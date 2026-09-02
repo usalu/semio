@@ -1,11 +1,11 @@
-# import CreateStepInput from "./🌱create-step/🔗️.graphql"
-# import DeleteStepInput from "./🗑️delete-step/🔗️.graphql"
-# import MoveStepInput from "./📍move-step/🔗️.graphql"
-# import EditStepParamsInput from "./🔧edit-step-params/🔗️.graphql"
-# import ChangeStepCollapsedInput from "./🗂️change-step-collapsed/🔗️.graphql"
-# import ConnectStepsInput from "./🔗connect-steps/🔗️.graphql"
-# import DisconnectStepsInput from "./✂️disconnect-steps/🔗️.graphql"
-# import DuplicateStepInput from "./🧬duplicate-step/🔗️.graphql"
+# import CreateStepInput from "../../../✳️step/🧬️schema/🧬️mutations/🌱create-step/🔗️.graphql"
+# import DeleteStepInput from "../../../✳️step/🧬️schema/🧬️mutations/🗑️delete-step/🔗️.graphql"
+# import MoveStepInput from "../../../✳️step/🧬️schema/🧬️mutations/📍move-step/🔗️.graphql"
+# import EditStepParamsInput from "../../../✳️step/🧬️schema/🧬️mutations/🔧edit-step-params/🔗️.graphql"
+# import ChangeStepCollapsedInput from "../../../✳️step/🧬️schema/🧬️mutations/🗂️change-step-collapsed/🔗️.graphql"
+# import ConnectStepsInput from "../../../✳️dependency/🧬️schema/🧬️mutations/🔗connect-steps/🔗️.graphql"
+# import DisconnectStepsInput from "../../../✳️dependency/🧬️schema/🧬️mutations/✂️disconnect-steps/🔗️.graphql"
+# import DuplicateStepInput from "../../../✳️step/🧬️schema/🧬️mutations/🧬duplicate-step/🔗️.graphql"
 
 scalar JSON
 

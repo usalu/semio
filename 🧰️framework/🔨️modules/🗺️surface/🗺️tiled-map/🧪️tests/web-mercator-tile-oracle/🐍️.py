@@ -1,6 +1,6 @@
 """🐍️ Third-party oracle adapter for `s.gis` tiled-map Web-Mercator projection and slippy-tile selection.
 
-Re-derives every vector in the sibling `🧫️fixtures/🔣️vectors.json` directly from `mercantile`
+Re-derives every vector in the sibling `local://🔣️.json` directly from `mercantile`
 (pure Python, zero runtime dependencies — a test-only dependency added to `pyproject.toml`'s `test`
 group) and asserts agreement with the frozen fixture. This is the third-party half of the
 differential pair; the Rust half lives at
@@ -11,7 +11,7 @@ Run directly: `.venv/bin/python3 "🐍️.py"` (from this directory) or via `uv 
 from the repo root. Exits non-zero on any disagreement.
 
 @see ../🥒️.feature
-@see ../🧫️fixtures/🔣️vectors.json
+@see ../🧫️fixtures/🔣️.json
 """
 
 from __future__ import annotations
@@ -73,7 +73,7 @@ def check_lod_bands(fixture: dict, failures: list[str]) -> None:
 
 
 def main() -> int:
-    fixture_path = Path(__file__).resolve().parent / "🧫️fixtures" / "🔣️vectors.json"
+    fixture_path = Path(__file__).resolve().parent / "🧫️fixtures" / "🔣️.json"
     fixture = json.loads(fixture_path.read_text(encoding="utf-8"))
     failures: list[str] = []
     check_projection(fixture, failures)

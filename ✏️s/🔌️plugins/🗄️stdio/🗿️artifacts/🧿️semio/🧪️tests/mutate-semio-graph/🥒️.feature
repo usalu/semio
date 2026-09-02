@@ -9,7 +9,7 @@ Feature: Apply every typed semio GRAPH mutation to the Nakagin Capsule Tower's p
   frame, the recursive `SemioValue` codec and all eleven verbs, written in Python from the committed
   specification documents alone
   (`../../🏅️standards/🔖️v1/🪆️subsets/✳️graph/🧬️schema/📸️snapshot/📝️text/📖️component.grammar.semio`,
-  `…/📸️snapshot/💾️binary/📡️component.protocol.semio`, `…/📸️snapshot/🔣️component.json`,
+  `…/📸️snapshot/💾️binary/📡️component.protocol.semio`, `…/📸️snapshot/🔣️.json`,
   `…/🧬️schema/🧬️mutations/📝️text/📖️component.grammar.semio`, `✳️value`'s own snapshot schema for the
   `SemioValue` member names, and the semio envelope in
   `🧰️framework/🛍️products/💻️os/🔨️modules/🧬️semio/🦀️component.rs`), importing nothing from and
@@ -78,7 +78,7 @@ Feature: Apply every typed semio GRAPH mutation to the Nakagin Capsule Tower's p
   @level-exhaustive
   @mode-differential
   Scenario Outline: Apply <id> to the real Nakagin Capsule Tower port graph
-    Given the real capsule tower graph local://🗣️nakagin-capsule-tower.dsl.semio
+    Given the real capsule tower graph local://🧪️nakagin-capsule-tower/🗣️.dsl.semio
     When the <id> mutation is applied to the graph parsed from it
       """
       <mutation>
@@ -102,7 +102,7 @@ Feature: Apply every typed semio GRAPH mutation to the Nakagin Capsule Tower's p
   @level-exhaustive
   @mode-differential
   Scenario Outline: Undoing <id> restores the real Nakagin Capsule Tower port graph
-    Given the real capsule tower graph local://🗣️nakagin-capsule-tower.dsl.semio
+    Given the real capsule tower graph local://🧪️nakagin-capsule-tower/🗣️.dsl.semio
     When the <id> mutation is applied to the graph parsed from it and each side undoes it with its own computed inverse
       """
       <mutation>
@@ -126,9 +126,9 @@ Feature: Apply every typed semio GRAPH mutation to the Nakagin Capsule Tower's p
   @level-exhaustive
   @mode-differential
   Scenario Outline: Apply <id> to its committed handcrafted specification vector
-    Given the committed before-snapshot asset://🏅️standards/🔖️v1/🪆️subsets/✳️graph/🧬️schema/🧬️mutations/<dir>/🧪️tests/<fixture>/📸️snapshot/⬅️before/🔣️component.json
-    And the committed mutation payload asset://🏅️standards/🔖️v1/🪆️subsets/✳️graph/🧬️schema/🧬️mutations/<dir>/🧪️tests/<fixture>/🦠️mutation/🔣️component.json
-    And the committed after-snapshot asset://🏅️standards/🔖️v1/🪆️subsets/✳️graph/🧬️schema/🧬️mutations/<dir>/🧪️tests/<fixture>/📸️snapshot/➡️after/🔣️component.json
+    Given the committed before-snapshot asset://🏅️standards/🔖️v1/🪆️subsets/✳️graph/🧬️schema/🧬️mutations/<dir>/🧪️tests/<fixture>/📸️snapshot/⬅️before/🔣️.json
+    And the committed mutation payload asset://🏅️standards/🔖️v1/🪆️subsets/✳️graph/🧬️schema/🧬️mutations/<dir>/🧪️tests/<fixture>/🦠️mutation/🔣️.json
+    And the committed after-snapshot asset://🏅️standards/🔖️v1/🪆️subsets/✳️graph/🧬️schema/🧬️mutations/<dir>/🧪️tests/<fixture>/📸️snapshot/➡️after/🔣️.json
     When both implementations apply the committed mutation to the committed before-snapshot
     Then each reaches the committed after-snapshot and the two agree
     Examples:
@@ -149,9 +149,9 @@ Feature: Apply every typed semio GRAPH mutation to the Nakagin Capsule Tower's p
   @level-long
   @mode-round-trip
   Scenario: Re-emit both encodings of the committed wires graph and of the real capsule tower graph
-    Given the real committed graph artifact asset://🏅️standards/🔖️v1/🪆️subsets/✳️graph/📚️examples/🕸️wires/🖼️assets/🗣️example.dsl.semio
+    Given the real committed graph artifact asset://🏅️standards/🔖️v1/🪆️subsets/✳️graph/📚️examples/🕸️wires/🖼️assets/🗣️.dsl.semio
     And its committed binary twin asset://🏅️standards/🔖️v1/🪆️subsets/✳️graph/📚️examples/🕸️wires/🖼️assets/🎒️.pack.semio
-    And the real capsule tower graph local://🗣️nakagin-capsule-tower.dsl.semio
+    And the real capsule tower graph local://🧪️nakagin-capsule-tower/🗣️.dsl.semio
     And its binary twin local://🎒️.pack.semio
     When each implementation parses all four files, prints both documents back and re-encodes both packs
     Then all four files are reproduced byte for byte and the two implementations agree on both graphs and on the digests of what they emitted

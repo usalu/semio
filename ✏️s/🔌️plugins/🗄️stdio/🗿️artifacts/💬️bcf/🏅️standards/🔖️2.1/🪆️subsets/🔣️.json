@@ -2,8 +2,14 @@
   "artifact": "s.stdio.bcf",
   "standard": "2.1",
   "subsets": {
-    "*": {
-      "name": "Unconstrained bcf 2.1"
+    "markup": {
+      "name": "buildingSMART BCF-XML 2.1 Markup (`markup.bcf` per topic, plus the container-level `bcf.version`) -- topic and comment text, version, plus the whole-document set-snapshot/no-mutation surface. The shared reader/writer for the whole BCF-ZIP container lives here; the other two subsets reuse it (family-module pattern) rather than duplicating it."
+    },
+    "viewpoint": {
+      "name": "buildingSMART BCF-XML 2.1 Viewpoint (`viewpoint.bcfv` per topic) -- camera and visibility/coloring component state, a file distinct from that topic's markup."
+    },
+    "snapshot": {
+      "name": "buildingSMART BCF-XML 2.1 Snapshot (`snapshot.png` per topic) -- the screen-capture image file, distinct from that topic's markup and viewpoint."
     }
   }
 }

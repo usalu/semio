@@ -3,7 +3,7 @@
 @comparison-semantic-html-v1
 @mutations-html-5-any
 Feature: Apply every typed HTML 5 mutation to a real-world document
-  The input is shared://🌐️zukunft-bau-entwerfen-mit-bestand.html, derived once from the real,
+  The input is shared://🧪️zukunft-bau-entwerfen-mit-bestand/🌐️.html, derived once from the real,
   committed presentation page at ../../../../../♻️mit-bestand/🎤️präsentation/📅️33.projektetage/
   🌐️public/🌐️zukunft-bau-entwerfen-mit-bestand.html (a real TYPO3-produced HTML5 document, 2,337
   lines / 149 KB, genuine `<head>`/`<body>` structure, real navigation, real footer, real external
@@ -62,7 +62,7 @@ Feature: Apply every typed HTML 5 mutation to a real-world document
   @level-exhaustive
   @mode-differential
   Scenario Outline: Apply <id> to the real document
-    Given the real input document shared://🌐️zukunft-bau-entwerfen-mit-bestand.html
+    Given the real input document shared://🧪️zukunft-bau-entwerfen-mit-bestand/🌐️.html
     When the <id> mutation is applied with its parameters
       """
       {"kind": "<id>", "params": <params>}
@@ -86,7 +86,7 @@ Feature: Apply every typed HTML 5 mutation to a real-world document
   @level-exhaustive
   @mode-differential
   Scenario Outline: Undoing <id> restores the document
-    Given the real input document shared://🌐️zukunft-bau-entwerfen-mit-bestand.html
+    Given the real input document shared://🧪️zukunft-bau-entwerfen-mit-bestand/🌐️.html
     When the <id> mutation is applied and then undone
       """
       {"kind": "<id>", "params": <params>}
@@ -109,7 +109,7 @@ Feature: Apply every typed HTML 5 mutation to a real-world document
   @level-long
   @mode-round-trip
   Scenario: Decode and re-encode the real document without passing bytes through
-    Given the real input document shared://🌐️zukunft-bau-entwerfen-mit-bestand.html
+    Given the real input document shared://🧪️zukunft-bau-entwerfen-mit-bestand/🌐️.html
     When the document is fully parsed into the subset's own snapshot model and re-encoded from it alone
     Then the oracle and the subject agree on the semantic projection
     And the re-encoded bytes are not bit-identical to the input

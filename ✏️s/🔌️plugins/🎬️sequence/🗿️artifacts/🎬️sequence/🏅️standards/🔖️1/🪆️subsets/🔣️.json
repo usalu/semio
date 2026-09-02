@@ -2,8 +2,14 @@
   "artifact": "s.sequence.sequence",
   "standard": "1",
   "subsets": {
-    "*": {
-      "name": "Unconstrained sequence 1"
+    "step": {
+      "name": "Step nodes -- SequenceStep entities: creation, deletion, reposition (x/y), param edits, collapse state and duplication."
+    },
+    "dependency": {
+      "name": "Dependency edges -- SequenceEdge entities connecting steps: connect/disconnect."
+    },
+    "any": {
+      "name": "Shared sequence substrate -- whole-document schema/snapshot/diff, io codecs, editor and viewer. Owns no mutation; step and dependency are this artifact's only mutation-owning subsets."
     }
   }
 }

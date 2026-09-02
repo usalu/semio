@@ -16,7 +16,7 @@ Feature: Apply every typed remodel-scene mutation to its committed specification
   LIBRARY is a different judgement from declining a SECOND IMPLEMENTATION, and only the first was ever
   made here. `mutate-cad-1` and `mutate-lowpoly-1` took Python second
   implementations over this same `.dsl.semio` carrier in this wave, so the same is writable for this
-  subset from `🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🔣️component.json`, the rules of
+  subset from `🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🔣️.json`, the rules of
   `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/📓️derivation-rules.md` and the
   committed vectors this feature already replays. What blocks it TODAY is stated in the decision and
   is one edit: this case's vectors are not declared as `asset://` fixtures — the `Examples` table
@@ -44,7 +44,7 @@ Feature: Apply every typed remodel-scene mutation to its committed specification
   `(before, mutation, after)` triple cannot carry. This case exercises it through its own documented
   refusal path instead, using a vector assembled ONCE from committed sibling content and kept in this
   case's own fixtures — local://commit-reconstruction-before.json is a byte copy of
-  `../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏗️replace-job/🧪️tests/advances-the-job-to-texturing/📸️snapshot/⬅️before/🔣️component.json`,
+  `../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏗️replace-job/🧪️tests/advances-the-job-to-texturing/📸️snapshot/⬅️before/🔣️.json`,
   local://commit-reconstruction-mutation.json pairs that leaf's committed `job` payload with
   `⭐replace-sparse`'s committed `sparse` payload (a plain point buffer, deliberately NOT a replayable
   staging handle), and local://commit-reconstruction-after.json is the before-document unchanged,
@@ -162,6 +162,6 @@ Feature: Apply every typed remodel-scene mutation to its committed specification
   @level-long
   @mode-round-trip
   Scenario: Parse and reprint the real committed example without passing bytes through
-    Given the real committed example asset://🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio
+    Given the real committed example asset://🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/🗣️.dsl.semio
     When it is parsed, printed back to DSL and parsed again through round_trip_remodel_dsl
     Then both parses agree on one document, and the reprinted text reproduces the committed example byte for byte

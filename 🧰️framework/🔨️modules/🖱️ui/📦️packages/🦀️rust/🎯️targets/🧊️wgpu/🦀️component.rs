@@ -6,18 +6,30 @@ pub mod layout {
 
     use crate::wgpu::IconName;
     use dsl::DslValue;
-    use semio_framework_value_derive::{FromValue, ToValue};
+    // 🌱️ `dsl` (the `semio_framework_os_kernel` alias) re-exports BOTH the `ToValue`/`FromValue`
+    // TRAIT (type namespace) and the identically named `#[derive(ToValue, FromValue)]` macro
+    // (macro namespace) under its own crate root already — see that crate's `🦀️.rs`:
+    // `pub use crate::os_dsl::schema::{..., FromValue, ToValue, ...};` (trait) alongside
+    // `pub use semio_framework_value_derive::{FromValue, ToValue};` (macro). So a SINGLE `use
+    // dsl::{FromValue, ToValue};` here brings in both namespaces at once — importing
+    // `semio_framework_value_derive` directly here too would re-import the macro namespace a
+    // second time (`E0252`). The trait half is what lets the hand-written
+    // `WindowLayoutChild`/`WindowLayoutRoot` `impl`s below (untagged enums the derive cannot
+    // express) call `.to_value()`/`Type::from_value(...)` directly.
+    use dsl::{FromValue, ToValue};
     use serde::{Deserialize, Serialize};
     use std::collections::HashMap;
     use ui_contract::UiFixedList;
 
     //#region 🔖️Action
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
     #[serde(rename_all = "camelCase")]
+    #[value(rename_all = "camelCase")]
     pub struct ActionDescriptor {
         pub controller_id: String,
         pub action: String,
         #[serde(skip_serializing_if = "Option::is_none")]
+        #[value(skip_serializing_if = "Option::is_none")]
         pub args: Option<DslValue>,
     }
 
@@ -701,8 +713,9 @@ pub mod layout {
     }
 
     /// 🧭️ Corner of a window stack where a tab chip docks.
-    #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+    #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]
     #[serde(rename_all = "camelCase")]
+    #[value(rename_all = "camelCase")]
     pub enum WindowStackCorner {
         #[default]
         TopLeft,
@@ -711,39 +724,56 @@ pub mod layout {
         BottomRight,
     }
 
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
     #[serde(rename_all = "camelCase")]
+    #[value(rename_all = "camelCase")]
     pub struct WindowLayoutWindowNode {
         #[serde(default = "kind_window")]
+        #[value(default = "kind_window")]
         pub kind: String,
         pub window_kind_id: String,
         #[serde(skip_serializing_if = "Option::is_none")]
+        #[value(skip_serializing_if = "Option::is_none")]
         pub title: Option<String>,
         #[serde(skip_serializing_if = "Option::is_none")]
+        #[value(skip_serializing_if = "Option::is_none")]
         pub instance_id: Option<String>,
         #[serde(skip_serializing_if = "Option::is_none")]
+        #[value(skip_serializing_if = "Option::is_none")]
         pub template_id: Option<String>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[value(default, skip_serializing_if = "Option::is_none")]
         pub corner: Option<WindowStackCorner>,
     }
 
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
     #[serde(rename_all = "camelCase")]
+    #[value(rename_all = "camelCase")]
     pub struct WindowLayoutStackNode {
         #[serde(default = "kind_stack")]
+        #[value(default = "kind_stack")]
         pub kind: String,
         #[serde(skip_serializing_if = "Option::is_none")]
+        #[value(skip_serializing_if = "Option::is_none")]
         pub size: Option<f64>,
+        // ⚠️ `alias = "activeId"` is deliberately NOT mirrored into `#[value(...)]` — the
+        // first-party derive (`🌱️value/✨️derive`) has no `alias` attribute (see its module
+        // docstring's supported-attribute list) and an unrecognized key is a hard compile error.
+        // `ToValue`/`FromValue` round-trips on the canonical `activeWindowKindId` key only; the
+        // serde path keeps accepting the legacy `activeId` alias unchanged.
         #[serde(skip_serializing_if = "Option::is_none", alias = "activeId")]
+        #[value(skip_serializing_if = "Option::is_none")]
         pub active_window_kind_id: Option<String>,
         pub children: Vec<WindowLayoutWindowNode>,
     }
 
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
     #[serde(rename_all = "camelCase")]
+    #[value(rename_all = "camelCase")]
     pub struct WindowLayoutAxisNode {
         pub kind: String,
         #[serde(skip_serializing_if = "Option::is_none")]
+        #[value(skip_serializing_if = "Option::is_none")]
         pub size: Option<f64>,
         pub children: Vec<WindowLayoutChild>,
     }
@@ -755,6 +785,29 @@ pub mod layout {
         Stack(WindowLayoutStackNode),
     }
 
+    // 🌱️ Hand-written, not derived: `#[serde(untagged)]` has no `#[value(...)]` equivalent (the
+    // derive's supported container attributes are `rename_all`/`tag`/`content`/`default`/
+    // `deny_unknown_fields`/`transparent`/`bound` only — see `🌱️value/✨️derive/🦀️.rs`'s module
+    // docstring). Mirrors serde's own untagged algorithm: try each variant's decode in
+    // declaration order, first success wins — same order `#[serde(untagged)]` tries at runtime.
+    impl ToValue for WindowLayoutChild {
+        fn to_value(&self) -> DslValue {
+            match self {
+                WindowLayoutChild::Axis(node) => node.to_value(),
+                WindowLayoutChild::Stack(node) => node.to_value(),
+            }
+        }
+    }
+
+    impl FromValue for WindowLayoutChild {
+        fn from_value(value: DslValue) -> Result<Self, dsl::ValueError> {
+            match WindowLayoutAxisNode::from_value(value.clone()) {
+                Ok(node) => Ok(WindowLayoutChild::Axis(node)),
+                Err(_) => WindowLayoutStackNode::from_value(value).map(WindowLayoutChild::Stack),
+            }
+        }
+    }
+
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
     #[serde(untagged)]
     pub enum WindowLayoutRoot {
@@ -762,22 +815,46 @@ pub mod layout {
         Stack(WindowLayoutStackNode),
     }
 
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+    // 🌱️ Hand-written for the same reason as `WindowLayoutChild` above — `#[serde(untagged)]` has
+    // no `#[value(...)]` equivalent.
+    impl ToValue for WindowLayoutRoot {
+        fn to_value(&self) -> DslValue {
+            match self {
+                WindowLayoutRoot::Axis(node) => node.to_value(),
+                WindowLayoutRoot::Stack(node) => node.to_value(),
+            }
+        }
+    }
+
+    impl FromValue for WindowLayoutRoot {
+        fn from_value(value: DslValue) -> Result<Self, dsl::ValueError> {
+            match WindowLayoutAxisNode::from_value(value.clone()) {
+                Ok(node) => Ok(WindowLayoutRoot::Axis(node)),
+                Err(_) => WindowLayoutStackNode::from_value(value).map(WindowLayoutRoot::Stack),
+            }
+        }
+    }
+
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
     #[serde(rename_all = "camelCase")]
+    #[value(rename_all = "camelCase")]
     pub struct WindowLayout {
         pub root: WindowLayoutRoot,
     }
 
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
     #[serde(rename_all = "camelCase")]
+    #[value(rename_all = "camelCase")]
     pub struct NamedLayout {
         pub id: String,
         pub label: String,
         #[serde(skip_serializing_if = "Option::is_none")]
+        #[value(skip_serializing_if = "Option::is_none")]
         pub icon_id: Option<IconName>,
         pub layout: WindowLayout,
         pub origin: String,
         #[serde(skip_serializing_if = "Option::is_none")]
+        #[value(skip_serializing_if = "Option::is_none")]
         pub group_path: Option<Vec<String>>,
     }
 
@@ -872,16 +949,18 @@ pub mod layout {
     //#endregion 🔖️WindowLayout
 
     //#region 🔖️WindowMeasure
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
     #[serde(rename_all = "camelCase")]
+    #[value(rename_all = "camelCase")]
     pub struct MeasureSelectItem {
         pub id: String,
         pub value: String,
         pub label: String,
     }
 
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
     #[serde(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
+    #[value(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
     pub enum WindowMeasure {
         Select {
             id: String,
@@ -900,21 +979,26 @@ pub mod layout {
             /// 🎚️ Absolute value on the fixed `[min, max]` range that is already preloaded/ready.
             /// Renderers keep `max` stable and draw a highlight from the knob to this extent.
             #[serde(default, skip_serializing_if = "Option::is_none")]
+            #[value(default, skip_serializing_if = "Option::is_none")]
             ready: Option<f64>,
             /// 🌀️ When true, the measure tree leaf shows a loading ring while preload continues.
             #[serde(default, skip_serializing_if = "Option::is_none")]
+            #[value(default, skip_serializing_if = "Option::is_none")]
             loading: Option<bool>,
             /// 🌀️ When true, the measure tree leaf shows a dashed, slower waiting ring; `loading` takes precedence when both are set.
             #[serde(default, skip_serializing_if = "Option::is_none")]
+            #[value(default, skip_serializing_if = "Option::is_none")]
             waiting: Option<bool>,
             /// 🚫️ When true, the slider is inert — used when a parent weight is zero so joint percentages cannot change anything.
             #[serde(default, skip_serializing_if = "Option::is_none")]
+            #[value(default, skip_serializing_if = "Option::is_none")]
             disabled: Option<bool>,
             /// 🪣️ When set, this is a reveal-group id: the host must NOT dispatch `onChange` on every drag
             /// value — only on gesture commit (pointer-up) — and while dragging must locally cut off
             /// instances tagged with this reveal group's id instead. See `WorldInstancesLayer`'s reveal
             /// cutoff store and `revealCutoffs` in `World3dScene.interaction_json`.
             #[serde(default, skip_serializing_if = "Option::is_none")]
+            #[value(default, skip_serializing_if = "Option::is_none")]
             reveal: Option<String>,
             on_change: ActionDescriptor,
         },
@@ -935,23 +1019,32 @@ pub mod layout {
             /// beside the utility bar — never in the always-on Measures overlay. When absent, the group is a
             /// general measure and stays in the Measures overlay exactly as before. See [`partition_window_measures`].
             #[serde(skip_serializing_if = "Option::is_none")]
+            #[value(skip_serializing_if = "Option::is_none")]
             active_utility_id: Option<String>,
             /// 🎚️ Optional header slider — when set with `on_change`, the group row hosts a weight control (e.g. object-kind probability).
             #[serde(skip_serializing_if = "Option::is_none")]
+            #[value(skip_serializing_if = "Option::is_none")]
             value: Option<f64>,
             #[serde(skip_serializing_if = "Option::is_none")]
+            #[value(skip_serializing_if = "Option::is_none")]
             min: Option<f64>,
             #[serde(skip_serializing_if = "Option::is_none")]
+            #[value(skip_serializing_if = "Option::is_none")]
             max: Option<f64>,
             #[serde(skip_serializing_if = "Option::is_none")]
+            #[value(skip_serializing_if = "Option::is_none")]
             step: Option<f64>,
             #[serde(skip_serializing_if = "Option::is_none")]
+            #[value(skip_serializing_if = "Option::is_none")]
             ready: Option<f64>,
             #[serde(skip_serializing_if = "Option::is_none")]
+            #[value(skip_serializing_if = "Option::is_none")]
             loading: Option<bool>,
             #[serde(skip_serializing_if = "Option::is_none")]
+            #[value(skip_serializing_if = "Option::is_none")]
             waiting: Option<bool>,
             #[serde(skip_serializing_if = "Option::is_none")]
+            #[value(skip_serializing_if = "Option::is_none")]
             on_change: Option<ActionDescriptor>,
             children: Vec<WindowMeasure>,
         },
@@ -1001,89 +1094,114 @@ pub mod layout {
     //#endregion 🔖️PartitionWindowMeasures
 
     //#region 🔖️WindowEngagement
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
     #[serde(rename_all = "camelCase")]
+    #[value(rename_all = "camelCase")]
     pub struct WindowEngagementOption {
         pub id: String,
         #[serde(skip_serializing_if = "Option::is_none")]
+        #[value(skip_serializing_if = "Option::is_none")]
         pub label: Option<String>,
         #[serde(skip_serializing_if = "Option::is_none")]
+        #[value(skip_serializing_if = "Option::is_none")]
         pub icon_id: Option<IconName>,
         #[serde(skip_serializing_if = "Option::is_none")]
+        #[value(skip_serializing_if = "Option::is_none")]
         pub pressed: Option<bool>,
         #[serde(skip_serializing_if = "Option::is_none")]
+        #[value(skip_serializing_if = "Option::is_none")]
         pub disabled: Option<bool>,
         #[serde(skip_serializing_if = "Option::is_none")]
+        #[value(skip_serializing_if = "Option::is_none")]
         pub action: Option<ActionDescriptor>,
     }
 
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
     #[serde(rename_all = "camelCase")]
+    #[value(rename_all = "camelCase")]
     pub struct WindowEngagementInput {
         #[serde(skip_serializing_if = "Option::is_none")]
+        #[value(skip_serializing_if = "Option::is_none")]
         pub id: Option<String>,
         #[serde(skip_serializing_if = "Option::is_none")]
+        #[value(skip_serializing_if = "Option::is_none")]
         pub value: Option<String>,
         #[serde(skip_serializing_if = "Option::is_none")]
+        #[value(skip_serializing_if = "Option::is_none")]
         pub placeholder: Option<String>,
         #[serde(skip_serializing_if = "Option::is_none")]
+        #[value(skip_serializing_if = "Option::is_none")]
         pub disabled: Option<bool>,
         #[serde(skip_serializing_if = "Option::is_none")]
+        #[value(skip_serializing_if = "Option::is_none")]
         pub on_change: Option<ActionDescriptor>,
         #[serde(skip_serializing_if = "Option::is_none")]
+        #[value(skip_serializing_if = "Option::is_none")]
         pub on_submit: Option<ActionDescriptor>,
         #[serde(skip_serializing_if = "Option::is_none")]
+        #[value(skip_serializing_if = "Option::is_none")]
         pub on_repeat_last: Option<ActionDescriptor>,
         #[serde(skip_serializing_if = "Option::is_none")]
+        #[value(skip_serializing_if = "Option::is_none")]
         pub on_abort: Option<ActionDescriptor>,
     }
 
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
     #[serde(rename_all = "camelCase")]
+    #[value(rename_all = "camelCase")]
     pub struct WindowEngagementStatus {
         pub id: String,
         pub text: String,
     }
 
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
     #[serde(rename_all = "camelCase")]
+    #[value(rename_all = "camelCase")]
     pub struct WindowEngagementPossible {
         pub id: String,
         pub label: String,
         #[serde(skip_serializing_if = "Option::is_none")]
+        #[value(skip_serializing_if = "Option::is_none")]
         pub detail: Option<String>,
         #[serde(skip_serializing_if = "Option::is_none")]
+        #[value(skip_serializing_if = "Option::is_none")]
         pub action: Option<ActionDescriptor>,
     }
 
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
     #[serde(rename_all = "camelCase")]
+    #[value(rename_all = "camelCase")]
     pub struct WindowEngagementRingOption {
         pub id: String,
         pub label: String,
         #[serde(skip_serializing_if = "Option::is_none")]
+        #[value(skip_serializing_if = "Option::is_none")]
         pub disabled: Option<bool>,
     }
 
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
     #[serde(rename_all = "camelCase")]
+    #[value(rename_all = "camelCase")]
     pub struct WindowEngagementToggleGroupOption {
         pub id: String,
         pub label: String,
         #[serde(skip_serializing_if = "Option::is_none")]
+        #[value(skip_serializing_if = "Option::is_none")]
         pub disabled: Option<bool>,
     }
 
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
     #[serde(rename_all = "camelCase")]
+    #[value(rename_all = "camelCase")]
     pub struct WindowEngagementSelectItem {
         pub id: String,
         pub value: String,
         pub label: String,
     }
 
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
     #[serde(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
+    #[value(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
     pub enum WindowEngagementControl {
         Slider { id: Option<String>, label: Option<String>, value: f64, min: f64, max: f64, step: Option<f64>, unit: Option<String>, disabled: Option<bool>, on_change: Option<ActionDescriptor>, on_commit: Option<ActionDescriptor> },
         Stepper { id: Option<String>, label: Option<String>, value: f64, min: Option<f64>, max: Option<f64>, step: Option<f64>, unit: Option<String>, disabled: Option<bool>, on_change: Option<ActionDescriptor>, on_commit: Option<ActionDescriptor> },
@@ -1092,22 +1210,30 @@ pub mod layout {
         Select { id: Option<String>, label: Option<String>, value: Option<String>, placeholder: Option<String>, items: Vec<WindowEngagementSelectItem>, disabled: Option<bool>, on_change: Option<ActionDescriptor> },
     }
 
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
     #[serde(rename_all = "camelCase")]
+    #[value(rename_all = "camelCase")]
     pub struct WindowEngagement {
         #[serde(skip_serializing_if = "Option::is_none")]
+        #[value(skip_serializing_if = "Option::is_none")]
         pub session_active: Option<bool>,
         #[serde(skip_serializing_if = "Option::is_none")]
+        #[value(skip_serializing_if = "Option::is_none")]
         pub options: Option<Vec<WindowEngagementOption>>,
         #[serde(skip_serializing_if = "Option::is_none")]
+        #[value(skip_serializing_if = "Option::is_none")]
         pub input: Option<WindowEngagementInput>,
         #[serde(skip_serializing_if = "Option::is_none")]
+        #[value(skip_serializing_if = "Option::is_none")]
         pub control: Option<WindowEngagementControl>,
         #[serde(skip_serializing_if = "Option::is_none")]
+        #[value(skip_serializing_if = "Option::is_none")]
         pub controls: Option<Vec<WindowEngagementControl>>,
         #[serde(skip_serializing_if = "Option::is_none")]
+        #[value(skip_serializing_if = "Option::is_none")]
         pub status: Option<Vec<WindowEngagementStatus>>,
         #[serde(skip_serializing_if = "Option::is_none")]
+        #[value(skip_serializing_if = "Option::is_none")]
         pub possible_engagements: Option<Vec<WindowEngagementPossible>>,
     }
 
@@ -1117,8 +1243,9 @@ pub mod layout {
     /// larger than `None` — boxing it would be a breaking public-API change (every construction/match
     /// site across ~30 plugins would need `Box::new`/deref updates), out of scope for a mechanical pass.
     #[allow(clippy::large_enum_variant, reason = "boxing is a breaking public API change, out of T1 scope")]
-    #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+    #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
     #[serde(rename_all = "camelCase", tag = "kind", content = "value")]
+    #[value(rename_all = "camelCase", tag = "kind", content = "value")]
     pub enum WindowEngagementSlot {
         #[default]
         None,
@@ -1149,12 +1276,15 @@ pub mod layout {
     /// 🎛️ Everything a window kind can expose beyond its rendered body — always present as a shape,
     /// empty collections/`WindowEngagementSlot::None` for windows that don't use a given facet.
     /// Replaces the previously separately-optional `measures`/`engagement` pair on `WindowKindDefinition`.
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, Default)]
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, Default, ToValue, FromValue)]
     #[serde(rename_all = "camelCase")]
+    #[value(rename_all = "camelCase")]
     pub struct WindowOptions {
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
+        #[value(default, skip_serializing_if = "Vec::is_empty")]
         pub measures: Vec<WindowMeasure>,
         #[serde(default)]
+        #[value(default)]
         pub engagement: WindowEngagementSlot,
     }
     //#endregion 🔖️WindowEngagement
@@ -1350,6 +1480,74 @@ pub mod layout {
         }
     }
     //#endregion 🔖️WireFormatGoldenTests
+
+    //#region 🔖️ValueRoundTripTests
+    /// 🌱️ `ToValue`/`FromValue` round-trip tests for the keystone types this pass gave the traits
+    /// to — `FromValue(ToValue(x)) == x` for each, matching the requirement in ticket
+    /// 26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS.
+    #[cfg(test)]
+    mod value_round_trip_tests {
+        use super::*;
+
+        #[semio_framework_async_macros::async_test]
+        async fn action_descriptor_round_trips() {
+            let values = [
+                ActionDescriptor { controller_id: "ctrl".into(), action: "doThing".into(), args: Some(DslValue::float(42.0)) },
+                ActionDescriptor { controller_id: "ctrl".into(), action: "doOther".into(), args: None },
+            ];
+            for value in values {
+                assert_eq!(ActionDescriptor::from_value(value.to_value()).expect("valid DslValue decodes"), value);
+            }
+        }
+
+        #[semio_framework_async_macros::async_test]
+        async fn window_layout_round_trips() {
+            let layout = WindowLayout {
+                root: WindowLayoutRoot::Axis(WindowLayoutAxisNode {
+                    kind: "horizontal".into(),
+                    size: None,
+                    children: vec![
+                        WindowLayoutChild::Stack(WindowLayoutStackNode {
+                            kind: "stack".into(),
+                            size: Some(0.5),
+                            active_window_kind_id: Some("main".into()),
+                            children: vec![WindowLayoutWindowNode { kind: "window".into(), window_kind_id: "main".into(), title: Some("Main".into()), instance_id: None, template_id: None, corner: Some(WindowStackCorner::TopRight) }],
+                        }),
+                        WindowLayoutChild::Axis(WindowLayoutAxisNode { kind: "vertical".into(), size: Some(0.5), children: vec![] }),
+                    ],
+                }),
+            };
+            assert_eq!(WindowLayout::from_value(layout.to_value()).expect("valid DslValue decodes"), layout);
+        }
+
+        #[semio_framework_async_macros::async_test]
+        async fn named_layout_round_trips() {
+            let layout = WindowLayout { root: WindowLayoutRoot::Stack(WindowLayoutStackNode { kind: "stack".into(), size: None, active_window_kind_id: None, children: vec![] }) };
+            let named = NamedLayout { id: "layout-1".into(), label: "Default".into(), icon_id: Some(IconName::AppWindow), layout, origin: "user".into(), group_path: Some(vec!["group".into()]) };
+            assert_eq!(NamedLayout::from_value(named.to_value()).expect("valid DslValue decodes"), named);
+        }
+
+        #[semio_framework_async_macros::async_test]
+        async fn window_options_round_trips() {
+            let options = WindowOptions {
+                measures: vec![WindowMeasure::Toggle { id: "m1".into(), icon_id: IconName::CircleDot, label: Some("Toggle".into()), pressed: true, text: None, on_change: ActionDescriptor { controller_id: "ctrl".into(), action: "toggle".into(), args: None } }],
+                engagement: WindowEngagementSlot::Some(default_viewport_engagement()),
+            };
+            assert_eq!(WindowOptions::from_value(options.to_value()).expect("valid DslValue decodes"), options);
+        }
+
+        #[semio_framework_async_macros::async_test]
+        async fn surface_kind_round_trips() {
+            // 🔀️ `SurfaceKind` lives in the sibling `pub mod ui`, not here in `layout` —
+            // imported explicitly rather than via `use super::*` to avoid pulling that whole
+            // module's re-exports into this test scope.
+            use crate::wgpu::SurfaceKind;
+            for kind in [SurfaceKind::Canvas2d, SurfaceKind::World3d, SurfaceKind::VirtualFileSystem, SurfaceKind::EventFeed] {
+                assert_eq!(SurfaceKind::from_value(kind.to_value()).expect("valid DslValue decodes"), kind);
+            }
+        }
+    }
+    //#endregion 🔖️ValueRoundTripTests
     // #endregion layout
 }
 
@@ -1950,6 +2148,10 @@ pub mod ui {
     use crate::wgpu::IconName;
     use crate::wgpu::Label;
     use dsl::DslValue;
+    // 🌱️ Same `dsl::{FromValue, ToValue}` re-export as `super::layout` above — `dsl` already
+    // carries both the trait AND the derive macro under these names, so this single `use` covers
+    // `#[derive(ToValue, FromValue)]` sites in this module (only `SurfaceKind` so far).
+    use dsl::{FromValue, ToValue};
     use serde::{Deserialize, Serialize};
     use std::collections::HashMap;
 
@@ -2775,37 +2977,52 @@ pub mod ui {
     //#endregion 🔖️InspectorHelpers
 
     //#region 🔖️ComponentScenes
-    #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
+    #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize, ToValue, FromValue)]
     pub enum SurfaceKind {
         #[serde(rename = "canvas-2d")]
+        #[value(rename = "canvas-2d")]
         Canvas2d,
         #[serde(rename = "world-3d")]
+        #[value(rename = "world-3d")]
         World3d,
         #[serde(rename = "node-graph")]
+        #[value(rename = "node-graph")]
         NodeGraph,
         #[serde(rename = "text-editor")]
+        #[value(rename = "text-editor")]
         TextEditor,
         #[serde(rename = "table")]
+        #[value(rename = "table")]
         Table,
         #[serde(rename = "paint-2d")]
+        #[value(rename = "paint-2d")]
         Paint2d,
         #[serde(rename = "virtualFileSystem")]
+        #[value(rename = "virtualFileSystem")]
         VirtualFileSystem,
         #[serde(rename = "tiled-map")]
+        #[value(rename = "tiled-map")]
         TiledMap,
         #[serde(rename = "board-2d")]
+        #[value(rename = "board-2d")]
         Board2d,
         #[serde(rename = "icon-render")]
+        #[value(rename = "icon-render")]
         IconRender,
         #[serde(rename = "ink-canvas")]
+        #[value(rename = "ink-canvas")]
         InkCanvas,
         #[serde(rename = "graph-timeline")]
+        #[value(rename = "graph-timeline")]
         GraphTimeline,
         #[serde(rename = "block-list")]
+        #[value(rename = "block-list")]
         BlockList,
         #[serde(rename = "diff-view")]
+        #[value(rename = "diff-view")]
         DiffView,
         #[serde(rename = "event-feed")]
+        #[value(rename = "event-feed")]
         EventFeed,
     }
 

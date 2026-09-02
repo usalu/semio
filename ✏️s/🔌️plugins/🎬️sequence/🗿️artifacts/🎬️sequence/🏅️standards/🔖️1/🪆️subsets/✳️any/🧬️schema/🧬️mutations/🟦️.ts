@@ -1,12 +1,12 @@
 /** 🎬️ Sequence mutation union assembled from direct payload owners. */
-import type { CreateStep } from "./🌱create-step/🟦️";
-import type { DeleteStep } from "./🗑️delete-step/🟦️";
-import type { MoveStep } from "./📍move-step/🟦️";
-import type { EditStepParams } from "./🔧edit-step-params/🟦️";
-import type { ChangeStepCollapsed } from "./🗂️change-step-collapsed/🟦️";
-import type { ConnectSteps } from "./🔗connect-steps/🟦️";
-import type { DisconnectSteps } from "./✂️disconnect-steps/🟦️";
-import type { DuplicateStep } from "./🧬duplicate-step/🟦️";
+import type { CreateStep } from "../../../✳️step/🧬️schema/🧬️mutations/🌱create-step/🟦️";
+import type { DeleteStep } from "../../../✳️step/🧬️schema/🧬️mutations/🗑️delete-step/🟦️";
+import type { MoveStep } from "../../../✳️step/🧬️schema/🧬️mutations/📍move-step/🟦️";
+import type { EditStepParams } from "../../../✳️step/🧬️schema/🧬️mutations/🔧edit-step-params/🟦️";
+import type { ChangeStepCollapsed } from "../../../✳️step/🧬️schema/🧬️mutations/🗂️change-step-collapsed/🟦️";
+import type { ConnectSteps } from "../../../✳️dependency/🧬️schema/🧬️mutations/🔗connect-steps/🟦️";
+import type { DisconnectSteps } from "../../../✳️dependency/🧬️schema/🧬️mutations/✂️disconnect-steps/🟦️";
+import type { DuplicateStep } from "../../../✳️step/🧬️schema/🧬️mutations/🧬duplicate-step/🟦️";
 
 //#region 🧬️Aggregate
 export type SequenceMutation =

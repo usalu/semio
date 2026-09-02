@@ -14,7 +14,7 @@ Feature: Produce every schema-expressible IFC2X3 mutation twice, in two independ
   other; neither is derived from the other.
 
   The artifact is the real one this subset already commits and is not substituted for anything
-  smaller: `shared://🏗️wellness-center-sama-street-level.ifc`, a real self-consistent 3 464-entity
+  smaller: `shared://🧪️wellness-center-sama-street-level/🏗️.ifc`, a real self-consistent 3 464-entity
   slice of a real 21 MB EDM StepFileFactory IFC2X3 export of the Wellness Center Sama,
   `FILE_SCHEMA(('IFC2X3'))`, **193 915 bytes**, every id, coordinate, geometry definition and
   relationship real and untouched. The whole entity graph is compared on every scenario. Every
@@ -67,7 +67,7 @@ Feature: Produce every schema-expressible IFC2X3 mutation twice, in two independ
   @level-exhaustive
   @mode-differential
   Scenario Outline: Both implementations apply <id> to the real 3464-entity building model
-    Given the real input document shared://🏗️wellness-center-sama-street-level.ifc
+    Given the real input document shared://🧪️wellness-center-sama-street-level/🏗️.ifc
     When the <id> mutation is applied with its parameters
       """
       {"kind": "<id>", "params": <params>}
@@ -84,7 +84,7 @@ Feature: Produce every schema-expressible IFC2X3 mutation twice, in two independ
   @level-exhaustive
   @mode-differential
   Scenario Outline: Both implementations undo <id> and restore the real building model
-    Given the real input document shared://🏗️wellness-center-sama-street-level.ifc
+    Given the real input document shared://🧪️wellness-center-sama-street-level/🏗️.ifc
     When the <id> mutation is applied with its parameters
       """
       {"kind": "<id>", "params": <params>}
@@ -101,6 +101,6 @@ Feature: Produce every schema-expressible IFC2X3 mutation twice, in two independ
   @level-long
   @mode-differential
   Scenario: Both implementations decode and re-encode the real building model from the model alone
-    Given the real input document shared://🏗️wellness-center-sama-street-level.ifc
+    Given the real input document shared://🧪️wellness-center-sama-street-level/🏗️.ifc
     When the document is decoded into each implementation's own model and re-encoded from it alone
     Then both independently re-encoded documents carry the same semantic projection

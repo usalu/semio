@@ -1,0 +1,27 @@
+{
+  "schemaVersion": 1,
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️camera/🧬️schema/🧬️mutations/🚚️🎥️move-camera",
+  "semanticKind": "move-camera",
+  "displayName": "Move Camera",
+  "emoji": "🚚️🎥️",
+  "aggregateVariant": "MoveCamera",
+  "payloadSchema": "🔣️.schema.json",
+  "textOpcode": null,
+  "binaryTag": null,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "detect",
+  "outcomeClasses": [
+    "applied",
+    "warning",
+    "error",
+    "fatal"
+  ],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": [
+    "rust",
+    "typescript",
+    "graphql",
+    "protobuf",
+    "json-schema"
+  ]
+}

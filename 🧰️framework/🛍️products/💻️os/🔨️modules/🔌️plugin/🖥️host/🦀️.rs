@@ -8304,12 +8304,12 @@ mod tests {
         let instance = mock.instantiate(&compiled, actor, &[], &Budget { fuel: 1_000, deadline_ms: 4, max_effects: 8, max_patch_bytes: 4096, max_frames: 1 }).await.expect("mock instantiate");
         mock.script_job_step(actor, JobStep::Running { progress: None }).await;
         let io_payload = semio_framework::io_schema::IoPayload::Text("87a-bytes".to_string());
-        mock.script_job_step(actor, JobStep::Done { output: serde_json::to_vec(&io_payload).expect("encode expected result") }).await;
+        mock.script_job_step(actor, JobStep::Done { output: dsl::os_pack::json::to_json_string(&io_payload).into_bytes() }).await;
         let handle = PluginInstanceHandle::new(actor, Arc::new(GuestRuntimes::Mock(mock.clone())), instance).await;
 
-        let payload_bytes = serde_json::to_vec(&semio_framework::io_schema::IoPayload::Text("raw-bytes".to_string())).expect("encode payload");
+        let payload_bytes = dsl::os_pack::json::to_json_string(&semio_framework::io_schema::IoPayload::Text("raw-bytes".to_string())).into_bytes();
         let result = handle.io_run("s.stdio.gif@87a/*", "s.stdio.gif@89a/*", payload_bytes).await.expect("job-backed io_run must drive start-job + step-job to Done");
-        let decoded: semio_framework::io_schema::IoPayload = serde_json::from_slice(&result).expect("decode io_run result");
+        let decoded: semio_framework::io_schema::IoPayload = dsl::os_pack::json::from_json_str(std::str::from_utf8(&result).expect("decode io_run result utf8")).expect("decode io_run result");
         assert_eq!(decoded, io_payload);
     }
 
@@ -8324,7 +8324,7 @@ mod tests {
         mock.script_job_step(actor, JobStep::Done { output: vec![3u8] }).await;
         let handle = PluginInstanceHandle::new(actor, Arc::new(GuestRuntimes::Mock(mock.clone())), instance).await;
 
-        let payload_bytes = serde_json::to_vec(&semio_framework::io_schema::IoPayload::Binary(vec![0xFF])).expect("encode payload");
+        let payload_bytes = dsl::os_pack::json::to_json_string(&semio_framework::io_schema::IoPayload::Binary(vec![0xFF])).into_bytes();
         let rank = handle.io_sniff("s.stdio.binary@raw/*", "s.stdio.gif@87a/*", &payload_bytes).await.expect("job-backed io_sniff must decode a Done result");
         assert_eq!(rank, 3);
     }
@@ -8409,9 +8409,9 @@ mod tests {
         let (plugins, _keys) = router.stats().await.expect("router stats");
         assert_eq!(plugins, 2, "both plugin instance handles must be registered with the shared router");
 
-        let start_payload = serde_json::to_vec(&semio_framework::io_schema::IoPayload::Text("start".to_string())).expect("encode start payload");
+        let start_payload = dsl::os_pack::json::to_json_string(&semio_framework::io_schema::IoPayload::Text("start".to_string())).into_bytes();
         let result_bytes = router.run_io("norm", &binary_raw.to_coordinate(), &gif_89a.to_coordinate(), start_payload).await.expect("2-hop run_io crossing stdio then gif must succeed");
-        let decoded: semio_framework::io_schema::IoPayload = serde_json::from_slice(&result_bytes).expect("decode final run_io result");
+        let decoded: semio_framework::io_schema::IoPayload = dsl::os_pack::json::from_json_str(std::str::from_utf8(&result_bytes).expect("decode final run_io result utf8")).expect("decode final run_io result");
         assert_eq!(decoded, final_payload, "the SECOND hop's (gif's) scripted result must be what comes out — proves the chain really crossed both instance handles in order");
     }
 

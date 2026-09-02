@@ -256,6 +256,13 @@
       ]
     }
   ],
+  "comparisonProfiles": [
+    {
+      "id": "semantic-brep-kernel-edit-v1",
+      "description": "⚖️ A BRep edit compared as a KERNEL-LEVEL bundle: the re-exported STEP (topology and exact analytic geometry as OCCT actually classified it, through brepjs-occt), the tessellated mesh projection (size+digest, the same treatment this fleet gives every large binary payload) and the measured metrics (volume, area, bounding box) computed independently by the cross-language semio-brep-python-independent reader. A structural-only compare of the STEP text would fail on legitimate entity-numbering and formatting freedom OCCT itself is not obliged to preserve; comparing the measured and tessellated projections instead compares what the mutation actually claimed to change.",
+      "arrays": "ordered"
+    }
+  ],
   "probes": [
     {
       "id": "brepjs-step-import",
@@ -741,7 +748,21 @@
       ]
     }
   ],
-  "toleranceProfiles": [],
+  "toleranceProfiles": [
+    {
+      "id": "geometry-tessellated",
+      "description": "📏️ Curve-replacement edits (arc→spline and line→arc) that legitimately re-tessellate: the new curve is geometrically different by construction, so the gate is the DEVIATION of the tessellated approximation from the analytic curve it replaces, not bit-identity with a previous tessellation. Wider than `mechanical-standard` because a spline approximating an arc carries real, expected chord error at the segment's own scale.",
+      "absoluteLength": 1e-06,
+      "relativeLength": 1e-05,
+      "absoluteArea": 1e-06,
+      "relativeArea": 1e-05,
+      "absoluteVolume": 1e-06,
+      "relativeVolume": 1e-05,
+      "normalizedHausdorffMax": 0.0001,
+      "normalizedCentroidDistanceMax": 1e-06,
+      "maxOverrideFactor": 5
+    }
+  ],
   "comparisonPipelines": [
     {
       "id": "semantic-brep-kernel-v1",
@@ -779,10 +800,10 @@
             "actual-step"
           ],
           "assertions": {
-            "relativeVolumeErrorMax": 1e-8,
-            "relativeAreaErrorMax": 1e-7,
-            "normalizedCentroidDistanceMax": 1e-8,
-            "normalizedBoundingBoxDiagonalErrorMax": 1e-8,
+            "relativeVolumeErrorMax": 1e-08,
+            "relativeAreaErrorMax": 1e-07,
+            "normalizedCentroidDistanceMax": 1e-08,
+            "normalizedBoundingBoxDiagonalErrorMax": 1e-08,
             "connectedComponentsEqual": true
           }
         },
@@ -1292,7 +1313,7 @@
         "privacy": "no-personal-data"
       },
       "comparisonProfile": "semantic-brep-kernel-edit-v1",
-      "toleranceProfile": "boolean-standard",
+      "toleranceProfile": "mechanical-standard",
       "reproducible": true,
       "family": "booleans",
       "notes": "The full-face-coincident stack at 1e2 scale.",
@@ -1369,7 +1390,7 @@
         "privacy": "no-personal-data"
       },
       "comparisonProfile": "semantic-brep-kernel-edit-v1",
-      "toleranceProfile": "boolean-standard",
+      "toleranceProfile": "mechanical-standard",
       "reproducible": true,
       "family": "booleans",
       "notes": "Two boxes stacked so an ENTIRE face is exactly coincident (not merely tangent at a point or a line). MEASURED: `fuse` merges these into ONE solid of the combined volume (2000 = 10×10×20) — the coincident face is fully absorbed, unlike the point/line tangency cases above. The contrast between this fixture and the tangent ones is the point: whether a Boolean merges two solids depends on the DIMENSION of their shared locus, not merely on 'do they touch'.",
@@ -1432,7 +1453,7 @@
         "privacy": "no-personal-data"
       },
       "comparisonProfile": "semantic-brep-kernel-edit-v1",
-      "toleranceProfile": "boolean-standard",
+      "toleranceProfile": "mechanical-standard",
       "reproducible": true,
       "family": "booleans",
       "notes": "A cutter that fully ENGULFS its target. MEASURED: `cut` returns 0 solids — genuinely nothing, not a degenerate near-zero sliver — which this generator records as `hasExtent: false` rather than fabricating a placeholder shape or a mesh for a volume that does not exist.",
@@ -1509,7 +1530,7 @@
         "privacy": "no-personal-data"
       },
       "comparisonProfile": "semantic-brep-kernel-edit-v1",
-      "toleranceProfile": "boolean-standard",
+      "toleranceProfile": "mechanical-standard",
       "reproducible": true,
       "family": "booleans",
       "notes": "The bore-then-boss chain at 1e2 scale.",
@@ -1586,7 +1607,7 @@
         "privacy": "no-personal-data"
       },
       "comparisonProfile": "semantic-brep-kernel-edit-v1",
-      "toleranceProfile": "boolean-standard",
+      "toleranceProfile": "mechanical-standard",
       "reproducible": true,
       "family": "booleans",
       "notes": "A two-step chain: a box bored through by a cylinder (`cut`), then a cylindrical boss fused onto the resulting face (`fuse`). `operand-a`/`operand-b` are the chain's two RAW inputs — the plain box and the bore cylinder — and `expected.step` is the state after BOTH steps, not just the first.",
@@ -1663,7 +1684,7 @@
         "privacy": "no-personal-data"
       },
       "comparisonProfile": "semantic-brep-kernel-edit-v1",
-      "toleranceProfile": "boolean-standard",
+      "toleranceProfile": "mechanical-standard",
       "reproducible": true,
       "family": "booleans",
       "notes": "A cutter with NO overlap with its target at all. MEASURED: `cut` returns 1 solid with the target's own UNCHANGED volume (125 = 5³) — the Boolean is a legal no-op, distinguishable from the fully-engulfed `empty` fixture only by actually measuring the result rather than assuming 'a cut with no interference is either always a no-op or always a failure'.",
@@ -1740,7 +1761,7 @@
         "privacy": "no-personal-data"
       },
       "comparisonProfile": "semantic-brep-kernel-edit-v1",
-      "toleranceProfile": "boolean-standard",
+      "toleranceProfile": "mechanical-standard",
       "reproducible": true,
       "family": "booleans",
       "notes": "Two solids at DELIBERATELY MISMATCHED scales (a 5mm cube and a 500mm box, three orders of magnitude apart in linear size) placed far enough apart that neither Boolean operand overlaps or touches the other at all — the plainest possible `disjoint` classification, and a check that `tessellationToleranceFor`'s relative term is computed from the RESULT's own bounding box (which spans both scales at once) rather than from either operand's scale alone.",
@@ -1817,7 +1838,7 @@
         "privacy": "no-personal-data"
       },
       "comparisonProfile": "semantic-brep-kernel-edit-v1",
-      "toleranceProfile": "boolean-standard",
+      "toleranceProfile": "mechanical-standard",
       "reproducible": true,
       "family": "booleans",
       "notes": "A THREE-operation chain touching all three Boolean verbs in sequence: `fuse(box, cylinder)`, then `cut` by a second cylinder, then `intersect` with a bounding box that trims the result back down. `operand-a`/`operand-b` are the first `fuse`'s two inputs; the cutter and the trimming box are recorded only in `notes`, same convention `s.stdio.step@ap214/✳️cc6`'s own chain fixtures use for a chain that folds in more tools than two operand files could represent.",
@@ -1880,7 +1901,7 @@
         "privacy": "no-personal-data"
       },
       "comparisonProfile": "semantic-brep-kernel-edit-v1",
-      "toleranceProfile": "boolean-standard",
+      "toleranceProfile": "mechanical-standard",
       "reproducible": true,
       "family": "booleans",
       "notes": "`intersect` on two solids with no shared volume at all. MEASURED: 0 solids — the same `empty` classification as the fully-engulfed `cut`, now from the opposite direction (no overlap rather than total overlap), confirming `empty` is about the RESULT'S measured extent, not about which Boolean verb produced it.",
@@ -1957,7 +1978,7 @@
         "privacy": "no-personal-data"
       },
       "comparisonProfile": "semantic-brep-kernel-edit-v1",
-      "toleranceProfile": "boolean-standard",
+      "toleranceProfile": "mechanical-standard",
       "reproducible": true,
       "family": "booleans",
       "notes": "A FOUR-step chain (`fuse`, `cut`, `cut`, `fuse`) at 1e4 scale — the largest linear dimension in this family, chosen to exercise `tessellationToleranceFor`'s relative term against the small chains' absolute floor in the same comparison run.",
@@ -2034,7 +2055,7 @@
         "privacy": "no-personal-data"
       },
       "comparisonProfile": "semantic-brep-kernel-edit-v1",
-      "toleranceProfile": "boolean-standard",
+      "toleranceProfile": "mechanical-standard",
       "reproducible": true,
       "family": "booleans",
       "notes": "The double-internal-cavity cut at 1e2 scale.",
@@ -2111,7 +2132,7 @@
         "privacy": "no-personal-data"
       },
       "comparisonProfile": "semantic-brep-kernel-edit-v1",
-      "toleranceProfile": "boolean-standard",
+      "toleranceProfile": "mechanical-standard",
       "reproducible": true,
       "family": "booleans",
       "notes": "TWO separate, non-touching internal cavities cut into the same outer box. MEASURED: still 1 solid overall, but 3 shells (1 outer + 2 independent inner cavity shells) and volume 26750 = 30³ − 2×5³ — the shell COUNT is where this fixture differs from the single-cavity ones, not the solid count.",
@@ -2188,7 +2209,7 @@
         "privacy": "no-personal-data"
       },
       "comparisonProfile": "semantic-brep-kernel-edit-v1",
-      "toleranceProfile": "boolean-standard",
+      "toleranceProfile": "mechanical-standard",
       "reproducible": true,
       "family": "booleans",
       "notes": "The single fully-internal cavity at 1e2 scale.",
@@ -2265,7 +2286,7 @@
         "privacy": "no-personal-data"
       },
       "comparisonProfile": "semantic-brep-kernel-edit-v1",
-      "toleranceProfile": "boolean-standard",
+      "toleranceProfile": "mechanical-standard",
       "reproducible": true,
       "family": "booleans",
       "notes": "A single fully-internal cavity: the cutter never reaches any outer face, so the outer surface is completely untouched and only an internal shell records the change — exactly the case where a surface-only check would miss a lost cavity. MEASURED: volume 7875 = 20³ − 5³.",
@@ -2342,7 +2363,7 @@
         "privacy": "no-personal-data"
       },
       "comparisonProfile": "semantic-brep-kernel-edit-v1",
-      "toleranceProfile": "boolean-standard",
+      "toleranceProfile": "mechanical-standard",
       "reproducible": true,
       "family": "booleans",
       "notes": "Two boxes placed so they share exactly ONE corner VERTEX and nothing else — the non-manifold single-point touch the goal calls out by name, distinct from the sphere/cylinder tangency above in that the shared locus is a single shared VERTEX of two otherwise axis-aligned solids, not a smooth tangent point on curved surfaces. MEASURED: `fuse` returns two solids; the compound of the two UNFUSED operands already shows the shared corner as a coincident vertex position across 16 total vertices, not a merged 15.",
@@ -2419,7 +2440,7 @@
         "privacy": "no-personal-data"
       },
       "comparisonProfile": "semantic-brep-kernel-edit-v1",
-      "toleranceProfile": "boolean-standard",
+      "toleranceProfile": "mechanical-standard",
       "reproducible": true,
       "family": "booleans",
       "notes": "Two parallel cylinders of equal radius placed exactly `2r` apart touch along a LINE (their full height) rather than a single point. MEASURED: `fuse` on this pair ALSO returns two solids — the same non-bridging behaviour as the point-tangent spheres, now confirmed for a higher-dimensional (1D, not 0D) tangency locus.",
@@ -2496,7 +2517,7 @@
         "privacy": "no-personal-data"
       },
       "comparisonProfile": "semantic-brep-kernel-edit-v1",
-      "toleranceProfile": "boolean-standard",
+      "toleranceProfile": "mechanical-standard",
       "reproducible": true,
       "family": "booleans",
       "notes": "Two spheres of equal radius placed exactly `2r` apart touch at a single POINT. MEASURED: `fuse` on this pair returns TWO solids, not one — OpenCASCADE's Boolean does not bridge a zero-area point contact into a single manifold body, whatever the geometric intuition of 'touching' suggests. `outcome: disjoint` records the kernel's actual classification, not an assumption about what tangency should do.",
@@ -2573,7 +2594,7 @@
         "privacy": "no-personal-data"
       },
       "comparisonProfile": "semantic-brep-kernel-edit-v1",
-      "toleranceProfile": "boolean-standard",
+      "toleranceProfile": "mechanical-standard",
       "reproducible": true,
       "family": "booleans",
       "notes": "The point-tangent sphere pair at 1e2 scale.",
@@ -3623,7 +3644,7 @@
         "privacy": "no-personal-data"
       },
       "comparisonProfile": "semantic-brep-kernel-edit-v1",
-      "toleranceProfile": "topology-exact",
+      "toleranceProfile": "analytic-strict",
       "reproducible": true,
       "family": "move-vertex",
       "notes": "The in-plane corner shift on a solid at 2e2 scale.",
@@ -3693,7 +3714,7 @@
         "privacy": "no-personal-data"
       },
       "comparisonProfile": "semantic-brep-kernel-edit-v1",
-      "toleranceProfile": "topology-exact",
+      "toleranceProfile": "analytic-strict",
       "reproducible": true,
       "family": "move-vertex",
       "notes": "The same in-plane corner shift carried through `extrude` into a SOLID rather than a flat face, so the moved vertex propagates into two faces (top and bottom) and two edges of a real 3D body, not just one face's own boundary.",
@@ -3763,7 +3784,7 @@
         "privacy": "no-personal-data"
       },
       "comparisonProfile": "semantic-brep-kernel-edit-v1",
-      "toleranceProfile": "topology-exact",
+      "toleranceProfile": "analytic-strict",
       "reproducible": true,
       "family": "move-vertex",
       "notes": "The in-plane corner shift at 1e3 scale.",
@@ -3833,7 +3854,7 @@
         "privacy": "no-personal-data"
       },
       "comparisonProfile": "semantic-brep-kernel-edit-v1",
-      "toleranceProfile": "topology-exact",
+      "toleranceProfile": "analytic-strict",
       "reproducible": true,
       "family": "move-vertex",
       "notes": "The plainest legal `move-vertex`: BEFORE is a square face, AFTER moves one corner sideways WITHIN the same plane, staying a valid — if no longer square — planar quad. Area and boundary both change; validity does not.",
@@ -4029,7 +4050,7 @@
         "privacy": "no-personal-data"
       },
       "comparisonProfile": "semantic-brep-kernel-edit-v1",
-      "toleranceProfile": "topology-exact",
+      "toleranceProfile": "analytic-strict",
       "reproducible": true,
       "family": "move-vertex",
       "notes": "The non-planar-move rejection against a five-sided BEFORE face rather than a quad, checking the rejection isn't an artefact of exactly four corners.",
@@ -4085,7 +4106,7 @@
         "privacy": "no-personal-data"
       },
       "comparisonProfile": "semantic-brep-kernel-edit-v1",
-      "toleranceProfile": "topology-exact",
+      "toleranceProfile": "analytic-strict",
       "reproducible": true,
       "family": "move-vertex",
       "notes": "Moving a QUAD's corner off the shared plane of the other three — unlike the triangle case above, four points generally stop being coplanar the moment one moves in z. Rebuilding the face via `polygon()` (planar-only) — MEASURED — throws `FACE_NOT_PLANAR`. `filledFace()` on the same non-planar wire DOES succeed (a general surface can span it), which is recorded in `notes` rather than substituted as the AFTER shape: this fixture is specifically about the planar builder's own refusal.",
@@ -4155,7 +4176,7 @@
         "privacy": "no-personal-data"
       },
       "comparisonProfile": "semantic-brep-kernel-edit-v1",
-      "toleranceProfile": "topology-exact",
+      "toleranceProfile": "analytic-strict",
       "reproducible": true,
       "family": "move-vertex",
       "notes": "Moving corner 2 to where corner 3 used to be (and vice versa, by construction) turns a simple square into a self-crossing bowtie. `polygon()` does NOT throw on the in-memory attempt — MEASURED there, its own `measureArea()` collapses to a value indistinguishable from zero, the two triangular lobes' signed contributions cancelling. But this is exactly lesson 1 in miniature: measured OFF `expected.step` — the form a real consumer sees — the picture is different again. OCCT's STEP writer silently splits the self-intersecting single face into TWO separate valid triangular faces meeting at the crossing point (2 faces, 2 shells, 5 vertices — one MORE than the 4 input points, the crossing point itself — 6 edges), whose combined AREA is 50, exactly HALF the original square's 100, not zero at all. Three measurements, three different pictures of the same illegal move: `false`-free in-memory success, a cancelled zero-ish signed area, and a round-tripped shape with real positive area the input geometry never specified. All three are recorded.",
@@ -4225,7 +4246,7 @@
         "privacy": "no-personal-data"
       },
       "comparisonProfile": "semantic-brep-kernel-edit-v1",
-      "toleranceProfile": "topology-exact",
+      "toleranceProfile": "analytic-strict",
       "reproducible": true,
       "family": "move-vertex",
       "notes": "The self-intersecting bowtie move at 5e2 scale — MEASURED to split the same way (2 faces, area = half the original square's, a new crossing-point vertex), confirming the STEP-writer split isn't an artefact of the small fixture's particular coordinates.",
@@ -4295,7 +4316,7 @@
         "privacy": "no-personal-data"
       },
       "comparisonProfile": "semantic-brep-kernel-edit-v1",
-      "toleranceProfile": "topology-exact",
+      "toleranceProfile": "analytic-strict",
       "reproducible": true,
       "family": "topology-build",
       "notes": "The same edit against a CURVED boundary: a chord edge added across a circular disk face. Where the square case adds a straight edge to a face whose own boundary is also straight, this pairs a straight new edge with a face whose boundary is a single closed circular edge — a different combination of the curve types the added entity and its host can carry.",
@@ -4365,7 +4386,7 @@
         "privacy": "no-personal-data"
       },
       "comparisonProfile": "semantic-brep-kernel-edit-v1",
-      "toleranceProfile": "topology-exact",
+      "toleranceProfile": "analytic-strict",
       "reproducible": true,
       "family": "topology-build",
       "notes": "The diagonal-edge edit at 5e2 scale.",
@@ -4435,7 +4456,7 @@
         "privacy": "no-personal-data"
       },
       "comparisonProfile": "semantic-brep-kernel-edit-v1",
-      "toleranceProfile": "topology-exact",
+      "toleranceProfile": "analytic-strict",
       "reproducible": true,
       "family": "topology-build",
       "notes": "Adds a diagonal edge across a square face, as a `compound(face, edge)` — the diagonal is NOT part of the face's boundary wire, so the face itself is untouched; only the compound's edge count grows. Mirrors this subset's own oracle scenario `create-edge/adds-a-diagonal-edge-across-the-square`.",
@@ -4505,7 +4526,7 @@
         "privacy": "no-personal-data"
       },
       "comparisonProfile": "semantic-brep-kernel-edit-v1",
-      "toleranceProfile": "topology-exact",
+      "toleranceProfile": "analytic-strict",
       "reproducible": true,
       "family": "topology-build",
       "notes": "The same edit against a CURVED shell: a cylinder missing its top disc (lateral surface + bottom disc only, an open shell), capped by adding the third face. Exercises `create-face` where the new face closes a shell that already contains an analytic non-planar face, unlike the all-planar box case.",
@@ -4575,7 +4596,7 @@
         "privacy": "no-personal-data"
       },
       "comparisonProfile": "semantic-brep-kernel-edit-v1",
-      "toleranceProfile": "topology-exact",
+      "toleranceProfile": "analytic-strict",
       "reproducible": true,
       "family": "topology-build",
       "notes": "The open-shell-to-solid edit at 2e3 scale.",
@@ -4645,7 +4666,7 @@
         "privacy": "no-personal-data"
       },
       "comparisonProfile": "semantic-brep-kernel-edit-v1",
-      "toleranceProfile": "topology-exact",
+      "toleranceProfile": "analytic-strict",
       "reproducible": true,
       "family": "topology-build",
       "notes": "BEFORE is an OPEN shell — a box missing its +z cap face, sewn from the other 5. AFTER adds the 6th face and welds all six into a closed, valid solid via `solid()`. This is `create-face` at the point it matters most: the moment a shell BECOMES a solid.",
@@ -4715,7 +4736,7 @@
         "privacy": "no-personal-data"
       },
       "comparisonProfile": "semantic-brep-kernel-edit-v1",
-      "toleranceProfile": "topology-exact",
+      "toleranceProfile": "analytic-strict",
       "reproducible": true,
       "family": "topology-build",
       "notes": "The same second-shell edit against a cylinder rather than a box, so the added shell carries a non-planar face — a different shape family from the two box-based `create-shell` fixtures above.",
@@ -4785,7 +4806,7 @@
         "privacy": "no-personal-data"
       },
       "comparisonProfile": "semantic-brep-kernel-edit-v1",
-      "toleranceProfile": "topology-exact",
+      "toleranceProfile": "analytic-strict",
       "reproducible": true,
       "family": "topology-build",
       "notes": "AFTER adds a SECOND shell built from the same box's own faces with every face's orientation flipped, alongside the original solid in a compound — mirrors this subset's own oracle scenario `create-shell/adds-a-second-shell-that-reuses-the-face-with-flipped-sense`. The two shells occupy the same geometric locus but are DISTINCT topological entities: `getShells` on the compound counts both.",
@@ -4855,7 +4876,7 @@
         "privacy": "no-personal-data"
       },
       "comparisonProfile": "semantic-brep-kernel-edit-v1",
-      "toleranceProfile": "topology-exact",
+      "toleranceProfile": "analytic-strict",
       "reproducible": true,
       "family": "topology-build",
       "notes": "The flipped-sense second-shell edit at 5e2 scale.",
@@ -4925,7 +4946,7 @@
         "privacy": "no-personal-data"
       },
       "comparisonProfile": "semantic-brep-kernel-edit-v1",
-      "toleranceProfile": "topology-exact",
+      "toleranceProfile": "analytic-strict",
       "reproducible": true,
       "family": "topology-build",
       "notes": "The second-disjoint-solid edit at 1e3 scale.",
@@ -4995,7 +5016,7 @@
         "privacy": "no-personal-data"
       },
       "comparisonProfile": "semantic-brep-kernel-edit-v1",
-      "toleranceProfile": "topology-exact",
+      "toleranceProfile": "analytic-strict",
       "reproducible": true,
       "family": "topology-build",
       "notes": "AFTER adds a second, spatially disjoint solid alongside the first in a compound — the plainest `create-solid` edit: a wholly new entity with no interaction with the existing one.",
@@ -5065,7 +5086,7 @@
         "privacy": "no-personal-data"
       },
       "comparisonProfile": "semantic-brep-kernel-edit-v1",
-      "toleranceProfile": "topology-exact",
+      "toleranceProfile": "analytic-strict",
       "reproducible": true,
       "family": "topology-build",
       "notes": "AFTER treats an already-cut internal void's own boundary as a SECOND solid alongside the hollowed body — mirrors this subset's own oracle scenario `create-solid/adds-a-second-solid-that-treats-the-shell-as-a-void`: the cavity that `cut` bored out of the outer box is independently rebuilt as its own solid and added to the compound, rather than staying merely a hole.",
@@ -5135,7 +5156,7 @@
         "privacy": "no-personal-data"
       },
       "comparisonProfile": "semantic-brep-kernel-edit-v1",
-      "toleranceProfile": "topology-exact",
+      "toleranceProfile": "analytic-strict",
       "reproducible": true,
       "family": "topology-build",
       "notes": "The same apex-vertex edit at 1e3 scale — the tessellation tolerance for this fixture is resolved from ITS OWN bounding-box diagonal, so a fixed absolute tolerance would either over- or under-mesh it relative to the small variant.",
@@ -5205,7 +5226,7 @@
         "privacy": "no-personal-data"
       },
       "comparisonProfile": "semantic-brep-kernel-edit-v1",
-      "toleranceProfile": "topology-exact",
+      "toleranceProfile": "analytic-strict",
       "reproducible": true,
       "family": "topology-build",
       "notes": "Adds a single loose apex vertex above a box's top face, as a `compound(solid, vertex)` — the smallest possible `create-vertex` edit: a new 0D entity, no incident edges, no effect on the solid it accompanies.",
@@ -5275,7 +5296,7 @@
         "privacy": "no-personal-data"
       },
       "comparisonProfile": "semantic-brep-kernel-edit-v1",
-      "toleranceProfile": "topology-exact",
+      "toleranceProfile": "analytic-strict",
       "reproducible": true,
       "family": "topology-build",
       "notes": "THREE `create-vertex` edits folded into one AFTER state — exercises a compound whose vertex count grows by more than one per edit, which is the case a fixture that only ever adds a single vertex would never touch.",
@@ -5331,7 +5352,7 @@
         "privacy": "no-personal-data"
       },
       "comparisonProfile": "semantic-brep-kernel-edit-v1",
-      "toleranceProfile": "topology-exact",
+      "toleranceProfile": "analytic-strict",
       "reproducible": true,
       "family": "topology-remove",
       "notes": "Deleting an edge that is part of a face's own boundary wire, not a loose addition. Removing one of the square's four boundary edges and reassembling the other three — MEASURED — throws `WIRE_NOT_CLOSED`: three edges of a four-edge rectangle span only 3/4 of the perimeter and cannot close. A face's boundary can only lose an edge if something else fills the gap it leaves, which `delete-edge` alone does not provide.",
@@ -5401,7 +5422,7 @@
         "privacy": "no-personal-data"
       },
       "comparisonProfile": "semantic-brep-kernel-edit-v1",
-      "toleranceProfile": "topology-exact",
+      "toleranceProfile": "analytic-strict",
       "reproducible": true,
       "family": "topology-remove",
       "notes": "The loose-diagonal removal at 5e2 scale.",
@@ -5471,7 +5492,7 @@
         "privacy": "no-personal-data"
       },
       "comparisonProfile": "semantic-brep-kernel-edit-v1",
-      "toleranceProfile": "topology-exact",
+      "toleranceProfile": "analytic-strict",
       "reproducible": true,
       "family": "topology-remove",
       "notes": "Inverts `topology-build-create-edge-diagonal-across-square-small`: BEFORE is `compound(face, diagonal)`, AFTER removes the loose diagonal and leaves the face alone — the diagonal was never part of the face's own boundary wire.",
@@ -5541,7 +5562,7 @@
         "privacy": "no-personal-data"
       },
       "comparisonProfile": "semantic-brep-kernel-edit-v1",
-      "toleranceProfile": "topology-exact",
+      "toleranceProfile": "analytic-strict",
       "reproducible": true,
       "family": "topology-remove",
       "notes": "The redundant-shell face deletion at 5e2 scale.",
@@ -5611,7 +5632,7 @@
         "privacy": "no-personal-data"
       },
       "comparisonProfile": "semantic-brep-kernel-edit-v1",
-      "toleranceProfile": "topology-exact",
+      "toleranceProfile": "analytic-strict",
       "reproducible": true,
       "family": "topology-remove",
       "notes": "A `delete-face` that LEAVES A VALID SOLID: BEFORE is `compound(box, redundantFlippedShell)` — the box plus a second, non-load-bearing shell built from its own faces with flipped orientation (see `topology-build-create-shell-second-shell-flipped-sense`). AFTER removes one face from the REDUNDANT shell only; the box itself, still a complete 6-face solid, is untouched and remains valid. Proves a face deletion is safe exactly when nothing else depends on the face's closure.",
@@ -5681,7 +5702,7 @@
         "privacy": "no-personal-data"
       },
       "comparisonProfile": "semantic-brep-kernel-edit-v1",
-      "toleranceProfile": "topology-exact",
+      "toleranceProfile": "analytic-strict",
       "reproducible": true,
       "family": "topology-remove",
       "notes": "The exact case this subset's own goal calls out: deleting a face still bounding a closed shell. BEFORE is a complete 6-face box solid. Attempting the deletion by rebuilding `solid()` from the remaining 5 faces — MEASURED — does NOT throw: OpenCASCADE returns a shape immediately (`isValidSolid()` on THAT in-memory object measures `false`), but the honest proof only shows up downstream: exported to STEP and re-imported — the only form a real consumer ever sees — `getSolids()` on it measures `0`, even though it still carries all 5 faces / 12 edges / 8 vertices and `isValidSolid()` on the re-imported shape now (misleadingly) measures `true`. `isValidSolid()` is NOT a reliable signal across a STEP round-trip; `getSolids().length === 0` on the re-imported artifact is. Both numbers are recorded in `expected.metrics.json` rather than only the one that reads cleanly.",
@@ -5737,7 +5758,7 @@
         "privacy": "no-personal-data"
       },
       "comparisonProfile": "semantic-brep-kernel-edit-v1",
-      "toleranceProfile": "topology-exact",
+      "toleranceProfile": "analytic-strict",
       "reproducible": true,
       "family": "topology-remove",
       "notes": "Deleting the ONLY shell that defines a solid — nothing would be left to bound it. Rebuilding via `solid([])` (an empty face/shell list) — MEASURED — throws `Cannot determine shape type: shape is null` directly out of the kernel: there is no shape at all to wrap, let alone a valid one, which is the cleanest possible proof that a solid's last shell cannot simply vanish.",
@@ -5807,7 +5828,7 @@
         "privacy": "no-personal-data"
       },
       "comparisonProfile": "semantic-brep-kernel-edit-v1",
-      "toleranceProfile": "topology-exact",
+      "toleranceProfile": "analytic-strict",
       "reproducible": true,
       "family": "topology-remove",
       "notes": "The redundant-shell removal at 5e2 scale.",
@@ -5877,7 +5898,7 @@
         "privacy": "no-personal-data"
       },
       "comparisonProfile": "semantic-brep-kernel-edit-v1",
-      "toleranceProfile": "topology-exact",
+      "toleranceProfile": "analytic-strict",
       "reproducible": true,
       "family": "topology-remove",
       "notes": "Inverts `topology-build-create-shell-second-shell-flipped-sense`: BEFORE is `compound(box, redundantShell)`, AFTER removes the redundant shell entirely and leaves the box's own single shell untouched.",
@@ -5947,7 +5968,7 @@
         "privacy": "no-personal-data"
       },
       "comparisonProfile": "semantic-brep-kernel-edit-v1",
-      "toleranceProfile": "topology-exact",
+      "toleranceProfile": "analytic-strict",
       "reproducible": true,
       "family": "topology-remove",
       "notes": "THREE solids in the compound, ONE deleted — exercises `delete-solid` where the entity count doesn't collapse to a single leftover, distinguishing it from the two-solid fixtures above.",
@@ -6017,7 +6038,7 @@
         "privacy": "no-personal-data"
       },
       "comparisonProfile": "semantic-brep-kernel-edit-v1",
-      "toleranceProfile": "topology-exact",
+      "toleranceProfile": "analytic-strict",
       "reproducible": true,
       "family": "topology-remove",
       "notes": "The second-disjoint-solid removal at 1e3 scale.",
@@ -6087,7 +6108,7 @@
         "privacy": "no-personal-data"
       },
       "comparisonProfile": "semantic-brep-kernel-edit-v1",
-      "toleranceProfile": "topology-exact",
+      "toleranceProfile": "analytic-strict",
       "reproducible": true,
       "family": "topology-remove",
       "notes": "Inverts `topology-build-create-solid-second-disjoint-solid-small`: BEFORE is `compound(boxA, boxB)`, AFTER removes `boxB` and leaves `boxA` alone.",
@@ -6143,7 +6164,7 @@
         "privacy": "no-personal-data"
       },
       "comparisonProfile": "semantic-brep-kernel-edit-v1",
-      "toleranceProfile": "topology-exact",
+      "toleranceProfile": "analytic-strict",
       "reproducible": true,
       "family": "topology-remove",
       "notes": "Mirrors this subset's own oracle scenario `delete-vertex/removes-a-corner-vertex-and-cascades-into-its-two-incident-edges`, and proves WHY it must be rejected here: removing a square's corner vertex forces its two incident edges out too, leaving only the two OPPOSITE, mutually disconnected edges. `wireLoop` on those two — MEASURED — throws `WIRE_BUILD_FAILED` (the kernel cannot even attempt to close two edges that share no endpoint at all, a step short of the `WIRE_NOT_CLOSED` the sibling `delete-edge` fixture below gets from a wire that DOES connect but not into a loop). The deletion is topologically incoherent without a replacement edge no `delete-vertex` call supplies, so a real dispatcher has nothing legal to build.",
@@ -6213,7 +6234,7 @@
         "privacy": "no-personal-data"
       },
       "comparisonProfile": "semantic-brep-kernel-edit-v1",
-      "toleranceProfile": "topology-exact",
+      "toleranceProfile": "analytic-strict",
       "reproducible": true,
       "family": "topology-remove",
       "notes": "The loose-vertex removal at 1e3 scale.",
@@ -6283,7 +6304,7 @@
         "privacy": "no-personal-data"
       },
       "comparisonProfile": "semantic-brep-kernel-edit-v1",
-      "toleranceProfile": "topology-exact",
+      "toleranceProfile": "analytic-strict",
       "reproducible": true,
       "family": "topology-remove",
       "notes": "Inverts `topology-build-create-vertex-apex-above-box-small`: BEFORE is `compound(box, apex)`, AFTER removes the loose apex vertex and leaves the box alone. The plainest legal `delete-vertex`: the removed entity had no incident edges to cascade into.",

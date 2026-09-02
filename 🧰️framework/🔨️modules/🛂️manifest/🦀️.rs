@@ -7,6 +7,12 @@
 // (`💻️os/📦️packages/🦀️rust/🦀️.rs:347`), so importing them again from `semio_framework_value_derive`
 // is a same-namespace redefinition (E0252), not a second namespace.
 use dsl::{DslValue, FromValue, ToValue, ValueError};
+// 🚧️ Still needed unconditionally: most `#[cfg(test)] mod …` blocks in this file oracle-test a type
+// through real `serde_json`, AND a handful of production types (`ViewModel`, the `MediaVocabulary`
+// family) stay `#[derive(Serialize, Deserialize)]` — see their own `🚧️ BLOCKED` docstrings — because
+// a sibling `#[path]`-mounted module (`🎠️kernel`, `🛍️products/💻️os/🔨️modules/🔁️workflow`, both
+// owned by other agents this pass) still embeds them by value inside plain serde-deriving types.
+// Ticket 26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS.
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 use ui_wgpu::wgpu::{ActionDescriptor, Locale, LocalizedLabel, NamedLayout, SurfaceKind, Terminology, WindowLayout, WindowOptions};
@@ -28,16 +34,20 @@ use crate::{DomainSelection, InteractionDefinition, InteractionRef};
 use crate::ArtifactDialect;
 
 //#region 🔖️Manifest
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+// 🚧️ Kept additive: consumed outside this pass by 🛍️products/💻️os (plugin/renderer modules) and/or ✏️s/🔌️plugins/** while still serde-deriving; ToValue/FromValue added alongside, not replacing, Serialize/Deserialize. Ticket 26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct Keybinding {
     pub keys: String,
     pub action: ActionDescriptor,
 }
 
 /// @emoji ⌨️ Operating system selector for a platform-specific keybinding.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+// 🚧️ Needed in serde form too: referenced (directly or transitively) by a `🚧️ BLOCKED` serde-only manifest type above/below — see that type's own docstring.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub enum Platform {
     MacOs,
     Windows,
@@ -45,11 +55,14 @@ pub enum Platform {
 }
 
 /// @emoji ⌨️ One command chord, optionally restricted to a host platform.
-#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+// 🚧️ Needed in serde form too: referenced (directly or transitively) by a `🚧️ BLOCKED` serde-only manifest type above/below — see that type's own docstring.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct PlatformKeybinding {
     pub chord: String,
     #[serde(skip_serializing_if = "Option::is_none")]
+    #[value(skip_serializing_if = "Option::is_none")]
     pub platform: Option<Platform>,
 }
 
@@ -64,8 +77,10 @@ impl PlatformKeybinding {
 }
 
 /// @emoji 🗂️ Classifies a declared action by how it interacts with VCS history.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+// 🚧️ Needed in serde form too: referenced (directly or transitively) by a `🚧️ BLOCKED` serde-only manifest type above/below — see that type's own docstring.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub enum ActionKind {
     /// Mutates the document — dispatched as VCS mutations with a true inverse, recorded in history.
     Mutation,
@@ -96,8 +111,10 @@ pub enum ActionKind {
 /// @emoji 🧬️ Semantic refinement of a `String`-typed `ArgSchema` leaf — what KIND of string this is,
 /// beyond "text". Orthogonal to `ArgPresentation` (which is about the WIDGET, not the value's
 /// semantics): a `Color` format could still render as free text in a minimal shell.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+// 🚧️ Needed in serde form too: referenced (directly or transitively) by a `🚧️ BLOCKED` serde-only manifest type above/below — see that type's own docstring.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
+#[value(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
 pub enum ArgFormat {
     ArtifactRef,
     WindowId,
@@ -127,43 +144,58 @@ pub enum ArgFormat {
 
 /// @emoji 🌳️ The stored, engine-neutral shape of one action argument's value — see this region's
 /// header comment for the D6 stored/derived split.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+// 🚧️ Kept additive: consumed outside this pass by 🛍️products/💻️os (plugin/renderer modules) and/or ✏️s/🔌️plugins/** while still serde-deriving; ToValue/FromValue added alongside, not replacing, Serialize/Deserialize. Ticket 26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
+#[value(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
 pub enum ArgSchema {
     String {
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
+        #[value(default, skip_serializing_if = "Vec::is_empty")]
         options: Vec<ActionArgOption>,
         #[serde(skip_serializing_if = "Option::is_none")]
+        #[value(skip_serializing_if = "Option::is_none")]
         min_len: Option<u32>,
         #[serde(skip_serializing_if = "Option::is_none")]
+        #[value(skip_serializing_if = "Option::is_none")]
         max_len: Option<u32>,
         #[serde(skip_serializing_if = "Option::is_none")]
+        #[value(skip_serializing_if = "Option::is_none")]
         pattern: Option<String>,
         #[serde(skip_serializing_if = "Option::is_none")]
+        #[value(skip_serializing_if = "Option::is_none")]
         format: Option<ArgFormat>,
     },
     Number {
         #[serde(skip_serializing_if = "Option::is_none")]
+        #[value(skip_serializing_if = "Option::is_none")]
         min: Option<f64>,
         #[serde(skip_serializing_if = "Option::is_none")]
+        #[value(skip_serializing_if = "Option::is_none")]
         max: Option<f64>,
         #[serde(skip_serializing_if = "Option::is_none")]
+        #[value(skip_serializing_if = "Option::is_none")]
         step: Option<f64>,
         #[serde(default)]
+        #[value(default)]
         integer: bool,
         #[serde(skip_serializing_if = "Option::is_none")]
+        #[value(skip_serializing_if = "Option::is_none")]
         unit: Option<String>,
     },
     Boolean,
     Vec3 {
         #[serde(skip_serializing_if = "Option::is_none")]
+        #[value(skip_serializing_if = "Option::is_none")]
         unit: Option<String>,
     },
     Array {
         items: Box<ArgSchema>,
         #[serde(skip_serializing_if = "Option::is_none")]
+        #[value(skip_serializing_if = "Option::is_none")]
         min_items: Option<u32>,
         #[serde(skip_serializing_if = "Option::is_none")]
+        #[value(skip_serializing_if = "Option::is_none")]
         max_items: Option<u32>,
     },
     Object {
@@ -175,8 +207,10 @@ pub enum ArgSchema {
 /// @emoji 🖼️ How to WIDGET-render an argument beyond what its `ArgSchema` alone implies — consumed by
 /// `ActionArgDef::control()` (e.g. a bounded `Number` still renders `Slider` without this, but a
 /// single-bound one needs it to opt in).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+// 🚧️ Needed in serde form too: referenced (directly or transitively) by a `🚧️ BLOCKED` serde-only manifest type above/below — see that type's own docstring.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
+#[value(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
 pub enum ArgPresentation {
     Slider,
     IconSelect { classifier_kind: String },
@@ -188,8 +222,10 @@ pub enum ArgPresentation {
 //#region 🔖️ActionArgs
 /// @emoji 🔘️ One selectable option of a `Select` argument control — the persisted `value` and its
 /// human `label`.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+// 🚧️ Kept additive: consumed outside this pass by 🛍️products/💻️os (plugin/renderer modules) and/or ✏️s/🔌️plugins/** while still serde-deriving; ToValue/FromValue added alongside, not replacing, Serialize/Deserialize. Ticket 26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct ActionArgOption {
     pub value: String,
     /// 🗣️ Manifest-level, locale×terminology-checked — see `LocalizedLabel`. Not yet owned-schema-mirrored
@@ -207,27 +243,35 @@ impl ActionArgOption {
 /// deliberately NOT `ui_wgpu::wgpu::UiControlNode` (whose variants embed live values and immediate-dispatch
 /// wiring). Renderers map each variant onto a staged form field. Tagged with `kind` to mirror the
 /// sibling `UtilityNode`/`UiControlNode` declarative-tree convention.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+// 🚧️ Kept additive: consumed outside this pass by 🛍️products/💻️os (plugin/renderer modules) and/or ✏️s/🔌️plugins/** while still serde-deriving; ToValue/FromValue added alongside, not replacing, Serialize/Deserialize. Ticket 26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
+#[value(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
 pub enum ActionArgControl {
     Text {
         #[serde(skip_serializing_if = "Option::is_none")]
+        #[value(skip_serializing_if = "Option::is_none")]
         placeholder: Option<String>,
     },
     Number {
         #[serde(skip_serializing_if = "Option::is_none")]
+        #[value(skip_serializing_if = "Option::is_none")]
         min: Option<f64>,
         #[serde(skip_serializing_if = "Option::is_none")]
+        #[value(skip_serializing_if = "Option::is_none")]
         max: Option<f64>,
         #[serde(skip_serializing_if = "Option::is_none")]
+        #[value(skip_serializing_if = "Option::is_none")]
         step: Option<f64>,
     },
     Slider {
         min: f64,
         max: f64,
         #[serde(skip_serializing_if = "Option::is_none")]
+        #[value(skip_serializing_if = "Option::is_none")]
         step: Option<f64>,
         #[serde(skip_serializing_if = "Option::is_none")]
+        #[value(skip_serializing_if = "Option::is_none")]
         unit: Option<String>,
     },
     Toggle,
@@ -259,20 +303,26 @@ pub enum ActionArgControl {
 /// `control()` below is derived from it), an optional widget `presentation` hint, whether it is
 /// `required`, an optional `default` value, and an optional `description`. An empty
 /// `ActionDefinition.args` (the common case) means a no-argument action.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+// 🚧️ Kept additive: consumed outside this pass by 🛍️products/💻️os (plugin/renderer modules) and/or ✏️s/🔌️plugins/** while still serde-deriving; ToValue/FromValue added alongside, not replacing, Serialize/Deserialize. Ticket 26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct ActionArgDef {
     pub id: String,
     /// 🗣️ Manifest-level, locale×terminology-checked — see `LocalizedLabel` (follow-up: no owned schema mirror yet).
     pub label: LocalizedLabel,
     pub schema: ArgSchema,
     #[serde(skip_serializing_if = "Option::is_none")]
+    #[value(skip_serializing_if = "Option::is_none")]
     pub presentation: Option<ArgPresentation>,
     #[serde(default)]
+    #[value(default)]
     pub required: bool,
     #[serde(skip_serializing_if = "Option::is_none")]
+    #[value(skip_serializing_if = "Option::is_none")]
     pub default: Option<DslValue>,
     #[serde(skip_serializing_if = "Option::is_none")]
+    #[value(skip_serializing_if = "Option::is_none")]
     pub description: Option<String>,
 }
 
@@ -334,8 +384,8 @@ impl ActionArgDef {
     }
 
     /// @emoji 🎁️ Sets the default effective value used when nothing is staged.
-    pub fn default_value(mut self, value: impl Serialize) -> Self {
-        self.default = serde_json::to_value(&value).ok().map(dsl::DslValue::from);
+    pub fn default_value(mut self, value: impl ToValue) -> Self {
+        self.default = Some(value.to_value());
         self
     }
 
@@ -379,17 +429,17 @@ impl ActionArgDef {
     /// @emoji 📐️ JSON Schema (2020-12 leaf, no `$schema`/`$id` — the catalog compiler wraps those at
     /// the whole-action envelope, `📋️master.md` §3.2) for this one argument's value, folding in
     /// `description`/`default`.
-    pub fn json_schema(&self) -> serde_json::Value {
-        let mut schema = arg_schema_json_schema(&self.schema);
-        if let Some(map) = schema.as_object_mut() {
-            if let Some(description) = &self.description {
-                map.insert("description".into(), serde_json::Value::String(description.clone()));
-            }
-            if let Some(default) = &self.default {
-                map.insert("default".into(), serde_json::Value::from(default));
-            }
+    pub fn json_schema(&self) -> DslValue {
+        let DslValue::Object(mut entries) = arg_schema_json_schema(&self.schema) else {
+            unreachable!("arg_schema_json_schema always returns an object");
+        };
+        if let Some(description) = &self.description {
+            entries.push(("description".to_string(), DslValue::String(description.clone())));
         }
-        schema
+        if let Some(default) = &self.default {
+            entries.push(("default".to_string(), default.clone()));
+        }
+        DslValue::Object(entries)
     }
 }
 
@@ -397,113 +447,119 @@ impl ActionArgDef {
 /// (the vendor extension every format carries) plus, for the two host-resolved refinements, the
 /// `roles`/`dialect_arg` a host needs to resolve them (`x-semio-roles`/`x-semio-dialect-arg`) — and
 /// the standard `format: "uri"` keyword where JSON Schema already defines one.
-fn apply_arg_format(map: &mut serde_json::Map<String, serde_json::Value>, format: &ArgFormat) {
+fn apply_arg_format(entries: &mut Vec<(String, DslValue)>, format: &ArgFormat) {
     let tag = match format {
         ArgFormat::ArtifactRef => "artifactRef",
         ArgFormat::WindowId => "windowId",
         ArgFormat::EntityId { entity_kind } => {
-            map.insert("x-semio-entity-kind".into(), serde_json::Value::String(entity_kind.clone()));
+            entries.push(("x-semio-entity-kind".to_string(), DslValue::String(entity_kind.clone())));
             "entityId"
         }
         ArgFormat::IconId => "iconId",
         ArgFormat::Color => "color",
         ArgFormat::Uri => {
-            map.insert("format".into(), serde_json::Value::String("uri".into()));
+            entries.push(("format".to_string(), DslValue::String("uri".to_string())));
             "uri"
         }
         ArgFormat::Json => "json",
         ArgFormat::Locale => "locale",
         ArgFormat::Terminology => "terminology",
         ArgFormat::ArtifactKind { roles } => {
-            map.insert("x-semio-roles".into(), serde_json::json!(roles));
+            entries.push(("x-semio-roles".to_string(), DslValue::Array(roles.iter().map(ToValue::to_value).collect())));
             "artifactKind"
         }
         ArgFormat::SurfaceApp { roles, dialect_arg } => {
-            map.insert("x-semio-roles".into(), serde_json::json!(roles));
-            map.insert("x-semio-dialect-arg".into(), serde_json::Value::String(dialect_arg.clone()));
+            entries.push(("x-semio-roles".to_string(), DslValue::Array(roles.iter().map(ToValue::to_value).collect())));
+            entries.push(("x-semio-dialect-arg".to_string(), DslValue::String(dialect_arg.clone())));
             "surfaceApp"
         }
     };
-    map.insert("x-semio-format".into(), serde_json::Value::String(tag.to_string()));
+    entries.push(("x-semio-format".to_string(), DslValue::String(tag.to_string())));
 }
 
 /// @emoji 📐️ JSON Schema 2020-12 for one `ArgSchema` node (recursive over `Array`/`Object`) — carries
 /// `Number.unit`/`Vec3.unit` as `x-semio-unit`, `String.format` via `apply_arg_format`. No
 /// `additionalProperties`/`$schema`/`$id` at this altitude; the catalog compiler owns the envelope.
-fn arg_schema_json_schema(schema: &ArgSchema) -> serde_json::Value {
+fn arg_schema_json_schema(schema: &ArgSchema) -> DslValue {
     match schema {
         ArgSchema::String { options, min_len, max_len, pattern, format } => {
-            let mut value = serde_json::json!({ "type": "string" });
-            let map = value.as_object_mut().expect("object schema");
+            let mut entries = vec![("type".to_string(), DslValue::String("string".to_string()))];
             if !options.is_empty() {
-                map.insert("enum".into(), serde_json::Value::Array(options.iter().map(|option| serde_json::Value::String(option.value.clone())).collect()));
+                entries.push(("enum".to_string(), DslValue::Array(options.iter().map(|option| DslValue::String(option.value.clone())).collect())));
             }
             if let Some(min_len) = min_len {
-                map.insert("minLength".into(), serde_json::json!(min_len));
+                entries.push(("minLength".to_string(), min_len.to_value()));
             }
             if let Some(max_len) = max_len {
-                map.insert("maxLength".into(), serde_json::json!(max_len));
+                entries.push(("maxLength".to_string(), max_len.to_value()));
             }
             if let Some(pattern) = pattern {
-                map.insert("pattern".into(), serde_json::Value::String(pattern.clone()));
+                entries.push(("pattern".to_string(), DslValue::String(pattern.clone())));
             }
             if let Some(format) = format {
-                apply_arg_format(map, format);
+                apply_arg_format(&mut entries, format);
             }
-            value
+            DslValue::Object(entries)
         }
         ArgSchema::Number { min, max, step, integer, unit } => {
-            let mut value = serde_json::json!({ "type": if *integer { "integer" } else { "number" } });
-            let map = value.as_object_mut().expect("object schema");
+            let mut entries = vec![("type".to_string(), DslValue::String(if *integer { "integer" } else { "number" }.to_string()))];
             if let Some(min) = min {
-                map.insert("minimum".into(), serde_json::json!(min));
+                entries.push(("minimum".to_string(), min.to_value()));
             }
             if let Some(max) = max {
-                map.insert("maximum".into(), serde_json::json!(max));
+                entries.push(("maximum".to_string(), max.to_value()));
             }
             if let Some(step) = step {
-                map.insert("multipleOf".into(), serde_json::json!(step));
+                entries.push(("multipleOf".to_string(), step.to_value()));
             }
             if let Some(unit) = unit {
-                map.insert("x-semio-unit".into(), serde_json::Value::String(unit.clone()));
+                entries.push(("x-semio-unit".to_string(), DslValue::String(unit.clone())));
             }
-            value
+            DslValue::Object(entries)
         }
-        ArgSchema::Boolean => serde_json::json!({ "type": "boolean" }),
+        ArgSchema::Boolean => DslValue::object([("type".to_string(), DslValue::String("boolean".to_string()))]),
         ArgSchema::Vec3 { unit } => {
-            let mut value = serde_json::json!({ "type": "array", "items": { "type": "number" }, "minItems": 3, "maxItems": 3 });
+            let mut entries = vec![
+                ("type".to_string(), DslValue::String("array".to_string())),
+                ("items".to_string(), DslValue::object([("type".to_string(), DslValue::String("number".to_string()))])),
+                ("minItems".to_string(), DslValue::uint(3)),
+                ("maxItems".to_string(), DslValue::uint(3)),
+            ];
             if let Some(unit) = unit {
-                value.as_object_mut().expect("object schema").insert("x-semio-unit".into(), serde_json::Value::String(unit.clone()));
+                entries.push(("x-semio-unit".to_string(), DslValue::String(unit.clone())));
             }
-            value
+            DslValue::Object(entries)
         }
         ArgSchema::Array { items, min_items, max_items } => {
-            let mut value = serde_json::json!({ "type": "array", "items": arg_schema_json_schema(items) });
-            let map = value.as_object_mut().expect("object schema");
+            let mut entries = vec![("type".to_string(), DslValue::String("array".to_string())), ("items".to_string(), arg_schema_json_schema(items))];
             if let Some(min_items) = min_items {
-                map.insert("minItems".into(), serde_json::json!(min_items));
+                entries.push(("minItems".to_string(), min_items.to_value()));
             }
             if let Some(max_items) = max_items {
-                map.insert("maxItems".into(), serde_json::json!(max_items));
+                entries.push(("maxItems".to_string(), max_items.to_value()));
             }
-            value
+            DslValue::Object(entries)
         }
         ArgSchema::Object { fields } => {
-            let mut properties = serde_json::Map::new();
+            let mut properties = Vec::new();
             let mut required = Vec::new();
             for field in fields {
-                properties.insert(field.id.clone(), field.json_schema());
+                properties.push((field.id.clone(), field.json_schema()));
                 if field.required {
-                    required.push(serde_json::Value::String(field.id.clone()));
+                    required.push(DslValue::String(field.id.clone()));
                 }
             }
-            let mut value = serde_json::json!({ "type": "object", "properties": properties, "additionalProperties": false });
+            let mut entries = vec![
+                ("type".to_string(), DslValue::String("object".to_string())),
+                ("properties".to_string(), DslValue::Object(properties)),
+                ("additionalProperties".to_string(), DslValue::Bool(false)),
+            ];
             if !required.is_empty() {
-                value.as_object_mut().expect("object schema").insert("required".into(), serde_json::Value::Array(required));
+                entries.push(("required".to_string(), DslValue::Array(required)));
             }
-            value
+            DslValue::Object(entries)
         }
-        ArgSchema::Any => serde_json::json!({}),
+        ArgSchema::Any => DslValue::Object(vec![]),
     }
 }
 //#endregion 🔖️ActionArgs
@@ -632,8 +688,26 @@ pub fn catalog_command_icon_id(id: &str) -> IconName {
 /// documented vocabulary (`"artifact:{self}"`, `"artifact:{arg.<id>}"`, `"config:{self}"`,
 /// `"ui:window"`, `"clipboard"`, `"fs:{arg.<id>}"`, `"net:{origin}"`), not a closed enum: a new
 /// resource family never needs a manifest schema change.
+// 🚧️ Needed in serde form too: referenced (directly or transitively) by a `🚧️ BLOCKED` serde-only
+// manifest type above/below — see that type's own docstring. `#[serde(transparent)]` (unlike
+// `#[value(...)]`, which has no tuple-struct support at all) handles the bare-string wire shape
+// natively, so this one derives rather than hand-writing `Serialize`/`Deserialize`.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(transparent)]
 pub struct ResourceSelector(pub String);
+
+/// 🌉️ Hand-written, not derived: `#[derive(ToValue, FromValue)]` doesn't support tuple structs —
+/// wire-shaped as the bare inner string, matching serde's own default newtype-struct behavior.
+impl ToValue for ResourceSelector {
+    fn to_value(&self) -> DslValue {
+        self.0.to_value()
+    }
+}
+impl FromValue for ResourceSelector {
+    fn from_value(value: DslValue) -> Result<Self, ValueError> {
+        String::from_value(value).map(ResourceSelector)
+    }
+}
 
 impl ResourceSelector {
     pub fn new(selector: impl Into<String>) -> Self {
@@ -643,25 +717,34 @@ impl ResourceSelector {
 
 /// @emoji 🧮️ What one capability touches — read/write resource selectors plus the three coarse flags
 /// the gateway's policy/preview machinery gates on.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+// 🚧️ Needed in serde form too: referenced (directly or transitively) by a `🚧️ BLOCKED` serde-only manifest type above/below — see that type's own docstring.
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct CapabilityEffects {
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[value(default, skip_serializing_if = "Vec::is_empty")]
     pub reads: Vec<ResourceSelector>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[value(default, skip_serializing_if = "Vec::is_empty")]
     pub writes: Vec<ResourceSelector>,
     #[serde(default)]
+    #[value(default)]
     pub external: bool,
     #[serde(default)]
+    #[value(default)]
     pub destructive: bool,
     #[serde(default)]
+    #[value(default)]
     pub reversible: bool,
 }
 
 /// @emoji 🚦️ When the gateway must pause for human approval before committing an invocation of this
 /// capability.
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+// 🚧️ Needed in serde form too: referenced (directly or transitively) by a `🚧️ BLOCKED` serde-only manifest type above/below — see that type's own docstring.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub enum ApprovalMode {
     #[default]
     Never,
@@ -673,18 +756,24 @@ pub enum ApprovalMode {
 /// `kernel::CapabilityId`s (the Broker's own enforcement primitive, see `🔖️Kernel` below), never a
 /// parallel string vocabulary: `ExtensionPointDeclaration.capability_allowance` already establishes
 /// that `kernel::CapabilityId` is reachable from this crate with no dependency cycle.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+// 🚧️ Needed in serde form too: referenced (directly or transitively) by a `🚧️ BLOCKED` serde-only manifest type above/below — see that type's own docstring.
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct CapabilityPolicy {
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[value(default, skip_serializing_if = "Vec::is_empty")]
     pub scopes: Vec<kernel::CapabilityId>,
     #[serde(default)]
+    #[value(default)]
     pub approval: ApprovalMode,
 }
 
 /// @emoji 👁️ Whether/how the gateway can show the effect of an invocation before committing it.
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+// 🚧️ Needed in serde form too: referenced (directly or transitively) by a `🚧️ BLOCKED` serde-only manifest type above/below — see that type's own docstring.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub enum PreviewMode {
     #[default]
     None,
@@ -693,8 +782,10 @@ pub enum PreviewMode {
 }
 
 /// @emoji ↩️ How a committed invocation of this capability can be undone.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+// 🚧️ Needed in serde form too: referenced (directly or transitively) by a `🚧️ BLOCKED` serde-only manifest type above/below — see that type's own docstring.
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
+#[value(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
 pub enum UndoMode {
     #[default]
     None,
@@ -707,8 +798,10 @@ pub enum UndoMode {
 }
 
 /// @emoji 🔁️ Whether replaying the same invocation twice is safe, and how the gateway makes it so.
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+// 🚧️ Needed in serde form too: referenced (directly or transitively) by a `🚧️ BLOCKED` serde-only manifest type above/below — see that type's own docstring.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub enum IdempotencyMode {
     Natural,
     Key,
@@ -718,8 +811,10 @@ pub enum IdempotencyMode {
 
 /// @emoji ⏱️ How long-running/interactive an invocation of this capability is — the gateway's job
 /// vs. interactive-call dispatch hint.
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+// 🚧️ Needed in serde form too: referenced (directly or transitively) by a `🚧️ BLOCKED` serde-only manifest type above/below — see that type's own docstring.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub enum ExecutionClass {
     #[default]
     Interactive,
@@ -731,8 +826,10 @@ pub enum ExecutionClass {
 /// default is deliberately not executable: manifests decoded without an explicit disposition remain
 /// visible to audit tooling but are rejected by [`validate_interactive_job_classification`] before a
 /// release catalog can be activated.
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+// 🚧️ Needed in serde form too: referenced (directly or transitively) by a `🚧️ BLOCKED` serde-only manifest type above/below — see that type's own docstring.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub enum InteractiveJobClassification {
     #[default]
     Unclassified,
@@ -743,22 +840,31 @@ pub enum InteractiveJobClassification {
 }
 
 /// @emoji ⚙️ Preview/undo/idempotency/cancellation shape of one capability invocation.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+// 🚧️ Needed in serde form too: referenced (directly or transitively) by a `🚧️ BLOCKED` serde-only manifest type above/below — see that type's own docstring.
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct CapabilityExecution {
     #[serde(default)]
+    #[value(default)]
     pub preview: PreviewMode,
     #[serde(default)]
+    #[value(default)]
     pub undo: UndoMode,
     #[serde(default)]
+    #[value(default)]
     pub idempotency: IdempotencyMode,
     #[serde(default)]
+    #[value(default)]
     pub expected_revision: bool,
     #[serde(default)]
+    #[value(default)]
     pub cancellable: bool,
     #[serde(default)]
+    #[value(default)]
     pub class: ExecutionClass,
     #[serde(default)]
+    #[value(default)]
     pub interactive_job: InteractiveJobClassification,
 }
 
@@ -769,20 +875,28 @@ pub struct CapabilityExecution {
 /// tolerates old serialized manifests with no `semantics` key at all (deserializes to
 /// `ActionSemantics::default()`, the type-level default below — NOT re-derived from `kind`, since
 /// serde field defaults cannot see sibling fields).
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+// 🚧️ Kept additive: consumed outside this pass by 🛍️products/💻️os (plugin/renderer modules) and/or ✏️s/🔌️plugins/** while still serde-deriving; ToValue/FromValue added alongside, not replacing, Serialize/Deserialize. Ticket 26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS.
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct ActionSemantics {
     #[serde(default)]
+    #[value(default)]
     pub effects: CapabilityEffects,
     #[serde(default)]
+    #[value(default)]
     pub policy: CapabilityPolicy,
     #[serde(default)]
+    #[value(default)]
     pub execution: CapabilityExecution,
     #[serde(skip_serializing_if = "Option::is_none")]
+    #[value(skip_serializing_if = "Option::is_none")]
     pub description: Option<LocalizedLabel>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[value(default, skip_serializing_if = "Vec::is_empty")]
     pub use_when: Vec<String>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[value(default, skip_serializing_if = "Vec::is_empty")]
     pub examples: Vec<String>,
 }
 
@@ -853,8 +967,10 @@ pub fn validate_interactive_job_classification<'a>(actions: impl IntoIterator<It
 //#endregion 🔖️ActionSemantics
 
 /// @emoji 📇️ Declares one action an app can receive via `ActionDescriptor.action`.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+// 🚧️ Kept additive: consumed outside this pass by 🛍️products/💻️os (plugin/renderer modules) and/or ✏️s/🔌️plugins/** while still serde-deriving; ToValue/FromValue added alongside, not replacing, Serialize/Deserialize. Ticket 26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct ActionDefinition {
     pub id: String,
     /// 🗣️ Manifest-level, locale×terminology-checked — see `LocalizedLabel` (follow-up: no owned schema mirror yet).
@@ -864,16 +980,20 @@ pub struct ActionDefinition {
     /// 📝️ Typed argument declarations. Empty (the common case) = a no-argument action.
     pub args: Vec<ActionArgDef>,
     #[serde(skip_serializing_if = "Option::is_none")]
+    #[value(skip_serializing_if = "Option::is_none")]
     pub keys: Option<String>,
     #[serde(default)]
+    #[value(default)]
     pub in_palette: bool,
     #[serde(skip_serializing_if = "Option::is_none")]
+    #[value(skip_serializing_if = "Option::is_none")]
     pub category: Option<String>,
     /// 🎯️ Effects/policy/execution/use_when — see `🔖️ActionSemantics`. Defaulted per-`kind` by
     /// `ActionSemantics::for_kind` in `new`/`new_catalog`; every struct-update-syntax call site
     /// (`ActionDefinition { .., ..Self::new_catalog(..) }`) inherits it unchanged from the base
     /// expression, so none of the ~126 declaration sites need touching.
     #[serde(default)]
+    #[value(default)]
     pub semantics: ActionSemantics,
 }
 
@@ -1002,7 +1122,7 @@ pub fn set_history_command_filter_action_definition() -> ActionDefinition {
         LocalizedLabel::native("Filter", "Filter"),
         options,
     )
-    .default_value(serde_json::json!("all"))])
+    .default_value("all")])
 }
 
 /// @emoji 🗒️ The framework-owned action id apps dispatch to note a shell effect (navigate, export,
@@ -1040,7 +1160,7 @@ pub fn clipboard_action_definitions() -> Vec<ActionDefinition> {
         ActionDefinition { keys: Some("mod+c".into()), ..ActionDefinition::resumable_framework_catalog("copy", LocalizedLabel::native("Copy", "Kopieren"), ActionKind::Clipboard) },
         ActionDefinition { keys: Some("mod+x".into()), ..ActionDefinition::resumable_framework_catalog("cut", LocalizedLabel::native("Cut", "Ausschneiden"), ActionKind::Clipboard) },
         ActionDefinition { keys: Some("mod+v".into()), ..ActionDefinition::resumable_framework_catalog("paste", LocalizedLabel::native("Paste", "Einfügen"), ActionKind::Clipboard) }.with_args([
-            ActionArgDef::select("anchor", LocalizedLabel::native("Anchoring", "Verankerung"), anchoring_options).default_value(serde_json::json!("original")),
+            ActionArgDef::select("anchor", LocalizedLabel::native("Anchoring", "Verankerung"), anchoring_options).default_value("original"),
             ActionArgDef::vec3("position", LocalizedLabel::native("Position", "Position")),
         ]),
     ]
@@ -1155,8 +1275,10 @@ pub fn start_introduction_action_definition() -> ActionDefinition {
 
 /// 📇️ A relative action id used by declarations nested beneath an owning window kind.
 /// Distinct from `ActionAddress`, which qualifies a dispatched invocation down to a window instance.
-#[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
+// 🚧️ Needed in serde form too: referenced (directly or transitively) by a `🚧️ BLOCKED` serde-only manifest type above/below — see that type's own docstring.
+#[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(transparent)]
+#[value(transparent)]
 pub struct ActionRef(String);
 
 // 🚫️async: E1 — `new` is a pure single-field wrapper, zero suspension points, same rationale
@@ -1186,8 +1308,7 @@ impl From<String> for ActionRef {
 }
 
 /// @emoji 📍️ Fully qualified address of an action owned by one concrete window instance.
-#[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize, ToValue, FromValue)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, Eq, Hash, ToValue, FromValue)]
 #[value(rename_all = "camelCase")]
 pub struct ActionAddress {
     pub plugin_id: String,
@@ -1202,8 +1323,7 @@ pub struct ActionAddress {
 /// `26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS`: `arguments` used to be
 /// keyed to `serde_json::Value` (not a `ToValue`/`FromValue` target by design); `DslValue` carries
 /// the exact same schema-less-JSON shape without the serde dependency.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
 #[value(rename_all = "camelCase")]
 pub struct ActionInvocation {
     pub address: ActionAddress,
@@ -1214,6 +1334,10 @@ pub struct ActionInvocation {
 /// @emoji 🧰️ Declares one interactive utility (a live-preview pointer mode) an app exposes. Distinct from
 /// an `ActionDefinition`: exactly one utility is active per window kind at a time, and activation is
 /// host-owned session view state (`ViewModel.active_utility_id`), never a document field or VCS operation.
+// 🚧️ BLOCKED (26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS): `category`
+// below is `ui_wgpu::wgpu::UtilityCategory` — NOT among the seven ui_wgpu keystone types that
+// gained `ToValue`/`FromValue` this ticket (see 📓️ui-wgpu-keystone-seven-value-derive-2026-09-02.md);
+// `🖱️ui` is out of scope this pass. Left serde-only. Revisit once `UtilityCategory` converts.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct UtilityDefinition {
@@ -1247,8 +1371,10 @@ impl UtilityDefinition {
 
 /// @emoji 🧰️ A validated reference into an app's `AppDefinition.utilities` registry — the utility mirror of
 /// `ActionRef`, scoping utilities to window kinds/modes with a typed, resolvable id.
-#[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
+// 🚧️ Needed in serde form too: referenced (directly or transitively) by a `🚧️ BLOCKED` serde-only manifest type above/below — see that type's own docstring.
+#[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(transparent)]
+#[value(transparent)]
 pub struct UtilityRef(String);
 
 impl UtilityRef {
@@ -1279,8 +1405,10 @@ impl From<String> for UtilityRef {
 /// Its owner and availability are derived from the containing OS, plugin, app, or mode definition.
 /// Handling a command may emit VCS-tracked operations exactly like an operation-kind action — see
 /// `ArtifactApp::handle_command`/`ActionEmit`.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+// 🚧️ Kept additive: consumed outside this pass by 🛍️products/💻️os (plugin/renderer modules) and/or ✏️s/🔌️plugins/** while still serde-deriving; ToValue/FromValue added alongside, not replacing, Serialize/Deserialize. Ticket 26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct CommandDefinition {
     pub id: String,
     /// 🗣️ Manifest-level, locale×terminology-checked — see `LocalizedLabel` (follow-up: no owned schema mirror yet).
@@ -1292,11 +1420,14 @@ pub struct CommandDefinition {
     /// 📝️ Reuses `ActionArgDef` — one staged-form contract shared by actions, dialogs, and commands.
     pub args: Vec<ActionArgDef>,
     #[serde(default)]
+    #[value(default)]
     pub keybindings: Vec<PlatformKeybinding>,
     #[serde(default)]
+    #[value(default)]
     pub in_palette: bool,
     /// 🎯️ See `ActionDefinition.semantics` — same D6/§3.1 field, same defaulting/inheritance story.
     #[serde(default)]
+    #[value(default)]
     pub semantics: ActionSemantics,
 }
 
@@ -1358,8 +1489,7 @@ impl CommandDefinition {
 }
 
 /// @emoji 📍️ Hierarchical owner of a command definition.
-#[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize, ToValue, FromValue)]
-#[serde(rename_all = "camelCase", rename_all_fields = "camelCase")]
+#[derive(Clone, Debug, PartialEq, Eq, Hash, ToValue, FromValue)]
 #[value(rename_all = "camelCase", rename_all_fields = "camelCase")]
 pub enum CommandOwnerAddress {
     Os,
@@ -1369,8 +1499,7 @@ pub enum CommandOwnerAddress {
 }
 
 /// @emoji 📍️ Fully qualified address of one command.
-#[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize, ToValue, FromValue)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, Eq, Hash, ToValue, FromValue)]
 #[value(rename_all = "camelCase")]
 pub struct CommandAddress {
     pub owner: CommandOwnerAddress,
@@ -1380,8 +1509,7 @@ pub struct CommandAddress {
 /// @emoji 📨️ One addressed command invocation with named DSL-value arguments — see
 /// `ActionInvocation`'s docstring for why `arguments` is keyed to `DslValue`, not
 /// `serde_json::Value`.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
 #[value(rename_all = "camelCase")]
 pub struct CommandInvocation {
     pub address: CommandAddress,
@@ -1389,10 +1517,13 @@ pub struct CommandInvocation {
 }
 
 /// @emoji 💻️ Operating-system command catalog shared by every renderer.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+// 🚧️ Kept additive: consumed outside this pass by 🛍️products/💻️os (plugin/renderer modules) and/or ✏️s/🔌️plugins/** while still serde-deriving; ToValue/FromValue added alongside, not replacing, Serialize/Deserialize. Ticket 26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS.
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct OsDefinition {
     #[serde(default)]
+    #[value(default)]
     pub commands: Vec<CommandDefinition>,
 }
 //#endregion 🔖️Commands
@@ -1404,14 +1535,17 @@ pub struct OsDefinition {
 /// and activation is host-owned session view state (`ViewModel.active_tool_id`), never a document
 /// field or VCS operation. A tool's live options are supplied dynamically via `ArtifactApp::tool_measures`,
 /// keyed by tool id — not part of this static declaration.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+// 🚧️ Kept additive: consumed outside this pass by 🛍️products/💻️os (plugin/renderer modules) and/or ✏️s/🔌️plugins/** while still serde-deriving; ToValue/FromValue added alongside, not replacing, Serialize/Deserialize. Ticket 26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct ToolDefinition {
     pub id: String,
     /// 🗣️ Manifest-level, locale×terminology-checked — see `LocalizedLabel` (follow-up: no owned schema mirror yet).
     pub label: LocalizedLabel,
     pub icon_id: IconName,
     #[serde(skip_serializing_if = "Option::is_none")]
+    #[value(skip_serializing_if = "Option::is_none")]
     pub keys: Option<String>,
 }
 
@@ -1424,8 +1558,10 @@ impl ToolDefinition {
 
 /// @emoji 🛠️ A validated reference into an app's `AppDefinition.tools` registry — the tool mirror of
 /// `UtilityRef`, scoping tools to modes with a typed, resolvable id.
-#[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
+// 🚧️ Needed in serde form too: referenced (directly or transitively) by a `🚧️ BLOCKED` serde-only manifest type above/below — see that type's own docstring.
+#[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(transparent)]
+#[value(transparent)]
 pub struct ToolRef(String);
 
 impl ToolRef {
@@ -1544,8 +1680,10 @@ pub fn panel_tab_first_draggable_element_id(tab_id: &str) -> String {
 /// first-time user. Rendered as an ordered sequence of `IntroductionStepDefinition`s over a full-screen
 /// glass veil; the shell owns playback (start/advance/skip) as ephemeral chrome state, never the
 /// document.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+// 🚧️ Kept additive: consumed outside this pass by 🛍️products/💻️os (plugin/renderer modules) and/or ✏️s/🔌️plugins/** while still serde-deriving; ToValue/FromValue added alongside, not replacing, Serialize/Deserialize. Ticket 26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct IntroductionDefinition {
     /// 🗣️ Manifest-level, locale×terminology-checked — see `LocalizedLabel` (follow-up: no owned schema mirror yet).
     pub title: LocalizedLabel,
@@ -1554,8 +1692,10 @@ pub struct IntroductionDefinition {
 
 /// @emoji 🪜️ One step of an `IntroductionDefinition`: an info box pointing at `introduce`, with `show`
 /// raising extra elements above the glass veil and `interactions` completing the step.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+// 🚧️ Kept additive: consumed outside this pass by 🛍️products/💻️os (plugin/renderer modules) and/or ✏️s/🔌️plugins/** while still serde-deriving; ToValue/FromValue added alongside, not replacing, Serialize/Deserialize. Ticket 26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct IntroductionStepDefinition {
     pub id: String,
     /// 🗣️ Manifest-level, locale×terminology-checked — see `LocalizedLabel` (follow-up: no owned schema mirror yet).
@@ -1564,28 +1704,35 @@ pub struct IntroductionStepDefinition {
     /// 🎯️ The single element id raised above the glass, pulsing `data-introduced`, that the info box
     /// anchors to. `None` = a screen-style step: full veil, centered info box.
     #[serde(default)]
+    #[value(default)]
     pub introduce: Option<String>,
     /// 🕳️ Additional element ids raised above the glass — interactive, no pulse — e.g. every 3D window
     /// that accepts a catalogue drop while `introduce` teaches the drag source.
     #[serde(default)]
+    #[value(default)]
     pub show: Vec<String>,
     #[serde(default)]
+    #[value(default)]
     pub placement: IntroductionPlacement,
     /// ✅️ Interactions completing this step; empty means purely informational (Next-button-only).
     #[serde(default)]
+    #[value(default)]
     pub interactions: Vec<IntroductionInteraction>,
     /// 🔢️ Whether `interactions` must complete in declaration order — out-of-order completions are
     /// ignored. Unordered: the first incomplete matching interaction completes.
     #[serde(default)]
+    #[value(default)]
     pub ordered: bool,
     /// 🏛️ Institution/partner logos shown in the info box below the body — e.g. funding acknowledgements.
     #[serde(default)]
+    #[value(default)]
     pub logos: Vec<IntroductionLogo>,
     /// 🎬️ Ghost-cursor demonstrations played in order, one after another, then looping back to the first —
     /// e.g. a viewport step showing zoom, then pan, then orbit. When the step also declares `interactions`,
     /// `demonstrations[i]` previews `interactions[i]` and completed interactions are omitted from replay.
     /// Empty means no demonstration.
     #[serde(default)]
+    #[value(default)]
     pub demonstrations: Vec<IntroductionDemonstration>,
 }
 
@@ -1644,20 +1791,26 @@ impl IntroductionStepDefinition {
 
 /// @emoji 🏛️ One institution/partner logo shown in an `IntroductionStepDefinition`'s info box — a plain
 /// URL pair (no DOM/CSS types), optionally linking out when clicked.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+// 🚧️ Needed in serde form too: referenced (directly or transitively) by a `🚧️ BLOCKED` serde-only manifest type above/below — see that type's own docstring.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct IntroductionLogo {
     pub src: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub dark_src: Option<String>,
     pub alt: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub href: Option<String>,
 }
 
 /// @emoji 📍️ Where the info box is placed relative to its anchor.
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+// 🚧️ Needed in serde form too: referenced (directly or transitively) by a `🚧️ BLOCKED` serde-only manifest type above/below — see that type's own docstring.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub enum IntroductionPlacement {
     #[default]
     Auto,
@@ -1673,8 +1826,10 @@ pub enum IntroductionPlacement {
 /// section — teaching by doing. `Pan`/`Zoom`/`Orbit` complete on that camera-navigation gesture over the
 /// 3D window named by the payload (a window-kind id) — classified from camera-state deltas by the shell
 /// that renders the window, so only shells that render a 3D world (the React shell) can complete them.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+// 🚧️ Needed in serde form too: referenced (directly or transitively) by a `🚧️ BLOCKED` serde-only manifest type above/below — see that type's own docstring.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase", tag = "kind", content = "id")]
+#[value(rename_all = "camelCase", tag = "kind", content = "id")]
 pub enum IntroductionInteractionKind {
     /// 📇️ References an action owned by the active window kind.
     Action(ActionRef),
@@ -1696,14 +1851,17 @@ pub enum IntroductionInteractionKind {
 
 /// @emoji ✅️ One thing the user must do to complete an interaction-gated `IntroductionStepDefinition` —
 /// rendered as a checklist row in the info box and celebrated individually on completion.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+// 🚧️ Needed in serde form too: referenced (directly or transitively) by a `🚧️ BLOCKED` serde-only manifest type above/below — see that type's own docstring.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct IntroductionInteraction {
     pub on: IntroductionInteractionKind,
     /// 🏷️ Short checklist label shown in the step's info box.
     pub label: String,
     /// 🎉️ Element id stamped `data-celebrated` on completion; `None` falls back to the step's `introduce`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub celebrate: Option<String>,
 }
 
@@ -1763,16 +1921,19 @@ impl IntroductionInteraction {
 /// point type covers click targets and drag endpoints across every addressing scheme the shell needs:
 /// element-relative, absolute/normalized screen space, absolute/normalized window(pane)-local space, and
 /// a 3D scene world position projected through that window's live camera.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+// 🚧️ Needed in serde form too: referenced (directly or transitively) by a `🚧️ BLOCKED` serde-only manifest type above/below — see that type's own docstring.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 // 🐢️ `rename_all_fields` is required alongside `rename_all` — the latter only renames the *variant* tag
 // values; without the former, a future multi-word field inside a variant would silently serialize
 // snake_case and desync from the generated TS type (see `UiDirtyScope`'s comment for the full story).
 #[serde(rename_all = "camelCase", rename_all_fields = "camelCase", tag = "kind")]
+#[value(rename_all = "camelCase", rename_all_fields = "camelCase", tag = "kind")]
 pub enum IntroductionPoint {
     /// 🎯️ Center (or `offset`, normalized 0–1 within the element's rect) of the element `id` resolves to.
     Element {
         id: String,
         #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[value(default, skip_serializing_if = "Option::is_none")]
         offset: Option<[f64; 2]>,
     },
     /// 🖥️ Absolute viewport pixel.
@@ -1799,6 +1960,7 @@ pub enum IntroductionPoint {
         domain: String,
         entity: String,
         #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[value(default, skip_serializing_if = "Option::is_none")]
         offset: Option<[f64; 2]>,
     },
     /// 🪡️ A parametric point along an entity's curve geometry (an attraction segment, graph edge, ink
@@ -1837,8 +1999,10 @@ impl IntroductionPoint {
 }
 
 /// @emoji 🖱️ Which mouse button a drag-like demonstration presses.
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+// 🚧️ Needed in serde form too: referenced (directly or transitively) by a `🚧️ BLOCKED` serde-only manifest type above/below — see that type's own docstring.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub enum IntroductionPointerButton {
     #[default]
     Left,
@@ -1847,8 +2011,10 @@ pub enum IntroductionPointerButton {
 }
 
 /// @emoji ⌨️ Keyboard modifier held during a drag-like demonstration.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+// 🚧️ Needed in serde form too: referenced (directly or transitively) by a `🚧️ BLOCKED` serde-only manifest type above/below — see that type's own docstring.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub enum IntroductionKeyModifier {
     Alt,
     Shift,
@@ -1873,10 +2039,12 @@ fn introduction_orbit_default_modifiers() -> Vec<IntroductionKeyModifier> {
 
 /// @emoji 👆️ A gesture a demonstration plays: the ghost cursor travels to (or between) `IntroductionPoint`s
 /// and performs the visual press/release affordance for the gesture kind.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+// 🚧️ Needed in serde form too: referenced (directly or transitively) by a `🚧️ BLOCKED` serde-only manifest type above/below — see that type's own docstring.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 // 🐢️ `rename_all_fields` required alongside `rename_all` so `Scroll`'s `delta_y` field actually
 // serializes/types as `deltaY` — see `IntroductionPoint`'s comment / `UiDirtyScope`'s for the full story.
 #[serde(rename_all = "camelCase", rename_all_fields = "camelCase", tag = "kind")]
+#[value(rename_all = "camelCase", rename_all_fields = "camelCase", tag = "kind")]
 pub enum IntroductionGesture {
     LeftClick {
         at: IntroductionPoint,
@@ -1891,8 +2059,10 @@ pub enum IntroductionGesture {
         from: IntroductionPoint,
         to: IntroductionPoint,
         #[serde(default = "introduction_pointer_button_left")]
+        #[value(default = "introduction_pointer_button_left")]
         button: IntroductionPointerButton,
         #[serde(default)]
+        #[value(default)]
         modifiers: Vec<IntroductionKeyModifier>,
     },
     Scroll {
@@ -1905,15 +2075,19 @@ pub enum IntroductionGesture {
         from: IntroductionPoint,
         to: IntroductionPoint,
         #[serde(default = "introduction_pointer_button_right")]
+        #[value(default = "introduction_pointer_button_right")]
         button: IntroductionPointerButton,
         #[serde(default = "introduction_orbit_default_modifiers")]
+        #[value(default = "introduction_orbit_default_modifiers")]
         modifiers: Vec<IntroductionKeyModifier>,
     },
 }
 
 /// @emoji 🖱️ Ghost-cursor glyph, mirroring `🎨️ui.css`'s `--cursor-*` custom cursors.
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+// 🚧️ Needed in serde form too: referenced (directly or transitively) by a `🚧️ BLOCKED` serde-only manifest type above/below — see that type's own docstring.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub enum IntroductionCursor {
     #[default]
     Default,
@@ -1929,11 +2103,14 @@ pub enum IntroductionCursor {
 /// movement mutes it and restores the real cursor instantly; going idle again while the step is still
 /// active replays it from the beginning. `cursor` overrides the glyph shown over the target; omitted, it
 /// derives from `gesture` (clicks → pointer, drag → grab/grabbing).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+// 🚧️ Needed in serde form too: referenced (directly or transitively) by a `🚧️ BLOCKED` serde-only manifest type above/below — see that type's own docstring.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct IntroductionDemonstration {
     pub gesture: IntroductionGesture,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub cursor: Option<IntroductionCursor>,
 }
 
@@ -1974,87 +2151,111 @@ impl IntroductionDemonstration {
 /// produces a densely-sampled one; nothing distinguishes a hand-authored tutorial from a captured one.
 /// Distinct from the docs-tooltip `tutorial` link field in `ui/js/react`'s `UiLabelLeaf` (a URL into the
 /// manual) — this is the interactive playback mechanism.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+// 🚧️ Kept additive: consumed outside this pass by 🛍️products/💻️os (plugin/renderer modules) and/or ✏️s/🔌️plugins/** while still serde-deriving; ToValue/FromValue added alongside, not replacing, Serialize/Deserialize. Ticket 26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct TutorialDefinition {
     pub id: String,
     /// 🗣️ Manifest-level, locale×terminology-checked — see `LocalizedLabel` (follow-up: no owned schema mirror yet).
     pub title: LocalizedLabel,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub description: Option<LocalizedLabel>,
     /// ⏱️ Total timeline length in milliseconds; every track entry's `at` (+ duration) must fit within.
     pub duration_ms: u64,
     /// 📖️ Scrub-bar markers, sorted ascending by `at`.
     #[serde(default)]
+    #[value(default)]
     pub chapters: Vec<TutorialChapter>,
     /// 🎬️ Starting conditions the player restores into its sandbox before t=0.
     pub base: TutorialBase,
     pub tracks: TutorialTracks,
     /// 🧾️ Recorder provenance (ISO 8601 timestamp); `None` means hand-authored.
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub recorded_at: Option<String>,
 }
 
 impl TutorialDefinition {
     /// @emoji 📂️ Deserializes a `TutorialDefinition` from its JSON wire format — the constructor apps use
     /// to load a hand-authored or recorded tutorial (e.g. via `include_str!`) into `.tutorial(...)`.
+    // 🚧️ BLOCKED: `TutorialDefinition` itself is serde-only (see its docstring) — this stays on
+    // `serde_json` until that lands.
     pub async fn from_json(json: &str) -> Result<Self, serde_json::Error> {
         serde_json::from_str(json)
     }
 }
 
 /// @emoji 📖️ One scrub-bar marker in a `TutorialDefinition`'s timeline.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+// 🚧️ Kept additive: consumed outside this pass by 🛍️products/💻️os (plugin/renderer modules) and/or ✏️s/🔌️plugins/** while still serde-deriving; ToValue/FromValue added alongside, not replacing, Serialize/Deserialize. Ticket 26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct TutorialChapter {
     pub id: String,
     pub at: u64,
     /// 🗣️ Manifest-level, locale×terminology-checked — see `LocalizedLabel` (follow-up: no owned schema mirror yet).
     pub title: LocalizedLabel,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub body: Option<LocalizedLabel>,
 }
 
 /// @emoji 🎬️ What must be true at t=0: the document the tutorial sandboxes and the initial UI/camera
 /// state. The player snapshots the user's live document, loads this in its place, and restores the
 /// snapshot on exit — a tutorial can never touch real work.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+// 🚧️ Kept additive: consumed outside this pass by 🛍️products/💻️os (plugin/renderer modules) and/or ✏️s/🔌️plugins/** while still serde-deriving; ToValue/FromValue added alongside, not replacing, Serialize/Deserialize. Ticket 26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct TutorialBase {
     /// 📂️ Full document DSL text (`ArtifactTextFiles.dsl`) to sandbox-load; `None` falls back to `example_id`, and both
     /// `None` falls back to the app's default/empty document.
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub document_dsl: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub example_id: Option<String>,
     pub ui: TutorialUiSnapshot,
     /// 🎥️ Initial camera per window instance (every entry's `at` is `0`).
     #[serde(default)]
+    #[value(default)]
     pub cameras: Vec<TutorialCameraKeyframe>,
 }
 
 /// @emoji 🎞️ The seven parallel tracks of a `TutorialDefinition`'s timeline; every entry's `at` is a
 /// millisecond offset from tutorial start, and each `Vec` is sorted ascending by `at`
 /// (`validate_tutorial` enforces this).
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+// 🚧️ Kept additive: consumed outside this pass by 🛍️products/💻️os (plugin/renderer modules) and/or ✏️s/🔌️plugins/** while still serde-deriving; ToValue/FromValue added alongside, not replacing, Serialize/Deserialize. Ticket 26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS.
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct TutorialTracks {
     #[serde(default)]
+    #[value(default)]
     pub narration: Vec<TutorialNarrationCue>,
     #[serde(default)]
+    #[value(default)]
     pub video: Vec<TutorialVideoCue>,
     /// 🏷️ Annotational only — drives affordance pulses and scrub-bar tick marks; playback never
     /// re-dispatches these into a plugin (see `TutorialEventKind`).
     #[serde(default)]
+    #[value(default)]
     pub events: Vec<TutorialEvent>,
     #[serde(default)]
+    #[value(default)]
     pub ui: Vec<TutorialUiKeyframe>,
     /// 🖋️ The sole source of document mutation during playback — see `TutorialArtifactEventKind`.
     #[serde(default)]
+    #[value(default)]
     pub document: Vec<TutorialArtifactEvent>,
     #[serde(default)]
+    #[value(default)]
     pub camera: Vec<TutorialCameraKeyframe>,
     #[serde(default)]
+    #[value(default)]
     pub gestures: Vec<TutorialGestureCue>,
 }
 
@@ -2062,8 +2263,10 @@ pub struct TutorialTracks {
 /// (content-addressed Blake3 hash + size + media type) — `framework/core` does not depend on
 /// `semio-vcs`, so the shape is mirrored rather than reused; conversion between the two is
 /// field-for-field.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+// 🚧️ Needed in serde form too: referenced (directly or transitively) by a `🚧️ BLOCKED` serde-only manifest type above/below — see that type's own docstring.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase", rename_all_fields = "camelCase", tag = "kind")]
+#[value(rename_all = "camelCase", rename_all_fields = "camelCase", tag = "kind")]
 pub enum TutorialAssetSrc {
     /// 🌐️ Static asset route (a brand's `assetsDir` or the shared `ui/asset` mount).
     Url { url: String },
@@ -2087,8 +2290,10 @@ fn tutorial_rate_is_default(rate: &f64) -> bool {
 /// overrides TTS with a recorded take. The timeline is always the master clock — a still-speaking TTS
 /// utterance is cancelled at the next cue's `at`; audio assets are seeked and rate-matched to the
 /// playhead instead of played independently.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+// 🚧️ Kept additive: consumed outside this pass by 🛍️products/💻️os (plugin/renderer modules) and/or ✏️s/🔌️plugins/** while still serde-deriving; ToValue/FromValue added alongside, not replacing, Serialize/Deserialize. Ticket 26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct TutorialNarrationCue {
     pub id: String,
     pub at: u64,
@@ -2098,22 +2303,28 @@ pub struct TutorialNarrationCue {
     /// 🗣️ Manifest-level, locale×terminology-checked — see `LocalizedLabel` (follow-up: no owned schema mirror yet).
     pub text: LocalizedLabel,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub audio: Option<TutorialAssetSrc>,
     /// 🗣️ Web Speech API voice-name hint; ignored once `audio` is set.
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub voice: Option<String>,
     /// 🎚️ TTS/audio rate multiplier layered under the player's own playback-rate control.
     #[serde(default = "tutorial_narration_default_rate", skip_serializing_if = "tutorial_rate_is_default")]
+    #[value(default = "tutorial_narration_default_rate", skip_serializing_if = "tutorial_rate_is_default")]
     pub rate: f64,
     /// 💬️ Timed caption sub-segments (offsets relative to this cue's `at`); empty means `text` is shown
     /// whole for the cue's `duration_ms`.
     #[serde(default)]
+    #[value(default)]
     pub captions: Vec<TutorialCaption>,
 }
 
 /// @emoji 💬️ One timed caption sub-segment of a `TutorialNarrationCue`.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+// 🚧️ Kept additive: consumed outside this pass by 🛍️products/💻️os (plugin/renderer modules) and/or ✏️s/🔌️plugins/** while still serde-deriving; ToValue/FromValue added alongside, not replacing, Serialize/Deserialize. Ticket 26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct TutorialCaption {
     pub at: u64,
     pub duration_ms: u64,
@@ -2122,8 +2333,10 @@ pub struct TutorialCaption {
 }
 
 /// @emoji 🖼️ Normalized 0–1 viewport rect for a `TutorialVideoCue` overlay.
-#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
+// 🚧️ Needed in serde form too: referenced (directly or transitively) by a `🚧️ BLOCKED` serde-only manifest type above/below — see that type's own docstring.
+#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct TutorialOverlayRect {
     pub x: f64,
     pub y: f64,
@@ -2139,44 +2352,55 @@ impl Default for TutorialOverlayRect {
 }
 
 /// @emoji 📹️ A timed video overlay — e.g. a presenter webcam picture-in-picture, or an authored clip.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+// 🚧️ Needed in serde form too: referenced (directly or transitively) by a `🚧️ BLOCKED` serde-only manifest type above/below — see that type's own docstring.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct TutorialVideoCue {
     pub at: u64,
     pub duration_ms: u64,
     pub src: TutorialAssetSrc,
     #[serde(default)]
+    #[value(default)]
     pub rect: TutorialOverlayRect,
     /// 🔇️ True when narration carries the audio (a webcam take recorded muted).
     #[serde(default)]
+    #[value(default)]
     pub muted: bool,
     /// ⏩️ Seek offset into the source at cue start.
     #[serde(default)]
+    #[value(default)]
     pub source_offset_ms: u64,
 }
 
 /// @emoji 🏷️ One recorded action/command/keypress, annotational only — see `TutorialTracks::events`.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+// 🚧️ Needed in serde form too: referenced (directly or transitively) by a `🚧️ BLOCKED` serde-only manifest type above/below — see that type's own docstring.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct TutorialEvent {
     pub at: u64,
     pub kind: TutorialEventKind,
 }
 
 /// @emoji 🏷️ What one `TutorialEvent` annotates.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+// 🚧️ Needed in serde form too: referenced (directly or transitively) by a `🚧️ BLOCKED` serde-only manifest type above/below — see that type's own docstring.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase", rename_all_fields = "camelCase", tag = "kind")]
+#[value(rename_all = "camelCase", rename_all_fields = "camelCase", tag = "kind")]
 pub enum TutorialEventKind {
     /// 📇️ A relative dispatch to an action owned by the active window kind, with its effective args.
     Action {
         action: String,
         #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[value(default, skip_serializing_if = "Option::is_none")]
         args: Option<DslValue>,
     },
     /// 🎛️ A `CommandDefinition` dispatch.
     Command {
         command: String,
         #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[value(default, skip_serializing_if = "Option::is_none")]
         args: Option<DslValue>,
     },
     /// ⌨️ A keybinding press, display-only over the action it triggered.
@@ -2185,16 +2409,20 @@ pub enum TutorialEventKind {
 
 /// @emoji 🧮️ One UI-state track entry: either a full restore-point snapshot (a valid seek anchor) or a
 /// sparse list of changes since the previous sample.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+// 🚧️ Kept additive: consumed outside this pass by 🛍️products/💻️os (plugin/renderer modules) and/or ✏️s/🔌️plugins/** while still serde-deriving; ToValue/FromValue added alongside, not replacing, Serialize/Deserialize. Ticket 26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct TutorialUiKeyframe {
     pub at: u64,
     pub sample: TutorialUiSample,
 }
 
 /// @emoji 🧮️ See `TutorialUiKeyframe`.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+// 🚧️ Kept additive: consumed outside this pass by 🛍️products/💻️os (plugin/renderer modules) and/or ✏️s/🔌️plugins/** while still serde-deriving; ToValue/FromValue added alongside, not replacing, Serialize/Deserialize. Ticket 26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase", rename_all_fields = "camelCase", tag = "kind")]
+#[value(rename_all = "camelCase", rename_all_fields = "camelCase", tag = "kind")]
 pub enum TutorialUiSample {
     Snapshot { state: Box<TutorialUiSnapshot> },
     Delta { changes: Vec<TutorialUiChange> },
@@ -2204,59 +2432,77 @@ pub enum TutorialUiSample {
 /// dock/panel/dialog state neither shell serializes today. Deliberately NOT a serialization of either
 /// shell's internal store: each shell implements its own `captureUiSnapshot`/`applyUiSnapshot` against
 /// this shape. Locale/terminology are excluded on purpose — a tutorial plays in the viewer's own locale.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+// 🚧️ Kept additive: consumed outside this pass by 🛍️products/💻️os (plugin/renderer modules) and/or ✏️s/🔌️plugins/** while still serde-deriving; ToValue/FromValue added alongside, not replacing, Serialize/Deserialize. Ticket 26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS.
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct TutorialUiSnapshot {
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub active_mode_id: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub focused_window_id: Option<String>,
     /// 🧰️ Mirrors `ViewModel.active_utility_by_window_id`.
     #[serde(default, skip_serializing_if = "std::collections::HashMap::is_empty")]
+    #[value(default, skip_serializing_if = "std::collections::HashMap::is_empty")]
     pub active_utility_by_window_id: std::collections::HashMap<String, String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub active_tool_id: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub layout: Option<WindowLayout>,
     /// 📑️ Active tab id per panel group; groups absent from the map are collapsed/closed.
     #[serde(default, skip_serializing_if = "std::collections::HashMap::is_empty")]
+    #[value(default, skip_serializing_if = "std::collections::HashMap::is_empty")]
     pub active_panel_tab_by_group: std::collections::HashMap<String, String>,
     /// 🗂️ Opaque program vocabulary, verbatim `ViewModel.panel_json`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub panel_json: Option<String>,
     /// 🕹️ Per-domain selection state, keyed by `InteractionDefinition.id` — the framework-owned
     /// replacement for the deleted opaque `selection_json`; see `TutorialUiChange::Selection`.
     #[serde(default, skip_serializing_if = "std::collections::HashMap::is_empty")]
+    #[value(default, skip_serializing_if = "std::collections::HashMap::is_empty")]
     pub interaction_selection: std::collections::HashMap<String, DomainSelection>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub open_dialog_id: Option<String>,
     #[serde(default)]
+    #[value(default)]
     pub expanded_tree_ids: Vec<String>,
     #[serde(default)]
+    #[value(default)]
     pub command_panel_open: bool,
 }
 
 /// @emoji 🩹️ One typed, sparse UI-state change — the alphabet `compose_tutorial_ui` replays over a prior
 /// `TutorialUiSnapshot` to reconstruct state at any timeline offset without shipping a full snapshot at
 /// every sample.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+// 🚧️ Kept additive: consumed outside this pass by 🛍️products/💻️os (plugin/renderer modules) and/or ✏️s/🔌️plugins/** while still serde-deriving; ToValue/FromValue added alongside, not replacing, Serialize/Deserialize. Ticket 26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase", rename_all_fields = "camelCase", tag = "kind")]
+#[value(rename_all = "camelCase", rename_all_fields = "camelCase", tag = "kind")]
 pub enum TutorialUiChange {
     ActiveMode {
         id: String,
     },
     FocusedWindow {
         #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[value(default, skip_serializing_if = "Option::is_none")]
         id: Option<String>,
     },
     /// 🧰️ `utility_id: None` deactivates — mirrors `SetActiveUtility` semantics.
     ActiveUtility {
         window_id: String,
         #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[value(default, skip_serializing_if = "Option::is_none")]
         utility_id: Option<String>,
     },
     ActiveTool {
         #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[value(default, skip_serializing_if = "Option::is_none")]
         id: Option<String>,
     },
     Layout {
@@ -2266,6 +2512,7 @@ pub enum TutorialUiChange {
     PanelTab {
         group: String,
         #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[value(default, skip_serializing_if = "Option::is_none")]
         tab_id: Option<String>,
     },
     PanelState {
@@ -2278,12 +2525,15 @@ pub enum TutorialUiChange {
         domain_id: String,
         granularity: String,
         #[serde(default)]
+        #[value(default)]
         ids: Vec<String>,
     },
     Dialog {
         #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[value(default, skip_serializing_if = "Option::is_none")]
         id: Option<String>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[value(default, skip_serializing_if = "Option::is_none")]
         args: Option<DslValue>,
     },
     TreeExpansion {
@@ -2300,8 +2550,10 @@ pub enum TutorialUiChange {
 /// diff). This is the SOLE source of document mutation during playback: recorded `TutorialEvent`s are
 /// annotational only, never re-dispatched, because re-dispatching a plugin action is non-deterministic
 /// (fresh ids/timestamps) and would double-apply against this track.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+// 🚧️ Needed in serde form too: referenced (directly or transitively) by a `🚧️ BLOCKED` serde-only manifest type above/below — see that type's own docstring.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct TutorialArtifactEvent {
     pub at: u64,
     pub kind: TutorialArtifactEventKind,
@@ -2309,21 +2561,26 @@ pub struct TutorialArtifactEvent {
 
 /// @emoji 🖋️ See `TutorialArtifactEvent`. `Edit` carries both `forwards` and `backwards` operations
 /// verbatim from the vcs edit that produced it — the source of exact bidirectional scrubbing.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+// 🚧️ Needed in serde form too: referenced (directly or transitively) by a `🚧️ BLOCKED` serde-only manifest type above/below — see that type's own docstring.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase", rename_all_fields = "camelCase", tag = "kind")]
+#[value(rename_all = "camelCase", rename_all_fields = "camelCase", tag = "kind")]
 pub enum TutorialArtifactEventKind {
     Edit {
         forwards: Vec<DslValue>,
         backwards: Vec<DslValue>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[value(default, skip_serializing_if = "Option::is_none")]
         description: Option<String>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[value(default, skip_serializing_if = "Option::is_none")]
         coalesce_key: Option<String>,
     },
     Undo,
     Redo,
     Checkpoint {
         #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[value(default, skip_serializing_if = "Option::is_none")]
         message: Option<String>,
     },
     CheckoutCheckpoint {
@@ -2346,8 +2603,10 @@ fn tutorial_camera_up_z() -> [f64; 3] {
 }
 
 /// @emoji 🎥️ One camera track keyframe for a specific window instance.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+// 🚧️ Needed in serde form too: referenced (directly or transitively) by a `🚧️ BLOCKED` serde-only manifest type above/below — see that type's own docstring.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct TutorialCameraKeyframe {
     pub at: u64,
     /// 🪟️ Window *instance* id (matches `ViewWindowInstance.id`).
@@ -2355,20 +2614,25 @@ pub struct TutorialCameraKeyframe {
     pub camera: TutorialCameraState,
     /// 🪄️ Easing INTO this keyframe from the previous one on the same window.
     #[serde(default)]
+    #[value(default)]
     pub easing: TutorialEasing,
 }
 
 /// @emoji 🎥️ A camera pose — `Orbit` mirrors `World3dScene.camera_json`/`OrbitController`, `Canvas`
 /// mirrors `Canvas2dScene`'s `cameraX`/`cameraY`/`zoom`.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+// 🚧️ Needed in serde form too: referenced (directly or transitively) by a `🚧️ BLOCKED` serde-only manifest type above/below — see that type's own docstring.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase", rename_all_fields = "camelCase", tag = "kind")]
+#[value(rename_all = "camelCase", rename_all_fields = "camelCase", tag = "kind")]
 pub enum TutorialCameraState {
     Orbit {
         position: [f64; 3],
         target: [f64; 3],
         #[serde(default = "tutorial_camera_up_z")]
+        #[value(default = "tutorial_camera_up_z")]
         up: [f64; 3],
         #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[value(default, skip_serializing_if = "Option::is_none")]
         fov: Option<f64>,
     },
     Canvas {
@@ -2379,8 +2643,10 @@ pub enum TutorialCameraState {
 }
 
 /// @emoji 🪄️ Interpolation curve into a `TutorialCameraKeyframe` from its predecessor on the same window.
-#[derive(Clone, Copy, Debug, Default, PartialEq, Serialize, Deserialize)]
+// 🚧️ Needed in serde form too: referenced (directly or transitively) by a `🚧️ BLOCKED` serde-only manifest type above/below — see that type's own docstring.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub enum TutorialEasing {
     Linear,
     #[default]
@@ -2391,13 +2657,16 @@ pub enum TutorialEasing {
 
 /// @emoji 👻️ One ghost-cursor gesture cue, reusing the introduction demonstration vocabulary verbatim —
 /// both shells already resolve/render `IntroductionGesture`/`IntroductionPoint`/`IntroductionCursor`.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+// 🚧️ Needed in serde form too: referenced (directly or transitively) by a `🚧️ BLOCKED` serde-only manifest type above/below — see that type's own docstring.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct TutorialGestureCue {
     pub at: u64,
     pub duration_ms: u64,
     pub gesture: IntroductionGesture,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub cursor: Option<IntroductionCursor>,
 }
 
@@ -2681,13 +2950,16 @@ pub fn tutorial_slice(def: &TutorialDefinition, from_ms: f64, to_ms: f64) -> Tut
 /// presents `args` as a staged form. Submit dispatches `submit_action` with the merged effective
 /// args; empty `args` degenerates to a message/confirm dialog. Opened only via
 /// `Effect::OpenDialog`; the shell owns open/close as ephemeral chrome state, never the document.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+// 🚧️ Kept additive: consumed outside this pass by 🛍️products/💻️os (plugin/renderer modules) and/or ✏️s/🔌️plugins/** while still serde-deriving; ToValue/FromValue added alongside, not replacing, Serialize/Deserialize. Ticket 26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct DialogDefinition {
     pub id: String,
     /// 🗣️ Manifest-level, locale×terminology-checked — see `LocalizedLabel` (follow-up: no owned schema mirror yet).
     pub title: LocalizedLabel,
     #[serde(skip_serializing_if = "Option::is_none")]
+    #[value(skip_serializing_if = "Option::is_none")]
     pub body: Option<LocalizedLabel>,
     pub args: Vec<ActionArgDef>,
     /// 📇️ References an action owned by the active window kind, dispatched with merged args.
@@ -2696,8 +2968,10 @@ pub struct DialogDefinition {
     /// 📇️ Optional active-window action reference dispatched on any dismissal (Escape, veil
     /// click, or the Cancel button).
     #[serde(skip_serializing_if = "Option::is_none")]
+    #[value(skip_serializing_if = "Option::is_none")]
     pub cancel_action: Option<ActionRef>,
     #[serde(skip_serializing_if = "Option::is_none")]
+    #[value(skip_serializing_if = "Option::is_none")]
     pub cancel_label: Option<LocalizedLabel>,
 }
 
@@ -2750,8 +3024,10 @@ impl DialogDefinition {
 }
 //#endregion 🔖️Dialog
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+// 🚧️ Kept additive: consumed outside this pass by 🛍️products/💻️os (plugin/renderer modules) and/or ✏️s/🔌️plugins/** while still serde-deriving; ToValue/FromValue added alongside, not replacing, Serialize/Deserialize. Ticket 26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct ModeDefinition {
     pub id: String,
     /// 🗣️ Manifest-level, locale×terminology-checked — see `LocalizedLabel` (follow-up: no owned schema mirror yet).
@@ -2759,19 +3035,21 @@ pub struct ModeDefinition {
     pub icon_id: IconName,
     /// 🛠️ Tools available while this mode is active — references `AppDefinition.tools` ids.
     #[serde(default)]
+    #[value(default)]
     pub tools: Vec<ToolRef>,
     #[serde(skip_serializing_if = "Option::is_none")]
+    #[value(skip_serializing_if = "Option::is_none")]
     pub layout_id: Option<String>,
     /// 🎛️ Commands owned by this mode and active only while it is active.
     #[serde(default)]
+    #[value(default)]
     pub commands: Vec<CommandDefinition>,
 }
 
 /// 🚫️ A non-empty, order-preserving list — construction-time enforcement replaces what used to be a
 /// runtime `assert!` deep inside `AppBuilder::build_definition`. The first entry is the implicit
 /// fallback default when nothing else specifies one.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(try_from = "Vec<T>", into = "Vec<T>", bound = "T: Clone + Serialize + serde::de::DeserializeOwned")]
+#[derive(Clone, Debug, PartialEq)]
 pub struct NonEmptyVec<T> {
     first: T,
     rest: Vec<T>,
@@ -2853,6 +3131,43 @@ impl<T: Clone> From<NonEmptyVec<T>> for Vec<T> {
     }
 }
 
+/// 🌉️ Hand-written, not derived: `#[value(…)]` has no `into`/`try_from` equivalent — this mirrors
+/// the retired `#[serde(try_from = "Vec<T>", into = "Vec<T>")]` bridge, wire-shaped as a plain
+/// array exactly like `Vec<T>` (see `ToValue`/`FromValue for Vec<T>` in `🌱️value/🔁️codec/🦀️.rs`).
+impl<T: ToValue> ToValue for NonEmptyVec<T> {
+    fn to_value(&self) -> DslValue {
+        DslValue::Array(self.iter().map(ToValue::to_value).collect())
+    }
+}
+impl<T: FromValue> FromValue for NonEmptyVec<T> {
+    fn from_value(value: DslValue) -> Result<Self, ValueError> {
+        let DslValue::Array(items) = value else {
+            return Err(ValueError::new(format!("expected an array, found {value:?}")));
+        };
+        let values = items.into_iter().enumerate().map(|(index, item)| T::from_value(item).map_err(|error| error.under(index))).collect::<Result<Vec<T>, ValueError>>()?;
+        NonEmptyVec::try_from(values).map_err(ValueError::new)
+    }
+}
+
+// 🚧️ BLOCKED (26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS): `AppDefinition`
+// (`modes: Modes`/`window_kinds: WindowKinds`, both `NonEmptyVec<_>`) is itself serde-only — blocked
+// on `ui_wgpu`/`interaction`/`🎠️kernel` field types elsewhere in this file — so `NonEmptyVec` must
+// keep pace with it. Hand-written (not `#[serde(try_from/into = "Vec<T>")]`, since the derive is
+// gone): mirrors the retired attribute via the existing `TryFrom<Vec<T>>`/`From<NonEmptyVec<T>> for
+// Vec<T>` bridge above.
+impl<T: Clone + Serialize> Serialize for NonEmptyVec<T> {
+    fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        let values: Vec<T> = self.clone().into();
+        values.serialize(serializer)
+    }
+}
+impl<'de, T: serde::de::DeserializeOwned> Deserialize<'de> for NonEmptyVec<T> {
+    fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
+        let values = Vec::<T>::deserialize(deserializer)?;
+        NonEmptyVec::try_from(values).map_err(serde::de::Error::custom)
+    }
+}
+
 /// 🚫️ Every app has at least one mode — `playbook/module/procedural` and any other single-purpose app
 /// must declare an explicit mode (e.g. `"default"`) instead of the zero-mode state the type system
 /// now makes unrepresentable.
@@ -2862,6 +3177,10 @@ pub type Modes = NonEmptyVec<ModeDefinition>;
 /// `AppBuilder::build_definition`.
 pub type WindowKinds = NonEmptyVec<WindowKindDefinition>;
 
+// 🚧️ BLOCKED (26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS): a field
+// here embeds `kernel::CapabilityRequirement`, which has no `ToValue`/`FromValue` yet (🎠️kernel
+// owned by another agent this pass). Left serde-only. Revisit once `CapabilityRequirement`
+// converts.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct WindowKindDefinition {
@@ -2896,8 +3215,10 @@ pub struct WindowKindDefinition {
     pub capabilities: Vec<kernel::CapabilityRequirement>,
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+// 🚧️ Needed in serde form too: referenced (directly or transitively) by a `🚧️ BLOCKED` serde-only manifest type above/below — see that type's own docstring.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub enum PanelGroup {
     Workbench,
     Details,
@@ -2932,8 +3253,10 @@ impl PanelGroup {
 /// live in the renderer: every panel tab is either a framework-predefined kind (compile-time
 /// exhaustive) or an app-declared custom tab (open id, still required to be unique/non-empty,
 /// validated at construction by `AppBuilder`).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+// 🚧️ Needed in serde form too: referenced (directly or transitively) by a `🚧️ BLOCKED` serde-only manifest type above/below — see that type's own docstring.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase", tag = "kind", content = "id")]
+#[value(rename_all = "camelCase", tag = "kind", content = "id")]
 pub enum PanelTabKind {
     WorkbenchCategory,
     DisplayCategory,
@@ -2970,16 +3293,20 @@ impl PanelTabKind {
 }
 
 /// 🌳️ A leaf carries `body_key` (its rendered panel); a branch carries `children` (the tab row shown below it). Exactly one of the two is set; `group` is only meaningful on root (non-nested) entries.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+// 🚧️ Kept additive: consumed outside this pass by 🛍️products/💻️os (plugin/renderer modules) and/or ✏️s/🔌️plugins/** while still serde-deriving; ToValue/FromValue added alongside, not replacing, Serialize/Deserialize. Ticket 26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct PanelTabDefinition {
     pub kind: PanelTabKind,
     /// 🗣️ Manifest-level, locale×terminology-checked — see `LocalizedLabel` (follow-up: no owned schema mirror yet).
     pub label: LocalizedLabel,
     pub group: PanelGroup,
     #[serde(skip_serializing_if = "Option::is_none")]
+    #[value(skip_serializing_if = "Option::is_none")]
     pub body_key: Option<String>,
     #[serde(default)]
+    #[value(default)]
     pub children: Vec<PanelTabDefinition>,
 }
 
@@ -2991,8 +3318,7 @@ impl PanelTabDefinition {
 
 //#region 🔖️Surface
 /// 👁️✏️ Whether a surface may change the artifact it is bound to.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub enum AppRole {
     Viewer,
     Editor,
@@ -3038,9 +3364,23 @@ impl FromValue for AppRole {
     }
 }
 
+// 🚧️ Needed in serde form too: referenced by a `🚧️ BLOCKED` serde-only manifest type — hand-written
+// (not derived, same reasoning as the `ToValue`/`FromValue` pair above) via the same `as_str`/
+// `FromStr` delegation.
+impl Serialize for AppRole {
+    fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        serializer.serialize_str(self.as_str())
+    }
+}
+impl<'de> Deserialize<'de> for AppRole {
+    fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
+        let s = String::deserialize(deserializer)?;
+        s.parse::<AppRole>().map_err(serde::de::Error::custom)
+    }
+}
+
 /// 🎯️ A surface addressed across plugin boundaries.
-#[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize, ToValue, FromValue)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, Eq, Hash, ToValue, FromValue)]
 #[value(rename_all = "camelCase")]
 pub struct AppRef {
     pub plugin_id: String,
@@ -3061,6 +3401,10 @@ pub fn parse_surface_app_id(id: &str) -> Result<(ArtifactDialect, AppRole), Stri
 }
 //#endregion 🔖️Surface
 
+// 🚧️ BLOCKED (26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS): transitively
+// embeds `WindowKindDefinition`/`UtilityDefinition` above, both still serde-only (blocked on
+// `kernel::CapabilityRequirement`/`ui_wgpu::UtilityCategory`, neither owned by this pass). Left
+// serde-only. Revisit once both convert.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct AppDefinition {
@@ -3275,8 +3619,10 @@ pub fn app_window_label(app: &AppDefinition, terminology: &str, locale: Locale, 
     app_breadcrumb(&breadcrumb)
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+// 🚧️ Kept additive: consumed outside this pass by 🛍️products/💻️os (plugin/renderer modules) and/or ✏️s/🔌️plugins/** while still serde-deriving; ToValue/FromValue added alongside, not replacing, Serialize/Deserialize. Ticket 26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct ExampleDefinition {
     pub id: String,
     /// 🗣️ Manifest-level, locale×terminology-checked — see `LocalizedLabel` (follow-up: no owned schema mirror yet).
@@ -3287,17 +3633,17 @@ pub struct ExampleDefinition {
 }
 
 /// 🧩️ One host-aggregated plugin contribution entry (`contributionsJson` wire shape).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct ProgramContributionEntry {
     pub plugin_id: String,
-    #[serde(default)]
+    #[value(default)]
     pub topic_contribution: Option<TopicContribution>,
 }
 
 /// 📕️ Parses host-pushed `contributionsJson` into typed entries.
 pub fn parse_contributions(json: &str) -> Vec<ProgramContributionEntry> {
-    serde_json::from_str(json).unwrap_or_default()
+    dsl::os_pack::json::from_json_str(json).unwrap_or_default()
 }
 
 //#region 🔖️TopicContribution
@@ -3307,8 +3653,7 @@ pub fn parse_contributions(json: &str) -> Vec<ProgramContributionEntry> {
 /// `"flow.extension"`, `"playbook.blockKind"`, `"cad.computer"`) — each producer/consumer picks its
 /// own topic string; this type does not enumerate them. See `component.ts`'s `TopicContribution` for
 /// the mirror.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq)]
 pub struct TopicContribution {
     pub topic: String,
     pub payload: DslValue,
@@ -3353,18 +3698,59 @@ impl FromValue for TopicContribution {
         })
     }
 }
+
+// 🚧️ Needed in serde form too: referenced by a `🚧️ BLOCKED` serde-only manifest type — hand-written
+// (not derived, same reasoning as the `ToValue`/`FromValue` pair above), same `topic`/`payload`
+// camelCase wire shape.
+impl Serialize for TopicContribution {
+    fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        use serde::ser::SerializeStruct;
+        let mut state = serializer.serialize_struct("TopicContribution", 2)?;
+        state.serialize_field("topic", &self.topic)?;
+        state.serialize_field("payload", &self.payload)?;
+        state.end()
+    }
+}
+impl<'de> Deserialize<'de> for TopicContribution {
+    fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
+        #[derive(Deserialize)]
+        #[serde(rename_all = "camelCase")]
+        struct Raw {
+            topic: String,
+            payload: DslValue,
+        }
+        let raw = Raw::deserialize(deserializer)?;
+        Ok(TopicContribution { topic: raw.topic, payload: raw.payload })
+    }
+}
 //#endregion 🔖️TopicContribution
 
 //#region 🔖️PluginDependency
 /// 🔢️ A frozen `major.minor.patch` version triple — no external semver crate (contract freeze
 /// `26/08/16/PLUGIN-DEPENDENCIES-ARTIFACT-CONTRIBUTIONS-AND-COMPOSITE-MUTATIONS` §3). `Ord` is
 /// derived field-in-order (major, then minor, then patch), which is exactly semver precedence.
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
-#[serde(into = "String", try_from = "String")]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct Version {
     pub major: u64,
     pub minor: u64,
     pub patch: u64,
+}
+
+/// 🌉️ Hand-written, not derived: `#[value(…)]` has no `into`/`try_from` equivalent — this mirrors
+/// the retired `#[serde(into = "String", try_from = "String")]` bridge via the existing
+/// `Display`/`FromStr` impls below.
+impl ToValue for Version {
+    fn to_value(&self) -> DslValue {
+        DslValue::String(self.to_string())
+    }
+}
+impl FromValue for Version {
+    fn from_value(value: DslValue) -> Result<Self, ValueError> {
+        match value {
+            DslValue::String(s) => Version::parse(&s).map_err(|e| ValueError::new(e.to_string())),
+            other => Err(ValueError::new(format!("expected a string, found {other:?}"))),
+        }
+    }
 }
 
 /// 🚧️ Failure parsing a `Version` (`major.minor.patch`, all-numeric segments) or a `VersionReq`.
@@ -3446,8 +3832,8 @@ pub enum VersionReq {
 
 impl VersionReq {
     /// 🔢️ Parses one of the five frozen grammar forms.
-    // 🚫️async: E1 transitive — `Deserialize::deserialize` (external) calls this synchronously; pure
-    // string parsing, no I/O (R9).
+    // 🚫️async: E1 transitive — `FromValue::from_value` (this file, below) calls this synchronously;
+    // pure string parsing, no I/O (R9).
     pub fn parse(input: &str) -> Result<Self, VersionReqParseError> {
         let trimmed = input.trim();
         if trimmed == "*" {
@@ -3543,12 +3929,28 @@ impl From<VersionParseError> for VersionReqParseError {
     }
 }
 
+impl ToValue for VersionReq {
+    fn to_value(&self) -> DslValue {
+        DslValue::String(self.to_string())
+    }
+}
+impl FromValue for VersionReq {
+    fn from_value(value: DslValue) -> Result<Self, ValueError> {
+        match value {
+            DslValue::String(s) => VersionReq::parse(&s).map_err(|e| ValueError::new(e.to_string())),
+            other => Err(ValueError::new(format!("expected a string, found {other:?}"))),
+        }
+    }
+}
+
+// 🚧️ Needed in serde form too: referenced (directly or transitively) by a `🚧️ BLOCKED` serde-only
+// manifest type above/below (`PluginDependency.version`) — hand-written, same reasoning as the
+// `ToValue`/`FromValue` pair above.
 impl Serialize for VersionReq {
     fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
         serializer.serialize_str(&self.to_string())
     }
 }
-
 impl<'de> Deserialize<'de> for VersionReq {
     fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
         let raw = String::deserialize(deserializer)?;
@@ -3558,8 +3960,10 @@ impl<'de> Deserialize<'de> for VersionReq {
 
 /// 🔗️ One direct plugin dependency: the depended-on plugin id plus the version requirement it must
 /// satisfy — see `resolve_load_order`/`validate_dependency_graph`.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+// 🚧️ Needed in serde form too: referenced (directly or transitively) by a `🚧️ BLOCKED` serde-only manifest type above/below — see that type's own docstring.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct PluginDependency {
     pub plugin_id: String,
     pub version: VersionReq,
@@ -3576,8 +3980,10 @@ impl PluginDependency {
 /// 🗂️ The `verb`/`entity`/`kind`/`record` semantic identity of one contributed mutation, carried as
 /// owned strings on the wire (the native `SemanticDescriptor` this mirrors lives in the os-kernel
 /// protocol crate, which `semio-framework` must not require plugin manifests to link against).
-#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+// 🚧️ Needed in serde form too: referenced (directly or transitively) by a `🚧️ BLOCKED` serde-only manifest type above/below — see that type's own docstring.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct ContributedMutationSemantics {
     pub verb: String,
     pub entity: String,
@@ -3587,8 +3993,10 @@ pub struct ContributedMutationSemantics {
 
 /// 🗂️ One mutation a plugin contributes onto an artifact kind it depends on — the manifest-declared
 /// counterpart of a `contributor.list-artifact-mutations` roster entry (contract freeze §3/§6).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+// 🚧️ Needed in serde form too: referenced (directly or transitively) by a `🚧️ BLOCKED` serde-only manifest type above/below — see that type's own docstring.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct ContributedMutationMetadata {
     /// 🪪️ `"<target-document-schema>#<contributor-plugin-id>:<kebab-kind>"` (contract freeze §3).
     pub mutation_id: String,
@@ -3601,8 +4009,10 @@ pub struct ContributedMutationMetadata {
 /// `ArtifactInferenceServiceMetadata` fields (owned strings instead of `&'static str`, since this
 /// travels over the wire in a manifest), plus `contributor`/`depends_on` for the contribution's own
 /// identity and ordering (contract freeze §4: `owner == contributor`, `artifact_kind == target`).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+// 🚧️ Needed in serde form too: referenced (directly or transitively) by a `🚧️ BLOCKED` serde-only manifest type above/below — see that type's own docstring.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct ContributedInferenceMetadata {
     pub owner: String,
     pub artifact_kind: String,
@@ -3616,23 +4026,32 @@ pub struct ContributedInferenceMetadata {
     pub policy_version: u32,
     pub contributor: String,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[value(default, skip_serializing_if = "Vec::is_empty")]
     pub depends_on: Vec<String>,
 }
 
 /// 🗂️ Everything one plugin contributes onto one artifact kind it depends on — see the registration
 /// gates in contract freeze §4 (accepted only when `artifact_kind`'s owner is a direct
 /// `PluginManifest.dependencies` entry).
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+// 🚧️ Needed in serde form too: referenced (directly or transitively) by a `🚧️ BLOCKED` serde-only manifest type above/below — see that type's own docstring.
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct ArtifactContributionDescriptor {
     pub artifact_kind: String,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[value(default, skip_serializing_if = "Vec::is_empty")]
     pub mutations: Vec<ContributedMutationMetadata>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[value(default, skip_serializing_if = "Vec::is_empty")]
     pub inferences: Vec<ContributedInferenceMetadata>,
 }
 //#endregion 🔖️ArtifactContribution
 
+// 🚧️ BLOCKED (26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS): a field
+// here embeds `kernel::CapabilityRequirement`, which has no `ToValue`/`FromValue` yet (🎠️kernel
+// owned by another agent this pass). Left serde-only. Revisit once `CapabilityRequirement`
+// converts.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct PluginManifest {
@@ -3696,46 +4115,50 @@ pub struct SurfaceAppChoice {
 /// alone if it ever needs to, but the frozen shape itself is native-only, matching `IconSelect`'s own
 /// `classifier_kind`-not-label precedent for host-resolved controls).
 pub async fn encode_artifact_kind_choice(choice: &ArtifactKindChoice) -> String {
-    serde_json::json!({
-        "kindId": choice.kind_id,
-        "schema": choice.schema,
-        "dialect": choice.dialect,
-        "label": {
-            "en": choice.label.resolve(Terminology::Native, Locale::En),
-            "de": choice.label.resolve(Terminology::Native, Locale::De),
-        },
-    })
-    .to_string()
+    dsl::os_pack::json::to_string(&dsl::os_pack::json::object([
+        ("kindId".to_string(), choice.kind_id.as_str().into()),
+        ("schema".to_string(), choice.schema.as_str().into()),
+        ("dialect".to_string(), dsl::os_pack::json::from_dsl_value(&choice.dialect.to_value())),
+        (
+            "label".to_string(),
+            dsl::os_pack::json::object([
+                ("en".to_string(), choice.label.resolve(Terminology::Native, Locale::En).to_string().into()),
+                ("de".to_string(), choice.label.resolve(Terminology::Native, Locale::De).to_string().into()),
+            ]),
+        ),
+    ]))
 }
 
 /// 🧵️ Inverse of `encode_artifact_kind_choice`.
 pub async fn decode_artifact_kind_choice(value: &str) -> Result<ArtifactKindChoice, String> {
-    let json: serde_json::Value = serde_json::from_str(value).map_err(|error| format!("malformed artifact kind choice JSON: {error}"))?;
-    let kind_id = json.get("kindId").and_then(serde_json::Value::as_str).ok_or_else(|| "artifact kind choice missing string field kindId".to_string())?.to_string();
-    let schema = json.get("schema").and_then(serde_json::Value::as_str).ok_or_else(|| "artifact kind choice missing string field schema".to_string())?.to_string();
-    let dialect: ArtifactDialect =
-        json.get("dialect").cloned().ok_or_else(|| "artifact kind choice missing field dialect".to_string()).and_then(|value| serde_json::from_value(value).map_err(|error| format!("artifact kind choice has a malformed dialect: {error}")))?;
-    let en = json.pointer("/label/en").and_then(serde_json::Value::as_str).ok_or_else(|| "artifact kind choice missing string field label.en".to_string())?;
-    let de = json.pointer("/label/de").and_then(serde_json::Value::as_str).ok_or_else(|| "artifact kind choice missing string field label.de".to_string())?;
+    let json = dsl::os_pack::json::parse(value).map_err(|error| format!("malformed artifact kind choice JSON: {error}"))?;
+    let kind_id = json.get("kindId").and_then(dsl::os_pack::json::Value::as_str).ok_or_else(|| "artifact kind choice missing string field kindId".to_string())?.to_string();
+    let schema = json.get("schema").and_then(dsl::os_pack::json::Value::as_str).ok_or_else(|| "artifact kind choice missing string field schema".to_string())?.to_string();
+    let dialect: ArtifactDialect = json
+        .get("dialect")
+        .cloned()
+        .ok_or_else(|| "artifact kind choice missing field dialect".to_string())
+        .and_then(|value| ArtifactDialect::from_value(dsl::os_pack::json::to_dsl_value(&value)).map_err(|error| format!("artifact kind choice has a malformed dialect: {error}")))?;
+    let en = json.pointer("/label/en").and_then(dsl::os_pack::json::Value::as_str).ok_or_else(|| "artifact kind choice missing string field label.en".to_string())?;
+    let de = json.pointer("/label/de").and_then(dsl::os_pack::json::Value::as_str).ok_or_else(|| "artifact kind choice missing string field label.de".to_string())?;
     Ok(ArtifactKindChoice { kind_id, schema, dialect, label: LocalizedLabel::native(en, de) })
 }
 
 /// 🧵️ Encodes a `SurfaceAppChoice` into its frozen `ActionArgOption.value` JSON shape.
 pub async fn encode_surface_app_choice(choice: &SurfaceAppChoice) -> String {
-    serde_json::json!({
-        "pluginId": choice.app.plugin_id,
-        "appId": choice.app.app_id,
-        "role": choice.role.as_str(),
-    })
-    .to_string()
+    dsl::os_pack::json::to_string(&dsl::os_pack::json::object([
+        ("pluginId".to_string(), choice.app.plugin_id.as_str().into()),
+        ("appId".to_string(), choice.app.app_id.as_str().into()),
+        ("role".to_string(), choice.role.as_str().into()),
+    ]))
 }
 
 /// 🧵️ Inverse of `encode_surface_app_choice`.
 pub async fn decode_surface_app_choice(value: &str) -> Result<SurfaceAppChoice, String> {
-    let json: serde_json::Value = serde_json::from_str(value).map_err(|error| format!("malformed surface app choice JSON: {error}"))?;
-    let plugin_id = json.get("pluginId").and_then(serde_json::Value::as_str).ok_or_else(|| "surface app choice missing string field pluginId".to_string())?.to_string();
-    let app_id = json.get("appId").and_then(serde_json::Value::as_str).ok_or_else(|| "surface app choice missing string field appId".to_string())?.to_string();
-    let role_str = json.get("role").and_then(serde_json::Value::as_str).ok_or_else(|| "surface app choice missing string field role".to_string())?;
+    let json = dsl::os_pack::json::parse(value).map_err(|error| format!("malformed surface app choice JSON: {error}"))?;
+    let plugin_id = json.get("pluginId").and_then(dsl::os_pack::json::Value::as_str).ok_or_else(|| "surface app choice missing string field pluginId".to_string())?.to_string();
+    let app_id = json.get("appId").and_then(dsl::os_pack::json::Value::as_str).ok_or_else(|| "surface app choice missing string field appId".to_string())?.to_string();
+    let role_str = json.get("role").and_then(dsl::os_pack::json::Value::as_str).ok_or_else(|| "surface app choice missing string field role".to_string())?;
     let role: AppRole = role_str.parse()?;
     Ok(SurfaceAppChoice { app: AppRef { plugin_id, app_id }, role })
 }
@@ -4140,6 +4563,11 @@ mod plugin_dependency_tests {
     //#endregion 🔖️ManifestSerdeTests
 }
 
+// 🚧️ BLOCKED (26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS): `locale`/
+// `terminology` below are `ui_wgpu::wgpu::{Locale, Terminology}` — NOT among the seven ui_wgpu
+// keystone types that gained `ToValue`/`FromValue` this ticket (see
+// 📓️ui-wgpu-keystone-seven-value-derive-2026-09-02.md); `🖱️ui` is out of scope this pass. Left
+// serde-only. Revisit once `Locale`/`Terminology` convert.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ViewModel {
@@ -4187,8 +4615,12 @@ pub struct ViewModel {
 
 /// 🪟️ One live window instance, as seen by a plugin: `id` is the instance id (equal to `window_kind_id`
 /// for a base, unsplit window), `window_kind_id` is the `AppDefinition.windowKinds` entry it renders.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+// 🚧️ BLOCKED: see `ViewModel` above — `ViewModel.window_instances: Vec<ViewWindowInstance>` is
+// itself serde-only (blocked on `ui_wgpu::wgpu::{Locale, Terminology}` gaining `ToValue`/
+// `FromValue`), so this type must keep pace with it.
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct ViewWindowInstance {
     pub id: String,
     pub window_kind_id: String,
@@ -4207,8 +4639,10 @@ pub mod kernel;
 
 //#region 🔖️PackageDescriptor
 /// 🎭️ Which actor-world role a package fills — `📓️design-abi.md` §3.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+// 🚧️ Needed in serde form too: referenced (directly or transitively) by a `🚧️ BLOCKED` serde-only manifest type above/below — see that type's own docstring.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub enum PackageRole {
     Plugin,
     Extension,
@@ -4219,8 +4653,10 @@ pub enum PackageRole {
 /// requires the same publisher as the host plugin (enforced at link time, feature-gated to avoid
 /// the `semio-framework-os-flow` ↔ extension-crate cycle); `Exclusive` gets a dedicated actor
 /// (e.g. flow/brep tessellation); `Cold` runs as a bounded job, not a resident actor.
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+// 🚧️ Needed in serde form too: referenced (directly or transitively) by a `🚧️ BLOCKED` serde-only manifest type above/below — see that type's own docstring.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub enum ExecutionMode {
     Declarative,
     Linked,
@@ -4234,6 +4670,10 @@ pub enum ExecutionMode {
 /// (`📓️design-abi.md` §5). `allowed_modes` gates `Linked` (same publisher required);
 /// `capability_allowance`/`quota_ceiling` bound what any extension attaching here can ever hold,
 /// regardless of what it requests — "a host can never delegate more than it holds".
+// 🚧️ BLOCKED (26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS): a field
+// here embeds `kernel::ActivationEvent`, which has no `ToValue`/`FromValue` yet (🎠️kernel owned
+// by another agent this pass). `ToValue`/`FromValue` cannot be derived here until it does;
+// left serde-only. Revisit once `ActivationEvent` converts.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ExtensionPointDeclaration {
@@ -4250,8 +4690,10 @@ pub struct ExtensionPointDeclaration {
 
 /// 📦️ One asset bundled with a package and preloaded into `kernel::Event::InstanceOpen.assets` —
 /// `📓️design-abi.md` §2's `read-asset` replacement.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+// 🚧️ Needed in serde form too: referenced (directly or transitively) by a `🚧️ BLOCKED` serde-only manifest type above/below — see that type's own docstring.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct AssetDeclaration {
     pub name: String,
     pub media_type: MediaType,
@@ -4261,8 +4703,10 @@ pub struct AssetDeclaration {
 
 /// #️⃣ Content hashes the registry's `check` gate verifies against the built wasm —
 /// `📓️design-abi.md` §3.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+// 🚧️ Needed in serde form too: referenced (directly or transitively) by a `🚧️ BLOCKED` serde-only manifest type above/below — see that type's own docstring.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct PackageHashes {
     pub wasm_sha256: String,
     pub core_wasm_sha256: String,
@@ -4277,12 +4721,15 @@ pub struct PackageHashes {
 /// context menus are derived at runtime from `ActionSemantics`/category metadata, and there is no
 /// declared theme/palette contribution anywhere under `🖱️ui/🎨️styling`). Additive: nothing
 /// constructs one yet, and a future typed model can replace either category without a wire break.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+// 🚧️ Needed in serde form too: referenced (directly or transitively) by a `🚧️ BLOCKED` serde-only manifest type above/below — see that type's own docstring.
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct DescriptorEntry {
     pub id: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub payload: Option<serde_json::Value>,
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub payload: Option<DslValue>,
 }
 
 /// 🗂️ One file-format kind an app declares it can import and/or export — the typed shape for
@@ -4290,8 +4737,10 @@ pub struct DescriptorEntry {
 /// `import_formats` (currently flat `Vec<String>` scaffolding on that type) paired with the app's
 /// own `document_media_type`, flattened to one row per format kind across every app the package
 /// declares.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+// 🚧️ Needed in serde form too: referenced (directly or transitively) by a `🚧️ BLOCKED` serde-only manifest type above/below — see that type's own docstring.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct FileTypeContribution {
     pub format_kind: String,
     pub media_type: MediaType,
@@ -4303,8 +4752,10 @@ pub struct FileTypeContribution {
 /// (`🚪️io/🦀️.rs`), the same "owned wire twin of a native type living in a sibling
 /// framework module" idiom `ContributedMutationMetadata`/`ContributedInferenceMetadata` already
 /// use for the os-kernel protocol crate.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+// 🚧️ Needed in serde form too: referenced (directly or transitively) by a `🚧️ BLOCKED` serde-only manifest type above/below — see that type's own docstring.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub enum IoEntryDirection {
     Import,
     Export,
@@ -4316,8 +4767,10 @@ pub enum IoEntryDirection {
 /// `ArtifactDialect` (`🚪️io/🧬️schema/🦀️component.rs`) instead of `IoKey`'s seven flat fields —
 /// `IoKey` itself isn't `owned schema exporter`-derived and this crate must not add that derive to a module it
 /// doesn't own.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+// 🚧️ Needed in serde form too: referenced (directly or transitively) by a `🚧️ BLOCKED` serde-only manifest type above/below — see that type's own docstring.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct IoEntryDescriptor {
     pub owner: ArtifactDialect,
     pub counterpart: ArtifactDialect,
@@ -4328,11 +4781,14 @@ pub struct IoEntryDescriptor {
 /// `ContributionSet.composer_entries`, an owned mirror of `io::ComposerEntry`'s `(writes, reads)`
 /// identity (its third field, the `compose` fn pointer, is runtime-only and has no wire form —
 /// a descriptor is build-time, non-executable data).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+// 🚧️ Needed in serde form too: referenced (directly or transitively) by a `🚧️ BLOCKED` serde-only manifest type above/below — see that type's own docstring.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct ComposerEntryDescriptor {
     pub writes: ArtifactDialect,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[value(default, skip_serializing_if = "Vec::is_empty")]
     pub reads: Vec<ArtifactDialect>,
 }
 
@@ -4347,30 +4803,43 @@ pub struct ComposerEntryDescriptor {
 /// `file_types`/`io_entries`/`composer_entries` are new types grounded in `AppIo`/`io::IoKey`/
 /// `io::ComposerEntry` — see each type's own doc. `menus`/`themes` stay `DescriptorEntry` — see
 /// its doc for why.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+// 🚧️ Kept additive: consumed outside this pass by 🛍️products/💻️os (plugin/renderer modules) and/or ✏️s/🔌️plugins/** while still serde-deriving; ToValue/FromValue added alongside, not replacing, Serialize/Deserialize. Ticket 26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS.
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct ContributionSet {
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[value(default, skip_serializing_if = "Vec::is_empty")]
     pub commands: Vec<CommandDefinition>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[value(default, skip_serializing_if = "Vec::is_empty")]
     pub menus: Vec<DescriptorEntry>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[value(default, skip_serializing_if = "Vec::is_empty")]
     pub file_types: Vec<FileTypeContribution>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[value(default, skip_serializing_if = "Vec::is_empty")]
     pub panels: Vec<PanelTabDefinition>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[value(default, skip_serializing_if = "Vec::is_empty")]
     pub themes: Vec<DescriptorEntry>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[value(default, skip_serializing_if = "Vec::is_empty")]
     pub topic_contributions: Vec<TopicContribution>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[value(default, skip_serializing_if = "Vec::is_empty")]
     pub artifact_contributions: Vec<ArtifactContributionDescriptor>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[value(default, skip_serializing_if = "Vec::is_empty")]
     pub inference_services: Vec<ContributedInferenceMetadata>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[value(default, skip_serializing_if = "Vec::is_empty")]
     pub mutation_services: Vec<ContributedMutationMetadata>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[value(default, skip_serializing_if = "Vec::is_empty")]
     pub io_entries: Vec<IoEntryDescriptor>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[value(default, skip_serializing_if = "Vec::is_empty")]
     pub composer_entries: Vec<ComposerEntryDescriptor>,
 }
 
@@ -4387,6 +4856,10 @@ pub const ASSEMBLY_FAILED_PLUGIN_ID: &str = "assembly-failed";
 /// `📓️design-abi.md` §3's `describe()` output (`🛂️.descriptor.semio`/`🔣️.json`).
 /// Nothing constructs or reads one yet in this packet: additive contract only (packet
 /// A2-abi-sdk's builder wiring and E1-describe's emitter/registry `check` gate consume it next).
+// 🚧️ BLOCKED (26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS): transitively
+// embeds `kernel::ActivationEvent` via `ExtensionPointDeclaration`/`ContributionSet` above, which
+// has no `ToValue`/`FromValue` yet (🎠️kernel owned by another agent this pass). Left serde-only.
+// Revisit once `ActivationEvent` converts.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct PackageDescriptor {
@@ -4445,12 +4918,12 @@ pub struct PackageDescriptor {
 /// `capabilities.search`/`capabilities.describe`. Both empty by default — an absent
 /// `AgentContributions` (the `Option` on `PackageDescriptor` stays `None`) means "not yet
 /// agent-enabled", never "agent-enabled with zero capabilities" (an empty-but-`Some` value).
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct AgentContributions {
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[value(default, skip_serializing_if = "Vec::is_empty")]
     pub capabilities: Vec<String>,
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[value(default, skip_serializing_if = "Vec::is_empty")]
     pub promoted: Vec<String>,
 }
 
@@ -4518,8 +4991,10 @@ mod agent_contributions_tests {
 /// counterpart threaded onto `AppDefinition.artifact_kinds` (see `ArtifactKindSpec`). Canonical home for
 /// what used to be duplicated verbatim in `framework/plugin/rs` and `framework/product/os/core/rs`; both
 /// now re-export this definition instead of declaring their own.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+// 🚧️ Needed in serde form too: referenced (directly or transitively) by a `🚧️ BLOCKED` serde-only manifest type above/below — see that type's own docstring.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub enum OsMediaCapability {
     MeshOnly,
     Brep,
@@ -4533,8 +5008,19 @@ pub enum OsMediaCapability {
 /// so one spec carries both the OS-catalog presentation shape and the `MediaType` a wire actually negotiates
 /// — see `crate::media_types_compatible`. `OsArtifactDescriptor` (`framework/product/os/core`) threads
 /// `media_type` through so registry lookups return it alongside the rest of the descriptor.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+/// 🌉️ `#[value(...)]` has no `skip_deserializing`-only equivalent (only bare `skip`, which also
+/// drops the field from encode) — this stands in for the retired `#[serde(default,
+/// skip_deserializing)]` on `export_stdio_kinds`/`import_stdio_kinds` below: still encoded (so
+/// downstream tooling sees the computed stdio kind ids) but never decoded (`&'static str` can't be
+/// hydrated from wire data anyway; it always resets to empty and gets recomputed).
+fn ignore_stdio_kinds_on_decode(_value: DslValue) -> Result<Vec<&'static str>, ValueError> {
+    Ok(Vec::new())
+}
+
+// 🚧️ Needed in serde form too: referenced (directly or transitively) by a `🚧️ BLOCKED` serde-only manifest type above/below — see that type's own docstring.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct ArtifactKindSpec {
     pub id: String,
     pub name: String,
@@ -4550,15 +5036,22 @@ pub struct ArtifactKindSpec {
     pub import_formats: Vec<String>,
     /// 🗄️ Stdio export target kind ids (e.g. `stdio.json`) — additive peer of `export_formats`.
     #[serde(default, skip_deserializing)]
+    #[value(default, deserialize_with = "ignore_stdio_kinds_on_decode")]
     pub export_stdio_kinds: Vec<&'static str>,
     /// 🗄️ Stdio import source kind ids — additive peer of `import_formats`.
     #[serde(default, skip_deserializing)]
+    #[value(default, deserialize_with = "ignore_stdio_kinds_on_decode")]
     pub import_stdio_kinds: Vec<&'static str>,
 }
 //#endregion ArtifactKind
 
 //#region MediaType
 /// 🧬️ Typed-media lattice: every port/wire in the workflow carries a `MediaType` (`class` × `form`) instead of the legacy string `artifact_kind`. `MediaType` is what a wire negotiates; a format kind id string is only how bytes are encoded once they actually cross a process boundary (see `MediaWireFormat`). Dependent tickets retire `OsMediaCapability` (see the `ArtifactKind` region above) onto `MediaForm::{Brep,Mesh}`, which already covers what `OsMediaCapability::{Brep,MeshOnly}` expresses.
+// 🚧️ BLOCKED (26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS): `🎠️kernel/🦀️.rs`
+// and `🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️.rs` (both owned by other agents this pass) still
+// embed `MediaType`/`MediaClass`/`MediaForm` by value inside plain `#[derive(Serialize,
+// Deserialize)]` types — dropping serde here breaks `cargo check -p semio-framework` today. Both
+// derive families stay load-bearing simultaneously until those crates migrate; revisit once they do.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
@@ -4574,6 +5067,7 @@ pub enum MediaClass {
 }
 
 /// 🧬️ The shape/representation a `MediaClass` payload takes, orthogonal to `class` — e.g. `ThreeD` × `Brep` vs `ThreeD` × `Mesh`. `Any` only ever appears on the accepting side of a port (see `media_types_compatible`).
+// 🚧️ BLOCKED: see `MediaClass` above — same cross-crate serde dependency.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
@@ -4597,6 +5091,7 @@ pub enum MediaForm {
 }
 
 /// 🧬️ A port or wire's declared media type — the pair a producer offers or a consumer accepts.
+// 🚧️ BLOCKED: see `MediaClass` above — same cross-crate serde dependency.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
@@ -4609,38 +5104,50 @@ pub struct MediaType {
 /// carry a format kind id string (the legacy format enum was retired — ticket 26/08/11/
 /// SEMIO-ARTIFACT-UNIFIED-IMPORT-EXPORT-AND-MEDIA-FORMAT-RETIREMENT W6), structured payloads carry
 /// a schema id instead (see `ArtifactKindSpec::schema`).
-#[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
+// 🚧️ BLOCKED: see `MediaClass` above — `🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️.rs`'s
+// `WorkflowMediaPort`/`MediaContract` (owned by another agent this pass) still embed this by value
+// inside plain `#[derive(Serialize, Deserialize)]` types.
+#[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase", tag = "kind")]
+#[value(rename_all = "camelCase", tag = "kind")]
 pub enum MediaWireFormat {
     Binary { format_kind: String },
     Document { schema: String },
 }
 
 /// 🔀️ Which side of a wire a `MediaPortSpec` sits on.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
+// 🚧️ BLOCKED: see `MediaWireFormat` above — same cross-crate serde dependency (`WorkflowMediaPort`).
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub enum MediaPortDirection {
     In,
     Out,
 }
 
 /// 🔢️ Whether a `MediaPortSpec` accepts/produces exactly one media value or a stream/collection of them — e.g. a mesh-array input that fans in from several upstream producers.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
+// 🚧️ BLOCKED: see `MediaWireFormat` above — same cross-crate serde dependency (`WorkflowMediaPort`).
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub enum PortMultiplicity {
     One,
     Many,
 }
 
 /// 🔌️ A single port an app exposes on the workflow — `kind_id` optionally pins it to one `ArtifactKindSpec.id` when the port is more specific than its `media_type` alone conveys.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+// 🚧️ BLOCKED: see `MediaWireFormat` above — `WorkflowMediaPort.spec` embeds this by value inside a
+// plain `#[derive(Serialize, Deserialize)]` type.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct MediaPortSpec {
     pub id: String,
     pub label: String,
     pub direction: MediaPortDirection,
     pub media_type: MediaType,
     #[serde(skip_serializing_if = "Option::is_none")]
+    #[value(skip_serializing_if = "Option::is_none")]
     pub kind_id: Option<String>,
     pub required: bool,
     pub multiplicity: PortMultiplicity,
@@ -4679,8 +5186,10 @@ pub async fn media_types_compatible(produced: &MediaType, accepted: &MediaType) 
 /// a resource presents in the OS catalog — split out so `AppIo` can carry its own `export_formats`/
 /// `import_formats` lists without duplicating `ArtifactKindSpec`'s full shape (which stays alive
 /// unchanged for now; later waves retire it onto `AppIo`).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+// 🚧️ Needed in serde form too: referenced (directly or transitively) by a `🚧️ BLOCKED` serde-only manifest type above/below — see that type's own docstring.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct ArtifactPresentation {
     pub id: String,
     pub name: String,
@@ -4693,8 +5202,10 @@ pub struct ArtifactPresentation {
 /// export/import formats, and OS presentation it declares itself. Scaffolding for the typed manifest
 /// surface (`AppDefinition.io`); apps don't populate this yet — later waves migrate `media_inputs`/
 /// `media_outputs`/`artifact_kinds` onto it.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+// 🚧️ Needed in serde form too: referenced (directly or transitively) by a `🚧️ BLOCKED` serde-only manifest type above/below — see that type's own docstring.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct AppIo {
     pub document_schema: String,
     pub document_media_type: MediaType,
@@ -4755,15 +5266,20 @@ impl Default for AppIo {
 /// `Serialize`/`Deserialize` — `Shape::Record`/`Statements`/`Table` carry `fn() -> RecordSpec` pointers
 /// — and `semio-framework-core` doesn't depend on `dsl`/`dsl_schema` today, so wrapping it would add a
 /// new cross-crate dependency purely to reach a shape that can't round-trip over the wire anyway).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+// 🚧️ Needed in serde form too: referenced (directly or transitively) by a `🚧️ BLOCKED` serde-only manifest type above/below — see that type's own docstring.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase", tag = "kind")]
+#[value(rename_all = "camelCase", tag = "kind")]
 pub enum ConfigFieldShape {
     Number {
         #[serde(skip_serializing_if = "Option::is_none")]
+        #[value(skip_serializing_if = "Option::is_none")]
         min: Option<f64>,
         #[serde(skip_serializing_if = "Option::is_none")]
+        #[value(skip_serializing_if = "Option::is_none")]
         max: Option<f64>,
         #[serde(skip_serializing_if = "Option::is_none")]
+        #[value(skip_serializing_if = "Option::is_none")]
         step: Option<f64>,
     },
     Toggle,
@@ -4778,22 +5294,28 @@ pub enum ConfigFieldShape {
 
 /// 🧮️ One field of an app's declared configuration record — the whole-app-settings counterpart to
 /// `ActionArgDef` (which scopes to a single action's arguments instead).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+// 🚧️ Needed in serde form too: referenced (directly or transitively) by a `🚧️ BLOCKED` serde-only manifest type above/below — see that type's own docstring.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct ConfigFieldSpec {
     pub key: String,
     pub label: String,
     pub shape: ConfigFieldShape,
     #[serde(skip_serializing_if = "Option::is_none")]
+    #[value(skip_serializing_if = "Option::is_none")]
     pub default: Option<DslValue>,
 }
 
 /// 🧮️ An app's full typed configuration record — the manifest-level declaration
 /// `AppDefinition.config` carries. Empty until per-app waves populate it.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, Default)]
+// 🚧️ Needed in serde form too: referenced (directly or transitively) by a `🚧️ BLOCKED` serde-only manifest type above/below — see that type's own docstring.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, Default)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct ConfigSpec {
     #[serde(default)]
+    #[value(default)]
     pub fields: Vec<ConfigFieldSpec>,
 }
 
@@ -4810,8 +5332,10 @@ impl ConfigSpec {
 /// derived from `dsl_schema`). No `List`/array shape exists yet — the manifest's existing field-typed
 /// vocabulary (`ActionArgControl`: Text/Number/Slider/Toggle/Select/Vec3/IconSelect) has no array
 /// control either, so `ConfigFieldShape` doesn't invent one ahead of a real need.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+// 🚧️ Needed in serde form too: referenced (directly or transitively) by a `🚧️ BLOCKED` serde-only manifest type above/below — see that type's own docstring.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct CommandFieldSpec {
     pub key: String,
     pub shape: ConfigFieldShape,
@@ -4819,8 +5343,10 @@ pub struct CommandFieldSpec {
 }
 
 /// 🎛️ One keyword-dispatched command variant (e.g. `move x=1 y=2`) and its field grammar.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+// 🚧️ Needed in serde form too: referenced (directly or transitively) by a `🚧️ BLOCKED` serde-only manifest type above/below — see that type's own docstring.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct CommandVariantSpec {
     pub keyword: String,
     pub fields: Vec<CommandFieldSpec>,
@@ -4828,10 +5354,13 @@ pub struct CommandVariantSpec {
 
 /// 🎛️ An app's full typed binary command grammar — the manifest-level declaration
 /// `AppDefinition.command_grammar` carries. Empty until per-app waves populate it.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, Default)]
+// 🚧️ Needed in serde form too: referenced (directly or transitively) by a `🚧️ BLOCKED` serde-only manifest type above/below — see that type's own docstring.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, Default)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct CommandGrammar {
     #[serde(default)]
+    #[value(default)]
     pub variants: Vec<CommandVariantSpec>,
 }
 
@@ -4844,24 +5373,37 @@ impl CommandGrammar {
 
 //#region Media
 /// 🎞️ The value that actually flows over a workflow wire, produced by `ArtifactApp::export_media` and consumed by `ArtifactApp::import_media`. Kept separate from the `MediaType` lattice above (which only negotiates *compatibility*, never carries a value) so headless runners and the UI share one payload shape.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct Media {
     pub media_type: MediaType,
     pub payload: MediaPayload,
 }
 
 /// 📦️ Structured payloads stay inline as canonical JSON (small, diffable); binary payloads are content-addressed through `store::BlobStore` so a `Media` value never carries megabytes across a WIT boundary.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase", tag = "kind")]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
+#[value(rename_all = "camelCase", tag = "kind")]
 pub enum MediaPayload {
     Structured { schema: String, json: String },
     Binary { format_kind: String, blob_hash: String },
 }
 
 /// 🔑️ A cheap identity for one port's current output, independent of serializing the full payload — the unit the `SpaceRunner` compares to decide whether a downstream node actually needs to see a new value.
-#[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub struct MediaFingerprint(pub String);
+
+/// 🌉️ Hand-written, not derived: `#[derive(ToValue, FromValue)]` doesn't support tuple structs —
+/// wire-shaped as the bare inner string, matching serde's own default newtype-struct behavior.
+impl ToValue for MediaFingerprint {
+    fn to_value(&self) -> DslValue {
+        self.0.to_value()
+    }
+}
+impl FromValue for MediaFingerprint {
+    fn from_value(value: DslValue) -> Result<Self, ValueError> {
+        String::from_value(value).map(MediaFingerprint)
+    }
+}
 
 impl MediaFingerprint {
     /// 🔑️ Canonical fingerprint of a `Media` value: structured payloads hash their JSON text, binary payloads reuse their existing content hash directly (no re-hashing bytes already addressed by the blob store).

@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 1,
+  "owner": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️load/🧬️schema/🧬️mutations/🗑🔗️delete-combination",
+  "semanticKind": "delete-combination",
+  "displayName": "Delete Combination",
+  "emoji": "🗑🔗️",
+  "aggregateVariant": "DeleteCombination",
+  "payloadSchema": "🔣️.schema.json",
+  "textOpcode": "delete-combination",
+  "binaryTag": null,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "detect",
+  "outcomeClasses": [
+    "error",
+    "applied"
+  ],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": [
+    "rust",
+    "json-schema",
+    "text",
+    "binary"
+  ]
+}

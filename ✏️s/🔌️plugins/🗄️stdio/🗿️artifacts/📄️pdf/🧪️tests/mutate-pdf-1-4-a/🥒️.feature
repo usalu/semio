@@ -1,5 +1,5 @@
 @capability-pdf-1-4-a-mutate
-@oracle-lopdf-pdf-1-4-a-mutate
+@oracle-lopdf-pdf-1-4-a-mutate-reader
 @comparison-semantic-pdf-1-4-conformance-a-v1
 @mutations-pdf-1-4-a
 Feature: Apply every concrete PDF 1.4 A mutation to a real document

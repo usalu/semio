@@ -3,7 +3,7 @@
 @comparison-semantic-ifc-v1
 @mutations-ifc-2x3-cv20
 Feature: Apply every typed Coordination View 2.0 mutation to a real IFC2X3 building model
-  The input is `shared://🏗️wellness-center-sama-street-level.ifc`, a real self-consistent 3464-entity
+  The input is `shared://🧪️wellness-center-sama-street-level/🏗️.ifc`, a real self-consistent 3464-entity
   slice of a genuine 21 MB IFC2X3 building model (an EDM StepFileFactory export, 2021). It is the
   only real IFC2X3 file in this repository and it is genuinely a document of THIS subset's own model
   view definition: its `FILE_DESCRIPTION` declares `ViewDefinition [CoordinationView_V2.0]` and its
@@ -52,7 +52,7 @@ Feature: Apply every typed Coordination View 2.0 mutation to a real IFC2X3 build
   @level-exhaustive
   @mode-property
   Scenario Outline: Apply <id> to the real Coordination View 2.0 model
-    Given the real input document shared://🏗️wellness-center-sama-street-level.ifc
+    Given the real input document shared://🧪️wellness-center-sama-street-level/🏗️.ifc
     When the <id> mutation is applied with its parameters
       """
       {"kind": "<id>", "params": <params>}
@@ -71,7 +71,7 @@ Feature: Apply every typed Coordination View 2.0 mutation to a real IFC2X3 build
   @level-exhaustive
   @mode-property
   Scenario Outline: Undoing <id> restores the real Coordination View 2.0 model
-    Given the real input document shared://🏗️wellness-center-sama-street-level.ifc
+    Given the real input document shared://🧪️wellness-center-sama-street-level/🏗️.ifc
     When the <id> mutation is applied with its parameters
       """
       {"kind": "<id>", "params": <params>}
@@ -91,7 +91,7 @@ Feature: Apply every typed Coordination View 2.0 mutation to a real IFC2X3 build
   @level-long
   @mode-round-trip
   Scenario: Decode and re-encode the real model without passing bytes through
-    Given the real input document shared://🏗️wellness-center-sama-street-level.ifc
+    Given the real input document shared://🧪️wellness-center-sama-street-level/🏗️.ifc
     When the document is decoded into the subset's own snapshot and re-encoded from it alone
     Then the output is not bit-identical to the input
     And the independently read projections of input and output agree

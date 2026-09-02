@@ -2,6 +2,14 @@
   "artifact": "s.stdio.avi",
   "standard": "1.0",
   "subsets": {
-    "*": { "name": "Unconstrained avi 1.0" }
+    "hdrl": {
+      "name": "Video for Windows AVI 1.0 `hdrl` LIST -- the main AVI header and per-stream headers/formats (`avih`/`strh`/`strf`), plus the whole-document set-snapshot/no-mutation surface. The shared RIFF reader/writer for the whole container lives here; the other two subsets reuse it (family-module pattern) rather than duplicating it."
+    },
+    "movi": {
+      "name": "Video for Windows AVI 1.0 `movi` LIST -- the interleaved video/audio sample data chunks, normatively distinct from `hdrl`."
+    },
+    "idx1": {
+      "name": "Video for Windows AVI 1.0 `idx1` chunk -- the optional index of `movi` chunk offsets/flags/sizes, normatively distinct from both `hdrl` and `movi`."
+    }
   }
 }

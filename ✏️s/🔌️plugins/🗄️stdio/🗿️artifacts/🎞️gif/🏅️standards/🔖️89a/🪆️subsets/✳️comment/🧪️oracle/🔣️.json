@@ -1,0 +1,195 @@
+{
+  "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json",
+  "schemaVersion": 2,
+  "_comment": "Ticket 26/09/02/SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION: split out of the former `✳️any` catch-all. The GIF89a Specification (CompuServe, 1990) §24 defines the Comment Extension as a self-contained, optional block (block label 0x21 0xFE) of plain-text sub-blocks with no rendering effect. `insert-comment`/`remove-comment` are that block's own vocabulary, owned here rather than by `✳️base`, for the same family-module reuse rationale as `../../✳️graphic-control/🧪️oracle/🔣️.json`.",
+  "oracles": [],
+  "noOracleDecisions": [],
+  "comparisonProfiles": [],
+  "mutationManifests": [
+    {
+      "schema": "semio.repository-test.mutation-manifest/v2",
+      "artifact": "s.stdio.gif",
+      "standard": "89a",
+      "subset": "comment",
+      "standardDirectoryName": "🔖️89a",
+      "subsetDirectoryName": "✳️comment",
+      "mutations": [
+        {
+          "id": "insert-comment",
+          "capability": "gif-89a-comment-mutate",
+          "payloadSchema": "../🧬️schema/🧬️mutations/💬insert-comment/🦀️.rs#InsertComment",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "insert-comment",
+            "bridgeVersion": 1,
+            "variant": "GifMutation::InsertComment"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "gif-89a-comment-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "gif-89a-extension-reader"
+            }
+          ],
+          "carriers": [
+            "gif"
+          ],
+          "invariants": {
+            "local": [
+              "comment-extension-text-and-count-agree"
+            ],
+            "enclosing": [
+              "gif-reencode-round-trip-agrees-with-reference-decoder"
+            ]
+          }
+        },
+        {
+          "id": "remove-comment",
+          "capability": "gif-89a-comment-mutate",
+          "payloadSchema": "../🧬️schema/🧬️mutations/🚫remove-comment/🦀️.rs#RemoveComment",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "remove-comment",
+            "bridgeVersion": 1,
+            "variant": "GifMutation::RemoveComment"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "gif-89a-comment-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "gif-89a-extension-reader"
+            }
+          ],
+          "carriers": [
+            "gif"
+          ],
+          "invariants": {
+            "local": [
+              "comment-extension-count-agrees"
+            ],
+            "enclosing": [
+              "gif-reencode-round-trip-agrees-with-reference-decoder"
+            ]
+          }
+        }
+      ]
+    }
+  ],
+  "fixtureManifests": [
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "extension-insert-comment",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.gif",
+        "standard": "89a",
+        "subset": "comment"
+      },
+      "mutation": "insert-comment",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before-gif",
+          "path": "../🧫️fixtures/insert-comment/before.gif",
+          "mediaType": "image/gif",
+          "sha256": "sha256:bdd47b88c3d972b13a95547f059eb7ae5844de6b9b4be4a8fefc71691269591b",
+          "bytes": 51
+        },
+        {
+          "role": "expected-after-gif",
+          "path": "../🧫️fixtures/insert-comment/after.gif",
+          "mediaType": "image/gif",
+          "sha256": "sha256:58e64d4fd0599ac36ca9ca337b6b84e054cb15867f6013ae69022ba59ffe0635",
+          "bytes": 80
+        }
+      ],
+      "provenance": {
+        "source": "generated",
+        "license": "public-domain (synthetic, no third-party content embedded)"
+      },
+      "generator": {
+        "oracle": "gif-89a-extension-reader",
+        "packageVersion": "11.3.0",
+        "engineFamily": "pillow",
+        "engineVersion": "11.3.0",
+        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/🔖️89a/🪆️subsets/✳️base/🏭️generator/📜️script.ts extensions",
+        "platform": "darwin"
+      },
+      "comparisonProfile": "semantic-gif-89a-extension-v1",
+      "reproducible": true,
+      "family": "mechanical",
+      "notes": "A Pillow-written GIF pair differing only in the extension block this kind touches. gif 0.13's high-level Decoder, this subset's other reader, consumes extension blocks on the way to frames and never surfaces them; its documented low-level StreamingDecoder does. Observability was checked through that reader before the pair was written.",
+      "comparisonPipeline": "gif-89a-extension-compare-v1"
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "extension-remove-comment",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.gif",
+        "standard": "89a",
+        "subset": "comment"
+      },
+      "mutation": "remove-comment",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before-gif",
+          "path": "../🧫️fixtures/remove-comment/before.gif",
+          "mediaType": "image/gif",
+          "sha256": "sha256:58e64d4fd0599ac36ca9ca337b6b84e054cb15867f6013ae69022ba59ffe0635",
+          "bytes": 80
+        },
+        {
+          "role": "expected-after-gif",
+          "path": "../🧫️fixtures/remove-comment/after.gif",
+          "mediaType": "image/gif",
+          "sha256": "sha256:bdd47b88c3d972b13a95547f059eb7ae5844de6b9b4be4a8fefc71691269591b",
+          "bytes": 51
+        }
+      ],
+      "provenance": {
+        "source": "generated",
+        "license": "public-domain (synthetic, no third-party content embedded)"
+      },
+      "generator": {
+        "oracle": "gif-89a-extension-reader",
+        "packageVersion": "11.3.0",
+        "engineFamily": "pillow",
+        "engineVersion": "11.3.0",
+        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/🔖️89a/🪆️subsets/✳️base/🏭️generator/📜️script.ts extensions",
+        "platform": "darwin"
+      },
+      "comparisonProfile": "semantic-gif-89a-extension-v1",
+      "reproducible": true,
+      "family": "mechanical",
+      "notes": "A Pillow-written GIF pair differing only in the extension block this kind touches. gif 0.13's high-level Decoder, this subset's other reader, consumes extension blocks on the way to frames and never surfaces them; its documented low-level StreamingDecoder does. Observability was checked through that reader before the pair was written.",
+      "comparisonPipeline": "gif-89a-extension-compare-v1"
+    }
+  ],
+  "mutationCatalogs": [
+    {
+      "id": "gif-89a-comment",
+      "capability": "gif-89a-comment-mutate",
+      "standardDirectoryName": "🔖️89a",
+      "subsetDirectoryName": "✳️comment",
+      "vectors": [],
+      "kinds": [
+        "insert-comment",
+        "remove-comment"
+      ]
+    }
+  ]
+}

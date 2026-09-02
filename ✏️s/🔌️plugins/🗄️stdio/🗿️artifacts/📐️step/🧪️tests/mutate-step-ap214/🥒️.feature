@@ -4,7 +4,7 @@
 @mutations-step-ap214-any
 Feature: Apply every typed STEP AP214 mutation to a real-world exchange structure
   The input is a real ISO 10303-21 exchange structure derived once from a real committed BIM export,
-  not a synthetic fixture: `shared://📐️hexagonal-cut-concrete-forest-left-ap214.stp`, whose own header
+  not a synthetic fixture: `shared://🧪️hexagonal-cut-concrete-forest-left-ap214/📐️.stp`, whose own header
   comment records the exact derivation. Its DATA section (1396 real entities: 449 CARTESIAN_POINT,
   126 B_SPLINE_CURVE_WITH_KNOTS, 71 VERTEX_POINT, 57 each of ADVANCED_FACE/PLANE/EDGE_LOOP/
   FACE_OUTER_BOUND, one MANIFOLD_SOLID_BREP/CLOSED_SHELL, plus the real PRODUCT/PRODUCT_DEFINITION
@@ -75,7 +75,7 @@ Feature: Apply every typed STEP AP214 mutation to a real-world exchange structur
   @level-exhaustive
   @mode-property
   Scenario Outline: Apply <id> to the real exchange structure
-    Given the real input document shared://📐️hexagonal-cut-concrete-forest-left-ap214.stp
+    Given the real input document shared://🧪️hexagonal-cut-concrete-forest-left-ap214/📐️.stp
     When the <id> mutation is applied with its parameters
       """
       {"kind": "<id>", "params": <params>}
@@ -99,7 +99,7 @@ Feature: Apply every typed STEP AP214 mutation to a real-world exchange structur
   @level-exhaustive
   @mode-property
   Scenario Outline: Undoing <id> restores the real exchange structure
-    Given the real input document shared://📐️hexagonal-cut-concrete-forest-left-ap214.stp
+    Given the real input document shared://🧪️hexagonal-cut-concrete-forest-left-ap214/📐️.stp
     When the <id> mutation is applied with its parameters
       """
       {"kind": "<id>", "params": <params>}
@@ -124,7 +124,7 @@ Feature: Apply every typed STEP AP214 mutation to a real-world exchange structur
   @level-long
   @mode-round-trip
   Scenario: Decode and re-encode the real exchange structure without passing bytes through
-    Given the real input document shared://📐️hexagonal-cut-concrete-forest-left-ap214.stp
+    Given the real input document shared://🧪️hexagonal-cut-concrete-forest-left-ap214/📐️.stp
     When the document is decoded into the subset's own snapshot and re-encoded from it alone
     Then the output is not bit-identical to the input
     And the independently read projections of input and output agree

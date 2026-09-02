@@ -64,7 +64,7 @@ from semio_repo_test import Adapter, Context, Outcome
 
 
 # region 🔖️Input
-INPUT = "shared://🏗️nakagin-capsule-tower.ifc"
+INPUT = "shared://🧪️nakagin-capsule-tower/🏗️.ifc"
 
 #: 🧬️ The seven kinds IfcOpenShell can genuinely PRODUCE, in this subset's own catalog order.
 KINDS = ["no-mutation", "set-snapshot", "set-file-description", "set-file-name", "set-file-schema", "insert-entity", "set-entity-arg"]

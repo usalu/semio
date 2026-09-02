@@ -44,7 +44,7 @@
         "version": "0.44"
       },
       "capabilities": [
-        "pdf-1-4-a-mutate-reader"
+        "pdf-1-4-a-mutate"
       ],
       "comparisonProfiles": [
         "semantic-pdf-1-4-conformance-a-v1"
@@ -133,7 +133,7 @@
           },
           "oracleRequirements": [
             {
-              "capability": "pdf-1-4-a-mutate-reader",
+              "capability": "pdf-1-4-a-mutate",
               "qualifyingKind": "third-party-library",
               "oracle": "lopdf-pdf-1-4-a-mutate-reader"
             }
@@ -154,7 +154,7 @@
           },
           "oracleRequirements": [
             {
-              "capability": "pdf-1-4-a-mutate-reader",
+              "capability": "pdf-1-4-a-mutate",
               "qualifyingKind": "third-party-library",
               "oracle": "lopdf-pdf-1-4-a-mutate-reader"
             }
@@ -353,7 +353,7 @@
         "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.4/🪆️subsets/✳️a/🏭️generator/📜️script.ts generate",
         "platform": "darwin"
       },
-      "comparisonProfile": "semantic-pdf-conformance-v1",
+      "comparisonProfile": "semantic-pdf-1-4-conformance-a-v1",
       "reproducible": true,
       "family": "mechanical",
       "notes": "A minimal two-descriptor seed built with lopdf 0.44, with the set-page-text mutation applied THROUGH lopdf's own public COS API (🦀️lopdf-engine/src/lib.rs::apply) — never through this repository's own mutation engine, which is what made the previous corpus inadmissible as evidence. base.pdf is the seed after 🦀️lopdf-engine's arrange put the mutation's precondition in place (identical to the untouched seed for every kind whose precondition is already satisfied); mutated.pdf is the result lopdf wrote. Observability (mutated projection != base projection, both read back through lopdf) is checked for every pair before it is written, and a pair that does not move is refused rather than committed.",
@@ -402,7 +402,7 @@
         "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.4/🪆️subsets/✳️a/🏭️generator/📜️script.ts generate",
         "platform": "darwin"
       },
-      "comparisonProfile": "semantic-pdf-conformance-v1",
+      "comparisonProfile": "semantic-pdf-1-4-conformance-a-v1",
       "reproducible": true,
       "family": "mechanical",
       "notes": "A minimal two-descriptor seed built with lopdf 0.44, with the clear-page-text mutation applied THROUGH lopdf's own public COS API (🦀️lopdf-engine/src/lib.rs::apply) — never through this repository's own mutation engine, which is what made the previous corpus inadmissible as evidence. base.pdf is the seed after 🦀️lopdf-engine's arrange put the mutation's precondition in place (identical to the untouched seed for every kind whose precondition is already satisfied); mutated.pdf is the result lopdf wrote. Observability (mutated projection != base projection, both read back through lopdf) is checked for every pair before it is written, and a pair that does not move is refused rather than committed.",

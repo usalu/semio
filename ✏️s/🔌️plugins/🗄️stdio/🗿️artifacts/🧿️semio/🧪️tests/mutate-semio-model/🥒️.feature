@@ -136,9 +136,9 @@ Feature: Apply every typed semio MODEL mutation to the Nakagin Capsule Tower, ag
   Scenario Outline: Apply and undo <id> on its committed specification vector over the real demo building
     Given the committed specification fixtures for the <id> kind
       | role     | fixture                     |
-      | before   | local://<id>/⬅️before.json   |
-      | mutation | local://<id>/🦠️mutation.json |
-      | after    | local://<id>/➡️after.json    |
+      | before   | local://<id>/⬅️before/🔣️.json   |
+      | mutation | local://<id>/🦠️mutation/🔣️.json |
+      | after    | local://<id>/➡️after/🔣️.json    |
     When both implementations apply the committed mutation to the committed before-snapshot and undo it again
     Then each reaches the committed after-snapshot, each returns to the before-snapshot, and the two agree
     Examples:
@@ -159,7 +159,7 @@ Feature: Apply every typed semio MODEL mutation to the Nakagin Capsule Tower, ag
   @level-long
   @mode-round-trip
   Scenario: Re-emit both encodings of the demo building and of the real capsule tower from the parsed documents
-    Given the real committed text artifact asset://🏅️standards/🔖️v1/🪆️subsets/✳️any/📚️examples/🏢️building/🖼️assets/🗣️example.dsl.semio
+    Given the real committed text artifact asset://🏅️standards/🔖️v1/🪆️subsets/✳️any/📚️examples/🏢️building/🖼️assets/🗣️.dsl.semio
     And its committed binary twin asset://🏅️standards/🔖️v1/🪆️subsets/✳️any/📚️examples/🏢️building/🖼️assets/🎒️.pack.semio
     And the real capsule tower model local://🏗️nakagin-capsule-tower.dsl.semio
     And its binary twin local://🏗️nakagin-capsule-tower.pack.semio

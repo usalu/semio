@@ -25,7 +25,7 @@
 //   bun 📜️script.ts docx-compare --input <expected.docx> --input <actual.docx>
 //
 // @see 🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json — ProbeReport
-// @see ../../../../../💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/✳️any/🔬️probes/📜️script.ts — the sibling
+// @see ../../../../../💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/✳️markup/🔬️probes/📜️script.ts — the sibling
 //      probe suite this file's CLI/dispatch shape is mirrored from
 
 //#endregion 🧲️Header

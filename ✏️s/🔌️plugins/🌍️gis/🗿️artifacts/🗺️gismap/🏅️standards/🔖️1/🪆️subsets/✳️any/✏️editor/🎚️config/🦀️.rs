@@ -251,6 +251,6 @@ mod tests {
 }
 
 #[cfg(test)]
-#[path = "🧪️tests/🧬️mutations/🦀️.rs"]
+#[path = "🧪️tests/🧬️direct-leaves/🦀️.rs"]
 mod direct_mutation_tests;
 //#endregion 🧪️Tests

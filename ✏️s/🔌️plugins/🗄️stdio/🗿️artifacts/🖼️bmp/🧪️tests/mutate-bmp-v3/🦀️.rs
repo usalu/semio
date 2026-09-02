@@ -28,7 +28,7 @@ const KINDS: &[&str] = &["change-header-fields", "insert-palette-entry", "remove
 //#endregion 🔖️Kinds
 
 //#region 🔖️Input
-const INPUT: &str = "shared://🖼️rathaus-ahlen-grundriss.bmp";
+const INPUT: &str = "shared://🧪️rathaus-ahlen-grundriss/🖼️.bmp";
 
 /// 🧫️ Copies the immutable real fixture into the work directory and returns the mutable copy's
 /// bytes — the committed 250 KB-source, 2334x2560, 8-bit palette architectural floor plan

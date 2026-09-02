@@ -1,0 +1,65 @@
+{
+  "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json",
+  "schemaVersion": 2,
+  "_comment": "🧩️ This subset's own mutation-catalog contribution to the repository test platform -- registers the skin slice of the glTF 2.0 mutation vocabulary (moved here from the artifact-level ✳️any catalog by shard A6, ticket 26/09/02/SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION). The shared whole-document io/oracle/generator machinery, and every mutation's own manifest/fixture record, stay centralized at the artifact's ✳️any substrate; this file exists so the skin vocabulary directory has a claiming catalog of its own, per `unregistered-mutation-vocabulary`.",
+  "mutationCatalogs": [
+    {
+      "id": "gltf-2-0-skin",
+      "capability": "gltf-2-0-mutate",
+      "standardDirectoryName": "🔖️2.0",
+      "subsetDirectoryName": "✳️skin",
+      "vectors": [
+        {
+          "mutationId": "create-skin",
+          "sourceMutationDirectoryName": "🌱️🧥️create-skin",
+          "mutationDirectoryName": "🌱️🧥️create-skin",
+          "scenarios": [
+            {
+              "id": "inserts-an-empty-skin-ahead-of-the-jointed-skin",
+              "directoryName": "🧪️inserts-an-empty-skin-ahead-of-the-jointed-skin"
+            }
+          ]
+        },
+        {
+          "mutationId": "delete-skin",
+          "sourceMutationDirectoryName": "🗑️🧥️delete-skin",
+          "mutationDirectoryName": "🗑️🧥️delete-skin",
+          "scenarios": [
+            {
+              "id": "removes-the-first-skin-and-renumbers-the-bound-node",
+              "directoryName": "🧪️removes-the-first-skin-and-renumbers-the-bound-node"
+            }
+          ]
+        },
+        {
+          "mutationId": "move-skin",
+          "sourceMutationDirectoryName": "🚚️🧥️move-skin",
+          "mutationDirectoryName": "🚚️🧥️move-skin",
+          "scenarios": [
+            {
+              "id": "swaps-the-two-skins-and-rewrites-both-node-bindings",
+              "directoryName": "🧪️swaps-the-two-skins-and-rewrites-both-node-bindings"
+            }
+          ]
+        },
+        {
+          "mutationId": "reorder-skins",
+          "sourceMutationDirectoryName": "🔀️🧥️reorder-skins",
+          "mutationDirectoryName": "🔀️🧥️reorder-skins",
+          "scenarios": [
+            {
+              "id": "flips-the-two-skins-and-remaps-both-node-bindings",
+              "directoryName": "🧪️flips-the-two-skins-and-remaps-both-node-bindings"
+            }
+          ]
+        }
+      ],
+      "kinds": [
+        "create-skin",
+        "delete-skin",
+        "move-skin",
+        "reorder-skins"
+      ]
+    }
+  ]
+}

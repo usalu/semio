@@ -1,0 +1,22 @@
+{
+  "schemaVersion": 1,
+  "owner": "✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️canvas/🧬️schema/🧬️mutations/🧲️change-snap-enabled",
+  "semanticKind": "change-snap-enabled",
+  "displayName": "Change Snap Enabled",
+  "emoji": "🧲️",
+  "aggregateVariant": "ChangeSnapEnabled",
+  "payloadSchema": "🔣️.schema.json",
+  "textOpcode": "change-snap-enabled",
+  "binaryTag": null,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "detect",
+  "outcomeClasses": [
+    "info",
+    "applied"
+  ],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": [
+    "rust",
+    "json-schema"
+  ]
+}

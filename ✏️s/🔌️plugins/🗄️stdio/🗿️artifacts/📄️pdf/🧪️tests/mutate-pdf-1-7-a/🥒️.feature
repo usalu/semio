@@ -1,5 +1,5 @@
 @capability-pdf-1-7-a-mutate
-@oracle-lopdf-pdf-1-7-a-mutate
+@oracle-lopdf-pdf-1-7-a-mutate-reader
 @comparison-semantic-pdf-conformance-a-v1
 @mutations-pdf-1-7-a
 Feature: Apply every typed ISO 19005-2 / ISO 19005-3 (PDF/A-2, PDF/A-3) conformance-class mutation to a real document

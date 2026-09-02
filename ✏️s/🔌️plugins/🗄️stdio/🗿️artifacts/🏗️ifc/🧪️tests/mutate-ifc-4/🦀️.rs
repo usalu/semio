@@ -22,7 +22,7 @@ const KINDS: &[&str] = &["no-mutation", "set-snapshot", "set-file-description", 
 //#endregion 🔖️Kinds
 
 //#region 🔖️Input
-const INPUT: &str = "shared://🏗️nakagin-capsule-tower.ifc";
+const INPUT: &str = "shared://🧪️nakagin-capsule-tower/🏗️.ifc";
 
 /// 🧫️ Copies the immutable committed fixture into the work directory and returns the mutable
 /// copy's bytes; the committed fixture itself is never written to.

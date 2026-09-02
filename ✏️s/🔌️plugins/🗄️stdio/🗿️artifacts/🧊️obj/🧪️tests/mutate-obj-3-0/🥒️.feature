@@ -1,5 +1,5 @@
 @capability-obj-3-0-mutate
-@oracle-tobj-obj-3-0-mutate
+@oracle-tobj-obj-3-0-mutate-reader
 @comparison-semantic-obj-3-0-v1
 @mutations-obj-3-0-any
 Feature: Apply every typed OBJ 3.0 mutation to a real-world mesh
@@ -45,7 +45,7 @@ Feature: Apply every typed OBJ 3.0 mutation to a real-world mesh
   the projection reported 8,577 vertices where the real mesh has 8,576.
 
   `Mutation::inverse` returns `Vec<Self>`, and that is where the repair went.
-  `../../🏅️standards/🔖️3.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs` now inverts
+  `../../🏅️standards/🔖️3.0/🪆️subsets/✳️geometry/🧬️schema/🧬️mutations/🦀️component.rs` now inverts
   `RemoveFace` as `[InsertFace, SetGroup…, SetObject…]`, re-declaring every membership list that
   names a face at or after the removed index — the removed face's own bands included — with the
   exact list the pre-mutation document carries; this adapter computes the same sequence
@@ -67,7 +67,7 @@ Feature: Apply every typed OBJ 3.0 mutation to a real-world mesh
   document in which `o pattern-sphere` still ran to end-of-file. Re-reading it handed back the
   original membership over all 16,128 faces: the mutation was unobservable and the row measured
   nothing. `decode_obj` already read an argument-less `o` as "no object from here on", and this
-  case's reference writes exactly that (`../../🏅️standards/🔖️3.0/🪆️subsets/✳️any/🧪️oracle/
+  case's reference writes exactly that (`../../🏅️standards/🔖️3.0/🪆️subsets/✳️geometry/🧪️oracle/
   🦀️component.rs` renders `o\n` when the object run ends), so only our encoder was short of the
   grammar. It now emits the bare `o` terminator, mirroring the bare `g` it already wrote when a
   group run ends, pinned by `🚪️io/🦀️component.rs`'s own
@@ -87,7 +87,7 @@ Feature: Apply every typed OBJ 3.0 mutation to a real-world mesh
   @level-exhaustive
   @mode-differential
   Scenario Outline: Apply <id> to the real mesh
-    Given the real input mesh shared://🧊️pattern-sphere.obj
+    Given the real input mesh shared://🧪️pattern-sphere/🧊️.obj
     When the <id> mutation is applied with its parameters
       """
       {"kind": "<id>", "params": <params>}
@@ -113,8 +113,6 @@ Feature: Apply every typed OBJ 3.0 mutation to a real-world mesh
       | remove-group          | {"name":"band-0"}                                                                            |
       | set-object            | {"name":"pattern-sphere","faces":[0,1,2]}                                                    |
       | remove-object         | {"name":"pattern-sphere"}                                                                    |
-      | set-mtllib            | {"mtllib":"pattern-sphere.mtl"}                                                              |
-      | set-usemtl            | {"usemtl":[{"faceIndexFrom":0,"material":"clay"}]}                                           |
       | set-smoothing-groups  | {"smoothingGroups":[{"faceIndexFrom":0,"group":1}]}                                          |
       | set-unknown-statements | {"unknownStatements":[{"lineIndex":0,"raw":"# replaced by mutation"}]}                       |
 
@@ -122,7 +120,7 @@ Feature: Apply every typed OBJ 3.0 mutation to a real-world mesh
   @level-exhaustive
   @mode-property
   Scenario Outline: Undoing <id> restores the real mesh
-    Given the real input mesh shared://🧊️pattern-sphere.obj
+    Given the real input mesh shared://🧪️pattern-sphere/🧊️.obj
     When the <id> mutation is applied with its parameters
       """
       {"kind": "<id>", "params": <params>}
@@ -149,8 +147,6 @@ Feature: Apply every typed OBJ 3.0 mutation to a real-world mesh
       | remove-group          | {"name":"band-0"}                                                                            |
       | set-object            | {"name":"pattern-sphere","faces":[0,1,2]}                                                    |
       | remove-object         | {"name":"pattern-sphere"}                                                                    |
-      | set-mtllib            | {"mtllib":"pattern-sphere.mtl"}                                                              |
-      | set-usemtl            | {"usemtl":[{"faceIndexFrom":0,"material":"clay"}]}                                           |
       | set-smoothing-groups  | {"smoothingGroups":[{"faceIndexFrom":0,"group":1}]}                                          |
       | set-unknown-statements | {"unknownStatements":[{"lineIndex":0,"raw":"# replaced by mutation"}]}                       |
 
@@ -158,7 +154,7 @@ Feature: Apply every typed OBJ 3.0 mutation to a real-world mesh
   @level-long
   @mode-round-trip
   Scenario: Decode and re-encode the real mesh without passing bytes through
-    Given the real input mesh shared://🧊️pattern-sphere.obj
+    Given the real input mesh shared://🧪️pattern-sphere/🧊️.obj
     When the mesh is decoded into the subset's own snapshot and re-encoded from it alone
     Then the output is not bit-identical to the input
     And the oracle and the subject agree on the semantic projection

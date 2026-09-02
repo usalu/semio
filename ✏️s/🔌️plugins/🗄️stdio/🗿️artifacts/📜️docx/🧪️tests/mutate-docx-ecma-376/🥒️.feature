@@ -1,7 +1,7 @@
 @capability-docx-ecma-376-mutate
-@oracle-zip-quick-xml-docx-ecma-376-mutate
+@oracle-jszip-docx-ecma-376-mutate-reader
 @comparison-semantic-docx-ecma-376-mutate-v1
-@mutations-docx-ecma-376-any
+@mutations-docx-ecma-376-base
 Feature: Apply every typed DOCX ECMA-376 mutation to a real-world document
   The committed `example.docx` under this artifact's own demo example is a genuine OOXML package but
   only 1,648 bytes -- thin for exercising all 13 `DocxMutation` kinds. No larger real `.docx` exists

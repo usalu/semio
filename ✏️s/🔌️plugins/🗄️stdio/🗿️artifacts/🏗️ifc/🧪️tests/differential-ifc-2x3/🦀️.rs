@@ -35,7 +35,7 @@ const INVERSE_KINDS: &[&str] = &["no-mutation", "upsert-instance", "set-header"]
 //#endregion 🔖️Kinds
 
 //#region 🔖️Input
-const INPUT: &str = "shared://🏗️wellness-center-sama-street-level.ifc";
+const INPUT: &str = "shared://🧪️wellness-center-sama-street-level/🏗️.ifc";
 //#endregion 🔖️Input
 
 //#region 🔖️JsonBuild

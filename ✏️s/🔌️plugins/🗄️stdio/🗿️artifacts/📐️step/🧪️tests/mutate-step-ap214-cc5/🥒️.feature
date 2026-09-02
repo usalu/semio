@@ -3,7 +3,7 @@
 @comparison-semantic-step-conformance-class-v1
 @mutations-step-ap214-cc5
 Feature: Apply every typed ISO 10303-214 CC5 (faceted B-Rep) mutation to a real AP214 exchange structure
-  The input is `shared://📐️hexagonal-cut-concrete-forest-left-ap214.stp`, the same real committed
+  The input is `shared://🧪️hexagonal-cut-concrete-forest-left-ap214/📐️.stp`, the same real committed
   export the `✳️any` case reads: a real Rhino 8.31 / ST-Developer v19.2 BIM export whose 1,396-entity
   DATA section is byte-for-byte untouched real data, with one edit recorded in its own header comment
   — the `FILE_SCHEMA` line, changed from the source's real AP242 declaration to `AUTOMOTIVE_DESIGN`,
@@ -74,7 +74,7 @@ Feature: Apply every typed ISO 10303-214 CC5 (faceted B-Rep) mutation to a real 
   @level-exhaustive
   @mode-property
   Scenario Outline: Apply <id> and read the conformance projection back
-    Given the real input document shared://📐️hexagonal-cut-concrete-forest-left-ap214.stp
+    Given the real input document shared://🧪️hexagonal-cut-concrete-forest-left-ap214/📐️.stp
     When the <id> mutation is applied with its parameters
       """
       {"kind": "<id>", "params": <params>}
@@ -93,7 +93,7 @@ Feature: Apply every typed ISO 10303-214 CC5 (faceted B-Rep) mutation to a real 
   @level-exhaustive
   @mode-property
   Scenario Outline: Undoing <id> restores the real exchange structure
-    Given the real input document shared://📐️hexagonal-cut-concrete-forest-left-ap214.stp
+    Given the real input document shared://🧪️hexagonal-cut-concrete-forest-left-ap214/📐️.stp
     When the <id> mutation is applied with its parameters
       """
       {"kind": "<id>", "params": <params>}
@@ -113,7 +113,7 @@ Feature: Apply every typed ISO 10303-214 CC5 (faceted B-Rep) mutation to a real 
   @level-long
   @mode-round-trip
   Scenario: Decode and re-encode the real exchange structure without passing bytes through
-    Given the real input document shared://📐️hexagonal-cut-concrete-forest-left-ap214.stp
+    Given the real input document shared://🧪️hexagonal-cut-concrete-forest-left-ap214/📐️.stp
     When the document is decoded into the subset's own snapshot and re-encoded from it alone
     Then the output is not bit-identical to the input, asserted in role
     And the independently read conformance projections of input and output agree, asserted in role

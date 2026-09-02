@@ -52,7 +52,7 @@ Feature: Apply every typed PLY 1.0 mutation to a real-world document
   @level-exhaustive
   @mode-differential
   Scenario Outline: Apply <id> to the real document
-    Given the real input document shared://🧊️pattern-sphere.ply
+    Given the real input document shared://🧪️pattern-sphere/🧊️.ply
     When the <id> mutation is applied with its parameters
       """
       {"kind": "<id>", "params": <params>}
@@ -75,7 +75,7 @@ Feature: Apply every typed PLY 1.0 mutation to a real-world document
   @level-exhaustive
   @mode-property
   Scenario Outline: Undoing <id> restores the real document
-    Given the real input document shared://🧊️pattern-sphere.ply
+    Given the real input document shared://🧪️pattern-sphere/🧊️.ply
     When the <id> mutation is applied with its parameters
       """
       {"kind": "<id>", "params": <params>}
@@ -99,7 +99,7 @@ Feature: Apply every typed PLY 1.0 mutation to a real-world document
   @level-long
   @mode-round-trip
   Scenario: Decode and re-encode the real document without passing bytes through
-    Given the real input document shared://🧊️pattern-sphere.ply
+    Given the real input document shared://🧪️pattern-sphere/🧊️.ply
     When the document is decoded into the subset's own snapshot and re-encoded from it alone
     Then the output is not bit-identical to the input
     And the oracle and the subject agree on the semantic projection

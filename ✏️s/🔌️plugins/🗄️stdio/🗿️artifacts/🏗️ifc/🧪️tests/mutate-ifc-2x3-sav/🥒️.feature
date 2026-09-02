@@ -3,7 +3,7 @@
 @comparison-semantic-ifc-v1
 @mutations-ifc-2x3-sav
 Feature: Apply every typed Structural Analysis View mutation to an IFC2X3 building model
-  The input is `shared://🏗️wellness-center-sama-structural-seed.ifc`.
+  The input is `shared://🧪️wellness-center-sama-structural-seed/🏗️.ifc`.
 
   Honest limit stated up front, because it is the weakest real-world claim in this subset: **this
   repository contains no real IFC2X3 Structural Analysis View document.** Grepping the FULL 21 MB
@@ -61,7 +61,7 @@ Feature: Apply every typed Structural Analysis View mutation to an IFC2X3 buildi
   @level-exhaustive
   @mode-property
   Scenario Outline: Apply <id> to the structural analysis document
-    Given the real input document shared://🏗️wellness-center-sama-structural-seed.ifc
+    Given the real input document shared://🧪️wellness-center-sama-structural-seed/🏗️.ifc
     When the <id> mutation is applied with its parameters
       """
       {"kind": "<id>", "params": <params>}
@@ -80,7 +80,7 @@ Feature: Apply every typed Structural Analysis View mutation to an IFC2X3 buildi
   @level-exhaustive
   @mode-property
   Scenario Outline: Undoing <id> restores the structural analysis document
-    Given the real input document shared://🏗️wellness-center-sama-structural-seed.ifc
+    Given the real input document shared://🧪️wellness-center-sama-structural-seed/🏗️.ifc
     When the <id> mutation is applied with its parameters
       """
       {"kind": "<id>", "params": <params>}
@@ -100,7 +100,7 @@ Feature: Apply every typed Structural Analysis View mutation to an IFC2X3 buildi
   @level-long
   @mode-round-trip
   Scenario: Decode and re-encode the document without passing bytes through
-    Given the real input document shared://🏗️wellness-center-sama-structural-seed.ifc
+    Given the real input document shared://🧪️wellness-center-sama-structural-seed/🏗️.ifc
     When the document is decoded into the subset's own snapshot and re-encoded from it alone
     Then the output is not bit-identical to the input
     And the independently read projections of input and output agree

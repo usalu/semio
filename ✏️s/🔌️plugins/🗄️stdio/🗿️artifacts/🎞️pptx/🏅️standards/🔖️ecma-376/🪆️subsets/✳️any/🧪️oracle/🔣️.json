@@ -17,7 +17,7 @@
       "license": "MIT",
       "testOnly": true,
       "homepage": "https://github.com/zip-rs/zip2 ; https://github.com/tafia/quick-xml",
-      "rationale": "A PPTX is a ZIP of XML parts (ECMA-376 Part 2 OPC). No standalone `pptx` crate is registered: the only one on crates.io is a 0.1.0 first release, and a first-release crate judging our implementation would be worse than none (fleet brief instruction). `zip` and `quick-xml` are both already linked for other subsets (🎒zip, 📰xml, 🎨svg) and both genuinely independent of this repository's own PPTX codec — this oracle unzips with `zip`, parses/edits/re-serializes `ppt/presentation.xml` and every `ppt/slides/slideN.xml` with `quick-xml`, and rezips with `zip`. Every mutation kind is expressed as a pure operation on an independent, typed, ordered slide/shape list, then EVERY slide-related OPC part (slides, their `.rels`, `presentation.xml`'s `p:sldIdLst`, `presentation.xml.rels`'s slide relationships, `[Content_Types].xml`'s slide `Override`s) is freshly regenerated from that list — a genuine re-serialization on every call, never a byte pass-through, including `no-mutation` and `identity-round-trip`.",
+      "rationale": "🩹️ RECLASSIFIED (ticket SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION, shard A10, 2026-09-02). This entry was registered `third-party-library` on the strength of a real crate that does genuine codec work, but the mutation's expected RESULT is computed by this owner's own `🦀️oracle.rs` -- its dispatch function's catch-all arm is `\"mutation kind {...} has no oracle implementation\"`, proof that every OTHER arm is an implementation, not a reading. Both halves of the comparison then descend from the same specification, so a shared misreading produces two agreeing wrong answers -- the one failure a differential oracle exists to catch. This is a `cross-semio-implementation`: a required SUPPLEMENT (metamorphic/inverse/round-trip evidence), never a substitute. A qualifying third-party reference for the mutation semantics is still owed. See $TICKET/📓️a10-oracle-honesty.md.\n\nA PPTX is a ZIP of XML parts (ECMA-376 Part 2 OPC). No standalone `pptx` crate is registered: the only one on crates.io is a 0.1.0 first release, and a first-release crate judging our implementation would be worse than none (fleet brief instruction). `zip` and `quick-xml` are both already linked for other subsets (🎒zip, 📰xml, 🎨svg) and both genuinely independent of this repository's own PPTX codec — this oracle unzips with `zip`, parses/edits/re-serializes `ppt/presentation.xml` and every `ppt/slides/slideN.xml` with `quick-xml`, and rezips with `zip`. Every mutation kind is expressed as a pure operation on an independent, typed, ordered slide/shape list, then EVERY slide-related OPC part (slides, their `.rels`, `presentation.xml`'s `p:sldIdLst`, `presentation.xml.rels`'s slide relationships, `[Content_Types].xml`'s slide `Override`s) is freshly regenerated from that list — a genuine re-serialization on every call, never a byte pass-through, including `no-mutation` and `identity-round-trip`.",
       "hostPath": "✏️s/🔌️plugins/🗄️stdio/🧪️oracle/📦️packages/🦀️rust",
       "packages": [
         {
@@ -28,7 +28,7 @@
           "role": "independent XML reader/writer for every part inside the archive"
         }
       ],
-      "kind": "third-party-library",
+      "kind": "cross-semio-implementation",
       "engine": {
         "family": "zip",
         "implementation": "zip Rust ZIP reader/writer",

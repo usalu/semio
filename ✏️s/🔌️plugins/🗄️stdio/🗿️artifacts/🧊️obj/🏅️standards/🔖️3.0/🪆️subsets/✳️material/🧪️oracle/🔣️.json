@@ -1,0 +1,197 @@
+{
+  "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json",
+  "schemaVersion": 2,
+  "_comment": "Ticket 26/09/02/SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION: split out of the former `✳️any` catch-all. Wavefront OBJ 3.0 (obj_spec.pdf, 1995) defines no conformance classes, but its `mtllib`/`usemtl` statements are the only real scope split: they REFERENCE a companion .mtl material library rather than declaring OBJ geometry (v/vt/vn/f/g/o/s) -- the one line-type family whose meaning is resolved against a different file, not this one's own vertex/face state. `set-mtllib`/`set-usemtl` are owned here rather than by `✳️geometry`. The leaf struct definitions physically moved into this subset's own `🧬️schema/🧬️mutations`; the `ObjMutation` enum, its diff dispatch and the real text codec they compile into remain in `✳️geometry` (one shared, always-co-resident implementation -- the same family-module reuse this repo already uses for svg tiny/basic). This subset owns no new third-party oracle: `three-obj-3-0-document-reader` (declared by `../../✳️geometry/🧪️oracle/🔣️.json`, merged into the shared registry) already reads these two statements back.",
+  "oracles": [],
+  "noOracleDecisions": [],
+  "comparisonProfiles": [],
+  "mutationManifests": [
+    {
+      "schema": "semio.repository-test.mutation-manifest/v2",
+      "artifact": "s.stdio.obj",
+      "standard": "3.0",
+      "subset": "material",
+      "standardDirectoryName": "🔖️3.0",
+      "subsetDirectoryName": "✳️material",
+      "mutations": [
+        {
+          "id": "set-usemtl",
+          "capability": "obj-3-0-material-mutate",
+          "payloadSchema": "../🧬️schema/🧬️mutations/🖌set-usemtl/🦀️.rs#SetUsemtl",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "set-usemtl",
+            "bridgeVersion": 1,
+            "variant": "ObjMutation::SetUsemtl"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "obj-3-0-material-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "three-obj-3-0-document-reader"
+            }
+          ],
+          "carriers": [
+            "obj"
+          ],
+          "invariants": {
+            "local": [
+              "usemtl-run-starts-match-the-declared-list"
+            ],
+            "enclosing": [
+              "tobj-mesh-and-independent-document-projection-agree"
+            ]
+          }
+        },
+        {
+          "id": "set-mtllib",
+          "capability": "obj-3-0-material-mutate",
+          "payloadSchema": "../🧬️schema/🧬️mutations/🎨set-mtllib/🦀️.rs#SetMtllib",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "set-mtllib",
+            "bridgeVersion": 1,
+            "variant": "ObjMutation::SetMtllib"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "obj-3-0-material-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "three-obj-3-0-document-reader"
+            }
+          ],
+          "carriers": [
+            "obj"
+          ],
+          "invariants": {
+            "local": [
+              "mtllib-reference-matches-or-is-absent"
+            ],
+            "enclosing": [
+              "tobj-mesh-and-independent-document-projection-agree"
+            ]
+          }
+        }
+      ]
+    }
+  ],
+  "fixtureManifests": [
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "document-set-mtllib",
+      "class": "handcrafted",
+      "target": {
+        "artifact": "s.stdio.obj",
+        "standard": "3.0",
+        "subset": "material"
+      },
+      "mutation": "set-mtllib",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "radian"
+      },
+      "files": [
+        {
+          "role": "expected-before-obj",
+          "path": "../🧫️fixtures/set-mtllib/before.obj",
+          "mediaType": "model/obj",
+          "sha256": "sha256:06a9207e60bf3a3b1f96d0d94584a6d3c74cbb1cd7592b58601f8c869ef728b0",
+          "bytes": 114
+        },
+        {
+          "role": "expected-after-obj",
+          "path": "../🧫️fixtures/set-mtllib/after.obj",
+          "mediaType": "model/obj",
+          "sha256": "sha256:870cf7527e8e08a57f3bd4ca9b8793eb3d1de52190d05bf224a7dfede6fe41e4",
+          "bytes": 115
+        }
+      ],
+      "provenance": {
+        "source": "handcrafted",
+        "license": "public-domain (synthetic, no third-party content embedded)"
+      },
+      "generator": {
+        "oracle": "three-obj-3-0-document-reader",
+        "packageVersion": "0.182.0",
+        "engineFamily": "threejs",
+        "engineVersion": "0.182.0",
+        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️obj/🏅️standards/🔖️3.0/🪆️subsets/✳️geometry/🏭️generator/📜️script.ts document",
+        "platform": "darwin"
+      },
+      "comparisonProfile": "semantic-obj-document-v1",
+      "reproducible": true,
+      "family": "mechanical",
+      "notes": "A minimal handcrafted OBJ document with the set-mtllib statement changed. tobj, this subset's other reader, is a MESH reader and discards this statement entirely; three's OBJLoader parses and keeps it. Observability was checked through that reader before the pair was written.",
+      "comparisonPipeline": "obj-3-0-document-compare-v1"
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "document-set-usemtl",
+      "class": "handcrafted",
+      "target": {
+        "artifact": "s.stdio.obj",
+        "standard": "3.0",
+        "subset": "material"
+      },
+      "mutation": "set-usemtl",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "radian"
+      },
+      "files": [
+        {
+          "role": "expected-before-obj",
+          "path": "../🧫️fixtures/set-usemtl/before.obj",
+          "mediaType": "model/obj",
+          "sha256": "sha256:06a9207e60bf3a3b1f96d0d94584a6d3c74cbb1cd7592b58601f8c869ef728b0",
+          "bytes": 114
+        },
+        {
+          "role": "expected-after-obj",
+          "path": "../🧫️fixtures/set-usemtl/after.obj",
+          "mediaType": "model/obj",
+          "sha256": "sha256:c117997a37de889ac48996e460ddb0424480e8b9a7db4215e410bd504f07f554",
+          "bytes": 115
+        }
+      ],
+      "provenance": {
+        "source": "handcrafted",
+        "license": "public-domain (synthetic, no third-party content embedded)"
+      },
+      "generator": {
+        "oracle": "three-obj-3-0-document-reader",
+        "packageVersion": "0.182.0",
+        "engineFamily": "threejs",
+        "engineVersion": "0.182.0",
+        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️obj/🏅️standards/🔖️3.0/🪆️subsets/✳️geometry/🏭️generator/📜️script.ts document",
+        "platform": "darwin"
+      },
+      "comparisonProfile": "semantic-obj-document-v1",
+      "reproducible": true,
+      "family": "mechanical",
+      "notes": "A minimal handcrafted OBJ document with the set-usemtl statement changed. tobj, this subset's other reader, is a MESH reader and discards this statement entirely; three's OBJLoader parses and keeps it. Observability was checked through that reader before the pair was written.",
+      "comparisonPipeline": "obj-3-0-document-compare-v1"
+    }
+  ],
+  "mutationCatalogs": [
+    {
+      "id": "obj-3.0-material",
+      "capability": "obj-3-0-material-mutate",
+      "standardDirectoryName": "🔖️3.0",
+      "subsetDirectoryName": "✳️material",
+      "vectors": [],
+      "kinds": [
+        "set-usemtl",
+        "set-mtllib"
+      ]
+    }
+  ]
+}

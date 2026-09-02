@@ -1,0 +1,27 @@
+{
+  "schemaVersion": 1,
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️mesh/🧬️schema/🧬️mutations/✏️🔺️change-primitive-extra-data",
+  "semanticKind": "change-primitive-extra-data",
+  "displayName": "Change Primitive Extra Data",
+  "emoji": "✏️🔺️",
+  "aggregateVariant": "ChangePrimitiveExtraData",
+  "payloadSchema": "🔣️.schema.json",
+  "textOpcode": null,
+  "binaryTag": null,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "detect",
+  "outcomeClasses": [
+    "applied",
+    "warning",
+    "error",
+    "fatal"
+  ],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": [
+    "rust",
+    "typescript",
+    "graphql",
+    "protobuf",
+    "json-schema"
+  ]
+}

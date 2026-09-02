@@ -6,14 +6,14 @@ Feature: Apply every typed XML 1.0 valid-subset mutation to a real 40 KB DOCTYPE
   📰️ **The input is a real 40 KB property list, derived ONCE from real committed content.** XML 1.0
   Fifth Edition §2.8 makes a document *valid* only if it carries a document type declaration whose
   Name is the document element's name, and exactly ONE committed document in this repository
-  satisfies that: `shared://📰️macos-uttype-plist.xml`, copied verbatim from
+  satisfies that: `shared://🧪️macos-uttype-plist/🏷️.xml`, copied verbatim from
   `🧰️framework/🛍️products/💻️os/🔨️modules/🧬️semio/🖥️associations/macos/tech.semio.document.uttype.plist`,
   the real Uniform Type Identifier declaration macOS reads to associate `.semio` files with the app.
   It is 631 bytes, which puts every mutation at the document's edge. Every larger committed XML
   document in this repository — the OOXML parts, the SVG drawings, the HTML article — carries no
   DOCTYPE at all, so none of them is in this subset.
 
-  `shared://📰️reuse-marketplaces-plist.xml` is therefore derived, by `🐍️derive-xml-valid-fixture.py`
+  `shared://🧪️reuse-marketplaces-plist/🏷️.xml` is therefore derived, by `🐍️derive-xml-valid-fixture.py`
   in the ticket folder, from real committed CONTENT in the same Apple PropertyList 1.0 dialect and
   under the same real Apple DOCTYPE: the real 50-row German building-material-reuse survey
   `../../📊️csv/🧫️fixtures/📊️reuse-marketplaces.csv` — 50 real rows over 12 real columns — read with
@@ -89,7 +89,7 @@ Feature: Apply every typed XML 1.0 valid-subset mutation to a real 40 KB DOCTYPE
   @level-exhaustive
   @mode-differential
   Scenario Outline: Apply <id> to the real property-list document
-    Given the real input document shared://📰️reuse-marketplaces-plist.xml
+    Given the real input document shared://🧪️reuse-marketplaces-plist/🏷️.xml
     When the <id> mutation is applied with its parameters
       """
       {"kind": "<id>", "params": <params>}
@@ -112,7 +112,7 @@ Feature: Apply every typed XML 1.0 valid-subset mutation to a real 40 KB DOCTYPE
   @level-exhaustive
   @mode-property
   Scenario Outline: Undoing <id> restores the real property-list document
-    Given the real input document shared://📰️reuse-marketplaces-plist.xml
+    Given the real input document shared://🧪️reuse-marketplaces-plist/🏷️.xml
     When the <id> mutation is applied and then its own computed inverse is applied to that result
       """
       {"kind": "<id>", "params": <params>}
@@ -134,8 +134,8 @@ Feature: Apply every typed XML 1.0 valid-subset mutation to a real 40 KB DOCTYPE
   @level-long
   @mode-round-trip
   Scenario: Decode and re-encode both real documents without passing bytes through
-    Given the real input document shared://📰️reuse-marketplaces-plist.xml
-    And the real macOS UTType declaration this case used to rest on shared://📰️macos-uttype-plist.xml
+    Given the real input document shared://🧪️reuse-marketplaces-plist/🏷️.xml
+    And the real macOS UTType declaration this case used to rest on shared://🧪️macos-uttype-plist/🏷️.xml
     When each document is fully parsed into the subset's own snapshot model and re-encoded from it alone
     Then the oracle and the subject agree on the semantic projection of both
     And the re-encoded bytes of each are not bit-identical to its input

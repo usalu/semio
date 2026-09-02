@@ -16,7 +16,7 @@ Feature: Apply every typed ISO-BMFF mutation to a real-world video
   `asset://` on every scenario, with the exact derivation command: `ffmpeg -i
   "♻️mit-bestand/🎤️präsentation/📅️33.projektetage/🌐️public/🎥️bauen-mit-bestand.mp4" -t 1.5 -c copy
   -movflags +faststart 🎥️bauen-mit-bestand-ausschnitt.mp4`,
-  producing the committed `shared://🎥️bauen-mit-bestand-ausschnitt.mp4` (2.7 MB, same 1200x1080
+  producing the committed `shared://🎬️.mp4` (2.7 MB, same 1200x1080
   `avc1` stream, `nal_length_size=4`, 47 real B-frame-containing samples with non-zero composition
   offsets).
 
@@ -63,7 +63,7 @@ Feature: Apply every typed ISO-BMFF mutation to a real-world video
   @level-exhaustive
   @mode-differential
   Scenario Outline: Apply <id> to the real video
-    Given the real input video shared://🎥️bauen-mit-bestand-ausschnitt.mp4
+    Given the real input video shared://🎬️.mp4
     When the <id> mutation is applied with its parameters
       """
       {"kind": "<id>", "params": <params>}
@@ -86,7 +86,7 @@ Feature: Apply every typed ISO-BMFF mutation to a real-world video
   @level-exhaustive
   @mode-property
   Scenario Outline: Undoing <id> restores the real video
-    Given the real input video shared://🎥️bauen-mit-bestand-ausschnitt.mp4
+    Given the real input video shared://🎬️.mp4
     When the <id> mutation is applied with its parameters
       """
       {"kind": "<id>", "params": <params>}
@@ -110,6 +110,6 @@ Feature: Apply every typed ISO-BMFF mutation to a real-world video
   @level-long
   @mode-round-trip
   Scenario: Decode and re-encode the real video from the typed model alone
-    Given the real input video shared://🎥️bauen-mit-bestand-ausschnitt.mp4
+    Given the real input video shared://🎬️.mp4
     When the video is decoded to the typed snapshot and re-encoded from it alone
     Then the reference implementation and this repository agree on the result

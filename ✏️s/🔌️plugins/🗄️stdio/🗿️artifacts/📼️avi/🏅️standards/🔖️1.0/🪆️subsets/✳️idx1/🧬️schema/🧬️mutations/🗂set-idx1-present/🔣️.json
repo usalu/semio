@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📼️avi/🏅️standards/🔖️1.0/🪆️subsets/✳️idx1/🧬️schema/🧬️mutations/🗂set-idx1-present",
+  "semanticKind": "set-idx1-present",
+  "displayName": "Set Idx1 Present",
+  "emoji": "🗂",
+  "aggregateVariant": "SetIdx1Present",
+  "payloadSchema": "🔣️.schema.json",
+  "textOpcode": null,
+  "binaryTag": null,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "detect",
+  "outcomeClasses": [
+    "applied"
+  ],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": [
+    "rust",
+    "json-schema",
+    "text",
+    "binary"
+  ]
+}

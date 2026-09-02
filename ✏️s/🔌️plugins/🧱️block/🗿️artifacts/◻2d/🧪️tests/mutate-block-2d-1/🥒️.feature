@@ -6,8 +6,8 @@ Feature: Apply every typed block2d node-kind mutation twice — once in Rust, on
 
   This case is a CROSS-LANGUAGE DIFFERENTIAL. The reference is `🐍️component.py` in this directory: a
   second implementation of the `s.block.block2d` node-kind document and all twenty-six typed
-  mutations, written in Python from `🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🔣️component.json`,
-  from `…/🧬️schema/🧬️mutations/🔣️component.json` and `…/🧬️schema/🧬️mutations/📝️text/📖️component.grammar.semio`,
+  mutations, written in Python from `🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🔣️.json`,
+  from `…/🧬️schema/🧬️mutations/🔣️.json` and `…/🧬️schema/🧬️mutations/📝️text/📖️component.grammar.semio`,
   and from the twenty-six committed specification vectors. It imports nothing from this repository's
   Rust.
 
@@ -19,7 +19,7 @@ Feature: Apply every typed block2d node-kind mutation twice — once in Rust, on
   notion of a kind-level compatibility relation, of a rim angle in radians, or of the presentation
   VARIANT this vocabulary switches with a single verb — and none of them reads `.dsl.semio`.
 
-  The artifact is real. `local://🧱️hexagonal-cut-concrete-forest-left.snapshot.json` was derived ONCE
+  The artifact is real. `local://🔣️.snapshot.json` was derived ONCE
   by `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️23/END-TO-END-TESTING-REFACTOR/w16-cross-language/🐍️derive-block2d-kind.py`
   from the artifact's own committed example
   (`🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️hexagonal-cut-concrete-forest-left/🖼️assets/🗣️hexagonal-cut-concrete-forest-left.dsl.semio`):
@@ -63,7 +63,7 @@ Feature: Apply every typed block2d node-kind mutation twice — once in Rust, on
   @level-exhaustive
   @mode-differential
   Scenario Outline: Apply <id> to the real derived node kind
-    Given the real derived node kind local://🧱️hexagonal-cut-concrete-forest-left.snapshot.json
+    Given the real derived node kind local://🔣️.snapshot.json
     When the <id> mutation is applied with the parameters the feature states
       """
       <mutation>
@@ -102,7 +102,7 @@ Feature: Apply every typed block2d node-kind mutation twice — once in Rust, on
   @level-exhaustive
   @mode-differential
   Scenario Outline: Undo <id> on the real derived node kind and land back on it
-    Given the real derived node kind local://🧱️hexagonal-cut-concrete-forest-left.snapshot.json
+    Given the real derived node kind local://🔣️.snapshot.json
     When the <id> mutation is applied and then its own computed inverse is applied
       """
       <mutation>
@@ -141,9 +141,9 @@ Feature: Apply every typed block2d node-kind mutation twice — once in Rust, on
   @level-exhaustive
   @mode-differential
   Scenario Outline: Replay the committed <id> specification vector through both implementations
-    Given the committed before-document asset://🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/<dir>/🧪️tests/<fixture>/📸️snapshot/⬅️before/🔣️component.json
-    And the committed mutation asset://🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/<dir>/🧪️tests/<fixture>/🦠️mutation/🔣️component.json
-    And the committed after-document asset://🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/<dir>/🧪️tests/<fixture>/📸️snapshot/➡️after/🔣️component.json
+    Given the committed before-document asset://🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/<dir>/🧪️tests/<fixture>/📸️snapshot/⬅️before/🔣️.json
+    And the committed mutation asset://🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/<dir>/🧪️tests/<fixture>/🦠️mutation/🔣️.json
+    And the committed after-document asset://🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/<dir>/🧪️tests/<fixture>/📸️snapshot/➡️after/🔣️.json
     When the committed mutation is applied to the committed before-document
     Then each implementation lands on the committed after-document in role, only the member this verb writes moved, and the two agree
     Examples:
@@ -179,7 +179,7 @@ Feature: Apply every typed block2d node-kind mutation twice — once in Rust, on
   @level-long
   @mode-round-trip
   Scenario: Read the real derived node kind in both languages and agree on it
-    Given the real derived node kind local://🧱️hexagonal-cut-concrete-forest-left.snapshot.json
+    Given the real derived node kind local://🔣️.snapshot.json
     When each implementation reads it through its own JSON codec, the Rust through the bridge with a payload naming the value the document already holds
       """
       {"mutation":"changeMetaDescription","newDescription":""}

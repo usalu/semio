@@ -122,7 +122,7 @@ Feature: Apply every typed semio FLOW mutation to the Nakagin Capsule Tower's 18
   @level-exhaustive
   @mode-differential
   Scenario Outline: Apply and undo <id> on its committed specification vector over the real demo pipeline
-    Given the committed specification vector local://🦠️<id>.json whose before-snapshot is the real pipeline artifact decoded
+    Given the committed specification vector local://🧫️<id>/🦠️mutation/🔣️.json whose before-snapshot is the real pipeline artifact decoded
     When both implementations apply the vector's mutation to its before-snapshot and undo it again
     Then each reaches the vector's after-snapshot, each returns to its before-snapshot, and the two agree
     Examples:
@@ -145,7 +145,7 @@ Feature: Apply every typed semio FLOW mutation to the Nakagin Capsule Tower's 18
   @level-long
   @mode-round-trip
   Scenario: Re-emit both encodings of the demo pipeline and of the real capsule network from the parsed documents
-    Given the real committed text artifact asset://🏅️standards/🔖️v1/🪆️subsets/✳️any/📚️examples/🌊️pipeline/🖼️assets/🗣️example.dsl.semio
+    Given the real committed text artifact asset://🏅️standards/🔖️v1/🪆️subsets/✳️any/📚️examples/🌊️pipeline/🖼️assets/🗣️.dsl.semio
     And its committed binary twin asset://🏅️standards/🔖️v1/🪆️subsets/✳️any/📚️examples/🌊️pipeline/🖼️assets/🎒️.pack.semio
     And the real capsule network local://🏗️nakagin-capsule-tower.dsl.semio
     And its binary twin local://🏗️nakagin-capsule-tower.pack.semio

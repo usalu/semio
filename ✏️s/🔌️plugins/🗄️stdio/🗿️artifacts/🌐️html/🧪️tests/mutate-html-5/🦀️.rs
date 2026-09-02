@@ -1,7 +1,7 @@
 //! 🦀️ HTML 5 exhaustive mutation case — Rust adapter. Ticket 26/08/23/END-TO-END-TESTING-REFACTOR
 //! wave 7.
 //!
-//! Every scenario copies the real, derived `🌐️zukunft-bau-entwerfen-mit-bestand.html` fixture (see
+//! Every scenario copies the real, derived `🧪️zukunft-bau-entwerfen-mit-bestand/🌐️.html` fixture (see
 //! the feature file's own header for the derivation note) into the case work directory first; the
 //! committed fixture is never written to. `oracle` drives the registered `html5ever`/
 //! `markup5ever_rcdom` reference implementation
@@ -27,7 +27,7 @@ const KINDS: &[&str] = &["set-snapshot", "set-doctype", "insert-node", "remove-n
 //#endregion 🔖️Kinds
 
 //#region 🔖️Input
-const INPUT: &str = "shared://🌐️zukunft-bau-entwerfen-mit-bestand.html";
+const INPUT: &str = "shared://🧪️zukunft-bau-entwerfen-mit-bestand/🌐️.html";
 
 /// 🧫️ Copies the immutable real fixture into the work directory and returns the mutable copy's bytes.
 fn mutable_input(ctx: &Context) -> Result<Vec<u8>, String> {

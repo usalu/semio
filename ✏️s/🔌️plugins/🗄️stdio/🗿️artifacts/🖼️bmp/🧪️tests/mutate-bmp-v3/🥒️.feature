@@ -1,5 +1,5 @@
 @capability-bmp-3-mutate
-@oracle-image-bmp-3-mutate
+@oracle-image-bmp-3-mutate-reader
 @comparison-semantic-raster-v1
 @mutations-bmp-3-any
 Feature: Apply every typed BMP v3 mutation to a real-world document
@@ -11,7 +11,7 @@ Feature: Apply every typed BMP v3 mutation to a real-world document
   `BmpEncoder::encode_with_palette` writes them back as an 8-bit indexed BITMAPINFOHEADER BMP v3 —
   so the committed fixture genuinely exercises BMP's palette path rather than being downgraded to
   24-bit RGB. That derivation is a one-off (not a test step, `#[ignore]`d in the subset's own oracle
-  module); the committed result, shared://🖼️rathaus-ahlen-grundriss.bmp, is what every scenario below
+  module); the committed result, shared://🧪️rathaus-ahlen-grundriss/🖼️.bmp, is what every scenario below
   reads. Each scenario copies it into the case work directory before touching it; the committed
   document is never written to.
 
@@ -77,7 +77,7 @@ Feature: Apply every typed BMP v3 mutation to a real-world document
   @level-exhaustive
   @mode-differential
   Scenario Outline: Apply <id> to the real document
-    Given the real input document shared://🖼️rathaus-ahlen-grundriss.bmp
+    Given the real input document shared://🧪️rathaus-ahlen-grundriss/🖼️.bmp
     When the <id> mutation is applied with its parameters
       """
       {"kind": "<id>", "params": <params>}
@@ -95,7 +95,7 @@ Feature: Apply every typed BMP v3 mutation to a real-world document
   @level-exhaustive
   @mode-property
   Scenario Outline: Undoing <id> restores the document
-    Given the real input document shared://🖼️rathaus-ahlen-grundriss.bmp
+    Given the real input document shared://🧪️rathaus-ahlen-grundriss/🖼️.bmp
     When the <id> mutation is applied with its parameters
       """
       {"kind": "<id>", "params": <params>}
@@ -115,7 +115,7 @@ Feature: Apply every typed BMP v3 mutation to a real-world document
   @level-long
   @mode-round-trip
   Scenario: Decode and re-encode the real document, reproducing it exactly
-    Given the real input document shared://🖼️rathaus-ahlen-grundriss.bmp
+    Given the real input document shared://🧪️rathaus-ahlen-grundriss/🖼️.bmp
     When the document is decoded, printed through the DSL text codec, reparsed and re-encoded
     Then the output reproduces the input byte for byte
     And the oracle and the subject agree on the semantic projection

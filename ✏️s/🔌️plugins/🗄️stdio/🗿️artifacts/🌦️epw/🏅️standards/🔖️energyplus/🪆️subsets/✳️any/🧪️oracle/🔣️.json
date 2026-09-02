@@ -57,6 +57,7 @@
         }
       ],
       "kinds": [
+        "no-mutation",
         "set-snapshot",
         "set-location",
         "set-design-conditions",

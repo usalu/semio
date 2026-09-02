@@ -5,7 +5,7 @@
 Feature: Apply every typed puzzle2d board mutation twice — once in Rust, once in Python — and require the same answer
   This case is a CROSS-LANGUAGE DIFFERENTIAL. The reference is `🐍️component.py` in this directory: a
   second implementation of the `s.puzzle.2d` board document and its twenty-six typed mutations,
-  written in Python from `🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🔣️component.json`, from
+  written in Python from `🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🔣️.json`, from
   rules 2, 4 and 7 of
   `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/📓️derivation-rules.md`, and
   from the twenty-six committed quintets. It imports nothing from this repository's Rust.
@@ -37,7 +37,7 @@ Feature: Apply every typed puzzle2d board mutation twice — once in Rust, once 
   nothing committed says whether the verb accepts a null argument.
 
   📌️ A FINDING MADE WHILE THE REFERENCE WAS BEING WRITTEN.
-  `🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔣️component.json` is not a mutation schema at
+  `🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔣️.json` is not a mutation schema at
   all: it is titled `Puzzle2dMutation` and declares `{schema, camera, nodes, edges, meta}` — a copy of
   the SNAPSHOT schema, the pre-migration whole-snapshot-shaped generic schema that
   `s.architect.program`'s own mutation schema records itself as superseding. It was never replaced
@@ -80,11 +80,11 @@ Feature: Apply every typed puzzle2d board mutation twice — once in Rust, once 
       """
       {
         "kind": "<id>",
-        "before": "asset://🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/<vector>/📸️snapshot/⬅️before/🔣️component.json",
-        "mutation": "asset://🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/<vector>/🦠️mutation/🔣️component.json",
-        "diff": "asset://🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/<vector>/🔺️diff/🔣️component.json",
-        "outcome": "asset://🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/<vector>/🎯️outcome/🔣️component.json",
-        "after": "asset://🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/<vector>/📸️snapshot/➡️after/🔣️component.json"
+        "before": "asset://🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/<vector>/📸️snapshot/⬅️before/🔣️.json",
+        "mutation": "asset://🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/<vector>/🦠️mutation/🔣️.json",
+        "diff": "asset://🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/<vector>/🔺️diff/🔣️.json",
+        "outcome": "asset://🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/<vector>/🎯️outcome/🔣️.json",
+        "after": "asset://🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/<vector>/📸️snapshot/➡️after/🔣️.json"
       }
       """
     Then the committed mutation payload declares the <id> kind
@@ -126,11 +126,11 @@ Feature: Apply every typed puzzle2d board mutation twice — once in Rust, once 
       """
       {
         "kind": "<id>",
-        "before": "asset://🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/<vector>/📸️snapshot/⬅️before/🔣️component.json",
-        "mutation": "asset://🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/<vector>/🦠️mutation/🔣️component.json",
-        "diff": "asset://🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/<vector>/🔺️diff/🔣️component.json",
-        "outcome": "asset://🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/<vector>/🎯️outcome/🔣️component.json",
-        "after": "asset://🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/<vector>/📸️snapshot/➡️after/🔣️component.json"
+        "before": "asset://🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/<vector>/📸️snapshot/⬅️before/🔣️.json",
+        "mutation": "asset://🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/<vector>/🦠️mutation/🔣️.json",
+        "diff": "asset://🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/<vector>/🔺️diff/🔣️.json",
+        "outcome": "asset://🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/<vector>/🎯️outcome/🔣️.json",
+        "after": "asset://🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/<vector>/📸️snapshot/➡️after/🔣️.json"
       }
       """
     Then every field where the after-snapshot differs from the before-snapshot is declared by the committed diff
@@ -168,6 +168,6 @@ Feature: Apply every typed puzzle2d board mutation twice — once in Rust, once 
   @level-long
   @mode-round-trip
   Scenario: Decode and re-encode the two-node, one-edge puzzle drawing
-    Given the committed before-snapshot asset://🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌱create-node/🧪️tests/appends-node-c/📸️snapshot/⬅️before/🔣️component.json
+    Given the committed before-snapshot asset://🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌱create-node/🧪️tests/appends-node-c/📸️snapshot/⬅️before/🔣️.json
     When it is parsed by the platform's own dependency-free JSON reader, re-serialized and parsed again
     Then the document is unchanged and the re-serialized bytes are not the committed bytes

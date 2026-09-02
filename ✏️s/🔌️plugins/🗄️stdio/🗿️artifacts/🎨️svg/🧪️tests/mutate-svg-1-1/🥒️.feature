@@ -1,7 +1,7 @@
 @capability-svg-1-1-mutate
-@oracle-quick-xml-svg-1-1-mutate
+@oracle-quick-xml-svg-1-1-mutate-reader
 @comparison-semantic-svg-1-1-v1
-@mutations-svg-1-1-any
+@mutations-svg-1-1-base
 Feature: Apply every typed SVG 1.1 mutation to a real-world document
   The input is a real, committed QR-code logo drawing (`🔣️qr-code.svg`, provenance: copied verbatim
   from `🧰️framework/🔨️modules/🖼️assets/🪧️logos/🔣️qr-code.svg` into this artifact's own

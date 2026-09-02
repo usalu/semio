@@ -66,8 +66,20 @@ impl Mat2 {
 
 // #region 🔖️VecD
 /// 📏️ Heap-allocated f64 vector for element and system-level numerics (loads, displacements, residuals).
-#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct VecD(pub Vec<f64>);
+
+impl dsl::ToValue for VecD {
+    fn to_value(&self) -> dsl::DslValue {
+        dsl::ToValue::to_value(&self.0)
+    }
+}
+
+impl dsl::FromValue for VecD {
+    fn from_value(value: dsl::DslValue) -> Result<Self, dsl::ValueError> {
+        Ok(Self(dsl::FromValue::from_value(value)?))
+    }
+}
 
 impl VecD {
     pub fn zeros(n: usize) -> Self {
@@ -126,7 +138,7 @@ impl VecD {
 
 // #region 🔖️MatD
 /// 🧮️ Dynamic dense f64 matrix, row-major storage; sized for element stiffness matrices and small global systems.
-#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct MatD {
     pub rows: usize,
     pub cols: usize,

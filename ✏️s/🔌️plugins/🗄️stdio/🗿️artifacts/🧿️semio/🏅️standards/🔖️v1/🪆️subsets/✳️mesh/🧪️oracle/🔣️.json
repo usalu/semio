@@ -4,6 +4,29 @@
   "_comment": "🧩️ This subset's own contribution: the mutation vocabulary belongs to ONE subset of ONE standard of ONE artifact, so its oracle registration and catalog live here rather than in a shared manifest. The reference is a cross-language pair — three.js for the geometry it genuinely speaks, and an independent TypeScript implementation of the semio-native carrier and the seventeen verbs for the half no third party speaks.",
   "oracles": [
     {
+      "id": "semio-mesh-typescript-three-independent",
+      "kind": "cross-semio-implementation",
+      "ecosystem": "typescript",
+      "package": "semio-s-plugin-stdio-test-oracle",
+      "engine": {
+        "family": "semio-mesh-ts-independent",
+        "implementation": "hand-written TypeScript reimplementation of the semio v1 mesh carrier, pack frame and 17 mutation verbs",
+        "version": "1"
+      },
+      "capabilities": [
+        "semio-v1-mesh-mutate"
+      ],
+      "comparisonProfiles": [
+        "ordered-json-v1"
+      ],
+      "license": "MIT",
+      "testOnly": true,
+      "productionReachable": false,
+      "networkDuringExecution": false,
+      "hostPath": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-mesh",
+      "rationale": "🩹️ REGISTERED (ticket SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION, shard A10). `stdio.semio.mesh`'s carrier and its seventeen verbs are semio's own — no third party speaks them, so `three-carrier-reader` and `manifold-mesh-measure`/`manifold3d-three` above cover only the GEOMETRY half. The second producer for the half no third party speaks is `🟦️.ts` beside `../../../../../../../🧪️tests/mutate-semio-mesh/🥒️.feature`: a second implementation written in TypeScript from the committed specification documents alone (the DSL grammar, the pack-frame protocol and its Kaitai mirror, the mutation grammar and its proto/JSON-schema mirrors), importing nothing from and transliterating nothing of the Rust subject it judges — pinned before use by reproducing the committed `🧊️cube` artifact byte for byte in both encodings and reaching all seventeen committed after-snapshots. A required SUPPLEMENT, never a substitute for a qualifying third-party reference: registered `cross-semio-implementation`, not `third-party-library`. The `@no-oracle-…` decision this replaces is already gone from this registry; only the oracle id the feature's `@oracle-semio-mesh-typescript-three-independent` tag names was missing."
+    },
+    {
       "id": "three-carrier-reader",
       "kind": "third-party-library",
       "ecosystem": "javascript",
@@ -91,6 +114,60 @@
       ],
       "homepage": "https://github.com/elalish/manifold",
       "rationale": "📏️ THE MEASURING ENGINE, AND A DIFFERENT FAMILY FROM THE READER ON PURPOSE. three parses the carrier; manifold computes volume, surface area, genus and connected-component count from what three recovered. Because the two are independent implementations, the measurement checks the parse instead of confirming it — which is exactly what `distinctEngineFamilies` is accounting for, and why a second three-based measurement would not have counted.\n\nmanifold requires a welded, watertight mesh and REFUSES a triangle soup outright, which STL and OBJ both are. Welding is therefore not a tidying step but a precondition, and it is done on a grid keyed to the model's own bounding-box diagonal (1e-7 relative) rather than a constant — a constant merges genuine detail on a millimetre part and welds nothing at all on a kilometre one. MEASURED: a 20 mm cube with a bore re-imported from STL welds 6336 soup corners back to exactly the 1056 shared vertices manifold originally built it with, 0 degenerate triangles, and reports genus 1 — the bore survives as a topological fact, not merely as a triangle count."
+    },
+    {
+      "id": "manifold3d-three",
+      "kind": "third-party-library",
+      "ecosystem": "javascript",
+      "package": "manifold-3d",
+      "version": "3.5.1",
+      "packages": [
+        {
+          "package": "three",
+          "version": "0.182.0",
+          "license": "MIT",
+          "role": "exports/imports the four committed carriers (STL/OBJ/PLY/glTF) the generator writes fixtures as",
+          "homepage": "https://threejs.org"
+        }
+      ],
+      "source": {
+        "repository": "https://github.com/elalish/manifold",
+        "license": "Apache-2.0"
+      },
+      "engine": {
+        "family": "manifold",
+        "implementation": "manifold-3d wasm + three.js exporters",
+        "version": "3.5.1"
+      },
+      "capabilities": [
+        "semio-v1-mesh-mutate",
+        "mesh.generate.boolean",
+        "mesh.generate.primitive",
+        "mesh.carrier.stl",
+        "mesh.carrier.obj",
+        "mesh.carrier.ply",
+        "mesh.carrier.gltf"
+      ],
+      "license": "Apache-2.0",
+      "testOnly": true,
+      "productionReachable": false,
+      "networkDuringExecution": false,
+      "platforms": [
+        "darwin-arm64",
+        "darwin-x64",
+        "linux-x64",
+        "linux-arm64",
+        "win32-x64"
+      ],
+      "homepage": "https://github.com/elalish/manifold",
+      "rationale": "🏭️ THE GENERATOR PAIR, DISTINCT FROM THE TWO RUNTIME-COMPARISON ORACLES ABOVE. `manifold-mesh-measure` and `three-carrier-reader` judge a mutation already applied by this subset's own code; this entry is the tool that PRODUCED the expected fixture files in the first place — manifold-3d computes the boolean/primitive geometry (the same engine and version `manifold-mesh-measure` uses to judge it later), and three.js's exporters/loaders round-trip that geometry through all four committed carrier formats so every fixture ships STL, OBJ, PLY and glTF built by the same real pipeline this subset's mutations claim to produce. Registered separately from `manifold-mesh-measure` because a fixture's authority is the tool that GENERATED it, and that tool is this pair used together, not either library alone."
+    }
+  ],
+  "comparisonProfiles": [
+    {
+      "id": "semantic-mesh-manifold-v1",
+      "description": "⚖️ A mesh edit compared by MEASUREMENT rather than by triangle-for-triangle identity: relative volume error, relative area error and normalized symmetric Hausdorff distance, all computed by manifold-3d (`manifold-mesh-measure`) from the mesh three.js recovered from each of the four exported carriers (STL/OBJ/PLY/glTF). Triangle-soup identity is not the contract — a re-tessellation that changes vertex count while preserving volume/area/topology is a correct answer — so the profile measures the shape THE MUTATION claimed to produce, matching this oracle's own measured baseline: 0.000e+00 on an unchanged round-trip against 1.073e-01 / 9.988e-01 for a genuinely different solid at identical tessellation.",
+      "arrays": "ordered"
     }
   ],
   "mutationCatalogs": [
@@ -6541,6 +6618,60 @@
       "reproducible": true,
       "family": "topology",
       "notes": "A thin-walled box shell (`topology-thin-shell-box`'s construction) with an internal partition wall fused across its hollow interior, splitting the one cavity into two chambers. The partition is sized to overlap the shell's own solid material at both ends rather than merely touch it face-to-face, so the fuse is a genuine volumetric union rather than a coincident-face join — MEASURED: the resulting SOLID is one contiguous piece of material (volume 6224mm³, 42mm³ less than the un-merged 5048+1218 sum, exactly the overlap the union correctly deduplicated), but its BOUNDARY still decomposes into 3 disjoint closed surfaces (the outer shell face plus one per now-separated chamber, each genus 0) — the same one-solid/many-boundary-components split `boolean-difference-nested-cavity-sphere` documents, here with the added twist that the partition is what CREATES the second inner boundary rather than a single pre-existing cavity being merely enclosed. This is the thin-partition-inside-a-cavity case the mechanical STEP pilot found interesting for exactly the reason it is here: a lost internal wall leaves the outer surface, and therefore a surface-only check, completely untouched."
+    }
+  ],
+  "toleranceProfiles": [
+    {
+      "id": "mesh-exact",
+      "description": "📏️ Analytic primitives (a cube, whose eight vertices and six faces have a closed-form volume/area) tessellated by manifold-3d with no boolean or scale operation applied — the tightest mesh floor this subset uses, admitting only IEEE-754 and triangulation-seam noise.",
+      "absoluteLength": 1e-09,
+      "relativeLength": 1e-10,
+      "absoluteArea": 1e-08,
+      "relativeArea": 1e-09,
+      "absoluteVolume": 1e-08,
+      "relativeVolume": 1e-09,
+      "normalizedHausdorffMax": 1e-07,
+      "normalizedCentroidDistanceMax": 1e-08,
+      "maxOverrideFactor": 5
+    },
+    {
+      "id": "mesh-tessellated",
+      "description": "📏️ The default for this subset's boolean/primitive/topology corpus: ordinary mechanical solids at millimetre scale re-tessellated by manifold-3d after a boolean or topology edit. Measured against this oracle's own baseline (0.000e+00 round-trip noise, 1.073e-01/9.988e-01 for a genuinely different 5mm-vs-6mm bore) so the floor sits comfortably below any real defect while absorbing ordinary re-tessellation seam noise.",
+      "absoluteLength": 1e-06,
+      "relativeLength": 1e-07,
+      "absoluteArea": 1e-05,
+      "relativeArea": 1e-06,
+      "absoluteVolume": 1e-05,
+      "relativeVolume": 1e-06,
+      "normalizedHausdorffMax": 0.0001,
+      "normalizedCentroidDistanceMax": 1e-05,
+      "maxOverrideFactor": 8
+    },
+    {
+      "id": "mesh-degenerate",
+      "description": "📏️ Slivers, hairline grooves, needle cones and tiny bores at or below manifold's own welding tolerance, where the RESULT CLASS (does the feature survive at all) is the assertion this subset's `degenerate-*` family is making and the metric is secondary — the loosest floor here, mirroring `epsilon-degenerate`'s reasoning but sized to manifold-3d's 1e-7 relative welding grid rather than an analytic kernel's.",
+      "absoluteLength": 1e-05,
+      "relativeLength": 1e-06,
+      "absoluteArea": 0.0001,
+      "relativeArea": 1e-05,
+      "absoluteVolume": 0.0001,
+      "relativeVolume": 1e-05,
+      "normalizedHausdorffMax": 0.001,
+      "normalizedCentroidDistanceMax": 0.0001,
+      "maxOverrideFactor": 4
+    },
+    {
+      "id": "mesh-scale-relative",
+      "description": "📏️ The `scale-bore-boss-*`/`scale-torus-*` family, the SAME geometry re-expressed from 1e-3 to 1e6 length units, where a fixed absolute floor sized for one scale would either swallow the whole model at the small end or reject legitimate noise at the large end. Only the relative terms are meaningful here, mirroring `large-coordinate`'s and `micro-scale`'s reasoning combined into one profile because this family spans both directions from unit scale.",
+      "absoluteLength": 1e-09,
+      "relativeLength": 1e-06,
+      "absoluteArea": 1e-09,
+      "relativeArea": 1e-05,
+      "absoluteVolume": 1e-09,
+      "relativeVolume": 1e-05,
+      "normalizedHausdorffMax": 1e-05,
+      "normalizedCentroidDistanceMax": 1e-06,
+      "maxOverrideFactor": 5
     }
   ]
 }

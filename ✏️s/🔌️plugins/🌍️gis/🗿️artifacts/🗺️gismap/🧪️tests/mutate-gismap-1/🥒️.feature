@@ -6,7 +6,7 @@ Feature: Apply every typed gis.gismap mutation twice — once in Rust, once in P
 
   This case is a CROSS-LANGUAGE DIFFERENTIAL. The reference is `🐍️component.py` in this directory:
   a second implementation of the `s.gis.gismap` document and all twelve typed mutations, written in
-  Python from the committed specification — `🧬️schema/📸️snapshot/🔣️component.json` for the document,
+  Python from the committed specification — `🧬️schema/📸️snapshot/🔣️.json` for the document,
   `🧬️schema/🧬️mutations/📝️text/📖️component.grammar.semio` for the twelve verbs and their argument
   lists, and the committed `(before, mutation, after, diff, outcome)` vectors for the wire form of
   each verb. It imports nothing from this repository's Rust and transliterates none of it.
@@ -121,9 +121,9 @@ Feature: Apply every typed gis.gismap mutation twice — once in Rust, once in P
   @level-exhaustive
   @mode-differential
   Scenario Outline: Replay the committed <id> specification vector through both implementations
-    Given the committed before-snapshot asset://🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/<dir>/🧪️tests/<fixture>/📸️snapshot/⬅️before/🔣️component.json
-    And the committed mutation asset://🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/<dir>/🧪️tests/<fixture>/🦠️mutation/🔣️component.json
-    And the committed after-snapshot asset://🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/<dir>/🧪️tests/<fixture>/📸️snapshot/➡️after/🔣️component.json
+    Given the committed before-snapshot asset://🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/<dir>/🧪️tests/<fixture>/📸️snapshot/⬅️before/🔣️.json
+    And the committed mutation asset://🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/<dir>/🧪️tests/<fixture>/🦠️mutation/🔣️.json
+    And the committed after-snapshot asset://🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/<dir>/🧪️tests/<fixture>/📸️snapshot/➡️after/🔣️.json
     When the committed mutation is applied to the committed before-snapshot
     Then each implementation lands on the committed after-snapshot in role, and the two agree
     Examples:
@@ -145,6 +145,6 @@ Feature: Apply every typed gis.gismap mutation twice — once in Rust, once in P
   @level-long
   @mode-round-trip
   Scenario: Read the artifact's own committed Liège document in both languages and agree on it
-    Given the real committed document asset://🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio
+    Given the real committed document asset://🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/🗣️.dsl.semio
     When each implementation parses it, prints it back through its own carrier and parses it again
     Then both languages read the same positions, routes and regions out of the same real bytes, the Python reproduces the file byte for byte, and the Rust holds its own canonical printing to ArtifactDsl's fixpoint law and cross-checks the pack codec

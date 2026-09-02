@@ -3,7 +3,7 @@
 @comparison-semantic-tabular-v1
 @mutations-csv-rfc4180-any
 Feature: Apply every typed RFC 4180 CSV mutation to a real-world table
-  The input is shared://📊️reuse-marketplaces.csv, a 50-row, 12-column real research table derived
+  The input is shared://🧪️reuse-marketplaces/📊️.csv, a 50-row, 12-column real research table derived
   ONCE (♻️mit-bestand/📋️bericht/📋️zwischenbericht/anhang/bauteilboersen.tex → csv, committed here
   verbatim) from a real systematic survey of European building-component reuse marketplaces —
   real platform names, real countries and genuinely comma-laden multi-value cells, so most of the
@@ -15,7 +15,7 @@ Feature: Apply every typed RFC 4180 CSV mutation to a real-world table
   @level-exhaustive
   @mode-differential
   Scenario Outline: Apply <id> to the real table
-    Given the real input table shared://📊️reuse-marketplaces.csv
+    Given the real input table shared://🧪️reuse-marketplaces/📊️.csv
     When the <id> mutation is applied with its parameters
       """
       {"kind": "<id>", "params": <params>}
@@ -34,7 +34,7 @@ Feature: Apply every typed RFC 4180 CSV mutation to a real-world table
   @level-exhaustive
   @mode-differential
   Scenario Outline: Undoing <id> restores the real table
-    Given the real input table shared://📊️reuse-marketplaces.csv
+    Given the real input table shared://🧪️reuse-marketplaces/📊️.csv
     When the <id> mutation is applied with its parameters
       """
       {"kind": "<id>", "params": <params>}
@@ -54,7 +54,7 @@ Feature: Apply every typed RFC 4180 CSV mutation to a real-world table
   @level-long
   @mode-round-trip
   Scenario: Decode and re-encode the real table without passing bytes through
-    Given the real input table shared://📊️reuse-marketplaces.csv
+    Given the real input table shared://🧪️reuse-marketplaces/📊️.csv
     When the table is decoded to the typed snapshot and re-encoded from it alone
     Then the oracle and the subject agree on the semantic projection
     And the re-encoded bytes are not bit-identical to the input

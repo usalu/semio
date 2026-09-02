@@ -13,7 +13,7 @@ Feature: Apply every typed animate PRESENT mutation to the real committed figure
   LIBRARY is a different judgement from declining a SECOND IMPLEMENTATION, and only the first was ever
   made here. `mutate-note-1` and `mutate-program-1` took Python second
   implementations over this same `.dsl.semio` carrier in this wave, so the same is writable for this
-  subset from `🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🔣️component.json`, the rules of
+  subset from `🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🔣️.json`, the rules of
   `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/📓️derivation-rules.md` and the
   committed vectors this feature already replays. What blocks it TODAY is stated in the decision and
   is one edit: this case's vectors are not declared as `asset://` fixtures — the `Examples` table
@@ -25,13 +25,13 @@ Feature: Apply every typed animate PRESENT mutation to the real committed figure
   one this decision has always had: no second producer runs beside it, so a mistake shared by the
   handcrafted vector and the production code passes unseen.
 
-  📄️ The base document is real and committed. `asset://🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio` is
+  📄️ The base document is real and committed. `asset://🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/🗣️.dsl.semio` is
   parsed by production's own `parse_dsl`, and the figure SOURCE every scenario starts from is whatever
   that artifact decodes to — never a literal in this case. What the committed artifact cannot supply is
   tiles: `PresentSnapshot` keeps its `(source, tiles)` in a composed `s.stdio.semio.presentation` CHILD
   and the `.present` DSL persists the child HANDLE, not the child, so a case that only parsed the file
   would find an empty tile list and six of the nine kinds would address nothing. The three tiles are
-  therefore committed once in `local://🎞️base-tiles.json`, derived from this vocabulary's OWN committed
+  therefore committed once in `local://🔣️.json`, derived from this vocabulary's OWN committed
   per-kind leaf fixtures under `../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/<kind>/🧪️tests/`
   — that file records exactly which id and which crop came from which committed payload, and which two
   crops are this case's own derivation.
@@ -55,8 +55,8 @@ Feature: Apply every typed animate PRESENT mutation to the real committed figure
   @level-exhaustive
   @mode-conformance
   Scenario Outline: Apply <id> to the real committed deck and observe it move
-    Given the real committed deck artifact asset://🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio
-    And its composed presentation child seeded from local://🎞️base-tiles.json
+    Given the real committed deck artifact asset://🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/🗣️.dsl.semio
+    And its composed presentation child seeded from local://🔣️.json
     When the <id> mutation is applied through apply_present_mutation
       """
       {"kind": "<id>", "params": <params>}
@@ -78,8 +78,8 @@ Feature: Apply every typed animate PRESENT mutation to the real committed figure
   @level-exhaustive
   @mode-property
   Scenario Outline: Undoing <id> restores the real committed deck exactly
-    Given the real committed deck artifact asset://🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio
-    And its composed presentation child seeded from local://🎞️base-tiles.json
+    Given the real committed deck artifact asset://🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/🗣️.dsl.semio
+    And its composed presentation child seeded from local://🔣️.json
     When the <id> mutation is applied through apply_present_mutation
       """
       {"kind": "<id>", "params": <params>}
@@ -102,7 +102,7 @@ Feature: Apply every typed animate PRESENT mutation to the real committed figure
   @level-long
   @mode-round-trip
   Scenario: Decode and re-encode the real committed deck artifact
-    Given the real committed deck artifact asset://🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio
+    Given the real committed deck artifact asset://🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/🗣️.dsl.semio
     When it is parsed with parse_dsl and printed back with print_dsl
     Then the printed bytes are identical to the committed bytes and reparsing preserves the projection
       """

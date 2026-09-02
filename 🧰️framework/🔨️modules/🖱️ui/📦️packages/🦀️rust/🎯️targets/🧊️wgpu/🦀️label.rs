@@ -6,6 +6,11 @@
 // literal assigned to a label field (`label: "LOD".into()`) does not compile. See ticket
 // 26/08/03/COMPILE-TIME-CHECKED-UI-LABELS-ACROSS-LOCALE-TERMINOLOGY-AND-BRAND.
 use super::{Locale, Terminology};
+// 🌱️ `dsl` is the `semio_framework_os_kernel` extern-crate alias set up crate-wide in the
+// `wgpu`-feature-gated `🦀️.rs` root (this file is only ever mounted under that feature — see its
+// docstring). `ToValue`/`FromValue` here is the first-party analog of `Serialize`/`Deserialize`
+// below, for ticket 26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS.
+use dsl::{DslValue, FromValue, ToValue, ValueError};
 use serde::{Deserialize, Serialize};
 use std::borrow::Cow;
 
@@ -146,6 +151,55 @@ impl<'de> Deserialize<'de> for LocalizedLabel {
     fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
         let raw: std::collections::HashMap<String, std::collections::HashMap<String, String>> = Deserialize::deserialize(deserializer)?;
         Ok(Self::from_fn(|terminology, locale| raw.get(terminology.as_str()).and_then(|m| m.get(locale.as_str())).cloned().unwrap_or_default()))
+    }
+}
+
+/// 🌱️ Hand-written, not derived: `#[derive(ToValue, FromValue)]` (`#[value(...)]`) only reads a
+/// struct's own named/unnamed fields, and `cells` is a `[[Cow<'static, str>; N]; M]` fixed-size
+/// nested array with no field-level shape to annotate — the same reason `Serialize`/`Deserialize`
+/// above are hand-written rather than derived. Mirrors those two exactly: the SAME
+/// `{terminology.as_str(): {locale.as_str(): text}}` object shape, so the wire format is
+/// unchanged and `to_dsl_value(&to_json_value(x)) == x.to_value()` for every `LocalizedLabel`.
+/// Ticket 26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS.
+impl ToValue for LocalizedLabel {
+    fn to_value(&self) -> DslValue {
+        DslValue::object(Terminology::ALL.into_iter().map(|terminology| {
+            let inner = DslValue::object(Locale::ALL.into_iter().map(|locale| (locale.as_str().to_string(), DslValue::String(self.resolve(terminology, locale).to_string()))));
+            (terminology.as_str().to_string(), inner)
+        }))
+    }
+}
+
+/// 🌱️ Exact inverse of the `ToValue` impl above — same missing-key-defaults-to-empty-string
+/// fallback the hand-written `Deserialize` impl already uses (`raw.get(...).unwrap_or_default()`).
+impl FromValue for LocalizedLabel {
+    fn from_value(value: DslValue) -> Result<Self, ValueError> {
+        Ok(Self::from_fn(|terminology, locale| value.get(terminology.as_str()).and_then(|inner| inner.get(locale.as_str())).and_then(DslValue::as_str).map(str::to_string).unwrap_or_default()))
+    }
+}
+
+#[cfg(test)]
+mod localized_label_value_round_trip_tests {
+    use super::*;
+
+    #[semio_framework_async_macros::async_test]
+    async fn round_trips_through_to_value_and_from_value() {
+        let label = LocalizedLabel::from_fn(|terminology, locale| format!("{}-{}", terminology.as_str(), locale.as_str()));
+        let decoded = LocalizedLabel::from_value(label.to_value()).expect("valid DslValue decodes");
+        assert_eq!(decoded, label);
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn to_value_uses_the_same_keys_the_hand_written_serde_impl_emits() {
+        let label = LocalizedLabel::native("Hello", "Hallo");
+        let entries = label.to_value().into_object().expect("LocalizedLabel::to_value is an object");
+        for terminology in Terminology::ALL {
+            let inner = entries.iter().find(|(key, _)| key == terminology.as_str()).map(|(_, value)| value.clone()).expect("terminology key present").into_object().expect("inner value is an object");
+            for locale in Locale::ALL {
+                let text = inner.iter().find(|(key, _)| key == locale.as_str()).map(|(_, value)| value.clone()).expect("locale key present");
+                assert_eq!(text, DslValue::String(label.resolve(terminology, locale).to_string()));
+            }
+        }
     }
 }
 

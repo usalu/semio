@@ -15,7 +15,7 @@ Feature: Apply every typed VCS checkpoint mutation to its committed specificatio
   LIBRARY is a different judgement from declining a SECOND IMPLEMENTATION, and only the first was ever
   made here. `mutate-writer-1` and `mutate-playbook-1` took Python second
   implementations over this same `.dsl.semio` carrier in this wave, so the same is writable for this
-  subset from `🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🔣️component.json`, the rules of
+  subset from `🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🔣️.json`, the rules of
   `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/📓️derivation-rules.md` and the
   committed vectors this feature already replays. What blocks it TODAY is stated in the decision and
   is one edit: this case's vectors are not declared as `asset://` fixtures — the `Examples` table
@@ -47,7 +47,7 @@ Feature: Apply every typed VCS checkpoint mutation to its committed specificatio
   Because this case records a no-oracle decision the runner executes NO oracle role, so every
   assertion lives inside the subject handler: `mutate-<kind>` compares the applied snapshot with
   the committed after-snapshot and the reported diagnostic codes with the committed
-  `🎯️outcome/🔣️component.json`, and `inverse-<kind>` compares the undone snapshot with the
+  `🎯️outcome/🔣️.json`, and `inverse-<kind>` compares the undone snapshot with the
   committed before-snapshot. A handler that merely ran the mutation and returned would report a
   pass having checked nothing.
 
@@ -93,6 +93,6 @@ Feature: Apply every typed VCS checkpoint mutation to its committed specificatio
   @level-long
   @mode-round-trip
   Scenario: Read the real committed checkpoint through its own DSL carrier and print it back
-    Given the real committed text artifact asset://🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio
+    Given the real committed text artifact asset://🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/🗣️.dsl.semio
     When the artifact is parsed, printed back to `.vcs.dsl.semio` and parsed again
     Then every decoding agrees on the same checkpoint — "VCS Demo" at counter 2, status draft, tags alpha then beta — and the printed text reproduces the committed file byte for byte

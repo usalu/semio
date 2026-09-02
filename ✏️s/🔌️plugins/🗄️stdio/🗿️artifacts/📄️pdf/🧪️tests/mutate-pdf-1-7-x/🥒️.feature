@@ -1,5 +1,5 @@
 @capability-pdf-1-7-x-mutate
-@oracle-lopdf-pdf-1-7-x-mutate
+@oracle-lopdf-pdf-1-7-x-mutate-reader
 @comparison-semantic-pdf-conformance-x-v1
 @mutations-pdf-1-7-x
 Feature: Apply every typed ISO 15930-7 (PDF/X-4) conformance-class mutation to a real document

@@ -1,5 +1,5 @@
 @capability-pdf-1-7-vt-mutate
-@oracle-lopdf-pdf-1-7-vt-mutate
+@oracle-lopdf-pdf-1-7-vt-mutate-reader
 @comparison-semantic-pdf-conformance-vt-v1
 @mutations-pdf-1-7-vt
 Feature: Apply every typed ISO 16612-2 (PDF/VT-1) conformance-class mutation to a real document

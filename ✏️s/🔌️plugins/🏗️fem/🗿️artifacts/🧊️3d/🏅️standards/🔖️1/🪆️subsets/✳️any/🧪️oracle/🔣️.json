@@ -131,318 +131,7 @@
       "rationale": "📖️ A READER over a DIFFERENT CARRIER, which is why it covers what the two mesh oracles cannot.\n\n`three-fem3d-mesh-reader` and `manifold-fem3d-mesh-measure` read the STL/OBJ export, so they witness GEOMETRY. A material's Young's modulus, a section's second moment of area, a support's restrained DOFs, a load case's self-weight flag and the analysis settings do not move a single triangle — which is exactly why 22 of this subset's kinds were recorded `-uncarried` against those two. That label was honest about the MESH carrier and does not generalise.\n\nThis subset's JSON export is not a stub. Unlike its csv/md/txt leaves, which wrap the DSL text in a single blob, its json leaf emits `serde_json::to_value(snapshot)` — the real structured tree, every snapshot field. So all nine collections are carrier-level facts and a third-party JSON implementation witnesses every one of them.\n\nThis is the same shape as the accepted `quick-xml`/svg and `burntsushi-csv`/mathematical readers: the judge is a third-party implementation of the CARRIER, and nothing in this repository predicts the answer it is judging. The expected state is the committed `after` half of each fixture."
     }
   ],
-  "mutationCatalogs": [
-    {
-      "id": "fem3d-1-any",
-      "capability": "fem3d-1-mutate",
-      "standardDirectoryName": "🔖️1",
-      "subsetDirectoryName": "✳️any",
-      "vectors": [
-        {
-          "mutationId": "add-load",
-          "sourceMutationDirectoryName": "➕add-load",
-          "mutationDirectoryName": "➕add-load",
-          "scenarios": [
-            {
-              "id": "lays-an-area-pressure-over-the-roof-slab",
-              "directoryName": "🧪️lays-an-area-pressure-over-the-roof-slab"
-            }
-          ]
-        },
-        {
-          "mutationId": "change-load-case-self-weight",
-          "sourceMutationDirectoryName": "⚖change-load-case-self-weight",
-          "mutationDirectoryName": "⚖change-load-case-self-weight",
-          "scenarios": [
-            {
-              "id": "switches-self-weight-off-for-the-dead-case",
-              "directoryName": "🧪️switches-self-weight-off-for-the-dead-case"
-            }
-          ]
-        },
-        {
-          "mutationId": "create-combination",
-          "sourceMutationDirectoryName": "🌱🔗️create-combination",
-          "mutationDirectoryName": "🌱🔗️create-combination",
-          "scenarios": [
-            {
-              "id": "appends-a-serviceability-combination-keyed-by-case-id",
-              "directoryName": "🧪️appends-a-serviceability-combination-keyed-by-case-id"
-            }
-          ]
-        },
-        {
-          "mutationId": "create-element",
-          "sourceMutationDirectoryName": "🌱🧩️create-element",
-          "mutationDirectoryName": "🌱🧩️create-element",
-          "scenarios": [
-            {
-              "id": "appends-a-diagonal-bracing-bar",
-              "directoryName": "🧪️appends-a-diagonal-bracing-bar"
-            }
-          ]
-        },
-        {
-          "mutationId": "create-load-case",
-          "sourceMutationDirectoryName": "🌱📋️create-load-case",
-          "mutationDirectoryName": "🌱📋️create-load-case",
-          "scenarios": [
-            {
-              "id": "appends-a-wind-case-pushing-on-the-column-head",
-              "directoryName": "🧪️appends-a-wind-case-pushing-on-the-column-head"
-            }
-          ]
-        },
-        {
-          "mutationId": "create-material",
-          "sourceMutationDirectoryName": "🌱🧱️create-material",
-          "mutationDirectoryName": "🌱🧱️create-material",
-          "scenarios": [
-            {
-              "id": "appends-an-aluminium-alloy",
-              "directoryName": "🧪️appends-an-aluminium-alloy"
-            }
-          ]
-        },
-        {
-          "mutationId": "create-node",
-          "sourceMutationDirectoryName": "🌱⚪️create-node",
-          "mutationDirectoryName": "🌱⚪️create-node",
-          "scenarios": [
-            {
-              "id": "appends-the-column-head-node-n3",
-              "directoryName": "🧪️appends-the-column-head-node-n3"
-            }
-          ]
-        },
-        {
-          "mutationId": "create-section",
-          "sourceMutationDirectoryName": "🌱create-section",
-          "mutationDirectoryName": "🌱create-section",
-          "scenarios": [
-            {
-              "id": "appends-a-square-hollow-profile",
-              "directoryName": "🧪️appends-a-square-hollow-profile"
-            }
-          ]
-        },
-        {
-          "mutationId": "create-solid",
-          "sourceMutationDirectoryName": "🌱🧊️create-solid",
-          "mutationDirectoryName": "🌱🧊️create-solid",
-          "scenarios": [
-            {
-              "id": "appends-an-extruded-roof-slab",
-              "directoryName": "🧪️appends-an-extruded-roof-slab"
-            }
-          ]
-        },
-        {
-          "mutationId": "create-support",
-          "sourceMutationDirectoryName": "🌱🛡️create-support",
-          "mutationDirectoryName": "🌱🛡️create-support",
-          "scenarios": [
-            {
-              "id": "clamps-the-column-base-in-all-six-dofs",
-              "directoryName": "🧪️clamps-the-column-base-in-all-six-dofs"
-            }
-          ]
-        },
-        {
-          "mutationId": "delete-combination",
-          "sourceMutationDirectoryName": "🗑🔗️delete-combination",
-          "mutationDirectoryName": "🗑🔗️delete-combination",
-          "scenarios": [
-            {
-              "id": "removes-the-serviceability-combination-and-keeps-both-cases",
-              "directoryName": "🧪️removes-the-serviceability-combination-and-keeps-both-cases"
-            }
-          ]
-        },
-        {
-          "mutationId": "delete-element",
-          "sourceMutationDirectoryName": "🗑🧩️delete-element",
-          "mutationDirectoryName": "🗑🧩️delete-element",
-          "scenarios": [
-            {
-              "id": "removes-the-bracing-bar-and-leaves-the-frame",
-              "directoryName": "🧪️removes-the-bracing-bar-and-leaves-the-frame"
-            }
-          ]
-        },
-        {
-          "mutationId": "delete-load-case",
-          "sourceMutationDirectoryName": "🗑📋️delete-load-case",
-          "mutationDirectoryName": "🗑📋️delete-load-case",
-          "scenarios": [
-            {
-              "id": "removes-the-wind-case-together-with-its-load",
-              "directoryName": "🧪️removes-the-wind-case-together-with-its-load"
-            }
-          ]
-        },
-        {
-          "mutationId": "delete-material",
-          "sourceMutationDirectoryName": "🗑🧱️delete-material",
-          "mutationDirectoryName": "🗑🧱️delete-material",
-          "scenarios": [
-            {
-              "id": "removes-the-unreferenced-aluminium-alloy",
-              "directoryName": "🧪️removes-the-unreferenced-aluminium-alloy"
-            }
-          ]
-        },
-        {
-          "mutationId": "delete-node",
-          "sourceMutationDirectoryName": "🗑⚪️delete-node",
-          "mutationDirectoryName": "🗑⚪️delete-node",
-          "scenarios": [
-            {
-              "id": "removes-the-column-head-node-under-a-live-frame",
-              "directoryName": "🧪️removes-the-column-head-node-under-a-live-frame"
-            }
-          ]
-        },
-        {
-          "mutationId": "delete-section",
-          "sourceMutationDirectoryName": "🗑📐️delete-section",
-          "mutationDirectoryName": "🗑📐️delete-section",
-          "scenarios": [
-            {
-              "id": "removes-the-spare-square-hollow-profile",
-              "directoryName": "🧪️removes-the-spare-square-hollow-profile"
-            }
-          ]
-        },
-        {
-          "mutationId": "delete-solid",
-          "sourceMutationDirectoryName": "🗑🧊️delete-solid",
-          "mutationDirectoryName": "🗑🧊️delete-solid",
-          "scenarios": [
-            {
-              "id": "removes-the-roof-slab-and-keeps-its-material",
-              "directoryName": "🧪️removes-the-roof-slab-and-keeps-its-material"
-            }
-          ]
-        },
-        {
-          "mutationId": "delete-support",
-          "sourceMutationDirectoryName": "🗑delete-support",
-          "mutationDirectoryName": "🗑delete-support",
-          "scenarios": [
-            {
-              "id": "releases-the-pinned-node-n2",
-              "directoryName": "🧪️releases-the-pinned-node-n2"
-            }
-          ]
-        },
-        {
-          "mutationId": "remove-load",
-          "sourceMutationDirectoryName": "➖remove-load",
-          "mutationDirectoryName": "➖remove-load",
-          "scenarios": [
-            {
-              "id": "drops-the-trailing-member-udl-from-the-dead-case",
-              "directoryName": "🧪️drops-the-trailing-member-udl-from-the-dead-case"
-            }
-          ]
-        },
-        {
-          "mutationId": "replace-element",
-          "sourceMutationDirectoryName": "🔁🧩️replace-element",
-          "mutationDirectoryName": "🔁🧩️replace-element",
-          "scenarios": [
-            {
-              "id": "rolls-the-column-about-its-own-axis",
-              "directoryName": "🧪️rolls-the-column-about-its-own-axis"
-            }
-          ]
-        },
-        {
-          "mutationId": "replace-material",
-          "sourceMutationDirectoryName": "🔁🧱️replace-material",
-          "mutationDirectoryName": "🔁🧱️replace-material",
-          "scenarios": [
-            {
-              "id": "softens-the-steel-shear-modulus-in-place",
-              "directoryName": "🧪️softens-the-steel-shear-modulus-in-place"
-            }
-          ]
-        },
-        {
-          "mutationId": "replace-section",
-          "sourceMutationDirectoryName": "🔁📐️replace-section",
-          "mutationDirectoryName": "🔁📐️replace-section",
-          "scenarios": [
-            {
-              "id": "raises-the-torsion-constant-of-hea200",
-              "directoryName": "🧪️raises-the-torsion-constant-of-hea200"
-            }
-          ]
-        },
-        {
-          "mutationId": "replace-solid",
-          "sourceMutationDirectoryName": "🔁replace-solid",
-          "mutationDirectoryName": "🔁replace-solid",
-          "scenarios": [
-            {
-              "id": "thickens-the-slab-and-adds-a-mesh-layer",
-              "directoryName": "🧪️thickens-the-slab-and-adds-a-mesh-layer"
-            }
-          ]
-        },
-        {
-          "mutationId": "replace-support",
-          "sourceMutationDirectoryName": "🔁🛡️replace-support",
-          "mutationDirectoryName": "🔁🛡️replace-support",
-          "scenarios": [
-            {
-              "id": "frees-the-three-rotations-at-the-column-base",
-              "directoryName": "🧪️frees-the-three-rotations-at-the-column-base"
-            }
-          ]
-        },
-        {
-          "mutationId": "update-analysis-settings",
-          "sourceMutationDirectoryName": "🎛update-analysis-settings",
-          "mutationDirectoryName": "🎛update-analysis-settings",
-          "scenarios": [
-            {
-              "id": "doubles-the-buckling-mode-count",
-              "directoryName": "🧪️doubles-the-buckling-mode-count"
-            }
-          ]
-        }
-      ],
-      "kinds": [
-        "create-node",
-        "delete-node",
-        "create-element",
-        "delete-element",
-        "replace-element",
-        "create-material",
-        "delete-material",
-        "replace-material",
-        "create-section",
-        "delete-section",
-        "replace-section",
-        "create-support",
-        "delete-support",
-        "replace-support",
-        "create-solid",
-        "delete-solid",
-        "replace-solid",
-        "create-load-case",
-        "delete-load-case",
-        "add-load",
-        "remove-load",
-        "change-load-case-self-weight",
-        "create-combination",
-        "delete-combination",
-        "update-analysis-settings"
-      ]
-    }
-  ],
+  "mutationCatalogs": [],
   "noOracleDecisions": [
     {
       "id": "fem3d-non-geometry-mutation-semantics",
@@ -463,6 +152,7 @@
       "mutations": [
         {
           "id": "create-node",
+          "subset": "mesh",
           "capability": "fem3d-1-mutate",
           "payloadSchema": "../🧬️schema/🧬️mutations/🌱⚪️create-node/🦀️.rs#CreateNode",
           "outcomes": [
@@ -496,6 +186,7 @@
         },
         {
           "id": "delete-node",
+          "subset": "mesh",
           "capability": "fem3d-1-mutate",
           "payloadSchema": "../🧬️schema/🧬️mutations/🗑⚪️delete-node/🦀️.rs#DeleteNode",
           "outcomes": [
@@ -529,6 +220,7 @@
         },
         {
           "id": "create-element",
+          "subset": "mesh",
           "capability": "fem3d-1-mutate",
           "payloadSchema": "../🧬️schema/🧬️mutations/🌱🧩️create-element/🦀️.rs#CreateElement",
           "outcomes": [
@@ -562,6 +254,7 @@
         },
         {
           "id": "delete-element",
+          "subset": "mesh",
           "capability": "fem3d-1-mutate",
           "payloadSchema": "../🧬️schema/🧬️mutations/🗑🧩️delete-element/🦀️.rs#DeleteElement",
           "outcomes": [
@@ -595,6 +288,7 @@
         },
         {
           "id": "replace-element",
+          "subset": "mesh",
           "capability": "fem3d-1-mutate",
           "payloadSchema": "../🧬️schema/🧬️mutations/🔁🧩️replace-element/🦀️.rs#ReplaceElement",
           "outcomes": [
@@ -629,6 +323,7 @@
         },
         {
           "id": "create-material",
+          "subset": "material",
           "capability": "fem3d-1-mutate",
           "payloadSchema": "../🧬️schema/🧬️mutations/🌱🧱️create-material/🦀️.rs#CreateMaterial",
           "outcomes": [
@@ -662,6 +357,7 @@
         },
         {
           "id": "delete-material",
+          "subset": "material",
           "capability": "fem3d-1-mutate",
           "payloadSchema": "../🧬️schema/🧬️mutations/🗑🧱️delete-material/🦀️.rs#DeleteMaterial",
           "outcomes": [
@@ -695,6 +391,7 @@
         },
         {
           "id": "replace-material",
+          "subset": "material",
           "capability": "fem3d-1-mutate",
           "payloadSchema": "../🧬️schema/🧬️mutations/🔁🧱️replace-material/🦀️.rs#ReplaceMaterial",
           "outcomes": [
@@ -729,6 +426,7 @@
         },
         {
           "id": "create-section",
+          "subset": "mesh",
           "capability": "fem3d-1-mutate",
           "payloadSchema": "../🧬️schema/🧬️mutations/🌱create-section/🦀️.rs#CreateSection",
           "outcomes": [
@@ -762,6 +460,7 @@
         },
         {
           "id": "delete-section",
+          "subset": "mesh",
           "capability": "fem3d-1-mutate",
           "payloadSchema": "../🧬️schema/🧬️mutations/🗑📐️delete-section/🦀️.rs#DeleteSection",
           "outcomes": [
@@ -795,6 +494,7 @@
         },
         {
           "id": "replace-section",
+          "subset": "mesh",
           "capability": "fem3d-1-mutate",
           "payloadSchema": "../🧬️schema/🧬️mutations/🔁📐️replace-section/🦀️.rs#ReplaceSection",
           "outcomes": [
@@ -829,6 +529,7 @@
         },
         {
           "id": "create-support",
+          "subset": "boundary",
           "capability": "fem3d-1-mutate",
           "payloadSchema": "../🧬️schema/🧬️mutations/🌱🛡️create-support/🦀️.rs#CreateSupport",
           "outcomes": [
@@ -862,6 +563,7 @@
         },
         {
           "id": "delete-support",
+          "subset": "boundary",
           "capability": "fem3d-1-mutate",
           "payloadSchema": "../🧬️schema/🧬️mutations/🗑delete-support/🦀️.rs#DeleteSupport",
           "outcomes": [
@@ -895,6 +597,7 @@
         },
         {
           "id": "replace-support",
+          "subset": "boundary",
           "capability": "fem3d-1-mutate",
           "payloadSchema": "../🧬️schema/🧬️mutations/🔁🛡️replace-support/🦀️.rs#ReplaceSupport",
           "outcomes": [
@@ -929,6 +632,7 @@
         },
         {
           "id": "create-solid",
+          "subset": "mesh",
           "capability": "fem3d-1-mutate",
           "payloadSchema": "../🧬️schema/🧬️mutations/🌱🧊️create-solid/🦀️.rs#CreateSolid",
           "outcomes": [
@@ -967,6 +671,7 @@
         },
         {
           "id": "delete-solid",
+          "subset": "mesh",
           "capability": "fem3d-1-mutate",
           "payloadSchema": "../🧬️schema/🧬️mutations/🗑🧊️delete-solid/🦀️.rs#DeleteSolid",
           "outcomes": [
@@ -1005,6 +710,7 @@
         },
         {
           "id": "replace-solid",
+          "subset": "mesh",
           "capability": "fem3d-1-mutate",
           "payloadSchema": "../🧬️schema/🧬️mutations/🔁replace-solid/🦀️.rs#ReplaceSolid",
           "outcomes": [
@@ -1044,6 +750,7 @@
         },
         {
           "id": "create-load-case",
+          "subset": "load",
           "capability": "fem3d-1-mutate",
           "payloadSchema": "../🧬️schema/🧬️mutations/🌱📋️create-load-case/🦀️.rs#CreateLoadCase",
           "outcomes": [
@@ -1077,6 +784,7 @@
         },
         {
           "id": "delete-load-case",
+          "subset": "load",
           "capability": "fem3d-1-mutate",
           "payloadSchema": "../🧬️schema/🧬️mutations/🗑📋️delete-load-case/🦀️.rs#DeleteLoadCase",
           "outcomes": [
@@ -1110,6 +818,7 @@
         },
         {
           "id": "add-load",
+          "subset": "load",
           "capability": "fem3d-1-mutate",
           "payloadSchema": "../🧬️schema/🧬️mutations/➕add-load/🦀️.rs#AddLoad",
           "outcomes": [
@@ -1144,6 +853,7 @@
         },
         {
           "id": "remove-load",
+          "subset": "load",
           "capability": "fem3d-1-mutate",
           "payloadSchema": "../🧬️schema/🧬️mutations/➖remove-load/🦀️.rs#RemoveLoad",
           "outcomes": [
@@ -1177,6 +887,7 @@
         },
         {
           "id": "change-load-case-self-weight",
+          "subset": "load",
           "capability": "fem3d-1-mutate",
           "payloadSchema": "../🧬️schema/🧬️mutations/⚖change-load-case-self-weight/🦀️.rs#ChangeLoadCaseSelfWeight",
           "outcomes": [
@@ -1211,6 +922,7 @@
         },
         {
           "id": "create-combination",
+          "subset": "load",
           "capability": "fem3d-1-mutate",
           "payloadSchema": "../🧬️schema/🧬️mutations/🌱🔗️create-combination/🦀️.rs#CreateCombination",
           "outcomes": [
@@ -1244,6 +956,7 @@
         },
         {
           "id": "delete-combination",
+          "subset": "load",
           "capability": "fem3d-1-mutate",
           "payloadSchema": "../🧬️schema/🧬️mutations/🗑🔗️delete-combination/🦀️.rs#DeleteCombination",
           "outcomes": [
@@ -1277,6 +990,7 @@
         },
         {
           "id": "update-analysis-settings",
+          "subset": "analysis",
           "capability": "fem3d-1-mutate",
           "payloadSchema": "../🧬️schema/🧬️mutations/🎛update-analysis-settings/🦀️.rs#UpdateAnalysisSettings",
           "outcomes": [
@@ -1319,7 +1033,7 @@
       "target": {
         "artifact": "s.fem.3d",
         "standard": "1",
-        "subset": "any"
+        "subset": "mesh"
       },
       "mutation": "replace-solid-geometry",
       "outcome": "applied",
@@ -1332,21 +1046,21 @@
       "files": [
         {
           "role": "expected-stl",
-          "path": "../🧫️fixtures/degenerate-hairline-height/expected.stl",
+          "path": "../../✳️mesh/🧫️fixtures/degenerate-hairline-height/expected.stl",
           "mediaType": "model/stl",
           "sha256": "sha256:c17d4fd245d7f8fa682d849175b26d90e64119a8fd3f8c2bc1200febb7acc353",
           "bytes": 1593
         },
         {
           "role": "expected-obj",
-          "path": "../🧫️fixtures/degenerate-hairline-height/expected.obj",
+          "path": "../../✳️mesh/🧫️fixtures/degenerate-hairline-height/expected.obj",
           "mediaType": "model/obj",
           "sha256": "sha256:518159885cc8a694d238328b67be60796793c6f5f9c97bf00529b4941b4b7dbc",
           "bytes": 916
         },
         {
           "role": "expected-measurements",
-          "path": "../🧫️fixtures/degenerate-hairline-height/expected.metrics.json",
+          "path": "../../✳️mesh/🧫️fixtures/degenerate-hairline-height/expected.metrics.json",
           "mediaType": "application/json",
           "sha256": "sha256:659532c9a97aa77178924a9fa1b11b73b9c3bd3f9ad330f691229ef58bc0403a",
           "bytes": 851
@@ -1386,7 +1100,7 @@
       "target": {
         "artifact": "s.fem.3d",
         "standard": "1",
-        "subset": "any"
+        "subset": "mesh"
       },
       "mutation": "replace-solid-geometry",
       "outcome": "applied",
@@ -1399,21 +1113,21 @@
       "files": [
         {
           "role": "expected-stl",
-          "path": "../🧫️fixtures/degenerate-sliver-outline/expected.stl",
+          "path": "../../✳️mesh/🧫️fixtures/degenerate-sliver-outline/expected.stl",
           "mediaType": "model/stl",
           "sha256": "sha256:39dbc5582ba4bb0ce5f1ea7d87c72dabbf574d755372668803bc9f84cde920e4",
           "bytes": 1917
         },
         {
           "role": "expected-obj",
-          "path": "../🧫️fixtures/degenerate-sliver-outline/expected.obj",
+          "path": "../../✳️mesh/🧫️fixtures/degenerate-sliver-outline/expected.obj",
           "mediaType": "model/obj",
           "sha256": "sha256:3d291c34fd8dcfb4bd7d8f0d8cfd6758fd177d8aa6a23d7dbf6a034cba45da57",
           "bytes": 975
         },
         {
           "role": "expected-measurements",
-          "path": "../🧫️fixtures/degenerate-sliver-outline/expected.metrics.json",
+          "path": "../../✳️mesh/🧫️fixtures/degenerate-sliver-outline/expected.metrics.json",
           "mediaType": "application/json",
           "sha256": "sha256:7d0bf0009f0e4d66b773b6c3a30c677a04ab40326b10989b39178c547bcf8732",
           "bytes": 876
@@ -1453,7 +1167,7 @@
       "target": {
         "artifact": "s.fem.3d",
         "standard": "1",
-        "subset": "any"
+        "subset": "mesh"
       },
       "mutation": "replace-solid-geometry",
       "outcome": "applied",
@@ -1466,21 +1180,21 @@
       "files": [
         {
           "role": "expected-stl",
-          "path": "../🧫️fixtures/polygon-l-shape/expected.stl",
+          "path": "../../✳️mesh/🧫️fixtures/polygon-l-shape/expected.stl",
           "mediaType": "model/stl",
           "sha256": "sha256:9c48669878f1326df4a4a676e37bae7e21dfa1f31943f0b2bca82407331108cf",
           "bytes": 2601
         },
         {
           "role": "expected-obj",
-          "path": "../🧫️fixtures/polygon-l-shape/expected.obj",
+          "path": "../../✳️mesh/🧫️fixtures/polygon-l-shape/expected.obj",
           "mediaType": "model/obj",
           "sha256": "sha256:2ce91e52ba853ff9013e9621ebf7e82aa74994502c866401387d37cb2e027871",
           "bytes": 1361
         },
         {
           "role": "expected-measurements",
-          "path": "../🧫️fixtures/polygon-l-shape/expected.metrics.json",
+          "path": "../../✳️mesh/🧫️fixtures/polygon-l-shape/expected.metrics.json",
           "mediaType": "application/json",
           "sha256": "sha256:4abaa8346774c83031bb89255f006abb1ffc804826b4f89ba91e346cbb6a1f7e",
           "bytes": 843
@@ -1520,7 +1234,7 @@
       "target": {
         "artifact": "s.fem.3d",
         "standard": "1",
-        "subset": "any"
+        "subset": "mesh"
       },
       "mutation": "replace-solid-geometry",
       "outcome": "applied",
@@ -1533,21 +1247,21 @@
       "files": [
         {
           "role": "expected-stl",
-          "path": "../🧫️fixtures/polygon-triangle/expected.stl",
+          "path": "../../✳️mesh/🧫️fixtures/polygon-triangle/expected.stl",
           "mediaType": "model/stl",
           "sha256": "sha256:fff7cd4d9c90ac47eac10691c583637450771ba86b4c524401013acdaaaff68f",
           "bytes": 986
         },
         {
           "role": "expected-obj",
-          "path": "../🧫️fixtures/polygon-triangle/expected.obj",
+          "path": "../../✳️mesh/🧫️fixtures/polygon-triangle/expected.obj",
           "mediaType": "model/obj",
           "sha256": "sha256:a0cdaf5dffd4be6d58833ee0d90069f15114f5b20c8795af63f6bc803c4ce436",
           "bytes": 558
         },
         {
           "role": "expected-measurements",
-          "path": "../🧫️fixtures/polygon-triangle/expected.metrics.json",
+          "path": "../../✳️mesh/🧫️fixtures/polygon-triangle/expected.metrics.json",
           "mediaType": "application/json",
           "sha256": "sha256:bd3b4335f496fe18f0f9c127f0c6902f1d161917bf5100ba32b44b6c92328f39",
           "bytes": 780
@@ -1587,7 +1301,7 @@
       "target": {
         "artifact": "s.fem.3d",
         "standard": "1",
-        "subset": "any"
+        "subset": "mesh"
       },
       "mutation": "replace-solid-geometry",
       "outcome": "applied",
@@ -1600,21 +1314,21 @@
       "files": [
         {
           "role": "expected-stl",
-          "path": "../🧫️fixtures/rect-roof-slab/expected.stl",
+          "path": "../../✳️mesh/🧫️fixtures/rect-roof-slab/expected.stl",
           "mediaType": "model/stl",
           "sha256": "sha256:3d9cb8ec60abfc1474aa8678166c13c0d99dc79e9c33418ce9ae1305dc6d29c9",
           "bytes": 1341
         },
         {
           "role": "expected-obj",
-          "path": "../🧫️fixtures/rect-roof-slab/expected.obj",
+          "path": "../../✳️mesh/🧫️fixtures/rect-roof-slab/expected.obj",
           "mediaType": "model/obj",
           "sha256": "sha256:32bca627c57b24765191b73062bd10722dda9310651db80f4aae2ad65e4e3944",
           "bytes": 832
         },
         {
           "role": "expected-measurements",
-          "path": "../🧫️fixtures/rect-roof-slab/expected.metrics.json",
+          "path": "../../✳️mesh/🧫️fixtures/rect-roof-slab/expected.metrics.json",
           "mediaType": "application/json",
           "sha256": "sha256:5aa4948336f73b5742e98cab1f2d13af7de37f4e78229ff847ee8da919a4c1c5",
           "bytes": 776
@@ -1654,7 +1368,7 @@
       "target": {
         "artifact": "s.fem.3d",
         "standard": "1",
-        "subset": "any"
+        "subset": "mesh"
       },
       "mutation": "replace-solid-geometry",
       "outcome": "applied",
@@ -1667,21 +1381,21 @@
       "files": [
         {
           "role": "expected-stl",
-          "path": "../🧫️fixtures/rect-thin-plate/expected.stl",
+          "path": "../../✳️mesh/🧫️fixtures/rect-thin-plate/expected.stl",
           "mediaType": "model/stl",
           "sha256": "sha256:c19e1bfa9274292b617a3ba9448c3909c612fb9132f39e78cc09a168ddbd1046",
           "bytes": 1611
         },
         {
           "role": "expected-obj",
-          "path": "../🧫️fixtures/rect-thin-plate/expected.obj",
+          "path": "../../✳️mesh/🧫️fixtures/rect-thin-plate/expected.obj",
           "mediaType": "model/obj",
           "sha256": "sha256:da3e18d2e615bab6b14bfc84fe354e579fb5dc00726740730d9484929dba1dba",
           "bytes": 911
         },
         {
           "role": "expected-measurements",
-          "path": "../🧫️fixtures/rect-thin-plate/expected.metrics.json",
+          "path": "../../✳️mesh/🧫️fixtures/rect-thin-plate/expected.metrics.json",
           "mediaType": "application/json",
           "sha256": "sha256:4c594db5ef1b31755cb278f4599f7a5399a77006cc86c30ba22bb989dbd99213",
           "bytes": 847
@@ -1721,7 +1435,7 @@
       "target": {
         "artifact": "s.fem.3d",
         "standard": "1",
-        "subset": "any"
+        "subset": "mesh"
       },
       "mutation": "replace-solid-geometry",
       "outcome": "applied",
@@ -1734,21 +1448,21 @@
       "files": [
         {
           "role": "expected-stl",
-          "path": "../🧫️fixtures/rect-unit-cube/expected.stl",
+          "path": "../../✳️mesh/🧫️fixtures/rect-unit-cube/expected.stl",
           "mediaType": "model/stl",
           "sha256": "sha256:bebe99ef3e65497713cef13c1814e11eae7868b049d2b9cadf6173ae2c1f6851",
           "bytes": 1251
         },
         {
           "role": "expected-obj",
-          "path": "../🧫️fixtures/rect-unit-cube/expected.obj",
+          "path": "../../✳️mesh/🧫️fixtures/rect-unit-cube/expected.obj",
           "mediaType": "model/obj",
           "sha256": "sha256:490187fcea1f602ee5163f55afcb4ff158d9370f701b491416a2388a393a0d8e",
           "bytes": 782
         },
         {
           "role": "expected-measurements",
-          "path": "../🧫️fixtures/rect-unit-cube/expected.metrics.json",
+          "path": "../../✳️mesh/🧫️fixtures/rect-unit-cube/expected.metrics.json",
           "mediaType": "application/json",
           "sha256": "sha256:7aa15d69ba5212b955b910475e0f96443ba30c17bf237e08166ce10df79eebd1",
           "bytes": 768
@@ -1788,7 +1502,7 @@
       "target": {
         "artifact": "s.fem.3d",
         "standard": "1",
-        "subset": "any"
+        "subset": "mesh"
       },
       "mutation": "replace-solid-geometry",
       "outcome": "applied",
@@ -1801,21 +1515,21 @@
       "files": [
         {
           "role": "expected-stl",
-          "path": "../🧫️fixtures/scale-one-hole-1e-3/expected.stl",
+          "path": "../../✳️mesh/🧫️fixtures/scale-one-hole-1e-3/expected.stl",
           "mediaType": "model/stl",
           "sha256": "sha256:cabf00b6260d8f415fde77326d7151d648db09ab7dbdcdb0c4076281db501078",
           "bytes": 8033
         },
         {
           "role": "expected-obj",
-          "path": "../🧫️fixtures/scale-one-hole-1e-3/expected.obj",
+          "path": "../../✳️mesh/🧫️fixtures/scale-one-hole-1e-3/expected.obj",
           "mediaType": "model/obj",
           "sha256": "sha256:04ea1aa09f59b60b48362161aab656bfce9cee4dbfe3c6bee560539a085fdb81",
           "bytes": 2598
         },
         {
           "role": "expected-measurements",
-          "path": "../🧫️fixtures/scale-one-hole-1e-3/expected.metrics.json",
+          "path": "../../✳️mesh/🧫️fixtures/scale-one-hole-1e-3/expected.metrics.json",
           "mediaType": "application/json",
           "sha256": "sha256:b3858bebf0ef47f57d2121e5b071fb0afb44f9446cb4b2b6d08af76edc5db43f",
           "bytes": 944
@@ -1855,7 +1569,7 @@
       "target": {
         "artifact": "s.fem.3d",
         "standard": "1",
-        "subset": "any"
+        "subset": "mesh"
       },
       "mutation": "replace-solid-geometry",
       "outcome": "applied",
@@ -1868,21 +1582,21 @@
       "files": [
         {
           "role": "expected-stl",
-          "path": "../🧫️fixtures/scale-one-hole-1e3/expected.stl",
+          "path": "../../✳️mesh/🧫️fixtures/scale-one-hole-1e3/expected.stl",
           "mediaType": "model/stl",
           "sha256": "sha256:1b94b928119650c85f5033a3cec8cf105d5ac962e4cdbc9c8da2d4a5df4c87b1",
           "bytes": 3981
         },
         {
           "role": "expected-obj",
-          "path": "../🧫️fixtures/scale-one-hole-1e3/expected.obj",
+          "path": "../../✳️mesh/🧫️fixtures/scale-one-hole-1e3/expected.obj",
           "mediaType": "model/obj",
           "sha256": "sha256:d06ba0deda2f50bbc9068a536b9b9e4e61ba18d02ce9b19707d5c2a682f9c728",
           "bytes": 1923
         },
         {
           "role": "expected-measurements",
-          "path": "../🧫️fixtures/scale-one-hole-1e3/expected.metrics.json",
+          "path": "../../✳️mesh/🧫️fixtures/scale-one-hole-1e3/expected.metrics.json",
           "mediaType": "application/json",
           "sha256": "sha256:9c491d09b695ed68e582e6a11c0b07bd9c04e524cf0c4142684e8f3c62e8b3dc",
           "bytes": 840
@@ -1922,7 +1636,7 @@
       "target": {
         "artifact": "s.fem.3d",
         "standard": "1",
-        "subset": "any"
+        "subset": "mesh"
       },
       "mutation": "replace-solid-geometry",
       "outcome": "applied",
@@ -1935,21 +1649,21 @@
       "files": [
         {
           "role": "expected-stl",
-          "path": "../🧫️fixtures/scale-one-hole-1e6/expected.stl",
+          "path": "../../✳️mesh/🧫️fixtures/scale-one-hole-1e6/expected.stl",
           "mediaType": "model/stl",
           "sha256": "sha256:8b3793663319ac931ba28207a62fa1e91748aeddc13a2a24f887dc02a106b810",
           "bytes": 4707
         },
         {
           "role": "expected-obj",
-          "path": "../🧫️fixtures/scale-one-hole-1e6/expected.obj",
+          "path": "../../✳️mesh/🧫️fixtures/scale-one-hole-1e6/expected.obj",
           "mediaType": "model/obj",
           "sha256": "sha256:d3cd15a1b2400b3bc171448afb090cb0414ea5d02b75d2f244bf53934a51805e",
           "bytes": 2043
         },
         {
           "role": "expected-measurements",
-          "path": "../🧫️fixtures/scale-one-hole-1e6/expected.metrics.json",
+          "path": "../../✳️mesh/🧫️fixtures/scale-one-hole-1e6/expected.metrics.json",
           "mediaType": "application/json",
           "sha256": "sha256:78efa0f162ac8473e174862086ed80b2302789a82b99357f468719db5f7d9b07",
           "bytes": 871
@@ -1989,7 +1703,7 @@
       "target": {
         "artifact": "s.fem.3d",
         "standard": "1",
-        "subset": "any"
+        "subset": "mesh"
       },
       "mutation": "replace-solid-geometry",
       "outcome": "applied",
@@ -2002,21 +1716,21 @@
       "files": [
         {
           "role": "expected-stl",
-          "path": "../🧫️fixtures/solid-one-hole/expected.stl",
+          "path": "../../✳️mesh/🧫️fixtures/solid-one-hole/expected.stl",
           "mediaType": "model/stl",
           "sha256": "sha256:b46cd5d5ca039bc75cc2588404c89d471c6ee146d3a2f832399300d34701e6b8",
           "bytes": 3521
         },
         {
           "role": "expected-obj",
-          "path": "../🧫️fixtures/solid-one-hole/expected.obj",
+          "path": "../../✳️mesh/🧫️fixtures/solid-one-hole/expected.obj",
           "mediaType": "model/obj",
           "sha256": "sha256:20dd9b39f146e28d5e0882e0eae0252342f68dd2b5f189d241b652c3b4ea7d1c",
           "bytes": 1843
         },
         {
           "role": "expected-measurements",
-          "path": "../🧫️fixtures/solid-one-hole/expected.metrics.json",
+          "path": "../../✳️mesh/🧫️fixtures/solid-one-hole/expected.metrics.json",
           "mediaType": "application/json",
           "sha256": "sha256:eb4f0d45b4e07f74308bacb10a4d8cc42c0d2490b52be45c06fb604e438adb5a",
           "bytes": 778
@@ -2056,7 +1770,7 @@
       "target": {
         "artifact": "s.fem.3d",
         "standard": "1",
-        "subset": "any"
+        "subset": "mesh"
       },
       "mutation": "replace-solid-geometry",
       "outcome": "applied",
@@ -2069,21 +1783,21 @@
       "files": [
         {
           "role": "expected-stl",
-          "path": "../🧫️fixtures/solid-one-hole-elevated-high/expected.stl",
+          "path": "../../✳️mesh/🧫️fixtures/solid-one-hole-elevated-high/expected.stl",
           "mediaType": "model/stl",
           "sha256": "sha256:0903309f76781551504a661666efbf12d745f7029321390fabdd1adbb1180415",
           "bytes": 3617
         },
         {
           "role": "expected-obj",
-          "path": "../🧫️fixtures/solid-one-hole-elevated-high/expected.obj",
+          "path": "../../✳️mesh/🧫️fixtures/solid-one-hole-elevated-high/expected.obj",
           "mediaType": "model/obj",
           "sha256": "sha256:3d2e5367713f155ed3c9169d5f6e5e4793d23497ba53ba1e059fdbec4385dd22",
           "bytes": 1873
         },
         {
           "role": "expected-measurements",
-          "path": "../🧫️fixtures/solid-one-hole-elevated-high/expected.metrics.json",
+          "path": "../../✳️mesh/🧫️fixtures/solid-one-hole-elevated-high/expected.metrics.json",
           "mediaType": "application/json",
           "sha256": "sha256:1f2a3467f04814c4cd421dd31f8965114914731ff5f3df1eab92fcb50192ab30",
           "bytes": 816
@@ -2123,7 +1837,7 @@
       "target": {
         "artifact": "s.fem.3d",
         "standard": "1",
-        "subset": "any"
+        "subset": "mesh"
       },
       "mutation": "replace-solid-geometry",
       "outcome": "applied",
@@ -2136,21 +1850,21 @@
       "files": [
         {
           "role": "expected-stl",
-          "path": "../🧫️fixtures/solid-one-hole-elevated-low/expected.stl",
+          "path": "../../✳️mesh/🧫️fixtures/solid-one-hole-elevated-low/expected.stl",
           "mediaType": "model/stl",
           "sha256": "sha256:017325248c78f0669be19c91a11f8752fd3abfdccef138a01c965f2815fb11c2",
           "bytes": 3521
         },
         {
           "role": "expected-obj",
-          "path": "../🧫️fixtures/solid-one-hole-elevated-low/expected.obj",
+          "path": "../../✳️mesh/🧫️fixtures/solid-one-hole-elevated-low/expected.obj",
           "mediaType": "model/obj",
           "sha256": "sha256:f11e4e706ad01a10e4034a9ba0197ba2819641ff8a9fa7847e0a397969057fe5",
           "bytes": 1856
         },
         {
           "role": "expected-measurements",
-          "path": "../🧫️fixtures/solid-one-hole-elevated-low/expected.metrics.json",
+          "path": "../../✳️mesh/🧫️fixtures/solid-one-hole-elevated-low/expected.metrics.json",
           "mediaType": "application/json",
           "sha256": "sha256:32de6bc323f76725633e203875f5020800f4366a5d508fe0ca96489b6a03cca4",
           "bytes": 813
@@ -2190,7 +1904,7 @@
       "target": {
         "artifact": "s.fem.3d",
         "standard": "1",
-        "subset": "any"
+        "subset": "mesh"
       },
       "mutation": "replace-solid-geometry",
       "outcome": "applied",
@@ -2203,21 +1917,21 @@
       "files": [
         {
           "role": "expected-stl",
-          "path": "../🧫️fixtures/solid-one-hole-elevated-negative/expected.stl",
+          "path": "../../✳️mesh/🧫️fixtures/solid-one-hole-elevated-negative/expected.stl",
           "mediaType": "model/stl",
           "sha256": "sha256:75da18ed139e014f78d81f8760eff2c2c8d94100be19a95e2c0c9e253c83725c",
           "bytes": 3617
         },
         {
           "role": "expected-obj",
-          "path": "../🧫️fixtures/solid-one-hole-elevated-negative/expected.obj",
+          "path": "../../✳️mesh/🧫️fixtures/solid-one-hole-elevated-negative/expected.obj",
           "mediaType": "model/obj",
           "sha256": "sha256:3d7f123c2a9a448b73ff41445439b45a22a579bf3888b544d9fa80c01d67f9a4",
           "bytes": 1877
         },
         {
           "role": "expected-measurements",
-          "path": "../🧫️fixtures/solid-one-hole-elevated-negative/expected.metrics.json",
+          "path": "../../✳️mesh/🧫️fixtures/solid-one-hole-elevated-negative/expected.metrics.json",
           "mediaType": "application/json",
           "sha256": "sha256:f18ac9390246246c6851b7d36026be98a33e23589b476f449ec74102cb119f6b",
           "bytes": 816
@@ -2257,7 +1971,7 @@
       "target": {
         "artifact": "s.fem.3d",
         "standard": "1",
-        "subset": "any"
+        "subset": "mesh"
       },
       "mutation": "replace-solid-geometry",
       "outcome": "applied",
@@ -2270,21 +1984,21 @@
       "files": [
         {
           "role": "expected-stl",
-          "path": "../🧫️fixtures/solid-two-holes/expected.stl",
+          "path": "../../✳️mesh/🧫️fixtures/solid-two-holes/expected.stl",
           "mediaType": "model/stl",
           "sha256": "sha256:02522178dc76c275ba9ecefdcfa40a3074375f0c712d46f8c3b75e2fd449f2ba",
           "bytes": 7539
         },
         {
           "role": "expected-obj",
-          "path": "../🧫️fixtures/solid-two-holes/expected.obj",
+          "path": "../../✳️mesh/🧫️fixtures/solid-two-holes/expected.obj",
           "mediaType": "model/obj",
           "sha256": "sha256:f449fb640e7573d62025f06e0d06e605059f81719f6f626ba9e2d4f8d4150c07",
           "bytes": 3158
         },
         {
           "role": "expected-measurements",
-          "path": "../🧫️fixtures/solid-two-holes/expected.metrics.json",
+          "path": "../../✳️mesh/🧫️fixtures/solid-two-holes/expected.metrics.json",
           "mediaType": "application/json",
           "sha256": "sha256:f8120e751bb82dfc39d293b98c3c0b82de3df84ceafc3ed74dfeb61b1f7f9c08",
           "bytes": 830
@@ -2324,7 +2038,7 @@
       "target": {
         "artifact": "s.fem.3d",
         "standard": "1",
-        "subset": "any"
+        "subset": "mesh"
       },
       "mutation": "create-node",
       "outcome": "applied",
@@ -2335,14 +2049,14 @@
       "files": [
         {
           "role": "expected-before-json",
-          "path": "../🧫️fixtures/create-node/before.json",
+          "path": "../../✳️mesh/🧫️fixtures/create-node/before.json",
           "mediaType": "application/json",
           "sha256": "sha256:3c177c2ac3e8a0d2f7d6f8a6f4f79340e5b732a87b6159ecd4c74e8bf3438358",
           "bytes": 3127
         },
         {
           "role": "expected-after-json",
-          "path": "../🧫️fixtures/create-node/after.json",
+          "path": "../../✳️mesh/🧫️fixtures/create-node/after.json",
           "mediaType": "application/json",
           "sha256": "sha256:840c5e935f18863ed9bf1e5e727d065fe6528738c5a2560ef6a68fd30ded125f",
           "bytes": 3205
@@ -2373,7 +2087,7 @@
       "target": {
         "artifact": "s.fem.3d",
         "standard": "1",
-        "subset": "any"
+        "subset": "mesh"
       },
       "mutation": "delete-node",
       "outcome": "applied",
@@ -2384,14 +2098,14 @@
       "files": [
         {
           "role": "expected-before-json",
-          "path": "../🧫️fixtures/delete-node/before.json",
+          "path": "../../✳️mesh/🧫️fixtures/delete-node/before.json",
           "mediaType": "application/json",
           "sha256": "sha256:3c177c2ac3e8a0d2f7d6f8a6f4f79340e5b732a87b6159ecd4c74e8bf3438358",
           "bytes": 3127
         },
         {
           "role": "expected-after-json",
-          "path": "../🧫️fixtures/delete-node/after.json",
+          "path": "../../✳️mesh/🧫️fixtures/delete-node/after.json",
           "mediaType": "application/json",
           "sha256": "sha256:f310ba8c38ac075a4469e831792e8847aac8e75ff981f6b69dff2260dd15fd8b",
           "bytes": 3049
@@ -2422,7 +2136,7 @@
       "target": {
         "artifact": "s.fem.3d",
         "standard": "1",
-        "subset": "any"
+        "subset": "mesh"
       },
       "mutation": "create-element",
       "outcome": "applied",
@@ -2433,14 +2147,14 @@
       "files": [
         {
           "role": "expected-before-json",
-          "path": "../🧫️fixtures/create-element/before.json",
+          "path": "../../✳️mesh/🧫️fixtures/create-element/before.json",
           "mediaType": "application/json",
           "sha256": "sha256:3c177c2ac3e8a0d2f7d6f8a6f4f79340e5b732a87b6159ecd4c74e8bf3438358",
           "bytes": 3127
         },
         {
           "role": "expected-after-json",
-          "path": "../🧫️fixtures/create-element/after.json",
+          "path": "../../✳️mesh/🧫️fixtures/create-element/after.json",
           "mediaType": "application/json",
           "sha256": "sha256:13cb386358145227ee4da2902d6fd531c6f7941b880513eb42ef33971cbf78b9",
           "bytes": 3269
@@ -2471,7 +2185,7 @@
       "target": {
         "artifact": "s.fem.3d",
         "standard": "1",
-        "subset": "any"
+        "subset": "mesh"
       },
       "mutation": "delete-element",
       "outcome": "applied",
@@ -2482,14 +2196,14 @@
       "files": [
         {
           "role": "expected-before-json",
-          "path": "../🧫️fixtures/delete-element/before.json",
+          "path": "../../✳️mesh/🧫️fixtures/delete-element/before.json",
           "mediaType": "application/json",
           "sha256": "sha256:3c177c2ac3e8a0d2f7d6f8a6f4f79340e5b732a87b6159ecd4c74e8bf3438358",
           "bytes": 3127
         },
         {
           "role": "expected-after-json",
-          "path": "../🧫️fixtures/delete-element/after.json",
+          "path": "../../✳️mesh/🧫️fixtures/delete-element/after.json",
           "mediaType": "application/json",
           "sha256": "sha256:1b9755dc8df80d95161756111319eec6727a8aaee0096acaf191dd8de9c27e79",
           "bytes": 2964
@@ -2520,7 +2234,7 @@
       "target": {
         "artifact": "s.fem.3d",
         "standard": "1",
-        "subset": "any"
+        "subset": "mesh"
       },
       "mutation": "replace-element",
       "outcome": "applied",
@@ -2531,14 +2245,14 @@
       "files": [
         {
           "role": "expected-before-json",
-          "path": "../🧫️fixtures/replace-element/before.json",
+          "path": "../../✳️mesh/🧫️fixtures/replace-element/before.json",
           "mediaType": "application/json",
           "sha256": "sha256:3c177c2ac3e8a0d2f7d6f8a6f4f79340e5b732a87b6159ecd4c74e8bf3438358",
           "bytes": 3127
         },
         {
           "role": "expected-after-json",
-          "path": "../🧫️fixtures/replace-element/after.json",
+          "path": "../../✳️mesh/🧫️fixtures/replace-element/after.json",
           "mediaType": "application/json",
           "sha256": "sha256:b59b4b0afc20f53e52c1093096e1968d91fb3dbfde0bbfb4c4fc579f90afa92e",
           "bytes": 3106
@@ -2569,7 +2283,7 @@
       "target": {
         "artifact": "s.fem.3d",
         "standard": "1",
-        "subset": "any"
+        "subset": "material"
       },
       "mutation": "create-material",
       "outcome": "applied",
@@ -2580,14 +2294,14 @@
       "files": [
         {
           "role": "expected-before-json",
-          "path": "../🧫️fixtures/create-material/before.json",
+          "path": "../../✳️material/🧫️fixtures/create-material/before.json",
           "mediaType": "application/json",
           "sha256": "sha256:3c177c2ac3e8a0d2f7d6f8a6f4f79340e5b732a87b6159ecd4c74e8bf3438358",
           "bytes": 3127
         },
         {
           "role": "expected-after-json",
-          "path": "../🧫️fixtures/create-material/after.json",
+          "path": "../../✳️material/🧫️fixtures/create-material/after.json",
           "mediaType": "application/json",
           "sha256": "sha256:188d2b9db785c3668106e847db7a614033414f30bbfb4c8c575db766ff504c6b",
           "bytes": 3267
@@ -2618,7 +2332,7 @@
       "target": {
         "artifact": "s.fem.3d",
         "standard": "1",
-        "subset": "any"
+        "subset": "material"
       },
       "mutation": "delete-material",
       "outcome": "applied",
@@ -2629,14 +2343,14 @@
       "files": [
         {
           "role": "expected-before-json",
-          "path": "../🧫️fixtures/delete-material/before.json",
+          "path": "../../✳️material/🧫️fixtures/delete-material/before.json",
           "mediaType": "application/json",
           "sha256": "sha256:3c177c2ac3e8a0d2f7d6f8a6f4f79340e5b732a87b6159ecd4c74e8bf3438358",
           "bytes": 3127
         },
         {
           "role": "expected-after-json",
-          "path": "../🧫️fixtures/delete-material/after.json",
+          "path": "../../✳️material/🧫️fixtures/delete-material/after.json",
           "mediaType": "application/json",
           "sha256": "sha256:95d59d9e445496f7c717f46acb9edcc2bb65d14eb3d6c3feb888262dee664708",
           "bytes": 2983
@@ -2667,7 +2381,7 @@
       "target": {
         "artifact": "s.fem.3d",
         "standard": "1",
-        "subset": "any"
+        "subset": "material"
       },
       "mutation": "replace-material",
       "outcome": "applied",
@@ -2678,14 +2392,14 @@
       "files": [
         {
           "role": "expected-before-json",
-          "path": "../🧫️fixtures/replace-material/before.json",
+          "path": "../../✳️material/🧫️fixtures/replace-material/before.json",
           "mediaType": "application/json",
           "sha256": "sha256:3c177c2ac3e8a0d2f7d6f8a6f4f79340e5b732a87b6159ecd4c74e8bf3438358",
           "bytes": 3127
         },
         {
           "role": "expected-after-json",
-          "path": "../🧫️fixtures/replace-material/after.json",
+          "path": "../../✳️material/🧫️fixtures/replace-material/after.json",
           "mediaType": "application/json",
           "sha256": "sha256:b34b24fc68352af2901bc955d08a11d23ad688df86110cd89a52e6279d063a46",
           "bytes": 3127
@@ -2716,7 +2430,7 @@
       "target": {
         "artifact": "s.fem.3d",
         "standard": "1",
-        "subset": "any"
+        "subset": "mesh"
       },
       "mutation": "create-section",
       "outcome": "applied",
@@ -2727,14 +2441,14 @@
       "files": [
         {
           "role": "expected-before-json",
-          "path": "../🧫️fixtures/create-section/before.json",
+          "path": "../../✳️mesh/🧫️fixtures/create-section/before.json",
           "mediaType": "application/json",
           "sha256": "sha256:3c177c2ac3e8a0d2f7d6f8a6f4f79340e5b732a87b6159ecd4c74e8bf3438358",
           "bytes": 3127
         },
         {
           "role": "expected-after-json",
-          "path": "../🧫️fixtures/create-section/after.json",
+          "path": "../../✳️mesh/🧫️fixtures/create-section/after.json",
           "mediaType": "application/json",
           "sha256": "sha256:5b15baa2d3ad41e45287028ae8da280d8c667ba904875af5a19daced99a5bfcd",
           "bytes": 3269
@@ -2765,7 +2479,7 @@
       "target": {
         "artifact": "s.fem.3d",
         "standard": "1",
-        "subset": "any"
+        "subset": "mesh"
       },
       "mutation": "delete-section",
       "outcome": "applied",
@@ -2776,14 +2490,14 @@
       "files": [
         {
           "role": "expected-before-json",
-          "path": "../🧫️fixtures/delete-section/before.json",
+          "path": "../../✳️mesh/🧫️fixtures/delete-section/before.json",
           "mediaType": "application/json",
           "sha256": "sha256:3c177c2ac3e8a0d2f7d6f8a6f4f79340e5b732a87b6159ecd4c74e8bf3438358",
           "bytes": 3127
         },
         {
           "role": "expected-after-json",
-          "path": "../🧫️fixtures/delete-section/after.json",
+          "path": "../../✳️mesh/🧫️fixtures/delete-section/after.json",
           "mediaType": "application/json",
           "sha256": "sha256:b238229da9190fa152a7f852a3f8605e55c40126df5d6d5aac463e2ef5c7ec69",
           "bytes": 2986
@@ -2814,7 +2528,7 @@
       "target": {
         "artifact": "s.fem.3d",
         "standard": "1",
-        "subset": "any"
+        "subset": "mesh"
       },
       "mutation": "replace-section",
       "outcome": "applied",
@@ -2825,14 +2539,14 @@
       "files": [
         {
           "role": "expected-before-json",
-          "path": "../🧫️fixtures/replace-section/before.json",
+          "path": "../../✳️mesh/🧫️fixtures/replace-section/before.json",
           "mediaType": "application/json",
           "sha256": "sha256:3c177c2ac3e8a0d2f7d6f8a6f4f79340e5b732a87b6159ecd4c74e8bf3438358",
           "bytes": 3127
         },
         {
           "role": "expected-after-json",
-          "path": "../🧫️fixtures/replace-section/after.json",
+          "path": "../../✳️mesh/🧫️fixtures/replace-section/after.json",
           "mediaType": "application/json",
           "sha256": "sha256:b3f30760113540d24102c289d4ec7a4ab5475615dcb6310521a00fa6835c9aed",
           "bytes": 3127
@@ -2863,7 +2577,7 @@
       "target": {
         "artifact": "s.fem.3d",
         "standard": "1",
-        "subset": "any"
+        "subset": "boundary"
       },
       "mutation": "create-support",
       "outcome": "applied",
@@ -2874,14 +2588,14 @@
       "files": [
         {
           "role": "expected-before-json",
-          "path": "../🧫️fixtures/create-support/before.json",
+          "path": "../../✳️boundary/🧫️fixtures/create-support/before.json",
           "mediaType": "application/json",
           "sha256": "sha256:3c177c2ac3e8a0d2f7d6f8a6f4f79340e5b732a87b6159ecd4c74e8bf3438358",
           "bytes": 3127
         },
         {
           "role": "expected-after-json",
-          "path": "../🧫️fixtures/create-support/after.json",
+          "path": "../../✳️boundary/🧫️fixtures/create-support/after.json",
           "mediaType": "application/json",
           "sha256": "sha256:58e58d9218a1dc88d4afdcd5dbaa4c7a19661c291978f47e55f985c0be099603",
           "bytes": 3234
@@ -2912,7 +2626,7 @@
       "target": {
         "artifact": "s.fem.3d",
         "standard": "1",
-        "subset": "any"
+        "subset": "boundary"
       },
       "mutation": "delete-support",
       "outcome": "applied",
@@ -2923,14 +2637,14 @@
       "files": [
         {
           "role": "expected-before-json",
-          "path": "../🧫️fixtures/delete-support/before.json",
+          "path": "../../✳️boundary/🧫️fixtures/delete-support/before.json",
           "mediaType": "application/json",
           "sha256": "sha256:3c177c2ac3e8a0d2f7d6f8a6f4f79340e5b732a87b6159ecd4c74e8bf3438358",
           "bytes": 3127
         },
         {
           "role": "expected-after-json",
-          "path": "../🧫️fixtures/delete-support/after.json",
+          "path": "../../✳️boundary/🧫️fixtures/delete-support/after.json",
           "mediaType": "application/json",
           "sha256": "sha256:dbdaaa0cbe6d810afea2412717013dddb6cf954b147c5d45360b80c7b84c6071",
           "bytes": 3034
@@ -2961,7 +2675,7 @@
       "target": {
         "artifact": "s.fem.3d",
         "standard": "1",
-        "subset": "any"
+        "subset": "boundary"
       },
       "mutation": "replace-support",
       "outcome": "applied",
@@ -2972,14 +2686,14 @@
       "files": [
         {
           "role": "expected-before-json",
-          "path": "../🧫️fixtures/replace-support/before.json",
+          "path": "../../✳️boundary/🧫️fixtures/replace-support/before.json",
           "mediaType": "application/json",
           "sha256": "sha256:3c177c2ac3e8a0d2f7d6f8a6f4f79340e5b732a87b6159ecd4c74e8bf3438358",
           "bytes": 3127
         },
         {
           "role": "expected-after-json",
-          "path": "../🧫️fixtures/replace-support/after.json",
+          "path": "../../✳️boundary/🧫️fixtures/replace-support/after.json",
           "mediaType": "application/json",
           "sha256": "sha256:a9a3a577b20f0c76feef378f5852e1bb3ced6719ce401a2a85272840d44a67bd",
           "bytes": 3071
@@ -3010,7 +2724,7 @@
       "target": {
         "artifact": "s.fem.3d",
         "standard": "1",
-        "subset": "any"
+        "subset": "load"
       },
       "mutation": "create-load-case",
       "outcome": "applied",
@@ -3021,14 +2735,14 @@
       "files": [
         {
           "role": "expected-before-json",
-          "path": "../🧫️fixtures/create-load-case/before.json",
+          "path": "../../✳️load/🧫️fixtures/create-load-case/before.json",
           "mediaType": "application/json",
           "sha256": "sha256:3c177c2ac3e8a0d2f7d6f8a6f4f79340e5b732a87b6159ecd4c74e8bf3438358",
           "bytes": 3127
         },
         {
           "role": "expected-after-json",
-          "path": "../🧫️fixtures/create-load-case/after.json",
+          "path": "../../✳️load/🧫️fixtures/create-load-case/after.json",
           "mediaType": "application/json",
           "sha256": "sha256:d08cea6cb87966ea6cdd7e013521038bbc39006968a432d78eb18f647992d3fb",
           "bytes": 3226
@@ -3059,7 +2773,7 @@
       "target": {
         "artifact": "s.fem.3d",
         "standard": "1",
-        "subset": "any"
+        "subset": "load"
       },
       "mutation": "delete-load-case",
       "outcome": "applied",
@@ -3070,14 +2784,14 @@
       "files": [
         {
           "role": "expected-before-json",
-          "path": "../🧫️fixtures/delete-load-case/before.json",
+          "path": "../../✳️load/🧫️fixtures/delete-load-case/before.json",
           "mediaType": "application/json",
           "sha256": "sha256:3c177c2ac3e8a0d2f7d6f8a6f4f79340e5b732a87b6159ecd4c74e8bf3438358",
           "bytes": 3127
         },
         {
           "role": "expected-after-json",
-          "path": "../🧫️fixtures/delete-load-case/after.json",
+          "path": "../../✳️load/🧫️fixtures/delete-load-case/after.json",
           "mediaType": "application/json",
           "sha256": "sha256:aeacd977e4808902bb86be045208ee2d1c8df8db5833d6e4dbc982235fa609de",
           "bytes": 2894
@@ -3108,7 +2822,7 @@
       "target": {
         "artifact": "s.fem.3d",
         "standard": "1",
-        "subset": "any"
+        "subset": "load"
       },
       "mutation": "add-load",
       "outcome": "applied",
@@ -3119,14 +2833,14 @@
       "files": [
         {
           "role": "expected-before-json",
-          "path": "../🧫️fixtures/add-load/before.json",
+          "path": "../../✳️load/🧫️fixtures/add-load/before.json",
           "mediaType": "application/json",
           "sha256": "sha256:3c177c2ac3e8a0d2f7d6f8a6f4f79340e5b732a87b6159ecd4c74e8bf3438358",
           "bytes": 3127
         },
         {
           "role": "expected-after-json",
-          "path": "../🧫️fixtures/add-load/after.json",
+          "path": "../../✳️load/🧫️fixtures/add-load/after.json",
           "mediaType": "application/json",
           "sha256": "sha256:745b1c63b3f144dc391b875bf10ff9d2e1a5f6af4425bc2ca9947a679dc69ea2",
           "bytes": 3272
@@ -3157,7 +2871,7 @@
       "target": {
         "artifact": "s.fem.3d",
         "standard": "1",
-        "subset": "any"
+        "subset": "load"
       },
       "mutation": "remove-load",
       "outcome": "applied",
@@ -3168,14 +2882,14 @@
       "files": [
         {
           "role": "expected-before-json",
-          "path": "../🧫️fixtures/remove-load/before.json",
+          "path": "../../✳️load/🧫️fixtures/remove-load/before.json",
           "mediaType": "application/json",
           "sha256": "sha256:3c177c2ac3e8a0d2f7d6f8a6f4f79340e5b732a87b6159ecd4c74e8bf3438358",
           "bytes": 3127
         },
         {
           "role": "expected-after-json",
-          "path": "../🧫️fixtures/remove-load/after.json",
+          "path": "../../✳️load/🧫️fixtures/remove-load/after.json",
           "mediaType": "application/json",
           "sha256": "sha256:9b9018da9b99f87e1cef5061dfb3611b6a5b722f0487300312eb74477232db2f",
           "bytes": 2958
@@ -3206,7 +2920,7 @@
       "target": {
         "artifact": "s.fem.3d",
         "standard": "1",
-        "subset": "any"
+        "subset": "load"
       },
       "mutation": "change-load-case-self-weight",
       "outcome": "applied",
@@ -3217,14 +2931,14 @@
       "files": [
         {
           "role": "expected-before-json",
-          "path": "../🧫️fixtures/change-load-case-self-weight/before.json",
+          "path": "../../✳️load/🧫️fixtures/change-load-case-self-weight/before.json",
           "mediaType": "application/json",
           "sha256": "sha256:3c177c2ac3e8a0d2f7d6f8a6f4f79340e5b732a87b6159ecd4c74e8bf3438358",
           "bytes": 3127
         },
         {
           "role": "expected-after-json",
-          "path": "../🧫️fixtures/change-load-case-self-weight/after.json",
+          "path": "../../✳️load/🧫️fixtures/change-load-case-self-weight/after.json",
           "mediaType": "application/json",
           "sha256": "sha256:bc39ca7c3d13d3253bb1229e35f968f8531f7695c755c0aa348da31c8fb1fa0f",
           "bytes": 3128
@@ -3255,7 +2969,7 @@
       "target": {
         "artifact": "s.fem.3d",
         "standard": "1",
-        "subset": "any"
+        "subset": "load"
       },
       "mutation": "create-combination",
       "outcome": "applied",
@@ -3266,14 +2980,14 @@
       "files": [
         {
           "role": "expected-before-json",
-          "path": "../🧫️fixtures/create-combination/before.json",
+          "path": "../../✳️load/🧫️fixtures/create-combination/before.json",
           "mediaType": "application/json",
           "sha256": "sha256:3c177c2ac3e8a0d2f7d6f8a6f4f79340e5b732a87b6159ecd4c74e8bf3438358",
           "bytes": 3127
         },
         {
           "role": "expected-after-json",
-          "path": "../🧫️fixtures/create-combination/after.json",
+          "path": "../../✳️load/🧫️fixtures/create-combination/after.json",
           "mediaType": "application/json",
           "sha256": "sha256:db3dc7bf83887de542256b6d132f0b5de817050a6b51222278fe018543d40eb2",
           "bytes": 3275
@@ -3304,7 +3018,7 @@
       "target": {
         "artifact": "s.fem.3d",
         "standard": "1",
-        "subset": "any"
+        "subset": "load"
       },
       "mutation": "delete-combination",
       "outcome": "applied",
@@ -3315,14 +3029,14 @@
       "files": [
         {
           "role": "expected-before-json",
-          "path": "../🧫️fixtures/delete-combination/before.json",
+          "path": "../../✳️load/🧫️fixtures/delete-combination/before.json",
           "mediaType": "application/json",
           "sha256": "sha256:3c177c2ac3e8a0d2f7d6f8a6f4f79340e5b732a87b6159ecd4c74e8bf3438358",
           "bytes": 3127
         },
         {
           "role": "expected-after-json",
-          "path": "../🧫️fixtures/delete-combination/after.json",
+          "path": "../../✳️load/🧫️fixtures/delete-combination/after.json",
           "mediaType": "application/json",
           "sha256": "sha256:a3e6bc4af460c1caeac0abb75a9629e9c821944d26edcce345f3d209734e1f87",
           "bytes": 2907
@@ -3353,7 +3067,7 @@
       "target": {
         "artifact": "s.fem.3d",
         "standard": "1",
-        "subset": "any"
+        "subset": "analysis"
       },
       "mutation": "update-analysis-settings",
       "outcome": "applied",
@@ -3364,14 +3078,14 @@
       "files": [
         {
           "role": "expected-before-json",
-          "path": "../🧫️fixtures/update-analysis-settings/before.json",
+          "path": "../../✳️analysis/🧫️fixtures/update-analysis-settings/before.json",
           "mediaType": "application/json",
           "sha256": "sha256:3c177c2ac3e8a0d2f7d6f8a6f4f79340e5b732a87b6159ecd4c74e8bf3438358",
           "bytes": 3127
         },
         {
           "role": "expected-after-json",
-          "path": "../🧫️fixtures/update-analysis-settings/after.json",
+          "path": "../../✳️analysis/🧫️fixtures/update-analysis-settings/after.json",
           "mediaType": "application/json",
           "sha256": "sha256:ae5f6c0f9c17a5c2c5c4c7bfb1ea054d51d84b41b9cf20cf10ca410e1b345b73",
           "bytes": 3128
@@ -3526,6 +3240,42 @@
     {
       "id": "semantic-fem3d-carrier-v1",
       "description": "The nine snapshot collections as ordered lists — nodes, elements, regions, materials, sections, supports, loadCases, combinations, analysis — canonicalised with object keys sorted and array order preserved, so a reordering is a difference rather than a tie."
+    },
+    {
+      "id": "semantic-fem-mesh-manifold-v1",
+      "description": "The extruded-solid mesh measurement bundle (expected-obj + expected-stl + expected-measurements, one `manifold-fem3d-mesh-measure` fixture per `replace-solid-geometry` vector) compared on its TRIANGULATION-INVARIANT topological facts only: `empty`, `solids` (connected-component count), `genus`/`componentGenus`/`expectedGenus` (surface genus — a miscounted hole or wrong connectivity fails here even when two independent triangulators tile the SAME flat-faced solid differently) and `crossFormatTriangleCountsAgree` (the fixture's own OBJ/STL self-consistency flag). Every DIMENSIONAL field is stripped from this flat structural equality and left to the paired `fem-polygon-exact` tolerance profile instead: `vertexCount`/`triangleCount`/`weld.soupVertices`/`weld.weldedVertices`/`weld.droppedDegenerateTriangles`/`crossFormatTriangleCounts` (triangulation is producer freedom for a flat-faced prism — this subset's own `🔬️probes/📜️script.ts` `compareMeshes` gate documents that 'volume and area are triangulation-invariant... unlike a curved BRep solid'), `volume`/`surfaceArea`/`boundingBox`/`boundingBoxDiagonal`/`weld.grid`/`analyticVolume`/`analyticVolumeRelativeError`/`analyticMinZ`/`minZRelativeError`/`expectedBaseZ` and the purely descriptive `measuredFrom`. A single flat comparison tolerance cannot honestly serve fixtures spanning a boundingBoxDiagonal of 4.5 mm to 4.5 Mm (nine orders of magnitude) in this subset's own corpus, which is why the dimensional half is a NAMED, scale-relative tolerance profile rather than a number on this spec.",
+      "arrays": "ordered",
+      "ignoreKeys": [
+        "measuredFrom",
+        "vertexCount",
+        "triangleCount",
+        "volume",
+        "surfaceArea",
+        "boundingBox",
+        "boundingBoxDiagonal",
+        "weld",
+        "crossFormatTriangleCounts",
+        "analyticVolume",
+        "analyticVolumeRelativeError",
+        "analyticMinZ",
+        "minZRelativeError",
+        "expectedBaseZ"
+      ]
+    }
+  ],
+  "toleranceProfiles": [
+    {
+      "id": "fem-polygon-exact",
+      "description": "Straight-edged, flat-faced FEM solid meshes (a linear extrusion of a polygon outline+holes by the solid's own height, offset by baseZ — no curvature anywhere in `build_semio_mesh_snapshot`'s bridge), re-imported from float32 STL/OBJ and welded onto a `boundingBoxDiagonal × 1e-7` grid. Derived from THIS subset's own fixture corpus (15 `expected.metrics.json` files spanning `boundingBoxDiagonal` 4.48e-3 to 4.48e6, plus the paired ◻2d corpus at 1.42 to 4.48): the worst observed float32 round-trip noise across every fixture is `analyticVolumeRelativeError` 2.04e-6 and `minZRelativeError` 2.12e-8, both at the smallest (1e-3) scale fixture; the weld grid itself is `diagonal × 1e-7` at every single scale, by construction. `relativeLength`/`relativeArea`/`relativeVolume` are set to 1e-6/1e-5/1e-5 — a comfortable ≥10× margin over that measured noise floor. `absoluteLength`/`absoluteArea`/`absoluteVolume` floor at 1e-9 for near-zero references, matching the smallest fixture's own weld grid (1e-9, at the 1e-3 scale). A genuine defect sits nowhere near this floor: this subset's own carrier-oracle rationale (`three-fem3d-mesh-reader` entry, this same file) measures `relativeVolumeError` up to 7.083e-1 for a structurally different solid, and `normalizedSymmetricHausdorff` at 4.465e-1 even for the SUBTLEST real defect on record (same shape, wrong elevation — `solid-one-hole` vs `solid-one-hole-elevated-low` — where the elevation-invariant volume/area metrics read ~0) — so `normalizedHausdorffMax`/`normalizedCentroidDistanceMax` are set to 1e-4: roughly four thousand times below that smallest real signal, and roughly a hundred times above the representation noise floor. `maxOverrideFactor: 5` matches the CORE `mechanical-standard`/`large-coordinate` profiles' own headroom, reserved for a future fixture whose own measured baseline needs a documented, capped exception rather than a silently widened gate.",
+      "absoluteLength": 1e-09,
+      "relativeLength": 1e-06,
+      "absoluteArea": 1e-09,
+      "relativeArea": 1e-05,
+      "absoluteVolume": 1e-09,
+      "relativeVolume": 1e-05,
+      "normalizedHausdorffMax": 0.0001,
+      "normalizedCentroidDistanceMax": 0.0001,
+      "maxOverrideFactor": 5
     }
   ],
   "comparisonPipelines": [

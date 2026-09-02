@@ -5,5 +5,7 @@
     "*": {
       "name": "Unconstrained png 1.2"
     }
-  }
+  },
+  "subsetPolicy": "single",
+  "subsetPolicyRationale": "RFC 2083 / the W3C PNG 1.2 recommendation defines exactly one conformance target -- there is no PNG/A, no PNG profile, no ISO-style conformance class the way PDF/A or STEP AP214's cc1-cc6 partition their formats. The spec does separate critical chunks (IHDR/PLTE/IDAT/IEND, mandatory for every decoder) from ancillary chunks (gAMA/cHRM/tRNS/tEXt/bKGD/pHYs/tIME/unknown, individually optional) -- but that is a per-CHUNK optionality inside one always-co-decoded image, not an alternate whole-file profile a PNG either is or is not; every conforming decoder must already handle both classes together. This artifact's 15 mutations (change-background/-chromaticities/-gamma/-header/-physical-dims/-srgb-intent/-timestamp/-transparency, insert/remove/replace-text-chunk, insert/remove-unknown-chunk, replace-palette, replace-pixels) are exactly that: ancillary-chunk edits, palette/pixel edits and the one mandatory-chunk edit (header), all against the SAME single IHDR-rooted raster, decoded by the SAME codec regardless of which chunk a mutation touches. `✳️any` remains this artifact's only real scope."
 }

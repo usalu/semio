@@ -38,7 +38,7 @@ const KINDS: &[&str] = &["no-mutation", "set-snapshot", "set-sof-marker", "set-s
 /// 🖼️ The real 2275x2560 architectural scan, shared with the `✳️any` case rather than copied: two
 /// DQT, an SOF0 with three components, four DHT and SOS.
 #[cfg(feature = "sut")]
-const SCAN: &str = "shared://🖼️abbau-aufbau-masterarbeit-grundriss.jpg";
+const SCAN: &str = "shared://🧪️abbau-aufbau-masterarbeit-grundriss/🖼️.jpg";
 //#endregion 🔖️Kinds
 
 //#region 🔖️Oracle

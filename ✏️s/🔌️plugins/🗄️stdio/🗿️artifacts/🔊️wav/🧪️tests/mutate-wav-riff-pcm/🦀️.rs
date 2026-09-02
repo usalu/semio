@@ -13,7 +13,7 @@ use semio_s_plugin_stdio_test_oracle::artifacts::wav::standards::v_riff_pcm::sub
 use semio_s_plugin_stdio_test_oracle::law;
 
 //#region 🔖️Input
-const INPUT: &str = "shared://🔊️bauen-mit-bestand-ausschnitt.wav";
+const INPUT: &str = "shared://🧪️bauen-mit-bestand-ausschnitt/🔊️.wav";
 
 /// 🦠️ The catalog's own kinds (`../../🏅️standards/🔖️riff-pcm/🪆️subsets/✳️any/🔣️oracle.json`),
 /// duplicated as a plain constant rather than reached through the subject crate — this loop drives
@@ -65,7 +65,7 @@ fn inverse_oracle(ctx: &Context) -> Result<Outcome, String> {
 /// 🚫️ The "re-encoded bytes must differ from the input" half of the law does NOT hold on this side
 /// and is deliberately not contrived into one that does. RIFF/WAVE 16-bit PCM has exactly ONE
 /// canonical layout for a recording with no auxiliary chunks — a 44-byte `RIFF`/`fmt `/`data`
-/// header followed by the samples — and `shared://🔊️bauen-mit-bestand-ausschnitt.wav` is precisely
+/// header followed by the samples — and `shared://🧪️bauen-mit-bestand-ausschnitt/🔊️.wav` is precisely
 /// that (verified: mono, 8000 Hz, 16-bit, `data` starts at offset 44, no `LIST`/`fact`/anything
 /// else). A conforming writer reproducing it byte-for-byte is the format being canonical, not the
 /// input being smuggled through. What IS assertable of a canonical writer — and asserted here — is
@@ -202,7 +202,7 @@ mod subject {
     /// through `law::carrier_is_exact`, the DOCUMENTED MIRROR of the no-byte-pass-through tripwire,
     /// for the SAME reason `round_trip_oracle` above already spells out and which turns out not to
     /// distinguish the two writers at all: RIFF/WAVE 16-bit PCM has exactly ONE canonical layout for
-    /// a recording with no auxiliary chunks, and `shared://🔊️bauen-mit-bestand-ausschnitt.wav` is
+    /// a recording with no auxiliary chunks, and `shared://🧪️bauen-mit-bestand-ausschnitt/🔊️.wav` is
     /// precisely that layout. Canonicity is a property of the FORMAT, so a conforming writer that
     /// reproduced anything else would be the defect — this repository's `encode_wav` included.
     /// This handler used to demand the opposite of the subject in the same breath as excusing the

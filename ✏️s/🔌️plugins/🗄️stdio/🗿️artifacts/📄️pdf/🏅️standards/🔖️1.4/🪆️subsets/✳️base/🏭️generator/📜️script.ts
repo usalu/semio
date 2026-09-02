@@ -43,7 +43,7 @@ const ENGINE_BIN = join(ENGINE_DIR, "target", "release", "generate");
 const FIXTURES_DIR = join(HERE, "..", "🧫️fixtures");
 const SUBSET = "base";
 const ORACLE_ID = "lopdf-pdf-1-4-base-mutate-reader";
-const COMPARISON_PROFILE = "semantic-pdf-conformance-v1";
+const COMPARISON_PROFILE = "semantic-pdf-structural-base-14-v1";
 // 🧾️ Kept in step with `🦀️lopdf-engine/src/lib.rs::KINDS` (itself the same list as
 // `../🔣️oracle.json`'s `pdf-1-4-base` catalog) — `manifests` walks whichever recipe directories the
 // engine actually wrote rather than trusting this constant, so a drift here fails loudly as a

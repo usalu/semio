@@ -2,8 +2,41 @@
   "artifact": "s.stdio.gltf",
   "standard": "2.0",
   "subsets": {
-    "*": {
-      "name": "Unconstrained gltf 2.0"
+    "any": {
+      "name": "Shared glTF 2.0 substrate",
+      "note": "The whole-document container: GLB/GLTF io, the third-party oracle, the fixture generator and the core snapshot/diff/inference schema. glTF 2.0 defines exactly one conformance target (a \"glTF Asset\"), never independently-validatable profiles the way PDF/A or STEP AP214's cc1-cc6 do -- so this stays the shared codec every domain subset below composes with, not a mutation owner in its own right. No mutation resolves here any more (see the 8 domain subsets)."
+    },
+    "scene": {
+      "name": "Scene graph",
+      "note": "glTF.schema.json `scene`/`node`: scenes, root-node lists, node hierarchy/transform/child edges."
+    },
+    "mesh": {
+      "name": "Meshes and accessors",
+      "note": "glTF.schema.json `mesh`/`mesh.primitive`/`accessor`: meshes, primitives, morph targets, typed accessor views."
+    },
+    "material": {
+      "name": "Materials and textures",
+      "note": "glTF.schema.json `material`/`texture`/`sampler`/`image`: PBR materials, textures, samplers, images."
+    },
+    "animation": {
+      "name": "Animations",
+      "note": "glTF.schema.json `animation`: channels, samplers, keyframe targets."
+    },
+    "skin": {
+      "name": "Skins",
+      "note": "glTF.schema.json `skin`: joints, inverse bind matrices, skeleton root."
+    },
+    "camera": {
+      "name": "Cameras",
+      "note": "glTF.schema.json `camera`: perspective/orthographic projections."
+    },
+    "buffer": {
+      "name": "Buffers",
+      "note": "glTF.schema.json `buffer`/`bufferView`: binary storage and typed views into it."
+    },
+    "asset": {
+      "name": "Asset, document and extensions",
+      "note": "glTF.schema.json `asset` plus the root document's own extension/extras data and the extensionsUsed/extensionsRequired mechanism itself (not any one ratified KHR_*/EXT_* extension's payload)."
     }
   },
   "x-semio": {
@@ -13,7 +46,55 @@
         "directory": "✳️any",
         "id": "s.stdio.gltf.subset.any",
         "kind": "subset",
-        "responsibility": "Unconstrained glTF 2.0 subset assembly."
+        "responsibility": "Shared glTF 2.0 io/oracle/generator/schema-core substrate; owns no mutation."
+      },
+      {
+        "directory": "✳️scene",
+        "id": "s.stdio.gltf.subset.scene",
+        "kind": "subset",
+        "responsibility": "Scene graph mutations (scenes, nodes)."
+      },
+      {
+        "directory": "✳️mesh",
+        "id": "s.stdio.gltf.subset.mesh",
+        "kind": "subset",
+        "responsibility": "Mesh, primitive, morph-target and accessor mutations."
+      },
+      {
+        "directory": "✳️material",
+        "id": "s.stdio.gltf.subset.material",
+        "kind": "subset",
+        "responsibility": "Material, texture, sampler and image mutations."
+      },
+      {
+        "directory": "✳️animation",
+        "id": "s.stdio.gltf.subset.animation",
+        "kind": "subset",
+        "responsibility": "Animation mutations."
+      },
+      {
+        "directory": "✳️skin",
+        "id": "s.stdio.gltf.subset.skin",
+        "kind": "subset",
+        "responsibility": "Skin mutations."
+      },
+      {
+        "directory": "✳️camera",
+        "id": "s.stdio.gltf.subset.camera",
+        "kind": "subset",
+        "responsibility": "Camera mutations."
+      },
+      {
+        "directory": "✳️buffer",
+        "id": "s.stdio.gltf.subset.buffer",
+        "kind": "subset",
+        "responsibility": "Buffer and buffer-view mutations."
+      },
+      {
+        "directory": "✳️asset",
+        "id": "s.stdio.gltf.subset.asset",
+        "kind": "subset",
+        "responsibility": "Asset metadata, document extension/extras and extension-mechanism mutations."
       }
     ]
   }

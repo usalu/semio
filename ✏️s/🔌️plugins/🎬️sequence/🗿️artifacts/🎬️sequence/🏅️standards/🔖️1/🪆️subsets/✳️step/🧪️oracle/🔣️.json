@@ -1,0 +1,486 @@
+{
+  "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json",
+  "schemaVersion": 2,
+  "_comment": "🎬️ The step-node semantic vocabulary: the six mutations that create, remove, reposition, reconfigure or duplicate a SequenceStep entity. Split out of ✳️any (ticket 26/09/02/SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION) so this narrower vocabulary has a real, non-wildcard owner. `oracles`/`noOracleDecisions` for capability `sequence-1-mutate`/`sequence-1-mutate-uncarried` stay registered on ✳️any's own contribution and apply registry-wide by capability, not by subset.",
+  "mutationCatalogs": [
+    {
+      "id": "sequence-1-step",
+      "capability": "sequence-1-mutate",
+      "standardDirectoryName": "🔖️1",
+      "subsetDirectoryName": "✳️step",
+      "vectors": [
+        {
+          "mutationId": "change-step-collapsed",
+          "sourceMutationDirectoryName": "🗂️change-step-collapsed",
+          "mutationDirectoryName": "🗂️change-step-collapsed",
+          "scenarios": [
+            {
+              "id": "no-ops-when-the-step-is-already-collapsed",
+              "directoryName": "🧪️no-ops-when-the-step-is-already-collapsed"
+            }
+          ]
+        },
+        {
+          "mutationId": "create-step",
+          "sourceMutationDirectoryName": "🌱create-step",
+          "mutationDirectoryName": "🌱create-step",
+          "scenarios": [
+            {
+              "id": "rejects-a-duplicate-step-id",
+              "directoryName": "🧪️rejects-a-duplicate-step-id"
+            }
+          ]
+        },
+        {
+          "mutationId": "delete-step",
+          "sourceMutationDirectoryName": "🗑️delete-step",
+          "mutationDirectoryName": "🗑️delete-step",
+          "scenarios": [
+            {
+              "id": "rejects-deleting-a-missing-step",
+              "directoryName": "🧪️rejects-deleting-a-missing-step"
+            }
+          ]
+        },
+        {
+          "mutationId": "duplicate-step",
+          "sourceMutationDirectoryName": "🧬duplicate-step",
+          "mutationDirectoryName": "🧬duplicate-step",
+          "scenarios": [
+            {
+              "id": "rejects-when-the-new-id-already-exists",
+              "directoryName": "🧪️rejects-when-the-new-id-already-exists"
+            }
+          ]
+        },
+        {
+          "mutationId": "edit-step-params",
+          "sourceMutationDirectoryName": "🔧edit-step-params",
+          "mutationDirectoryName": "🔧edit-step-params",
+          "scenarios": [
+            {
+              "id": "no-ops-when-the-params-are-already-identical",
+              "directoryName": "🧪️no-ops-when-the-params-are-already-identical"
+            }
+          ]
+        },
+        {
+          "mutationId": "move-step",
+          "sourceMutationDirectoryName": "📍move-step",
+          "mutationDirectoryName": "📍move-step",
+          "scenarios": [
+            {
+              "id": "no-ops-when-the-step-is-already-at-that-position",
+              "directoryName": "🧪️no-ops-when-the-step-is-already-at-that-position"
+            }
+          ]
+        }
+      ],
+      "kinds": [
+        "create-step",
+        "delete-step",
+        "move-step",
+        "edit-step-params",
+        "change-step-collapsed",
+        "duplicate-step"
+      ]
+    }
+  ],
+  "mutationManifests": [
+    {
+      "schema": "semio.repository-test.mutation-manifest/v2",
+      "artifact": "s.sequence.sequence",
+      "standard": "1",
+      "subset": "step",
+      "standardDirectoryName": "🔖️1",
+      "subsetDirectoryName": "✳️step",
+      "mutations": [
+        {
+          "id": "change-step-collapsed",
+          "capability": "sequence-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-step-collapsed",
+            "bridgeVersion": 1,
+            "variant": "ChangeStepCollapsed"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "sequence-1-mutate-uncarried",
+              "qualifyingKind": "third-party-library"
+            }
+          ],
+          "invariants": {
+            "local": [
+              "not-encoded-by-any-exported-carrier"
+            ],
+            "enclosing": [
+              "step-order-preserved"
+            ]
+          }
+        },
+        {
+          "id": "create-step",
+          "capability": "sequence-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "create-step",
+            "bridgeVersion": 1,
+            "variant": "CreateStep"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "sequence-1-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "csv-rfc4180-reader"
+            }
+          ],
+          "invariants": {
+            "local": [
+              "row-set-agrees-with-rfc4180-reader"
+            ],
+            "enclosing": [
+              "step-order-preserved"
+            ]
+          }
+        },
+        {
+          "id": "delete-step",
+          "capability": "sequence-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "delete-step",
+            "bridgeVersion": 1,
+            "variant": "DeleteStep"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "sequence-1-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "csv-rfc4180-reader"
+            }
+          ],
+          "invariants": {
+            "local": [
+              "row-set-agrees-with-rfc4180-reader"
+            ],
+            "enclosing": [
+              "step-order-preserved"
+            ]
+          }
+        },
+        {
+          "id": "duplicate-step",
+          "capability": "sequence-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "duplicate-step",
+            "bridgeVersion": 1,
+            "variant": "DuplicateStep"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "sequence-1-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "csv-rfc4180-reader"
+            }
+          ],
+          "invariants": {
+            "local": [
+              "row-set-agrees-with-rfc4180-reader"
+            ],
+            "enclosing": [
+              "step-order-preserved"
+            ]
+          }
+        },
+        {
+          "id": "edit-step-params",
+          "capability": "sequence-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "edit-step-params",
+            "bridgeVersion": 1,
+            "variant": "EditStepParams"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "sequence-1-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "csv-rfc4180-reader"
+            }
+          ],
+          "invariants": {
+            "local": [
+              "row-set-agrees-with-rfc4180-reader"
+            ],
+            "enclosing": [
+              "step-order-preserved"
+            ]
+          }
+        },
+        {
+          "id": "move-step",
+          "capability": "sequence-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "move-step",
+            "bridgeVersion": 1,
+            "variant": "MoveStep"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "sequence-1-mutate-uncarried",
+              "qualifyingKind": "third-party-library"
+            }
+          ],
+          "invariants": {
+            "local": [
+              "not-encoded-by-any-exported-carrier"
+            ],
+            "enclosing": [
+              "step-order-preserved"
+            ]
+          }
+        }
+      ]
+    }
+  ],
+  "fixtureManifests": [
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "sequence-csv-create-step",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.sequence.sequence",
+        "standard": "1",
+        "subset": "step"
+      },
+      "mutation": "create-step",
+      "outcome": "applied",
+      "units": {
+        "length": "none",
+        "angle": "none",
+        "handedness": "none",
+        "up": "none"
+      },
+      "files": [
+        {
+          "role": "input-csv",
+          "path": "../🧫️fixtures/create-step/before.csv",
+          "mediaType": "text/csv",
+          "sha256": "sha256:0dae98d9a9d4968cf6d1e0f0764fcbd24df356f228af59cd75f9364256eeed7c",
+          "bytes": 113
+        },
+        {
+          "role": "expected-csv",
+          "path": "../🧫️fixtures/create-step/after.csv",
+          "mediaType": "text/csv",
+          "sha256": "sha256:18074615c68d6d9a11200b3d2eeabe8fcd7705276731e5448f80883cb584f733",
+          "bytes": 147
+        }
+      ],
+      "generator": {
+        "oracle": "csv-rfc4180-reader",
+        "packageVersion": "1.4.0",
+        "engineFamily": "csv",
+        "engineVersion": "1.4.0",
+        "command": "bun ✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/🏅️standards/🔖️1/🪆️subsets/✳️any/🏭️generator/📜️script.ts generate",
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "Unlicense OR MIT (csv)",
+        "attribution": "Serialized with the csv crate (Unlicense OR MIT); no semio code participates in the expectation",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "unordered-json-v1",
+      "reproducible": true,
+      "family": "sequence-csv-carrier",
+      "notes": "Authored (before, after) CSV pair for `create-step`. The pair is the expectation; the third-party csv reader re-derives the row set."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "sequence-csv-delete-step",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.sequence.sequence",
+        "standard": "1",
+        "subset": "step"
+      },
+      "mutation": "delete-step",
+      "outcome": "applied",
+      "units": {
+        "length": "none",
+        "angle": "none",
+        "handedness": "none",
+        "up": "none"
+      },
+      "files": [
+        {
+          "role": "input-csv",
+          "path": "../🧫️fixtures/delete-step/before.csv",
+          "mediaType": "text/csv",
+          "sha256": "sha256:0dae98d9a9d4968cf6d1e0f0764fcbd24df356f228af59cd75f9364256eeed7c",
+          "bytes": 113
+        },
+        {
+          "role": "expected-csv",
+          "path": "../🧫️fixtures/delete-step/after.csv",
+          "mediaType": "text/csv",
+          "sha256": "sha256:3bb4ae48d72e7138506c8341bf3f0903d4d624883a1f146590f0225b8230996c",
+          "bytes": 75
+        }
+      ],
+      "generator": {
+        "oracle": "csv-rfc4180-reader",
+        "packageVersion": "1.4.0",
+        "engineFamily": "csv",
+        "engineVersion": "1.4.0",
+        "command": "bun ✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/🏅️standards/🔖️1/🪆️subsets/✳️any/🏭️generator/📜️script.ts generate",
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "Unlicense OR MIT (csv)",
+        "attribution": "Serialized with the csv crate (Unlicense OR MIT); no semio code participates in the expectation",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "unordered-json-v1",
+      "reproducible": true,
+      "family": "sequence-csv-carrier",
+      "notes": "Authored (before, after) CSV pair for `delete-step`. The pair is the expectation; the third-party csv reader re-derives the row set."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "sequence-csv-duplicate-step",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.sequence.sequence",
+        "standard": "1",
+        "subset": "step"
+      },
+      "mutation": "duplicate-step",
+      "outcome": "applied",
+      "units": {
+        "length": "none",
+        "angle": "none",
+        "handedness": "none",
+        "up": "none"
+      },
+      "files": [
+        {
+          "role": "input-csv",
+          "path": "../🧫️fixtures/duplicate-step/before.csv",
+          "mediaType": "text/csv",
+          "sha256": "sha256:0dae98d9a9d4968cf6d1e0f0764fcbd24df356f228af59cd75f9364256eeed7c",
+          "bytes": 113
+        },
+        {
+          "role": "expected-csv",
+          "path": "../🧫️fixtures/duplicate-step/after.csv",
+          "mediaType": "text/csv",
+          "sha256": "sha256:271d66b948fb1ad3056c150c16d0fde40378dacce3ec01127ba89753bfa6757f",
+          "bytes": 156
+        }
+      ],
+      "generator": {
+        "oracle": "csv-rfc4180-reader",
+        "packageVersion": "1.4.0",
+        "engineFamily": "csv",
+        "engineVersion": "1.4.0",
+        "command": "bun ✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/🏅️standards/🔖️1/🪆️subsets/✳️any/🏭️generator/📜️script.ts generate",
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "Unlicense OR MIT (csv)",
+        "attribution": "Serialized with the csv crate (Unlicense OR MIT); no semio code participates in the expectation",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "unordered-json-v1",
+      "reproducible": true,
+      "family": "sequence-csv-carrier",
+      "notes": "Authored (before, after) CSV pair for `duplicate-step`. The pair is the expectation; the third-party csv reader re-derives the row set."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "sequence-csv-edit-step-params",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.sequence.sequence",
+        "standard": "1",
+        "subset": "step"
+      },
+      "mutation": "edit-step-params",
+      "outcome": "applied",
+      "units": {
+        "length": "none",
+        "angle": "none",
+        "handedness": "none",
+        "up": "none"
+      },
+      "files": [
+        {
+          "role": "input-csv",
+          "path": "../🧫️fixtures/edit-step-params/before.csv",
+          "mediaType": "text/csv",
+          "sha256": "sha256:0dae98d9a9d4968cf6d1e0f0764fcbd24df356f228af59cd75f9364256eeed7c",
+          "bytes": 113
+        },
+        {
+          "role": "expected-csv",
+          "path": "../🧫️fixtures/edit-step-params/after.csv",
+          "mediaType": "text/csv",
+          "sha256": "sha256:50ec84b81817b7c1fbf60fabc48e75786d6c28b6ac7188788cb6ce18dcdb044f",
+          "bytes": 114
+        }
+      ],
+      "generator": {
+        "oracle": "csv-rfc4180-reader",
+        "packageVersion": "1.4.0",
+        "engineFamily": "csv",
+        "engineVersion": "1.4.0",
+        "command": "bun ✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/🏅️standards/🔖️1/🪆️subsets/✳️any/🏭️generator/📜️script.ts generate",
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "Unlicense OR MIT (csv)",
+        "attribution": "Serialized with the csv crate (Unlicense OR MIT); no semio code participates in the expectation",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "unordered-json-v1",
+      "reproducible": true,
+      "family": "sequence-csv-carrier",
+      "notes": "Authored (before, after) CSV pair for `edit-step-params`. The pair is the expectation; the third-party csv reader re-derives the row set."
+    }
+  ]
+}

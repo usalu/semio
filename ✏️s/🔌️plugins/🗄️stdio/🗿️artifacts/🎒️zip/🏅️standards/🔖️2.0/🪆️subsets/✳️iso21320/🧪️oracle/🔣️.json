@@ -17,9 +17,9 @@
       "license": "MIT",
       "testOnly": true,
       "homepage": "https://github.com/zip-rs/zip2",
-      "rationale": "The reference ZIP reader/writer of the Rust ecosystem, and the only producer in this comparison that can honour a per-member compression method: ZipWriter::start_file takes the method explicitly, and ZipFile::compression/encrypted expose on read exactly the two wire properties ISO/IEC 21320-1 §4.1 and §4.4 constrain. That is what makes it the right independent reference for this subset rather than for ZIP in general. A distinct id and capability from both the plugin-level `zip` entry (zip-archive: plain create/read/remove evidence) and the sibling `✳️any` entry (zip-2-0-mutate): a mutation vocabulary belongs to the subset that declares it, and reusing an approved oracle outside its surveyed capability fails the contract's oracle-capability-mismatch check.",
+      "rationale": "🩹️ RECLASSIFIED (ticket SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION, shard A10, 2026-09-02). This entry was registered `third-party-library` on the strength of a real crate that does genuine codec work, but the mutation's expected RESULT is computed by this owner's own `🦀️oracle.rs` -- its dispatch function's catch-all arm is `\"mutation kind {...} has no oracle implementation\"`, proof that every OTHER arm is an implementation, not a reading. Both halves of the comparison then descend from the same specification, so a shared misreading produces two agreeing wrong answers -- the one failure a differential oracle exists to catch. This is a `cross-semio-implementation`: a required SUPPLEMENT (metamorphic/inverse/round-trip evidence), never a substitute. A qualifying third-party reference for the mutation semantics is still owed. See $TICKET/📓️a10-oracle-honesty.md.\n\nThe reference ZIP reader/writer of the Rust ecosystem, and the only producer in this comparison that can honour a per-member compression method: ZipWriter::start_file takes the method explicitly, and ZipFile::compression/encrypted expose on read exactly the two wire properties ISO/IEC 21320-1 §4.1 and §4.4 constrain. That is what makes it the right independent reference for this subset rather than for ZIP in general. A distinct id and capability from both the plugin-level `zip` entry (zip-archive: plain create/read/remove evidence) and the sibling `✳️any` entry (zip-2-0-mutate): a mutation vocabulary belongs to the subset that declares it, and reusing an approved oracle outside its surveyed capability fails the contract's oracle-capability-mismatch check.",
       "hostPath": "✏️s/🔌️plugins/🗄️stdio/🧪️oracle/📦️packages/🦀️rust",
-      "kind": "third-party-library",
+      "kind": "cross-semio-implementation",
       "engine": {
         "family": "zip",
         "implementation": "zip Rust ZIP reader/writer",
@@ -38,6 +38,7 @@
       "subsetDirectoryName": "✳️iso21320",
       "vectors": [],
       "kinds": [
+        "no-mutation",
         "set-snapshot",
         "set-archive-comment",
         "add-stored-entry",

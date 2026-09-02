@@ -4,7 +4,7 @@
 @mutations-ifc-4-any
 Feature: Apply every typed IFC4 mutation to a real-world exchange structure
   The input is a real 2.5 MB, 24792-entity IFC4 exchange structure, not a synthetic fixture:
-  `shared://🏗️nakagin-capsule-tower.ifc`, a real IfcOpenShell 0.8.4.post1 export of the Nakagin
+  `shared://🧪️nakagin-capsule-tower/🏗️.ifc`, a real IfcOpenShell 0.8.4.post1 export of the Nakagin
   Capsule Tower produced 2026-03-20, copied verbatim (byte-identical, confirmed by md5) from ticket
   26/03/20/EXPORT-NAKAGIN-CAPSULE-TOWER-IFC-FILE-TO-REPORTS's `test-nakagin.ifc` into this artifact's
   own `🧫️fixtures` directory, which is its durable home. Its header declares
@@ -74,7 +74,7 @@ Feature: Apply every typed IFC4 mutation to a real-world exchange structure
   @level-exhaustive
   @mode-property
   Scenario Outline: Apply <id> to the real exchange structure
-    Given the real input document shared://🏗️nakagin-capsule-tower.ifc
+    Given the real input document shared://🧪️nakagin-capsule-tower/🏗️.ifc
     When the <id> mutation is applied with its parameters
       """
       {"kind": "<id>", "params": <params>}
@@ -98,7 +98,7 @@ Feature: Apply every typed IFC4 mutation to a real-world exchange structure
   @level-exhaustive
   @mode-property
   Scenario Outline: Undoing <id> restores the real exchange structure
-    Given the real input document shared://🏗️nakagin-capsule-tower.ifc
+    Given the real input document shared://🧪️nakagin-capsule-tower/🏗️.ifc
     When the <id> mutation is applied with its parameters
       """
       {"kind": "<id>", "params": <params>}
@@ -123,7 +123,7 @@ Feature: Apply every typed IFC4 mutation to a real-world exchange structure
   @level-long
   @mode-round-trip
   Scenario: Decode and re-encode the real exchange structure without passing bytes through
-    Given the real input document shared://🏗️nakagin-capsule-tower.ifc
+    Given the real input document shared://🧪️nakagin-capsule-tower/🏗️.ifc
     When the document is decoded into the subset's own snapshot and re-encoded from it alone
     Then the output is not bit-identical to the input
     And the independently read projections of input and output agree

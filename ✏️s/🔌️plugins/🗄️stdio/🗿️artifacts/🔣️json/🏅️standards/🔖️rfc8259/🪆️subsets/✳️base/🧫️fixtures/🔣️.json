@@ -47,8 +47,7 @@
       "security": "scanned-clean",
       "privacy": "no-personal-data"
     },
-    "comparisonProfile": "json-value-tree",
-    "toleranceProfile": "exact",
+    "comparisonProfile": "ordered-json-v1",
     "reproducible": true,
     "family": "json-base-carrier",
     "notes": "Authored (before, after) JSON pair for `insert-array-element`. The pair is the expectation; the third-party JSON reader reads both halves."
@@ -101,8 +100,7 @@
       "security": "scanned-clean",
       "privacy": "no-personal-data"
     },
-    "comparisonProfile": "json-value-tree",
-    "toleranceProfile": "exact",
+    "comparisonProfile": "ordered-json-v1",
     "reproducible": true,
     "family": "json-base-carrier",
     "notes": "Authored (before, after) JSON pair for `remove-array-element`. The pair is the expectation; the third-party JSON reader reads both halves."
@@ -155,8 +153,7 @@
       "security": "scanned-clean",
       "privacy": "no-personal-data"
     },
-    "comparisonProfile": "json-value-tree",
-    "toleranceProfile": "exact",
+    "comparisonProfile": "ordered-json-v1",
     "reproducible": true,
     "family": "json-base-carrier",
     "notes": "Authored (before, after) JSON pair for `remove-member`. The pair is the expectation; the third-party JSON reader reads both halves."
@@ -209,8 +206,7 @@
       "security": "scanned-clean",
       "privacy": "no-personal-data"
     },
-    "comparisonProfile": "json-value-tree",
-    "toleranceProfile": "exact",
+    "comparisonProfile": "ordered-json-v1",
     "reproducible": true,
     "family": "json-base-carrier",
     "notes": "Authored (before, after) JSON pair for `set-member`. The pair is the expectation; the third-party JSON reader reads both halves."
@@ -263,8 +259,7 @@
       "security": "scanned-clean",
       "privacy": "no-personal-data"
     },
-    "comparisonProfile": "json-value-tree",
-    "toleranceProfile": "exact",
+    "comparisonProfile": "ordered-json-v1",
     "reproducible": true,
     "family": "json-base-carrier",
     "notes": "Authored (before, after) JSON pair for `set-scalar`. The pair is the expectation; the third-party JSON reader reads both halves."

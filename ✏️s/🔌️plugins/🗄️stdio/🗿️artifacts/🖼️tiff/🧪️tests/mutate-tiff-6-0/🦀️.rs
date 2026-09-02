@@ -24,7 +24,7 @@ const KINDS: &[&str] = &["change-byte-order", "insert-ifd", "remove-ifd", "repla
 //#endregion 🔖️Kinds
 
 //#region 🔖️Input
-const INPUT: &str = "shared://🖼️abbau-aufbau-masterarbeit-grundriss.tiff";
+const INPUT: &str = "shared://🧪️abbau-aufbau-masterarbeit-grundriss/🖼️.tiff";
 
 /// 🧫️ Copies the immutable fixture into the work directory and returns the mutable copy's bytes.
 fn mutable_input(ctx: &Context) -> Result<Vec<u8>, String> {
@@ -91,7 +91,7 @@ fn inverse_oracle(ctx: &Context) -> Result<Outcome, String> {
 /// projection must survive unchanged.
 ///
 /// 🚫️ The "re-encoded bytes must differ from the input" half of the law is NOT assertable on this
-/// side and is deliberately not contrived: `shared://🖼️abbau-aufbau-masterarbeit-grundriss.tiff` is
+/// side and is deliberately not contrived: `shared://🧪️abbau-aufbau-masterarbeit-grundriss/🖼️.tiff` is
 /// itself the output of this very `write_tiff`
 /// (`../../🏅️standards/🔖️6.0/🪆️subsets/✳️document/🦀️oracle.rs`'s own `derive_real_world_fixture`),
 /// so a canonical, deterministic writer reproducing it byte-for-byte is CORRECT, not a pass-through.

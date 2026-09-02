@@ -14,7 +14,7 @@ Feature: Apply the one typed s.energy.model mutation to its committed specificat
   LIBRARY is a different judgement from declining a SECOND IMPLEMENTATION, and only the first was ever
   made here. `mutate-cad-1` and `mutate-lowpoly-1` took Python second
   implementations over this same `.dsl.semio` carrier in this wave, so the same is writable for this
-  subset from `🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🔣️component.json`, the rules of
+  subset from `🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🔣️.json`, the rules of
   `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/📓️derivation-rules.md` and the
   committed vectors this feature already replays. What blocks it TODAY is stated in the decision and
   is one edit: this case's vectors are not declared as `asset://` fixtures — the `Examples` table
@@ -86,6 +86,6 @@ Feature: Apply the one typed s.energy.model mutation to its committed specificat
   @level-long
   @mode-round-trip
   Scenario: Parse the real committed energy model document, print it back and cross it against its binary encoding
-    Given the real committed document asset://🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio
+    Given the real committed document asset://🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/🗣️.dsl.semio
     When the document is parsed, printed back to canonical DSL, parsed again, and separately encoded to a pack and decoded back
     Then every decoding agrees on one snapshot, and printing the canonical text a second time reproduces it byte for byte as ArtifactDsl's own fixpoint law requires

@@ -8,7 +8,7 @@ Feature: Apply every typed EnergyPlus EPW mutation to the only EPW this reposito
   `.epw` files tracked anywhere are byte-identical copies of the same 32-line handcrafted stub whose
   own COMMENTS 1 line says so directly: "semio W0 handcrafted EPW fixture -- structurally valid,
   plausible values, not a real station record." The input this feature uses,
-  asset://🏅️standards/🔖️energyplus/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/🌦️example.epw, IS that
+  asset://🏅️standards/🔖️energyplus/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/🧪️example/🌦️.epw, IS that
   stub: a real, structurally valid LOCATION for Hannover (52.37N, 9.74E) with a real 2009 ASHRAE
   Handbook DESIGN CONDITIONS block, but only 24 hourly records (one day, hour-ending 1..24), not the
   8,760 a genuine annual TMY file carries. Fixing this properly needs a genuine TMY3 export for
@@ -64,7 +64,7 @@ Feature: Apply every typed EnergyPlus EPW mutation to the only EPW this reposito
   @level-exhaustive
   @mode-differential
   Scenario Outline: Apply <id> to the real weather file's record grid
-    Given the real input weather file asset://🏅️standards/🔖️energyplus/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/🌦️example.epw
+    Given the real input weather file asset://🏅️standards/🔖️energyplus/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/🧪️example/🌦️.epw
     When the <id> mutation is applied with its parameters
       """
       {"kind": "<id>", "params": <params>}
@@ -81,7 +81,7 @@ Feature: Apply every typed EnergyPlus EPW mutation to the only EPW this reposito
   @level-exhaustive
   @mode-property
   Scenario Outline: Apply <id> to the real weather file's header
-    Given the real input weather file asset://🏅️standards/🔖️energyplus/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/🌦️example.epw
+    Given the real input weather file asset://🏅️standards/🔖️energyplus/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/🧪️example/🌦️.epw
     When the <id> mutation is applied with its parameters
       """
       {"kind": "<id>", "params": <params>}
@@ -103,7 +103,7 @@ Feature: Apply every typed EnergyPlus EPW mutation to the only EPW this reposito
   @level-exhaustive
   @mode-property
   Scenario Outline: Undoing <id> restores the real weather file
-    Given the real input weather file asset://🏅️standards/🔖️energyplus/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/🌦️example.epw
+    Given the real input weather file asset://🏅️standards/🔖️energyplus/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/🧪️example/🌦️.epw
     When the <id> mutation is applied with its parameters
       """
       {"kind": "<id>", "params": <params>}
@@ -130,7 +130,7 @@ Feature: Apply every typed EnergyPlus EPW mutation to the only EPW this reposito
   @level-long
   @mode-round-trip
   Scenario: Decode and re-encode the real weather file, where byte identity IS the correct answer
-    Given the real input weather file asset://🏅️standards/🔖️energyplus/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/🌦️example.epw
+    Given the real input weather file asset://🏅️standards/🔖️energyplus/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/🧪️example/🌦️.epw
     When the weather file is decoded to the typed snapshot and re-encoded from it alone
     Then the oracle and the subject agree on the semantic projection
     And the re-encoded bytes are bit-identical to the input, which is EPW's absence of writer freedom working correctly rather than a byte pass-through

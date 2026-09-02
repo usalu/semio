@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 1,
+  "owner": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️load/🧬️schema/🧬️mutations/🌱📋️create-load-case",
+  "semanticKind": "create-load-case",
+  "displayName": "Create Load Case",
+  "emoji": "🌱📋️",
+  "aggregateVariant": "CreateLoadCase",
+  "payloadSchema": "🔣️.schema.json",
+  "textOpcode": "create-load-case",
+  "binaryTag": null,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "detect",
+  "outcomeClasses": [
+    "error",
+    "applied"
+  ],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": [
+    "rust",
+    "json-schema",
+    "text",
+    "binary"
+  ]
+}

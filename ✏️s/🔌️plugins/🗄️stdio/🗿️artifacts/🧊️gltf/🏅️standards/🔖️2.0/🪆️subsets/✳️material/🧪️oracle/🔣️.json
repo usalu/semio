@@ -1,0 +1,233 @@
+{
+  "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json",
+  "schemaVersion": 2,
+  "_comment": "🧩️ This subset's own mutation-catalog contribution to the repository test platform -- registers the material slice of the glTF 2.0 mutation vocabulary (moved here from the artifact-level ✳️any catalog by shard A6, ticket 26/09/02/SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION). The shared whole-document io/oracle/generator machinery, and every mutation's own manifest/fixture record, stay centralized at the artifact's ✳️any substrate; this file exists so the material vocabulary directory has a claiming catalog of its own, per `unregistered-mutation-vocabulary`.",
+  "mutationCatalogs": [
+    {
+      "id": "gltf-2-0-material",
+      "capability": "gltf-2-0-mutate",
+      "standardDirectoryName": "🔖️2.0",
+      "subsetDirectoryName": "✳️material",
+      "vectors": [
+        {
+          "mutationId": "change-material-alpha-mode",
+          "sourceMutationDirectoryName": "✏️💎️change-material-alpha-mode",
+          "mutationDirectoryName": "✏️💎️change-material-alpha-mode",
+          "scenarios": [
+            {
+              "id": "switches-the-default-material-from-opaque-to-mask",
+              "directoryName": "🧪️switches-the-default-material-from-opaque-to-mask"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-material-double-sided",
+          "sourceMutationDirectoryName": "✏️💎️change-material-double-sided",
+          "mutationDirectoryName": "✏️💎️change-material-double-sided",
+          "scenarios": [
+            {
+              "id": "makes-the-default-material-double-sided",
+              "directoryName": "🧪️makes-the-default-material-double-sided"
+            }
+          ]
+        },
+        {
+          "mutationId": "create-image",
+          "sourceMutationDirectoryName": "🌱️🖼️create-image",
+          "mutationDirectoryName": "🌱️🖼️create-image",
+          "scenarios": [
+            {
+              "id": "inserts-an-empty-image-ahead-of-the-albedo-image",
+              "directoryName": "🧪️inserts-an-empty-image-ahead-of-the-albedo-image"
+            }
+          ]
+        },
+        {
+          "mutationId": "create-material",
+          "sourceMutationDirectoryName": "🌱️💎️create-material",
+          "mutationDirectoryName": "🌱️💎️create-material",
+          "scenarios": [
+            {
+              "id": "inserts-a-default-material-ahead-of-the-glass-material",
+              "directoryName": "🧪️inserts-a-default-material-ahead-of-the-glass-material"
+            }
+          ]
+        },
+        {
+          "mutationId": "create-sampler",
+          "sourceMutationDirectoryName": "🌱️🎛️create-sampler",
+          "mutationDirectoryName": "🌱️🎛️create-sampler",
+          "scenarios": [
+            {
+              "id": "inserts-a-repeat-sampler-ahead-of-the-linear-sampler",
+              "directoryName": "🧪️inserts-a-repeat-sampler-ahead-of-the-linear-sampler"
+            }
+          ]
+        },
+        {
+          "mutationId": "create-texture",
+          "sourceMutationDirectoryName": "🌱️🎨️create-texture",
+          "mutationDirectoryName": "🌱️🎨️create-texture",
+          "scenarios": [
+            {
+              "id": "inserts-an-empty-texture-ahead-of-the-albedo-texture",
+              "directoryName": "🧪️inserts-an-empty-texture-ahead-of-the-albedo-texture"
+            }
+          ]
+        },
+        {
+          "mutationId": "delete-image",
+          "sourceMutationDirectoryName": "🗑️🖼️delete-image",
+          "mutationDirectoryName": "🗑️🖼️delete-image",
+          "scenarios": [
+            {
+              "id": "removes-the-albedo-image-and-renumbers-the-texture-source",
+              "directoryName": "🧪️removes-the-albedo-image-and-renumbers-the-texture-source"
+            }
+          ]
+        },
+        {
+          "mutationId": "delete-material",
+          "sourceMutationDirectoryName": "🗑️💎️delete-material",
+          "mutationDirectoryName": "🗑️💎️delete-material",
+          "scenarios": [
+            {
+              "id": "removes-the-glass-material-and-renumbers-the-primitive-binding",
+              "directoryName": "🧪️removes-the-glass-material-and-renumbers-the-primitive-binding"
+            }
+          ]
+        },
+        {
+          "mutationId": "delete-sampler",
+          "sourceMutationDirectoryName": "🗑️🎛️delete-sampler",
+          "mutationDirectoryName": "🗑️🎛️delete-sampler",
+          "scenarios": [
+            {
+              "id": "removes-the-linear-sampler-and-renumbers-the-texture",
+              "directoryName": "🧪️removes-the-linear-sampler-and-renumbers-the-texture"
+            }
+          ]
+        },
+        {
+          "mutationId": "delete-texture",
+          "sourceMutationDirectoryName": "🗑️🎨️delete-texture",
+          "mutationDirectoryName": "🗑️🎨️delete-texture",
+          "scenarios": [
+            {
+              "id": "removes-the-albedo-texture-and-renumbers-the-base-colour-binding",
+              "directoryName": "🧪️removes-the-albedo-texture-and-renumbers-the-base-colour-binding"
+            }
+          ]
+        },
+        {
+          "mutationId": "move-image",
+          "sourceMutationDirectoryName": "🚚️🖼️move-image",
+          "mutationDirectoryName": "🚚️🖼️move-image",
+          "scenarios": [
+            {
+              "id": "swaps-the-albedo-and-normal-images",
+              "directoryName": "🧪️swaps-the-albedo-and-normal-images"
+            }
+          ]
+        },
+        {
+          "mutationId": "move-material",
+          "sourceMutationDirectoryName": "🚚️💎️move-material",
+          "mutationDirectoryName": "🚚️💎️move-material",
+          "scenarios": [
+            {
+              "id": "swaps-the-glass-and-steel-materials",
+              "directoryName": "🧪️swaps-the-glass-and-steel-materials"
+            }
+          ]
+        },
+        {
+          "mutationId": "move-sampler",
+          "sourceMutationDirectoryName": "🚚️🎛️move-sampler",
+          "mutationDirectoryName": "🚚️🎛️move-sampler",
+          "scenarios": [
+            {
+              "id": "swaps-the-linear-and-clamped-samplers",
+              "directoryName": "🧪️swaps-the-linear-and-clamped-samplers"
+            }
+          ]
+        },
+        {
+          "mutationId": "move-texture",
+          "sourceMutationDirectoryName": "🚚️🎨️move-texture",
+          "mutationDirectoryName": "🚚️🎨️move-texture",
+          "scenarios": [
+            {
+              "id": "swaps-the-albedo-and-normal-textures",
+              "directoryName": "🧪️swaps-the-albedo-and-normal-textures"
+            }
+          ]
+        },
+        {
+          "mutationId": "reorder-images",
+          "sourceMutationDirectoryName": "🔀️🖼️reorder-images",
+          "mutationDirectoryName": "🔀️🖼️reorder-images",
+          "scenarios": [
+            {
+              "id": "flips-the-albedo-and-normal-images",
+              "directoryName": "🧪️flips-the-albedo-and-normal-images"
+            }
+          ]
+        },
+        {
+          "mutationId": "reorder-materials",
+          "sourceMutationDirectoryName": "🔀️💎️reorder-materials",
+          "mutationDirectoryName": "🔀️💎️reorder-materials",
+          "scenarios": [
+            {
+              "id": "flips-the-glass-and-steel-materials",
+              "directoryName": "🧪️flips-the-glass-and-steel-materials"
+            }
+          ]
+        },
+        {
+          "mutationId": "reorder-samplers",
+          "sourceMutationDirectoryName": "🔀️🎛️reorder-samplers",
+          "mutationDirectoryName": "🔀️🎛️reorder-samplers",
+          "scenarios": [
+            {
+              "id": "flips-the-linear-and-clamped-samplers",
+              "directoryName": "🧪️flips-the-linear-and-clamped-samplers"
+            }
+          ]
+        },
+        {
+          "mutationId": "reorder-textures",
+          "sourceMutationDirectoryName": "🔀️🎨️reorder-textures",
+          "mutationDirectoryName": "🔀️🎨️reorder-textures",
+          "scenarios": [
+            {
+              "id": "flips-the-albedo-and-normal-textures",
+              "directoryName": "🧪️flips-the-albedo-and-normal-textures"
+            }
+          ]
+        }
+      ],
+      "kinds": [
+        "change-material-alpha-mode",
+        "change-material-double-sided",
+        "create-image",
+        "create-material",
+        "create-sampler",
+        "create-texture",
+        "delete-image",
+        "delete-material",
+        "delete-sampler",
+        "delete-texture",
+        "move-image",
+        "move-material",
+        "move-sampler",
+        "move-texture",
+        "reorder-images",
+        "reorder-materials",
+        "reorder-samplers",
+        "reorder-textures"
+      ]
+    }
+  ]
+}

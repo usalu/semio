@@ -7,7 +7,7 @@ Feature: Apply every typed jack scene mutation twice — once in Rust, once in P
   This case is a CROSS-LANGUAGE DIFFERENTIAL. The reference is `🐍️component.py` in this directory: a
   second implementation of the `s.trinity.jack` assembly scene, of its `.dsl.semio` carrier and of
   all eight typed mutations, written in Python from
-  `🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🔣️component.json` (the document — nodes with
+  `🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🔣️.json` (the document — nodes with
   ports, edges over `node@port` endpoints, a manifest, a camera and a root node id), from
   `…/🧬️schema/🧬️mutations/📝️text/📖️component.grammar.semio` (the eight verbs and their argument
   lists, including `entity = "node" ":" id / "edge" ":" id`) and from the eight committed
@@ -29,7 +29,7 @@ Feature: Apply every typed jack scene mutation twice — once in Rust, once in P
   describes.
 
   TWO DEFECTS AND ONE GAP, found while writing the reference and reported rather than worked around.
-  First: `…/🧬️schema/🧬️mutations/🔣️component.json` does not describe the mutations at all — it is a
+  First: `…/🧬️schema/🧬️mutations/🔣️.json` does not describe the mutations at all — it is a
   verbatim copy of the snapshot schema with `title` changed to `JackMutation`. The wire form was
   therefore read off the committed vectors, which spell it internally tagged and inconsistently mix
   camelCase discriminators with snake_case arguments (`new_name`, `new_value`). Second: nothing in
@@ -74,7 +74,7 @@ Feature: Apply every typed jack scene mutation twice — once in Rust, once in P
   @level-exhaustive
   @mode-differential
   Scenario Outline: Apply <id> to the real Nakagin Capsule Tower scene
-    Given the real committed scene asset://🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio
+    Given the real committed scene asset://🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/🗣️.dsl.semio
     When the <id> mutation is applied with the parameters the feature states
       """
       <mutation>
@@ -95,7 +95,7 @@ Feature: Apply every typed jack scene mutation twice — once in Rust, once in P
   @level-exhaustive
   @mode-differential
   Scenario Outline: Undo <id> on the real tower scene and land back on it
-    Given the real committed scene asset://🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio
+    Given the real committed scene asset://🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/🗣️.dsl.semio
     When the <id> mutation is applied and then its own computed inverse is applied
       """
       <mutation>
@@ -116,9 +116,9 @@ Feature: Apply every typed jack scene mutation twice — once in Rust, once in P
   @level-exhaustive
   @mode-differential
   Scenario Outline: Replay the committed <id> specification vector through both implementations
-    Given the committed before-scene asset://🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/<dir>/🧪️tests/<fixture>/📸️snapshot/⬅️before/🔣️component.json
-    And the committed mutation asset://🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/<dir>/🧪️tests/<fixture>/🦠️mutation/🔣️component.json
-    And the committed after-scene asset://🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/<dir>/🧪️tests/<fixture>/📸️snapshot/➡️after/🔣️component.json
+    Given the committed before-scene asset://🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/<dir>/🧪️tests/<fixture>/📸️snapshot/⬅️before/🔣️.json
+    And the committed mutation asset://🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/<dir>/🧪️tests/<fixture>/🦠️mutation/🔣️.json
+    And the committed after-scene asset://🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/<dir>/🧪️tests/<fixture>/📸️snapshot/➡️after/🔣️.json
     When the committed mutation is applied to the committed before-scene
       """
       {"verdict": "<verdict>"}
@@ -139,6 +139,6 @@ Feature: Apply every typed jack scene mutation twice — once in Rust, once in P
   @level-long
   @mode-round-trip
   Scenario: Read the real committed Nakagin tower scene in both languages and agree on it
-    Given the real committed scene asset://🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio
+    Given the real committed scene asset://🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/🗣️.dsl.semio
     When each implementation parses it, prints it back through its own carrier and parses it again
     Then both languages read the same nine nodes and six edges out of the same real bytes, the Python reproduces the file byte for byte, and the Rust holds its own canonical printing to ArtifactDsl's fixpoint law

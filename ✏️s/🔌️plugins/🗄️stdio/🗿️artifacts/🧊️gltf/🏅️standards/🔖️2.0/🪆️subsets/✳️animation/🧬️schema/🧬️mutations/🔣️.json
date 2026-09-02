@@ -1,0 +1,71 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/stdio/gltf/2.0/mutation/animation",
+  "title": "glTF Animation Mutation",
+  "oneOf": [
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "payload"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "create-animation"
+        },
+        "payload": {
+          "$ref": "🌱️🎞️create-animation/🔣️.schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "payload"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "delete-animation"
+        },
+        "payload": {
+          "$ref": "🗑️🎞️delete-animation/🔣️.schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "payload"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "move-animation"
+        },
+        "payload": {
+          "$ref": "🚚️🎞️move-animation/🔣️.schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "payload"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "reorder-animations"
+        },
+        "payload": {
+          "$ref": "🔀️🎞️reorder-animations/🔣️.schema.json"
+        }
+      }
+    }
+  ]
+}

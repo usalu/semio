@@ -21,7 +21,7 @@ complex/multi-type instances whole, so an instance projects as a LIST of records
 must be able to disagree.
 
 🧫️ **The artifact is real and complex, and it is the one this subset already commits.**
-`shared://🏗️wellness-center-sama-street-level.ifc` — a real self-consistent 3 464-entity slice of a
+`shared://🧪️wellness-center-sama-street-level/🏗️.ifc` — a real self-consistent 3 464-entity slice of a
 real 21 MB EDM StepFileFactory IFC2X3 export of the Wellness Center Sama, `FILE_SCHEMA(('IFC2X3'))`,
 193 915 bytes, every id, coordinate, geometry definition and relationship untouched. Every scenario
 copies it into the case work directory first; the committed asset is never written to.
@@ -61,7 +61,7 @@ from semio_repo_test import Adapter, Context, Outcome
 
 
 # region 🔖️Input
-INPUT = "shared://🏗️wellness-center-sama-street-level.ifc"
+INPUT = "shared://🧪️wellness-center-sama-street-level/🏗️.ifc"
 
 #: 🧬️ The four kinds IfcOpenShell can genuinely PRODUCE, in this subset's own catalog order.
 KINDS = ["no-mutation", "set-snapshot", "upsert-instance", "set-header"]

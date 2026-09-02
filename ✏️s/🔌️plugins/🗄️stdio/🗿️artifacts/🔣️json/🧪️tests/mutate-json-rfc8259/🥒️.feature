@@ -1,12 +1,12 @@
 @capability-json-rfc8259-mutate
 @oracle-json-rust-rfc8259-mutate
 @comparison-ordered-json-v1
-@mutations-json-rfc8259-any
+@mutations-json-rfc8259-base
 Feature: Apply every typed RFC 8259 JSON mutation to a real-world document
-  The input is shared://🔣️hexagonal-cut-concrete-forest-left.model.json, copied verbatim (`cp`,
+  The input is shared://🔣️.json, copied verbatim (`cp`,
   committed here as-is) from the real 424 KB CAD model already committed at
   ✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🎮️play/
-  🔣️hexagonal-cut-concrete-forest-left.model.json — 8,979 nodes, 71 vertices, 126 edges, 57 wires,
+  🔣️.json — 8,979 nodes, 71 vertices, 126 edges, 57 wires,
   57 faces, deeply nested objects and arrays, and 146 real exponent-notation floats (machine-epsilon
   boundary geometry like `4.44089209850063e-16`) that exercise this subset's own arbitrary-precision
   number lexeme against the reference codec's own number parse. Every scenario copies the fixture
@@ -56,7 +56,7 @@ Feature: Apply every typed RFC 8259 JSON mutation to a real-world document
   @level-exhaustive
   @mode-differential
   Scenario Outline: Apply <id> to the real document
-    Given the real input document shared://🔣️hexagonal-cut-concrete-forest-left.model.json
+    Given the real input document shared://🔣️.json
     When the <id> mutation is applied with its parameters
       """
       {"kind": "<id>", "params": <params>}
@@ -74,7 +74,7 @@ Feature: Apply every typed RFC 8259 JSON mutation to a real-world document
   @level-exhaustive
   @mode-differential
   Scenario Outline: Undoing <id> restores the real document
-    Given the real input document shared://🔣️hexagonal-cut-concrete-forest-left.model.json
+    Given the real input document shared://🔣️.json
     When the <id> mutation is applied with its parameters
       """
       {"kind": "<id>", "params": <params>}
@@ -93,7 +93,7 @@ Feature: Apply every typed RFC 8259 JSON mutation to a real-world document
   @level-long
   @mode-round-trip
   Scenario: Decode and re-encode the real document without passing bytes through
-    Given the real input document shared://🔣️hexagonal-cut-concrete-forest-left.model.json
+    Given the real input document shared://🔣️.json
     When the document is decoded to the typed snapshot and re-encoded from it alone
     Then the oracle and the subject agree on the semantic projection
     And the re-encoded bytes are not bit-identical to the input

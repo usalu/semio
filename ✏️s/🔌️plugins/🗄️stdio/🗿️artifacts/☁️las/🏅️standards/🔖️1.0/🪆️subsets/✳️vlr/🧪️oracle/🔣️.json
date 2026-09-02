@@ -1,0 +1,131 @@
+{
+  "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json",
+  "schemaVersion": 2,
+  "_comment": "🧩️ Ticket 26/09/02/SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION: split out of the former `✳️any` catch-all. ASPRS LAS 1.0 §2.3 (Variable Length Record Header/Data) is a normatively distinct region of the file (a keyed list of typed metadata blocks living between the Public Header Block and the point data), so `insert-vlr`/`remove-vlr`/`set-vlr-data` are owned here rather than by `✳️header`. The leaf struct definitions physically moved into this subset's own `🧬️schema/🧬️mutations`; the `LasMutation` enum, its `apply`/diff dispatch and the real binary codec they compile into remain in `✳️header` (the whole-file reader/writer is one shared, always-co-resident implementation across every LAS region -- moving it would duplicate ~800 lines of codec per subset for a format that, unlike PDF/A or STEP's conformance classes, has no alternate standalone document profile to justify it; same family-module reuse this repo already uses for svg tiny/basic). This subset owns no new third-party oracle: `las-1-0-any-mutate` (declared by `../../✳️header/🧪️oracle/🔣️.json`, merged into the shared registry) already reads back every VLR field through the SAME independent `las` crate reader used for the header/points mutations.",
+  "oracles": [],
+  "noOracleDecisions": [],
+  "comparisonProfiles": [],
+  "mutationManifests": [
+    {
+      "schema": "semio.repository-test.mutation-manifest/v2",
+      "artifact": "s.stdio.las",
+      "standard": "1.0",
+      "subset": "vlr",
+      "standardDirectoryName": "🔖️1.0",
+      "subsetDirectoryName": "✳️vlr",
+      "mutations": [
+        {
+          "id": "insert-vlr",
+          "capability": "las-1-0-vlr-mutate",
+          "payloadSchema": "../🧬️schema/🧬️mutations/📥insert-vlr/🦀️.rs#InsertVlr",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "insert-vlr",
+            "bridgeVersion": 1,
+            "variant": "LasMutation::InsertVlr"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "las-1-0-vlr-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "las-1-0-any-mutate"
+            }
+          ],
+          "carriers": [
+            "las"
+          ],
+          "invariants": {
+            "local": [
+              "vlr-count-and-inserted-vlr-fields-agree"
+            ],
+            "enclosing": [
+              "las-reencode-round-trip-agrees-with-reference-reader"
+            ]
+          }
+        },
+        {
+          "id": "remove-vlr",
+          "capability": "las-1-0-vlr-mutate",
+          "payloadSchema": "../🧬️schema/🧬️mutations/📤remove-vlr/🦀️.rs#RemoveVlr",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "remove-vlr",
+            "bridgeVersion": 1,
+            "variant": "LasMutation::RemoveVlr"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "las-1-0-vlr-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "las-1-0-any-mutate"
+            }
+          ],
+          "carriers": [
+            "las"
+          ],
+          "invariants": {
+            "local": [
+              "vlr-count-and-remaining-vlr-order-agree"
+            ],
+            "enclosing": [
+              "las-reencode-round-trip-agrees-with-reference-reader"
+            ]
+          }
+        },
+        {
+          "id": "set-vlr-data",
+          "capability": "las-1-0-vlr-mutate",
+          "payloadSchema": "../🧬️schema/🧬️mutations/🗃set-vlr-data/🦀️.rs#SetVlrData",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "set-vlr-data",
+            "bridgeVersion": 1,
+            "variant": "LasMutation::SetVlrData"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "las-1-0-vlr-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "las-1-0-any-mutate"
+            }
+          ],
+          "carriers": [
+            "las"
+          ],
+          "invariants": {
+            "local": [
+              "vlr-data-payload-agrees"
+            ],
+            "enclosing": [
+              "las-reencode-round-trip-agrees-with-reference-reader"
+            ]
+          }
+        }
+      ]
+    }
+  ],
+  "fixtureManifests": [],
+  "mutationCatalogs": [
+    {
+      "id": "las-1.0-vlr",
+      "capability": "las-1-0-vlr-mutate",
+      "standardDirectoryName": "🔖️1.0",
+      "subsetDirectoryName": "✳️vlr",
+      "vectors": [],
+      "kinds": [
+        "insert-vlr",
+        "remove-vlr",
+        "set-vlr-data"
+      ]
+    }
+  ]
+}

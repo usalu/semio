@@ -7,10 +7,20 @@ use crate::algebra::{MatD, VecD};
 use crate::model::{BeamStation, Dof, Element, ElementContext, ElementResult, Elements, FemError, MemberUdl, NodalLoad, Node, NodeDisplacement, NodeReaction, PlaneStress, PlateMoments, ShellState, SolidStress, SolutionChecks, StaticResult, Support};
 use crate::sparse::{ldlt_factor, rcm_order, subspace_iteration, Coo, Csr, EigenPairs, LdltFactor};
 use semio_framework_job::{CommitCandidate, InteractiveJob, JobFault, JobPayloadStream, Operation, RetainedJobPayload, StepContext, StepOutcome};
+use semio_framework_value_derive::{FromValue, ToValue};
 use std::collections::{HashMap, HashSet};
 use std::sync::Arc;
 
 const MOUNTED_OWNER_PAGE_BYTES: usize = 4_096;
+
+fn encode_value<T: dsl::ToValue>(value: &T) -> Vec<u8> {
+    store::pack_rt::encode_wire_value(&value.to_value())
+}
+
+fn decode_value<T: dsl::FromValue>(bytes: &[u8]) -> Result<T, String> {
+    let value = store::pack_rt::decode_wire_value(bytes).map_err(|error| error.to_string())?;
+    T::from_value(value).map_err(|error| error.to_string())
+}
 
 fn reserve_exact_owner_page<T>(owner: &mut Vec<T>, additional: usize) -> bool {
     owner.try_reserve_exact(additional).is_ok() && owner.capacity().checked_mul(std::mem::size_of::<T>()).is_some_and(|bytes| bytes <= MOUNTED_OWNER_PAGE_BYTES)
@@ -406,7 +416,8 @@ pub struct BucklingResult {
 // #endregion 🔖️Model
 
 // #region 🧩️JobGraph
-#[derive(Clone, Copy, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, ToValue, FromValue)]
+#[value(tag = "kind")]
 pub enum FemJobStage {
     ValidateReferences,
     BuildDofMap,
@@ -433,13 +444,13 @@ impl FemJobStage {
     }
 }
 
-#[derive(Clone, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+#[derive(Clone, Debug, PartialEq, Eq, ToValue, FromValue)]
 pub struct FemStagePlan {
     pub stage: FemJobStage,
     pub units: u64,
 }
 
-#[derive(Clone, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+#[derive(Clone, Debug, PartialEq, Eq, ToValue, FromValue)]
 pub struct FemJobProgress {
     pub stage: Option<FemJobStage>,
     pub completed_stages: usize,
@@ -448,7 +459,7 @@ pub struct FemJobProgress {
     pub total_units: u64,
 }
 
-#[derive(Clone, serde::Serialize, serde::Deserialize)]
+#[derive(Clone, ToValue, FromValue)]
 struct FemGraphCheckpoint {
     plans: Vec<FemStagePlan>,
     stage_cursor: usize,
@@ -469,12 +480,12 @@ impl FemJobGraph {
         Self { operation, state: FemGraphCheckpoint { plans, stage_cursor: 0, unit_cursor: 0, completed_units: 0, units_per_step, checkpoint_due: false } }
     }
 
-    pub fn from_checkpoint(operation: Operation, bytes: &[u8]) -> Result<Self, serde_json::Error> {
-        Ok(Self { operation, state: serde_json::from_slice(bytes)? })
+    pub fn from_checkpoint(operation: Operation, bytes: &[u8]) -> Result<Self, String> {
+        Ok(Self { operation, state: decode_value(bytes)? })
     }
 
     pub fn checkpoint_bytes(&self) -> Vec<u8> {
-        serde_json::to_vec(&self.state).expect("fem graph checkpoint is serializable")
+        encode_value(&self.state)
     }
 
     pub fn progress(&self) -> FemJobProgress {
@@ -526,7 +537,7 @@ impl InteractiveJob for FemJobGraph {
         }
         if self.state.stage_cursor == self.state.plans.len() {
             let progress = self.progress();
-            let bytes = serde_json::to_vec(&progress).expect("fem graph output is serializable");
+            let bytes = encode_value(&progress);
             return match context.payload_from_bytes(JobPayloadStream::CommitOutput, &bytes) {
                 Ok(output) => StepOutcome::Complete(CommitCandidate { state: RetainedJobPayload::empty(JobPayloadStream::CommitState), output }),
                 Err(_) => StepOutcome::Fault(JobFault { detail: RetainedJobPayload::empty(JobPayloadStream::Fault) }),
@@ -557,13 +568,13 @@ impl InteractiveJob for FemJobGraph {
         }
         if self.state.stage_cursor == self.state.plans.len() {
             let progress = self.progress();
-            let bytes = serde_json::to_vec(&progress).expect("fem graph output is serializable");
+            let bytes = encode_value(&progress);
             return match context.payload_from_bytes(JobPayloadStream::CommitOutput, &bytes) {
                 Ok(output) => StepOutcome::Complete(CommitCandidate { state: RetainedJobPayload::empty(JobPayloadStream::CommitState), output }),
                 Err(_) => StepOutcome::Fault(JobFault { detail: RetainedJobPayload::empty(JobPayloadStream::Fault) }),
             };
         }
-        let bytes = serde_json::to_vec(&self.progress()).expect("fem graph preview is serializable");
+        let bytes = encode_value(&self.progress());
         match context.payload_from_bytes(JobPayloadStream::Preview, &bytes) {
             Ok(preview) => StepOutcome::PreviewReady(preview),
             Err(_) => StepOutcome::Fault(JobFault { detail: RetainedJobPayload::empty(JobPayloadStream::Fault) }),
@@ -744,7 +755,8 @@ fn build_rcm_permutation(nodes: &[Node], elements: &[Elements], dof_map: &DofMap
 
 // #region 🔖️Assembly
 /// 🧱️ Bounded phases of deterministic stiffness assembly.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, ToValue, FromValue)]
+#[value(tag = "kind")]
 pub enum AssemblyJobStage {
     ElementTriplets,
     MergeFull,
@@ -764,7 +776,7 @@ impl AssemblyJobStage {
 }
 
 /// 👁️ Replaceable assembly progress for live element-mark rendering.
-#[derive(Clone, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+#[derive(Clone, Debug, PartialEq, Eq, ToValue, FromValue)]
 pub struct AssemblyPreview {
     pub stage: AssemblyJobStage,
     pub completed_elements: usize,
@@ -774,7 +786,7 @@ pub struct AssemblyPreview {
     pub assembled_element_ids: Vec<String>,
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq)]
 struct AssemblyTriplet {
     sequence: u64,
     row: u32,
@@ -782,13 +794,13 @@ struct AssemblyTriplet {
     value: f64,
 }
 
-#[derive(Clone, Default, serde::Serialize, serde::Deserialize)]
+#[derive(Clone, Default)]
 struct AssemblyPartitionBuffer {
     full: Vec<AssemblyTriplet>,
     free: Vec<AssemblyTriplet>,
 }
 
-#[derive(Clone, serde::Serialize, serde::Deserialize)]
+#[derive(Clone)]
 struct PendingElementAssembly {
     element_index: usize,
     side: usize,
@@ -800,7 +812,7 @@ struct PendingElementAssembly {
     stiffness: Vec<f64>,
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, serde::Serialize, serde::Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 enum PendingElementBuildStage {
     ReserveIndices,
     Indices,
@@ -851,7 +863,7 @@ impl PendingElementBuildStage {
     }
 }
 
-#[derive(Clone, serde::Serialize, serde::Deserialize)]
+#[derive(Clone)]
 struct PendingElementBuild {
     element_index: usize,
     node_count: usize,
@@ -869,7 +881,7 @@ struct PendingElementBuild {
     stiffness_admitted: bool,
 }
 
-#[derive(Clone, serde::Serialize, serde::Deserialize)]
+#[derive(Clone)]
 struct AssemblyCheckpoint {
     stage: AssemblyJobStage,
     total_elements: usize,
@@ -888,7 +900,7 @@ struct AssemblyCheckpoint {
     merge_candidate: Option<(usize, AssemblyTriplet)>,
 }
 
-#[derive(serde::Serialize, serde::Deserialize)]
+#[derive(ToValue, FromValue)]
 struct AssemblyResumeCheckpoint {
     version: u8,
     model_signature: u64,
@@ -1643,7 +1655,7 @@ impl<'model> AssemblyJob<'model> {
     }
 
     pub fn from_checkpoint(model: &'model AnalysisModel, operation: Operation, bytes: &[u8]) -> Result<Self, String> {
-        let checkpoint: AssemblyResumeCheckpoint = serde_json::from_slice(bytes).map_err(|error| error.to_string())?;
+        let checkpoint: AssemblyResumeCheckpoint = decode_value(bytes)?;
         if checkpoint.version != 1 || checkpoint.partition_count == 0 || checkpoint.total_elements != model.elements.len() || checkpoint.completed_elements > checkpoint.total_elements || checkpoint.model_signature != assembly_model_signature(model) {
             return Err("assembly checkpoint does not match the supplied model".to_string());
         }
@@ -1660,7 +1672,7 @@ impl<'model> AssemblyJob<'model> {
             completed_elements: self.state.element_cursor.max(self.state.resume_target),
             partition_count: self.state.partitions.len(),
         };
-        serde_json::to_vec(&checkpoint).expect("assembly checkpoint is serializable")
+        encode_value(&checkpoint)
     }
 
     pub fn preview(&self) -> AssemblyPreview {
@@ -2404,7 +2416,7 @@ impl InteractiveJob for AssemblyJob<'_> {
             if matches!(&self.model, AnalysisModelOwner::Owned(_) | AnalysisModelOwner::Mounted(_)) {
                 return StepOutcome::Yield;
             }
-            let bytes = serde_json::to_vec(&self.preview()).expect("assembly preview is serializable");
+            let bytes = encode_value(&self.preview());
             return match context.payload_from_bytes(JobPayloadStream::Preview, &bytes) {
                 Ok(preview) => StepOutcome::PreviewReady(preview),
                 Err(_) => StepOutcome::Fault(JobFault { detail: RetainedJobPayload::empty(JobPayloadStream::Fault) }),
@@ -2420,7 +2432,7 @@ impl InteractiveJob for AssemblyJob<'_> {
                     output: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::CommitOutput),
                 });
             }
-            let bytes = serde_json::to_vec(&self.preview()).expect("assembly result is serializable");
+            let bytes = encode_value(&self.preview());
             return match context.payload_from_bytes(JobPayloadStream::CommitOutput, &bytes) {
                 Ok(output) => StepOutcome::Complete(CommitCandidate { state: RetainedJobPayload::empty(JobPayloadStream::CommitState), output }),
                 Err(_) => StepOutcome::Fault(JobFault { detail: RetainedJobPayload::empty(JobPayloadStream::Fault) }),
@@ -2463,7 +2475,7 @@ impl InteractiveJob for AssemblyJob<'_> {
         }
         if self.state.preview_due {
             self.state.preview_due = false;
-            let bytes = serde_json::to_vec(&self.preview()).expect("assembly preview is serializable");
+            let bytes = encode_value(&self.preview());
             match context.payload_from_bytes(JobPayloadStream::Preview, &bytes) {
                 Ok(preview) => StepOutcome::PreviewReady(preview),
                 Err(_) => StepOutcome::Fault(JobFault { detail: RetainedJobPayload::empty(JobPayloadStream::Fault) }),
@@ -3107,7 +3119,7 @@ mod tests {
             let outcome = job.step(&mut context);
             max_step_micros = max_step_micros.max(started.elapsed().as_micros());
             match outcome {
-                StepOutcome::PreviewReady(bytes) => previews.push(serde_json::from_slice(&bytes).expect("assembly preview decodes")),
+                StepOutcome::PreviewReady(bytes) => previews.push(decode_value(&bytes).expect("assembly preview decodes")),
                 StepOutcome::Complete(_) => break,
                 StepOutcome::Yield | StepOutcome::CheckpointReady(_) => {}
                 StepOutcome::Cancelled | StepOutcome::Fault(_) => panic!("assembly fixture must complete"),

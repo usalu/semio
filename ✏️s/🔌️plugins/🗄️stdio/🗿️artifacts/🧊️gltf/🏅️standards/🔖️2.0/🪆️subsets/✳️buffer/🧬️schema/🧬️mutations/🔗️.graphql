@@ -1,0 +1,21 @@
+# 🧬 Buffer slice of the glTF direct mutation discriminator roster.
+# create-buffer
+# create-buffer-view
+# delete-buffer
+# delete-buffer-view
+# move-buffer
+# move-buffer-view
+# reorder-buffer-views
+# reorder-buffers
+enum GltfBufferMutationKind {
+  CREATE_BUFFER
+  CREATE_BUFFER_VIEW
+  DELETE_BUFFER
+  DELETE_BUFFER_VIEW
+  MOVE_BUFFER
+  MOVE_BUFFER_VIEW
+  REORDER_BUFFER_VIEWS
+  REORDER_BUFFERS
+}
+scalar GltfBufferMutationPayload
+input GltfBufferMutationInput { kind: GltfBufferMutationKind!, payload: GltfBufferMutationPayload! }

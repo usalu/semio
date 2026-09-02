@@ -12,7 +12,7 @@ Feature: Apply every typed imperative-program mutation to its committed vector a
   LIBRARY is a different judgement from declining a SECOND IMPLEMENTATION, and only the first was ever
   made here. `mutate-writer-1` and `mutate-playbook-1` took Python second
   implementations over this same `.dsl.semio` carrier in this wave, so the same is writable for this
-  subset from `🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🔣️component.json`, the rules of
+  subset from `🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🔣️.json`, the rules of
   `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/📓️derivation-rules.md` and the
   committed vectors this feature already replays. What blocks it TODAY is stated in the decision and
   is one edit: this case's vectors are not declared as `asset://` fixtures — the `Examples` table
@@ -91,6 +91,6 @@ Feature: Apply every typed imperative-program mutation to its committed vector a
   @level-long
   @mode-round-trip
   Scenario: Read the real committed program document through its own DSL carrier and print it back
-    Given the real committed text artifact asset://🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio
+    Given the real committed text artifact asset://🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/🗣️.dsl.semio
     When the artifact is parsed, printed back to `.imperative.dsl.semio` and parsed again
     Then every decoding agrees on the same two composed children — an `s.stdio.semio@v1/flow` program and an `s.stdio.semio@v1/text` narrative — and the printed text reproduces the committed file byte for byte

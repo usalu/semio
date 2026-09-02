@@ -444,7 +444,7 @@
         "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.4/🪆️subsets/✳️base/🏭️generator/📜️script.ts generate",
         "platform": "darwin"
       },
-      "comparisonProfile": "semantic-pdf-conformance-v1",
+      "comparisonProfile": "semantic-pdf-structural-base-14-v1",
       "reproducible": true,
       "family": "mechanical",
       "notes": "A minimal two-descriptor seed built with lopdf 0.44, with the insert-page mutation applied THROUGH lopdf's own public COS API (🦀️lopdf-engine/src/lib.rs::apply) — never through this repository's own mutation engine, which is what made the previous corpus inadmissible as evidence. base.pdf is the seed after 🦀️lopdf-engine's arrange put the mutation's precondition in place (identical to the untouched seed for every kind whose precondition is already satisfied); mutated.pdf is the result lopdf wrote. Observability (mutated projection != base projection, both read back through lopdf) is checked for every pair before it is written, and a pair that does not move is refused rather than committed.",
@@ -493,7 +493,7 @@
         "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.4/🪆️subsets/✳️base/🏭️generator/📜️script.ts generate",
         "platform": "darwin"
       },
-      "comparisonProfile": "semantic-pdf-conformance-v1",
+      "comparisonProfile": "semantic-pdf-structural-base-14-v1",
       "reproducible": true,
       "family": "mechanical",
       "notes": "A minimal two-descriptor seed built with lopdf 0.44, with the remove-page mutation applied THROUGH lopdf's own public COS API (🦀️lopdf-engine/src/lib.rs::apply) — never through this repository's own mutation engine, which is what made the previous corpus inadmissible as evidence. base.pdf is the seed after 🦀️lopdf-engine's arrange put the mutation's precondition in place (identical to the untouched seed for every kind whose precondition is already satisfied); mutated.pdf is the result lopdf wrote. Observability (mutated projection != base projection, both read back through lopdf) is checked for every pair before it is written, and a pair that does not move is refused rather than committed.",
@@ -542,7 +542,7 @@
         "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.4/🪆️subsets/✳️base/🏭️generator/📜️script.ts generate",
         "platform": "darwin"
       },
-      "comparisonProfile": "semantic-pdf-conformance-v1",
+      "comparisonProfile": "semantic-pdf-structural-base-14-v1",
       "reproducible": true,
       "family": "mechanical",
       "notes": "A minimal two-descriptor seed built with lopdf 0.44, with the move-page mutation applied THROUGH lopdf's own public COS API (🦀️lopdf-engine/src/lib.rs::apply) — never through this repository's own mutation engine, which is what made the previous corpus inadmissible as evidence. base.pdf is the seed after 🦀️lopdf-engine's arrange put the mutation's precondition in place (identical to the untouched seed for every kind whose precondition is already satisfied); mutated.pdf is the result lopdf wrote. Observability (mutated projection != base projection, both read back through lopdf) is checked for every pair before it is written, and a pair that does not move is refused rather than committed.",
@@ -591,7 +591,7 @@
         "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.4/🪆️subsets/✳️base/🏭️generator/📜️script.ts generate",
         "platform": "darwin"
       },
-      "comparisonProfile": "semantic-pdf-conformance-v1",
+      "comparisonProfile": "semantic-pdf-structural-base-14-v1",
       "reproducible": true,
       "family": "mechanical",
       "notes": "A minimal two-descriptor seed built with lopdf 0.44, with the resize-page mutation applied THROUGH lopdf's own public COS API (🦀️lopdf-engine/src/lib.rs::apply) — never through this repository's own mutation engine, which is what made the previous corpus inadmissible as evidence. base.pdf is the seed after 🦀️lopdf-engine's arrange put the mutation's precondition in place (identical to the untouched seed for every kind whose precondition is already satisfied); mutated.pdf is the result lopdf wrote. Observability (mutated projection != base projection, both read back through lopdf) is checked for every pair before it is written, and a pair that does not move is refused rather than committed.",
@@ -640,7 +640,7 @@
         "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.4/🪆️subsets/✳️base/🏭️generator/📜️script.ts generate",
         "platform": "darwin"
       },
-      "comparisonProfile": "semantic-pdf-conformance-v1",
+      "comparisonProfile": "semantic-pdf-structural-base-14-v1",
       "reproducible": true,
       "family": "mechanical",
       "notes": "A minimal two-descriptor seed built with lopdf 0.44, with the replace-page-text mutation applied THROUGH lopdf's own public COS API (🦀️lopdf-engine/src/lib.rs::apply) — never through this repository's own mutation engine, which is what made the previous corpus inadmissible as evidence. base.pdf is the seed after 🦀️lopdf-engine's arrange put the mutation's precondition in place (identical to the untouched seed for every kind whose precondition is already satisfied); mutated.pdf is the result lopdf wrote. Observability (mutated projection != base projection, both read back through lopdf) is checked for every pair before it is written, and a pair that does not move is refused rather than committed.",

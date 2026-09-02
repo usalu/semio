@@ -1,5 +1,5 @@
 //! 🚪️ present <- pdf — foreign `Deserializer<PresentSnapshot>` (ticket
-//! 26/08/17/CLEAN-ARTIFACT-STANDARD-SUBSET-MECHANISM design.md §3). Structural `serde_json`
+//! 26/08/17/CLEAN-ARTIFACT-STANDARD-SUBSET-MECHANISM design.md §3). Structural first-party JSON
 //! coercion between `PdfSnapshot`'s and `PresentSnapshot`'s (unrelated) field shapes — not a real
 //! pdf->present semantic mapping (unchanged behaviour, pre-dates this ticket) — `IoFidelity::Lossy`.
 
@@ -21,8 +21,8 @@ impl Deserializer<PresentSnapshot> for PdfIntoPresent {
             return Err(IoError { message: "PdfIntoPresent: expected a binary pdf payload".to_string(), diagnostics: Vec::new() });
         };
         let wire = <PdfSnapshot as store::ArtifactPack>::decode_pack(bytes).map_err(|error| IoError { message: format!("PdfIntoPresent: {error}"), diagnostics: Vec::new() })?;
-        let dsl_value = dsl::ToValue::to_value(&wire);
-        let snapshot: PresentSnapshot = dsl::FromValue::from_value(dsl_value).map_err(|error| IoError { message: format!("PdfIntoPresent: {error}"), diagnostics: Vec::new() })?;
+        let json = dsl::json::to_json_string(&wire);
+        let snapshot: PresentSnapshot = dsl::json::from_json_str(&json).map_err(|error| IoError { message: format!("PdfIntoPresent: {error}"), diagnostics: Vec::new() })?;
         Ok(IoOutcome::clean(snapshot))
     }
 }

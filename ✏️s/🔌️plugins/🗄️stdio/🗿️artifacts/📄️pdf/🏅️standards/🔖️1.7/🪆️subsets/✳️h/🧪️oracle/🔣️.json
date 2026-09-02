@@ -44,7 +44,7 @@
         "version": "0.44"
       },
       "capabilities": [
-        "pdf-1-7-h-mutate-reader"
+        "pdf-1-7-h-mutate"
       ],
       "comparisonProfiles": [
         "semantic-pdf-conformance-h-v1"
@@ -117,7 +117,7 @@
           },
           "oracleRequirements": [
             {
-              "capability": "pdf-1-7-h-mutate-reader",
+              "capability": "pdf-1-7-h-mutate",
               "qualifyingKind": "third-party-library",
               "oracle": "lopdf-pdf-1-7-h-mutate-reader"
             }
@@ -137,7 +137,7 @@
           },
           "oracleRequirements": [
             {
-              "capability": "pdf-1-7-h-mutate-reader",
+              "capability": "pdf-1-7-h-mutate",
               "qualifyingKind": "third-party-library",
               "oracle": "lopdf-pdf-1-7-h-mutate-reader"
             }
@@ -157,7 +157,7 @@
           },
           "oracleRequirements": [
             {
-              "capability": "pdf-1-7-h-mutate-reader",
+              "capability": "pdf-1-7-h-mutate",
               "qualifyingKind": "third-party-library",
               "oracle": "lopdf-pdf-1-7-h-mutate-reader"
             }
@@ -177,7 +177,7 @@
           },
           "oracleRequirements": [
             {
-              "capability": "pdf-1-7-h-mutate-reader",
+              "capability": "pdf-1-7-h-mutate",
               "qualifyingKind": "third-party-library",
               "oracle": "lopdf-pdf-1-7-h-mutate-reader"
             }
@@ -197,7 +197,7 @@
           },
           "oracleRequirements": [
             {
-              "capability": "pdf-1-7-h-mutate-reader",
+              "capability": "pdf-1-7-h-mutate",
               "qualifyingKind": "third-party-library",
               "oracle": "lopdf-pdf-1-7-h-mutate-reader"
             }
@@ -217,7 +217,7 @@
           },
           "oracleRequirements": [
             {
-              "capability": "pdf-1-7-h-mutate-reader",
+              "capability": "pdf-1-7-h-mutate",
               "qualifyingKind": "third-party-library",
               "oracle": "lopdf-pdf-1-7-h-mutate-reader"
             }
@@ -237,7 +237,7 @@
           },
           "oracleRequirements": [
             {
-              "capability": "pdf-1-7-h-mutate-reader",
+              "capability": "pdf-1-7-h-mutate",
               "qualifyingKind": "third-party-library",
               "oracle": "lopdf-pdf-1-7-h-mutate-reader"
             }
@@ -257,7 +257,7 @@
           },
           "oracleRequirements": [
             {
-              "capability": "pdf-1-7-h-mutate-reader",
+              "capability": "pdf-1-7-h-mutate",
               "qualifyingKind": "third-party-library",
               "oracle": "lopdf-pdf-1-7-h-mutate-reader"
             }
@@ -277,7 +277,7 @@
           },
           "oracleRequirements": [
             {
-              "capability": "pdf-1-7-h-mutate-reader",
+              "capability": "pdf-1-7-h-mutate",
               "qualifyingKind": "third-party-library",
               "oracle": "lopdf-pdf-1-7-h-mutate-reader"
             }
@@ -297,7 +297,7 @@
           },
           "oracleRequirements": [
             {
-              "capability": "pdf-1-7-h-mutate-reader",
+              "capability": "pdf-1-7-h-mutate",
               "qualifyingKind": "third-party-library",
               "oracle": "lopdf-pdf-1-7-h-mutate-reader"
             }

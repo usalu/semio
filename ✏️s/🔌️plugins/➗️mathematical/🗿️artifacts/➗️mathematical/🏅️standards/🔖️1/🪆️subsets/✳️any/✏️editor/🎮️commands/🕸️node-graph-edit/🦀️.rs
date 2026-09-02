@@ -1,7 +1,7 @@
 //! 🕸️ 🕸️ Mathematical play app commands command — `node-graph-edit`.
 
 use crate::artifacts::mathematical::op::MathematicalMutation;
-use crate::artifacts::mathematical::schema::mutations::replace_graph::mutation::ReplaceGraph;
+use crate::artifacts::mathematical::standards::v1::subsets::graph::schema::mutations::replace_graph::mutation::ReplaceGraph;
 use crate::artifacts::mathematical::{MathematicalEdge, MathematicalNode, MathematicalSnapshot};
 use crate::editor::mathematical::config::{MathematicalConfig, MathematicalConfigMutation};
 use pack::json::Value as JsonValue;

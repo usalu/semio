@@ -15,7 +15,7 @@ Feature: Apply every typed SHOOTING mutation to the vocabulary's own committed r
   LIBRARY is a different judgement from declining a SECOND IMPLEMENTATION, and only the first was ever
   made here. `mutate-puzzle-2d-1` and `mutate-puzzle-3d-1` took Python second
   implementations over this same `.dsl.semio` carrier in this wave, so the same is writable for this
-  subset from `🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🔣️component.json`, the rules of
+  subset from `🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🔣️.json`, the rules of
   `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/📓️derivation-rules.md` and the
   committed vectors this feature already replays. What blocks it TODAY is stated in the decision and
   is one edit: this case's vectors are not declared as `asset://` fixtures — the `Examples` table
@@ -32,7 +32,7 @@ Feature: Apply every typed SHOOTING mutation to the vocabulary's own committed r
   `../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/<kind>/🧪️tests/` commit the SAME
   before-snapshot, byte for byte — SHA-1 `6441b72754e5c649b2b07a2f2b244313467f85a0`, verified across all
   thirty-one copies — and this case reads that one document where the domain already keeps it, at
-  `asset://🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✏️rename-asset/🧪️tests/renames-asset-hero-to-lead/📸️snapshot/⬅️before/🔣️component.json`.
+  `asset://🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✏️rename-asset/🧪️tests/renames-asset-hero-to-lead/📸️snapshot/⬅️before/🔣️.json`.
   It carries two assets (one with a quaternion orientation and a non-unit scale, one with neither), two
   saved cameras, two shots (one with a background and a camera reference, one with neither), a full scene
   lighting block and both active-selection ids. Every `params` cell below is likewise the committed
@@ -44,7 +44,7 @@ Feature: Apply every typed SHOOTING mutation to the vocabulary's own committed r
 
   🎞️ The `identity-round-trip` scenario reads a different real committed file on purpose: the plugin's
   own DSL example at
-  `asset://🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio`.
+  `asset://🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/🗣️.dsl.semio`.
   That is where the TEXT codec's evidence has to come from — the before-snapshot above is committed as
   JSON and would prove nothing about the handcrafted block/table grammar. The example carries only one
   asset and no saved camera at all, which is exactly why it cannot serve as the mutation base: six kinds
@@ -72,7 +72,7 @@ Feature: Apply every typed SHOOTING mutation to the vocabulary's own committed r
   @level-exhaustive
   @mode-conformance
   Scenario Outline: Apply <id> to the committed render scene and observe it move
-    Given the committed before-snapshot every leaf fixture of this vocabulary shares asset://🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✏️rename-asset/🧪️tests/renames-asset-hero-to-lead/📸️snapshot/⬅️before/🔣️component.json
+    Given the committed before-snapshot every leaf fixture of this vocabulary shares asset://🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✏️rename-asset/🧪️tests/renames-asset-hero-to-lead/📸️snapshot/⬅️before/🔣️.json
     When the <id> mutation is applied through apply_shooting_mutation
       """
       {"kind": "<id>", "params": <params>}
@@ -116,7 +116,7 @@ Feature: Apply every typed SHOOTING mutation to the vocabulary's own committed r
   @level-exhaustive
   @mode-property
   Scenario Outline: Undoing <id> restores the committed render scene exactly
-    Given the committed before-snapshot every leaf fixture of this vocabulary shares asset://🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✏️rename-asset/🧪️tests/renames-asset-hero-to-lead/📸️snapshot/⬅️before/🔣️component.json
+    Given the committed before-snapshot every leaf fixture of this vocabulary shares asset://🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✏️rename-asset/🧪️tests/renames-asset-hero-to-lead/📸️snapshot/⬅️before/🔣️.json
     When the <id> mutation is applied through apply_shooting_mutation
       """
       {"kind": "<id>", "params": <params>}
@@ -161,7 +161,7 @@ Feature: Apply every typed SHOOTING mutation to the vocabulary's own committed r
   @level-long
   @mode-round-trip
   Scenario: Decode and re-encode the real committed shooting DSL artifact
-    Given the plugin's own committed DSL artifact asset://🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio
+    Given the plugin's own committed DSL artifact asset://🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/🗣️.dsl.semio
     When it is parsed with parse_dsl and printed back with print_dsl
     Then the printed bytes are identical to the committed bytes and reparsing preserves the projection
       """

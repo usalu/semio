@@ -1,5 +1,5 @@
 @capability-pdf-1-7-mutate
-@oracle-lopdf-pdf-1-7-mutate
+@oracle-lopdf-pdf-1-7-base-mutate-reader
 @comparison-semantic-pdf-v1
 @mutations-pdf-1-7-base
 Feature: Apply every typed PDF 1.7 mutation to a real-world document

@@ -22,11 +22,11 @@ use semio_s_plugin_stdio_test_oracle::law;
 /// the real animated `💃️dancing` fixture — three real frames of it (0, 20 and 40), cropped to
 /// 400×400, 400×400 and 32×32 rectangles of real already-decoded palette indices, with frame 0's real
 /// 256-colour local table promoted to the file's own Global Color Table.
-const INPUT: &str = "shared://🖼️dancing-87a-large.gif";
+const INPUT: &str = "shared://🧪️dancing-87a-large/🖼️.gif";
 /// 🖼️ The 2 936-byte 16×16 derivation this case used to rest on, kept for `identity-round-trip`: it
 /// is the smallest genuine GIF87a committed here and the one whose whole index buffer a scenario can
 /// still name literally, so nothing it proved is given up.
-const SMALL_INPUT: &str = "shared://🖼️dancing-87a.gif";
+const SMALL_INPUT: &str = "shared://🧪️dancing-87a/🖼️.gif";
 
 /// 🏷️ Mirrors `GifMutation::KINDS` (`../../🏅️standards/🔖️87a/🪆️subsets/✳️any/🧬️schema/🧬️mutations/
 /// 🦀️.rs`) as a literal, like the OBJ/PDF adapters' own `SCENARIOS` constants — the

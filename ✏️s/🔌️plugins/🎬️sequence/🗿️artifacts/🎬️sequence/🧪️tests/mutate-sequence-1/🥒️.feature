@@ -13,7 +13,7 @@ Feature: Apply every typed SEQUENCE mutation to the real committed step graph
   LIBRARY is a different judgement from declining a SECOND IMPLEMENTATION, and only the first was ever
   made here. `mutate-puzzle-2d-1` and `mutate-puzzle-3d-1` took Python second
   implementations over this same `.dsl.semio` carrier in this wave, so the same is writable for this
-  subset from `🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🔣️component.json`, the rules of
+  subset from `🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🔣️.json`, the rules of
   `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/📓️derivation-rules.md` and the
   committed vectors this feature already replays. What blocks it TODAY is stated in the decision and
   is one edit: this case's vectors are not declared as `asset://` fixtures — the `Examples` table
@@ -25,7 +25,7 @@ Feature: Apply every typed SEQUENCE mutation to the real committed step graph
   one this decision has always had: no second producer runs beside it, so a mistake shared by the
   handcrafted vector and the production code passes unseen.
 
-  📄️ The base document is real and committed. `asset://🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio` is
+  📄️ The base document is real and committed. `asset://🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/🗣️.dsl.semio` is
   parsed by production's own `parse_dsl` and supplies the document skeleton every scenario starts from.
   What the committed artifact cannot supply is the graph itself: `SequenceSnapshot` keeps its steps and
   edges in a composed `s.stdio.semio.flow` CHILD and the `.sequence` DSL persists the child HANDLE, not
@@ -33,7 +33,8 @@ Feature: Apply every typed SEQUENCE mutation to the real committed step graph
   only parsed it would find an empty graph and every id-keyed kind would address nothing. The three steps
   and one edge are therefore committed once in `local://🎬️base-scene.json`, derived from this
   vocabulary's OWN committed per-kind leaf fixtures under
-  `../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/<kind>/🧪️tests/`; that file records which id,
+  `../../🏅️standards/🔖️1/🪆️subsets/✳️step/🧬️schema/🧬️mutations/<kind>/🧪️tests/` or the sibling
+  `✳️dependency` subset for `connect`/`disconnect`; that file records which id,
   kind, params and coordinate came from which committed payload and which are this case's derivation.
 
   🧬️ The vocabulary is `SequenceMutation`'s eight variants in declaration order and it is genuinely this
@@ -57,7 +58,7 @@ Feature: Apply every typed SEQUENCE mutation to the real committed step graph
   @level-exhaustive
   @mode-conformance
   Scenario Outline: Apply <id> to the real committed step graph and observe it move
-    Given the real committed sequence artifact asset://🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio
+    Given the real committed sequence artifact asset://🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/🗣️.dsl.semio
     And its composed content child seeded from local://🎬️base-scene.json
     When the <id> mutation is applied through apply_sequence_mutation
       """
@@ -79,7 +80,7 @@ Feature: Apply every typed SEQUENCE mutation to the real committed step graph
   @level-exhaustive
   @mode-property
   Scenario Outline: Undoing <id> restores the real committed step graph exactly
-    Given the real committed sequence artifact asset://🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio
+    Given the real committed sequence artifact asset://🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/🗣️.dsl.semio
     And its composed content child seeded from local://🎬️base-scene.json
     When the <id> mutation is applied through apply_sequence_mutation
       """
@@ -102,7 +103,7 @@ Feature: Apply every typed SEQUENCE mutation to the real committed step graph
   @level-long
   @mode-round-trip
   Scenario: Decode and re-encode the real committed sequence artifact
-    Given the real committed sequence artifact asset://🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio
+    Given the real committed sequence artifact asset://🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/🗣️.dsl.semio
     When it is parsed with parse_dsl and printed back with print_dsl
     Then the printed bytes are identical to the committed bytes and reparsing preserves the projection
       """

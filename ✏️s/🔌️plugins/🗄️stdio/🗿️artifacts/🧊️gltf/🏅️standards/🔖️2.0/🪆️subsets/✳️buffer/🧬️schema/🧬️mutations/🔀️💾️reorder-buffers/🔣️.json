@@ -1,0 +1,27 @@
+{
+  "schemaVersion": 1,
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️buffer/🧬️schema/🧬️mutations/🔀️💾️reorder-buffers",
+  "semanticKind": "reorder-buffers",
+  "displayName": "Reorder Buffers",
+  "emoji": "🔀️💾️",
+  "aggregateVariant": "ReorderBuffers",
+  "payloadSchema": "🔣️.schema.json",
+  "textOpcode": null,
+  "binaryTag": null,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "detect",
+  "outcomeClasses": [
+    "applied",
+    "warning",
+    "error",
+    "fatal"
+  ],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": [
+    "rust",
+    "typescript",
+    "graphql",
+    "protobuf",
+    "json-schema"
+  ]
+}

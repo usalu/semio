@@ -1,5 +1,5 @@
 @capability-pdf-1-7-e-mutate
-@oracle-lopdf-pdf-1-7-e-mutate
+@oracle-lopdf-pdf-1-7-e-mutate-reader
 @comparison-semantic-pdf-conformance-e-v1
 @mutations-pdf-1-7-e
 Feature: Apply every typed ISO 24517-1:2008 (PDF/E-1) conformance-class mutation to a real document

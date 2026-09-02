@@ -45,7 +45,7 @@ Feature: Move a real photographic JPEG across every axis of the T.81 baseline co
   @level-exhaustive
   @mode-conformance
   Scenario Outline: Apply <id> to the real scan and read the class verdict back
-    Given the real input document shared://🖼️abbau-aufbau-masterarbeit-grundriss.jpg
+    Given the real input document shared://🧪️abbau-aufbau-masterarbeit-grundriss/🖼️.jpg
     When the <id> mutation is applied to the decoded snapshot
       """
       {"kind": "<id>", "code": "<code>", "params": <params>}
@@ -68,7 +68,7 @@ Feature: Move a real photographic JPEG across every axis of the T.81 baseline co
   @level-exhaustive
   @mode-property
   Scenario Outline: Undoing <id> puts the real scan back inside the class
-    Given the real input document shared://🖼️abbau-aufbau-masterarbeit-grundriss.jpg
+    Given the real input document shared://🧪️abbau-aufbau-masterarbeit-grundriss/🖼️.jpg
     When <id> is applied to the decoded snapshot and then its own computed inverse steps are applied
       """
       {"kind": "<id>", "code": "<code>", "params": <params>}
@@ -91,6 +91,6 @@ Feature: Move a real photographic JPEG across every axis of the T.81 baseline co
   @level-long
   @mode-round-trip
   Scenario: Decode and re-encode the real scan without passing bytes through
-    Given the real input document shared://🖼️abbau-aufbau-masterarbeit-grundriss.jpg
+    Given the real input document shared://🧪️abbau-aufbau-masterarbeit-grundriss/🖼️.jpg
     When the scan is decoded into a snapshot and re-serialized from that snapshot alone
     Then the re-encoded bytes differ from the input, the document is still baseline-conforming, and the INDEPENDENT image reader agrees on the geometry of both

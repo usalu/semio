@@ -2,8 +2,14 @@
   "artifact": "s.mathematical.mathematical",
   "standard": "1",
   "subsets": {
-    "*": {
-      "name": "Unconstrained mathematical 1"
+    "graph": {
+      "name": "The node/edge graph playground and its algorithm — directed flag, nodes, edges, algorithm id and seed"
+    },
+    "geometry": {
+      "name": "The point cloud playground"
+    },
+    "equation": {
+      "name": "The inline labelled equation AST composed alongside the graph and geometry playgrounds"
     }
   }
 }

@@ -3,7 +3,7 @@
 @comparison-semantic-mp3-mpeg1-layer3-v1
 @mutations-mp3-mpeg1-layer3-any
 Feature: Apply every typed MP3 mpeg1-layer3 mutation to a real encoded stream
-  The input is shared://🎵️bauen-mit-bestand-ausschnitt.mp3 — 193,275 bytes of genuinely encoded
+  The input is shared://🔊️.mp3 — 193,275 bytes of genuinely encoded
   MPEG-1 Layer III audio: a 179-byte ID3v2.3.0 region and 462 real frames at 128 kbps / 44.1 kHz
   mono, with no ID3v1 trailer. Every scenario copies it into the case work directory before touching
   it; the committed file is never written to.
@@ -62,7 +62,7 @@ Feature: Apply every typed MP3 mpeg1-layer3 mutation to a real encoded stream
   @level-exhaustive
   @mode-differential
   Scenario Outline: Apply <id> to the real stream
-    Given the real input stream shared://🎵️bauen-mit-bestand-ausschnitt.mp3
+    Given the real input stream shared://🔊️.mp3
     When the <id> mutation is applied with its parameters
       """
       {"kind": "<id>", "params": <params>}
@@ -80,7 +80,7 @@ Feature: Apply every typed MP3 mpeg1-layer3 mutation to a real encoded stream
   @level-exhaustive
   @mode-property
   Scenario Outline: Undoing <id> restores the real stream
-    Given the real input stream shared://🎵️bauen-mit-bestand-ausschnitt.mp3
+    Given the real input stream shared://🔊️.mp3
     When the <id> mutation is applied with its parameters
       """
       {"kind": "<id>", "params": <params>}
@@ -99,7 +99,7 @@ Feature: Apply every typed MP3 mpeg1-layer3 mutation to a real encoded stream
   @level-long
   @mode-round-trip
   Scenario: Decode and re-encode the real stream
-    Given the real input stream shared://🎵️bauen-mit-bestand-ausschnitt.mp3
+    Given the real input stream shared://🔊️.mp3
     When the stream is decoded to its three layers and re-encoded from them alone
     Then the semantic projection is unchanged, asserted in role
     And each role asserts the byte law its own encoder is actually bound by, asserted in role

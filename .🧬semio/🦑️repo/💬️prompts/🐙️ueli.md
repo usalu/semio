@@ -38,7 +38,6 @@ Use the latest wip ueli branch: github.com/usalu/semio/tree/🐙ueli/⛳wip at t
 
 ---
 
-
 Use the main chat with Opus 5 High for main plan coordination, use multiple Sonnet 5 High agents for task execution, use multiple Haiku 4.5 agents for read-only exploration.
 Always use a work fleet of maximum possible parallel agents.
 There are other agents working on other logical, even if they work on the same files, dont stop and keep on to work in conjuntion with them, just focus on your task.
@@ -553,6 +552,16 @@ TODO: Add roomie to discord for verification
 TODO: Start new project `elements` that offers domain-agnostic primitives (such as multi-lingual ui and cross-plattform desktop with App for multi-device, multi-window ui where sketchpad/coda can use all primitive functionality. Introduce sidebar (no need for mobile support) for system trays, companions and side panels e.g. rhino plugin)t
 
 ##
+
+---
+
+/Users/ueli/Documents/semio/🧰️framework/🔨️modules/📐️geometry/📦️packages/🦀️rust/tests/first_party_geometry.rs
+
+---
+
+All emojis between sibilings must be unique and non-generic.
+violations e.g.
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/🧪️tests/🧪️package-export/🟦️.ts 🧪️package-export is generic
 
 ---
 

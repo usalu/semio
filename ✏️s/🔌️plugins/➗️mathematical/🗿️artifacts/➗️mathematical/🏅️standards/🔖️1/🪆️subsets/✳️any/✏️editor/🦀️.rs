@@ -548,8 +548,8 @@ impl MathematicalRetainedCommandWork {
     }
 
     fn finish(&mut self, command: &MathematicalCommand) -> Result<Emit<MathematicalMutation, MathematicalConfigMutation>, Fault> {
-        use crate::artifacts::mathematical::schema::mutations::replace_graph::mutation::ReplaceGraph;
-        use crate::artifacts::mathematical::schema::mutations::replace_points::mutation::ReplacePoints;
+        use crate::artifacts::mathematical::standards::v1::subsets::graph::schema::mutations::replace_graph::mutation::ReplaceGraph;
+        use crate::artifacts::mathematical::standards::v1::subsets::geometry::schema::mutations::replace_points::mutation::ReplacePoints;
         Ok(match command {
             MathematicalCommand::SetAlgorithm(_) => Emit::commit(vec![MathematicalMutation::ReplaceGraph(ReplaceGraph { graph: self.graph.take().ok_or_else(|| Fault::from("mathematical-command-graph-owner"))? })], "setAlgorithm"),
             MathematicalCommand::SetDirected(_) => Emit::mutations(vec![MathematicalMutation::ReplaceGraph(ReplaceGraph { graph: self.graph.take().ok_or_else(|| Fault::from("mathematical-command-graph-owner"))? })]),

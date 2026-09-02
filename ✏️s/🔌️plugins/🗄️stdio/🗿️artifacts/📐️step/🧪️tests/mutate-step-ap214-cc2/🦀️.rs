@@ -40,7 +40,7 @@ const CEILING: &str = "GEOMETRICALLY_BOUNDED_WIREFRAME_SHAPE_REPRESENTATION";
 //#endregion 🔖️Kinds
 
 //#region 🔖️Input
-const INPUT: &str = "shared://📐️hexagonal-cut-concrete-forest-left-ap214.stp";
+const INPUT: &str = "shared://🧪️hexagonal-cut-concrete-forest-left-ap214/📐️.stp";
 
 /// 🧫️ Copies the immutable committed export into the work directory and returns the mutable copy's
 /// bytes; the committed fixture is never written to.

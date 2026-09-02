@@ -111,6 +111,6 @@ impl protocol::OpBinary for Gis2dPresenceMutation {
 //#endregion 🔖️OpCodec
 
 #[cfg(test)]
-#[path = "🧪️tests/🧬️mutations/🦀️.rs"]
+#[path = "🧪️tests/🧬️direct-leaves/🦀️.rs"]
 mod direct_mutation_tests;
 //#endregion 🔖️PresenceMutations

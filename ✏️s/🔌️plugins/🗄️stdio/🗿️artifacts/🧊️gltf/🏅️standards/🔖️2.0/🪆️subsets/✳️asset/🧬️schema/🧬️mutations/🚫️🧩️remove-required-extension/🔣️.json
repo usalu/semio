@@ -1,0 +1,27 @@
+{
+  "schemaVersion": 1,
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️asset/🧬️schema/🧬️mutations/🚫️🧩️remove-required-extension",
+  "semanticKind": "remove-required-extension",
+  "displayName": "Remove Required Extension",
+  "emoji": "🚫️🧩️",
+  "aggregateVariant": "RemoveRequiredExtension",
+  "payloadSchema": "🔣️.schema.json",
+  "textOpcode": null,
+  "binaryTag": null,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "detect",
+  "outcomeClasses": [
+    "applied",
+    "warning",
+    "error",
+    "fatal"
+  ],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": [
+    "rust",
+    "typescript",
+    "graphql",
+    "protobuf",
+    "json-schema"
+  ]
+}

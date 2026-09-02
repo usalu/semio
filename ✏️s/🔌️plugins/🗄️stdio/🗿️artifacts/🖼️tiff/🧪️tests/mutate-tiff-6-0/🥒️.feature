@@ -1,13 +1,13 @@
 @capability-tiff-6-0-mutate
-@oracle-image-tiff-6-0-mutate
+@oracle-image-tiff-6-0-mutate-reader
 @comparison-semantic-raster-v1
-@mutations-tiff-6-0-any
+@mutations-tiff-6-0-document
 Feature: Apply every typed TIFF 6.0 mutation to a real-world document
   The input is a real 500 DPI architectural floor-plan scan
   (`🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🧫️fixtures/🖼️abbau-aufbau-masterarbeit-grundriss.jpg`,
   483 KB, 2275x2560), converted ONCE to TIFF 6.0 with the registered `image` 0.25 reference encoder
   (`image::codecs::tiff::TiffEncoder`) and committed as this artifact's own
-  `shared://🖼️abbau-aufbau-masterarbeit-grundriss.tiff`. Its second IFD is a genuinely real second
+  `shared://🧪️abbau-aufbau-masterarbeit-grundriss/🖼️.tiff`. Its second IFD is a genuinely real second
   page — the actual decoded, downsampled (16x16) pixels of the real
   `🖼️rathaus-ahlen-grundriss.png` floor plan, appended by this subset's own independent IFD-chain
   writer (`../../../../🧪️oracle/🦀️component.rs`'s `fixture_derivation` module — `image`'s public TIFF
@@ -46,7 +46,7 @@ Feature: Apply every typed TIFF 6.0 mutation to a real-world document
   @level-exhaustive
   @mode-differential
   Scenario Outline: Apply <id> to the real document
-    Given the real input document shared://🖼️abbau-aufbau-masterarbeit-grundriss.tiff
+    Given the real input document shared://🧪️abbau-aufbau-masterarbeit-grundriss/🖼️.tiff
     When the <id> mutation is applied with its parameters
       """
       {"kind": "<id>", "params": <params>}
@@ -59,13 +59,13 @@ Feature: Apply every typed TIFF 6.0 mutation to a real-world document
       | remove-ifd | {"index": 1} |
       | replace-tag | {"ifdIndex": 0, "tag": 315, "type": 2, "values": ["Derived for ticket 26/08/23/END-TO-END-TESTING-REFACTOR"]} |
       | remove-tag | {"ifdIndex": 0, "tag": 282} |
-      | replace-pixels | {"pixelsFixture": "local://🔄️flipped-scan.rgba"} |
+      | replace-pixels | {"pixelsFixture": "local://🖼️.rgba"} |
 
   @id-inverse
   @level-exhaustive
   @mode-differential
   Scenario Outline: Undoing <id> restores the document
-    Given the real input document shared://🖼️abbau-aufbau-masterarbeit-grundriss.tiff
+    Given the real input document shared://🧪️abbau-aufbau-masterarbeit-grundriss/🖼️.tiff
     When the <id> mutation is applied with its parameters
       """
       {"kind": "<id>", "params": <params>}
@@ -79,12 +79,12 @@ Feature: Apply every typed TIFF 6.0 mutation to a real-world document
       | remove-ifd | {"index": 1} |
       | replace-tag | {"ifdIndex": 0, "tag": 315, "type": 2, "values": ["Derived for ticket 26/08/23/END-TO-END-TESTING-REFACTOR"]} |
       | remove-tag | {"ifdIndex": 0, "tag": 282} |
-      | replace-pixels | {"pixelsFixture": "local://🔄️flipped-scan.rgba"} |
+      | replace-pixels | {"pixelsFixture": "local://🖼️.rgba"} |
 
   @id-identity-round-trip
   @level-long
   @mode-round-trip
   Scenario: Decode and re-encode the real document without passing bytes through
-    Given the real input document shared://🖼️abbau-aufbau-masterarbeit-grundriss.tiff
+    Given the real input document shared://🧪️abbau-aufbau-masterarbeit-grundriss/🖼️.tiff
     When the document is decoded and re-encoded with no mutation
     Then the oracle and the subject agree on the semantic projection

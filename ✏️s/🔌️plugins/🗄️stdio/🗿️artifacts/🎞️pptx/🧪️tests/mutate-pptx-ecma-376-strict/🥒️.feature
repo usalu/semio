@@ -3,7 +3,7 @@
 @comparison-semantic-ooxml-pptx-strict-v1
 @mutations-pptx-ecma-376-strict
 Feature: Apply every typed PPTX ECMA-376 Strict conformance-class mutation to a real package
-  The input is shared://🎞️semio-talk.pptx, a real committed ECMA-376 package: 55 parts — 7 slides,
+  The input is shared://📽️.pptx, a real committed ECMA-376 package: 55 parts — 7 slides,
   11 slide layouts, a slide master, 3 real media parts and 22 relationship parts — from a real 2020
   conference deck.
   Unzipping it and reading every namespace across all 55 entries shows a package that fails this
@@ -50,7 +50,7 @@ Feature: Apply every typed PPTX ECMA-376 Strict conformance-class mutation to a 
   @level-exhaustive
   @mode-differential
   Scenario Outline: Apply <id> to the real presentation package
-    Given the real input package shared://🎞️semio-talk.pptx
+    Given the real input package shared://📽️.pptx
     When the <id> mutation is applied with its parameters
       """
       {"kind": "<id>", "params": <params>}
@@ -74,7 +74,7 @@ Feature: Apply every typed PPTX ECMA-376 Strict conformance-class mutation to a 
   @level-exhaustive
   @mode-property
   Scenario Outline: Undoing <id> restores the real package
-    Given the real input package shared://🎞️semio-talk.pptx
+    Given the real input package shared://📽️.pptx
     When the <id> mutation is applied with its parameters
       """
       {"kind": "<id>", "params": <params>}
@@ -99,7 +99,7 @@ Feature: Apply every typed PPTX ECMA-376 Strict conformance-class mutation to a 
   @level-long
   @mode-round-trip
   Scenario: Decode and re-encode the real package without passing bytes through
-    Given the real input package shared://🎞️semio-talk.pptx
+    Given the real input package shared://📽️.pptx
     When the package is decoded to the typed snapshot and re-encoded from it alone
     Then the oracle and the subject agree on the conformance-class projection
     And the re-encoded bytes are not bit-identical to the input

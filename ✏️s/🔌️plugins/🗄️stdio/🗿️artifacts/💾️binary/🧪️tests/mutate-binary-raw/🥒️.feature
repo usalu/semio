@@ -40,7 +40,7 @@ Feature: Apply every typed raw-binary mutation to a real-world byte buffer
   @level-exhaustive
   @mode-conformance
   Scenario Outline: Apply <id> to the real buffer
-    Given the real input buffer shared://🖼️abbau-aufbau-masterarbeit-grundriss.jpg
+    Given the real input buffer shared://🧪️abbau-aufbau-masterarbeit-grundriss/🖼️.jpg
     When the <id> mutation is applied with its parameters
       """
       {"kind": "<id>", "params": <params>}
@@ -58,7 +58,7 @@ Feature: Apply every typed raw-binary mutation to a real-world byte buffer
   @level-exhaustive
   @mode-property
   Scenario Outline: Undoing <id> restores the real buffer
-    Given the real input buffer shared://🖼️abbau-aufbau-masterarbeit-grundriss.jpg
+    Given the real input buffer shared://🧪️abbau-aufbau-masterarbeit-grundriss/🖼️.jpg
     When the <id> mutation is applied with its parameters
       """
       {"kind": "<id>", "params": <params>}
@@ -77,7 +77,7 @@ Feature: Apply every typed raw-binary mutation to a real-world byte buffer
   @level-long
   @mode-round-trip
   Scenario: Decode and re-encode the real buffer, where byte identity IS the correct answer
-    Given the real input buffer shared://🖼️abbau-aufbau-masterarbeit-grundriss.jpg
+    Given the real input buffer shared://🧪️abbau-aufbau-masterarbeit-grundriss/🖼️.jpg
     When the buffer is decoded into the subset's own snapshot and re-encoded from it alone
     Then the output is bit-identical to the input, honestly, because this subset's decode/encode is the identity
     And the oracle and the subject agree on the exact output bytes
@@ -86,7 +86,7 @@ Feature: Apply every typed raw-binary mutation to a real-world byte buffer
   @level-exhaustive
   @mode-conformance
   Scenario Outline: Specification vector — <id>
-    Given the real input buffer shared://🖼️abbau-aufbau-masterarbeit-grundriss.jpg
+    Given the real input buffer shared://🧪️abbau-aufbau-masterarbeit-grundriss/🖼️.jpg
     When the <kind> mutation is applied with its parameters
       """
       {"kind": "<kind>", "params": <params>}
@@ -116,7 +116,7 @@ Feature: Apply every typed raw-binary mutation to a real-world byte buffer
   @level-exhaustive
   @mode-error
   Scenario Outline: An invalid splice fails cleanly — <id>
-    Given the real input buffer shared://🖼️abbau-aufbau-masterarbeit-grundriss.jpg
+    Given the real input buffer shared://🧪️abbau-aufbau-masterarbeit-grundriss/🖼️.jpg
     When the splice mutation is attempted with its parameters
       """
       {"kind": "splice", "params": <params>}

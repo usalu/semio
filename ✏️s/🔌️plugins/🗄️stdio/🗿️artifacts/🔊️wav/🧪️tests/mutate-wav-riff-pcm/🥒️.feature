@@ -46,7 +46,7 @@ Feature: Apply every typed WAV RIFF-PCM mutation to a real-world recording
   @level-exhaustive
   @mode-conformance
   Scenario Outline: Apply <id> to the real recording
-    Given the real input recording shared://🔊️bauen-mit-bestand-ausschnitt.wav
+    Given the real input recording shared://🧪️bauen-mit-bestand-ausschnitt/🔊️.wav
     When the <id> mutation is applied with its parameters
       """
       {"kind": "<id>", "params": <params>}
@@ -64,7 +64,7 @@ Feature: Apply every typed WAV RIFF-PCM mutation to a real-world recording
   @level-exhaustive
   @mode-property
   Scenario Outline: Undoing <id> restores the recording
-    Given the real input recording shared://🔊️bauen-mit-bestand-ausschnitt.wav
+    Given the real input recording shared://🧪️bauen-mit-bestand-ausschnitt/🔊️.wav
     When the <id> mutation is applied with its parameters
       """
       {"kind": "<id>", "params": <params>}
@@ -83,6 +83,6 @@ Feature: Apply every typed WAV RIFF-PCM mutation to a real-world recording
   @level-long
   @mode-round-trip
   Scenario: Decode and re-encode the real recording from the typed model alone
-    Given the real input recording shared://🔊️bauen-mit-bestand-ausschnitt.wav
+    Given the real input recording shared://🧪️bauen-mit-bestand-ausschnitt/🔊️.wav
     When the recording is decoded to the typed snapshot and re-encoded from it alone
     Then the reference implementation and this repository agree on the result

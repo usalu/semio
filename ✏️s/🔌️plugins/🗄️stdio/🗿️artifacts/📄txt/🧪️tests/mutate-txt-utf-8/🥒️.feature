@@ -16,7 +16,7 @@ Feature: Apply every typed UTF-8 text-line mutation to a real document
   That is a genuinely separate implementation — and it is OUR code, in OUR language, in OUR crate, by
   OUR authors. Under the raised bar it is not a second PRODUCER, and the `txt-utf-8-line-structure`
   decision now records that as a DEBT rather than as a verdict. A Python reference is writable here
-  from `🏅️standards/🔖️utf-8/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🔣️component.json` and the nine literal
+  from `🏅️standards/🔖️utf-8/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🔣️.json` and the nine literal
   byte vectors this feature already carries; what blocks it is that the oracle role is already
   occupied by another owner's module, and that the projection's `schema` member is the Rust constant
   `STDIO_TXT_DOCUMENT_SCHEMA` whose value no committed document states.
@@ -37,7 +37,7 @@ Feature: Apply every typed UTF-8 text-line mutation to a real document
   only legal combinations are the ones the split can return (a terminated document has at least one
   line; an unterminated one's last line is never empty — see the 🔒️ note below), and UTF-8 content
   with NO normalization, NO BOM handling and NO NEL(U+0085)/LS(U+2028)/PS(U+2029) line-breaking — see the `@id-spec-vector` scenarios for exactly what that means byte-for-byte. A
-  second real capture, shared://📓️hub-boot-log.txt (a genuine terminal log, mostly LF with two real
+  second real capture, shared://🔤️.txt (a genuine terminal log, mostly LF with two real
   embedded CRLF sequences from a subprocess's own convention), is exercised directly in the oracle
   module's own tests rather than here: it demonstrates the whole-document CrLf detection rule
   collapsing real mostly-LF content into very few split points, which is why it is not also used as

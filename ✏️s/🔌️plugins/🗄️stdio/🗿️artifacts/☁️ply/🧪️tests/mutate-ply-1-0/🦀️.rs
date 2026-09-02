@@ -26,7 +26,7 @@ const PLY_TOLERANCE: f64 = 1e-5;
 //#endregion 🔖️Profile
 
 //#region 🔖️Input
-const INPUT: &str = "shared://🧊️pattern-sphere.ply";
+const INPUT: &str = "shared://🧪️pattern-sphere/🧊️.ply";
 
 /// 🧫️ Copies the immutable committed document into the work directory and returns the mutable
 /// copy's bytes; the committed fixture itself is never written to.

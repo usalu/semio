@@ -4,14 +4,14 @@ use crate::artifacts::sequence::diff::SequenceDiff;
 use crate::artifacts::sequence::SequenceSnapshot;
 use serde::{Deserialize, Serialize};
 
-pub use super::change_step_collapsed::{change_step_collapsed, ChangeStepCollapsed};
-pub use super::connect_steps::{connect_steps, ConnectSteps};
-pub use super::create_step::{create_step, CreateStep};
-pub use super::delete_step::{delete_step, DeleteStep};
-pub use super::disconnect_steps::{disconnect_steps, DisconnectSteps};
-pub use super::duplicate_step::{duplicate_step, DuplicateStep};
-pub use super::edit_step_params::{edit_step_params, EditStepParams};
-pub use super::move_step::{move_step, MoveStep};
+pub use crate::artifacts::sequence::standards::v1::subsets::step::schema::mutations::change_step_collapsed::{change_step_collapsed, ChangeStepCollapsed};
+pub use crate::artifacts::sequence::standards::v1::subsets::dependency::schema::mutations::connect_steps::{connect_steps, ConnectSteps};
+pub use crate::artifacts::sequence::standards::v1::subsets::step::schema::mutations::create_step::{create_step, CreateStep};
+pub use crate::artifacts::sequence::standards::v1::subsets::step::schema::mutations::delete_step::{delete_step, DeleteStep};
+pub use crate::artifacts::sequence::standards::v1::subsets::dependency::schema::mutations::disconnect_steps::{disconnect_steps, DisconnectSteps};
+pub use crate::artifacts::sequence::standards::v1::subsets::step::schema::mutations::duplicate_step::{duplicate_step, DuplicateStep};
+pub use crate::artifacts::sequence::standards::v1::subsets::step::schema::mutations::edit_step_params::{edit_step_params, EditStepParams};
+pub use crate::artifacts::sequence::standards::v1::subsets::step::schema::mutations::move_step::{move_step, MoveStep};
 pub use crate::artifacts::sequence::schema::operations::*;
 
 //#region 🔖️Aggregate
@@ -33,7 +33,15 @@ pub enum SequenceMutation {
 
 //#region 🔎️DetectionRegistry
 pub const DETECTORS: &[SequenceMutationDetector] =
-    &[super::create_step::detect, super::delete_step::detect, super::move_step::detect, super::edit_step_params::detect, super::change_step_collapsed::detect, super::connect_steps::detect, super::disconnect_steps::detect];
+    &[
+        crate::artifacts::sequence::standards::v1::subsets::step::schema::mutations::create_step::detect,
+        crate::artifacts::sequence::standards::v1::subsets::step::schema::mutations::delete_step::detect,
+        crate::artifacts::sequence::standards::v1::subsets::step::schema::mutations::move_step::detect,
+        crate::artifacts::sequence::standards::v1::subsets::step::schema::mutations::edit_step_params::detect,
+        crate::artifacts::sequence::standards::v1::subsets::step::schema::mutations::change_step_collapsed::detect,
+        crate::artifacts::sequence::standards::v1::subsets::dependency::schema::mutations::connect_steps::detect,
+        crate::artifacts::sequence::standards::v1::subsets::dependency::schema::mutations::disconnect_steps::detect,
+    ];
 //#endregion 🔎️DetectionRegistry
 
 //#region 🧪️StructuralCorrespondence
@@ -44,6 +52,11 @@ mod structural_correspondence_tests {
     #[test]
     fn direct_owners_descriptors_surfaces_and_catalog_correspond() {
         let mutation_root = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../🗿️artifacts/🎬️sequence/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations");
+        // 🪆️ The six step-node kinds and two dependency-edge kinds physically live under their own subset now
+        // (ticket 26/09/02/SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION);
+        // `mutation_root` (✳️any) no longer owns any mutation directory.
+        let step_mutation_root = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../🗿️artifacts/🎬️sequence/🏅️standards/🔖️1/🪆️subsets/✳️step/🧬️schema/🧬️mutations");
+        let dependency_mutation_root = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../🗿️artifacts/🎬️sequence/🏅️standards/🔖️1/🪆️subsets/✳️dependency/🧬️schema/🧬️mutations");
         let descriptor_kinds: Vec<_> = <SequenceMutation as protocol::SemanticMutation<SequenceSnapshot>>::kinds().iter().map(|descriptor| descriptor.kind).collect();
         let catalog: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(mutation_root.join("../../🔣️oracle.json")).expect("language-neutral catalog")).expect("valid catalog");
         let mutation_catalog = &catalog["mutationCatalogs"][0];
@@ -56,7 +69,7 @@ mod structural_correspondence_tests {
             let variant = "CreateStep";
             let directory = "🌱create-step";
             let participation = "detect";
-            let owner = mutation_root.join("🌱create-step");
+            let owner = step_mutation_root.join("🌱create-step");
             let source = std::fs::read_to_string(owner.join("🦀️.rs")).expect("direct Rust owner");
             let descriptor: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(owner.join("🔣️.json")).expect("direct descriptor")).expect("valid descriptor");
             assert!(source.contains("MutationKind") && source.contains("SEMANTICS"));
@@ -89,7 +102,7 @@ mod structural_correspondence_tests {
             let variant = "DeleteStep";
             let directory = "🗑️delete-step";
             let participation = "detect";
-            let owner = mutation_root.join("🗑️delete-step");
+            let owner = step_mutation_root.join("🗑️delete-step");
             let source = std::fs::read_to_string(owner.join("🦀️.rs")).expect("direct Rust owner");
             let descriptor: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(owner.join("🔣️.json")).expect("direct descriptor")).expect("valid descriptor");
             assert!(source.contains("MutationKind") && source.contains("SEMANTICS"));
@@ -122,7 +135,7 @@ mod structural_correspondence_tests {
             let variant = "MoveStep";
             let directory = "📍move-step";
             let participation = "detect";
-            let owner = mutation_root.join("📍move-step");
+            let owner = step_mutation_root.join("📍move-step");
             let source = std::fs::read_to_string(owner.join("🦀️.rs")).expect("direct Rust owner");
             let descriptor: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(owner.join("🔣️.json")).expect("direct descriptor")).expect("valid descriptor");
             assert!(source.contains("MutationKind") && source.contains("SEMANTICS"));
@@ -155,7 +168,7 @@ mod structural_correspondence_tests {
             let variant = "EditStepParams";
             let directory = "🔧edit-step-params";
             let participation = "detect";
-            let owner = mutation_root.join("🔧edit-step-params");
+            let owner = step_mutation_root.join("🔧edit-step-params");
             let source = std::fs::read_to_string(owner.join("🦀️.rs")).expect("direct Rust owner");
             let descriptor: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(owner.join("🔣️.json")).expect("direct descriptor")).expect("valid descriptor");
             assert!(source.contains("MutationKind") && source.contains("SEMANTICS"));
@@ -188,7 +201,7 @@ mod structural_correspondence_tests {
             let variant = "ChangeStepCollapsed";
             let directory = "🗂️change-step-collapsed";
             let participation = "detect";
-            let owner = mutation_root.join("🗂️change-step-collapsed");
+            let owner = step_mutation_root.join("🗂️change-step-collapsed");
             let source = std::fs::read_to_string(owner.join("🦀️.rs")).expect("direct Rust owner");
             let descriptor: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(owner.join("🔣️.json")).expect("direct descriptor")).expect("valid descriptor");
             assert!(source.contains("MutationKind") && source.contains("SEMANTICS"));
@@ -221,7 +234,7 @@ mod structural_correspondence_tests {
             let variant = "ConnectSteps";
             let directory = "🔗connect-steps";
             let participation = "detect";
-            let owner = mutation_root.join("🔗connect-steps");
+            let owner = dependency_mutation_root.join("🔗connect-steps");
             let source = std::fs::read_to_string(owner.join("🦀️.rs")).expect("direct Rust owner");
             let descriptor: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(owner.join("🔣️.json")).expect("direct descriptor")).expect("valid descriptor");
             assert!(source.contains("MutationKind") && source.contains("SEMANTICS"));
@@ -254,7 +267,7 @@ mod structural_correspondence_tests {
             let variant = "DisconnectSteps";
             let directory = "✂️disconnect-steps";
             let participation = "detect";
-            let owner = mutation_root.join("✂️disconnect-steps");
+            let owner = dependency_mutation_root.join("✂️disconnect-steps");
             let source = std::fs::read_to_string(owner.join("🦀️.rs")).expect("direct Rust owner");
             let descriptor: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(owner.join("🔣️.json")).expect("direct descriptor")).expect("valid descriptor");
             assert!(source.contains("MutationKind") && source.contains("SEMANTICS"));
@@ -287,7 +300,7 @@ mod structural_correspondence_tests {
             let variant = "DuplicateStep";
             let directory = "🧬duplicate-step";
             let participation = "apply-only";
-            let owner = mutation_root.join("🧬duplicate-step");
+            let owner = step_mutation_root.join("🧬duplicate-step");
             let source = std::fs::read_to_string(owner.join("🦀️.rs")).expect("direct Rust owner");
             let descriptor: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(owner.join("🔣️.json")).expect("direct descriptor")).expect("valid descriptor");
             assert!(source.contains("MutationKind") && source.contains("SEMANTICS"));

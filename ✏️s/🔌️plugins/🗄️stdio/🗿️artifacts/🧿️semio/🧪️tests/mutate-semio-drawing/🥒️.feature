@@ -23,7 +23,7 @@ Feature: Apply every typed semio DRAWING mutation to a real vector document, aga
   no-oracle decision it replaces is gone, because a reference now exists.
 
   **The drawing under test is a real one, and its provenance is written down.**
-  `local://🗣️artifact.dsl.semio` and its binary twin were derived ONCE from two real committed SVG
+  `local://🗣️.dsl.semio` and its binary twin were derived ONCE from two real committed SVG
   documents — `🗿️artifacts/🎨️svg/🧫️fixtures/mouse.svg`, the introduction demonstration mouse with its
   eight real cubic-and-line paths, its `clipPath` group and its real stroke widths and opacities, and
   `…/🎨️svg/🧫️fixtures/qr-code.svg`, a real 1015×1015 Inkscape QR document whose 329 rectangles each
@@ -58,10 +58,10 @@ Feature: Apply every typed semio DRAWING mutation to a real vector document, aga
   mouse's own `introduction-demo-mouse-button` style, which carries a fill and no stroke, so
   `change-stroke-color` has to CREATE the optional leaf where `replace-fill` replaces one.
 
-  🔴 **`inverse-unflatten` is RED, and it is left red: `Unflatten`'s computed inverse cannot restore
+  🔴 **`inverse-unflatten-node` is RED, and it is left red: `Unflatten`'s computed inverse cannot restore
   an arbitrary replaced node.** The payload replaces the mouse layer's real `clipPath` group with a
   different one. The independent implementation undoes it by putting the captured node back and
-  restores the drawing exactly. The subject's own inverse law fails — `inverse-unflatten: undoing the
+  restores the drawing exactly. The subject's own inverse law fails — `inverse-unflatten-node: undoing the
   mutation did not restore the drawing`, with two different digests over the same layer and style
   lists — because `Unflatten`'s inverse is `Flatten`, and flattening the REPLACEMENT does not bring
   the replaced node back. The production vocabulary knows this: the demo-variant list in
@@ -98,8 +98,8 @@ Feature: Apply every typed semio DRAWING mutation to a real vector document, aga
   @level-exhaustive
   @mode-differential
   Scenario Outline: Apply <id> to the real derived drawing
-    Given the real derived drawing artifact local://🗣️artifact.dsl.semio
-    And the committed mutation payload local://🦠️<id>.json
+    Given the real derived drawing artifact local://🗣️.dsl.semio
+    And the committed mutation payload local://🧫️<id>/🦠️mutation/🔣️.json
     When the <id> mutation is applied to the drawing parsed from it
     Then the independent implementation and the subject agree on the resulting snapshot and on the scene-graph census
     Examples:
@@ -110,13 +110,13 @@ Feature: Apply every typed semio DRAWING mutation to a real vector document, aga
       | delete-node         |
       | move-node           |
       | drag-nodes          |
-      | rotate              |
-      | scale               |
+      | rotate-node         |
+      | scale-node          |
       | reorder-nodes       |
-      | group               |
-      | ungroup             |
-      | flatten             |
-      | unflatten           |
+      | group-nodes         |
+      | ungroup-node        |
+      | flatten-node        |
+      | unflatten-node      |
       | replace-path        |
       | replace-fill        |
       | change-stroke-color |
@@ -126,8 +126,8 @@ Feature: Apply every typed semio DRAWING mutation to a real vector document, aga
   @level-exhaustive
   @mode-differential
   Scenario Outline: Undoing <id> restores the real derived drawing
-    Given the real derived drawing artifact local://🗣️artifact.dsl.semio
-    And the committed mutation payload local://🦠️<id>.json
+    Given the real derived drawing artifact local://🗣️.dsl.semio
+    And the committed mutation payload local://🧫️<id>/🦠️mutation/🔣️.json
     When the <id> mutation is applied to the drawing parsed from it and each side undoes it with its own computed inverse
     Then both sides restore the drawing and agree on the mutated and the restored snapshot, scene-graph order and nesting included
     Examples:
@@ -138,13 +138,13 @@ Feature: Apply every typed semio DRAWING mutation to a real vector document, aga
       | delete-node         |
       | move-node           |
       | drag-nodes          |
-      | rotate              |
-      | scale               |
+      | rotate-node         |
+      | scale-node          |
       | reorder-nodes       |
-      | group               |
-      | ungroup             |
-      | flatten             |
-      | unflatten           |
+      | group-nodes         |
+      | ungroup-node        |
+      | flatten-node        |
+      | unflatten-node      |
       | replace-path        |
       | replace-fill        |
       | change-stroke-color |
@@ -154,9 +154,9 @@ Feature: Apply every typed semio DRAWING mutation to a real vector document, aga
   @level-exhaustive
   @mode-differential
   Scenario Outline: Apply <id> to its committed handcrafted specification vector
-    Given the committed before-snapshot asset://🏅️standards/🔖️v1/🪆️subsets/✳️drawing/🧬️schema/🧬️mutations/<dir>/🧪️tests/<slug>/📸️snapshot/⬅️before/🔣️component.json
-    And the committed mutation payload asset://🏅️standards/🔖️v1/🪆️subsets/✳️drawing/🧬️schema/🧬️mutations/<dir>/🧪️tests/<slug>/🦠️mutation/🔣️component.json
-    And the committed after-snapshot asset://🏅️standards/🔖️v1/🪆️subsets/✳️drawing/🧬️schema/🧬️mutations/<dir>/🧪️tests/<slug>/📸️snapshot/➡️after/🔣️component.json
+    Given the committed before-snapshot asset://🏅️standards/🔖️v1/🪆️subsets/✳️drawing/🧬️schema/🧬️mutations/<dir>/🧪️tests/<slug>/📸️snapshot/⬅️before/🔣️.json
+    And the committed mutation payload asset://🏅️standards/🔖️v1/🪆️subsets/✳️drawing/🧬️schema/🧬️mutations/<dir>/🧪️tests/<slug>/🦠️mutation/🔣️.json
+    And the committed after-snapshot asset://🏅️standards/🔖️v1/🪆️subsets/✳️drawing/🧬️schema/🧬️mutations/<dir>/🧪️tests/<slug>/📸️snapshot/➡️after/🔣️.json
     When both implementations apply the committed mutation to the committed before-snapshot
     Then each reaches the committed after-snapshot and the two agree
     Examples:
@@ -168,22 +168,22 @@ Feature: Apply every typed semio DRAWING mutation to a real vector document, aga
       | delete-layer        | 🗑️delete-layer        | removes-the-leading-layer-and-keeps-the-overlay             |
       | delete-node         | ➖delete-node          | removes-the-text-node-from-the-layer-root                   |
       | drag-nodes          | 🖐️drag-nodes          | drags-the-text-node-and-the-nested-group-by-the-same-offset |
-      | flatten             | 🫓flatten              | flattens-an-identity-nested-group-into-its-leaves           |
-      | group               | 🧷group                | groups-the-two-leading-children-into-a-new-group            |
+      | flatten             | 🫓flatten-node         | flattens-an-identity-nested-group-into-its-leaves           |
+      | group               | 🧷group-nodes          | groups-the-two-leading-children-into-a-new-group            |
       | move-node           | 📍move-node            | moves-the-text-node-to-a-new-origin                         |
       | reorder-nodes       | 🔀reorder-nodes        | moves-the-leading-path-node-to-the-end-of-the-layer-root    |
       | replace-fill        | 🪣replace-fill         | repaints-the-primary-styles-fill-from-red-to-blue           |
       | replace-path        | 🛤️replace-path        | swaps-the-open-path-for-a-closed-triangle                   |
-      | rotate              | 🔄rotate               | rotates-the-nested-group-a-half-turn-about-z                |
-      | scale               | 📏scale                | scales-the-nested-group-non-uniformly                       |
-      | unflatten           | 🎈unflatten            | restores-the-captured-hierarchy-over-the-flat-group         |
-      | ungroup             | 💫ungroup              | dissolves-the-nested-group-into-its-parent                  |
+      | rotate              | 🔄rotate-node          | rotates-the-nested-group-a-half-turn-about-z                |
+      | scale               | 📏scale-node           | scales-the-nested-group-non-uniformly                       |
+      | unflatten           | 🎈unflatten-node       | restores-the-captured-hierarchy-over-the-flat-group         |
+      | ungroup             | 💫ungroup-node         | dissolves-the-nested-group-into-its-parent                  |
 
   @id-identity-round-trip
   @level-long
   @mode-round-trip
   Scenario: Re-emit both committed encodings of the real derived drawing from the parsed document
-    Given the real derived drawing artifact local://🗣️artifact.dsl.semio
+    Given the real derived drawing artifact local://🗣️.dsl.semio
     And its committed binary twin local://🎒️.pack.semio
     When each implementation parses the text artifact, prints it back, decodes the binary twin and re-encodes it
     Then both reproduce the two committed files byte for byte and agree on the drawing, the scene-graph census and the digests of what they emitted

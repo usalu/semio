@@ -32,7 +32,7 @@ Feature: Apply every typed semio MESH mutation to a real architectural model, ag
   `semio-mesh-typescript-three-independent`; the recorded no-oracle decision it replaces is gone.
 
   **The model under test is a real one, and its provenance is written down.**
-  `local://🗣️artifact.dsl.semio` and its binary twin were derived ONCE from the real committed glTF
+  `local://🗣️.dsl.semio` and its binary twin were derived ONCE from the real committed glTF
   binary `🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/📚️examples/🌱️metabolism/🖼️assets/🧊️base.glb`
   — a real architectural model from the Metabolism study: 271 MESHES, 459 PRIMITIVES, 1 544 vertices,
   2 184 indices, two draw modes (`LINE_STRIP` and `TRIANGLES`) and two PBR materials. The GLB was
@@ -101,8 +101,8 @@ Feature: Apply every typed semio MESH mutation to a real architectural model, ag
   @level-exhaustive
   @mode-differential
   Scenario Outline: Apply <id> to the real derived model
-    Given the real derived mesh artifact local://🗣️artifact.dsl.semio
-    And the committed mutation payload local://🦠️<id>.json
+    Given the real derived mesh artifact local://🗣️.dsl.semio
+    And the committed mutation payload local://🧫️<id>/🦠️mutation/🔣️.json
     When the <id> mutation is applied to the model parsed from it
     Then the independent implementation and the subject agree on the resulting snapshot and on what three.js says its primitives are
     Examples:
@@ -129,8 +129,8 @@ Feature: Apply every typed semio MESH mutation to a real architectural model, ag
   @level-exhaustive
   @mode-differential
   Scenario Outline: Undoing <id> restores the real derived model
-    Given the real derived mesh artifact local://🗣️artifact.dsl.semio
-    And the committed mutation payload local://🦠️<id>.json
+    Given the real derived mesh artifact local://🗣️.dsl.semio
+    And the committed mutation payload local://🧫️<id>/🦠️mutation/🔣️.json
     When the <id> mutation is applied to the model parsed from it and each side undoes it with its own computed inverse
     Then both sides restore the model and agree on the mutated and the restored snapshot
     Examples:
@@ -157,9 +157,9 @@ Feature: Apply every typed semio MESH mutation to a real architectural model, ag
   @level-exhaustive
   @mode-differential
   Scenario Outline: Apply <id> to its committed handcrafted specification vector
-    Given the committed before-snapshot asset://🏅️standards/🔖️v1/🪆️subsets/✳️mesh/🧬️schema/🧬️mutations/<dir>/🧪️tests/<slug>/📸️snapshot/⬅️before/🔣️component.json
-    And the committed mutation payload asset://🏅️standards/🔖️v1/🪆️subsets/✳️mesh/🧬️schema/🧬️mutations/<dir>/🧪️tests/<slug>/🦠️mutation/🔣️component.json
-    And the committed after-snapshot asset://🏅️standards/🔖️v1/🪆️subsets/✳️mesh/🧬️schema/🧬️mutations/<dir>/🧪️tests/<slug>/📸️snapshot/➡️after/🔣️component.json
+    Given the committed before-snapshot asset://🏅️standards/🔖️v1/🪆️subsets/✳️mesh/🧬️schema/🧬️mutations/<dir>/🧪️tests/<slug>/📸️snapshot/⬅️before/🔣️.json
+    And the committed mutation payload asset://🏅️standards/🔖️v1/🪆️subsets/✳️mesh/🧬️schema/🧬️mutations/<dir>/🧪️tests/<slug>/🦠️mutation/🔣️.json
+    And the committed after-snapshot asset://🏅️standards/🔖️v1/🪆️subsets/✳️mesh/🧬️schema/🧬️mutations/<dir>/🧪️tests/<slug>/📸️snapshot/➡️after/🔣️.json
     When both implementations apply the committed mutation to the committed before-snapshot
     Then each reaches the committed after-snapshot and the two agree
     Examples:
@@ -186,7 +186,7 @@ Feature: Apply every typed semio MESH mutation to a real architectural model, ag
   @level-long
   @mode-round-trip
   Scenario: Re-emit both committed encodings of the real derived model from the parsed document
-    Given the real derived mesh artifact local://🗣️artifact.dsl.semio
+    Given the real derived mesh artifact local://🗣️.dsl.semio
     And its committed binary twin local://🎒️.pack.semio
     When each implementation parses the text artifact, prints it back, decodes the binary twin and re-encodes it
     Then both reproduce the two committed files byte for byte, agree on the model and on the digests of what they emitted, and agree with three.js about the primitives

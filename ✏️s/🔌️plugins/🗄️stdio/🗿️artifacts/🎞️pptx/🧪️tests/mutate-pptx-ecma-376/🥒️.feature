@@ -3,7 +3,7 @@
 @comparison-semantic-pptx-mutate-v1
 @mutations-pptx-ecma-376-any
 Feature: Apply every typed PPTX ECMA-376 mutation to a real-world presentation
-  The input is `shared://🎞️semio-talk.pptx`, a real 7-slide, ~110 KB subset derived ONCE (not a
+  The input is `shared://📽️.pptx`, a real 7-slide, ~110 KB subset derived ONCE (not a
   test step) from a real 62-slide, 16 MB 2020 conference deck ("Eine domänenspezifische
   Programmiersprache für Architekten", presented 27.11.2020) that this ticket nominated. The
   committed `📚️examples/🎬️demo/🖼️assets/🎞️example.pptx` for this artifact is 0 bytes — a placeholder,
@@ -68,7 +68,7 @@ Feature: Apply every typed PPTX ECMA-376 mutation to a real-world presentation
   @level-exhaustive
   @mode-differential
   Scenario Outline: Apply <id> to the real presentation
-    Given the real input presentation shared://🎞️semio-talk.pptx
+    Given the real input presentation shared://📽️.pptx
     When the <id> mutation is applied with its parameters
       """
       {"kind": "<id>", "params": <params>}
@@ -91,7 +91,7 @@ Feature: Apply every typed PPTX ECMA-376 mutation to a real-world presentation
   @level-exhaustive
   @mode-property
   Scenario Outline: Undoing <id> restores the presentation
-    Given the real input presentation shared://🎞️semio-talk.pptx
+    Given the real input presentation shared://📽️.pptx
     When the <id> mutation is applied and then undone with its own inverse
       """
       {"kind": "<id>", "params": <params>}
@@ -114,7 +114,7 @@ Feature: Apply every typed PPTX ECMA-376 mutation to a real-world presentation
   @level-long
   @mode-round-trip
   Scenario: Decode and re-encode the real presentation without passing bytes through
-    Given the real input presentation shared://🎞️semio-talk.pptx
+    Given the real input presentation shared://📽️.pptx
     When the presentation is decoded into the typed snapshot and re-encoded, with no mutation applied
     Then the re-encoded presentation is not a byte-for-byte copy of the input
     And its semantic projection matches the oracle's own decode-then-reencode of the same input

@@ -36,8 +36,8 @@ semio-framework-schema = { path = "../../../../../🧰️framework/🔨️module
 semio-framework-ui-contract = { path = "../../../../../🧰️framework/🔨️modules/🖱️ui/🧬️contract/📦️packages/🦀️rust", package = "semio-framework-ui-contract" }
 base64_codec = { path = "../../../../../🧰️framework/🔨️modules/🚪️io/🔤️base64/📦️packages/🦀️rust", package = "semio-framework-io-base64" }
 semio-framework-pixels = { path = "../../../../../🧰️framework/🔨️modules/🖼️pixels/📦️packages/🦀️rust", package = "semio-framework-pixels" }
-serde.workspace = true
-serde_json.workspace = true
 
 [dev-dependencies]
+serde.workspace = true
+serde_json.workspace = true
 semio-framework-async-macros = { path = "../../../../../🧰️framework/🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust" }

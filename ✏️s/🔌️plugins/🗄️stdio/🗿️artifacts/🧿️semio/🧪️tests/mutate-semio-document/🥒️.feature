@@ -66,7 +66,7 @@ Feature: Apply every typed semio DOCUMENT mutation to the real committed memo, a
   @level-exhaustive
   @mode-differential
   Scenario Outline: Apply <id> to the real committed memo
-    Given the real committed memo asset://🏅️standards/🔖️v1/🪆️subsets/✳️any/📚️examples/📄️memo/🖼️assets/🗣️example.dsl.semio
+    Given the real committed memo asset://🏅️standards/🔖️v1/🪆️subsets/✳️any/📚️examples/📄️memo/🖼️assets/🗣️.dsl.semio
     When the <id> mutation is applied to the memo parsed from it
       """
       <mutation>
@@ -97,7 +97,7 @@ Feature: Apply every typed semio DOCUMENT mutation to the real committed memo, a
   @level-exhaustive
   @mode-differential
   Scenario Outline: Undoing <id> restores the real committed memo
-    Given the real committed memo asset://🏅️standards/🔖️v1/🪆️subsets/✳️any/📚️examples/📄️memo/🖼️assets/🗣️example.dsl.semio
+    Given the real committed memo asset://🏅️standards/🔖️v1/🪆️subsets/✳️any/📚️examples/📄️memo/🖼️assets/🗣️.dsl.semio
     When the <id> mutation is applied to the memo parsed from it and each side undoes it with its own computed inverse
       """
       <mutation>
@@ -128,7 +128,7 @@ Feature: Apply every typed semio DOCUMENT mutation to the real committed memo, a
   @level-exhaustive
   @mode-differential
   Scenario Outline: Apply <id> to its committed specification vector
-    Given the committed specification vector local://🦠️<id>.json for the <id> kind
+    Given the committed specification vector local://🧫️<id>/🦠️mutation/🔣️.json for the <id> kind
     When both implementations apply the vector's mutation to its before-snapshot
     Then each reaches the committed after-snapshot and the two agree
     Examples:
@@ -156,8 +156,8 @@ Feature: Apply every typed semio DOCUMENT mutation to the real committed memo, a
   @level-long
   @mode-round-trip
   Scenario: Re-emit both committed encodings of the real memo from the parsed snapshot
-    Given the real committed memo asset://🏅️standards/🔖️v1/🪆️subsets/✳️any/📚️examples/📄️memo/🖼️assets/🗣️example.dsl.semio
+    Given the real committed memo asset://🏅️standards/🔖️v1/🪆️subsets/✳️any/📚️examples/📄️memo/🖼️assets/🗣️.dsl.semio
     And its committed binary twin asset://🏅️standards/🔖️v1/🪆️subsets/✳️any/📚️examples/📄️memo/🖼️assets/🎒️.pack.semio
-    And the committed specification vector local://🦠️no-mutation.json whose before-snapshot is that artifact decoded
+    And the committed specification vector local://🧫️no-mutation/🦠️mutation/🔣️.json whose before-snapshot is that artifact decoded
     When each implementation parses the text artifact, prints it back, decodes the binary twin and re-encodes it
     Then both reproduce the two committed files byte for byte and agree on the memo and on the digests of what they emitted

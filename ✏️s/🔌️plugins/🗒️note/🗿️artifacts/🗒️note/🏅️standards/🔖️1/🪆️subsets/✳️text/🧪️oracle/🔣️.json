@@ -1,0 +1,135 @@
+{
+  "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json",
+  "schemaVersion": 2,
+  "_comment": "🧩️ This subset's own contribution, split out of ✳️any's former note-1-any wildcard catalog in ticket 26/09/02/SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION so every s.note.note mutation has a non-wildcard subset owner. Text block rich-text content. The generic (whole-document) note-python-independent oracle and the three carrier-family third-party-library oracles (dxf/quick-xml/lopdf) this subset's fixtures cite by id stay registered once, in ✳️any/🧪️oracle/🔣️.json — the registry is global (semio.repository-test's loadOracleRegistry merges every subset's contribution), so this file references them by id without redeclaring them.",
+  "oracles": [],
+  "probes": [],
+  "noOracleDecisions": [],
+  "mutationCatalogs": [
+    {
+      "id": "note-1-text",
+      "capability": "note-1-mutate",
+      "standardDirectoryName": "🔖️1",
+      "subsetDirectoryName": "✳️text",
+      "kinds": [
+        "edit-block-text"
+      ],
+      "vectors": [
+        {
+          "mutationId": "edit-block-text",
+          "sourceMutationDirectoryName": "📝️edit-block-text",
+          "mutationDirectoryName": "📝️edit-block-text",
+          "scenarios": [
+            {
+              "id": "replaces-the-intro-paragraphs",
+              "directoryName": "🧪️replaces-the-intro-paragraphs"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "comparisonProfiles": [],
+  "mutationManifests": [
+    {
+      "schema": "semio.repository-test.mutation-manifest/v2",
+      "artifact": "s.note.note",
+      "standard": "1",
+      "subset": "text",
+      "standardDirectoryName": "🔖️1",
+      "subsetDirectoryName": "✳️text",
+      "mutations": [
+        {
+          "id": "edit-block-text",
+          "capability": "note-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "edit-block-text",
+            "bridgeVersion": 1,
+            "variant": "EditBlockText"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "note-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "fixtureManifests": [
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "edits-the-intro-paragraph",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.note.note",
+        "standard": "1",
+        "subset": "text"
+      },
+      "mutation": "edit-block-text",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree",
+        "handedness": "right",
+        "up": "y"
+      },
+      "files": [
+        {
+          "role": "before-pdf",
+          "path": "../🧫️fixtures/edits-the-intro-paragraph/before.pdf",
+          "mediaType": "application/pdf",
+          "sha256": "sha256:9968679f0fc791102940ea7e93cb1d0aeea2c315d880e8617f4ca6182f46b059",
+          "bytes": 431
+        },
+        {
+          "role": "after-pdf",
+          "path": "../🧫️fixtures/edits-the-intro-paragraph/after.pdf",
+          "mediaType": "application/pdf",
+          "sha256": "sha256:28351770ea693d0983522d2b1c8a465cea463915d333580ea9876e88236c6599",
+          "bytes": 448
+        },
+        {
+          "role": "before-svg",
+          "path": "../🧫️fixtures/edits-the-intro-paragraph/before.svg",
+          "mediaType": "image/svg+xml",
+          "sha256": "sha256:33c861c534b51d3768bd43db877996b6e2d1ad7b5f1b7c57f983a0e7660944a8",
+          "bytes": 852
+        },
+        {
+          "role": "after-svg",
+          "path": "../🧫️fixtures/edits-the-intro-paragraph/after.svg",
+          "mediaType": "image/svg+xml",
+          "sha256": "sha256:57159317d0d938ac42f0d99b82a8a11a17aee90385f004503b1610286e8ec878",
+          "bytes": 869
+        }
+      ],
+      "generator": {
+        "oracle": "lopdf-note-text-reader",
+        "packageVersion": "0.44",
+        "engineFamily": "lopdf",
+        "engineVersion": "0.44",
+        "command": "bun ✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/🏭️generator/📜️script.ts generate --only edits-the-intro-paragraph",
+        "seed": 0,
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "MIT",
+        "attribution": "Built and written by the lopdf 0.44 + quick-xml 0.42 crate(s) — no byte of PDF/SVG here originates in this repository.",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "semantic-note-pdf-text-v1",
+      "reproducible": true,
+      "family": "pdf+svg",
+      "notes": "Witnesses edit-block-text via the pdf+svg carrier(s) — see 📓️note-1-any-fixture-corpus.md for why exactly these carriers and not the others declared for this mutation kind."
+    }
+  ]
+}

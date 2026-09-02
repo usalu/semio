@@ -44,7 +44,7 @@ Feature: Move a real scanned TIFF across every axis of the Adobe TIFF 6.0 Baseli
   @level-exhaustive
   @mode-conformance
   Scenario Outline: Apply <id> to the real scan and read the class verdict back
-    Given the real input document shared://🖼️abbau-aufbau-masterarbeit-grundriss.tiff
+    Given the real input document shared://🧪️abbau-aufbau-masterarbeit-grundriss/🖼️.tiff
     When the <id> mutation is applied to the decoded snapshot
       """
       {"kind": "<id>", "code": "<code>", "setup": <setup>, "params": <params>}
@@ -66,7 +66,7 @@ Feature: Move a real scanned TIFF across every axis of the Adobe TIFF 6.0 Baseli
   @level-exhaustive
   @mode-property
   Scenario Outline: Undoing <id> puts the real scan back where it started
-    Given the real input document shared://🖼️abbau-aufbau-masterarbeit-grundriss.tiff
+    Given the real input document shared://🧪️abbau-aufbau-masterarbeit-grundriss/🖼️.tiff
     When <id> is applied to the decoded snapshot and then its own computed inverse steps are applied
       """
       {"kind": "<id>", "code": "<code>", "setup": <setup>, "params": <params>}
@@ -88,6 +88,6 @@ Feature: Move a real scanned TIFF across every axis of the Adobe TIFF 6.0 Baseli
   @level-long
   @mode-round-trip
   Scenario: Decode and re-encode the real scan without passing bytes through
-    Given the real input document shared://🖼️abbau-aufbau-masterarbeit-grundriss.tiff
+    Given the real input document shared://🧪️abbau-aufbau-masterarbeit-grundriss/🖼️.tiff
     When the scan is decoded into a snapshot and re-serialized from that snapshot alone
     Then the re-encoded bytes reproduce the reference writer's own file exactly, flipping one byte of the decoded raster changes them, the document is still Baseline-conforming, and the INDEPENDENT IFD reader agrees on the geometry of both

@@ -1,9 +1,10 @@
 {
   "artifact": "s.stdio.gif",
   "standard": "87a",
+  "subsetPolicy": "single",
   "subsets": {
     "*": {
-      "name": "Unconstrained gif 87a"
+      "name": "Unconstrained gif 87a -- the CompuServe GIF Specification (1987) defines no extension mechanism and no conformance classes: a GIF87a stream is one flat sequence of a Header, Logical Screen Descriptor, an optional Global Color Table, and Image Descriptor blocks (each with an optional Local Color Table and LZW raster data). There is no separable normative scope to split mutations against -- that structure was introduced only in GIF89a's extension blocks (Graphic Control, Comment, Plain Text, Application), which this earlier version does not have."
     }
   }
 }

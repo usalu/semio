@@ -64,39 +64,39 @@ pub enum NoteMutation {
 //#endregion 🔖️Mutations
 
 //#region 🔖️Reexports
-pub use super::change_block_font_size::{change_block_font_size, ChangeBlockFontSize};
-pub use super::change_block_ink_width::{change_block_ink_width, ChangeBlockInkWidth};
-pub use super::change_block_locked::{change_block_locked, ChangeBlockLocked};
-pub use super::change_block_visible::{change_block_visible, ChangeBlockVisible};
-pub use super::change_eraser_radius::{change_eraser_radius, ChangeEraserRadius};
-pub use super::change_grid_opacity::{change_grid_opacity, ChangeGridOpacity};
-pub use super::change_grid_spacing::{change_grid_spacing, ChangeGridSpacing};
-pub use super::change_grid_subdivisions::{change_grid_subdivisions, ChangeGridSubdivisions};
-pub use super::change_grid_visible::{change_grid_visible, ChangeGridVisible};
-pub use super::change_pencil_width::{change_pencil_width, ChangePencilWidth};
-pub use super::change_snap_enabled::{change_snap_enabled, ChangeSnapEnabled};
-pub use super::change_snap_grid_spacing::{change_snap_grid_spacing, ChangeSnapGridSpacing};
-pub use super::create_asset::{create_asset, CreateAsset};
-pub use super::create_block::{create_block, CreateBlock};
-pub use super::delete_asset::{delete_asset, DeleteAsset};
-pub use super::delete_block::{delete_block, DeleteBlock};
-pub use super::delete_blocks::{delete_blocks, DeleteBlocks};
-pub use super::drag_blocks::{drag_blocks, DragBlocks};
-pub use super::duplicate_block::{duplicate_block, DuplicateBlock};
-pub use super::duplicate_blocks::{duplicate_blocks, DuplicateBlocks};
-pub use super::edit_block_ink_stroke::{edit_block_ink_stroke, EditBlockInkStroke};
-pub use super::edit_block_math::{edit_block_math, EditBlockMath};
-pub use super::edit_block_text::{edit_block_text, EditBlockText};
-pub use super::insert_table_column::{insert_table_column, InsertTableColumn};
-pub use super::insert_table_row::{insert_table_row, InsertTableRow};
-pub use super::move_block::{move_block, MoveBlock};
-pub use super::move_block_to_container::{move_block_to_container, MoveBlockToContainer};
-pub use super::remove_table_column::{remove_table_column, RemoveTableColumn};
-pub use super::remove_table_row::{remove_table_row, RemoveTableRow};
-pub use super::rename_block::{rename_block, RenameBlock};
-pub use super::rename_note::{rename_note, RenameNote};
-pub use super::replace_asset_payload::{replace_asset_payload, ReplaceAssetPayload};
-pub use super::resize_block::{resize_block, ResizeBlock};
+pub use crate::artifacts::note::standards::v1::subsets::block::schema::mutations::change_block_font_size::{change_block_font_size, ChangeBlockFontSize};
+pub use crate::artifacts::note::standards::v1::subsets::ink::schema::mutations::change_block_ink_width::{change_block_ink_width, ChangeBlockInkWidth};
+pub use crate::artifacts::note::standards::v1::subsets::block::schema::mutations::change_block_locked::{change_block_locked, ChangeBlockLocked};
+pub use crate::artifacts::note::standards::v1::subsets::block::schema::mutations::change_block_visible::{change_block_visible, ChangeBlockVisible};
+pub use crate::artifacts::note::standards::v1::subsets::ink::schema::mutations::change_eraser_radius::{change_eraser_radius, ChangeEraserRadius};
+pub use crate::artifacts::note::standards::v1::subsets::canvas::schema::mutations::change_grid_opacity::{change_grid_opacity, ChangeGridOpacity};
+pub use crate::artifacts::note::standards::v1::subsets::canvas::schema::mutations::change_grid_spacing::{change_grid_spacing, ChangeGridSpacing};
+pub use crate::artifacts::note::standards::v1::subsets::canvas::schema::mutations::change_grid_subdivisions::{change_grid_subdivisions, ChangeGridSubdivisions};
+pub use crate::artifacts::note::standards::v1::subsets::canvas::schema::mutations::change_grid_visible::{change_grid_visible, ChangeGridVisible};
+pub use crate::artifacts::note::standards::v1::subsets::ink::schema::mutations::change_pencil_width::{change_pencil_width, ChangePencilWidth};
+pub use crate::artifacts::note::standards::v1::subsets::canvas::schema::mutations::change_snap_enabled::{change_snap_enabled, ChangeSnapEnabled};
+pub use crate::artifacts::note::standards::v1::subsets::canvas::schema::mutations::change_snap_grid_spacing::{change_snap_grid_spacing, ChangeSnapGridSpacing};
+pub use crate::artifacts::note::standards::v1::subsets::asset::schema::mutations::create_asset::{create_asset, CreateAsset};
+pub use crate::artifacts::note::standards::v1::subsets::block::schema::mutations::create_block::{create_block, CreateBlock};
+pub use crate::artifacts::note::standards::v1::subsets::asset::schema::mutations::delete_asset::{delete_asset, DeleteAsset};
+pub use crate::artifacts::note::standards::v1::subsets::block::schema::mutations::delete_block::{delete_block, DeleteBlock};
+pub use crate::artifacts::note::standards::v1::subsets::block::schema::mutations::delete_blocks::{delete_blocks, DeleteBlocks};
+pub use crate::artifacts::note::standards::v1::subsets::block::schema::mutations::drag_blocks::{drag_blocks, DragBlocks};
+pub use crate::artifacts::note::standards::v1::subsets::block::schema::mutations::duplicate_block::{duplicate_block, DuplicateBlock};
+pub use crate::artifacts::note::standards::v1::subsets::block::schema::mutations::duplicate_blocks::{duplicate_blocks, DuplicateBlocks};
+pub use crate::artifacts::note::standards::v1::subsets::ink::schema::mutations::edit_block_ink_stroke::{edit_block_ink_stroke, EditBlockInkStroke};
+pub use crate::artifacts::note::standards::v1::subsets::math::schema::mutations::edit_block_math::{edit_block_math, EditBlockMath};
+pub use crate::artifacts::note::standards::v1::subsets::text::schema::mutations::edit_block_text::{edit_block_text, EditBlockText};
+pub use crate::artifacts::note::standards::v1::subsets::table::schema::mutations::insert_table_column::{insert_table_column, InsertTableColumn};
+pub use crate::artifacts::note::standards::v1::subsets::table::schema::mutations::insert_table_row::{insert_table_row, InsertTableRow};
+pub use crate::artifacts::note::standards::v1::subsets::block::schema::mutations::move_block::{move_block, MoveBlock};
+pub use crate::artifacts::note::standards::v1::subsets::block::schema::mutations::move_block_to_container::{move_block_to_container, MoveBlockToContainer};
+pub use crate::artifacts::note::standards::v1::subsets::table::schema::mutations::remove_table_column::{remove_table_column, RemoveTableColumn};
+pub use crate::artifacts::note::standards::v1::subsets::table::schema::mutations::remove_table_row::{remove_table_row, RemoveTableRow};
+pub use crate::artifacts::note::standards::v1::subsets::block::schema::mutations::rename_block::{rename_block, RenameBlock};
+pub use crate::artifacts::note::standards::v1::subsets::document::schema::mutations::rename_note::{rename_note, RenameNote};
+pub use crate::artifacts::note::standards::v1::subsets::asset::schema::mutations::replace_asset_payload::{replace_asset_payload, ReplaceAssetPayload};
+pub use crate::artifacts::note::standards::v1::subsets::block::schema::mutations::resize_block::{resize_block, ResizeBlock};
 //#endregion 🔖️Reexports
 
 //#region 🔖️Helpers
@@ -198,10 +198,13 @@ mod kinds_catalog {
     use super::*;
 
     /// 🏷️ [`KINDS`] must name every declared variant, in the exact order and spelling
-    /// `#[derive(dsl::Mutations)]` assigns, and every one of those spellings must also appear in the
-    /// committed `note-1-any` catalog. The framework reads the catalog and never the enum, so
-    /// this is the only thing standing between a renamed variant and a mutation catalog that
-    /// silently measures a vocabulary the code no longer has.
+    /// `#[derive(dsl::Mutations)]` assigns, and every one of those spellings must also appear in one
+    /// of the nine subset-scoped catalogs (`note-1-any` plus the eight mutation-owning subsets this
+    /// enum's 33 variants were split across in ticket
+    /// `26/09/02/SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION`).
+    /// The framework reads the catalogs and never the enum, so this is the only thing standing
+    /// between a renamed variant and a mutation catalog that silently measures a vocabulary the code
+    /// no longer has.
     #[test]
     fn kinds_match_the_enum_and_the_catalog() {
         let descriptors = <NoteMutation as protocol::SemanticMutation<NoteSnapshot>>::kinds();
@@ -209,9 +212,19 @@ mod kinds_catalog {
         for (kind, descriptor) in KINDS.iter().zip(descriptors.iter()) {
             assert_eq!(*kind, descriptor.kind, "KINDS must match #[derive(dsl::Mutations)]'s own declaration order and spelling");
         }
-        let manifest = include_str!("../../🧪️oracle/🔣️.json");
+        let manifest = concat!(
+            include_str!("../../🧪️oracle/🔣️.json"),
+            include_str!("../../../✳️ink/🧪️oracle/🔣️.json"),
+            include_str!("../../../✳️text/🧪️oracle/🔣️.json"),
+            include_str!("../../../✳️math/🧪️oracle/🔣️.json"),
+            include_str!("../../../✳️table/🧪️oracle/🔣️.json"),
+            include_str!("../../../✳️asset/🧪️oracle/🔣️.json"),
+            include_str!("../../../✳️block/🧪️oracle/🔣️.json"),
+            include_str!("../../../✳️canvas/🧪️oracle/🔣️.json"),
+            include_str!("../../../✳️document/🧪️oracle/🔣️.json"),
+        );
         for kind in KINDS {
-            assert!(manifest.contains(&format!("\"{kind}\"")), "KINDS entry {kind:?} must also appear in the committed oracle manifest's catalog");
+            assert!(manifest.contains(&format!("\"{kind}\"")), "KINDS entry {kind:?} must also appear in one of the committed subset oracle manifests' catalogs");
         }
     }
 }

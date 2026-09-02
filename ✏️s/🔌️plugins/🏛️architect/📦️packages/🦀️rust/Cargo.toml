@@ -29,11 +29,10 @@ semio-framework-os-kernel = { path = "../../../../../🧰️framework/🛍️pro
 semio-framework-plugin = { path = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust", features = ["component-guest"], package = "semio-framework-plugin" }
 semio-framework-dispatch-macros = { path = "../../../../../🧰️framework/🔨️modules/🔀️dispatch/📦️packages/🦀️rust", package = "semio-framework-dispatch-macros" }
 semio-framework-schema = { path = "../../../../../🧰️framework/🔨️modules/🧬️schema/📦️packages/🦀️rust", package = "semio-framework-schema" }
-serde.workspace = true
-serde_json.workspace = true
-
 
 [dev-dependencies]
+serde.workspace = true
+serde_json.workspace = true
 semio-framework-async-macros = { path = "../../../../../🧰️framework/🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust" }
 zip = { version = "6", default-features = false, features = ["deflate"] }
 # 🚫️ NOT a path dev-dependency on `semio-s-plugin-stdio-test-oracle`. That crate declares its own

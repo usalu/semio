@@ -111,8 +111,8 @@ semio-framework-dispatch-macros = { path = "../../../../../🧰️framework/🔨
 fem = { path = "../../../🏗️fem/📦️packages/🦀️rust", package = "semio-s-plugin-fem", default-features = false, optional = true }
 semio-framework-value-derive = { path = "../../../../../🧰️framework/🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust", package = "semio-framework-value-derive" }
 pack = { path = "../../../../../🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust", package = "semio-framework-pack" }
-serde.workspace = true
-serde_json.workspace = true
 
 [dev-dependencies]
+serde.workspace = true
+serde_json.workspace = true
 semio-framework-async-macros = { path = "../../../../../🧰️framework/🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust" }

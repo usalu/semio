@@ -1,0 +1,21 @@
+{
+  "schemaVersion": 1,
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️obj/🏅️standards/🔖️3.0/🪆️subsets/✳️material/🧬️schema/🧬️mutations/🖌set-usemtl",
+  "semanticKind": "set-usemtl",
+  "displayName": "Set Usemtl",
+  "emoji": "🖌",
+  "aggregateVariant": "SetUsemtl",
+  "payloadSchema": "🔣️.schema.json",
+  "textOpcode": null,
+  "binaryTag": null,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "detect",
+  "outcomeClasses": [
+    "applied"
+  ],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": [
+    "rust",
+    "json-schema"
+  ]
+}

@@ -96,7 +96,7 @@ const KINDS: &[&str] = &[
 
 /// 🗣️ The real committed EN 1992 document, read where the domain already keeps it.
 #[cfg(feature = "sut")]
-const DSL_ASSET: &str = "asset://🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/📕️liquid-retaining-fem-anchor/🖼️assets/🗣️liquid-retaining-fem-anchor.dsl.semio";
+const DSL_ASSET: &str = "asset://🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/📕️liquid-retaining-fem-anchor/🖼️assets/🧪️liquid-retaining-fem-anchor/🗣️.dsl.semio";
 /// 🎒️ The same document in its binary envelope, written by a separate codec from the DSL text.
 #[cfg(feature = "sut")]
 const PACK_ASSET: &str = "asset://🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/📕️liquid-retaining-fem-anchor/🖼️assets/🎒️.pack.semio";

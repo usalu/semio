@@ -83,7 +83,7 @@ const KINDS: &[&str] = &[
 
 /// 🗣️ The real committed EN 1996 document, read where the domain already keeps it.
 #[cfg(feature = "sut")]
-const DSL_ASSET: &str = "asset://🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/📕️loadbearing-wall/🖼️assets/🗣️loadbearing-wall.dsl.semio";
+const DSL_ASSET: &str = "asset://🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/📕️loadbearing-wall/🖼️assets/🧪️loadbearing-wall/🗣️.dsl.semio";
 /// 🎒️ The same document in its binary envelope, written by a separate codec from the DSL text.
 #[cfg(feature = "sut")]
 const PACK_ASSET: &str = "asset://🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/📕️loadbearing-wall/🖼️assets/🎒️.pack.semio";

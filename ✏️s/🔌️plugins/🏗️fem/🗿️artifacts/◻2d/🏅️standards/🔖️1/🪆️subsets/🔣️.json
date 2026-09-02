@@ -2,8 +2,29 @@
   "artifact": "s.fem.2d",
   "standard": "1",
   "subsets": {
-    "*": {
-      "name": "Unconstrained 2d 1"
+    "any": {
+      "name": "Shared substrate",
+      "note": "The whole-document container: io, the third-party oracle, the fixture generator, editor/viewer and the core snapshot/diff/inference schema. No mutation resolves here any more (see the 5 domain subsets)."
+    },
+    "mesh": {
+      "name": "Mesh",
+      "note": "Geometry/topology mutations the mesh is built from: nodes, cross-sections, bar/beam elements, and the meshed continuum region/solid."
+    },
+    "material": {
+      "name": "Material",
+      "note": "Material mutations."
+    },
+    "load": {
+      "name": "Load",
+      "note": "Loading mutations: loads, load cases and combinations."
+    },
+    "boundary": {
+      "name": "Boundary",
+      "note": "Support (boundary restraint) mutations."
+    },
+    "analysis": {
+      "name": "Analysis",
+      "note": "Analysis-settings mutation (modal/buckling counts, deformation scale)."
     }
   }
 }

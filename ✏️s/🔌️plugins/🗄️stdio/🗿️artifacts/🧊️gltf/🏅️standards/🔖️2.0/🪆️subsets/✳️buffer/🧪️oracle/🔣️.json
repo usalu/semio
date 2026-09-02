@@ -1,0 +1,113 @@
+{
+  "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json",
+  "schemaVersion": 2,
+  "_comment": "🧩️ This subset's own mutation-catalog contribution to the repository test platform -- registers the buffer slice of the glTF 2.0 mutation vocabulary (moved here from the artifact-level ✳️any catalog by shard A6, ticket 26/09/02/SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION). The shared whole-document io/oracle/generator machinery, and every mutation's own manifest/fixture record, stay centralized at the artifact's ✳️any substrate; this file exists so the buffer vocabulary directory has a claiming catalog of its own, per `unregistered-mutation-vocabulary`.",
+  "mutationCatalogs": [
+    {
+      "id": "gltf-2-0-buffer",
+      "capability": "gltf-2-0-mutate",
+      "standardDirectoryName": "🔖️2.0",
+      "subsetDirectoryName": "✳️buffer",
+      "vectors": [
+        {
+          "mutationId": "create-buffer",
+          "sourceMutationDirectoryName": "🌱️💾️create-buffer",
+          "mutationDirectoryName": "🌱️💾️create-buffer",
+          "scenarios": [
+            {
+              "id": "inserts-a-two-byte-buffer-ahead-of-the-four-byte-buffer",
+              "directoryName": "🧪️inserts-a-two-byte-buffer-ahead-of-the-four-byte-buffer"
+            }
+          ]
+        },
+        {
+          "mutationId": "create-buffer-view",
+          "sourceMutationDirectoryName": "🌱️👁️create-buffer-view",
+          "mutationDirectoryName": "🌱️👁️create-buffer-view",
+          "scenarios": [
+            {
+              "id": "inserts-a-two-byte-window-ahead-of-the-four-byte-window",
+              "directoryName": "🧪️inserts-a-two-byte-window-ahead-of-the-four-byte-window"
+            }
+          ]
+        },
+        {
+          "mutationId": "delete-buffer",
+          "sourceMutationDirectoryName": "🗑️💾️delete-buffer",
+          "mutationDirectoryName": "🗑️💾️delete-buffer",
+          "scenarios": [
+            {
+              "id": "removes-the-two-byte-buffer-and-retargets-the-buffer-view",
+              "directoryName": "🧪️removes-the-two-byte-buffer-and-retargets-the-buffer-view"
+            }
+          ]
+        },
+        {
+          "mutationId": "delete-buffer-view",
+          "sourceMutationDirectoryName": "🗑️👁️delete-buffer-view",
+          "mutationDirectoryName": "🗑️👁️delete-buffer-view",
+          "scenarios": [
+            {
+              "id": "removes-the-two-byte-window-and-renumbers-the-accessor",
+              "directoryName": "🧪️removes-the-two-byte-window-and-renumbers-the-accessor"
+            }
+          ]
+        },
+        {
+          "mutationId": "move-buffer",
+          "sourceMutationDirectoryName": "🚚️💾️move-buffer",
+          "mutationDirectoryName": "🚚️💾️move-buffer",
+          "scenarios": [
+            {
+              "id": "swaps-the-two-buffers-and-their-byte-lanes",
+              "directoryName": "🧪️swaps-the-two-buffers-and-their-byte-lanes"
+            }
+          ]
+        },
+        {
+          "mutationId": "move-buffer-view",
+          "sourceMutationDirectoryName": "🚚️👁️move-buffer-view",
+          "mutationDirectoryName": "🚚️👁️move-buffer-view",
+          "scenarios": [
+            {
+              "id": "swaps-the-two-windows-and-renumbers-both-accessors",
+              "directoryName": "🧪️swaps-the-two-windows-and-renumbers-both-accessors"
+            }
+          ]
+        },
+        {
+          "mutationId": "reorder-buffer-views",
+          "sourceMutationDirectoryName": "🔀️👁️reorder-buffer-views",
+          "mutationDirectoryName": "🔀️👁️reorder-buffer-views",
+          "scenarios": [
+            {
+              "id": "flips-the-two-windows-and-remaps-both-accessors",
+              "directoryName": "🧪️flips-the-two-windows-and-remaps-both-accessors"
+            }
+          ]
+        },
+        {
+          "mutationId": "reorder-buffers",
+          "sourceMutationDirectoryName": "🔀️💾️reorder-buffers",
+          "mutationDirectoryName": "🔀️💾️reorder-buffers",
+          "scenarios": [
+            {
+              "id": "flips-the-two-buffers-and-their-byte-lanes",
+              "directoryName": "🧪️flips-the-two-buffers-and-their-byte-lanes"
+            }
+          ]
+        }
+      ],
+      "kinds": [
+        "create-buffer",
+        "create-buffer-view",
+        "delete-buffer",
+        "delete-buffer-view",
+        "move-buffer",
+        "move-buffer-view",
+        "reorder-buffer-views",
+        "reorder-buffers"
+      ]
+    }
+  ]
+}

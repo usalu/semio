@@ -46,6 +46,7 @@
         }
       ],
       "kinds": [
+        "no-mutation",
         "set-snapshot",
         "insert-slide",
         "remove-slide",

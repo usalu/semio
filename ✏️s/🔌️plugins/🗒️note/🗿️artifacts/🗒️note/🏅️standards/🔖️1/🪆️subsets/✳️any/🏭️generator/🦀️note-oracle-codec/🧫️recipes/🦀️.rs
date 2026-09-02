@@ -1,6 +1,6 @@
 //! 🍳️ The 16 witnessable-mutation recipes. Every BEFORE and AFTER `NoteDoc` below is independently
 //! authored by hand — never derived by executing note's own mutation semantics — exactly the "author
-//! both states directly" shape `…💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/✳️any/🏭️generator/📜️script.ts`
+//! both states directly" shape `…💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/✳️markup/🏭️generator/📜️script.ts`
 //! uses. `carriers` names exactly the files `generate` writes for that recipe, taken verbatim from
 //! `../../🔣️oracle.json`'s `mutationManifests`/the carrier table in
 //! `📓️note-layout-carrier-oracle-findings.md` — never all three blindly: a mutation whose carrier

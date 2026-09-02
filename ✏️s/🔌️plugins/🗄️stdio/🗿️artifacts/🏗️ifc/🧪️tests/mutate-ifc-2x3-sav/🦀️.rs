@@ -19,7 +19,7 @@ const KINDS: &[&str] = &["no-mutation", "set-snapshot", "set-view-definition", "
 //#endregion 🔖️Kinds
 
 //#region 🔖️Input
-const INPUT: &str = "shared://🏗️wellness-center-sama-structural-seed.ifc";
+const INPUT: &str = "shared://🧪️wellness-center-sama-structural-seed/🏗️.ifc";
 
 /// 🧫️ Copies the immutable committed fixture into the work directory and returns the mutable
 /// copy's bytes; the committed fixture itself is never written to.

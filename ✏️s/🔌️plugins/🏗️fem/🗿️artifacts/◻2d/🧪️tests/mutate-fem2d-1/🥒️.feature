@@ -6,7 +6,7 @@ Feature: Apply every typed fem2d model mutation twice — once in Rust, once in 
 
   This case is a CROSS-LANGUAGE DIFFERENTIAL. The reference is `🐍️component.py` in this directory: a
   second implementation of the `s.fem.fem2d` structural model and all twenty-five typed mutations,
-  written in Python from `🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🔣️component.json` (the
+  written in Python from `🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🔣️.json` (the
   nine members, `additionalProperties: false`), from `…/🧬️schema/🧬️mutations/📝️text/📖️component.grammar.semio`
   (the twenty-five verbs) and from the twenty-five committed specification vectors. It imports
   nothing from this repository's Rust.
@@ -21,7 +21,7 @@ Feature: Apply every typed fem2d model mutation twice — once in Rust, once in 
 
   A DEFECT IN THE SPECIFICATION, found while writing the reference and reported rather than worked
   around. Two of the three schema files here do not say what they claim.
-  `…/🧬️schema/🧬️mutations/🔣️component.json` is a verbatim copy of the SNAPSHOT schema with `title`
+  `…/🧬️schema/🧬️mutations/🔣️.json` is a verbatim copy of the SNAPSHOT schema with `title`
   changed to `Fem2dMutation`. And in the snapshot schema itself, every one of `FemNode`,
   `FemElement`, `FemRegion`, `FemMaterial`, `FemSection`, `FemSupport`, `FemLoadCase` and
   `FemCombination` is an EMPTY `{"title": …, "type": "object"}` with no properties at all. The record
@@ -31,7 +31,7 @@ Feature: Apply every typed fem2d model mutation twice — once in Rust, once in 
   The artifact is real. `local://🏗️timber-portal-frame.snapshot.json` was derived ONCE by
   `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️23/END-TO-END-TESTING-REFACTOR/w16-cross-language/🐍️derive-fem2d-frame.py`
   from the artifact's own committed demo model
-  (`🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio`): a twelve-node
+  (`🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/🗣️.dsl.semio`): a twelve-node
   timber-and-steel portal frame with a ridge at 7.6 m, nine beam elements, four supports, three real
   materials with their real moduli and densities, four sections with their real areas and second
   moments, a first-floor slab, a dead case carrying an area pressure, a live case carrying a nodal
@@ -142,9 +142,9 @@ Feature: Apply every typed fem2d model mutation twice — once in Rust, once in 
   @level-exhaustive
   @mode-differential
   Scenario Outline: Replay the committed <id> specification vector through both implementations
-    Given the committed before-model asset://🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/<dir>/🧪️tests/<fixture>/📸️snapshot/⬅️before/🔣️component.json
-    And the committed mutation asset://🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/<dir>/🧪️tests/<fixture>/🦠️mutation/🔣️component.json
-    And the committed after-model asset://🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/<dir>/🧪️tests/<fixture>/📸️snapshot/➡️after/🔣️component.json
+    Given the committed before-model asset://🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/<dir>/🧪️tests/<fixture>/📸️snapshot/⬅️before/🔣️.json
+    And the committed mutation asset://🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/<dir>/🧪️tests/<fixture>/🦠️mutation/🔣️.json
+    And the committed after-model asset://🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/<dir>/🧪️tests/<fixture>/📸️snapshot/➡️after/🔣️.json
     When the committed mutation is applied to the committed before-model
     Then each implementation lands on the committed after-model in role, only the member this verb writes moved, and the two agree
     Examples:
@@ -180,6 +180,6 @@ Feature: Apply every typed fem2d model mutation twice — once in Rust, once in 
   @mode-round-trip
   Scenario: Read the real derived frame in both languages, and hold the committed carrier to its own law in Rust
     Given the real derived model local://🏗️timber-portal-frame.snapshot.json
-    And the artifact's own committed carrier asset://🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio
+    And the artifact's own committed carrier asset://🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/🗣️.dsl.semio
     When each implementation reads the derived model, and the Rust additionally parses the committed carrier, prints it back and parses it again
     Then both languages read the same nine members, and the Rust reproduces the committed carrier byte for byte

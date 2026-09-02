@@ -1,5 +1,5 @@
 @capability-pdf-1-7-ua-mutate
-@oracle-lopdf-pdf-1-7-ua-mutate
+@oracle-lopdf-pdf-1-7-ua-mutate-reader
 @comparison-semantic-pdf-conformance-ua-v1
 @mutations-pdf-1-7-ua
 Feature: Apply every typed ISO 14289-1 (PDF/UA-1) conformance-class mutation to a real document

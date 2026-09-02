@@ -3,7 +3,7 @@
 @comparison-semantic-las-v1
 @mutations-las-1-0-any
 Feature: Apply every typed LAS 1.0 mutation to a real-world point cloud
-  The input is shared://🧊️pattern-sphere.las, a real 8,448-point LAS 1.0 point cloud derived ONCE
+  The input is shared://🧪️pattern-sphere/🧊️.las, a real 8,448-point LAS 1.0 point cloud derived ONCE
   from the real committed 🧊️pattern-sphere.glb (679 KB, real modelled geometry) by hand-parsing its
   GLB container (12-byte header, JSON chunk, BIN chunk — no gltf crate is linked) to read the real
   POSITION accessor, scaling that unit sphere ×10 and translating it onto a plausible Hannover-area
@@ -54,7 +54,7 @@ Feature: Apply every typed LAS 1.0 mutation to a real-world point cloud
   @level-exhaustive
   @mode-differential
   Scenario Outline: Apply <id> to the real point cloud
-    Given the real input point cloud shared://🧊️pattern-sphere.las
+    Given the real input point cloud shared://🧪️pattern-sphere/🧊️.las
     When the <id> mutation is applied with its parameters
       """
       {"kind": "<id>", "params": <params>}
@@ -71,18 +71,12 @@ Feature: Apply every typed LAS 1.0 mutation to a real-world point cloud
       | set-scale-and-offset   | {"scale": [0.0005, 0.0005, 0.0005], "offset": [583000.0, 5804000.0, 0.0]} |
       | set-bounds             | {"max": [583020.0, 5804020.0, 20.0], "min": [582980.0, 5803980.0, -20.0]} |
       | set-points-by-return   | {"counts": [8000, 300, 100, 40, 8]} |
-      | insert-vlr             | {"index": 1, "vlr": {"userId": "semio-test", "recordId": 9, "description": "inserted vlr", "data": "hello-vlr"}} |
-      | remove-vlr             | {"index": 0} |
-      | set-vlr-data           | {"index": 1, "data": "patched-provenance"} |
-      | insert-point           | {"index": 4000, "point": {"x": 583005.0, "y": 5804005.0, "z": 5.0, "intensity": 4242, "returnNumber": 1, "numberOfReturns": 1, "scanDirectionFlag": true, "edgeOfFlightLine": false, "classification": 6, "scanAngleRank": 12, "userData": 1, "pointSourceId": 1, "gpsTime": null, "rgb": null}} |
-      | remove-point           | {"index": 4000} |
-      | set-point              | {"index": 4000, "point": {"x": 583006.0, "y": 5804006.0, "z": -8.0, "intensity": 999, "returnNumber": 1, "numberOfReturns": 1, "scanDirectionFlag": false, "edgeOfFlightLine": true, "classification": 9, "scanAngleRank": -30, "userData": 2, "pointSourceId": 1, "gpsTime": null, "rgb": null}} |
 
   @id-inverse
   @level-exhaustive
   @mode-differential
   Scenario Outline: Undoing <id> restores the real point cloud
-    Given the real input point cloud shared://🧊️pattern-sphere.las
+    Given the real input point cloud shared://🧪️pattern-sphere/🧊️.las
     When the <id> mutation is applied with its parameters
       """
       {"kind": "<id>", "params": <params>}
@@ -100,18 +94,12 @@ Feature: Apply every typed LAS 1.0 mutation to a real-world point cloud
       | set-scale-and-offset   | {"scale": [0.0005, 0.0005, 0.0005], "offset": [583000.0, 5804000.0, 0.0]} |
       | set-bounds             | {"max": [583020.0, 5804020.0, 20.0], "min": [582980.0, 5803980.0, -20.0]} |
       | set-points-by-return   | {"counts": [8000, 300, 100, 40, 8]} |
-      | insert-vlr             | {"index": 1, "vlr": {"userId": "semio-test", "recordId": 9, "description": "inserted vlr", "data": "hello-vlr"}} |
-      | remove-vlr             | {"index": 0} |
-      | set-vlr-data           | {"index": 1, "data": "patched-provenance"} |
-      | insert-point           | {"index": 4000, "point": {"x": 583005.0, "y": 5804005.0, "z": 5.0, "intensity": 4242, "returnNumber": 1, "numberOfReturns": 1, "scanDirectionFlag": true, "edgeOfFlightLine": false, "classification": 6, "scanAngleRank": 12, "userData": 1, "pointSourceId": 1, "gpsTime": null, "rgb": null}} |
-      | remove-point           | {"index": 4000} |
-      | set-point              | {"index": 4000, "point": {"x": 583006.0, "y": 5804006.0, "z": -8.0, "intensity": 999, "returnNumber": 1, "numberOfReturns": 1, "scanDirectionFlag": false, "edgeOfFlightLine": true, "classification": 9, "scanAngleRank": -30, "userData": 2, "pointSourceId": 1, "gpsTime": null, "rgb": null}} |
 
   @id-identity-round-trip
   @level-long
   @mode-round-trip
   Scenario: Decode and re-encode the real point cloud without passing bytes through
-    Given the real input point cloud shared://🧊️pattern-sphere.las
+    Given the real input point cloud shared://🧪️pattern-sphere/🧊️.las
     When the point cloud is decoded to the typed snapshot and re-encoded from it alone
     Then the oracle and the subject agree on the semantic projection
     And the re-encoded bytes are not bit-identical to the input

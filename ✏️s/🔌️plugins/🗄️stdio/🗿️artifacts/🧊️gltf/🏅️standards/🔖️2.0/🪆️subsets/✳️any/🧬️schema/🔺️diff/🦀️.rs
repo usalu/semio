@@ -2697,7 +2697,7 @@ pub(crate) fn dec_collection<T, D>(s: &str, dec_item: impl Fn(&str) -> Result<T,
 /// 🧪️ P2-FG3: real binary value codecs for `GltfDiff`/`GltfMutation` — mirrors the text codecs
 /// above field-for-field, using `dsl::ByteWriter`/`dsl::ByteReader` (the same real LEB128-varint/
 /// length-prefixed framework primitives png's/gif89a's own upgraded binary frames use,
-/// `🎞️gif/🏅️standards/🔖️89a/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️.rs`'s `RealBinaryPrimitives`/
+/// `🎞️gif/🏅️standards/🔖️89a/🪆️subsets/✳️base/🧬️schema/🔺️diff/🦀️.rs`'s `RealBinaryPrimitives`/
 /// `RealBinaryDiffFrame` regions — `dsl`/`store`/`protocol` all alias the same kernel crate root,
 /// reachable with no `use` needed beyond the absolute path). `pub(crate)` so `🧬️mutations/
 /// 🦀️.rs`'s hand-rolled `OpBinary` can reuse every one of these the same way it already

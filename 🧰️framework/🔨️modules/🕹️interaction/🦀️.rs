@@ -16,6 +16,7 @@
 //! unchanged. Handcrafted TS parity lives in `🟦️.ts` (unmoved — TypeScript has no crate
 //! graph); schema leaves live in `🧬️schema/`.
 
+use dsl::{FromValue, ToValue};
 use serde::{Deserialize, Serialize};
 use ui_wgpu::wgpu::LocalizedLabel;
 
@@ -28,8 +29,15 @@ pub use protocol::{DomainHover, DomainSelection, DomainTopology, HierarchyProvid
 /// 🕹️ One interaction domain an app declares (e.g. "graph", "mesh", "ast", "world"): the target
 /// universe/hierarchy shared by both its hover and selection sub-specs. `AppDefinition.interactions`
 /// holds these; `WindowKindDefinition.interactions` references them via `InteractionRef`.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+// 🌱️ `ui_wgpu::LocalizedLabel`/`IconName` gained `ToValue`/`FromValue` (ticket
+// 26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS, see
+// 📓️ui-wgpu-keystone-seven-value-derive-2026-09-02.md) — this type is unblocked. Kept additive
+// (Serialize/Deserialize alongside ToValue/FromValue): `🛂️manifest/🦀️.rs`'s `AppDefinition`
+// embeds `Vec<InteractionDefinition>` and is itself consumed outside this pass by
+// `🛍️products/💻️os` (plugin/renderer modules) and `✏️s/🔌️plugins/**` while still serde-deriving.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct InteractionDefinition {
     pub id: String,
     /// 🗣️ Manifest-level, locale×terminology-checked — see `LocalizedLabel` (follow-up: no owned schema mirror yet).
@@ -51,8 +59,13 @@ impl InteractionDefinition {
 }
 
 /// 🔬️ One selectable/hoverable level of detail within a domain (e.g. mesh's object/face/edge/vertex).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+// 🌱️ Unblocked alongside `InteractionDefinition` above (same `LocalizedLabel`/`IconName` fields,
+// both now `ToValue`/`FromValue`). Kept additive for the same reason: transitively embedded in
+// `AppDefinition`/`InteractionDefinition.granularities`, still consumed with plain serde outside
+// this pass.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct GranularityDefinition {
     pub id: String,
     /// 🗣️ Manifest-level, locale×terminology-checked — see `LocalizedLabel` (follow-up: no owned schema mirror yet).
@@ -62,8 +75,15 @@ pub struct GranularityDefinition {
 
 /// 📇️ A validated reference into an app's `AppDefinition.interactions` registry — mirrors
 /// `ActionRef`/`UtilityRef` exactly.
-#[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
+// 🚧️ BLOCKED (26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS): `Serialize`/
+// `Deserialize` restored here ADDITIVELY, not removed — `🛂️manifest/🦀️.rs`'s
+// `WindowKindDefinition.interactions: Vec<InteractionRef>` is itself still serde-only (blocked on
+// `ui_wgpu::LocalizedLabel`/`IconName`/`SurfaceKind`/`WindowOptions`, none owned by this pass), so
+// this type still needs the serde half regardless of its own `ToValue`/`FromValue`. Revisit once
+// `WindowKindDefinition` converts.
+#[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(transparent)]
+#[value(transparent)]
 pub struct InteractionRef(String);
 
 impl InteractionRef {

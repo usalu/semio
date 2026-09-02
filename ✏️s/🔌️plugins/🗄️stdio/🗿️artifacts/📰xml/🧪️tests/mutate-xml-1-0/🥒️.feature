@@ -1,11 +1,11 @@
 @capability-xml-1-0-mutate
-@oracle-quick-xml-1-0-mutate
+@oracle-quick-xml-1-0-mutate-reader
 @comparison-semantic-xml-v1
-@mutations-xml-1-0-any
+@mutations-xml-1-0-base
 Feature: Apply every typed XML 1.0 mutation to a real 92 KB OOXML document part
   The input is `word/document.xml`, extracted once (unzip, no other edit) from the real committed
   ../../📜️docx/🧫️fixtures/📜️example-readme.docx and copied into this artifact's own fixtures
-  directory as `shared://📰️ooxml-readme-document.xml`. That DOCX was itself derived once from this
+  directory as `shared://🧪️ooxml-readme-document/🏷️.xml`. That DOCX was itself derived once from this
   repository's own real `README.md` (951 lines of real prose, 77 real headings, a real 37-row/
   7-column colour-reference table, real fenced code, real inline bold/italic spans) — see
   ../../📜️docx/🧪️tests/mutate-docx-ecma-376/🥒️.feature for that derivation. The part is
@@ -64,7 +64,7 @@ Feature: Apply every typed XML 1.0 mutation to a real 92 KB OOXML document part
 
   ⚠️ RESOLVED, and worth recording because the resolution was to change the ASSERTION rather than
   the fixture. `identity-round-trip` used to require the re-encoded bytes to differ from the input,
-  and it failed. `shared://📰️ooxml-word-document.xml` is byte-identical to the `word/document.xml`
+  and it failed. `shared://🏷️.xml` is byte-identical to the `word/document.xml`
   part of ../../📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️base/📚️examples/🎬️demo/🖼️assets/📜️example.docx
   — this repository's own minified OOXML writer's output, with no XML declaration and no
   inter-element whitespace — and `quick-xml`'s canonical serialization agrees with it character for
@@ -94,7 +94,7 @@ Feature: Apply every typed XML 1.0 mutation to a real 92 KB OOXML document part
   @level-exhaustive
   @mode-differential
   Scenario Outline: Apply <id> to the real document
-    Given the real input document shared://📰️ooxml-readme-document.xml
+    Given the real input document shared://🧪️ooxml-readme-document/🏷️.xml
     When the <id> mutation is applied with its parameters
       """
       {"kind": "<id>", "params": <params>}
@@ -114,7 +114,7 @@ Feature: Apply every typed XML 1.0 mutation to a real 92 KB OOXML document part
   @level-exhaustive
   @mode-differential
   Scenario Outline: Undoing <id> restores the document
-    Given the real input document shared://📰️ooxml-readme-document.xml
+    Given the real input document shared://🧪️ooxml-readme-document/🏷️.xml
     When the <id> mutation is applied and then undone
       """
       {"kind": "<id>", "params": <params>}
@@ -133,8 +133,8 @@ Feature: Apply every typed XML 1.0 mutation to a real 92 KB OOXML document part
   @level-long
   @mode-round-trip
   Scenario: Decode and re-encode both real documents without passing bytes through
-    Given the real input document shared://📰️ooxml-readme-document.xml
-    And the minified OOXML part this case used to rest on shared://📰️ooxml-word-document.xml
+    Given the real input document shared://🧪️ooxml-readme-document/🏷️.xml
+    And the minified OOXML part this case used to rest on shared://🏷️.xml
     When each document is fully parsed into the subset's own snapshot model and re-encoded from it alone
     Then the oracle and the subject agree on the semantic projection of both
     And a byte-different rendering of each document re-encodes to exactly those bytes

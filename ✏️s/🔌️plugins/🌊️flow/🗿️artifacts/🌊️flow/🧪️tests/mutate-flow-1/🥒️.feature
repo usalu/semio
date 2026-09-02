@@ -15,7 +15,7 @@ Feature: Apply every typed FLOW mutation to the real committed widget graph
   LIBRARY is a different judgement from declining a SECOND IMPLEMENTATION, and only the first was ever
   made here. `mutate-procedural-2d-1` and `mutate-procedural-3d-1` took Python second
   implementations over this same `.dsl.semio` carrier in this wave, so the same is writable for this
-  subset from `🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🔣️component.json`, the rules of
+  subset from `🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🔣️.json`, the rules of
   `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/📓️derivation-rules.md` and the
   committed vectors this feature already replays. What blocks it TODAY is stated in the decision and
   is one edit: this case's vectors are not declared as `asset://` fixtures — the `Examples` table
@@ -27,14 +27,14 @@ Feature: Apply every typed FLOW mutation to the real committed widget graph
   one this decision has always had: no second producer runs beside it, so a mistake shared by the
   handcrafted vector and the production code passes unseen.
 
-  📄️ The base document is real and committed. `asset://🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio` is
+  📄️ The base document is real and committed. `asset://🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/🗣️.dsl.semio` is
   parsed by production's own `parse_dsl` and supplies the schema and the CAMERA every scenario starts
   from — the camera is inline document state on `FlowSnapshot`, not composed content, so it comes from
   the file and from nowhere else. What the committed artifact cannot supply is the graph:
   `FlowSnapshot` keeps its widgets, synapses and layout in a composed `s.stdio.semio.flow` CHILD and the
   `.flow` DSL persists the child HANDLE, not the child, so a case that only parsed it would find an empty
   graph and every id-keyed kind would address nothing. The four widgets, two synapses and two layout
-  entries are therefore committed once in `local://🌊️base-scene.json`, derived from this vocabulary's OWN
+  entries are therefore committed once in `local://🔣️.json`, derived from this vocabulary's OWN
   committed per-kind leaf fixtures under
   `../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/<kind>/🧪️tests/`; that file records which
   widget, synapse, port and layout entry came from which committed payload and which are this case's
@@ -68,8 +68,8 @@ Feature: Apply every typed FLOW mutation to the real committed widget graph
   @level-exhaustive
   @mode-conformance
   Scenario Outline: Apply <id> to the real committed widget graph and observe it move
-    Given the real committed flow artifact asset://🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio
-    And its composed content child seeded from local://🌊️base-scene.json
+    Given the real committed flow artifact asset://🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/🗣️.dsl.semio
+    And its composed content child seeded from local://🔣️.json
     When the <id> mutation is applied through apply_flow_mutation
       """
       {"kind": "<id>", "params": <params>}
@@ -92,8 +92,8 @@ Feature: Apply every typed FLOW mutation to the real committed widget graph
   @level-exhaustive
   @mode-property
   Scenario Outline: Undoing <id> restores the real committed widget graph exactly
-    Given the real committed flow artifact asset://🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio
-    And its composed content child seeded from local://🌊️base-scene.json
+    Given the real committed flow artifact asset://🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/🗣️.dsl.semio
+    And its composed content child seeded from local://🔣️.json
     When the <id> mutation is applied through apply_flow_mutation
       """
       {"kind": "<id>", "params": <params>}
@@ -117,7 +117,7 @@ Feature: Apply every typed FLOW mutation to the real committed widget graph
   @level-long
   @mode-round-trip
   Scenario: Decode and re-encode the real committed flow artifact
-    Given the real committed flow artifact asset://🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio
+    Given the real committed flow artifact asset://🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/🗣️.dsl.semio
     When it is parsed with parse_dsl and printed back with print_dsl
     Then the printed bytes are identical to the committed bytes and reparsing preserves the projection
       """

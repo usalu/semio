@@ -5,7 +5,7 @@
 Feature: Apply every typed form document mutation twice — once in Rust, once in Python — and require the same answer
   This case is a CROSS-LANGUAGE DIFFERENTIAL. The reference is `🐍️component.py` in this directory: a
   second implementation of the `s.forms.form` document and all ten typed mutations, written in
-  Python from `🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🔣️component.json`, from rules 1, 2
+  Python from `🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🔣️.json`, from rules 1, 2
   and 3 of `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/📓️derivation-rules.md`,
   and from the ten committed vectors together with the `scene` array each scenario carries in
   its own doc string. It imports nothing from this repository's Rust.
@@ -60,10 +60,10 @@ Feature: Apply every typed form document mutation twice — once in Rust, once i
   @level-exhaustive
   @mode-differential
   Scenario Outline: Applying <id> to its committed before-snapshot yields the committed after-snapshot
-    Given the committed before-snapshot asset://🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/<vector>/📸️snapshot/⬅️before/🔣️component.json
-    And the committed mutation payload asset://🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/<vector>/🦠️mutation/🔣️component.json
-    And the committed after-snapshot asset://🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/<vector>/📸️snapshot/➡️after/🔣️component.json
-    And the committed outcome vector asset://🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/<vector>/🎯️outcome/🔣️component.json
+    Given the committed before-snapshot asset://🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/<vector>/📸️snapshot/⬅️before/🔣️.json
+    And the committed mutation payload asset://🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/<vector>/🦠️mutation/🔣️.json
+    And the committed after-snapshot asset://🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/<vector>/📸️snapshot/➡️after/🔣️.json
+    And the committed outcome vector asset://🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/<vector>/🎯️outcome/🔣️.json
     When <id> is applied through apply_form_mutation_outcome
       """
       {"kind": "<id>", "vector": "<vector>", "scene": <scene>}
@@ -86,8 +86,8 @@ Feature: Apply every typed form document mutation twice — once in Rust, once i
   @level-exhaustive
   @mode-differential
   Scenario Outline: Undoing <id> restores the committed before-snapshot
-    Given the committed before-snapshot asset://🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/<vector>/📸️snapshot/⬅️before/🔣️component.json
-    And the committed mutation payload asset://🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/<vector>/🦠️mutation/🔣️component.json
+    Given the committed before-snapshot asset://🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/<vector>/📸️snapshot/⬅️before/🔣️.json
+    And the committed mutation payload asset://🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/<vector>/🦠️mutation/🔣️.json
     When <id> is applied and then its own computed inverse is applied through apply_form_mutation_outcome
       """
       {"kind": "<id>", "vector": "<vector>", "scene": <scene>}
@@ -110,6 +110,6 @@ Feature: Apply every typed form document mutation twice — once in Rust, once i
   @level-long
   @mode-round-trip
   Scenario: Parse the real committed example document and print it back without losing or copying anything
-    Given the real committed artifact asset://🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio
+    Given the real committed artifact asset://🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/🗣️.dsl.semio
     When the artifact is parsed to a FormsSnapshot, printed back to `.forms` DSL and parsed again
     Then both parses agree on the same document and the printed text reproduces the committed bytes exactly

@@ -104,7 +104,8 @@
               "capability": "program-1-mutate",
               "qualifyingKind": "third-party-library"
             }
-          ]
+          ],
+          "subset": "relations"
         },
         {
           "id": "connect-trace",
@@ -123,7 +124,8 @@
               "capability": "program-1-mutate",
               "qualifyingKind": "third-party-library"
             }
-          ]
+          ],
+          "subset": "relations"
         },
         {
           "id": "create-access-rule",
@@ -142,7 +144,8 @@
               "capability": "program-1-mutate",
               "qualifyingKind": "third-party-library"
             }
-          ]
+          ],
+          "subset": "operations"
         },
         {
           "id": "create-accessibility-requirement",
@@ -161,7 +164,8 @@
               "capability": "program-1-mutate",
               "qualifyingKind": "third-party-library"
             }
-          ]
+          ],
+          "subset": "compliance"
         },
         {
           "id": "create-activity",
@@ -180,7 +184,8 @@
               "capability": "program-1-mutate",
               "qualifyingKind": "third-party-library"
             }
-          ]
+          ],
+          "subset": "brief"
         },
         {
           "id": "create-analysis-record",
@@ -199,7 +204,8 @@
               "capability": "program-1-mutate",
               "qualifyingKind": "third-party-library"
             }
-          ]
+          ],
+          "subset": "records"
         },
         {
           "id": "create-approval-record",
@@ -218,7 +224,8 @@
               "capability": "program-1-mutate",
               "qualifyingKind": "third-party-library"
             }
-          ]
+          ],
+          "subset": "records"
         },
         {
           "id": "create-assumption",
@@ -237,7 +244,8 @@
               "capability": "program-1-mutate",
               "qualifyingKind": "third-party-library"
             }
-          ]
+          ],
+          "subset": "records"
         },
         {
           "id": "create-audit-event",
@@ -256,7 +264,8 @@
               "capability": "program-1-mutate",
               "qualifyingKind": "third-party-library"
             }
-          ]
+          ],
+          "subset": "engagement"
         },
         {
           "id": "create-benchmark-record",
@@ -275,7 +284,8 @@
               "capability": "program-1-mutate",
               "qualifyingKind": "third-party-library"
             }
-          ]
+          ],
+          "subset": "knowledge"
         },
         {
           "id": "create-change-record",
@@ -294,7 +304,8 @@
               "capability": "program-1-mutate",
               "qualifyingKind": "third-party-library"
             }
-          ]
+          ],
+          "subset": "records"
         },
         {
           "id": "create-collaboration-record",
@@ -313,7 +324,8 @@
               "capability": "program-1-mutate",
               "qualifyingKind": "third-party-library"
             }
-          ]
+          ],
+          "subset": "records"
         },
         {
           "id": "create-communication-requirement",
@@ -332,7 +344,8 @@
               "capability": "program-1-mutate",
               "qualifyingKind": "third-party-library"
             }
-          ]
+          ],
+          "subset": "context"
         },
         {
           "id": "create-compliance-record",
@@ -351,7 +364,8 @@
               "capability": "program-1-mutate",
               "qualifyingKind": "third-party-library"
             }
-          ]
+          ],
+          "subset": "records"
         },
         {
           "id": "create-conflict",
@@ -370,7 +384,8 @@
               "capability": "program-1-mutate",
               "qualifyingKind": "third-party-library"
             }
-          ]
+          ],
+          "subset": "risk"
         },
         {
           "id": "create-constraint-record",
@@ -389,7 +404,8 @@
               "capability": "program-1-mutate",
               "qualifyingKind": "third-party-library"
             }
-          ]
+          ],
+          "subset": "records"
         },
         {
           "id": "create-cost-requirement",
@@ -408,7 +424,8 @@
               "capability": "program-1-mutate",
               "qualifyingKind": "third-party-library"
             }
-          ]
+          ],
+          "subset": "lifecycle"
         },
         {
           "id": "create-decision",
@@ -427,7 +444,8 @@
               "capability": "program-1-mutate",
               "qualifyingKind": "third-party-library"
             }
-          ]
+          ],
+          "subset": "decisions"
         },
         {
           "id": "create-delivery-constraint",
@@ -446,7 +464,8 @@
               "capability": "program-1-mutate",
               "qualifyingKind": "third-party-library"
             }
-          ]
+          ],
+          "subset": "lifecycle"
         },
         {
           "id": "create-document",
@@ -465,7 +484,8 @@
               "capability": "program-1-mutate",
               "qualifyingKind": "third-party-library"
             }
-          ]
+          ],
+          "subset": "records"
         },
         {
           "id": "create-environmental-requirement",
@@ -484,7 +504,8 @@
               "capability": "program-1-mutate",
               "qualifyingKind": "third-party-library"
             }
-          ]
+          ],
+          "subset": "compliance"
         },
         {
           "id": "create-equipment",
@@ -503,7 +524,8 @@
               "capability": "program-1-mutate",
               "qualifyingKind": "third-party-library"
             }
-          ]
+          ],
+          "subset": "resources"
         },
         {
           "id": "create-flexibility-requirement",
@@ -522,7 +544,8 @@
               "capability": "program-1-mutate",
               "qualifyingKind": "third-party-library"
             }
-          ]
+          ],
+          "subset": "lifecycle"
         },
         {
           "id": "create-flow-requirement",
@@ -541,7 +564,8 @@
               "capability": "program-1-mutate",
               "qualifyingKind": "third-party-library"
             }
-          ]
+          ],
+          "subset": "operations"
         },
         {
           "id": "create-function",
@@ -560,7 +584,8 @@
               "capability": "program-1-mutate",
               "qualifyingKind": "third-party-library"
             }
-          ]
+          ],
+          "subset": "brief"
         },
         {
           "id": "create-growth-plan",
@@ -579,7 +604,8 @@
               "capability": "program-1-mutate",
               "qualifyingKind": "third-party-library"
             }
-          ]
+          ],
+          "subset": "lifecycle"
         },
         {
           "id": "create-human-factor-requirement",
@@ -598,7 +624,8 @@
               "capability": "program-1-mutate",
               "qualifyingKind": "third-party-library"
             }
-          ]
+          ],
+          "subset": "compliance"
         },
         {
           "id": "create-information-requirement",
@@ -617,7 +644,8 @@
               "capability": "program-1-mutate",
               "qualifyingKind": "third-party-library"
             }
-          ]
+          ],
+          "subset": "context"
         },
         {
           "id": "create-infrastructure-requirement",
@@ -636,7 +664,8 @@
               "capability": "program-1-mutate",
               "qualifyingKind": "third-party-library"
             }
-          ]
+          ],
+          "subset": "context"
         },
         {
           "id": "create-issue",
@@ -655,7 +684,8 @@
               "capability": "program-1-mutate",
               "qualifyingKind": "third-party-library"
             }
-          ]
+          ],
+          "subset": "engagement"
         },
         {
           "id": "create-knowledge-record",
@@ -674,7 +704,8 @@
               "capability": "program-1-mutate",
               "qualifyingKind": "third-party-library"
             }
-          ]
+          ],
+          "subset": "knowledge"
         },
         {
           "id": "create-meeting-record",
@@ -693,7 +724,8 @@
               "capability": "program-1-mutate",
               "qualifyingKind": "third-party-library"
             }
-          ]
+          ],
+          "subset": "records"
         },
         {
           "id": "create-operational-requirement",
@@ -712,7 +744,8 @@
               "capability": "program-1-mutate",
               "qualifyingKind": "third-party-library"
             }
-          ]
+          ],
+          "subset": "operations"
         },
         {
           "id": "create-option-evaluation",
@@ -731,7 +764,8 @@
               "capability": "program-1-mutate",
               "qualifyingKind": "third-party-library"
             }
-          ]
+          ],
+          "subset": "decisions"
         },
         {
           "id": "create-organizational-requirement",
@@ -750,7 +784,8 @@
               "capability": "program-1-mutate",
               "qualifyingKind": "third-party-library"
             }
-          ]
+          ],
+          "subset": "context"
         },
         {
           "id": "create-performance-criterion",
@@ -769,7 +804,8 @@
               "capability": "program-1-mutate",
               "qualifyingKind": "third-party-library"
             }
-          ]
+          ],
+          "subset": "evaluation"
         },
         {
           "id": "create-priority-record",
@@ -788,7 +824,8 @@
               "capability": "program-1-mutate",
               "qualifyingKind": "third-party-library"
             }
-          ]
+          ],
+          "subset": "risk"
         },
         {
           "id": "create-privacy-requirement",
@@ -807,7 +844,8 @@
               "capability": "program-1-mutate",
               "qualifyingKind": "third-party-library"
             }
-          ]
+          ],
+          "subset": "compliance"
         },
         {
           "id": "create-process",
@@ -826,7 +864,8 @@
               "capability": "program-1-mutate",
               "qualifyingKind": "third-party-library"
             }
-          ]
+          ],
+          "subset": "operations"
         },
         {
           "id": "create-program-element",
@@ -845,7 +884,8 @@
               "capability": "program-1-mutate",
               "qualifyingKind": "third-party-library"
             }
-          ]
+          ],
+          "subset": "brief"
         },
         {
           "id": "create-quality-record",
@@ -864,7 +904,8 @@
               "capability": "program-1-mutate",
               "qualifyingKind": "third-party-library"
             }
-          ]
+          ],
+          "subset": "evaluation"
         },
         {
           "id": "create-quantity-requirement",
@@ -883,7 +924,8 @@
               "capability": "program-1-mutate",
               "qualifyingKind": "third-party-library"
             }
-          ]
+          ],
+          "subset": "brief"
         },
         {
           "id": "create-regulatory-requirement",
@@ -902,7 +944,8 @@
               "capability": "program-1-mutate",
               "qualifyingKind": "third-party-library"
             }
-          ]
+          ],
+          "subset": "compliance"
         },
         {
           "id": "create-relationship",
@@ -921,7 +964,8 @@
               "capability": "program-1-mutate",
               "qualifyingKind": "third-party-library"
             }
-          ]
+          ],
+          "subset": "relations"
         },
         {
           "id": "create-report-record",
@@ -940,7 +984,8 @@
               "capability": "program-1-mutate",
               "qualifyingKind": "third-party-library"
             }
-          ]
+          ],
+          "subset": "records"
         },
         {
           "id": "create-requirement",
@@ -959,7 +1004,8 @@
               "capability": "program-1-mutate",
               "qualifyingKind": "third-party-library"
             }
-          ]
+          ],
+          "subset": "risk"
         },
         {
           "id": "create-resilience-requirement",
@@ -978,7 +1024,8 @@
               "capability": "program-1-mutate",
               "qualifyingKind": "third-party-library"
             }
-          ]
+          ],
+          "subset": "lifecycle"
         },
         {
           "id": "create-resource",
@@ -997,7 +1044,8 @@
               "capability": "program-1-mutate",
               "qualifyingKind": "third-party-library"
             }
-          ]
+          ],
+          "subset": "resources"
         },
         {
           "id": "create-risk",
@@ -1016,7 +1064,8 @@
               "capability": "program-1-mutate",
               "qualifyingKind": "third-party-library"
             }
-          ]
+          ],
+          "subset": "risk"
         },
         {
           "id": "create-safety-requirement",
@@ -1035,7 +1084,8 @@
               "capability": "program-1-mutate",
               "qualifyingKind": "third-party-library"
             }
-          ]
+          ],
+          "subset": "compliance"
         },
         {
           "id": "create-scenario",
@@ -1054,7 +1104,8 @@
               "capability": "program-1-mutate",
               "qualifyingKind": "third-party-library"
             }
-          ]
+          ],
+          "subset": "decisions"
         },
         {
           "id": "create-schedule-requirement",
@@ -1073,7 +1124,8 @@
               "capability": "program-1-mutate",
               "qualifyingKind": "third-party-library"
             }
-          ]
+          ],
+          "subset": "lifecycle"
         },
         {
           "id": "create-search-filter",
@@ -1092,7 +1144,8 @@
               "capability": "program-1-mutate",
               "qualifyingKind": "third-party-library"
             }
-          ]
+          ],
+          "subset": "utility"
         },
         {
           "id": "create-security-requirement",
@@ -1111,7 +1164,8 @@
               "capability": "program-1-mutate",
               "qualifyingKind": "third-party-library"
             }
-          ]
+          ],
+          "subset": "compliance"
         },
         {
           "id": "create-service-requirement",
@@ -1130,7 +1184,8 @@
               "capability": "program-1-mutate",
               "qualifyingKind": "third-party-library"
             }
-          ]
+          ],
+          "subset": "context"
         },
         {
           "id": "create-site-context",
@@ -1149,7 +1204,8 @@
               "capability": "program-1-mutate",
               "qualifyingKind": "third-party-library"
             }
-          ]
+          ],
+          "subset": "context"
         },
         {
           "id": "create-stakeholder",
@@ -1168,7 +1224,8 @@
               "capability": "program-1-mutate",
               "qualifyingKind": "third-party-library"
             }
-          ]
+          ],
+          "subset": "participants"
         },
         {
           "id": "create-status-record",
@@ -1187,7 +1244,8 @@
               "capability": "program-1-mutate",
               "qualifyingKind": "third-party-library"
             }
-          ]
+          ],
+          "subset": "utility"
         },
         {
           "id": "create-storage-requirement",
@@ -1206,7 +1264,8 @@
               "capability": "program-1-mutate",
               "qualifyingKind": "third-party-library"
             }
-          ]
+          ],
+          "subset": "resources"
         },
         {
           "id": "create-survey",
@@ -1225,7 +1284,8 @@
               "capability": "program-1-mutate",
               "qualifyingKind": "third-party-library"
             }
-          ]
+          ],
+          "subset": "engagement"
         },
         {
           "id": "create-sustainability-requirement",
@@ -1244,7 +1304,8 @@
               "capability": "program-1-mutate",
               "qualifyingKind": "third-party-library"
             }
-          ]
+          ],
+          "subset": "lifecycle"
         },
         {
           "id": "create-template-record",
@@ -1263,7 +1324,8 @@
               "capability": "program-1-mutate",
               "qualifyingKind": "third-party-library"
             }
-          ]
+          ],
+          "subset": "knowledge"
         },
         {
           "id": "create-user-profile",
@@ -1282,7 +1344,8 @@
               "capability": "program-1-mutate",
               "qualifyingKind": "third-party-library"
             }
-          ]
+          ],
+          "subset": "participants"
         },
         {
           "id": "create-validation-record",
@@ -1301,7 +1364,8 @@
               "capability": "program-1-mutate",
               "qualifyingKind": "third-party-library"
             }
-          ]
+          ],
+          "subset": "decisions"
         },
         {
           "id": "create-wayfinding-requirement",
@@ -1320,7 +1384,8 @@
               "capability": "program-1-mutate",
               "qualifyingKind": "third-party-library"
             }
-          ]
+          ],
+          "subset": "context"
         },
         {
           "id": "create-workshop",
@@ -1339,7 +1404,8 @@
               "capability": "program-1-mutate",
               "qualifyingKind": "third-party-library"
             }
-          ]
+          ],
+          "subset": "engagement"
         },
         {
           "id": "delete-access-rule",
@@ -1359,7 +1425,8 @@
               "capability": "program-1-mutate",
               "qualifyingKind": "third-party-library"
             }
-          ]
+          ],
+          "subset": "operations"
         },
         {
           "id": "delete-accessibility-requirement",
@@ -1379,7 +1446,8 @@
               "capability": "program-1-mutate",
               "qualifyingKind": "third-party-library"
             }
-          ]
+          ],
+          "subset": "compliance"
         },
         {
           "id": "delete-activity",
@@ -1399,7 +1467,8 @@
               "capability": "program-1-mutate",
               "qualifyingKind": "third-party-library"
             }
-          ]
+          ],
+          "subset": "brief"
         },
         {
           "id": "delete-analysis-record",
@@ -1419,7 +1488,8 @@
               "capability": "program-1-mutate",
               "qualifyingKind": "third-party-library"
             }
-          ]
+          ],
+          "subset": "records"
         },
         {
           "id": "delete-approval-record",
@@ -1439,7 +1509,8 @@
               "capability": "program-1-mutate",
               "qualifyingKind": "third-party-library"
             }
-          ]
+          ],
+          "subset": "records"
         },
         {
           "id": "delete-assumption",
@@ -1459,7 +1530,8 @@
               "capability": "program-1-mutate",
               "qualifyingKind": "third-party-library"
             }
-          ]
+          ],
+          "subset": "records"
         },
         {
           "id": "delete-audit-event",
@@ -1479,7 +1551,8 @@
               "capability": "program-1-mutate",
               "qualifyingKind": "third-party-library"
             }
-          ]
+          ],
+          "subset": "engagement"
         },
         {
           "id": "delete-benchmark-record",
@@ -1499,7 +1572,8 @@
               "capability": "program-1-mutate",
               "qualifyingKind": "third-party-library"
             }
-          ]
+          ],
+          "subset": "knowledge"
         },
         {
           "id": "delete-change-record",
@@ -1519,7 +1593,8 @@
               "capability": "program-1-mutate",
               "qualifyingKind": "third-party-library"
             }
-          ]
+          ],
+          "subset": "records"
         },
         {
           "id": "delete-collaboration-record",
@@ -1539,7 +1614,8 @@
               "capability": "program-1-mutate",
               "qualifyingKind": "third-party-library"
             }
-          ]
+          ],
+          "subset": "records"
         },
         {
           "id": "delete-communication-requirement",
@@ -1559,7 +1635,8 @@
               "capability": "program-1-mutate",
               "qualifyingKind": "third-party-library"
             }
-          ]
+          ],
+          "subset": "context"
         },
         {
           "id": "delete-compliance-record",
@@ -1579,7 +1656,8 @@
               "capability": "program-1-mutate",
               "qualifyingKind": "third-party-library"
             }
-          ]
+          ],
+          "subset": "records"
         },
         {
           "id": "delete-conflict",
@@ -1599,7 +1677,8 @@
               "capability": "program-1-mutate",
               "qualifyingKind": "third-party-library"
             }
-          ]
+          ],
+          "subset": "risk"
         },
         {
           "id": "delete-constraint-record",
@@ -1619,7 +1698,8 @@
               "capability": "program-1-mutate",
               "qualifyingKind": "third-party-library"
             }
-          ]
+          ],
+          "subset": "records"
         },
         {
           "id": "delete-cost-requirement",
@@ -1639,7 +1719,8 @@
               "capability": "program-1-mutate",
               "qualifyingKind": "third-party-library"
             }
-          ]
+          ],
+          "subset": "lifecycle"
         },
         {
           "id": "delete-decision",
@@ -1659,7 +1740,8 @@
               "capability": "program-1-mutate",
               "qualifyingKind": "third-party-library"
             }
-          ]
+          ],
+          "subset": "decisions"
         },
         {
           "id": "delete-delivery-constraint",
@@ -1679,7 +1761,8 @@
               "capability": "program-1-mutate",
               "qualifyingKind": "third-party-library"
             }
-          ]
+          ],
+          "subset": "lifecycle"
         },
         {
           "id": "delete-document",
@@ -1699,7 +1782,8 @@
               "capability": "program-1-mutate",
               "qualifyingKind": "third-party-library"
             }
-          ]
+          ],
+          "subset": "records"
         },
         {
           "id": "delete-environmental-requirement",
@@ -1719,7 +1803,8 @@
               "capability": "program-1-mutate",
               "qualifyingKind": "third-party-library"
             }
-          ]
+          ],
+          "subset": "compliance"
         },
         {
           "id": "delete-equipment",
@@ -1739,7 +1824,8 @@
               "capability": "program-1-mutate",
               "qualifyingKind": "third-party-library"
             }
-          ]
+          ],
+          "subset": "resources"
         },
         {
           "id": "delete-flexibility-requirement",
@@ -1759,7 +1845,8 @@
               "capability": "program-1-mutate",
               "qualifyingKind": "third-party-library"
             }
-          ]
+          ],
+          "subset": "lifecycle"
         },
         {
           "id": "delete-flow-requirement",
@@ -1779,7 +1866,8 @@
               "capability": "program-1-mutate",
               "qualifyingKind": "third-party-library"
             }
-          ]
+          ],
+          "subset": "operations"
         },
         {
           "id": "delete-function",
@@ -1799,7 +1887,8 @@
               "capability": "program-1-mutate",
               "qualifyingKind": "third-party-library"
             }
-          ]
+          ],
+          "subset": "brief"
         },
         {
           "id": "delete-growth-plan",
@@ -1819,7 +1908,8 @@
               "capability": "program-1-mutate",
               "qualifyingKind": "third-party-library"
             }
-          ]
+          ],
+          "subset": "lifecycle"
         },
         {
           "id": "delete-human-factor-requirement",
@@ -1839,7 +1929,8 @@
               "capability": "program-1-mutate",
               "qualifyingKind": "third-party-library"
             }
-          ]
+          ],
+          "subset": "compliance"
         },
         {
           "id": "delete-information-requirement",
@@ -1859,7 +1950,8 @@
               "capability": "program-1-mutate",
               "qualifyingKind": "third-party-library"
             }
-          ]
+          ],
+          "subset": "context"
         },
         {
           "id": "delete-infrastructure-requirement",
@@ -1879,7 +1971,8 @@
               "capability": "program-1-mutate",
               "qualifyingKind": "third-party-library"
             }
-          ]
+          ],
+          "subset": "context"
         },
         {
           "id": "delete-issue",
@@ -1899,7 +1992,8 @@
               "capability": "program-1-mutate",
               "qualifyingKind": "third-party-library"
             }
-          ]
+          ],
+          "subset": "engagement"
         },
         {
           "id": "delete-knowledge-record",
@@ -1919,7 +2013,8 @@
               "capability": "program-1-mutate",
               "qualifyingKind": "third-party-library"
             }
-          ]
+          ],
+          "subset": "knowledge"
         },
         {
           "id": "delete-meeting-record",
@@ -1939,7 +2034,8 @@
               "capability": "program-1-mutate",
               "qualifyingKind": "third-party-library"
             }
-          ]
+          ],
+          "subset": "records"
         },
         {
           "id": "delete-operational-requirement",
@@ -1959,7 +2055,8 @@
               "capability": "program-1-mutate",
               "qualifyingKind": "third-party-library"
             }
-          ]
+          ],
+          "subset": "operations"
         },
         {
           "id": "delete-option-evaluation",
@@ -1979,7 +2076,8 @@
               "capability": "program-1-mutate",
               "qualifyingKind": "third-party-library"
             }
-          ]
+          ],
+          "subset": "decisions"
         },
         {
           "id": "delete-organizational-requirement",
@@ -1999,7 +2097,8 @@
               "capability": "program-1-mutate",
               "qualifyingKind": "third-party-library"
             }
-          ]
+          ],
+          "subset": "context"
         },
         {
           "id": "delete-performance-criterion",
@@ -2019,7 +2118,8 @@
               "capability": "program-1-mutate",
               "qualifyingKind": "third-party-library"
             }
-          ]
+          ],
+          "subset": "evaluation"
         },
         {
           "id": "delete-priority-record",
@@ -2039,7 +2139,8 @@
               "capability": "program-1-mutate",
               "qualifyingKind": "third-party-library"
             }
-          ]
+          ],
+          "subset": "risk"
         },
         {
           "id": "delete-privacy-requirement",
@@ -2059,7 +2160,8 @@
               "capability": "program-1-mutate",
               "qualifyingKind": "third-party-library"
             }
-          ]
+          ],
+          "subset": "compliance"
         },
         {
           "id": "delete-process",
@@ -2079,7 +2181,8 @@
               "capability": "program-1-mutate",
               "qualifyingKind": "third-party-library"
             }
-          ]
+          ],
+          "subset": "operations"
         },
         {
           "id": "delete-program-element",
@@ -2099,7 +2202,8 @@
               "capability": "program-1-mutate",
               "qualifyingKind": "third-party-library"
             }
-          ]
+          ],
+          "subset": "brief"
         },
         {
           "id": "delete-quality-record",
@@ -2119,7 +2223,8 @@
               "capability": "program-1-mutate",
               "qualifyingKind": "third-party-library"
             }
-          ]
+          ],
+          "subset": "evaluation"
         },
         {
           "id": "delete-quantity-requirement",
@@ -2139,7 +2244,8 @@
               "capability": "program-1-mutate",
               "qualifyingKind": "third-party-library"
             }
-          ]
+          ],
+          "subset": "brief"
         },
         {
           "id": "delete-regulatory-requirement",
@@ -2159,7 +2265,8 @@
               "capability": "program-1-mutate",
               "qualifyingKind": "third-party-library"
             }
-          ]
+          ],
+          "subset": "compliance"
         },
         {
           "id": "delete-relationship",
@@ -2179,7 +2286,8 @@
               "capability": "program-1-mutate",
               "qualifyingKind": "third-party-library"
             }
-          ]
+          ],
+          "subset": "relations"
         },
         {
           "id": "delete-report-record",
@@ -2199,7 +2307,8 @@
               "capability": "program-1-mutate",
               "qualifyingKind": "third-party-library"
             }
-          ]
+          ],
+          "subset": "records"
         },
         {
           "id": "delete-requirement",
@@ -2219,7 +2328,8 @@
               "capability": "program-1-mutate",
               "qualifyingKind": "third-party-library"
             }
-          ]
+          ],
+          "subset": "risk"
         },
         {
           "id": "delete-resilience-requirement",
@@ -2239,7 +2349,8 @@
               "capability": "program-1-mutate",
               "qualifyingKind": "third-party-library"
             }
-          ]
+          ],
+          "subset": "lifecycle"
         },
         {
           "id": "delete-resource",
@@ -2259,7 +2370,8 @@
               "capability": "program-1-mutate",
               "qualifyingKind": "third-party-library"
             }
-          ]
+          ],
+          "subset": "resources"
         },
         {
           "id": "delete-risk",
@@ -2279,7 +2391,8 @@
               "capability": "program-1-mutate",
               "qualifyingKind": "third-party-library"
             }
-          ]
+          ],
+          "subset": "risk"
         },
         {
           "id": "delete-safety-requirement",
@@ -2299,7 +2412,8 @@
               "capability": "program-1-mutate",
               "qualifyingKind": "third-party-library"
             }
-          ]
+          ],
+          "subset": "compliance"
         },
         {
           "id": "delete-scenario",
@@ -2319,7 +2433,8 @@
               "capability": "program-1-mutate",
               "qualifyingKind": "third-party-library"
             }
-          ]
+          ],
+          "subset": "decisions"
         },
         {
           "id": "delete-schedule-requirement",
@@ -2339,7 +2454,8 @@
               "capability": "program-1-mutate",
               "qualifyingKind": "third-party-library"
             }
-          ]
+          ],
+          "subset": "lifecycle"
         },
         {
           "id": "delete-search-filter",
@@ -2359,7 +2475,8 @@
               "capability": "program-1-mutate",
               "qualifyingKind": "third-party-library"
             }
-          ]
+          ],
+          "subset": "utility"
         },
         {
           "id": "delete-security-requirement",
@@ -2379,7 +2496,8 @@
               "capability": "program-1-mutate",
               "qualifyingKind": "third-party-library"
             }
-          ]
+          ],
+          "subset": "compliance"
         },
         {
           "id": "delete-service-requirement",
@@ -2399,7 +2517,8 @@
               "capability": "program-1-mutate",
               "qualifyingKind": "third-party-library"
             }
-          ]
+          ],
+          "subset": "context"
         },
         {
           "id": "delete-site-context",
@@ -2419,7 +2538,8 @@
               "capability": "program-1-mutate",
               "qualifyingKind": "third-party-library"
             }
-          ]
+          ],
+          "subset": "context"
         },
         {
           "id": "delete-stakeholder",
@@ -2439,7 +2559,8 @@
               "capability": "program-1-mutate",
               "qualifyingKind": "third-party-library"
             }
-          ]
+          ],
+          "subset": "participants"
         },
         {
           "id": "delete-status-record",
@@ -2459,7 +2580,8 @@
               "capability": "program-1-mutate",
               "qualifyingKind": "third-party-library"
             }
-          ]
+          ],
+          "subset": "utility"
         },
         {
           "id": "delete-storage-requirement",
@@ -2479,7 +2601,8 @@
               "capability": "program-1-mutate",
               "qualifyingKind": "third-party-library"
             }
-          ]
+          ],
+          "subset": "resources"
         },
         {
           "id": "delete-survey",
@@ -2499,7 +2622,8 @@
               "capability": "program-1-mutate",
               "qualifyingKind": "third-party-library"
             }
-          ]
+          ],
+          "subset": "engagement"
         },
         {
           "id": "delete-sustainability-requirement",
@@ -2519,7 +2643,8 @@
               "capability": "program-1-mutate",
               "qualifyingKind": "third-party-library"
             }
-          ]
+          ],
+          "subset": "lifecycle"
         },
         {
           "id": "delete-template-record",
@@ -2539,7 +2664,8 @@
               "capability": "program-1-mutate",
               "qualifyingKind": "third-party-library"
             }
-          ]
+          ],
+          "subset": "knowledge"
         },
         {
           "id": "delete-user-profile",
@@ -2559,7 +2685,8 @@
               "capability": "program-1-mutate",
               "qualifyingKind": "third-party-library"
             }
-          ]
+          ],
+          "subset": "participants"
         },
         {
           "id": "delete-validation-record",
@@ -2579,7 +2706,8 @@
               "capability": "program-1-mutate",
               "qualifyingKind": "third-party-library"
             }
-          ]
+          ],
+          "subset": "decisions"
         },
         {
           "id": "delete-wayfinding-requirement",
@@ -2599,7 +2727,8 @@
               "capability": "program-1-mutate",
               "qualifyingKind": "third-party-library"
             }
-          ]
+          ],
+          "subset": "context"
         },
         {
           "id": "delete-workshop",
@@ -2619,7 +2748,8 @@
               "capability": "program-1-mutate",
               "qualifyingKind": "third-party-library"
             }
-          ]
+          ],
+          "subset": "engagement"
         },
         {
           "id": "disconnect-adjacency",
@@ -2639,7 +2769,8 @@
               "capability": "program-1-mutate",
               "qualifyingKind": "third-party-library"
             }
-          ]
+          ],
+          "subset": "relations"
         },
         {
           "id": "disconnect-trace",
@@ -2659,7 +2790,8 @@
               "capability": "program-1-mutate",
               "qualifyingKind": "third-party-library"
             }
-          ]
+          ],
+          "subset": "relations"
         },
         {
           "id": "rename-access-rule",
@@ -2679,7 +2811,8 @@
               "capability": "program-1-mutate",
               "qualifyingKind": "third-party-library"
             }
-          ]
+          ],
+          "subset": "operations"
         },
         {
           "id": "rename-accessibility-requirement",
@@ -2699,7 +2832,8 @@
               "capability": "program-1-mutate",
               "qualifyingKind": "third-party-library"
             }
-          ]
+          ],
+          "subset": "compliance"
         },
         {
           "id": "rename-activity",
@@ -2719,7 +2853,8 @@
               "capability": "program-1-mutate",
               "qualifyingKind": "third-party-library"
             }
-          ]
+          ],
+          "subset": "brief"
         },
         {
           "id": "rename-analysis-record",
@@ -2739,7 +2874,8 @@
               "capability": "program-1-mutate",
               "qualifyingKind": "third-party-library"
             }
-          ]
+          ],
+          "subset": "records"
         },
         {
           "id": "rename-approval-record",
@@ -2759,7 +2895,8 @@
               "capability": "program-1-mutate",
               "qualifyingKind": "third-party-library"
             }
-          ]
+          ],
+          "subset": "records"
         },
         {
           "id": "rename-assumption",
@@ -2779,7 +2916,8 @@
               "capability": "program-1-mutate",
               "qualifyingKind": "third-party-library"
             }
-          ]
+          ],
+          "subset": "records"
         },
         {
           "id": "rename-audit-event",
@@ -2799,7 +2937,8 @@
               "capability": "program-1-mutate",
               "qualifyingKind": "third-party-library"
             }
-          ]
+          ],
+          "subset": "engagement"
         },
         {
           "id": "rename-benchmark-record",
@@ -2819,7 +2958,8 @@
               "capability": "program-1-mutate",
               "qualifyingKind": "third-party-library"
             }
-          ]
+          ],
+          "subset": "knowledge"
         },
         {
           "id": "rename-change-record",
@@ -2839,7 +2979,8 @@
               "capability": "program-1-mutate",
               "qualifyingKind": "third-party-library"
             }
-          ]
+          ],
+          "subset": "records"
         },
         {
           "id": "rename-collaboration-record",
@@ -2859,7 +3000,8 @@
               "capability": "program-1-mutate",
               "qualifyingKind": "third-party-library"
             }
-          ]
+          ],
+          "subset": "records"
         },
         {
           "id": "rename-communication-requirement",
@@ -2879,7 +3021,8 @@
               "capability": "program-1-mutate",
               "qualifyingKind": "third-party-library"
             }
-          ]
+          ],
+          "subset": "context"
         },
         {
           "id": "rename-compliance-record",
@@ -2899,7 +3042,8 @@
               "capability": "program-1-mutate",
               "qualifyingKind": "third-party-library"
             }
-          ]
+          ],
+          "subset": "records"
         },
         {
           "id": "rename-conflict",
@@ -2919,7 +3063,8 @@
               "capability": "program-1-mutate",
               "qualifyingKind": "third-party-library"
             }
-          ]
+          ],
+          "subset": "risk"
         },
         {
           "id": "rename-constraint-record",
@@ -2939,7 +3084,8 @@
               "capability": "program-1-mutate",
               "qualifyingKind": "third-party-library"
             }
-          ]
+          ],
+          "subset": "records"
         },
         {
           "id": "rename-cost-requirement",
@@ -2959,7 +3105,8 @@
               "capability": "program-1-mutate",
               "qualifyingKind": "third-party-library"
             }
-          ]
+          ],
+          "subset": "lifecycle"
         },
         {
           "id": "rename-decision",
@@ -2979,7 +3126,8 @@
               "capability": "program-1-mutate",
               "qualifyingKind": "third-party-library"
             }
-          ]
+          ],
+          "subset": "decisions"
         },
         {
           "id": "rename-delivery-constraint",
@@ -2999,7 +3147,8 @@
               "capability": "program-1-mutate",
               "qualifyingKind": "third-party-library"
             }
-          ]
+          ],
+          "subset": "lifecycle"
         },
         {
           "id": "rename-document",
@@ -3019,7 +3168,8 @@
               "capability": "program-1-mutate",
               "qualifyingKind": "third-party-library"
             }
-          ]
+          ],
+          "subset": "records"
         },
         {
           "id": "rename-environmental-requirement",
@@ -3039,7 +3189,8 @@
               "capability": "program-1-mutate",
               "qualifyingKind": "third-party-library"
             }
-          ]
+          ],
+          "subset": "compliance"
         },
         {
           "id": "rename-equipment",
@@ -3059,7 +3210,8 @@
               "capability": "program-1-mutate",
               "qualifyingKind": "third-party-library"
             }
-          ]
+          ],
+          "subset": "resources"
         },
         {
           "id": "rename-flexibility-requirement",
@@ -3079,7 +3231,8 @@
               "capability": "program-1-mutate",
               "qualifyingKind": "third-party-library"
             }
-          ]
+          ],
+          "subset": "lifecycle"
         },
         {
           "id": "rename-flow-requirement",
@@ -3099,7 +3252,8 @@
               "capability": "program-1-mutate",
               "qualifyingKind": "third-party-library"
             }
-          ]
+          ],
+          "subset": "operations"
         },
         {
           "id": "rename-function",
@@ -3119,7 +3273,8 @@
               "capability": "program-1-mutate",
               "qualifyingKind": "third-party-library"
             }
-          ]
+          ],
+          "subset": "brief"
         },
         {
           "id": "rename-governance",
@@ -3138,7 +3293,8 @@
               "capability": "program-1-mutate",
               "qualifyingKind": "third-party-library"
             }
-          ]
+          ],
+          "subset": "governance"
         },
         {
           "id": "rename-growth-plan",
@@ -3158,7 +3314,8 @@
               "capability": "program-1-mutate",
               "qualifyingKind": "third-party-library"
             }
-          ]
+          ],
+          "subset": "lifecycle"
         },
         {
           "id": "rename-human-factor-requirement",
@@ -3178,7 +3335,8 @@
               "capability": "program-1-mutate",
               "qualifyingKind": "third-party-library"
             }
-          ]
+          ],
+          "subset": "compliance"
         },
         {
           "id": "rename-information-requirement",
@@ -3198,7 +3356,8 @@
               "capability": "program-1-mutate",
               "qualifyingKind": "third-party-library"
             }
-          ]
+          ],
+          "subset": "context"
         },
         {
           "id": "rename-infrastructure-requirement",
@@ -3218,7 +3377,8 @@
               "capability": "program-1-mutate",
               "qualifyingKind": "third-party-library"
             }
-          ]
+          ],
+          "subset": "context"
         },
         {
           "id": "rename-issue",
@@ -3238,7 +3398,8 @@
               "capability": "program-1-mutate",
               "qualifyingKind": "third-party-library"
             }
-          ]
+          ],
+          "subset": "engagement"
         },
         {
           "id": "rename-knowledge-record",
@@ -3258,7 +3419,8 @@
               "capability": "program-1-mutate",
               "qualifyingKind": "third-party-library"
             }
-          ]
+          ],
+          "subset": "knowledge"
         },
         {
           "id": "rename-meeting-record",
@@ -3278,7 +3440,8 @@
               "capability": "program-1-mutate",
               "qualifyingKind": "third-party-library"
             }
-          ]
+          ],
+          "subset": "records"
         },
         {
           "id": "rename-meta",
@@ -3297,7 +3460,8 @@
               "capability": "program-1-mutate",
               "qualifyingKind": "third-party-library"
             }
-          ]
+          ],
+          "subset": "identity"
         },
         {
           "id": "rename-operational-requirement",
@@ -3317,7 +3481,8 @@
               "capability": "program-1-mutate",
               "qualifyingKind": "third-party-library"
             }
-          ]
+          ],
+          "subset": "operations"
         },
         {
           "id": "rename-option-evaluation",
@@ -3337,7 +3502,8 @@
               "capability": "program-1-mutate",
               "qualifyingKind": "third-party-library"
             }
-          ]
+          ],
+          "subset": "decisions"
         },
         {
           "id": "rename-organizational-requirement",
@@ -3357,7 +3523,8 @@
               "capability": "program-1-mutate",
               "qualifyingKind": "third-party-library"
             }
-          ]
+          ],
+          "subset": "context"
         },
         {
           "id": "rename-performance-criterion",
@@ -3377,7 +3544,8 @@
               "capability": "program-1-mutate",
               "qualifyingKind": "third-party-library"
             }
-          ]
+          ],
+          "subset": "evaluation"
         },
         {
           "id": "rename-priority-record",
@@ -3397,7 +3565,8 @@
               "capability": "program-1-mutate",
               "qualifyingKind": "third-party-library"
             }
-          ]
+          ],
+          "subset": "risk"
         },
         {
           "id": "rename-privacy-requirement",
@@ -3417,7 +3586,8 @@
               "capability": "program-1-mutate",
               "qualifyingKind": "third-party-library"
             }
-          ]
+          ],
+          "subset": "compliance"
         },
         {
           "id": "rename-process",
@@ -3437,7 +3607,8 @@
               "capability": "program-1-mutate",
               "qualifyingKind": "third-party-library"
             }
-          ]
+          ],
+          "subset": "operations"
         },
         {
           "id": "rename-program-element",
@@ -3457,7 +3628,8 @@
               "capability": "program-1-mutate",
               "qualifyingKind": "third-party-library"
             }
-          ]
+          ],
+          "subset": "brief"
         },
         {
           "id": "rename-project",
@@ -3476,7 +3648,8 @@
               "capability": "program-1-mutate",
               "qualifyingKind": "third-party-library"
             }
-          ]
+          ],
+          "subset": "identity"
         },
         {
           "id": "rename-quality-record",
@@ -3496,7 +3669,8 @@
               "capability": "program-1-mutate",
               "qualifyingKind": "third-party-library"
             }
-          ]
+          ],
+          "subset": "evaluation"
         },
         {
           "id": "rename-quantity-requirement",
@@ -3516,7 +3690,8 @@
               "capability": "program-1-mutate",
               "qualifyingKind": "third-party-library"
             }
-          ]
+          ],
+          "subset": "brief"
         },
         {
           "id": "rename-regulatory-requirement",
@@ -3536,7 +3711,8 @@
               "capability": "program-1-mutate",
               "qualifyingKind": "third-party-library"
             }
-          ]
+          ],
+          "subset": "compliance"
         },
         {
           "id": "rename-relationship",
@@ -3556,7 +3732,8 @@
               "capability": "program-1-mutate",
               "qualifyingKind": "third-party-library"
             }
-          ]
+          ],
+          "subset": "relations"
         },
         {
           "id": "rename-report-record",
@@ -3576,7 +3753,8 @@
               "capability": "program-1-mutate",
               "qualifyingKind": "third-party-library"
             }
-          ]
+          ],
+          "subset": "records"
         },
         {
           "id": "rename-requirement",
@@ -3596,7 +3774,8 @@
               "capability": "program-1-mutate",
               "qualifyingKind": "third-party-library"
             }
-          ]
+          ],
+          "subset": "risk"
         },
         {
           "id": "rename-resilience-requirement",
@@ -3616,7 +3795,8 @@
               "capability": "program-1-mutate",
               "qualifyingKind": "third-party-library"
             }
-          ]
+          ],
+          "subset": "lifecycle"
         },
         {
           "id": "rename-resource",
@@ -3636,7 +3816,8 @@
               "capability": "program-1-mutate",
               "qualifyingKind": "third-party-library"
             }
-          ]
+          ],
+          "subset": "resources"
         },
         {
           "id": "rename-risk",
@@ -3656,7 +3837,8 @@
               "capability": "program-1-mutate",
               "qualifyingKind": "third-party-library"
             }
-          ]
+          ],
+          "subset": "risk"
         },
         {
           "id": "rename-safety-requirement",
@@ -3676,7 +3858,8 @@
               "capability": "program-1-mutate",
               "qualifyingKind": "third-party-library"
             }
-          ]
+          ],
+          "subset": "compliance"
         },
         {
           "id": "rename-scenario",
@@ -3696,7 +3879,8 @@
               "capability": "program-1-mutate",
               "qualifyingKind": "third-party-library"
             }
-          ]
+          ],
+          "subset": "decisions"
         },
         {
           "id": "rename-schedule-requirement",
@@ -3716,7 +3900,8 @@
               "capability": "program-1-mutate",
               "qualifyingKind": "third-party-library"
             }
-          ]
+          ],
+          "subset": "lifecycle"
         },
         {
           "id": "rename-search-filter",
@@ -3736,7 +3921,8 @@
               "capability": "program-1-mutate",
               "qualifyingKind": "third-party-library"
             }
-          ]
+          ],
+          "subset": "utility"
         },
         {
           "id": "rename-security-requirement",
@@ -3756,7 +3942,8 @@
               "capability": "program-1-mutate",
               "qualifyingKind": "third-party-library"
             }
-          ]
+          ],
+          "subset": "compliance"
         },
         {
           "id": "rename-service-requirement",
@@ -3776,7 +3963,8 @@
               "capability": "program-1-mutate",
               "qualifyingKind": "third-party-library"
             }
-          ]
+          ],
+          "subset": "context"
         },
         {
           "id": "rename-site-context",
@@ -3796,7 +3984,8 @@
               "capability": "program-1-mutate",
               "qualifyingKind": "third-party-library"
             }
-          ]
+          ],
+          "subset": "context"
         },
         {
           "id": "rename-stakeholder",
@@ -3816,7 +4005,8 @@
               "capability": "program-1-mutate",
               "qualifyingKind": "third-party-library"
             }
-          ]
+          ],
+          "subset": "participants"
         },
         {
           "id": "rename-status-record",
@@ -3836,7 +4026,8 @@
               "capability": "program-1-mutate",
               "qualifyingKind": "third-party-library"
             }
-          ]
+          ],
+          "subset": "utility"
         },
         {
           "id": "rename-storage-requirement",
@@ -3856,7 +4047,8 @@
               "capability": "program-1-mutate",
               "qualifyingKind": "third-party-library"
             }
-          ]
+          ],
+          "subset": "resources"
         },
         {
           "id": "rename-survey",
@@ -3876,7 +4068,8 @@
               "capability": "program-1-mutate",
               "qualifyingKind": "third-party-library"
             }
-          ]
+          ],
+          "subset": "engagement"
         },
         {
           "id": "rename-sustainability-requirement",
@@ -3896,7 +4089,8 @@
               "capability": "program-1-mutate",
               "qualifyingKind": "third-party-library"
             }
-          ]
+          ],
+          "subset": "lifecycle"
         },
         {
           "id": "rename-template-record",
@@ -3916,7 +4110,8 @@
               "capability": "program-1-mutate",
               "qualifyingKind": "third-party-library"
             }
-          ]
+          ],
+          "subset": "knowledge"
         },
         {
           "id": "rename-user-profile",
@@ -3936,7 +4131,8 @@
               "capability": "program-1-mutate",
               "qualifyingKind": "third-party-library"
             }
-          ]
+          ],
+          "subset": "participants"
         },
         {
           "id": "rename-validation-record",
@@ -3956,7 +4152,8 @@
               "capability": "program-1-mutate",
               "qualifyingKind": "third-party-library"
             }
-          ]
+          ],
+          "subset": "decisions"
         },
         {
           "id": "rename-wayfinding-requirement",
@@ -3976,7 +4173,8 @@
               "capability": "program-1-mutate",
               "qualifyingKind": "third-party-library"
             }
-          ]
+          ],
+          "subset": "context"
         },
         {
           "id": "rename-workshop",
@@ -3996,7 +4194,8 @@
               "capability": "program-1-mutate",
               "qualifyingKind": "third-party-library"
             }
-          ]
+          ],
+          "subset": "engagement"
         },
         {
           "id": "replace-access-rule",
@@ -4016,7 +4215,8 @@
               "capability": "program-1-mutate",
               "qualifyingKind": "third-party-library"
             }
-          ]
+          ],
+          "subset": "operations"
         },
         {
           "id": "replace-accessibility-requirement",
@@ -4036,7 +4236,8 @@
               "capability": "program-1-mutate",
               "qualifyingKind": "third-party-library"
             }
-          ]
+          ],
+          "subset": "compliance"
         },
         {
           "id": "replace-activity",
@@ -4056,7 +4257,8 @@
               "capability": "program-1-mutate",
               "qualifyingKind": "third-party-library"
             }
-          ]
+          ],
+          "subset": "brief"
         },
         {
           "id": "replace-analysis-record",
@@ -4076,7 +4278,8 @@
               "capability": "program-1-mutate",
               "qualifyingKind": "third-party-library"
             }
-          ]
+          ],
+          "subset": "records"
         },
         {
           "id": "replace-approval-record",
@@ -4096,7 +4299,8 @@
               "capability": "program-1-mutate",
               "qualifyingKind": "third-party-library"
             }
-          ]
+          ],
+          "subset": "records"
         },
         {
           "id": "replace-assumption",
@@ -4116,7 +4320,8 @@
               "capability": "program-1-mutate",
               "qualifyingKind": "third-party-library"
             }
-          ]
+          ],
+          "subset": "records"
         },
         {
           "id": "replace-audit-event",
@@ -4136,7 +4341,8 @@
               "capability": "program-1-mutate",
               "qualifyingKind": "third-party-library"
             }
-          ]
+          ],
+          "subset": "engagement"
         },
         {
           "id": "replace-benchmark-record",
@@ -4156,7 +4362,8 @@
               "capability": "program-1-mutate",
               "qualifyingKind": "third-party-library"
             }
-          ]
+          ],
+          "subset": "knowledge"
         },
         {
           "id": "replace-change-record",
@@ -4176,7 +4383,8 @@
               "capability": "program-1-mutate",
               "qualifyingKind": "third-party-library"
             }
-          ]
+          ],
+          "subset": "records"
         },
         {
           "id": "replace-collaboration-record",
@@ -4196,7 +4404,8 @@
               "capability": "program-1-mutate",
               "qualifyingKind": "third-party-library"
             }
-          ]
+          ],
+          "subset": "records"
         },
         {
           "id": "replace-communication-requirement",
@@ -4216,7 +4425,8 @@
               "capability": "program-1-mutate",
               "qualifyingKind": "third-party-library"
             }
-          ]
+          ],
+          "subset": "context"
         },
         {
           "id": "replace-compliance-record",
@@ -4236,7 +4446,8 @@
               "capability": "program-1-mutate",
               "qualifyingKind": "third-party-library"
             }
-          ]
+          ],
+          "subset": "records"
         },
         {
           "id": "replace-conflict",
@@ -4256,7 +4467,8 @@
               "capability": "program-1-mutate",
               "qualifyingKind": "third-party-library"
             }
-          ]
+          ],
+          "subset": "risk"
         },
         {
           "id": "replace-constraint-record",
@@ -4276,7 +4488,8 @@
               "capability": "program-1-mutate",
               "qualifyingKind": "third-party-library"
             }
-          ]
+          ],
+          "subset": "records"
         },
         {
           "id": "replace-cost-requirement",
@@ -4296,7 +4509,8 @@
               "capability": "program-1-mutate",
               "qualifyingKind": "third-party-library"
             }
-          ]
+          ],
+          "subset": "lifecycle"
         },
         {
           "id": "replace-decision",
@@ -4316,7 +4530,8 @@
               "capability": "program-1-mutate",
               "qualifyingKind": "third-party-library"
             }
-          ]
+          ],
+          "subset": "decisions"
         },
         {
           "id": "replace-delivery-constraint",
@@ -4336,7 +4551,8 @@
               "capability": "program-1-mutate",
               "qualifyingKind": "third-party-library"
             }
-          ]
+          ],
+          "subset": "lifecycle"
         },
         {
           "id": "replace-document",
@@ -4356,7 +4572,8 @@
               "capability": "program-1-mutate",
               "qualifyingKind": "third-party-library"
             }
-          ]
+          ],
+          "subset": "records"
         },
         {
           "id": "replace-environmental-requirement",
@@ -4376,7 +4593,8 @@
               "capability": "program-1-mutate",
               "qualifyingKind": "third-party-library"
             }
-          ]
+          ],
+          "subset": "compliance"
         },
         {
           "id": "replace-equipment",
@@ -4396,7 +4614,8 @@
               "capability": "program-1-mutate",
               "qualifyingKind": "third-party-library"
             }
-          ]
+          ],
+          "subset": "resources"
         },
         {
           "id": "replace-flexibility-requirement",
@@ -4416,7 +4635,8 @@
               "capability": "program-1-mutate",
               "qualifyingKind": "third-party-library"
             }
-          ]
+          ],
+          "subset": "lifecycle"
         },
         {
           "id": "replace-flow-requirement",
@@ -4436,7 +4656,8 @@
               "capability": "program-1-mutate",
               "qualifyingKind": "third-party-library"
             }
-          ]
+          ],
+          "subset": "operations"
         },
         {
           "id": "replace-function",
@@ -4456,7 +4677,8 @@
               "capability": "program-1-mutate",
               "qualifyingKind": "third-party-library"
             }
-          ]
+          ],
+          "subset": "brief"
         },
         {
           "id": "replace-governance",
@@ -4475,7 +4697,8 @@
               "capability": "program-1-mutate",
               "qualifyingKind": "third-party-library"
             }
-          ]
+          ],
+          "subset": "governance"
         },
         {
           "id": "replace-growth-plan",
@@ -4495,7 +4718,8 @@
               "capability": "program-1-mutate",
               "qualifyingKind": "third-party-library"
             }
-          ]
+          ],
+          "subset": "lifecycle"
         },
         {
           "id": "replace-human-factor-requirement",
@@ -4515,7 +4739,8 @@
               "capability": "program-1-mutate",
               "qualifyingKind": "third-party-library"
             }
-          ]
+          ],
+          "subset": "compliance"
         },
         {
           "id": "replace-information-requirement",
@@ -4535,7 +4760,8 @@
               "capability": "program-1-mutate",
               "qualifyingKind": "third-party-library"
             }
-          ]
+          ],
+          "subset": "context"
         },
         {
           "id": "replace-infrastructure-requirement",
@@ -4555,7 +4781,8 @@
               "capability": "program-1-mutate",
               "qualifyingKind": "third-party-library"
             }
-          ]
+          ],
+          "subset": "context"
         },
         {
           "id": "replace-issue",
@@ -4575,7 +4802,8 @@
               "capability": "program-1-mutate",
               "qualifyingKind": "third-party-library"
             }
-          ]
+          ],
+          "subset": "engagement"
         },
         {
           "id": "replace-knowledge-record",
@@ -4595,7 +4823,8 @@
               "capability": "program-1-mutate",
               "qualifyingKind": "third-party-library"
             }
-          ]
+          ],
+          "subset": "knowledge"
         },
         {
           "id": "replace-meeting-record",
@@ -4615,7 +4844,8 @@
               "capability": "program-1-mutate",
               "qualifyingKind": "third-party-library"
             }
-          ]
+          ],
+          "subset": "records"
         },
         {
           "id": "replace-meta",
@@ -4634,7 +4864,8 @@
               "capability": "program-1-mutate",
               "qualifyingKind": "third-party-library"
             }
-          ]
+          ],
+          "subset": "identity"
         },
         {
           "id": "replace-operational-requirement",
@@ -4654,7 +4885,8 @@
               "capability": "program-1-mutate",
               "qualifyingKind": "third-party-library"
             }
-          ]
+          ],
+          "subset": "operations"
         },
         {
           "id": "replace-option-evaluation",
@@ -4674,7 +4906,8 @@
               "capability": "program-1-mutate",
               "qualifyingKind": "third-party-library"
             }
-          ]
+          ],
+          "subset": "decisions"
         },
         {
           "id": "replace-organizational-requirement",
@@ -4694,7 +4927,8 @@
               "capability": "program-1-mutate",
               "qualifyingKind": "third-party-library"
             }
-          ]
+          ],
+          "subset": "context"
         },
         {
           "id": "replace-performance-criterion",
@@ -4714,7 +4948,8 @@
               "capability": "program-1-mutate",
               "qualifyingKind": "third-party-library"
             }
-          ]
+          ],
+          "subset": "evaluation"
         },
         {
           "id": "replace-priority-record",
@@ -4734,7 +4969,8 @@
               "capability": "program-1-mutate",
               "qualifyingKind": "third-party-library"
             }
-          ]
+          ],
+          "subset": "risk"
         },
         {
           "id": "replace-privacy-requirement",
@@ -4754,7 +4990,8 @@
               "capability": "program-1-mutate",
               "qualifyingKind": "third-party-library"
             }
-          ]
+          ],
+          "subset": "compliance"
         },
         {
           "id": "replace-process",
@@ -4774,7 +5011,8 @@
               "capability": "program-1-mutate",
               "qualifyingKind": "third-party-library"
             }
-          ]
+          ],
+          "subset": "operations"
         },
         {
           "id": "replace-program-element",
@@ -4794,7 +5032,8 @@
               "capability": "program-1-mutate",
               "qualifyingKind": "third-party-library"
             }
-          ]
+          ],
+          "subset": "brief"
         },
         {
           "id": "replace-project",
@@ -4813,7 +5052,8 @@
               "capability": "program-1-mutate",
               "qualifyingKind": "third-party-library"
             }
-          ]
+          ],
+          "subset": "identity"
         },
         {
           "id": "replace-quality-record",
@@ -4833,7 +5073,8 @@
               "capability": "program-1-mutate",
               "qualifyingKind": "third-party-library"
             }
-          ]
+          ],
+          "subset": "evaluation"
         },
         {
           "id": "replace-quantity-requirement",
@@ -4853,7 +5094,8 @@
               "capability": "program-1-mutate",
               "qualifyingKind": "third-party-library"
             }
-          ]
+          ],
+          "subset": "brief"
         },
         {
           "id": "replace-regulatory-requirement",
@@ -4873,7 +5115,8 @@
               "capability": "program-1-mutate",
               "qualifyingKind": "third-party-library"
             }
-          ]
+          ],
+          "subset": "compliance"
         },
         {
           "id": "replace-relationship",
@@ -4893,7 +5136,8 @@
               "capability": "program-1-mutate",
               "qualifyingKind": "third-party-library"
             }
-          ]
+          ],
+          "subset": "relations"
         },
         {
           "id": "replace-report-record",
@@ -4913,7 +5157,8 @@
               "capability": "program-1-mutate",
               "qualifyingKind": "third-party-library"
             }
-          ]
+          ],
+          "subset": "records"
         },
         {
           "id": "replace-requirement",
@@ -4933,7 +5178,8 @@
               "capability": "program-1-mutate",
               "qualifyingKind": "third-party-library"
             }
-          ]
+          ],
+          "subset": "risk"
         },
         {
           "id": "replace-resilience-requirement",
@@ -4953,7 +5199,8 @@
               "capability": "program-1-mutate",
               "qualifyingKind": "third-party-library"
             }
-          ]
+          ],
+          "subset": "lifecycle"
         },
         {
           "id": "replace-resource",
@@ -4973,7 +5220,8 @@
               "capability": "program-1-mutate",
               "qualifyingKind": "third-party-library"
             }
-          ]
+          ],
+          "subset": "resources"
         },
         {
           "id": "replace-risk",
@@ -4993,7 +5241,8 @@
               "capability": "program-1-mutate",
               "qualifyingKind": "third-party-library"
             }
-          ]
+          ],
+          "subset": "risk"
         },
         {
           "id": "replace-safety-requirement",
@@ -5013,7 +5262,8 @@
               "capability": "program-1-mutate",
               "qualifyingKind": "third-party-library"
             }
-          ]
+          ],
+          "subset": "compliance"
         },
         {
           "id": "replace-scenario",
@@ -5033,7 +5283,8 @@
               "capability": "program-1-mutate",
               "qualifyingKind": "third-party-library"
             }
-          ]
+          ],
+          "subset": "decisions"
         },
         {
           "id": "replace-schedule-requirement",
@@ -5053,7 +5304,8 @@
               "capability": "program-1-mutate",
               "qualifyingKind": "third-party-library"
             }
-          ]
+          ],
+          "subset": "lifecycle"
         },
         {
           "id": "replace-search-filter",
@@ -5073,7 +5325,8 @@
               "capability": "program-1-mutate",
               "qualifyingKind": "third-party-library"
             }
-          ]
+          ],
+          "subset": "utility"
         },
         {
           "id": "replace-security-requirement",
@@ -5093,7 +5346,8 @@
               "capability": "program-1-mutate",
               "qualifyingKind": "third-party-library"
             }
-          ]
+          ],
+          "subset": "compliance"
         },
         {
           "id": "replace-service-requirement",
@@ -5113,7 +5367,8 @@
               "capability": "program-1-mutate",
               "qualifyingKind": "third-party-library"
             }
-          ]
+          ],
+          "subset": "context"
         },
         {
           "id": "replace-site-context",
@@ -5133,7 +5388,8 @@
               "capability": "program-1-mutate",
               "qualifyingKind": "third-party-library"
             }
-          ]
+          ],
+          "subset": "context"
         },
         {
           "id": "replace-stakeholder",
@@ -5153,7 +5409,8 @@
               "capability": "program-1-mutate",
               "qualifyingKind": "third-party-library"
             }
-          ]
+          ],
+          "subset": "participants"
         },
         {
           "id": "replace-status-record",
@@ -5173,7 +5430,8 @@
               "capability": "program-1-mutate",
               "qualifyingKind": "third-party-library"
             }
-          ]
+          ],
+          "subset": "utility"
         },
         {
           "id": "replace-storage-requirement",
@@ -5193,7 +5451,8 @@
               "capability": "program-1-mutate",
               "qualifyingKind": "third-party-library"
             }
-          ]
+          ],
+          "subset": "resources"
         },
         {
           "id": "replace-survey",
@@ -5213,7 +5472,8 @@
               "capability": "program-1-mutate",
               "qualifyingKind": "third-party-library"
             }
-          ]
+          ],
+          "subset": "engagement"
         },
         {
           "id": "replace-sustainability-requirement",
@@ -5233,7 +5493,8 @@
               "capability": "program-1-mutate",
               "qualifyingKind": "third-party-library"
             }
-          ]
+          ],
+          "subset": "lifecycle"
         },
         {
           "id": "replace-template-record",
@@ -5253,7 +5514,8 @@
               "capability": "program-1-mutate",
               "qualifyingKind": "third-party-library"
             }
-          ]
+          ],
+          "subset": "knowledge"
         },
         {
           "id": "replace-user-profile",
@@ -5273,7 +5535,8 @@
               "capability": "program-1-mutate",
               "qualifyingKind": "third-party-library"
             }
-          ]
+          ],
+          "subset": "participants"
         },
         {
           "id": "replace-validation-record",
@@ -5293,7 +5556,8 @@
               "capability": "program-1-mutate",
               "qualifyingKind": "third-party-library"
             }
-          ]
+          ],
+          "subset": "decisions"
         },
         {
           "id": "replace-wayfinding-requirement",
@@ -5313,7 +5577,8 @@
               "capability": "program-1-mutate",
               "qualifyingKind": "third-party-library"
             }
-          ]
+          ],
+          "subset": "context"
         },
         {
           "id": "replace-workshop",
@@ -5333,7 +5598,8 @@
               "capability": "program-1-mutate",
               "qualifyingKind": "third-party-library"
             }
-          ]
+          ],
+          "subset": "engagement"
         }
       ]
     }

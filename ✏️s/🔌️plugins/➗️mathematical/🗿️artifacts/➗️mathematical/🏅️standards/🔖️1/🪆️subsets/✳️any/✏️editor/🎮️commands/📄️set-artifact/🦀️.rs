@@ -2,8 +2,8 @@
 
 use crate::artifacts::mathematical::dsl::MathematicalGraphDsl;
 use crate::artifacts::mathematical::op::MathematicalMutation;
-use crate::artifacts::mathematical::schema::mutations::replace_graph::mutation::ReplaceGraph;
-use crate::artifacts::mathematical::schema::mutations::replace_points::mutation::ReplacePoints;
+use crate::artifacts::mathematical::standards::v1::subsets::graph::schema::mutations::replace_graph::mutation::ReplaceGraph;
+use crate::artifacts::mathematical::standards::v1::subsets::geometry::schema::mutations::replace_points::mutation::ReplacePoints;
 use crate::artifacts::mathematical::{MathematicalGeometry, MathematicalSnapshot};
 use crate::editor::mathematical::config::{MathematicalConfig, MathematicalConfigMutation};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};

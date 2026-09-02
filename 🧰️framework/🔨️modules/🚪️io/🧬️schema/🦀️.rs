@@ -26,29 +26,42 @@ use serde::{Deserialize, Serialize};
 
 //#region 🔖️Dialect
 /// 🏅️ A standard slug — the text after `🔖️` in `🏅️standards/🔖️<standard>/` (e.g. "2.0", "ap214", "1").
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
+/// 🌱️ `'static`-only, compile-time registration data — never crosses a wire, so it carries no
+/// `Serialize`/`Deserialize`/`ToValue`/`FromValue` at all (nothing in the repo (de)serializes it).
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub struct StandardId(pub &'static str);
 
 /// 🪆️ A subset id — the text materialized as `🪆️subsets/✳️<dir>/`. `ANY` is the unconstrained base
-/// subset every standard carries (dir `✳️any`).
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
+/// subset every standard carries (dir `✳️any`). See `StandardId`'s doc comment for why this has no
+/// wire-codec derive.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub struct SubsetId(pub &'static str);
 
 impl SubsetId {
     pub const ANY: SubsetId = SubsetId("*");
 }
 
-/// 🎯️ Fully-qualified dialect coordinate: which artifact, which standard, which subset.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
+/// 🎯️ Fully-qualified dialect coordinate: which artifact, which standard, which subset. See
+/// `StandardId`'s doc comment for why this has no wire-codec derive — `ArtifactDialect` below is
+/// this type's owned/wire twin.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub struct Dialect {
     pub artifact_kind: &'static str,
     pub standard: StandardId,
     pub subset: SubsetId,
 }
 
-/// 🎯️ Owned serde twin of `Dialect` — the persisted/wire form; every dialect consumer outside a
+/// 🎯️ Owned twin of `Dialect` — the persisted/wire form; every dialect consumer outside a
 /// `'static` compile-time registration (document envelopes, the hub's multi-user pin, WIT
-/// `io-run`/`io-routes`, the io leaf generators) reads/writes THIS type.
+/// `io-run`/`io-routes`, the io leaf generators) reads/writes THIS type via `ToValue`/`FromValue`.
+// 🚧️ BLOCKED (26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS): `Serialize`/
+// `Deserialize` restored here ADDITIVELY, not removed — `🛂️manifest/🦀️.rs`'s `AppDefinition` and
+// `WindowKindDefinition` are themselves serde-only (blocked on `ui_wgpu::LocalizedLabel`/
+// `IconName`/`SurfaceKind`/`WindowOptions`, none owned by this pass) and embed `dialect: ArtifactDialect`
+// resp. reach it transitively; `IoEntryDescriptor.owner`/`counterpart` and
+// `ComposerEntryDescriptor.writes`/`reads` are dual-derived but still need the serde half because
+// they are `referenced (directly or transitively) by a BLOCKED serde-only manifest type`. Revisit
+// once `🖱️ui` gains `ToValue`/`FromValue` for those types.
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
@@ -90,7 +103,8 @@ impl ArtifactDialect {
 /// 🪪️ Canonical artifact-kind id. Grammar: exactly three dot-separated ASCII segments,
 /// `s.<plugin>.<artifact>` — the first segment is always the literal `s`, the remaining two are
 /// lowercase-ASCII kebab (`[a-z0-9-]`, no leading/trailing/doubled hyphen).
-#[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Eq, Hash, ToValue, FromValue)]
+#[value(transparent)]
 pub struct ArtifactKindId(String);
 
 impl ArtifactKindId {
@@ -151,8 +165,7 @@ fn is_kebab_segment(segment: &str) -> bool {
 
 /// 🔗️ A reference to one artifact: its id plus the dialect it is materialized in. Renders to/from
 /// the wire URI `"<artifact_id>!<kind>@<standard>/<subset>"`.
-#[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize, ToValue, FromValue)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, Eq, Hash, ToValue, FromValue)]
 #[value(rename_all = "camelCase")]
 pub struct ArtifactRef {
     pub artifact_id: String,
@@ -187,7 +200,7 @@ impl ArtifactRef {
 /// external file content. So: **open a file** = `io_identify(bytes)` → `io_run(io_route(carrier →
 /// D))`; **save a file** = `io_run(io_route(D → carrier))`. This is the rule that stops an export
 /// writing pack bytes into a `.gif`/`.png` file.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
 pub enum IoPayload {
     Text(String),
     Binary(Vec<u8>),
@@ -205,7 +218,7 @@ pub const CARRIER_TEXT: Dialect = Dialect { artifact_kind: "s.stdio.txt", standa
 /// file's 3-variant `Confidence` (`High`/`Medium`/`Low`, no `None`) — that type stays exactly as
 /// it is so the old registry's exhaustive matches never change; this 4-variant type is the new
 /// mechanism's own, dropped entirely (not surfaced) by `io_identify` when the value is `None`.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, ToValue, FromValue)]
 pub enum Confidence {
     None,
     Low,
@@ -230,7 +243,7 @@ impl Confidence {
 /// ⚖️ Declared strongest IO fidelity one hop of the new mechanism achieves. Distinct from the OLD
 /// file's `IoFidelityClass` (same rank order, different name/type — that one stays a manifest
 /// declaration field for the old subset-validator machinery).
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, ToValue, FromValue)]
 pub enum IoFidelity {
     Exact,
     Canonical,
@@ -253,7 +266,7 @@ impl IoFidelity {
 
 //#region 🔖️Result
 /// 🚫️ A failed io operation: routing, running a hop, or (de)serializing one payload.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
 pub struct IoError {
     pub message: String,
     pub diagnostics: Vec<Diagnostic>,
@@ -283,8 +296,7 @@ pub type IoResult<T> = Result<IoOutcome<T>, IoError>;
 //#region 🔖️Route
 /// 📇️ One registered `IoEntry`, erased to owned/wire data — the shape the WIT `list-io-entries`
 /// guest export and the TS `IoEntryDescriptor[]` mirror both use.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
 #[value(rename_all = "camelCase")]
 pub struct IoEntryDescriptor {
     pub from: ArtifactDialect,
@@ -296,8 +308,7 @@ pub struct IoEntryDescriptor {
 /// 🗺️ A resolved, executable (or wire-transmissible) hop sequence from `io_route`. Pure data — no
 /// `&'static IoEntry` pointers — so it can cross the WIT `io-routes` boundary; `io_run` re-resolves
 /// each hop's `(from, into)` pair against the live registry.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
 #[value(rename_all = "camelCase")]
 pub struct IoRoute {
     pub hops: Vec<IoEntryDescriptor>,

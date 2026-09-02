@@ -1,0 +1,41 @@
+# 🧬 Material slice of the glTF direct mutation discriminator roster.
+# change-material-alpha-mode
+# change-material-double-sided
+# create-image
+# create-material
+# create-sampler
+# create-texture
+# delete-image
+# delete-material
+# delete-sampler
+# delete-texture
+# move-image
+# move-material
+# move-sampler
+# move-texture
+# reorder-images
+# reorder-materials
+# reorder-samplers
+# reorder-textures
+enum GltfMaterialMutationKind {
+  CHANGE_MATERIAL_ALPHA_MODE
+  CHANGE_MATERIAL_DOUBLE_SIDED
+  CREATE_IMAGE
+  CREATE_MATERIAL
+  CREATE_SAMPLER
+  CREATE_TEXTURE
+  DELETE_IMAGE
+  DELETE_MATERIAL
+  DELETE_SAMPLER
+  DELETE_TEXTURE
+  MOVE_IMAGE
+  MOVE_MATERIAL
+  MOVE_SAMPLER
+  MOVE_TEXTURE
+  REORDER_IMAGES
+  REORDER_MATERIALS
+  REORDER_SAMPLERS
+  REORDER_TEXTURES
+}
+scalar GltfMaterialMutationPayload
+input GltfMaterialMutationInput { kind: GltfMaterialMutationKind!, payload: GltfMaterialMutationPayload! }

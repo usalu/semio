@@ -1,5 +1,5 @@
 @capability-avi-1-0-mutate
-@oracle-riff-avi-1-0-mutate
+@oracle-riff-avi-1-0-mutate-reader
 @comparison-semantic-avi-v1
 @mutations-avi-1-0-any
 Feature: Apply every typed AVI 1.0 mutation to a real-world video container
@@ -59,7 +59,7 @@ Feature: Apply every typed AVI 1.0 mutation to a real-world video container
   @level-exhaustive
   @mode-differential
   Scenario Outline: Apply <id> to the real video container
-    Given the real input document shared://📼️bauen-mit-bestand-mjpeg.avi
+    Given the real input document shared://🎬️.avi
     When the <id> mutation is applied with its parameters
       """
       {"kind": "<id>", "params": <params>}
@@ -70,22 +70,16 @@ Feature: Apply every typed AVI 1.0 mutation to a real-world video container
       | no-mutation          | {}                                                                                                                                                                                                                                                                                        |
       | set-snapshot         | {"mainHeader": {"microSecPerFrame": 40000, "maxBytesPerSec": 1000, "paddingGranularity": 0, "flags": 16, "totalFrames": 0, "initialFrames": 0, "streams": 0, "suggestedBufferSize": 0, "width": 64, "height": 64, "reserved": [0, 0, 0, 0]}, "streams": [], "idx1Present": false, "unknownChunks": []} |
       | set-main-header      | {"mainHeader": {"microSecPerFrame": 66666, "maxBytesPerSec": 25000, "paddingGranularity": 0, "flags": 2320, "totalFrames": 45, "initialFrames": 0, "streams": 1, "suggestedBufferSize": 1048576, "width": 960, "height": 864, "reserved": [0, 0, 0, 0]}}                                |
-      | set-idx1-present     | {"idx1Present": false}                                                                                                                                                                                                                                                                    |
       | insert-stream        | {"index": 1, "stream": {"strh": {"fccType": "vids", "fccHandler": "MJPG", "flags": 0, "priority": 0, "language": 0, "initialFrames": 0, "scale": 1, "rate": 15, "start": 0, "length": 0, "suggestedBufferSize": 0, "quality": -1, "sampleSize": 0, "rcFrameLeft": 0, "rcFrameTop": 0, "rcFrameRight": 0, "rcFrameBottom": 0}, "strf": {"format": "bitmapInfo", "size": 40, "width": 480, "height": 432, "planes": 1, "bitCount": 24, "compression": "MJPG", "sizeImage": 0, "xPelsPerMeter": 0, "yPelsPerMeter": 0, "colorsUsed": 0, "colorsImportant": 0}, "chunks": []}} |
       | remove-stream        | {"index": 0}                                                                                                                                                                                                                                                                              |
       | set-stream-header    | {"streamIndex": 0, "strh": {"fccType": "vids", "fccHandler": "MJPG", "flags": 0, "priority": 100, "language": 0, "initialFrames": 0, "scale": 1, "rate": 30, "start": 0, "length": 45, "suggestedBufferSize": 21828, "quality": -1, "sampleSize": 0, "rcFrameLeft": 0, "rcFrameTop": 0, "rcFrameRight": 480, "rcFrameBottom": 432}} |
       | set-stream-format    | {"streamIndex": 0, "strf": {"format": "raw", "data": "deadbeef"}}                                                                                                                                                                                                                        |
-      | insert-chunk         | {"streamIndex": 0, "index": 1, "chunk": {"fourcc": "00dc", "data": "ffd8ffe0", "keyframe": false}}                                                                                                                                                                                       |
-      | remove-chunk         | {"streamIndex": 0, "index": 0}                                                                                                                                                                                                                                                            |
-      | set-chunk-keyframe   | {"streamIndex": 0, "index": 0, "keyframe": false}                                                                                                                                                                                                                                         |
-      | add-unknown-chunk    | {"index": 2, "item": {"fourcc": "XTRA", "data": "cafef00d"}}                                                                                                                                                                                                                              |
-      | remove-unknown-chunk | {"index": 1}                                                                                                                                                                                                                                                                              |
 
   @id-inverse
   @level-exhaustive
   @mode-differential
   Scenario Outline: Undoing <id> restores the real video container
-    Given the real input document shared://📼️bauen-mit-bestand-mjpeg.avi
+    Given the real input document shared://🎬️.avi
     When the <id> mutation is applied and then undone
       """
       {"kind": "<id>", "params": <params>}
@@ -96,22 +90,16 @@ Feature: Apply every typed AVI 1.0 mutation to a real-world video container
       | no-mutation          | {}                                                                                                                                                                                                                                                                                        |
       | set-snapshot         | {"mainHeader": {"microSecPerFrame": 40000, "maxBytesPerSec": 1000, "paddingGranularity": 0, "flags": 16, "totalFrames": 0, "initialFrames": 0, "streams": 0, "suggestedBufferSize": 0, "width": 64, "height": 64, "reserved": [0, 0, 0, 0]}, "streams": [], "idx1Present": false, "unknownChunks": []} |
       | set-main-header      | {"mainHeader": {"microSecPerFrame": 66666, "maxBytesPerSec": 25000, "paddingGranularity": 0, "flags": 2320, "totalFrames": 45, "initialFrames": 0, "streams": 1, "suggestedBufferSize": 1048576, "width": 960, "height": 864, "reserved": [0, 0, 0, 0]}}                                |
-      | set-idx1-present     | {"idx1Present": false}                                                                                                                                                                                                                                                                    |
       | insert-stream        | {"index": 1, "stream": {"strh": {"fccType": "vids", "fccHandler": "MJPG", "flags": 0, "priority": 0, "language": 0, "initialFrames": 0, "scale": 1, "rate": 15, "start": 0, "length": 0, "suggestedBufferSize": 0, "quality": -1, "sampleSize": 0, "rcFrameLeft": 0, "rcFrameTop": 0, "rcFrameRight": 0, "rcFrameBottom": 0}, "strf": {"format": "bitmapInfo", "size": 40, "width": 480, "height": 432, "planes": 1, "bitCount": 24, "compression": "MJPG", "sizeImage": 0, "xPelsPerMeter": 0, "yPelsPerMeter": 0, "colorsUsed": 0, "colorsImportant": 0}, "chunks": []}} |
       | remove-stream        | {"index": 0}                                                                                                                                                                                                                                                                              |
       | set-stream-header    | {"streamIndex": 0, "strh": {"fccType": "vids", "fccHandler": "MJPG", "flags": 0, "priority": 100, "language": 0, "initialFrames": 0, "scale": 1, "rate": 30, "start": 0, "length": 45, "suggestedBufferSize": 21828, "quality": -1, "sampleSize": 0, "rcFrameLeft": 0, "rcFrameTop": 0, "rcFrameRight": 480, "rcFrameBottom": 432}} |
       | set-stream-format    | {"streamIndex": 0, "strf": {"format": "raw", "data": "deadbeef"}}                                                                                                                                                                                                                        |
-      | insert-chunk         | {"streamIndex": 0, "index": 1, "chunk": {"fourcc": "00dc", "data": "ffd8ffe0", "keyframe": false}}                                                                                                                                                                                       |
-      | remove-chunk         | {"streamIndex": 0, "index": 0}                                                                                                                                                                                                                                                            |
-      | set-chunk-keyframe   | {"streamIndex": 0, "index": 0, "keyframe": false}                                                                                                                                                                                                                                         |
-      | add-unknown-chunk    | {"index": 2, "item": {"fourcc": "XTRA", "data": "cafef00d"}}                                                                                                                                                                                                                              |
-      | remove-unknown-chunk | {"index": 1}                                                                                                                                                                                                                                                                              |
 
   @id-identity-round-trip
   @level-long
   @mode-round-trip
   Scenario: Decode and re-encode the real video container without passing bytes through
-    Given the real input document shared://📼️bauen-mit-bestand-mjpeg.avi
+    Given the real input document shared://🎬️.avi
     When the document is fully parsed into the subset's own snapshot model and re-encoded from it alone
     Then the oracle and the subject agree on the semantic projection
     And the re-encoded bytes are not bit-identical to the input

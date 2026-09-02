@@ -6,7 +6,7 @@ Feature: Apply every typed IFC2X3 mutation to a real-world building model
   The input is a real, self-consistent SUBSET of a genuine 21 MB IFC2X3 building model
   (`temp/wellness-center-sama.ifc`, an EDM StepFileFactory export, 2021, `FILE_SCHEMA(('IFC2X3'))`
   confirmed by reading the header directly -- the only real IFC2X3 file in this repository), not a
-  synthetic fixture: `shared://🏗️wellness-center-sama-street-level.ifc`. 21 MB is too large to copy
+  synthetic fixture: `shared://🧪️wellness-center-sama-street-level/🏗️.ifc`. 21 MB is too large to copy
   into every work directory, so this fixture was derived ONCE (script in this ticket's own scratch
   folder) rather than committing the whole file: it keeps the real `IFCBUILDINGSTOREY` #139
   ("Street level"), its full real spatial-structure ancestor chain (`IFCRELAGGREGATES` up through
@@ -67,7 +67,7 @@ Feature: Apply every typed IFC2X3 mutation to a real-world building model
   @level-exhaustive
   @mode-property
   Scenario Outline: Apply <id> to the real building model
-    Given the real input document shared://🏗️wellness-center-sama-street-level.ifc
+    Given the real input document shared://🧪️wellness-center-sama-street-level/🏗️.ifc
     When the <id> mutation is applied with its parameters
       """
       {"kind": "<id>", "params": <params>}
@@ -85,7 +85,7 @@ Feature: Apply every typed IFC2X3 mutation to a real-world building model
   @level-exhaustive
   @mode-property
   Scenario Outline: Undoing <id> restores the real building model
-    Given the real input document shared://🏗️wellness-center-sama-street-level.ifc
+    Given the real input document shared://🧪️wellness-center-sama-street-level/🏗️.ifc
     When the <id> mutation is applied with its parameters
       """
       {"kind": "<id>", "params": <params>}
@@ -104,7 +104,7 @@ Feature: Apply every typed IFC2X3 mutation to a real-world building model
   @level-long
   @mode-round-trip
   Scenario: Decode and re-encode the real building model without passing bytes through
-    Given the real input document shared://🏗️wellness-center-sama-street-level.ifc
+    Given the real input document shared://🧪️wellness-center-sama-street-level/🏗️.ifc
     When the document is decoded into the subset's own snapshot and re-encoded from it alone
     Then the output is not bit-identical to the input
     And the independently read projections of input and output agree

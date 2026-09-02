@@ -41,10 +41,11 @@
         "version": "0.13.3"
       },
       "capabilities": [
-        "gif-87a-mutate-reader"
+        "gif-87a-mutate"
       ],
       "comparisonProfiles": [
-        "semantic-gif-87a-reader-v1"
+        "semantic-gif-87a-reader-v1",
+        "semantic-raster-v1"
       ],
       "license": "MIT OR Apache-2.0",
       "testOnly": true,
@@ -153,7 +154,7 @@
           },
           "oracleRequirements": [
             {
-              "capability": "gif-87a-mutate-reader",
+              "capability": "gif-87a-mutate",
               "qualifyingKind": "third-party-library",
               "oracle": "gif-87a-any-mutate-reader"
             }
@@ -186,7 +187,7 @@
           },
           "oracleRequirements": [
             {
-              "capability": "gif-87a-mutate-reader",
+              "capability": "gif-87a-mutate",
               "qualifyingKind": "third-party-library",
               "oracle": "gif-87a-any-mutate-reader"
             }
@@ -218,7 +219,7 @@
           },
           "oracleRequirements": [
             {
-              "capability": "gif-87a-mutate-reader",
+              "capability": "gif-87a-mutate",
               "qualifyingKind": "third-party-library",
               "oracle": "gif-87a-any-mutate-reader"
             }
@@ -250,7 +251,7 @@
           },
           "oracleRequirements": [
             {
-              "capability": "gif-87a-mutate-reader",
+              "capability": "gif-87a-mutate",
               "qualifyingKind": "third-party-library",
               "oracle": "gif-87a-any-mutate-reader"
             }
@@ -282,7 +283,7 @@
           },
           "oracleRequirements": [
             {
-              "capability": "gif-87a-mutate-reader",
+              "capability": "gif-87a-mutate",
               "qualifyingKind": "third-party-library",
               "oracle": "gif-87a-any-mutate-reader"
             }
@@ -346,7 +347,7 @@
           },
           "oracleRequirements": [
             {
-              "capability": "gif-87a-mutate-reader",
+              "capability": "gif-87a-mutate",
               "qualifyingKind": "third-party-library",
               "oracle": "gif-87a-any-mutate-reader"
             }
@@ -378,7 +379,7 @@
           },
           "oracleRequirements": [
             {
-              "capability": "gif-87a-mutate-reader",
+              "capability": "gif-87a-mutate",
               "qualifyingKind": "third-party-library",
               "oracle": "gif-87a-any-mutate-reader"
             }
@@ -410,7 +411,7 @@
           },
           "oracleRequirements": [
             {
-              "capability": "gif-87a-mutate-reader",
+              "capability": "gif-87a-mutate",
               "qualifyingKind": "third-party-library",
               "oracle": "gif-87a-any-mutate-reader"
             }
@@ -442,7 +443,7 @@
           },
           "oracleRequirements": [
             {
-              "capability": "gif-87a-mutate-reader",
+              "capability": "gif-87a-mutate",
               "qualifyingKind": "third-party-library",
               "oracle": "gif-87a-any-mutate-reader"
             }
@@ -474,7 +475,7 @@
           },
           "oracleRequirements": [
             {
-              "capability": "gif-87a-mutate-reader",
+              "capability": "gif-87a-mutate",
               "qualifyingKind": "third-party-library",
               "oracle": "gif-87a-any-mutate-reader"
             }
@@ -506,7 +507,7 @@
           },
           "oracleRequirements": [
             {
-              "capability": "gif-87a-mutate-reader",
+              "capability": "gif-87a-mutate",
               "qualifyingKind": "third-party-library",
               "oracle": "gif-87a-any-mutate-reader"
             }

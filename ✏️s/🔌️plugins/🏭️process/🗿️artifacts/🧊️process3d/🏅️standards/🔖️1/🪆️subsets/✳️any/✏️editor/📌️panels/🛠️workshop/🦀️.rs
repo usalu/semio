@@ -54,12 +54,13 @@ pub fn render(fixture: &Process3dSnapshot, contributions_json: &str, labels: &Pr
         machine_items.try_push(item).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.workshop.machines", "fixed workshop machine admission failed"))?;
     }
     builder = builder.section("process3d-play-workshop.machines", Some(crate::editor::process3d::ui_label(labels.machines.as_str())?), true, machine_items)?.interaction_domain(PROCESS3D_INTERACTION_DOMAIN)?;
+    let installed_ids: std::collections::BTreeSet<&str> = fixture.workshop.machines.iter().map(|machine| machine.id.as_str()).collect();
     for catalog in installed_catalogs(contributions_json) {
         let catalog_id = catalog.catalog_id();
         let mut items = semio_framework_plugin::UiFixedList::default();
         for machine in catalog.machines() {
             let id = format!("process3d-workshop.catalog.{catalog_id}.{}", machine.id);
-            let already_installed = fixture.workshop.machines.iter().any(|existing| existing.id == machine.id);
+            let already_installed = installed_ids.contains(machine.id.as_str());
             let item = if already_installed {
                 let mut item = tree_item_desc(id, crate::editor::process3d::ui_label(&machine.label)?, Some(labels.installed.as_str().to_string()))?;
                 if let semio_framework_plugin::Component::TreeItem(props) = &mut item.component {

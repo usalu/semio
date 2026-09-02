@@ -3,7 +3,7 @@
 @comparison-semantic-stl-ascii-v1
 @mutations-stl-ascii-any
 Feature: Apply every typed STL ascii mutation to a real-world mesh
-  The input is shared://🧊️hexagonal-cut-concrete-forest-left.stl, a real 958-triangle ASCII STL
+  The input is shared://🧪️hexagonal-cut-concrete-forest-left/🧊️.stl, a real 958-triangle ASCII STL
   derived ONCE (♻️mit-bestand/🖼️asset/🏚️abbau-aufbau/🧊️hexagonal-cut-concrete-forest-left.glb, a
   real modelled hexagonal-cut concrete forest structure, 86 KB) by hand-parsing its GLB container
   (12-byte header, JSON chunk, BIN chunk — no glTF crate is linked) since it carries no vertex
@@ -39,7 +39,7 @@ Feature: Apply every typed STL ascii mutation to a real-world mesh
   @level-exhaustive
   @mode-differential
   Scenario Outline: Apply <id> to the real mesh
-    Given the real input mesh shared://🧊️hexagonal-cut-concrete-forest-left.stl
+    Given the real input mesh shared://🧪️hexagonal-cut-concrete-forest-left/🧊️.stl
     When the <id> mutation is applied with its parameters
       """
       {"kind": "<id>", "params": <params>}
@@ -59,7 +59,7 @@ Feature: Apply every typed STL ascii mutation to a real-world mesh
   @level-exhaustive
   @mode-differential
   Scenario Outline: Undoing <id> restores the real mesh
-    Given the real input mesh shared://🧊️hexagonal-cut-concrete-forest-left.stl
+    Given the real input mesh shared://🧪️hexagonal-cut-concrete-forest-left/🧊️.stl
     When the <id> mutation is applied with its parameters
       """
       {"kind": "<id>", "params": <params>}
@@ -80,7 +80,7 @@ Feature: Apply every typed STL ascii mutation to a real-world mesh
   @level-long
   @mode-round-trip
   Scenario: Decode and re-encode the real mesh without passing bytes through
-    Given the real input mesh shared://🧊️hexagonal-cut-concrete-forest-left.stl
+    Given the real input mesh shared://🧪️hexagonal-cut-concrete-forest-left/🧊️.stl
     When the mesh is decoded to the typed snapshot and re-encoded from it alone
     Then the oracle and the subject agree on the semantic projection
     And the re-encoded bytes are not bit-identical to the input

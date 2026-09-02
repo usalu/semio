@@ -1,0 +1,27 @@
+{
+  "schemaVersion": 1,
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️scene/🧬️schema/🧬️mutations/✏️🔘️change-node-extension-data",
+  "semanticKind": "change-node-extension-data",
+  "displayName": "Change Node Extension Data",
+  "emoji": "✏️🔘️",
+  "aggregateVariant": "ChangeNodeExtensionData",
+  "payloadSchema": "🔣️.schema.json",
+  "textOpcode": null,
+  "binaryTag": null,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "detect",
+  "outcomeClasses": [
+    "applied",
+    "warning",
+    "error",
+    "fatal"
+  ],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": [
+    "rust",
+    "typescript",
+    "graphql",
+    "protobuf",
+    "json-schema"
+  ]
+}

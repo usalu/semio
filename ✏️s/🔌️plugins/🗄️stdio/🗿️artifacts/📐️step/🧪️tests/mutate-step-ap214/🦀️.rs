@@ -22,7 +22,7 @@ const KINDS: &[&str] = &["no-mutation", "set-snapshot", "set-file-description", 
 //#endregion 🔖️Kinds
 
 //#region 🔖️Input
-const INPUT: &str = "shared://📐️hexagonal-cut-concrete-forest-left-ap214.stp";
+const INPUT: &str = "shared://🧪️hexagonal-cut-concrete-forest-left-ap214/📐️.stp";
 
 /// 🧫️ Copies the immutable committed fixture into the work directory and returns the mutable
 /// copy's bytes; the committed fixture itself is never written to.

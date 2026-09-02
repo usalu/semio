@@ -28,7 +28,7 @@ const KINDS: &[&str] = &["set-snapshot", "splice", "append-bytes", "truncate-at"
 //#endregion 🔖️Kinds
 
 //#region 🔖️Input
-const INPUT: &str = "shared://🖼️abbau-aufbau-masterarbeit-grundriss.jpg";
+const INPUT: &str = "shared://🧪️abbau-aufbau-masterarbeit-grundriss/🖼️.jpg";
 
 /// 🧫️ Copies the immutable real fixture into the work directory and returns the mutable copy's
 /// bytes; the committed asset itself is never written to.

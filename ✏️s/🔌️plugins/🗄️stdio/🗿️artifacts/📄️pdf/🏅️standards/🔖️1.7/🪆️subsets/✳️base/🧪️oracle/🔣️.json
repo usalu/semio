@@ -44,45 +44,11 @@
         "version": "0.44"
       },
       "capabilities": [
-        "pdf-1-7-base-mutate-reader"
+        "pdf-1-7-mutate"
       ],
       "comparisonProfiles": [
-        "semantic-pdf-structural-base-v1"
-      ],
-      "license": "MIT",
-      "testOnly": true,
-      "productionReachable": false,
-      "networkDuringExecution": false,
-      "platforms": [
-        "darwin-arm64",
-        "darwin-x64",
-        "linux-x64",
-        "linux-arm64",
-        "win32-x64"
-      ],
-      "homepage": "https://github.com/J-F-Liu/lopdf",
-      "rationale": "📖️ A READER, over a corpus that had to be REBUILT before one could mean anything.\n\nThe previous generator imported `oracle_apply_mutation` and `project_conformance` from `semio-s-plugin-stdio-test-oracle`, this repository's own crate, so the mutated bytes AND the expected projection of them were both ours and `lopdf` was a codec for our own answer. Registering a reader beside that corpus would have changed the label and nothing else.\n\n`🦀️lopdf-engine` depends on `lopdf` and nothing else: it lays out the seed, performs each mutation through lopdf's own public COS API, and reads the conformance axes back through it. It refuses to write a pair whose projection does not move, so a no-op cannot be committed as a fixture that would pass forever.\n\nThe two encryption kinds are `-uncarried`, not routed around: lopdf 0.44's writer takes its encryption path whenever the trailer carries `/Encrypt` and then needs the encryption state a genuine decryption would have recorded, so a synthetic encryption dictionary can be neither written nor read back. A writer-side limit, not a reader gap."
-    },
-    {
-      "id": "lopdf-pdf-1-7-base-mutate-reader",
-      "kind": "third-party-library",
-      "ecosystem": "rust",
-      "package": "lopdf",
-      "version": "0.44",
-      "source": {
-        "repository": "https://github.com/J-F-Liu/lopdf",
-        "license": "MIT"
-      },
-      "engine": {
-        "family": "lopdf",
-        "implementation": "lopdf 0.44 COS object graph",
-        "version": "0.44"
-      },
-      "capabilities": [
-        "pdf-1-7-base-mutate-reader"
-      ],
-      "comparisonProfiles": [
-        "semantic-pdf-structural-base-v1"
+        "semantic-pdf-structural-base-v1",
+        "semantic-pdf-v1"
       ],
       "license": "MIT",
       "testOnly": true,
@@ -150,7 +116,7 @@
           },
           "oracleRequirements": [
             {
-              "capability": "pdf-1-7-base-mutate-reader",
+              "capability": "pdf-1-7-mutate",
               "qualifyingKind": "third-party-library",
               "oracle": "lopdf-pdf-1-7-base-mutate-reader"
             }
@@ -181,7 +147,7 @@
           },
           "oracleRequirements": [
             {
-              "capability": "pdf-1-7-base-mutate-reader",
+              "capability": "pdf-1-7-mutate",
               "qualifyingKind": "third-party-library",
               "oracle": "lopdf-pdf-1-7-base-mutate-reader"
             }
@@ -213,7 +179,7 @@
           },
           "oracleRequirements": [
             {
-              "capability": "pdf-1-7-base-mutate-reader",
+              "capability": "pdf-1-7-mutate",
               "qualifyingKind": "third-party-library",
               "oracle": "lopdf-pdf-1-7-base-mutate-reader"
             }
@@ -244,7 +210,7 @@
           },
           "oracleRequirements": [
             {
-              "capability": "pdf-1-7-base-mutate-reader",
+              "capability": "pdf-1-7-mutate",
               "qualifyingKind": "third-party-library",
               "oracle": "lopdf-pdf-1-7-base-mutate-reader"
             }
@@ -275,7 +241,7 @@
           },
           "oracleRequirements": [
             {
-              "capability": "pdf-1-7-base-mutate-reader",
+              "capability": "pdf-1-7-mutate",
               "qualifyingKind": "third-party-library",
               "oracle": "lopdf-pdf-1-7-base-mutate-reader"
             }
@@ -306,7 +272,7 @@
           },
           "oracleRequirements": [
             {
-              "capability": "pdf-1-7-base-mutate-reader",
+              "capability": "pdf-1-7-mutate",
               "qualifyingKind": "third-party-library",
               "oracle": "lopdf-pdf-1-7-base-mutate-reader"
             }
@@ -337,7 +303,7 @@
           },
           "oracleRequirements": [
             {
-              "capability": "pdf-1-7-base-mutate-reader",
+              "capability": "pdf-1-7-mutate",
               "qualifyingKind": "third-party-library",
               "oracle": "lopdf-pdf-1-7-base-mutate-reader"
             }
@@ -368,7 +334,7 @@
           },
           "oracleRequirements": [
             {
-              "capability": "pdf-1-7-base-mutate-reader",
+              "capability": "pdf-1-7-mutate",
               "qualifyingKind": "third-party-library",
               "oracle": "lopdf-pdf-1-7-base-mutate-reader"
             }
@@ -399,7 +365,7 @@
           },
           "oracleRequirements": [
             {
-              "capability": "pdf-1-7-base-mutate-reader",
+              "capability": "pdf-1-7-mutate",
               "qualifyingKind": "third-party-library",
               "oracle": "lopdf-pdf-1-7-base-mutate-reader"
             }
@@ -430,7 +396,7 @@
           },
           "oracleRequirements": [
             {
-              "capability": "pdf-1-7-base-mutate-reader",
+              "capability": "pdf-1-7-mutate",
               "qualifyingKind": "third-party-library",
               "oracle": "lopdf-pdf-1-7-base-mutate-reader"
             }
@@ -461,7 +427,7 @@
           },
           "oracleRequirements": [
             {
-              "capability": "pdf-1-7-base-mutate-reader",
+              "capability": "pdf-1-7-mutate",
               "qualifyingKind": "third-party-library",
               "oracle": "lopdf-pdf-1-7-base-mutate-reader"
             }
@@ -492,7 +458,7 @@
           },
           "oracleRequirements": [
             {
-              "capability": "pdf-1-7-base-mutate-reader",
+              "capability": "pdf-1-7-mutate",
               "qualifyingKind": "third-party-library",
               "oracle": "lopdf-pdf-1-7-base-mutate-reader"
             }
@@ -523,7 +489,7 @@
           },
           "oracleRequirements": [
             {
-              "capability": "pdf-1-7-base-mutate-reader",
+              "capability": "pdf-1-7-mutate",
               "qualifyingKind": "third-party-library",
               "oracle": "lopdf-pdf-1-7-base-mutate-reader"
             }
@@ -554,7 +520,7 @@
           },
           "oracleRequirements": [
             {
-              "capability": "pdf-1-7-base-mutate-reader",
+              "capability": "pdf-1-7-mutate",
               "qualifyingKind": "third-party-library",
               "oracle": "lopdf-pdf-1-7-base-mutate-reader"
             }
@@ -585,7 +551,7 @@
           },
           "oracleRequirements": [
             {
-              "capability": "pdf-1-7-base-mutate-reader",
+              "capability": "pdf-1-7-mutate",
               "qualifyingKind": "third-party-library",
               "oracle": "lopdf-pdf-1-7-base-mutate-reader"
             }
@@ -616,7 +582,7 @@
           },
           "oracleRequirements": [
             {
-              "capability": "pdf-1-7-base-mutate-reader",
+              "capability": "pdf-1-7-mutate",
               "qualifyingKind": "third-party-library",
               "oracle": "lopdf-pdf-1-7-base-mutate-reader"
             }

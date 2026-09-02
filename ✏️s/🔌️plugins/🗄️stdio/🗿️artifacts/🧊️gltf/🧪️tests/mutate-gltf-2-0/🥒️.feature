@@ -1,5 +1,5 @@
 @capability-gltf-2-0-mutate
-@oracle-json-rust-gltf-2-0-mutate
+@oracle-three-gltf-2-0-mutate-reader
 @comparison-semantic-gltf-v1
 @mutations-gltf-2-0-any
 Feature: Apply every registered typed glTF 2.0 mutation to a real-world document
@@ -8,13 +8,13 @@ Feature: Apply every registered typed glTF 2.0 mutation to a real-world document
   mutation/diff/inverse code and a committed fixture each, but only 7 are mounted as production
   modules AND listed in that descriptor table today; this case covers exactly those 7, honestly
   smaller than the 120 that exist. The input is the real 284 KB, 271-node, 2-material `base.glb`
-  export (asset://🏅️standards/🔖️2.0/🪆️subsets/✳️any/📚️examples/🌱️metabolism/🖼️assets/🧊️base.glb) with
+  export (asset://🏅️standards/🔖️2.0/🪆️subsets/✳️any/📚️examples/🌱️metabolism/🖼️assets/🧪️base/🧊️.glb) with
   one minimal, real-data-preserving derivation applied once: node 1 was moved out of the scene's
   271-entry root-node list and into node 0's own `children`, since the real export's whole node
   graph is otherwise flat (every node a direct scene root, none nested) and two of the seven
   registered kinds (`bind-node-child`/`unbind-node-child`) need an existing or creatable parent/child
   edge to exercise. Every other byte, including the whole BIN chunk (skinning/mesh geometry), is the
-  untouched real export; both the derived fixture (local://🧊️base-with-nested-node.glb) and the
+  untouched real export; both the derived fixture (local://🧪️base-with-nested-node/🧊️.glb) and the
   pristine real source are committed, so the substitution is auditable. Every scenario copies the
   fixture into the case work directory before touching it; the committed files are never written to.
   The oracle performs every kind by direct, independent GLB-container and JSON-tree manipulation
@@ -30,7 +30,7 @@ Feature: Apply every registered typed glTF 2.0 mutation to a real-world document
   @level-exhaustive
   @mode-differential
   Scenario Outline: Apply <id> to the real document
-    Given the real input document local://🧊️base-with-nested-node.glb
+    Given the real input document local://🧪️base-with-nested-node/🧊️.glb
     When the <id> mutation is applied with its parameters
       """
       {"kind": "<id>", "params": <params>}
@@ -50,7 +50,7 @@ Feature: Apply every registered typed glTF 2.0 mutation to a real-world document
   @level-exhaustive
   @mode-property
   Scenario Outline: Undoing <id> restores the real document
-    Given the real input document local://🧊️base-with-nested-node.glb
+    Given the real input document local://🧪️base-with-nested-node/🧊️.glb
     When the <id> mutation is applied with its parameters
       """
       {"kind": "<id>", "params": <params>}
@@ -71,7 +71,7 @@ Feature: Apply every registered typed glTF 2.0 mutation to a real-world document
   @level-long
   @mode-round-trip
   Scenario: Decode and re-encode the real document without passing bytes through
-    Given the real input document local://🧊️base-with-nested-node.glb
+    Given the real input document local://🧪️base-with-nested-node/🧊️.glb
     When the document is decoded into the subset's own snapshot and re-encoded from it alone
     Then the output is not bit-identical to the input
     And the oracle and the subject agree on the semantic projection

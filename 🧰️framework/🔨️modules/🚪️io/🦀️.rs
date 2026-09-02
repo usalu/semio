@@ -5,7 +5,6 @@
 //! inverted dependency — same reasoning as mesh's now-retired legacy format enum.
 
 use dsl::{Diagnostic, FromValue, ToValue};
-use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, HashMap};
 use std::sync::RwLock;
 
@@ -751,7 +750,7 @@ pub enum AnalyzeSource<'a> {
 }
 
 /// 🎚 Soft confidence for partial analysis/composition success.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, ToValue, FromValue)]
 pub enum Confidence {
     High,
     Medium,
@@ -782,7 +781,7 @@ pub struct Composition<T> {
 }
 
 /// ⚠️ Composition failed: no compatible source dialect, or every candidate errored.
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, ToValue, FromValue)]
 pub struct ComposeError {
     pub message: String,
     pub diagnostics: Vec<Diagnostic>,
@@ -791,7 +790,7 @@ pub struct ComposeError {
 
 //#region 🔖️ErasedRegistry
 /// 🧾️ Erased payload crossing composer/registry boundaries (dispatch, UI, wire).
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, ToValue, FromValue)]
 pub enum IoPayload {
     Text(String),
     Binary(Vec<u8>),
@@ -909,7 +908,7 @@ pub struct ComposerEntry {
     pub compose: AsyncComposeFn,
 }
 
-#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Debug, Serialize, Deserialize, ToValue, FromValue)]
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Debug, ToValue, FromValue)]
 pub enum IoDirection {
     Import,
     Export,
@@ -917,8 +916,7 @@ pub enum IoDirection {
 
 /// 🗝️ Owned mirror of two dialects + direction — the registry key. Owned (not `&'static`) so it
 /// can be built from runtime UI input (format kind strings) as well as static composer entries.
-#[derive(Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Debug, Serialize, Deserialize, ToValue, FromValue)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Debug, ToValue, FromValue)]
 #[value(rename_all = "camelCase")]
 pub struct IoKey {
     pub artifact_kind: String,
@@ -1364,8 +1362,8 @@ async fn run_subset_validation(dialect: Dialect, payload: &IoPayload, diagnostic
 
 //#region 🔖️IoFidelity
 /// ⚖️ Declared strongest IO fidelity a subset codec achieves.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, ToValue, FromValue)]
+#[value(rename_all = "camelCase")]
 pub enum IoFidelityClass {
     Exact,
     Canonical,
@@ -1405,8 +1403,8 @@ impl IoFidelityClass {
 }
 
 /// 📜 Manifest-facing IO fidelity declaration for a subset dialect.
-#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, Eq, ToValue, FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct IoFidelityDeclaration {
     pub class: IoFidelityClass,
     /// Field paths dropped under Lossy codecs; must be empty for stronger classes.
@@ -1457,16 +1455,16 @@ mod io_fidelity_tests {
 /// resolved back to the real `&'static Dialect` locally by matching coordinate strings against the
 /// receiving side's own `ComposerEntry.reads` — exactly like the native W15 dispatch sites in
 /// `🧰️framework/🛍️products/💻️os/🦀️.rs` already do via `io_dialects_for(...).find(...)`.
-#[derive(Clone, Debug, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, ToValue, FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct WireComposeSource {
     pub dialect: ArtifactDialect,
     pub payload: IoPayload,
 }
 
 /// 🎹️ Wire twin of `ComposedArtifact`.
-#[derive(Clone, Debug, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, ToValue, FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct WireComposedArtifact {
     pub dialect: ArtifactDialect,
     pub payload: IoPayload,
@@ -1567,10 +1565,17 @@ async fn validate_wire_key(key: &IoKey) -> Result<(), IoWireError> {
     Ok(())
 }
 
-async fn encode_wire_json<T: Serialize>(operation: &'static str, value: &T) -> Result<Vec<u8>, IoWireError> {
-    let bytes = serde_json::to_vec(value).map_err(|error| IoWireError::Encode { operation, message: error.to_string() })?;
+async fn encode_wire_json<T: ToValue>(operation: &'static str, value: &T) -> Result<Vec<u8>, IoWireError> {
+    let bytes = dsl::os_pack::json::to_json_string(value).into_bytes();
     ensure_wire_bytes(operation, &bytes)?;
     Ok(bytes)
+}
+
+/// 🌉️ `encode_wire_json`'s inverse: decodes bounded wire bytes (already UTF-8 JSON text, per the
+/// `T: ToValue` half above) via `pack::json`/`FromValue` instead of `serde_json`.
+async fn decode_wire_json<T: FromValue>(operation: &'static str, bytes: &[u8]) -> Result<T, IoWireError> {
+    let text = std::str::from_utf8(bytes).map_err(|error| IoWireError::Decode { operation, message: error.to_string() })?;
+    dsl::os_pack::json::from_json_str(text).map_err(|error| IoWireError::Decode { operation, message: error.to_string() })
 }
 
 async fn intern_dialect(dialect: &ArtifactDialect) -> Result<Dialect, IoWireError> {
@@ -1597,7 +1602,7 @@ async fn intern_dialect(dialect: &ArtifactDialect) -> Result<Dialect, IoWireErro
 /// — used by a guest's `io_dispatch` fallback hook once `host.io-compose` returns.
 pub async fn wire_decode_composed_artifact(bytes: &[u8]) -> Result<ComposedArtifact, IoWireError> {
     ensure_wire_bytes("composed-artifact", bytes)?;
-    let wire: WireComposedArtifact = serde_json::from_slice(bytes).map_err(|error| IoWireError::Decode { operation: "composed-artifact", message: error.to_string() })?;
+    let wire: WireComposedArtifact = decode_wire_json("composed-artifact", bytes).await?;
     validate_wire_dialect("composed-artifact", &wire.dialect).await?;
     validate_wire_payload("composed-artifact", &wire.payload).await?;
     if wire.diagnostics.len() > MAX_IO_WIRE_SOURCES {
@@ -1628,9 +1633,9 @@ pub async fn wire_list_composer_entries() -> Result<Vec<u8>, IoWireError> {
 pub async fn wire_artifact_compose(key_bytes: &[u8], sources_bytes: &[u8]) -> Result<Vec<u8>, IoWireError> {
     ensure_wire_bytes("io-key", key_bytes)?;
     ensure_wire_bytes("compose-source", sources_bytes)?;
-    let key: IoKey = serde_json::from_slice(key_bytes).map_err(|error| IoWireError::Decode { operation: "io-key", message: error.to_string() })?;
+    let key: IoKey = decode_wire_json("io-key", key_bytes).await?;
     validate_wire_key(&key).await?;
-    let wire_sources: Vec<WireComposeSource> = serde_json::from_slice(sources_bytes).map_err(|error| IoWireError::Decode { operation: "compose-source", message: error.to_string() })?;
+    let wire_sources: Vec<WireComposeSource> = decode_wire_json("compose-source", sources_bytes).await?;
     if wire_sources.len() > MAX_IO_WIRE_SOURCES {
         return Err(IoWireError::Limit { operation: "compose-source", detail: format!("{} sources exceeds {MAX_IO_WIRE_SOURCES}", wire_sources.len()) });
     }
@@ -1661,8 +1666,8 @@ pub async fn wire_artifact_compose(key_bytes: &[u8], sources_bytes: &[u8]) -> Re
 /// can call `register_format_descriptors` from its own init. `mesh`'s catalog itself is untouched
 /// here -- evicting it onto this registry is a LATER wave's job, once every producer/consumer of
 /// `StdioFormatEntry` has migrated to `FormatDescriptor`.
-#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, Eq, ToValue, FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct FormatDescriptor {
     pub kind_id: String,
     pub short_id: String,
@@ -2262,7 +2267,7 @@ mod tests {
             diagnostics: Vec::new(),
             confidence: Confidence::High,
         };
-        let bytes = serde_json::to_vec(&wire).expect("wire fixture");
+        let bytes = dsl::os_pack::json::to_json_string(&wire).into_bytes();
         assert!(matches!(wire_decode_composed_artifact(&bytes).await, Err(IoWireError::Limit { operation: "composed-artifact", .. })));
     }
 
@@ -2870,17 +2875,20 @@ pub mod io_mechanism {
             assert_eq!(existing.len(), 1, "existing registry state must be untouched by a failed validation");
         }
 
+        // 🌉️ `serde_json::Value` retired in favor of `dsl::DslValue` — `impl store::ArtifactPack for
+        // DslValue` (`🏪️store/🦀️.rs`) already gives it the same "schema-agnostic fixture type" role
+        // `serde_json::Value`'s own `impl ArtifactPack` used to play, with no serde dependency.
         struct JsonDeserializer;
-        impl Deserializer<serde_json::Value> for JsonDeserializer {
+        impl Deserializer<dsl::DslValue> for JsonDeserializer {
             const FROM: Dialect = B;
             const FIDELITY: IoFidelity = IoFidelity::Exact;
-            const CONFORMANCE: Option<fn(&serde_json::Value) -> Vec<Diagnostic>> = Some(flag_non_object);
+            const CONFORMANCE: Option<fn(&dsl::DslValue) -> Vec<Diagnostic>> = Some(flag_non_object);
 
-            async fn deserialize(payload: &IoPayload) -> IoResult<serde_json::Value> {
+            async fn deserialize(payload: &IoPayload) -> IoResult<dsl::DslValue> {
                 let IoPayload::Text(text) = payload else {
                     return Err(IoError { message: "expected text payload".to_string(), diagnostics: Vec::new() });
                 };
-                let value: serde_json::Value = serde_json::from_str(text).map_err(|error| IoError { message: error.to_string(), diagnostics: Vec::new() })?;
+                let value: dsl::DslValue = dsl::os_pack::json::from_json_str(text).map_err(|error| IoError { message: error.to_string(), diagnostics: Vec::new() })?;
                 Ok(IoOutcome::clean(value))
             }
         }
@@ -2888,8 +2896,8 @@ pub mod io_mechanism {
         // 🚫️async: E4 fn-pointer slot — assigned directly into `Deserializer::CONFORMANCE`, a plain
         // `Option<fn(&S) -> Vec<Diagnostic>>` const (see that trait's own doc comment for why it
         // cannot be a closure or an `async fn` item).
-        fn flag_non_object(value: &serde_json::Value) -> Vec<Diagnostic> {
-            if value.is_object() {
+        fn flag_non_object(value: &dsl::DslValue) -> Vec<Diagnostic> {
+            if matches!(value, dsl::DslValue::Object(_)) {
                 Vec::new()
             } else {
                 vec![Diagnostic::error("test.io-mechanism.not-object", dsl::TextSpan::at(0, 0), "value is not a JSON object")]
@@ -2898,7 +2906,7 @@ pub mod io_mechanism {
 
         #[semio_framework_async_macros::async_test]
         async fn conformance_runs_after_deserialize() {
-            let entry = deserializer_entry::<serde_json::Value, JsonDeserializer>(A);
+            let entry = deserializer_entry::<dsl::DslValue, JsonDeserializer>(A);
 
             let conforming = (entry.run)(&IoPayload::Text("{}".to_string())).expect("an empty object deserializes cleanly");
             assert!(conforming.diagnostics.is_empty(), "an object payload has no conformance diagnostics");

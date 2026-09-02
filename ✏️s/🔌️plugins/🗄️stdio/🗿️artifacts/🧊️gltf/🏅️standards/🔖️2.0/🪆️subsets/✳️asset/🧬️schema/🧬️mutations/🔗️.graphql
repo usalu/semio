@@ -1,0 +1,33 @@
+# 🧬 Asset slice of the glTF direct mutation discriminator roster.
+# change-asset-descriptive-metadata
+# change-asset-extension-data
+# change-asset-extra-data
+# change-asset-version
+# change-document-extension-data
+# change-document-extra-data
+# add-used-extension
+# move-required-extension
+# move-used-extension
+# reorder-required-extensions
+# reorder-used-extensions
+# add-required-extension
+# remove-required-extension
+# remove-used-extension
+enum GltfAssetMutationKind {
+  CHANGE_ASSET_DESCRIPTIVE_METADATA
+  CHANGE_ASSET_EXTENSION_DATA
+  CHANGE_ASSET_EXTRA_DATA
+  CHANGE_ASSET_VERSION
+  CHANGE_DOCUMENT_EXTENSION_DATA
+  CHANGE_DOCUMENT_EXTRA_DATA
+  ADD_USED_EXTENSION
+  MOVE_REQUIRED_EXTENSION
+  MOVE_USED_EXTENSION
+  REORDER_REQUIRED_EXTENSIONS
+  REORDER_USED_EXTENSIONS
+  ADD_REQUIRED_EXTENSION
+  REMOVE_REQUIRED_EXTENSION
+  REMOVE_USED_EXTENSION
+}
+scalar GltfAssetMutationPayload
+input GltfAssetMutationInput { kind: GltfAssetMutationKind!, payload: GltfAssetMutationPayload! }

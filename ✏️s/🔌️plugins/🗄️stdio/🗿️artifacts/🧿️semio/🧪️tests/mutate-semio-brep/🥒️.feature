@@ -9,7 +9,7 @@ Feature: Apply every typed semio BREP mutation to the real concrete-forest struc
   frame, both tagged geometry unions and all thirteen verbs, written in Python from the committed
   specification documents alone
   (`../../🏅️standards/🔖️v1/🪆️subsets/✳️brep/🧬️schema/📸️snapshot/📝️text/📖️component.grammar.semio`,
-  `…/📸️snapshot/💾️binary/📡️component.protocol.semio`, `…/📸️snapshot/🔣️component.json`,
+  `…/📸️snapshot/💾️binary/📡️component.protocol.semio`, `…/📸️snapshot/🔣️.json`,
   `…/🧬️schema/🧬️mutations/📝️text/📖️component.grammar.semio` and the semio envelope in
   `🧰️framework/🛍️products/💻️os/🔨️modules/🧬️semio/🦀️component.rs`), importing nothing from and
   transliterating nothing of the Rust it judges. It is registered as the oracle
@@ -93,7 +93,7 @@ Feature: Apply every typed semio BREP mutation to the real concrete-forest struc
   @level-exhaustive
   @mode-differential
   Scenario Outline: Apply <id> to the real concrete-forest structure
-    Given the real concrete-forest solid local://🗣️hexagonal-cut-concrete-forest-left.dsl.semio
+    Given the real concrete-forest solid local://🧪️hexagonal-cut-concrete-forest-left/🗣️.dsl.semio
     When the <id> mutation is applied to the prepared solid parsed from it
       """
       <mutation>
@@ -119,7 +119,7 @@ Feature: Apply every typed semio BREP mutation to the real concrete-forest struc
   @level-exhaustive
   @mode-differential
   Scenario Outline: Undoing <id> restores the prepared concrete-forest structure
-    Given the real concrete-forest solid local://🗣️hexagonal-cut-concrete-forest-left.dsl.semio
+    Given the real concrete-forest solid local://🧪️hexagonal-cut-concrete-forest-left/🗣️.dsl.semio
     When the <id> mutation is applied to the prepared solid parsed from it and each side undoes it with its own computed inverse
       """
       <mutation>
@@ -145,9 +145,9 @@ Feature: Apply every typed semio BREP mutation to the real concrete-forest struc
   @level-exhaustive
   @mode-differential
   Scenario Outline: Apply <id> to its committed handcrafted specification vector
-    Given the committed before-snapshot asset://🏅️standards/🔖️v1/🪆️subsets/✳️brep/🧬️schema/🧬️mutations/<dir>/🧪️tests/<fixture>/📸️snapshot/⬅️before/🔣️component.json
-    And the committed mutation payload asset://🏅️standards/🔖️v1/🪆️subsets/✳️brep/🧬️schema/🧬️mutations/<dir>/🧪️tests/<fixture>/🦠️mutation/🔣️component.json
-    And the committed after-snapshot asset://🏅️standards/🔖️v1/🪆️subsets/✳️brep/🧬️schema/🧬️mutations/<dir>/🧪️tests/<fixture>/📸️snapshot/➡️after/🔣️component.json
+    Given the committed before-snapshot asset://🏅️standards/🔖️v1/🪆️subsets/✳️brep/🧬️schema/🧬️mutations/<dir>/🧪️tests/<fixture>/📸️snapshot/⬅️before/🔣️.json
+    And the committed mutation payload asset://🏅️standards/🔖️v1/🪆️subsets/✳️brep/🧬️schema/🧬️mutations/<dir>/🧪️tests/<fixture>/🦠️mutation/🔣️.json
+    And the committed after-snapshot asset://🏅️standards/🔖️v1/🪆️subsets/✳️brep/🧬️schema/🧬️mutations/<dir>/🧪️tests/<fixture>/📸️snapshot/➡️after/🔣️.json
     When both implementations apply the committed mutation to the committed before-snapshot
     Then each reaches the committed after-snapshot and the two agree
     Examples:
@@ -170,9 +170,9 @@ Feature: Apply every typed semio BREP mutation to the real concrete-forest struc
   @level-long
   @mode-round-trip
   Scenario: Re-emit both encodings of the committed solid and of the real concrete-forest structure
-    Given the real committed brep artifact asset://🏅️standards/🔖️v1/🪆️subsets/✳️any/📚️examples/🧊️solid/🖼️assets/🗣️example.dsl.semio
+    Given the real committed brep artifact asset://🏅️standards/🔖️v1/🪆️subsets/✳️any/📚️examples/🧊️solid/🖼️assets/🗣️.dsl.semio
     And its committed binary twin asset://🏅️standards/🔖️v1/🪆️subsets/✳️any/📚️examples/🧊️solid/🖼️assets/🎒️.pack.semio
-    And the real concrete-forest solid local://🗣️hexagonal-cut-concrete-forest-left.dsl.semio
+    And the real concrete-forest solid local://🧪️hexagonal-cut-concrete-forest-left/🗣️.dsl.semio
     And its binary twin local://🎒️.pack.semio
     When each implementation parses all four files, prints both documents back and re-encodes both packs
     Then all four files are reproduced byte for byte and the two implementations agree on both documents and on the digests of what they emitted

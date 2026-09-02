@@ -5,5 +5,7 @@
     "*": {
       "name": "Unconstrained bmp v3"
     }
-  }
+  },
+  "subsetPolicy": "single",
+  "subsetPolicyRationale": "The Windows BITMAPINFOHEADER-era BMP v3 format (Microsoft's Windows 3.x device-independent bitmap) defines exactly one conformance target -- there is no BMP profile system, no ISO-style conformance classes, unlike PDF/A or STEP AP214's cc1-cc6. Its own internal variation (1/4/8-bit paletted vs 16/24/32-bit direct color, optional RLE compression) is a per-file ENCODING CHOICE the one decoder branches on internally, not an independently-owned scope with its own validator/generator. This artifact's 5 mutations (change-header-fields, insert/remove/replace-palette-entry, replace-pixel-data) are exactly the header fields and the one paletted-or-direct pixel buffer of the SAME single bitmap, always decoded together by the SAME codec. `✳️any` remains this artifact's only real scope."
 }

@@ -39,7 +39,7 @@ const KINDS: &[&str] = &[
 //#endregion 🔖️Kinds
 
 //#region 🔖️Input
-const INPUT: &str = "asset://🏅️standards/🔖️energyplus/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/🌦️example.epw";
+const INPUT: &str = "asset://🏅️standards/🔖️energyplus/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/🧪️example/🌦️.epw";
 
 /// 🧫️ Copies the immutable fixture into the work directory and returns the mutable copy's bytes.
 fn mutable_input(ctx: &Context) -> Result<Vec<u8>, String> {

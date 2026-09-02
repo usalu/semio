@@ -1,5 +1,5 @@
 @capability-pdf-1-7-h-mutate
-@oracle-lopdf-pdf-1-7-h-mutate
+@oracle-lopdf-pdf-1-7-h-mutate-reader
 @comparison-semantic-pdf-conformance-h-v1
 @mutations-pdf-1-7-h
 Feature: Apply every typed the PDF Healthcare Best Practices Guide (PDF/H) conformance-class mutation to a real document

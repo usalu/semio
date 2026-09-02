@@ -2,8 +2,17 @@
   "artifact": "s.stdio.gif",
   "standard": "89a",
   "subsets": {
-    "*": {
-      "name": "Unconstrained gif 89a"
+    "base": {
+      "name": "GIF89a core image stream (CompuServe GIF89a Specification, 1990) -- Logical Screen Descriptor, Global Color Table, Image Descriptors/Local Color Tables/raster data (the structure GIF87a already had), plus the whole-document set-snapshot/no-mutation surface. The shared reader/writer for the whole file lives here; the extension-block subsets reuse it (family-module pattern) rather than duplicating it."
+    },
+    "graphic-control": {
+      "name": "GIF89a Graphic Control Extension (Sec. 23) -- disposal method, user-input flag, transparent-color flag and index, delay time: a self-contained optional block (label 0x21 0xF9) preceding an image."
+    },
+    "comment": {
+      "name": "GIF89a Comment Extension (Sec. 24) -- a self-contained optional block (label 0x21 0xFE) of plain-text sub-blocks with no rendering effect."
+    },
+    "application": {
+      "name": "GIF89a Application Extension (Sec. 26) -- a self-contained optional block (label 0x21 0xFF) identifying an application plus its opaque sub-blocks, including the de-facto NETSCAPE2.0 looping sub-block."
     }
   }
 }

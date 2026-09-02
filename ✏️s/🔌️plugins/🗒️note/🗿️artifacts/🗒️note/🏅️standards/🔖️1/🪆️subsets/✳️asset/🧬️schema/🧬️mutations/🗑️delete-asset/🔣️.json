@@ -1,0 +1,22 @@
+{
+  "schemaVersion": 1,
+  "owner": "✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️asset/🧬️schema/🧬️mutations/🗑️delete-asset",
+  "semanticKind": "delete-asset",
+  "displayName": "Delete Asset",
+  "emoji": "🗑️",
+  "aggregateVariant": "DeleteAsset",
+  "payloadSchema": "🔣️.schema.json",
+  "textOpcode": "delete-asset",
+  "binaryTag": null,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "detect",
+  "outcomeClasses": [
+    "error",
+    "applied"
+  ],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": [
+    "rust",
+    "json-schema"
+  ]
+}

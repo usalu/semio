@@ -1,0 +1,131 @@
+{
+  "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json",
+  "schemaVersion": 2,
+  "_comment": "🧩️ Ticket 26/09/02/SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION: split out of the former `✳️any` catch-all. ASPRS LAS 1.0 §2.4 (Point Data Records) is the third normatively distinct region of the file (the header-length-and-count-declared array of fixed-size point records following the VLRs), so `insert-point`/`remove-point`/`set-point` are owned here rather than by `✳️header`. The leaf struct definitions physically moved into this subset's own `🧬️schema/🧬️mutations`; the `LasMutation` enum, its `apply`/diff dispatch and the real binary codec they compile into remain in `✳️header` for the same family-module reuse rationale as `../../✳️vlr/🧪️oracle/🔣️.json`. This subset owns no new third-party oracle: `las-1-0-any-mutate` (declared by `../../✳️header/🧪️oracle/🔣️.json`, merged into the shared registry) already reads back every point field -- decoded per the header's own declared Point Data Record Format (0 or 1 in LAS 1.0) -- through the SAME independent `las` crate reader used for the header/vlr mutations.",
+  "oracles": [],
+  "noOracleDecisions": [],
+  "comparisonProfiles": [],
+  "mutationManifests": [
+    {
+      "schema": "semio.repository-test.mutation-manifest/v2",
+      "artifact": "s.stdio.las",
+      "standard": "1.0",
+      "subset": "points",
+      "standardDirectoryName": "🔖️1.0",
+      "subsetDirectoryName": "✳️points",
+      "mutations": [
+        {
+          "id": "insert-point",
+          "capability": "las-1-0-points-mutate",
+          "payloadSchema": "../🧬️schema/🧬️mutations/➕insert-point/🦀️.rs#InsertPoint",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "insert-point",
+            "bridgeVersion": 1,
+            "variant": "LasMutation::InsertPoint"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "las-1-0-points-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "las-1-0-any-mutate"
+            }
+          ],
+          "carriers": [
+            "las"
+          ],
+          "invariants": {
+            "local": [
+              "point-count-and-inserted-point-fields-agree"
+            ],
+            "enclosing": [
+              "las-reencode-round-trip-agrees-with-reference-reader"
+            ]
+          }
+        },
+        {
+          "id": "remove-point",
+          "capability": "las-1-0-points-mutate",
+          "payloadSchema": "../🧬️schema/🧬️mutations/➖remove-point/🦀️.rs#RemovePoint",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "remove-point",
+            "bridgeVersion": 1,
+            "variant": "LasMutation::RemovePoint"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "las-1-0-points-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "las-1-0-any-mutate"
+            }
+          ],
+          "carriers": [
+            "las"
+          ],
+          "invariants": {
+            "local": [
+              "point-count-and-remaining-point-order-agree"
+            ],
+            "enclosing": [
+              "las-reencode-round-trip-agrees-with-reference-reader"
+            ]
+          }
+        },
+        {
+          "id": "set-point",
+          "capability": "las-1-0-points-mutate",
+          "payloadSchema": "../🧬️schema/🧬️mutations/✏set-point/🦀️.rs#SetPoint",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "set-point",
+            "bridgeVersion": 1,
+            "variant": "LasMutation::SetPoint"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "las-1-0-points-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "las-1-0-any-mutate"
+            }
+          ],
+          "carriers": [
+            "las"
+          ],
+          "invariants": {
+            "local": [
+              "point-fields-at-index-agree"
+            ],
+            "enclosing": [
+              "las-reencode-round-trip-agrees-with-reference-reader"
+            ]
+          }
+        }
+      ]
+    }
+  ],
+  "fixtureManifests": [],
+  "mutationCatalogs": [
+    {
+      "id": "las-1.0-points",
+      "capability": "las-1-0-points-mutate",
+      "standardDirectoryName": "🔖️1.0",
+      "subsetDirectoryName": "✳️points",
+      "vectors": [],
+      "kinds": [
+        "insert-point",
+        "remove-point",
+        "set-point"
+      ]
+    }
+  ]
+}

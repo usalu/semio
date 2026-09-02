@@ -85,7 +85,7 @@ VECTORS = {
 }
 
 #: 🗣️ The real committed EN 1999 document, read where the domain already keeps it.
-DSL_ASSET = "asset://🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/📕️aluminium-roof-purlin/🖼️assets/🗣️aluminium-roof-purlin.dsl.semio"
+DSL_ASSET = "asset://🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/📕️aluminium-roof-purlin/🖼️assets/🧪️aluminium-roof-purlin/🗣️.dsl.semio"
 
 #: ✉️ The envelope token that artifact's text preamble must carry.
 ENVELOPE = "norm.en1999.dsl"

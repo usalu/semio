@@ -6,7 +6,7 @@ Feature: Apply both typed gis.gisterrain mutations twice — once in Rust, once 
 
   This case is a CROSS-LANGUAGE DIFFERENTIAL. The reference is `🐍️component.py` in this directory: a
   second implementation of the `s.gis.gisterrain` document and both typed mutations, written in
-  Python from `🧬️schema/📸️snapshot/🔣️component.json` (the document is an `f64` `exaggeration` and a
+  Python from `🧬️schema/📸️snapshot/🔣️.json` (the document is an `f64` `exaggeration` and a
   raw `importedFeaturesJson` string, `additionalProperties: false`),
   `🧬️schema/🧬️mutations/📝️text/📖️component.grammar.semio` (the two verbs) and the two committed
   specification vectors (the externally tagged wire form of each, and the demonstration that the two
@@ -22,7 +22,7 @@ Feature: Apply both typed gis.gisterrain mutations twice — once in Rust, once 
   Liège survey fragment — exaggeration 1.5, an origin at 5.5818/50.603 and two named positions — but
   its `importedFeaturesJson` is EMPTY, so `change-imported-features` would replace nothing with
   something and its inverse would restore emptiness. The mutation scenarios therefore read
-  local://🏔️liege-terrain.snapshot.json, derived ONCE by
+  local://🔣️.snapshot.json, derived ONCE by
   `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️23/END-TO-END-TESTING-REFACTOR/w16-cross-language/🐍️derive-gisterrain-imports.py`
   from committed real content only: the exaggeration and the `mesh` composed-child handle come from
   that same terrain example, and the imported payload carries the two REAL Liège positions with
@@ -47,7 +47,7 @@ Feature: Apply both typed gis.gisterrain mutations twice — once in Rust, once 
   @level-exhaustive
   @mode-differential
   Scenario Outline: Apply <id> to the real derived Liège terrain document
-    Given the real derived terrain document local://🏔️liege-terrain.snapshot.json
+    Given the real derived terrain document local://🔣️.snapshot.json
     When the <id> mutation is applied with the parameters the feature states
       """
       <mutation>
@@ -62,7 +62,7 @@ Feature: Apply both typed gis.gisterrain mutations twice — once in Rust, once 
   @level-exhaustive
   @mode-differential
   Scenario Outline: Undo <id> on the real derived Liège terrain document and land back on it
-    Given the real derived terrain document local://🏔️liege-terrain.snapshot.json
+    Given the real derived terrain document local://🔣️.snapshot.json
     When the <id> mutation is applied and then its own computed inverse is applied
       """
       <mutation>
@@ -77,9 +77,9 @@ Feature: Apply both typed gis.gisterrain mutations twice — once in Rust, once 
   @level-exhaustive
   @mode-differential
   Scenario Outline: Replay the committed <id> specification vector through both implementations
-    Given the committed before-snapshot asset://🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/<dir>/🧪️tests/<fixture>/📸️snapshot/⬅️before/🔣️component.json
-    And the committed mutation asset://🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/<dir>/🧪️tests/<fixture>/🦠️mutation/🔣️component.json
-    And the committed after-snapshot asset://🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/<dir>/🧪️tests/<fixture>/📸️snapshot/➡️after/🔣️component.json
+    Given the committed before-snapshot asset://🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/<dir>/🧪️tests/<fixture>/📸️snapshot/⬅️before/🔣️.json
+    And the committed mutation asset://🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/<dir>/🧪️tests/<fixture>/🦠️mutation/🔣️.json
+    And the committed after-snapshot asset://🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/<dir>/🧪️tests/<fixture>/📸️snapshot/➡️after/🔣️.json
     When the committed mutation is applied to the committed before-snapshot
     Then each implementation lands on the committed after-snapshot in role, and the two agree
     Examples:
@@ -91,8 +91,8 @@ Feature: Apply both typed gis.gisterrain mutations twice — once in Rust, once 
   @level-long
   @mode-round-trip
   Scenario: Read the real derived terrain document in both languages, and hold the committed carrier to its own laws in Rust
-    Given the real derived terrain document local://🏔️liege-terrain.snapshot.json
-    And the artifact's own committed carrier asset://🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio
+    Given the real derived terrain document local://🔣️.snapshot.json
+    And the artifact's own committed carrier asset://🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/🗣️.dsl.semio
     When each implementation reads the derived document, and the Rust additionally parses the committed carrier, prints it back, parses it again and cross-checks the pack codec
       """
       {"ChangeExaggeration":{"newExaggeration":1.5}}

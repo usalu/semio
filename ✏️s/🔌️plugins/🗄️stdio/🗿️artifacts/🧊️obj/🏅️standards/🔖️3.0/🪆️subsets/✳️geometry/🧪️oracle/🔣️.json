@@ -1,0 +1,2512 @@
+{
+  "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json",
+  "schemaVersion": 2,
+  "_comment": "🧩️ This subset's contribution to the repository test platform: the mutation oracle and vocabulary for stdio.obj 3.0/✳️geometry, distinct from the shared `tobj` id already registered under `obj-mesh` in ✏️s/🔌️plugins/🗄️stdio/🔣️oracle.json (that entry is surveyed for mesh creation, not for this subset's 22-kind mutation vocabulary — reusing it here would fail the contract with oracle-capability-mismatch).",
+  "oracles": [
+    {
+      "id": "tobj-obj-3-0-mutate",
+      "ecosystem": "rust",
+      "package": "tobj",
+      "version": "4",
+      "capabilities": [
+        "obj-3-0-mutate-second-implementation"
+      ],
+      "comparisonProfiles": [
+        "semantic-obj-3-0-v1"
+      ],
+      "license": "MIT",
+      "testOnly": true,
+      "homepage": "https://github.com/Twinklebear/tobj",
+      "rationale": "🫥️ RECLASSIFIED by the `reimplementation-registered-as-third-party` gate. The crate named here does real work — it parses and writes this format — but what a MUTATION SHOULD PRODUCE is computed by this owner's own `🦀️oracle.rs`. Both halves of the comparison then descend from ONE reading of the specification, so a misreading of it yields two agreeing wrong answers: the single failure a differential test exists to prevent.\n\nThe honest split is that the crate discharges \"the result is a well-formed file of this format\" and NOT \"the mutation computed the right answer\". Only the second is what a mutation oracle is for, so this is a `cross-semio-implementation` — a required SUPPLEMENT, never a substitute, and a qualifying third-party reference is still owed.\n\nAny fixtures registered alongside are untouched and remain valuable: real bytes of the real format, byte-reproducible, and exactly what a qualifying reader gets pointed at the day one is registered.",
+      "hostPath": "✏️s/🔌️plugins/🗄️stdio/🧪️oracle/📦️packages/🦀️rust",
+      "kind": "cross-semio-implementation",
+      "engine": {
+        "family": "tobj",
+        "implementation": "tobj Rust Wavefront OBJ reader",
+        "version": "4"
+      },
+      "productionReachable": false,
+      "networkDuringExecution": false
+    },
+    {
+      "id": "tobj-obj-3-0-mutate-reader",
+      "kind": "third-party-library",
+      "ecosystem": "rust",
+      "package": "tobj",
+      "version": "4",
+      "engine": {
+        "family": "tobj",
+        "implementation": "tobj reader (single_index+triangulate, no material resolution)",
+        "version": "4"
+      },
+      "capabilities": [
+        "obj-3-0-mutate"
+      ],
+      "license": "MIT",
+      "testOnly": true,
+      "productionReachable": false,
+      "networkDuringExecution": false,
+      "platforms": [
+        "darwin-arm64",
+        "darwin-x64",
+        "linux-x64",
+        "linux-arm64",
+        "win32-x64"
+      ],
+      "rationale": "📖️ A READER, and that is the whole point of registering it separately from `tobj-obj-3-0-mutate`.\n\nThis subset also carries a `🦀️oracle.rs` that COMPUTES what each mutation should produce — its own independent parse/apply/render over a Model type it defines itself. That entry stays registered `cross-semio-implementation` and does not discharge independence on its own, because both halves of such a comparison descend from one reading of the Wavefront OBJ specification.\n\nThis entry is a different mechanism. The expected state for each of the 12 witnessable recipes below is not computed at all — it is COMMITTED, as the `after` half of a byte-reproducible fixture hand-authored directly against the grammar (OBJ has no reference WRITER in the Rust ecosystem, the same already-recorded reason `../../🦀️oracle.rs` and the shared `mesh::oracle_create_obj` write the grammar directly too). The real `tobj` 4 then parses BOTH sides with `../🏭️generator/🦀️tobj-obj-reader`'s `project` subcommand, and the comparison in `../../🔬️probes/📜️script.ts` is over what it recovered — never over a computed prediction.\n\n`tobj` is a MESH reader: it drops every `v`/`vt`/`vn` row no face resolves, and its material loader here is a no-op. Verified directly against real `tobj` 4 output (not assumed): 10 of the 22 declared kinds are therefore structurally invisible to it (`insert-vertex`/`remove-vertex`/`insert-texcoord`/`remove-texcoord`/`insert-normal`/`remove-normal` — unreferenced by construction — and `set-mtllib`/`set-usemtl`/`set-smoothing-groups`/`set-unknown-statements` — comments, material names and smoothing integers `tobj` never surfaces) and keep an `obj-3-0-mutate-uncarried` oracleRequirement instead of this one, the same convention `gltf@2.0/✳️geometry` uses for its own reader-blind kinds. The other 12 ARE witnessable, each confirmed by actually running the reader on a committed before/after pair: `set-vertex`/`set-texcoord`/`set-normal` on a row a face references (clean in-place value change); `insert-face`/`remove-face`/`set-face` (triangle count or topology moves directly); `set-group`/`remove-group`/`set-object`/`remove-object` (the named `tobj::Model` a face's triangle lands in changes — `tobj` splits models at `g`/`o` boundaries by name, confirmed empirically including the bare-reset-line and no-reset-merge cases); and `no-mutation`/`set-snapshot` (identity and whole-document replace respectively).\n\nSo the judge is a genuinely different implementation of the format, and nothing in this repository predicts the answer it is judging. That is what makes it qualifying where the sibling `cross-semio-implementation` entry is not.",
+      "comparisonProfiles": [
+        "semantic-obj-3-0-v1"
+      ]
+    },
+    {
+      "id": "three-obj-3-0-document-reader",
+      "kind": "third-party-library",
+      "ecosystem": "javascript",
+      "package": "three",
+      "version": "0.182.0",
+      "source": {
+        "repository": "https://github.com/mrdoob/three.js",
+        "license": "MIT"
+      },
+      "engine": {
+        "family": "threejs",
+        "implementation": "three OBJLoader (document statements: mtllib, usemtl, smoothing)",
+        "version": "0.182.0"
+      },
+      "capabilities": [
+        "obj-3-0-mutate-document",
+        "obj-3-0-material-mutate"
+      ],
+      "comparisonProfiles": [
+        "semantic-obj-document-v1"
+      ],
+      "license": "MIT",
+      "testOnly": true,
+      "productionReachable": true,
+      "networkDuringExecution": false,
+      "platforms": [
+        "darwin-arm64",
+        "darwin-x64",
+        "linux-x64",
+        "linux-arm64",
+        "win32-x64"
+      ],
+      "homepage": "https://threejs.org",
+      "rationale": "📖️ A SECOND reader for this subset, on the ground the first one cannot reach.\n\n`tobj` is a MESH reader: it resolves faces into vertex buffers and discards `mtllib`, `usemtl` and smoothing-group statements entirely. That is why ten of this subset's kinds were recorded `-uncarried` against it — honest about tobj, and not a claim about OBJ readers in general.\n\n`three`'s OBJLoader parses those statements and keeps them: `materialLibraries` on the parsed group, the material NAME per child, and `flatShading` derived from `s off`.\n\nMEASURED before registering, and the measurement decided the scope — twice, because the first measurement was too narrow.\n\n`set-mtllib`, `set-usemtl` and `set-smoothing-groups` move this reader's projection directly.\n\nThe six v/vt/vn insert-and-remove kinds were first tested by appending an UNREFERENCED element and found invisible, which is true and was mistaken for the whole answer. OBJ face indices are ABSOLUTE: inserting or removing at the FRONT of a v/vt/vn list changes what every subsequent index resolves to, so the mutation reaches the resolved geometry and this reader sees it. All six are now carried, and the projection was widened to include resolved positions, normals and uvs.\n\nThe limit that remains is worth stating rather than hiding: an insertion PAST the last referenced element still would not move this projection. These fixtures exercise the front, where the kind is observable through a mesh loader. A document-preserving OBJ parser would cover both, and none was available offline — npm, PyPI and the vendored cargo registry were all checked.\n\n`set-unknown-statements` is carried too, and how took a second look. OBJLoader does skip a line it does not recognise — but `unknown_statements` is defined by what THIS SUBSET'S codec models, not by what three does. The codec models v/vt/vn/f/g/o/mtllib/usemtl/s; `l` (polyline) and `p` (point) fall outside it and land in `unknown_statements`, and three parses both into Line and Points objects. The fixture uses `l`.\n\nMeasured alongside the instances that do NOT work, so the claim is not wider than the evidence: a `#` comment and a genuinely unrecognised directive (`zz custom 42`) are both invisible to this reader. The kind is carried for statements three models and not for the rest, and a fixture exercising a comment would not be evidence.\n\nFixtures are handcrafted OBJ text, which this repository already admits (svg and xml were built the same way) and which the goal statement names explicitly. The judge is third-party and nothing here predicts its answer.",
+      "productionDebt": {
+        "reason": "three is already a production-runtime dependency of ✏️s/🔌️plugins/📐️cad, 🧩️puzzle and the os renderer, so this oracle is not isolated from production the way an independent reader would be.",
+        "consequence": "A bug shared between three's OBJLoader and a production consumer of three elsewhere would not be caught by this oracle alone. This subset's own production OBJ codec is separate Rust, so for THIS subject three is genuinely an independent second reading; the debt is about three's cross-repo reach.",
+        "owner": "✏️s/🔌️plugins/📐️cad"
+      }
+    }
+  ],
+  "noOracleDecisions": [],
+  "comparisonProfiles": [
+    {
+      "id": "semantic-obj-3-0-v1",
+      "description": "Wavefront OBJ documents compared by the `tobj` triangle mesh (vertex set, face topology, counts) AND by the document surface a mesh reader cannot see: declared v/vt/vn row counts with their per-component extent and totals, the mtllib reference, the g/o membership spans, the usemtl/s run starts and the retained comment lines. Unlike the shared semantic-mesh-v1 profile, none of those are writer freedom here -- ObjMutation's set-mtllib/set-usemtl/set-smoothing-groups/set-unknown-statements and the four name-keyed g/o kinds mutate exactly that surface, so ignoring it would leave 14 of the 22 declared kinds unobservable. Only byte length and decimal precision remain producer freedom; per-component extents and totals are compared under the mesh tolerance so the two producers' differing decimal formatting never registers as a divergence.",
+      "tolerance": 1e-05,
+      "ignoreKeys": [
+        "byteLength",
+        "fileSize",
+        "precision"
+      ]
+    },
+    {
+      "id": "semantic-obj-document-v1",
+      "description": "The OBJ DOCUMENT statements a mesh reader discards: the mtllib material-library list, the per-child usemtl material name, and the smoothing state as flatShading."
+    }
+  ],
+  "mutationCatalogs": [
+    {
+      "id": "obj-3-0-any",
+      "capability": "obj-3-0-mutate",
+      "standardDirectoryName": "🔖️3.0",
+      "subsetDirectoryName": "✳️geometry",
+      "vectors": [
+        {
+          "mutationId": "set-snapshot",
+          "sourceMutationDirectoryName": "📄set-snapshot",
+          "mutationDirectoryName": "📄set-snapshot",
+          "scenarios": [
+            {
+              "id": "lifts-the-third-vertex-and-gives-it-an-explicit-w",
+              "directoryName": "🧪️lifts-the-third-vertex-and-gives-it-an-explicit-w"
+            }
+          ]
+        }
+      ],
+      "kinds": [
+        "no-mutation",
+        "set-snapshot",
+        "insert-vertex",
+        "remove-vertex",
+        "set-vertex",
+        "insert-texcoord",
+        "remove-texcoord",
+        "set-texcoord",
+        "insert-normal",
+        "remove-normal",
+        "set-normal",
+        "insert-face",
+        "remove-face",
+        "set-face",
+        "set-group",
+        "remove-group",
+        "set-object",
+        "remove-object",
+        "set-smoothing-groups",
+        "set-unknown-statements"
+      ]
+    }
+  ],
+  "mutationManifests": [
+    {
+      "schema": "semio.repository-test.mutation-manifest/v2",
+      "artifact": "s.stdio.obj",
+      "standard": "3.0",
+      "subset": "geometry",
+      "standardDirectoryName": "🔖️3.0",
+      "subsetDirectoryName": "✳️geometry",
+      "mutations": [
+        {
+          "id": "no-mutation",
+          "capability": "obj-3-0-mutate",
+          "payloadSchema": "../🧬️schema/🧬️mutations/🦀️.rs#NoMutation",
+          "outcomes": [
+            "no-op"
+          ],
+          "productionDispatch": {
+            "operation": "no-mutation",
+            "bridgeVersion": 1,
+            "variant": "ObjMutation::NoMutation"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "obj-3-0-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "tobj-obj-3-0-mutate-reader"
+            }
+          ],
+          "carriers": [
+            "obj"
+          ],
+          "invariants": {
+            "local": [
+              "composed-projection-unchanged"
+            ],
+            "enclosing": [
+              "tobj-mesh-and-independent-document-projection-agree"
+            ]
+          }
+        },
+        {
+          "id": "set-snapshot",
+          "capability": "obj-3-0-mutate",
+          "payloadSchema": "../🧬️schema/🧬️mutations/🦀️.rs#SetSnapshot",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "set-snapshot",
+            "bridgeVersion": 1,
+            "variant": "ObjMutation::SetSnapshot"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "obj-3-0-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "tobj-obj-3-0-mutate-reader"
+            }
+          ],
+          "carriers": [
+            "obj"
+          ],
+          "invariants": {
+            "local": [
+              "replacement-snapshot-reproduces-exactly-or-reports-no-op"
+            ],
+            "enclosing": [
+              "tobj-mesh-and-independent-document-projection-agree"
+            ]
+          }
+        },
+        {
+          "id": "insert-vertex",
+          "capability": "obj-3-0-mutate",
+          "payloadSchema": "../🧬️schema/🧬️mutations/🦀️.rs#InsertVertex",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "insert-vertex",
+            "bridgeVersion": 1,
+            "variant": "ObjMutation::InsertVertex"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "obj-3-0-mutate-document",
+              "qualifyingKind": "third-party-library",
+              "oracle": "three-obj-3-0-document-reader"
+            }
+          ],
+          "carriers": [
+            "obj"
+          ],
+          "invariants": {
+            "local": [
+              "declared-vertex-count-increases-by-one"
+            ],
+            "enclosing": [
+              "tobj-mesh-and-independent-document-projection-agree"
+            ]
+          }
+        },
+        {
+          "id": "remove-vertex",
+          "capability": "obj-3-0-mutate",
+          "payloadSchema": "../🧬️schema/🧬️mutations/🦀️.rs#RemoveVertex",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "remove-vertex",
+            "bridgeVersion": 1,
+            "variant": "ObjMutation::RemoveVertex"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "obj-3-0-mutate-document",
+              "qualifyingKind": "third-party-library",
+              "oracle": "three-obj-3-0-document-reader"
+            }
+          ],
+          "carriers": [
+            "obj"
+          ],
+          "invariants": {
+            "local": [
+              "declared-vertex-count-decreases-by-one"
+            ],
+            "enclosing": [
+              "tobj-mesh-and-independent-document-projection-agree"
+            ]
+          }
+        },
+        {
+          "id": "set-vertex",
+          "capability": "obj-3-0-mutate",
+          "payloadSchema": "../🧬️schema/🧬️mutations/🦀️.rs#SetVertex",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "set-vertex",
+            "bridgeVersion": 1,
+            "variant": "ObjMutation::SetVertex"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "obj-3-0-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "tobj-obj-3-0-mutate-reader"
+            }
+          ],
+          "carriers": [
+            "obj"
+          ],
+          "invariants": {
+            "local": [
+              "declared-vertex-extent-moves-at-the-named-row"
+            ],
+            "enclosing": [
+              "tobj-mesh-and-independent-document-projection-agree"
+            ]
+          }
+        },
+        {
+          "id": "insert-texcoord",
+          "capability": "obj-3-0-mutate",
+          "payloadSchema": "../🧬️schema/🧬️mutations/🦀️.rs#InsertTexcoord",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "insert-texcoord",
+            "bridgeVersion": 1,
+            "variant": "ObjMutation::InsertTexcoord"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "obj-3-0-mutate-document",
+              "qualifyingKind": "third-party-library",
+              "oracle": "three-obj-3-0-document-reader"
+            }
+          ],
+          "carriers": [
+            "obj"
+          ],
+          "invariants": {
+            "local": [
+              "declared-texcoord-count-increases-by-one"
+            ],
+            "enclosing": [
+              "tobj-mesh-and-independent-document-projection-agree"
+            ]
+          }
+        },
+        {
+          "id": "remove-texcoord",
+          "capability": "obj-3-0-mutate",
+          "payloadSchema": "../🧬️schema/🧬️mutations/🦀️.rs#RemoveTexcoord",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "remove-texcoord",
+            "bridgeVersion": 1,
+            "variant": "ObjMutation::RemoveTexcoord"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "obj-3-0-mutate-document",
+              "qualifyingKind": "third-party-library",
+              "oracle": "three-obj-3-0-document-reader"
+            }
+          ],
+          "carriers": [
+            "obj"
+          ],
+          "invariants": {
+            "local": [
+              "declared-texcoord-count-decreases-by-one"
+            ],
+            "enclosing": [
+              "tobj-mesh-and-independent-document-projection-agree"
+            ]
+          }
+        },
+        {
+          "id": "set-texcoord",
+          "capability": "obj-3-0-mutate",
+          "payloadSchema": "../🧬️schema/🧬️mutations/🦀️.rs#SetTexcoord",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "set-texcoord",
+            "bridgeVersion": 1,
+            "variant": "ObjMutation::SetTexcoord"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "obj-3-0-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "tobj-obj-3-0-mutate-reader"
+            }
+          ],
+          "carriers": [
+            "obj"
+          ],
+          "invariants": {
+            "local": [
+              "declared-texcoord-extent-moves-at-the-named-row"
+            ],
+            "enclosing": [
+              "tobj-mesh-and-independent-document-projection-agree"
+            ]
+          }
+        },
+        {
+          "id": "insert-normal",
+          "capability": "obj-3-0-mutate",
+          "payloadSchema": "../🧬️schema/🧬️mutations/🦀️.rs#InsertNormal",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "insert-normal",
+            "bridgeVersion": 1,
+            "variant": "ObjMutation::InsertNormal"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "obj-3-0-mutate-document",
+              "qualifyingKind": "third-party-library",
+              "oracle": "three-obj-3-0-document-reader"
+            }
+          ],
+          "carriers": [
+            "obj"
+          ],
+          "invariants": {
+            "local": [
+              "declared-normal-count-increases-by-one"
+            ],
+            "enclosing": [
+              "tobj-mesh-and-independent-document-projection-agree"
+            ]
+          }
+        },
+        {
+          "id": "remove-normal",
+          "capability": "obj-3-0-mutate",
+          "payloadSchema": "../🧬️schema/🧬️mutations/🦀️.rs#RemoveNormal",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "remove-normal",
+            "bridgeVersion": 1,
+            "variant": "ObjMutation::RemoveNormal"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "obj-3-0-mutate-document",
+              "qualifyingKind": "third-party-library",
+              "oracle": "three-obj-3-0-document-reader"
+            }
+          ],
+          "carriers": [
+            "obj"
+          ],
+          "invariants": {
+            "local": [
+              "declared-normal-count-decreases-by-one"
+            ],
+            "enclosing": [
+              "tobj-mesh-and-independent-document-projection-agree"
+            ]
+          }
+        },
+        {
+          "id": "set-normal",
+          "capability": "obj-3-0-mutate",
+          "payloadSchema": "../🧬️schema/🧬️mutations/🦀️.rs#SetNormal",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "set-normal",
+            "bridgeVersion": 1,
+            "variant": "ObjMutation::SetNormal"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "obj-3-0-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "tobj-obj-3-0-mutate-reader"
+            }
+          ],
+          "carriers": [
+            "obj"
+          ],
+          "invariants": {
+            "local": [
+              "declared-normal-extent-moves-at-the-named-row"
+            ],
+            "enclosing": [
+              "tobj-mesh-and-independent-document-projection-agree"
+            ]
+          }
+        },
+        {
+          "id": "insert-face",
+          "capability": "obj-3-0-mutate",
+          "payloadSchema": "../🧬️schema/🧬️mutations/🦀️.rs#InsertFace",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "insert-face",
+            "bridgeVersion": 1,
+            "variant": "ObjMutation::InsertFace"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "obj-3-0-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "tobj-obj-3-0-mutate-reader"
+            }
+          ],
+          "carriers": [
+            "obj"
+          ],
+          "invariants": {
+            "local": [
+              "face-index-space-opens-at-the-insertion-point",
+              "tobj-triangle-count-increases-by-one"
+            ],
+            "enclosing": [
+              "tobj-mesh-and-independent-document-projection-agree"
+            ]
+          }
+        },
+        {
+          "id": "remove-face",
+          "capability": "obj-3-0-mutate",
+          "payloadSchema": "../🧬️schema/🧬️mutations/🦀️.rs#RemoveFace",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "remove-face",
+            "bridgeVersion": 1,
+            "variant": "ObjMutation::RemoveFace"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "obj-3-0-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "tobj-obj-3-0-mutate-reader"
+            }
+          ],
+          "carriers": [
+            "obj"
+          ],
+          "invariants": {
+            "local": [
+              "face-index-space-closes-at-the-removal-point",
+              "tobj-triangle-count-decreases-by-one"
+            ],
+            "enclosing": [
+              "tobj-mesh-and-independent-document-projection-agree"
+            ]
+          }
+        },
+        {
+          "id": "set-face",
+          "capability": "obj-3-0-mutate",
+          "payloadSchema": "../🧬️schema/🧬️mutations/🦀️.rs#SetFace",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "set-face",
+            "bridgeVersion": 1,
+            "variant": "ObjMutation::SetFace"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "obj-3-0-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "tobj-obj-3-0-mutate-reader"
+            }
+          ],
+          "carriers": [
+            "obj"
+          ],
+          "invariants": {
+            "local": [
+              "tobj-face-topology-moves-while-the-document-surface-holds"
+            ],
+            "enclosing": [
+              "tobj-mesh-and-independent-document-projection-agree"
+            ]
+          }
+        },
+        {
+          "id": "set-group",
+          "capability": "obj-3-0-mutate",
+          "payloadSchema": "../🧬️schema/🧬️mutations/🦀️.rs#SetGroup",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "set-group",
+            "bridgeVersion": 1,
+            "variant": "ObjMutation::SetGroup"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "obj-3-0-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "tobj-obj-3-0-mutate-reader"
+            }
+          ],
+          "carriers": [
+            "obj"
+          ],
+          "invariants": {
+            "local": [
+              "named-group-membership-span-matches-the-declared-faces"
+            ],
+            "enclosing": [
+              "tobj-mesh-and-independent-document-projection-agree"
+            ]
+          }
+        },
+        {
+          "id": "remove-group",
+          "capability": "obj-3-0-mutate",
+          "payloadSchema": "../🧬️schema/🧬️mutations/🦀️.rs#RemoveGroup",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "remove-group",
+            "bridgeVersion": 1,
+            "variant": "ObjMutation::RemoveGroup"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "obj-3-0-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "tobj-obj-3-0-mutate-reader"
+            }
+          ],
+          "carriers": [
+            "obj"
+          ],
+          "invariants": {
+            "local": [
+              "named-group-leaves-the-list-and-later-bands-keep-their-order"
+            ],
+            "enclosing": [
+              "tobj-mesh-and-independent-document-projection-agree"
+            ]
+          }
+        },
+        {
+          "id": "set-object",
+          "capability": "obj-3-0-mutate",
+          "payloadSchema": "../🧬️schema/🧬️mutations/🦀️.rs#SetObject",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "set-object",
+            "bridgeVersion": 1,
+            "variant": "ObjMutation::SetObject"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "obj-3-0-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "tobj-obj-3-0-mutate-reader"
+            }
+          ],
+          "carriers": [
+            "obj"
+          ],
+          "invariants": {
+            "local": [
+              "named-object-membership-span-matches-the-declared-faces"
+            ],
+            "enclosing": [
+              "tobj-mesh-and-independent-document-projection-agree"
+            ]
+          }
+        },
+        {
+          "id": "remove-object",
+          "capability": "obj-3-0-mutate",
+          "payloadSchema": "../🧬️schema/🧬️mutations/🦀️.rs#RemoveObject",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "remove-object",
+            "bridgeVersion": 1,
+            "variant": "ObjMutation::RemoveObject"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "obj-3-0-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "tobj-obj-3-0-mutate-reader"
+            }
+          ],
+          "carriers": [
+            "obj"
+          ],
+          "invariants": {
+            "local": [
+              "named-object-leaves-the-list-and-later-objects-keep-their-order"
+            ],
+            "enclosing": [
+              "tobj-mesh-and-independent-document-projection-agree"
+            ]
+          }
+        },
+        {
+          "id": "set-smoothing-groups",
+          "capability": "obj-3-0-mutate",
+          "payloadSchema": "../🧬️schema/🧬️mutations/🦀️.rs#SetSmoothingGroups",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "set-smoothing-groups",
+            "bridgeVersion": 1,
+            "variant": "ObjMutation::SetSmoothingGroups"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "obj-3-0-mutate-document",
+              "qualifyingKind": "third-party-library",
+              "oracle": "three-obj-3-0-document-reader"
+            }
+          ],
+          "carriers": [
+            "obj"
+          ],
+          "invariants": {
+            "local": [
+              "smoothing-run-starts-match-the-declared-list"
+            ],
+            "enclosing": [
+              "tobj-mesh-and-independent-document-projection-agree"
+            ]
+          }
+        },
+        {
+          "id": "set-unknown-statements",
+          "capability": "obj-3-0-mutate",
+          "payloadSchema": "../🧬️schema/🧬️mutations/🦀️.rs#SetUnknownStatements",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "set-unknown-statements",
+            "bridgeVersion": 1,
+            "variant": "ObjMutation::SetUnknownStatements"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "obj-3-0-mutate-document",
+              "qualifyingKind": "third-party-library",
+              "oracle": "three-obj-3-0-document-reader"
+            }
+          ],
+          "carriers": [
+            "obj"
+          ],
+          "invariants": {
+            "local": [
+              "retained-statement-lines-match-the-declared-list"
+            ],
+            "enclosing": [
+              "tobj-mesh-and-independent-document-projection-agree"
+            ]
+          }
+        }
+      ]
+    }
+  ],
+  "fixtureManifests": [
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "pattern-shell",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.obj",
+        "standard": "3.0",
+        "subset": "geometry"
+      },
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "primary-obj",
+          "path": "../🧫️fixtures/pattern-shell/pattern-shell.obj",
+          "mediaType": "model/obj",
+          "sha256": "sha256:caa5195064e5011f97fccc8afedb2d61a7cf5e844b2f9dda9de9dc52e6f32418",
+          "bytes": 482
+        }
+      ],
+      "generator": {
+        "oracle": "tobj-obj-3-0-mutate-reader",
+        "packageVersion": "4",
+        "engineFamily": "tobj",
+        "engineVersion": "4",
+        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️obj/🏅️standards/🔖️3.0/🪆️subsets/✳️geometry/🏭️generator/📜️script.ts generate",
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "public-domain (synthetic, no third-party content embedded)"
+      },
+      "comparisonProfile": "semantic-obj-3-0-v1",
+      "reproducible": true,
+      "family": "mechanical",
+      "notes": "One base input document exercising all 22 declared obj@3.0 mutation kinds: 6 v rows (one with an explicit w, one referenced by no face), 6 vt and 4 vn rows (likewise one unreferenced each), 5 f rows across 2 g bands and 2 o objects, an mtllib, two usemtl runs and two s runs starting at different face indices (one of them `s off`), and 2 retained comment lines. The unreferenced rows are deliberate: tobj re-indexes per model and drops every row no face references, so those kinds move the document projection and NOTHING in the mesh projection — measured, 14 of the 22 kinds move only the document half and set-face moves only the mesh half. OBJ declares no physical length or angle unit, so `unitless`/`degree` are the schema-required placeholders, not claims. OBJ has no reference WRITER in the Rust ecosystem, so the bytes are written by the generator's own grammar emitter and ADMITTED by the registered tobj 4 reader before being written to disk (3 models, 13 referenced positions, 15 triangulated indices) — the same already-recorded precedent this subset's oracle and the shared mesh::oracle_create_obj rest on."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "no-mutation-no-op",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.obj",
+        "standard": "3.0",
+        "subset": "geometry"
+      },
+      "mutation": "no-mutation",
+      "outcome": "no-op",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before-obj",
+          "path": "../🧫️fixtures/no-mutation-no-op/before.obj",
+          "mediaType": "model/obj",
+          "sha256": "sha256:ee8eee4b677c7bb337d25dd01b23fa8f76723c42fa8bea45df57dcf7792763f7",
+          "bytes": 109
+        },
+        {
+          "role": "expected-after-obj",
+          "path": "../🧫️fixtures/no-mutation-no-op/after.obj",
+          "mediaType": "model/obj",
+          "sha256": "sha256:ee8eee4b677c7bb337d25dd01b23fa8f76723c42fa8bea45df57dcf7792763f7",
+          "bytes": 109
+        }
+      ],
+      "generator": {
+        "oracle": "tobj-obj-3-0-mutate-reader",
+        "packageVersion": "4",
+        "engineFamily": "tobj",
+        "engineVersion": "4",
+        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️obj/🏅️standards/🔖️3.0/🪆️subsets/✳️geometry/🏭️generator/📜️script.ts generate --only no-mutation-no-op",
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "public-domain (synthetic, no third-party content embedded)"
+      },
+      "comparisonProfile": "semantic-obj-3-0-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "Identity — NoMutation's diff is empty; before and after bytes are byte-identical. tobj must witness zero difference."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "set-snapshot-applied",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.obj",
+        "standard": "3.0",
+        "subset": "geometry"
+      },
+      "mutation": "set-snapshot",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before-obj",
+          "path": "../🧫️fixtures/set-snapshot-applied/before.obj",
+          "mediaType": "model/obj",
+          "sha256": "sha256:ee8eee4b677c7bb337d25dd01b23fa8f76723c42fa8bea45df57dcf7792763f7",
+          "bytes": 109
+        },
+        {
+          "role": "expected-after-obj",
+          "path": "../🧫️fixtures/set-snapshot-applied/after.obj",
+          "mediaType": "model/obj",
+          "sha256": "sha256:8354105427d4bb6797eb81d98d4b26d38f7bdb33ad7443564681b3632f21ac8a",
+          "bytes": 74
+        }
+      ],
+      "generator": {
+        "oracle": "tobj-obj-3-0-mutate-reader",
+        "packageVersion": "4",
+        "engineFamily": "tobj",
+        "engineVersion": "4",
+        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️obj/🏅️standards/🔖️3.0/🪆️subsets/✳️geometry/🏭️generator/📜️script.ts generate --only set-snapshot-applied",
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "public-domain (synthetic, no third-party content embedded)"
+      },
+      "comparisonProfile": "semantic-obj-3-0-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "Whole-document replace: a materially different 1-triangle document (fewer vertices, different positions, no shared face) — tobj sees a different vertexCount/triangleCount/positions."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "set-vertex-applied",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.obj",
+        "standard": "3.0",
+        "subset": "geometry"
+      },
+      "mutation": "set-vertex",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before-obj",
+          "path": "../🧫️fixtures/set-vertex-applied/before.obj",
+          "mediaType": "model/obj",
+          "sha256": "sha256:ee8eee4b677c7bb337d25dd01b23fa8f76723c42fa8bea45df57dcf7792763f7",
+          "bytes": 109
+        },
+        {
+          "role": "expected-after-obj",
+          "path": "../🧫️fixtures/set-vertex-applied/after.obj",
+          "mediaType": "model/obj",
+          "sha256": "sha256:410205277a1a23a6f3a70b688eb3689d92c6f836b504be04b9c6b11e3d6ee329",
+          "bytes": 109
+        }
+      ],
+      "generator": {
+        "oracle": "tobj-obj-3-0-mutate-reader",
+        "packageVersion": "4",
+        "engineFamily": "tobj",
+        "engineVersion": "4",
+        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️obj/🏅️standards/🔖️3.0/🪆️subsets/✳️geometry/🏭️generator/📜️script.ts generate --only set-vertex-applied",
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "public-domain (synthetic, no third-party content embedded)"
+      },
+      "comparisonProfile": "semantic-obj-3-0-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "SetVertex{index:1,...} on a vertex BOTH faces reference (in-place replace, no index shift) — tobj's resolved position for that corner moves from (1,0,0) to (1,0,5)."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "set-vertex-rejected-out-of-bounds",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.obj",
+        "standard": "3.0",
+        "subset": "geometry"
+      },
+      "mutation": "set-vertex",
+      "outcome": "rejected",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before-obj",
+          "path": "../🧫️fixtures/set-vertex-rejected-out-of-bounds/before.obj",
+          "mediaType": "model/obj",
+          "sha256": "sha256:ee8eee4b677c7bb337d25dd01b23fa8f76723c42fa8bea45df57dcf7792763f7",
+          "bytes": 109
+        }
+      ],
+      "generator": {
+        "oracle": "tobj-obj-3-0-mutate-reader",
+        "packageVersion": "4",
+        "engineFamily": "tobj",
+        "engineVersion": "4",
+        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️obj/🏅️standards/🔖️3.0/🪆️subsets/✳️geometry/🏭️generator/📜️script.ts generate --only set-vertex-rejected-out-of-bounds",
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "public-domain (synthetic, no third-party content embedded)"
+      },
+      "comparisonProfile": "semantic-obj-3-0-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "SetVertex{index:9,...} — base.vertices.len() is 4; validate_indexed_targets's invalid-modify-index rejects (../../🧬️schema/🔺️diff/🦀️.rs)."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "set-texcoord-applied",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.obj",
+        "standard": "3.0",
+        "subset": "geometry"
+      },
+      "mutation": "set-texcoord",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before-obj",
+          "path": "../🧫️fixtures/set-texcoord-applied/before.obj",
+          "mediaType": "model/obj",
+          "sha256": "sha256:ee8eee4b677c7bb337d25dd01b23fa8f76723c42fa8bea45df57dcf7792763f7",
+          "bytes": 109
+        },
+        {
+          "role": "expected-after-obj",
+          "path": "../🧫️fixtures/set-texcoord-applied/after.obj",
+          "mediaType": "model/obj",
+          "sha256": "sha256:ac271378834ce5cee8396064a10b5c58619c4227e2668a0bfa8ea11005fba112",
+          "bytes": 113
+        }
+      ],
+      "generator": {
+        "oracle": "tobj-obj-3-0-mutate-reader",
+        "packageVersion": "4",
+        "engineFamily": "tobj",
+        "engineVersion": "4",
+        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️obj/🏅️standards/🔖️3.0/🪆️subsets/✳️geometry/🏭️generator/📜️script.ts generate --only set-texcoord-applied",
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "public-domain (synthetic, no third-party content embedded)"
+      },
+      "comparisonProfile": "semantic-obj-3-0-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "SetTexcoord{index:1,...} on a texcoord a face references — tobj's per-corner texcoords array moves."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "set-texcoord-rejected-out-of-bounds",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.obj",
+        "standard": "3.0",
+        "subset": "geometry"
+      },
+      "mutation": "set-texcoord",
+      "outcome": "rejected",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before-obj",
+          "path": "../🧫️fixtures/set-texcoord-rejected-out-of-bounds/before.obj",
+          "mediaType": "model/obj",
+          "sha256": "sha256:ee8eee4b677c7bb337d25dd01b23fa8f76723c42fa8bea45df57dcf7792763f7",
+          "bytes": 109
+        }
+      ],
+      "generator": {
+        "oracle": "tobj-obj-3-0-mutate-reader",
+        "packageVersion": "4",
+        "engineFamily": "tobj",
+        "engineVersion": "4",
+        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️obj/🏅️standards/🔖️3.0/🪆️subsets/✳️geometry/🏭️generator/📜️script.ts generate --only set-texcoord-rejected-out-of-bounds",
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "public-domain (synthetic, no third-party content embedded)"
+      },
+      "comparisonProfile": "semantic-obj-3-0-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "SetTexcoord{index:9,...} — base.texcoords.len() is 4; invalid-modify-index rejects."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "set-normal-applied",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.obj",
+        "standard": "3.0",
+        "subset": "geometry"
+      },
+      "mutation": "set-normal",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before-obj",
+          "path": "../🧫️fixtures/set-normal-applied/before.obj",
+          "mediaType": "model/obj",
+          "sha256": "sha256:ee8eee4b677c7bb337d25dd01b23fa8f76723c42fa8bea45df57dcf7792763f7",
+          "bytes": 109
+        },
+        {
+          "role": "expected-after-obj",
+          "path": "../🧫️fixtures/set-normal-applied/after.obj",
+          "mediaType": "model/obj",
+          "sha256": "sha256:5aa947df8804885045dceddf8f4c64876cde1f90a157e9898ec8e687b99634d4",
+          "bytes": 110
+        }
+      ],
+      "generator": {
+        "oracle": "tobj-obj-3-0-mutate-reader",
+        "packageVersion": "4",
+        "engineFamily": "tobj",
+        "engineVersion": "4",
+        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️obj/🏅️standards/🔖️3.0/🪆️subsets/✳️geometry/🏭️generator/📜️script.ts generate --only set-normal-applied",
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "public-domain (synthetic, no third-party content embedded)"
+      },
+      "comparisonProfile": "semantic-obj-3-0-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "SetNormal{index:0,...} (the sole declared normal, referenced by both faces) — tobj's per-corner normals array flips."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "set-normal-rejected-out-of-bounds",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.obj",
+        "standard": "3.0",
+        "subset": "geometry"
+      },
+      "mutation": "set-normal",
+      "outcome": "rejected",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before-obj",
+          "path": "../🧫️fixtures/set-normal-rejected-out-of-bounds/before.obj",
+          "mediaType": "model/obj",
+          "sha256": "sha256:ee8eee4b677c7bb337d25dd01b23fa8f76723c42fa8bea45df57dcf7792763f7",
+          "bytes": 109
+        }
+      ],
+      "generator": {
+        "oracle": "tobj-obj-3-0-mutate-reader",
+        "packageVersion": "4",
+        "engineFamily": "tobj",
+        "engineVersion": "4",
+        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️obj/🏅️standards/🔖️3.0/🪆️subsets/✳️geometry/🏭️generator/📜️script.ts generate --only set-normal-rejected-out-of-bounds",
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "public-domain (synthetic, no third-party content embedded)"
+      },
+      "comparisonProfile": "semantic-obj-3-0-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "SetNormal{index:9,...} — base.normals.len() is 1; invalid-modify-index rejects."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "insert-face-applied",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.obj",
+        "standard": "3.0",
+        "subset": "geometry"
+      },
+      "mutation": "insert-face",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before-obj",
+          "path": "../🧫️fixtures/insert-face-applied/before.obj",
+          "mediaType": "model/obj",
+          "sha256": "sha256:ee8eee4b677c7bb337d25dd01b23fa8f76723c42fa8bea45df57dcf7792763f7",
+          "bytes": 109
+        },
+        {
+          "role": "expected-after-obj",
+          "path": "../🧫️fixtures/insert-face-applied/after.obj",
+          "mediaType": "model/obj",
+          "sha256": "sha256:284687dc5003121d3570e29af1277a1c5b6075202433c6ba9a5196f2ac9d4396",
+          "bytes": 129
+        }
+      ],
+      "generator": {
+        "oracle": "tobj-obj-3-0-mutate-reader",
+        "packageVersion": "4",
+        "engineFamily": "tobj",
+        "engineVersion": "4",
+        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️obj/🏅️standards/🔖️3.0/🪆️subsets/✳️geometry/🏭️generator/📜️script.ts generate --only insert-face-applied",
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "public-domain (synthetic, no third-party content embedded)"
+      },
+      "comparisonProfile": "semantic-obj-3-0-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "InsertFace{index:1,...} between the two declared faces — tobj's triangleCount goes 2 -> 3."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "insert-face-rejected-out-of-bounds",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.obj",
+        "standard": "3.0",
+        "subset": "geometry"
+      },
+      "mutation": "insert-face",
+      "outcome": "rejected",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before-obj",
+          "path": "../🧫️fixtures/insert-face-rejected-out-of-bounds/before.obj",
+          "mediaType": "model/obj",
+          "sha256": "sha256:ee8eee4b677c7bb337d25dd01b23fa8f76723c42fa8bea45df57dcf7792763f7",
+          "bytes": 109
+        }
+      ],
+      "generator": {
+        "oracle": "tobj-obj-3-0-mutate-reader",
+        "packageVersion": "4",
+        "engineFamily": "tobj",
+        "engineVersion": "4",
+        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️obj/🏅️standards/🔖️3.0/🪆️subsets/✳️geometry/🏭️generator/📜️script.ts generate --only insert-face-rejected-out-of-bounds",
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "public-domain (synthetic, no third-party content embedded)"
+      },
+      "comparisonProfile": "semantic-obj-3-0-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "InsertFace{index:9,...} — base.faces.len() is 2 (evolving length 2); invalid-add-index rejects (index > length)."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "remove-face-applied",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.obj",
+        "standard": "3.0",
+        "subset": "geometry"
+      },
+      "mutation": "remove-face",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before-obj",
+          "path": "../🧫️fixtures/remove-face-applied/before.obj",
+          "mediaType": "model/obj",
+          "sha256": "sha256:ee8eee4b677c7bb337d25dd01b23fa8f76723c42fa8bea45df57dcf7792763f7",
+          "bytes": 109
+        },
+        {
+          "role": "expected-after-obj",
+          "path": "../🧫️fixtures/remove-face-applied/after.obj",
+          "mediaType": "model/obj",
+          "sha256": "sha256:05a9f2628671b7952437b89273a29324af43d84afbdba2594551fa463ec51551",
+          "bytes": 89
+        }
+      ],
+      "generator": {
+        "oracle": "tobj-obj-3-0-mutate-reader",
+        "packageVersion": "4",
+        "engineFamily": "tobj",
+        "engineVersion": "4",
+        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️obj/🏅️standards/🔖️3.0/🪆️subsets/✳️geometry/🏭️generator/📜️script.ts generate --only remove-face-applied",
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "public-domain (synthetic, no third-party content embedded)"
+      },
+      "comparisonProfile": "semantic-obj-3-0-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "RemoveFace{index:0} — tobj's triangleCount goes 2 -> 1."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "remove-face-rejected-missing",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.obj",
+        "standard": "3.0",
+        "subset": "geometry"
+      },
+      "mutation": "remove-face",
+      "outcome": "rejected",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before-obj",
+          "path": "../🧫️fixtures/remove-face-rejected-missing/before.obj",
+          "mediaType": "model/obj",
+          "sha256": "sha256:ee8eee4b677c7bb337d25dd01b23fa8f76723c42fa8bea45df57dcf7792763f7",
+          "bytes": 109
+        }
+      ],
+      "generator": {
+        "oracle": "tobj-obj-3-0-mutate-reader",
+        "packageVersion": "4",
+        "engineFamily": "tobj",
+        "engineVersion": "4",
+        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️obj/🏅️standards/🔖️3.0/🪆️subsets/✳️geometry/🏭️generator/📜️script.ts generate --only remove-face-rejected-missing",
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "public-domain (synthetic, no third-party content embedded)"
+      },
+      "comparisonProfile": "semantic-obj-3-0-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "RemoveFace{index:9} — base.faces.len() is 2; invalid-remove-index rejects."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "set-face-applied",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.obj",
+        "standard": "3.0",
+        "subset": "geometry"
+      },
+      "mutation": "set-face",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before-obj",
+          "path": "../🧫️fixtures/set-face-applied/before.obj",
+          "mediaType": "model/obj",
+          "sha256": "sha256:ee8eee4b677c7bb337d25dd01b23fa8f76723c42fa8bea45df57dcf7792763f7",
+          "bytes": 109
+        },
+        {
+          "role": "expected-after-obj",
+          "path": "../🧫️fixtures/set-face-applied/after.obj",
+          "mediaType": "model/obj",
+          "sha256": "sha256:c1de8b0f93c158cbe1bfd44562be6dd8c45b162de403a46229a2b910d9134f19",
+          "bytes": 109
+        }
+      ],
+      "generator": {
+        "oracle": "tobj-obj-3-0-mutate-reader",
+        "packageVersion": "4",
+        "engineFamily": "tobj",
+        "engineVersion": "4",
+        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️obj/🏅️standards/🔖️3.0/🪆️subsets/✳️geometry/🏭️generator/📜️script.ts generate --only set-face-applied",
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "public-domain (synthetic, no third-party content embedded)"
+      },
+      "comparisonProfile": "semantic-obj-3-0-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "SetFace{index:0,...} — same 3 corners, reversed winding; tobj's triangles[0] index order changes even though vertexCount/triangleCount hold."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "set-face-rejected-out-of-bounds",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.obj",
+        "standard": "3.0",
+        "subset": "geometry"
+      },
+      "mutation": "set-face",
+      "outcome": "rejected",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before-obj",
+          "path": "../🧫️fixtures/set-face-rejected-out-of-bounds/before.obj",
+          "mediaType": "model/obj",
+          "sha256": "sha256:ee8eee4b677c7bb337d25dd01b23fa8f76723c42fa8bea45df57dcf7792763f7",
+          "bytes": 109
+        }
+      ],
+      "generator": {
+        "oracle": "tobj-obj-3-0-mutate-reader",
+        "packageVersion": "4",
+        "engineFamily": "tobj",
+        "engineVersion": "4",
+        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️obj/🏅️standards/🔖️3.0/🪆️subsets/✳️geometry/🏭️generator/📜️script.ts generate --only set-face-rejected-out-of-bounds",
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "public-domain (synthetic, no third-party content embedded)"
+      },
+      "comparisonProfile": "semantic-obj-3-0-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "SetFace{index:9,...} — base.faces.len() is 2; invalid-modify-index rejects."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "set-group-applied",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.obj",
+        "standard": "3.0",
+        "subset": "geometry"
+      },
+      "mutation": "set-group",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before-obj",
+          "path": "../🧫️fixtures/set-group-applied/before.obj",
+          "mediaType": "model/obj",
+          "sha256": "sha256:f342d88522c1afb2b7f4f46c19a691bf9538e2075f40b971c37db81a1ea91277",
+          "bytes": 74
+        },
+        {
+          "role": "expected-after-obj",
+          "path": "../🧫️fixtures/set-group-applied/after.obj",
+          "mediaType": "model/obj",
+          "sha256": "sha256:b283463bf79eadf81e1fd8092621f89d6ecf9e53a32a2c0b746ff9a3965ea314",
+          "bytes": 72
+        }
+      ],
+      "generator": {
+        "oracle": "tobj-obj-3-0-mutate-reader",
+        "packageVersion": "4",
+        "engineFamily": "tobj",
+        "engineVersion": "4",
+        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️obj/🏅️standards/🔖️3.0/🪆️subsets/✳️geometry/🏭️generator/📜️script.ts generate --only set-group-applied",
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "public-domain (synthetic, no third-party content embedded)"
+      },
+      "comparisonProfile": "semantic-obj-3-0-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "SetGroup{name:\"alpha\",faces:[0,1]} — face 1 was ungrouped (bare `g` reset, tobj's own \"unnamed_object\" fallback); after, both faces fall continuously under `g alpha`, so tobj merges 2 models into 1 named \"alpha\" with 2 triangles."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "remove-group-applied",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.obj",
+        "standard": "3.0",
+        "subset": "geometry"
+      },
+      "mutation": "remove-group",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before-obj",
+          "path": "../🧫️fixtures/remove-group-applied/before.obj",
+          "mediaType": "model/obj",
+          "sha256": "sha256:876b124d9e7315366c9df9bbf74feb64d1bc7f3ef7b05c65dc1932dcd54beec8",
+          "bytes": 79
+        },
+        {
+          "role": "expected-after-obj",
+          "path": "../🧫️fixtures/remove-group-applied/after.obj",
+          "mediaType": "model/obj",
+          "sha256": "sha256:f342d88522c1afb2b7f4f46c19a691bf9538e2075f40b971c37db81a1ea91277",
+          "bytes": 74
+        }
+      ],
+      "generator": {
+        "oracle": "tobj-obj-3-0-mutate-reader",
+        "packageVersion": "4",
+        "engineFamily": "tobj",
+        "engineVersion": "4",
+        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️obj/🏅️standards/🔖️3.0/🪆️subsets/✳️geometry/🏭️generator/📜️script.ts generate --only remove-group-applied",
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "public-domain (synthetic, no third-party content embedded)"
+      },
+      "comparisonProfile": "semantic-obj-3-0-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "RemoveGroup{name:\"beta\"} — face 1 falls back to no group; tobj's second model's NAME changes from \"beta\" to its own \"unnamed_object\" fallback."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "remove-group-rejected-missing",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.obj",
+        "standard": "3.0",
+        "subset": "geometry"
+      },
+      "mutation": "remove-group",
+      "outcome": "rejected",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before-obj",
+          "path": "../🧫️fixtures/remove-group-rejected-missing/before.obj",
+          "mediaType": "model/obj",
+          "sha256": "sha256:876b124d9e7315366c9df9bbf74feb64d1bc7f3ef7b05c65dc1932dcd54beec8",
+          "bytes": 79
+        }
+      ],
+      "generator": {
+        "oracle": "tobj-obj-3-0-mutate-reader",
+        "packageVersion": "4",
+        "engineFamily": "tobj",
+        "engineVersion": "4",
+        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️obj/🏅️standards/🔖️3.0/🪆️subsets/✳️geometry/🏭️generator/📜️script.ts generate --only remove-group-rejected-missing",
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "public-domain (synthetic, no third-party content embedded)"
+      },
+      "comparisonProfile": "semantic-obj-3-0-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "RemoveGroup{name:\"gamma\"} — \"gamma\" is not in base.groups; validate_named_targets's invalid-remove-target rejects."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "set-object-applied",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.obj",
+        "standard": "3.0",
+        "subset": "geometry"
+      },
+      "mutation": "set-object",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before-obj",
+          "path": "../🧫️fixtures/set-object-applied/before.obj",
+          "mediaType": "model/obj",
+          "sha256": "sha256:66fb04bcdcbede442dee473eba8ccf65dfa9e72d019ad00317233011e049993d",
+          "bytes": 72
+        },
+        {
+          "role": "expected-after-obj",
+          "path": "../🧫️fixtures/set-object-applied/after.obj",
+          "mediaType": "model/obj",
+          "sha256": "sha256:1cf08bfbcc83d05218f1eb9bf62e394a544b19b3b3b3cbb26ef806084d1fdf18",
+          "bytes": 79
+        }
+      ],
+      "generator": {
+        "oracle": "tobj-obj-3-0-mutate-reader",
+        "packageVersion": "4",
+        "engineFamily": "tobj",
+        "engineVersion": "4",
+        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️obj/🏅️standards/🔖️3.0/🪆️subsets/✳️geometry/🏭️generator/📜️script.ts generate --only set-object-applied",
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "public-domain (synthetic, no third-party content embedded)"
+      },
+      "comparisonProfile": "semantic-obj-3-0-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "SetObject{name:\"beta\",faces:[1]} — face 1 was under \"alpha\" (1 merged model, 2 triangles); \"beta\" is appended after \"alpha\" in the objects list so it wins face 1 on render, and tobj now reports 2 models, \"alpha\" (1 tri) and \"beta\" (1 tri)."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "remove-object-applied",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.obj",
+        "standard": "3.0",
+        "subset": "geometry"
+      },
+      "mutation": "remove-object",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before-obj",
+          "path": "../🧫️fixtures/remove-object-applied/before.obj",
+          "mediaType": "model/obj",
+          "sha256": "sha256:1cf08bfbcc83d05218f1eb9bf62e394a544b19b3b3b3cbb26ef806084d1fdf18",
+          "bytes": 79
+        },
+        {
+          "role": "expected-after-obj",
+          "path": "../🧫️fixtures/remove-object-applied/after.obj",
+          "mediaType": "model/obj",
+          "sha256": "sha256:7c887feb8b6ab0f42cecc51ffc927b39065bcad7a01cad51804a642265b785d6",
+          "bytes": 74
+        }
+      ],
+      "generator": {
+        "oracle": "tobj-obj-3-0-mutate-reader",
+        "packageVersion": "4",
+        "engineFamily": "tobj",
+        "engineVersion": "4",
+        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️obj/🏅️standards/🔖️3.0/🪆️subsets/✳️geometry/🏭️generator/📜️script.ts generate --only remove-object-applied",
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "public-domain (synthetic, no third-party content embedded)"
+      },
+      "comparisonProfile": "semantic-obj-3-0-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "RemoveObject{name:\"beta\"} — face 1 falls back to no object; tobj's second model's NAME changes from \"beta\" to its own \"unnamed_object\" fallback."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "remove-object-rejected-missing",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.obj",
+        "standard": "3.0",
+        "subset": "geometry"
+      },
+      "mutation": "remove-object",
+      "outcome": "rejected",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before-obj",
+          "path": "../🧫️fixtures/remove-object-rejected-missing/before.obj",
+          "mediaType": "model/obj",
+          "sha256": "sha256:1cf08bfbcc83d05218f1eb9bf62e394a544b19b3b3b3cbb26ef806084d1fdf18",
+          "bytes": 79
+        }
+      ],
+      "generator": {
+        "oracle": "tobj-obj-3-0-mutate-reader",
+        "packageVersion": "4",
+        "engineFamily": "tobj",
+        "engineVersion": "4",
+        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️obj/🏅️standards/🔖️3.0/🪆️subsets/✳️geometry/🏭️generator/📜️script.ts generate --only remove-object-rejected-missing",
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "public-domain (synthetic, no third-party content embedded)"
+      },
+      "comparisonProfile": "semantic-obj-3-0-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "RemoveObject{name:\"gamma\"} — \"gamma\" is not in base.objects; validate_named_targets's invalid-remove-target rejects."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "document-set-smoothing-groups",
+      "class": "handcrafted",
+      "target": {
+        "artifact": "s.stdio.obj",
+        "standard": "3.0",
+        "subset": "geometry"
+      },
+      "mutation": "set-smoothing-groups",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "radian"
+      },
+      "files": [
+        {
+          "role": "expected-before-obj",
+          "path": "../🧫️fixtures/set-smoothing-groups/before.obj",
+          "mediaType": "model/obj",
+          "sha256": "sha256:06a9207e60bf3a3b1f96d0d94584a6d3c74cbb1cd7592b58601f8c869ef728b0",
+          "bytes": 114
+        },
+        {
+          "role": "expected-after-obj",
+          "path": "../🧫️fixtures/set-smoothing-groups/after.obj",
+          "mediaType": "model/obj",
+          "sha256": "sha256:b73e3faa256144b0af412c58cc97fb220652a6145021eb497d6879f901f5feb0",
+          "bytes": 116
+        }
+      ],
+      "provenance": {
+        "source": "handcrafted",
+        "license": "public-domain (synthetic, no third-party content embedded)"
+      },
+      "generator": {
+        "oracle": "three-obj-3-0-document-reader",
+        "packageVersion": "0.182.0",
+        "engineFamily": "threejs",
+        "engineVersion": "0.182.0",
+        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️obj/🏅️standards/🔖️3.0/🪆️subsets/✳️geometry/🏭️generator/📜️script.ts document",
+        "platform": "darwin"
+      },
+      "comparisonProfile": "semantic-obj-document-v1",
+      "reproducible": true,
+      "family": "mechanical",
+      "notes": "A minimal handcrafted OBJ document with the set-smoothing-groups statement changed. tobj, this subset's other reader, is a MESH reader and discards this statement entirely; three's OBJLoader parses and keeps it. Observability was checked through that reader before the pair was written.",
+      "comparisonPipeline": "obj-3-0-document-compare-v1"
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "document-insert-vertex",
+      "class": "handcrafted",
+      "target": {
+        "artifact": "s.stdio.obj",
+        "standard": "3.0",
+        "subset": "geometry"
+      },
+      "mutation": "insert-vertex",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "radian"
+      },
+      "files": [
+        {
+          "role": "expected-before-obj",
+          "path": "../🧫️fixtures/insert-vertex/before.obj",
+          "mediaType": "model/obj",
+          "sha256": "sha256:06a9207e60bf3a3b1f96d0d94584a6d3c74cbb1cd7592b58601f8c869ef728b0",
+          "bytes": 114
+        },
+        {
+          "role": "expected-after-obj",
+          "path": "../🧫️fixtures/insert-vertex/after.obj",
+          "mediaType": "model/obj",
+          "sha256": "sha256:493c0270ee4e915656f6f75051e211507c6c5d1a2236b5257545f17a4efd4063",
+          "bytes": 122
+        }
+      ],
+      "provenance": {
+        "source": "handcrafted",
+        "license": "public-domain (synthetic, no third-party content embedded)"
+      },
+      "generator": {
+        "oracle": "three-obj-3-0-document-reader",
+        "packageVersion": "0.182.0",
+        "engineFamily": "threejs",
+        "engineVersion": "0.182.0",
+        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️obj/🏅️standards/🔖️3.0/🪆️subsets/✳️geometry/🏭️generator/📜️script.ts document",
+        "platform": "darwin"
+      },
+      "comparisonProfile": "semantic-obj-document-v1",
+      "reproducible": true,
+      "family": "mechanical",
+      "notes": "A minimal handcrafted OBJ document with the insert-vertex statement changed. tobj, this subset's other reader, is a MESH reader and discards this statement entirely; three's OBJLoader parses and keeps it. Observability was checked through that reader before the pair was written.",
+      "comparisonPipeline": "obj-3-0-document-compare-v1"
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "document-remove-vertex",
+      "class": "handcrafted",
+      "target": {
+        "artifact": "s.stdio.obj",
+        "standard": "3.0",
+        "subset": "geometry"
+      },
+      "mutation": "remove-vertex",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "radian"
+      },
+      "files": [
+        {
+          "role": "expected-before-obj",
+          "path": "../🧫️fixtures/remove-vertex/before.obj",
+          "mediaType": "model/obj",
+          "sha256": "sha256:06a9207e60bf3a3b1f96d0d94584a6d3c74cbb1cd7592b58601f8c869ef728b0",
+          "bytes": 114
+        },
+        {
+          "role": "expected-after-obj",
+          "path": "../🧫️fixtures/remove-vertex/after.obj",
+          "mediaType": "model/obj",
+          "sha256": "sha256:e8408d167da18fe1d70bff8e0f688a59e7fb479ed84d778622cbf713f985ed7b",
+          "bytes": 106
+        }
+      ],
+      "provenance": {
+        "source": "handcrafted",
+        "license": "public-domain (synthetic, no third-party content embedded)"
+      },
+      "generator": {
+        "oracle": "three-obj-3-0-document-reader",
+        "packageVersion": "0.182.0",
+        "engineFamily": "threejs",
+        "engineVersion": "0.182.0",
+        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️obj/🏅️standards/🔖️3.0/🪆️subsets/✳️geometry/🏭️generator/📜️script.ts document",
+        "platform": "darwin"
+      },
+      "comparisonProfile": "semantic-obj-document-v1",
+      "reproducible": true,
+      "family": "mechanical",
+      "notes": "A minimal handcrafted OBJ document with the remove-vertex statement changed. tobj, this subset's other reader, is a MESH reader and discards this statement entirely; three's OBJLoader parses and keeps it. Observability was checked through that reader before the pair was written.",
+      "comparisonPipeline": "obj-3-0-document-compare-v1"
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "document-insert-texcoord",
+      "class": "handcrafted",
+      "target": {
+        "artifact": "s.stdio.obj",
+        "standard": "3.0",
+        "subset": "geometry"
+      },
+      "mutation": "insert-texcoord",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "radian"
+      },
+      "files": [
+        {
+          "role": "expected-before-obj",
+          "path": "../🧫️fixtures/insert-texcoord/before.obj",
+          "mediaType": "model/obj",
+          "sha256": "sha256:06a9207e60bf3a3b1f96d0d94584a6d3c74cbb1cd7592b58601f8c869ef728b0",
+          "bytes": 114
+        },
+        {
+          "role": "expected-after-obj",
+          "path": "../🧫️fixtures/insert-texcoord/after.obj",
+          "mediaType": "model/obj",
+          "sha256": "sha256:afee2bbae7c94d3715f4350b45a919625b350e236aa83cc86b4dabd67d1943aa",
+          "bytes": 125
+        }
+      ],
+      "provenance": {
+        "source": "handcrafted",
+        "license": "public-domain (synthetic, no third-party content embedded)"
+      },
+      "generator": {
+        "oracle": "three-obj-3-0-document-reader",
+        "packageVersion": "0.182.0",
+        "engineFamily": "threejs",
+        "engineVersion": "0.182.0",
+        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️obj/🏅️standards/🔖️3.0/🪆️subsets/✳️geometry/🏭️generator/📜️script.ts document",
+        "platform": "darwin"
+      },
+      "comparisonProfile": "semantic-obj-document-v1",
+      "reproducible": true,
+      "family": "mechanical",
+      "notes": "A minimal handcrafted OBJ document with the insert-texcoord statement changed. tobj, this subset's other reader, is a MESH reader and discards this statement entirely; three's OBJLoader parses and keeps it. Observability was checked through that reader before the pair was written.",
+      "comparisonPipeline": "obj-3-0-document-compare-v1"
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "document-remove-texcoord",
+      "class": "handcrafted",
+      "target": {
+        "artifact": "s.stdio.obj",
+        "standard": "3.0",
+        "subset": "geometry"
+      },
+      "mutation": "remove-texcoord",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "radian"
+      },
+      "files": [
+        {
+          "role": "expected-before-obj",
+          "path": "../🧫️fixtures/remove-texcoord/before.obj",
+          "mediaType": "model/obj",
+          "sha256": "sha256:06a9207e60bf3a3b1f96d0d94584a6d3c74cbb1cd7592b58601f8c869ef728b0",
+          "bytes": 114
+        },
+        {
+          "role": "expected-after-obj",
+          "path": "../🧫️fixtures/remove-texcoord/after.obj",
+          "mediaType": "model/obj",
+          "sha256": "sha256:880c3089a94fe9d9b7d0a5423d223bc935746ce03e9cd496484f1f7c9111c210",
+          "bytes": 107
+        }
+      ],
+      "provenance": {
+        "source": "handcrafted",
+        "license": "public-domain (synthetic, no third-party content embedded)"
+      },
+      "generator": {
+        "oracle": "three-obj-3-0-document-reader",
+        "packageVersion": "0.182.0",
+        "engineFamily": "threejs",
+        "engineVersion": "0.182.0",
+        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️obj/🏅️standards/🔖️3.0/🪆️subsets/✳️geometry/🏭️generator/📜️script.ts document",
+        "platform": "darwin"
+      },
+      "comparisonProfile": "semantic-obj-document-v1",
+      "reproducible": true,
+      "family": "mechanical",
+      "notes": "A minimal handcrafted OBJ document with the remove-texcoord statement changed. tobj, this subset's other reader, is a MESH reader and discards this statement entirely; three's OBJLoader parses and keeps it. Observability was checked through that reader before the pair was written.",
+      "comparisonPipeline": "obj-3-0-document-compare-v1"
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "document-insert-normal",
+      "class": "handcrafted",
+      "target": {
+        "artifact": "s.stdio.obj",
+        "standard": "3.0",
+        "subset": "geometry"
+      },
+      "mutation": "insert-normal",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "radian"
+      },
+      "files": [
+        {
+          "role": "expected-before-obj",
+          "path": "../🧫️fixtures/insert-normal/before.obj",
+          "mediaType": "model/obj",
+          "sha256": "sha256:06a9207e60bf3a3b1f96d0d94584a6d3c74cbb1cd7592b58601f8c869ef728b0",
+          "bytes": 114
+        },
+        {
+          "role": "expected-after-obj",
+          "path": "../🧫️fixtures/insert-normal/after.obj",
+          "mediaType": "model/obj",
+          "sha256": "sha256:fb5365bbfe2becda88a4a8696d38818bf0929b1c354559d5043273fcc3951b2a",
+          "bytes": 123
+        }
+      ],
+      "provenance": {
+        "source": "handcrafted",
+        "license": "public-domain (synthetic, no third-party content embedded)"
+      },
+      "generator": {
+        "oracle": "three-obj-3-0-document-reader",
+        "packageVersion": "0.182.0",
+        "engineFamily": "threejs",
+        "engineVersion": "0.182.0",
+        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️obj/🏅️standards/🔖️3.0/🪆️subsets/✳️geometry/🏭️generator/📜️script.ts document",
+        "platform": "darwin"
+      },
+      "comparisonProfile": "semantic-obj-document-v1",
+      "reproducible": true,
+      "family": "mechanical",
+      "notes": "A minimal handcrafted OBJ document with the insert-normal statement changed. tobj, this subset's other reader, is a MESH reader and discards this statement entirely; three's OBJLoader parses and keeps it. Observability was checked through that reader before the pair was written.",
+      "comparisonPipeline": "obj-3-0-document-compare-v1"
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "document-remove-normal",
+      "class": "handcrafted",
+      "target": {
+        "artifact": "s.stdio.obj",
+        "standard": "3.0",
+        "subset": "geometry"
+      },
+      "mutation": "remove-normal",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "radian"
+      },
+      "files": [
+        {
+          "role": "expected-before-obj",
+          "path": "../🧫️fixtures/remove-normal/before.obj",
+          "mediaType": "model/obj",
+          "sha256": "sha256:06a9207e60bf3a3b1f96d0d94584a6d3c74cbb1cd7592b58601f8c869ef728b0",
+          "bytes": 114
+        },
+        {
+          "role": "expected-after-obj",
+          "path": "../🧫️fixtures/remove-normal/after.obj",
+          "mediaType": "model/obj",
+          "sha256": "sha256:0464d1fb765122f179ca8dcc4479c1ceb4f420fb0fe1360a49df73db8c0c4866",
+          "bytes": 105
+        }
+      ],
+      "provenance": {
+        "source": "handcrafted",
+        "license": "public-domain (synthetic, no third-party content embedded)"
+      },
+      "generator": {
+        "oracle": "three-obj-3-0-document-reader",
+        "packageVersion": "0.182.0",
+        "engineFamily": "threejs",
+        "engineVersion": "0.182.0",
+        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️obj/🏅️standards/🔖️3.0/🪆️subsets/✳️geometry/🏭️generator/📜️script.ts document",
+        "platform": "darwin"
+      },
+      "comparisonProfile": "semantic-obj-document-v1",
+      "reproducible": true,
+      "family": "mechanical",
+      "notes": "A minimal handcrafted OBJ document with the remove-normal statement changed. tobj, this subset's other reader, is a MESH reader and discards this statement entirely; three's OBJLoader parses and keeps it. Observability was checked through that reader before the pair was written.",
+      "comparisonPipeline": "obj-3-0-document-compare-v1"
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "document-set-unknown-statements",
+      "class": "handcrafted",
+      "target": {
+        "artifact": "s.stdio.obj",
+        "standard": "3.0",
+        "subset": "geometry"
+      },
+      "mutation": "set-unknown-statements",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "radian"
+      },
+      "files": [
+        {
+          "role": "expected-before-obj",
+          "path": "../🧫️fixtures/set-unknown-statements/before.obj",
+          "mediaType": "model/obj",
+          "sha256": "sha256:06a9207e60bf3a3b1f96d0d94584a6d3c74cbb1cd7592b58601f8c869ef728b0",
+          "bytes": 114
+        },
+        {
+          "role": "expected-after-obj",
+          "path": "../🧫️fixtures/set-unknown-statements/after.obj",
+          "mediaType": "model/obj",
+          "sha256": "sha256:830c9ab83b5ff47aec6327861e6ace49c4714a660a23e8ae0cb55b19bc1746d0",
+          "bytes": 122
+        }
+      ],
+      "provenance": {
+        "source": "handcrafted",
+        "license": "public-domain (synthetic, no third-party content embedded)"
+      },
+      "generator": {
+        "oracle": "three-obj-3-0-document-reader",
+        "packageVersion": "0.182.0",
+        "engineFamily": "threejs",
+        "engineVersion": "0.182.0",
+        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️obj/🏅️standards/🔖️3.0/🪆️subsets/✳️geometry/🏭️generator/📜️script.ts document",
+        "platform": "darwin"
+      },
+      "comparisonProfile": "semantic-obj-document-v1",
+      "reproducible": true,
+      "family": "mechanical",
+      "notes": "A minimal handcrafted OBJ document with the set-unknown-statements statement changed. tobj, this subset's other reader, is a MESH reader and discards this statement entirely; three's OBJLoader parses and keeps it. Observability was checked through that reader before the pair was written.",
+      "comparisonPipeline": "obj-3-0-document-compare-v1"
+    }
+  ],
+  "probes": [
+    {
+      "id": "obj-import",
+      "kind": "external-process",
+      "ecosystem": "rust",
+      "package": "tobj",
+      "version": "4",
+      "engine": {
+        "family": "tobj",
+        "implementation": "tobj-obj-reader (tobj 4, single_index+triangulate)",
+        "version": "tobj@4"
+      },
+      "capabilities": [
+        "obj.tobj.import"
+      ],
+      "outputSchema": "semio.repository-test.probe-report/v2",
+      "deterministic": true,
+      "license": "MIT",
+      "testOnly": true,
+      "productionReachable": false,
+      "networkDuringExecution": false,
+      "command": [
+        "bun",
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️obj/🏅️standards/🔖️3.0/🪆️subsets/✳️geometry/🔬️probes/📜️script.ts",
+        "obj-import"
+      ],
+      "rationale": "An INDEPENDENT reader (tobj's own grammar parse + single-index/triangulate resolution, via the standalone tobj-obj-reader binary) accepts both files at all. Nothing downstream means anything if one of them does not parse.",
+      "qualification": {
+        "status": "qualified",
+        "evidence": "Validated BOTH ways for all 10 kinds: (before,before) -> equal:true for 10/10; (before,after) -> equal:false for 10/10. Scope was set by measurement and revised TWICE: the six v/vt/vn kinds were first tested by appending an unreferenced element and found invisible, then found observable when the edit is at the FRONT of the list (OBJ face indices are absolute); set-unknown-statements was first tested with an unrecognised directive and found invisible, then found observable with an `l` polyline — which this subset's codec does not model and three does parse. A `#` comment and a `zz` directive remain invisible and the rationale records that limit.",
+        "checkedAt": "2026-08-28",
+        "criteria": [
+          {
+            "id": "reads-a-real-obj",
+            "met": true,
+            "detail": "tobj::load_obj_buf(triangulate:true, single_index:true) — the same options the shared mesh::project_obj uses"
+          },
+          {
+            "id": "offline",
+            "met": true,
+            "detail": "tobj-obj-reader depends only on tobj 4, resolved from the local cargo registry cache; no network during execution"
+          },
+          {
+            "id": "scope-set-by-measurement",
+            "met": true,
+            "detail": "Revised twice; each revision came from varying the INSTANCE of the mutation rather than re-reading the library"
+          },
+          {
+            "id": "known-limit-is-stated",
+            "met": true,
+            "detail": "An insert past the last referenced element, a `#` comment, and a genuinely unrecognised directive all remain invisible to this reader; the rationale says so"
+          }
+        ]
+      }
+    },
+    {
+      "id": "obj-project",
+      "kind": "external-process",
+      "ecosystem": "rust",
+      "package": "tobj",
+      "version": "4",
+      "engine": {
+        "family": "tobj",
+        "implementation": "tobj-obj-reader (tobj 4, single_index+triangulate)",
+        "version": "tobj@4"
+      },
+      "capabilities": [
+        "obj.tobj.project"
+      ],
+      "outputSchema": "semio.repository-test.probe-report/v2",
+      "deterministic": true,
+      "license": "MIT",
+      "testOnly": true,
+      "productionReachable": false,
+      "networkDuringExecution": false,
+      "command": [
+        "bun",
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️obj/🏅️standards/🔖️3.0/🪆️subsets/✳️geometry/🔬️probes/📜️script.ts",
+        "obj-project"
+      ],
+      "rationale": "The typed projection this reader oracle is measured against — one entry per tobj::Model (name + resolved position/texcoord/normal/triangle-index arrays, post single-indexing).",
+      "qualification": {
+        "status": "qualified",
+        "evidence": "Validated BOTH ways for all 10 kinds: (before,before) -> equal:true for 10/10; (before,after) -> equal:false for 10/10. Scope was set by measurement and revised TWICE: the six v/vt/vn kinds were first tested by appending an unreferenced element and found invisible, then found observable when the edit is at the FRONT of the list (OBJ face indices are absolute); set-unknown-statements was first tested with an unrecognised directive and found invisible, then found observable with an `l` polyline — which this subset's codec does not model and three does parse. A `#` comment and a `zz` directive remain invisible and the rationale records that limit.",
+        "checkedAt": "2026-08-28",
+        "criteria": [
+          {
+            "id": "positional-not-keyed",
+            "met": true,
+            "detail": "models/triangles/positions project as ordered arrays — tobj assigns model order by first appearance in the file, this format's own real order"
+          },
+          {
+            "id": "resolved-not-raw-indices",
+            "met": true,
+            "detail": "single_index:true means positions/texcoords/normals are already per-corner resolved, not a separate index buffer per attribute"
+          },
+          {
+            "id": "scope-set-by-measurement",
+            "met": true,
+            "detail": "Revised twice; each revision came from varying the INSTANCE of the mutation rather than re-reading the library"
+          },
+          {
+            "id": "known-limit-is-stated",
+            "met": true,
+            "detail": "An insert past the last referenced element, a `#` comment, and a genuinely unrecognised directive all remain invisible to this reader; the rationale says so"
+          }
+        ]
+      }
+    },
+    {
+      "id": "obj-compare",
+      "kind": "external-process",
+      "ecosystem": "rust",
+      "package": "tobj",
+      "version": "4",
+      "engine": {
+        "family": "tobj",
+        "implementation": "tobj-obj-reader (tobj 4, single_index+triangulate)",
+        "version": "tobj@4"
+      },
+      "capabilities": [
+        "obj.tobj.compare"
+      ],
+      "outputSchema": "semio.repository-test.probe-report/v2",
+      "deterministic": true,
+      "license": "MIT",
+      "testOnly": true,
+      "productionReachable": false,
+      "networkDuringExecution": false,
+      "command": [
+        "bun",
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️obj/🏅️standards/🔖️3.0/🪆️subsets/✳️geometry/🔬️probes/📜️script.ts",
+        "obj-compare"
+      ],
+      "rationale": "Ordered structural equality over two independently-decoded projections — the GATING comparison. Computes no mutation semantics, only structural equality of two already-existing byte blobs.",
+      "qualification": {
+        "status": "qualified",
+        "evidence": "Validated BOTH ways for all 10 kinds: (before,before) -> equal:true for 10/10; (before,after) -> equal:false for 10/10. Scope was set by measurement and revised TWICE: the six v/vt/vn kinds were first tested by appending an unreferenced element and found invisible, then found observable when the edit is at the FRONT of the list (OBJ face indices are absolute); set-unknown-statements was first tested with an unrecognised directive and found invisible, then found observable with an `l` polyline — which this subset's codec does not model and three does parse. A `#` comment and a `zz` directive remain invisible and the rationale records that limit.",
+        "checkedAt": "2026-08-28",
+        "criteria": [
+          {
+            "id": "accepts-a-known-good-pair",
+            "met": true,
+            "detail": "identical projections compare equal:true, diffCount:0"
+          },
+          {
+            "id": "rejects-a-known-bad-pair",
+            "met": true,
+            "detail": "a single deliberately-wrong field compares equal:false, diffCount:1, and the diff names the exact field path"
+          },
+          {
+            "id": "scope-set-by-measurement",
+            "met": true,
+            "detail": "Revised twice; each revision came from varying the INSTANCE of the mutation rather than re-reading the library"
+          },
+          {
+            "id": "known-limit-is-stated",
+            "met": true,
+            "detail": "An insert past the last referenced element, a `#` comment, and a genuinely unrecognised directive all remain invisible to this reader; the rationale says so"
+          }
+        ]
+      }
+    },
+    {
+      "id": "obj-document-project",
+      "kind": "external-process",
+      "ecosystem": "javascript",
+      "package": "three",
+      "version": "0.182.0",
+      "engine": {
+        "family": "threejs",
+        "implementation": "three OBJLoader (document statements)",
+        "version": "0.182.0"
+      },
+      "capabilities": [
+        "obj.document.project"
+      ],
+      "outputSchema": "semio.repository-test.probe-report/v2",
+      "deterministic": true,
+      "license": "MIT",
+      "testOnly": true,
+      "productionReachable": false,
+      "networkDuringExecution": false,
+      "command": [
+        "bun",
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️obj/🏅️standards/🔖️3.0/🪆️subsets/✳️geometry/🔬️probes/📜️script.ts",
+        "obj-document-project"
+      ],
+      "qualification": {
+        "status": "qualified",
+        "evidence": "Validated BOTH ways for all 10 kinds: (before,before) -> equal:true for 10/10; (before,after) -> equal:false for 10/10. Scope was set by measurement and revised TWICE: the six v/vt/vn kinds were first tested by appending an unreferenced element and found invisible, then found observable when the edit is at the FRONT of the list (OBJ face indices are absolute); set-unknown-statements was first tested with an unrecognised directive and found invisible, then found observable with an `l` polyline — which this subset's codec does not model and three does parse. A `#` comment and a `zz` directive remain invisible and the rationale records that limit.",
+        "checkedAt": "2026-08-28",
+        "criteria": [
+          {
+            "id": "accepts-a-known-good-pair",
+            "met": true,
+            "detail": "3/3 kinds: identical (before,before) compares equal:true"
+          },
+          {
+            "id": "rejects-a-known-bad-pair",
+            "met": true,
+            "detail": "3/3 kinds: the kind's own (before,after) compares equal:false"
+          },
+          {
+            "id": "witnesses-what-tobj-cannot",
+            "met": true,
+            "detail": "materialLibraries, per-child material name and flatShading are all discarded by tobj's mesh resolution"
+          },
+          {
+            "id": "reads-only",
+            "met": true,
+            "detail": "The probes parse and compare; neither applies a mutation nor predicts one"
+          },
+          {
+            "id": "offline",
+            "met": true,
+            "detail": "three is vendored in node_modules; the loader runs with no network"
+          },
+          {
+            "id": "scope-set-by-measurement",
+            "met": true,
+            "detail": "Revised twice; each revision came from varying the INSTANCE of the mutation rather than re-reading the library"
+          },
+          {
+            "id": "known-limit-is-stated",
+            "met": true,
+            "detail": "An insert past the last referenced element, a `#` comment, and a genuinely unrecognised directive all remain invisible to this reader; the rationale says so"
+          }
+        ]
+      }
+    },
+    {
+      "id": "obj-document-compare",
+      "kind": "external-process",
+      "ecosystem": "javascript",
+      "package": "three",
+      "version": "0.182.0",
+      "engine": {
+        "family": "threejs",
+        "implementation": "three OBJLoader (document statements)",
+        "version": "0.182.0"
+      },
+      "capabilities": [
+        "obj.document.compare"
+      ],
+      "outputSchema": "semio.repository-test.probe-report/v2",
+      "deterministic": true,
+      "license": "MIT",
+      "testOnly": true,
+      "productionReachable": false,
+      "networkDuringExecution": false,
+      "command": [
+        "bun",
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️obj/🏅️standards/🔖️3.0/🪆️subsets/✳️geometry/🔬️probes/📜️script.ts",
+        "obj-document-compare"
+      ],
+      "qualification": {
+        "status": "qualified",
+        "evidence": "Validated BOTH ways for all 10 kinds: (before,before) -> equal:true for 10/10; (before,after) -> equal:false for 10/10. Scope was set by measurement and revised TWICE: the six v/vt/vn kinds were first tested by appending an unreferenced element and found invisible, then found observable when the edit is at the FRONT of the list (OBJ face indices are absolute); set-unknown-statements was first tested with an unrecognised directive and found invisible, then found observable with an `l` polyline — which this subset's codec does not model and three does parse. A `#` comment and a `zz` directive remain invisible and the rationale records that limit.",
+        "checkedAt": "2026-08-28",
+        "criteria": [
+          {
+            "id": "accepts-a-known-good-pair",
+            "met": true,
+            "detail": "3/3 kinds: identical (before,before) compares equal:true"
+          },
+          {
+            "id": "rejects-a-known-bad-pair",
+            "met": true,
+            "detail": "3/3 kinds: the kind's own (before,after) compares equal:false"
+          },
+          {
+            "id": "witnesses-what-tobj-cannot",
+            "met": true,
+            "detail": "materialLibraries, per-child material name and flatShading are all discarded by tobj's mesh resolution"
+          },
+          {
+            "id": "reads-only",
+            "met": true,
+            "detail": "The probes parse and compare; neither applies a mutation nor predicts one"
+          },
+          {
+            "id": "offline",
+            "met": true,
+            "detail": "three is vendored in node_modules; the loader runs with no network"
+          },
+          {
+            "id": "scope-set-by-measurement",
+            "met": true,
+            "detail": "Revised twice; each revision came from varying the INSTANCE of the mutation rather than re-reading the library"
+          },
+          {
+            "id": "known-limit-is-stated",
+            "met": true,
+            "detail": "An insert past the last referenced element, a `#` comment, and a genuinely unrecognised directive all remain invisible to this reader; the rationale says so"
+          }
+        ]
+      }
+    }
+  ],
+  "comparisonPipelines": [
+    {
+      "id": "obj-3-0-tobj-compare-v1",
+      "description": "Reads the subject's produced OBJ and the fixture's own expected OBJ with an independent tobj-obj-reader projection, then compares their ordered projections. GATING. Covers exactly the 12 witnessable kinds this reader oracle is registered against.",
+      "stages": [
+        {
+          "probe": "obj-import",
+          "description": "An independent reader accepts both files.",
+          "inputs": [
+            "expected-obj",
+            "actual-obj"
+          ],
+          "assertions": {
+            "bothImport": true
+          }
+        },
+        {
+          "probe": "obj-compare",
+          "description": "Ordered structural equality — the operative equality.",
+          "inputs": [
+            "expected-obj",
+            "actual-obj"
+          ],
+          "assertions": {
+            "equal": true
+          }
+        }
+      ]
+    },
+    {
+      "id": "obj-3-0-document-compare-v1",
+      "description": "Document-statement equality through three's OBJLoader. GATING for the three kinds tobj's mesh resolution discards.",
+      "stages": [
+        {
+          "probe": "obj-document-project",
+          "description": "An independent document-aware reader accepts both files.",
+          "inputs": [
+            "expected-before-obj",
+            "expected-after-obj"
+          ],
+          "assertions": {
+            "bothImport": true
+          }
+        },
+        {
+          "probe": "obj-document-compare",
+          "description": "Equality over the document statements — the operative equality.",
+          "inputs": [
+            "expected-before-obj",
+            "expected-after-obj"
+          ],
+          "assertions": {
+            "equal": true
+          }
+        }
+      ]
+    }
+  ]
+}

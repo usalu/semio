@@ -2,8 +2,14 @@
   "artifact": "s.stdio.las",
   "standard": "1.0",
   "subsets": {
-    "*": {
-      "name": "Unconstrained las 1.0"
+    "header": {
+      "name": "ASPRS LAS 1.0 Public Header Block (Sec. 2.2) -- version, identifiers, creation date, scale/offset, bounds, points-by-return, plus the whole-document set-snapshot/no-mutation surface. The shared reader/writer for the whole file lives here; the other two regions reuse it (family-module pattern) rather than duplicating it."
+    },
+    "vlr": {
+      "name": "ASPRS LAS 1.0 Variable Length Records (Sec. 2.3) -- the keyed list of typed metadata blocks between the Public Header Block and the point data."
+    },
+    "points": {
+      "name": "ASPRS LAS 1.0 Point Data Records (Sec. 2.4) -- the header-length-and-count-declared array of fixed-size point records, decoded per the header's own declared Point Data Record Format (0 or 1 in LAS 1.0)."
     }
   }
 }

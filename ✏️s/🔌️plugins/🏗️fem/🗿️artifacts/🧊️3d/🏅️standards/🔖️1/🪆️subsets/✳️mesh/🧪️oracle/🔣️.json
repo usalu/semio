@@ -1,0 +1,149 @@
+{
+  "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json",
+  "schemaVersion": 2,
+  "_comment": "🧩️ This subset's own mutation-catalog contribution to the repository test platform -- registers the mesh slice of the s.fem.3d@1 mutation vocabulary (moved here from the artifact-level ✳️any catalog, ticket 26/09/02/SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION). The shared whole-document io/oracle/generator machinery, and every mutation's own manifest/fixture record, stay centralized at the artifact's ✳️any substrate; this file exists so the mesh vocabulary directory has a claiming catalog of its own.",
+  "mutationCatalogs": [
+    {
+      "id": "fem3d-1-mesh",
+      "capability": "fem3d-1-mutate",
+      "standardDirectoryName": "🔖️1",
+      "subsetDirectoryName": "✳️mesh",
+      "vectors": [
+        {
+          "mutationId": "create-element",
+          "sourceMutationDirectoryName": "🌱🧩️create-element",
+          "mutationDirectoryName": "🌱🧩️create-element",
+          "scenarios": [
+            {
+              "id": "appends-a-diagonal-bracing-bar",
+              "directoryName": "🧪️appends-a-diagonal-bracing-bar"
+            }
+          ]
+        },
+        {
+          "mutationId": "create-node",
+          "sourceMutationDirectoryName": "🌱⚪️create-node",
+          "mutationDirectoryName": "🌱⚪️create-node",
+          "scenarios": [
+            {
+              "id": "appends-the-column-head-node-n3",
+              "directoryName": "🧪️appends-the-column-head-node-n3"
+            }
+          ]
+        },
+        {
+          "mutationId": "create-section",
+          "sourceMutationDirectoryName": "🌱create-section",
+          "mutationDirectoryName": "🌱create-section",
+          "scenarios": [
+            {
+              "id": "appends-a-square-hollow-profile",
+              "directoryName": "🧪️appends-a-square-hollow-profile"
+            }
+          ]
+        },
+        {
+          "mutationId": "create-solid",
+          "sourceMutationDirectoryName": "🌱🧊️create-solid",
+          "mutationDirectoryName": "🌱🧊️create-solid",
+          "scenarios": [
+            {
+              "id": "appends-an-extruded-roof-slab",
+              "directoryName": "🧪️appends-an-extruded-roof-slab"
+            }
+          ]
+        },
+        {
+          "mutationId": "delete-element",
+          "sourceMutationDirectoryName": "🗑🧩️delete-element",
+          "mutationDirectoryName": "🗑🧩️delete-element",
+          "scenarios": [
+            {
+              "id": "removes-the-bracing-bar-and-leaves-the-frame",
+              "directoryName": "🧪️removes-the-bracing-bar-and-leaves-the-frame"
+            }
+          ]
+        },
+        {
+          "mutationId": "delete-node",
+          "sourceMutationDirectoryName": "🗑⚪️delete-node",
+          "mutationDirectoryName": "🗑⚪️delete-node",
+          "scenarios": [
+            {
+              "id": "removes-the-column-head-node-under-a-live-frame",
+              "directoryName": "🧪️removes-the-column-head-node-under-a-live-frame"
+            }
+          ]
+        },
+        {
+          "mutationId": "delete-section",
+          "sourceMutationDirectoryName": "🗑📐️delete-section",
+          "mutationDirectoryName": "🗑📐️delete-section",
+          "scenarios": [
+            {
+              "id": "removes-the-spare-square-hollow-profile",
+              "directoryName": "🧪️removes-the-spare-square-hollow-profile"
+            }
+          ]
+        },
+        {
+          "mutationId": "delete-solid",
+          "sourceMutationDirectoryName": "🗑🧊️delete-solid",
+          "mutationDirectoryName": "🗑🧊️delete-solid",
+          "scenarios": [
+            {
+              "id": "removes-the-roof-slab-and-keeps-its-material",
+              "directoryName": "🧪️removes-the-roof-slab-and-keeps-its-material"
+            }
+          ]
+        },
+        {
+          "mutationId": "replace-element",
+          "sourceMutationDirectoryName": "🔁🧩️replace-element",
+          "mutationDirectoryName": "🔁🧩️replace-element",
+          "scenarios": [
+            {
+              "id": "rolls-the-column-about-its-own-axis",
+              "directoryName": "🧪️rolls-the-column-about-its-own-axis"
+            }
+          ]
+        },
+        {
+          "mutationId": "replace-section",
+          "sourceMutationDirectoryName": "🔁📐️replace-section",
+          "mutationDirectoryName": "🔁📐️replace-section",
+          "scenarios": [
+            {
+              "id": "raises-the-torsion-constant-of-hea200",
+              "directoryName": "🧪️raises-the-torsion-constant-of-hea200"
+            }
+          ]
+        },
+        {
+          "mutationId": "replace-solid",
+          "sourceMutationDirectoryName": "🔁replace-solid",
+          "mutationDirectoryName": "🔁replace-solid",
+          "scenarios": [
+            {
+              "id": "thickens-the-slab-and-adds-a-mesh-layer",
+              "directoryName": "🧪️thickens-the-slab-and-adds-a-mesh-layer"
+            }
+          ]
+        }
+      ],
+      "kinds": [
+        "create-node",
+        "delete-node",
+        "create-element",
+        "delete-element",
+        "replace-element",
+        "create-section",
+        "delete-section",
+        "replace-section",
+        "create-solid",
+        "delete-solid",
+        "replace-solid"
+      ]
+    }
+  ]
+}

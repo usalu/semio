@@ -1,0 +1,227 @@
+{
+  "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json",
+  "schemaVersion": 2,
+  "_comment": "s.draw.draw@1/✳️transform -- Geometric placement and shape-processing -- transform, boolean operation, trace params. Split out of ✳️any's single wildcard-owned manifest (2026-09-02) so every mutation has a real, non-wildcard subset owner; see ../✳️any/🧪️oracle/🔣️.json for the shared oracles/no-oracle-decisions/probes/comparison-profiles/tolerance-profiles this subset's requirements resolve against (the registry merges every 🧪️oracle contribution repo-wide, so none of that needs restating here). The `mutate-draw-1` cross-language differential test still exhaustively claims the original `draw-1-any` catalog id (relocating it is a later wave, out of scope here) -- this subset's own catalog fragment reuses that SAME id so `mutation-catalog-unclaimed` resolves against the still-claimed name, while `subsetDirectoryName` correctly ties its vectors to this subset's own physical 🧬️mutations tree.",
+  "oracles": [],
+  "noOracleDecisions": [],
+  "mutationCatalogs": [
+    {
+      "id": "draw-1-any",
+      "capability": "draw-1-mutate",
+      "standardDirectoryName": "🔖️1",
+      "subsetDirectoryName": "✳️transform",
+      "kinds": [
+        "set-layer-boolean-operation",
+        "update-layer-trace-params",
+        "update-layer-transform"
+      ],
+      "vectors": [
+        {
+          "mutationId": "set-layer-boolean-operation",
+          "sourceMutationDirectoryName": "🔀set-layer-boolean-operation",
+          "mutationDirectoryName": "🔀set-layer-boolean-operation",
+          "scenarios": [
+            {
+              "id": "union-to-subtract",
+              "directoryName": "🧪️union-to-subtract"
+            }
+          ]
+        },
+        {
+          "mutationId": "update-layer-trace-params",
+          "sourceMutationDirectoryName": "🔧update-layer-trace-params",
+          "mutationDirectoryName": "🔧update-layer-trace-params",
+          "scenarios": [
+            {
+              "id": "sharpens-the-trace",
+              "directoryName": "🧪️sharpens-the-trace"
+            }
+          ]
+        },
+        {
+          "mutationId": "update-layer-transform",
+          "sourceMutationDirectoryName": "🔄️update-layer-transform",
+          "mutationDirectoryName": "🔄️update-layer-transform",
+          "scenarios": [
+            {
+              "id": "translates-and-scales-shape-a",
+              "directoryName": "🧪️translates-and-scales-shape-a"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "comparisonProfiles": [],
+  "probes": [],
+  "comparisonPipelines": [],
+  "toleranceProfiles": [],
+  "mutationManifests": [
+    {
+      "schema": "semio.repository-test.mutation-manifest/v2",
+      "artifact": "s.draw.draw",
+      "standard": "1",
+      "subset": "transform",
+      "standardDirectoryName": "🔖️1",
+      "subsetDirectoryName": "✳️transform",
+      "mutations": [
+        {
+          "id": "update-layer-transform",
+          "capability": "draw-1-mutate",
+          "payloadSchema": "../🧬️schema/🧬️mutations/🔄️update-layer-transform/🔣️.schema.json",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "update-layer-transform",
+            "bridgeVersion": 1,
+            "variant": "UpdateLayerTransform"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "draw-1-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "quick-xml-draw-1-mutate"
+            }
+          ],
+          "carriers": [
+            "svg"
+          ],
+          "invariants": {
+            "local": [
+              "scene-agrees-with-quick-xml-reader"
+            ],
+            "enclosing": [
+              "node-order-preserved-except-where-the-mutation-changes-it"
+            ]
+          }
+        },
+        {
+          "id": "set-layer-boolean-operation",
+          "capability": "draw-1-mutate",
+          "payloadSchema": "../🧬️schema/🧬️mutations/🔀set-layer-boolean-operation/🔣️.schema.json",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "set-layer-boolean-operation",
+            "bridgeVersion": 1,
+            "variant": "SetLayerBooleanOperation"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "draw-1-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "quick-xml-draw-1-mutate"
+            }
+          ],
+          "carriers": [
+            "svg"
+          ],
+          "invariants": {
+            "local": [
+              "scene-agrees-with-quick-xml-reader"
+            ],
+            "enclosing": [
+              "node-order-preserved-except-where-the-mutation-changes-it"
+            ]
+          },
+          "notes": "The recomputed path is witnessed by geometry diff only — quick-xml never sees the operation name, only its geometric consequence via this repository's own semio_s_2d boolean kernel."
+        },
+        {
+          "id": "update-layer-trace-params",
+          "capability": "draw-1-mutate",
+          "payloadSchema": "../🧬️schema/🧬️mutations/🔧update-layer-trace-params/🔣️.schema.json",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "update-layer-trace-params",
+            "bridgeVersion": 1,
+            "variant": "UpdateLayerTraceParams"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "draw-1-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "quick-xml-draw-1-mutate"
+            }
+          ],
+          "carriers": [
+            "svg"
+          ],
+          "invariants": {
+            "local": [
+              "scene-agrees-with-quick-xml-reader"
+            ],
+            "enclosing": [
+              "node-order-preserved-except-where-the-mutation-changes-it"
+            ]
+          },
+          "notes": "The retraced path is witnessed by geometry diff only — quick-xml never sees the threshold/epsilon parameters, only their geometric consequence via this repository's own semio_s_2d trace kernel."
+        }
+      ]
+    }
+  ],
+  "fixtureManifests": [
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "update-layer-transform-moves-a-node",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.draw.draw",
+        "standard": "1",
+        "subset": "transform"
+      },
+      "mutation": "update-layer-transform",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "radian"
+      },
+      "files": [
+        {
+          "role": "before-svg",
+          "path": "../🧫️fixtures/update-layer-transform-moves-a-node/before.svg",
+          "mediaType": "image/svg+xml",
+          "sha256": "sha256:02544b3f57ec0149adab8bf5dc04f7630aa93e751b9ffefb98202675ea5b10ff",
+          "bytes": 210
+        },
+        {
+          "role": "after-svg",
+          "path": "../🧫️fixtures/update-layer-transform-moves-a-node/after.svg",
+          "mediaType": "image/svg+xml",
+          "sha256": "sha256:bed7f6407139a3ebcf7515b5ee32a0d593d9ca73f1b3567004860acae70820ce",
+          "bytes": 211
+        }
+      ],
+      "generator": {
+        "oracle": "quick-xml-draw-1-mutate",
+        "packageVersion": "0.42.0",
+        "engineFamily": "quick-xml",
+        "engineVersion": "0.42.0",
+        "command": "bun ✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️draw/🏅️standards/🔖️1/🪆️subsets/✳️any/🔬️probes/📜️script.ts fixtures",
+        "seed": 4815162342,
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "MIT (quick-xml)",
+        "attribution": "SVG markup written by quick-xml's own Writer (MIT), independently of this repository's write_svg_xml.",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "semantic-draw-svg-v1",
+      "toleranceProfile": "draw-svg-exact",
+      "reproducible": true,
+      "family": "svg",
+      "notes": "The wrapping group's matrix translation changes; the path's own d is untouched, isolating the transform as the only measured difference."
+    }
+  ]
+}

@@ -3,7 +3,7 @@
 @comparison-semantic-i-json-v1
 @mutations-json-rfc8259-i-json
 Feature: Apply every typed RFC 7493 I-JSON mutation to a real-world document
-  The input is shared://🔣️hexagonal-cut-concrete-forest-left.model.json, the real 424 KB CAD model
+  The input is shared://🔣️.json, the real 424 KB CAD model
   this artifact already keeps in its own fixtures directory — 8,979 nodes, 71 vertices, 126 edges,
   57 wires, 57 faces, deeply nested objects and arrays, and 146 real exponent-notation floats at the
   machine-epsilon boundary. It was verified I-JSON-conforming before this case was written: valid
@@ -51,7 +51,7 @@ Feature: Apply every typed RFC 7493 I-JSON mutation to a real-world document
   @level-exhaustive
   @mode-differential
   Scenario Outline: Apply <id> to the real document
-    Given the real input document shared://🔣️hexagonal-cut-concrete-forest-left.model.json
+    Given the real input document shared://🔣️.json
     When the <id> mutation is applied with its parameters
       """
       {"kind": "<id>", "params": <params>}
@@ -74,7 +74,7 @@ Feature: Apply every typed RFC 7493 I-JSON mutation to a real-world document
   @level-exhaustive
   @mode-differential
   Scenario Outline: Undoing <id> restores the real document
-    Given the real input document shared://🔣️hexagonal-cut-concrete-forest-left.model.json
+    Given the real input document shared://🔣️.json
     When the <id> mutation is applied with its parameters
       """
       {"kind": "<id>", "params": <params>}
@@ -98,7 +98,7 @@ Feature: Apply every typed RFC 7493 I-JSON mutation to a real-world document
   @level-quick
   @mode-conformance
   Scenario: The real document is an I-JSON document, not merely an RFC 8259 one
-    Given the real input document shared://🔣️hexagonal-cut-concrete-forest-left.model.json
+    Given the real input document shared://🔣️.json
     When the reference implementation checks every clause RFC 7493 adds to RFC 8259
     Then the top level is an object, no object repeats a member name, every integer fits ±(2^53−1) and no string carries a Unicode noncharacter
 
@@ -106,7 +106,7 @@ Feature: Apply every typed RFC 7493 I-JSON mutation to a real-world document
   @level-long
   @mode-round-trip
   Scenario: Decode and re-encode the real document without passing bytes through
-    Given the real input document shared://🔣️hexagonal-cut-concrete-forest-left.model.json
+    Given the real input document shared://🔣️.json
     When the document is fully parsed into the subset's own snapshot model and re-encoded from it alone
     Then the oracle and the subject agree on the semantic projection
     And the re-encoded bytes are not bit-identical to the input

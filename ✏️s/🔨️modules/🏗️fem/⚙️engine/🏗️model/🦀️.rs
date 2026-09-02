@@ -9,13 +9,12 @@ pub use crate::elements3d::{Bar3, Frame3, Hex8, ShellFacet3, Tet4};
 
 use crate::algebra::{MatD, VecD};
 use semio_framework_dispatch_macros::{dyn_enum, dyn_enum_close};
-use serde::{Deserialize, Serialize};
 use std::collections::{BTreeSet, HashMap, HashSet};
 use std::fmt;
 
 // #region 🔖️Dof
 /// 🧭️ Nodal degree of freedom kind, shared by 2D (Tx, Ty, Rz) and 3D (all six) models.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub enum Dof {
     Tx,
     Ty,

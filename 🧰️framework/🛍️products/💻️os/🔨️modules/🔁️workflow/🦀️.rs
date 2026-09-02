@@ -269,14 +269,77 @@ impl dsl::DslField for MediaContract {
         }
     }
 }
+
+/// 🔀️ Hand-written, not derived: `conversion: Option<(MediaForm, MediaForm)>` is a raw Rust tuple,
+/// which has no blanket `ToValue`/`FromValue` (same reasoning as this type's hand-crafted
+/// `dsl::DslField` above) — bridged directly as a two-element `DslValue::Array`. `kind_id`/
+/// `media_type`/`wire` reuse their own `ToValue`/`FromValue` impls (`MediaType`/`MediaWireFormat`
+/// gained them in `🛂️manifest/🦀️.rs`).
+impl ::semio_framework_os_kernel::ToValue for MediaContract {
+    fn to_value(&self) -> ::semio_framework_os_kernel::DslValue {
+        ::semio_framework_os_kernel::DslValue::object([
+            ("kindId".to_string(), ::semio_framework_os_kernel::ToValue::to_value(&self.kind_id)),
+            ("mediaType".to_string(), ::semio_framework_os_kernel::ToValue::to_value(&self.media_type)),
+            ("wire".to_string(), ::semio_framework_os_kernel::ToValue::to_value(&self.wire)),
+            (
+                "conversion".to_string(),
+                match &self.conversion {
+                    Some((from, to)) => ::semio_framework_os_kernel::DslValue::Array(vec![::semio_framework_os_kernel::ToValue::to_value(from), ::semio_framework_os_kernel::ToValue::to_value(to)]),
+                    None => ::semio_framework_os_kernel::DslValue::Null,
+                },
+            ),
+        ])
+    }
+}
+impl ::semio_framework_os_kernel::FromValue for MediaContract {
+    fn from_value(value: ::semio_framework_os_kernel::DslValue) -> Result<Self, ::semio_framework_os_kernel::ValueError> {
+        let ::semio_framework_os_kernel::DslValue::Object(fields) = value else {
+            return Err(::semio_framework_os_kernel::ValueError::new(format!("expected an object for MediaContract, found {value:?}")));
+        };
+        let mut kind_id = None;
+        let mut media_type = None;
+        let mut wire = None;
+        let mut conversion = None;
+        for (key, entry) in fields {
+            match key.as_str() {
+                "kindId" => kind_id = Some(<String as ::semio_framework_os_kernel::FromValue>::from_value(entry).map_err(|e| e.under("kindId"))?),
+                "mediaType" => media_type = Some(<MediaType as ::semio_framework_os_kernel::FromValue>::from_value(entry).map_err(|e| e.under("mediaType"))?),
+                "wire" => wire = Some(<MediaWireFormat as ::semio_framework_os_kernel::FromValue>::from_value(entry).map_err(|e| e.under("wire"))?),
+                "conversion" => {
+                    conversion = Some(match entry {
+                        ::semio_framework_os_kernel::DslValue::Null => None,
+                        ::semio_framework_os_kernel::DslValue::Array(items) => {
+                            let mut iter = items.into_iter();
+                            let from = iter.next().ok_or_else(|| ::semio_framework_os_kernel::ValueError::new("MediaContract.conversion missing from"))?;
+                            let to = iter.next().ok_or_else(|| ::semio_framework_os_kernel::ValueError::new("MediaContract.conversion missing to"))?;
+                            Some((
+                                <MediaForm as ::semio_framework_os_kernel::FromValue>::from_value(from).map_err(|e| e.under("conversion.0"))?,
+                                <MediaForm as ::semio_framework_os_kernel::FromValue>::from_value(to).map_err(|e| e.under("conversion.1"))?,
+                            ))
+                        }
+                        other => return Err(::semio_framework_os_kernel::ValueError::new(format!("expected array or null for MediaContract.conversion, found {other:?}"))),
+                    })
+                }
+                _ => {}
+            }
+        }
+        Ok(MediaContract {
+            kind_id: kind_id.ok_or_else(|| ::semio_framework_os_kernel::ValueError::new("MediaContract missing kindId"))?,
+            media_type: media_type.ok_or_else(|| ::semio_framework_os_kernel::ValueError::new("MediaContract missing mediaType"))?,
+            wire: wire.ok_or_else(|| ::semio_framework_os_kernel::ValueError::new("MediaContract missing wire"))?,
+            conversion: conversion.unwrap_or(None),
+        })
+    }
+}
 //#endregion 🔖️MediaContractDsl
 
 //#region 🔖️WorkflowMediaPort
 /// 🔌️ One instance-scoped wire endpoint on a `WorkflowNode` — `id` is unique within the graph
 /// (`"{node_id}:{spec.id}:{in|out}"`, see `workflow_media_port`), `spec` is the app-level port
 /// declaration it was instantiated from (`semio_framework::MediaPortSpec`).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ::semio_framework_value_derive::ToValue, ::semio_framework_value_derive::FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct WorkflowMediaPort {
     pub id: String,
     pub spec: MediaPortSpec,

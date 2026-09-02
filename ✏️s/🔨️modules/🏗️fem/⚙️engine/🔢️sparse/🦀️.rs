@@ -7,7 +7,17 @@
 
 use crate::algebra::{MatD, VecD};
 use semio_framework_job::{CommitCandidate, InteractiveJob, JobFault, JobPayloadAdmissionFault, JobPayloadStream, Operation, RetainedJobPayload, RetainedJobPayloadWriter, StepBudget, StepContext, StepOutcome};
+use semio_framework_value_derive::{FromValue, ToValue};
 use std::collections::{BTreeMap, VecDeque};
+
+fn encode_value<T: dsl::ToValue>(value: &T) -> Vec<u8> {
+    store::pack_rt::encode_wire_value(&value.to_value())
+}
+
+fn decode_value<T: dsl::FromValue>(bytes: &[u8]) -> Result<T, String> {
+    let value = store::pack_rt::decode_wire_value(bytes).map_err(|error| error.to_string())?;
+    T::from_value(value).map_err(|error| error.to_string())
+}
 
 fn close_vec_owner_step<T>(owner: &mut Vec<T>, maximum_bytes: usize) -> Result<Option<(usize, usize)>, ()> {
     if owner.pop().is_some() {
@@ -144,7 +154,7 @@ impl Coo {
 
 // #region 🔖️Csr
 /// 🧮️ General compressed-sparse-row matrix — used for SpMV (PCG, residual checks).
-#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
 pub struct Csr {
     pub n: usize,
     indptr: Vec<u32>,
@@ -207,7 +217,7 @@ impl Csr {
 // #region 🔖️CscSym
 /// 🔺️ Symmetric matrix, upper-triangle entries only (`col >= row`), grouped by the smaller index —
 /// storage-column `j` holds `A[j][c]` for every `c >= j`, the LDLT input format.
-#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct CscSym {
     pub n: usize,
     colptr: Vec<u32>,
@@ -276,7 +286,7 @@ pub enum SparseError {
 /// 🧊️ A sparse left-looking LDLT factorization (unit lower `L`, diagonal `D`), permutation-agnostic
 /// — a caller applying `rcm_order` reorders the matrix/RHS/solution indices itself before/after
 /// calling into this module.
-#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct LdltFactor {
     n: usize,
     l_cols: Vec<Vec<(u32, f64)>>,
@@ -339,14 +349,14 @@ pub fn ldlt_factor(a: &CscSym) -> Result<LdltFactor, SparseError> {
     Ok(LdltFactor { n, l_cols, d })
 }
 
-#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct LdltPreview {
     pub completed_columns: usize,
     pub total_columns: usize,
     pub negative_pivots: usize,
 }
 
-#[derive(Clone, PartialEq, serde::Serialize, serde::Deserialize)]
+#[derive(Clone, PartialEq)]
 struct LdltCheckpoint {
     identity: NumericalCheckpointIdentity,
     a: CscSym,
@@ -365,7 +375,7 @@ struct LdltCheckpoint {
     publication_inner: usize,
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 struct NumericalCheckpointIdentity {
     operation: u64,
     revision: u64,
@@ -383,7 +393,7 @@ impl NumericalCheckpointIdentity {
     }
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 enum LdltColumnStage {
     ReserveColumn,
     SourceEntry,
@@ -396,7 +406,7 @@ enum LdltColumnStage {
     CompleteColumn,
 }
 
-#[derive(Clone, PartialEq, serde::Serialize, serde::Deserialize)]
+#[derive(Clone, PartialEq)]
 struct LdltColumnCursor {
     stage: LdltColumnStage,
     source: usize,
@@ -413,7 +423,7 @@ struct LdltColumnCursor {
     pivot: f64,
 }
 
-#[derive(Clone, PartialEq, serde::Serialize, serde::Deserialize)]
+#[derive(Clone, PartialEq)]
 struct LdltColumnWorkspace {
     values: Vec<f64>,
     marks: Vec<u32>,
@@ -1714,14 +1724,15 @@ impl LdltFactor {
 
 // #region 🔖️Pcg
 /// 📈️ Convergence outcome of a `pcg` call.
-#[derive(Clone, Copy, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq)]
 pub struct PcgStats {
     pub iterations: usize,
     pub residual_norm: f64,
     pub converged: bool,
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, ToValue, FromValue)]
+#[value(tag = "kind")]
 pub enum PcgStage {
     InitializeDiagonal,
     InitialSpmv,
@@ -1734,14 +1745,15 @@ pub enum PcgStage {
     Complete,
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, ToValue, FromValue)]
+#[value(tag = "kind")]
 pub enum PcgQuality {
     Initializing,
     Coarse,
     Final,
 }
 
-#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
 pub struct PcgPreview {
     pub stage: PcgStage,
     pub quality: PcgQuality,
@@ -1754,7 +1766,7 @@ pub struct PcgPreview {
     pub converged: bool,
 }
 
-#[derive(Clone, serde::Serialize, serde::Deserialize)]
+#[derive(Clone, ToValue, FromValue)]
 struct PcgCheckpoint {
     a: Csr,
     b: VecD,
@@ -1846,12 +1858,12 @@ impl PcgJob {
         }
     }
 
-    pub fn from_checkpoint(operation: Operation, bytes: &[u8]) -> Result<Self, serde_json::Error> {
-        Ok(Self { operation, state: serde_json::from_slice(bytes)?, close_lane: 0 })
+    pub fn from_checkpoint(operation: Operation, bytes: &[u8]) -> Result<Self, String> {
+        Ok(Self { operation, state: decode_value(bytes)?, close_lane: 0 })
     }
 
     pub fn checkpoint_bytes(&self) -> Vec<u8> {
-        serde_json::to_vec(&self.state).expect("pcg checkpoint is serializable")
+        encode_value(&self.state)
     }
 
     pub fn preview(&self) -> PcgPreview {
@@ -2587,7 +2599,7 @@ impl InteractiveJob for PcgJob {
             }
         }
         if self.state.stage == PcgStage::Complete {
-            let bytes = serde_json::to_vec(&self.preview()).expect("pcg output is serializable");
+            let bytes = encode_value(&self.preview());
             return match context.payload_from_bytes(JobPayloadStream::CommitOutput, &bytes) {
                 Ok(output) => StepOutcome::Complete(CommitCandidate { state: RetainedJobPayload::empty(JobPayloadStream::CommitState), output }),
                 Err(_) => StepOutcome::Fault(JobFault { detail: RetainedJobPayload::empty(JobPayloadStream::Fault) }),
@@ -2595,7 +2607,7 @@ impl InteractiveJob for PcgJob {
         }
         if self.state.preview_due {
             self.state.preview_due = false;
-            let bytes = serde_json::to_vec(&self.preview()).expect("pcg preview is serializable");
+            let bytes = encode_value(&self.preview());
             return match context.payload_from_bytes(JobPayloadStream::Preview, &bytes) {
                 Ok(preview) => StepOutcome::PreviewReady(preview),
                 Err(_) => StepOutcome::Fault(JobFault { detail: RetainedJobPayload::empty(JobPayloadStream::Fault) }),
@@ -2751,13 +2763,13 @@ fn symmetrize(a: &MatD) -> MatD {
 
 // #region 🔖️SubspaceIteration
 /// 📐️ The lowest `p` eigenpairs of a generalized eigenproblem, ascending by value.
-#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct EigenPairs {
     pub values: Vec<f64>,
     pub vectors: Vec<VecD>,
 }
 
-#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct SubspacePreview {
     pub iteration: usize,
     pub eigenvalues: Vec<f64>,
@@ -2771,7 +2783,7 @@ fn mat_col(m: &MatD, col: usize) -> VecD {
     VecD::from_vec((0..m.rows).map(|row| m.get(row, col)).collect())
 }
 
-#[derive(Clone, PartialEq, serde::Serialize, serde::Deserialize)]
+#[derive(Clone, PartialEq)]
 struct SubspaceCheckpoint {
     identity: NumericalCheckpointIdentity,
     k_factor: LdltFactor,
@@ -2800,7 +2812,7 @@ struct SubspaceCheckpoint {
     retiring_work: Option<SubspaceWork>,
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 enum SubspaceStage {
     ReserveIteration,
     ApplyOperatorColumnRow,
@@ -2820,7 +2832,7 @@ enum SubspaceStage {
     PublishIteration,
 }
 
-#[derive(Clone, PartialEq, serde::Serialize, serde::Deserialize)]
+#[derive(Clone, PartialEq)]
 struct SubspaceWork {
     stage: SubspaceStage,
     reserve: usize,
@@ -5239,7 +5251,7 @@ mod tests {
             let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(u64::MAX, u64::MAX), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence);
             match job.step(&mut context) {
                 StepOutcome::PreviewReady(bytes) => {
-                    let preview: PcgPreview = serde_json::from_slice(&bytes).expect("pcg preview decodes");
+                    let preview: PcgPreview = decode_value(&bytes).expect("pcg preview decodes");
                     assert_eq!(preview.quality, PcgQuality::Coarse);
                     assert!(preview.residual_norm < 1e-3);
                     assert!(preview.residual_norm >= 1e-12);

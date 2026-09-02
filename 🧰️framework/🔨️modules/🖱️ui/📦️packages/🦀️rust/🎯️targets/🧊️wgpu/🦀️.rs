@@ -25,6 +25,13 @@ mod icon_name_gen;
 
 pub use icon_name_gen::IconName;
 
+// 🌱️ `ToValue`/`FromValue` for `IconName`, hand-written in a sibling file rather than added to
+// `icon_name_gen` above — that generated file is marked "do not edit" at its own top line. See
+// `🦀️icon_name_value.rs`'s own docstring for why this is a separate mount instead of a `#[value]`
+// attribute on the derive. Ticket 26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS.
+#[path = "🦀️icon_name_value.rs"]
+mod icon_name_value;
+
 //#region 🔖️UiAxes
 #[path = "🤖️generated.rs"]
 mod ui_axes_gen;

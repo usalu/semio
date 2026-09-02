@@ -28,7 +28,7 @@ const KINDS: &[&str] = &["change-header", "replace-palette", "change-transparenc
 //#endregion 🔖️Kinds
 
 //#region 🔖️Input
-const INPUT: &str = "shared://🖼️rathaus-ahlen-grundriss.png";
+const INPUT: &str = "shared://🧪️rathaus-ahlen-grundriss/🖼️.png";
 
 /// 🧫️ Copies the immutable real fixture into the work directory and returns the mutable copy's
 /// bytes — the committed 250 KB, 2334x2560, 8-bit COLORMAP architectural floor plan

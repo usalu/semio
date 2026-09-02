@@ -10,7 +10,7 @@ Feature: Apply every typed semio TABLE mutation to a real 50-row survey table, a
   written in Python from the committed specification documents alone
   (`../../🏅️standards/🔖️v1/🪆️subsets/✳️table/🧬️schema/📸️snapshot/📝️text/📖️component.grammar.semio`,
   `…/📸️snapshot/💾️binary/📡️component.protocol.semio`, `…/🧬️mutations/📝️text/📖️component.grammar.semio`,
-  `…/🧬️mutations/🔣️component.json` and the semio envelope region of
+  `…/🧬️mutations/🔣️.json` and the semio envelope region of
   `🧰️framework/🛍️products/💻️os/🔨️modules/🧬️semio/🦀️component.rs`), importing nothing from and
   transliterating nothing of the Rust it judges. It is registered as the oracle
   `semio-table-python-independent` in `…/✳️table/🧪️oracle/🔣️.json`; the recorded no-oracle
@@ -22,7 +22,7 @@ Feature: Apply every typed semio TABLE mutation to a real 50-row survey table, a
   re-derived on every run by the `payload-fidelity` scenario — from the real committed survey
   `../../../📊️csv/🧫️fixtures/📊️reuse-marketplaces.csv`: 50 records over 12 columns of German
   building-material-reuse marketplace research, with commas, em dashes and umlauts inside quoted
-  fields. Its source is committed beside this case as `local://📊️reuse-marketplaces.csv` so the
+  fields. Its source is committed beside this case as `local://🧪️reuse-marketplaces/📊️.csv` so the
   provenance is checkable in the tree, and the derivation is a faithful transcription — the header
   names the columns, every column is `str` because every source field is text, and every cell carries
   its field verbatim. The result is 600 cells, 24 399 bytes of DSL and 12 212 bytes of pack, against
@@ -107,9 +107,9 @@ Feature: Apply every typed semio TABLE mutation to a real 50-row survey table, a
   @level-exhaustive
   @mode-differential
   Scenario Outline: Apply <id> to its committed handcrafted specification vector
-    Given the committed before-snapshot asset://🏅️standards/🔖️v1/🪆️subsets/✳️table/🧬️schema/🧬️mutations/<dir>/🧪️tests/<slug>/📸️snapshot/⬅️before/🔣️component.json
-    And the committed mutation payload asset://🏅️standards/🔖️v1/🪆️subsets/✳️table/🧬️schema/🧬️mutations/<dir>/🧪️tests/<slug>/🦠️mutation/🔣️component.json
-    And the committed after-snapshot asset://🏅️standards/🔖️v1/🪆️subsets/✳️table/🧬️schema/🧬️mutations/<dir>/🧪️tests/<slug>/📸️snapshot/➡️after/🔣️component.json
+    Given the committed before-snapshot asset://🏅️standards/🔖️v1/🪆️subsets/✳️table/🧬️schema/🧬️mutations/<dir>/🧪️tests/<slug>/📸️snapshot/⬅️before/🔣️.json
+    And the committed mutation payload asset://🏅️standards/🔖️v1/🪆️subsets/✳️table/🧬️schema/🧬️mutations/<dir>/🧪️tests/<slug>/🦠️mutation/🔣️.json
+    And the committed after-snapshot asset://🏅️standards/🔖️v1/🪆️subsets/✳️table/🧬️schema/🧬️mutations/<dir>/🧪️tests/<slug>/📸️snapshot/➡️after/🔣️.json
     When both implementations apply the committed mutation to the committed before-snapshot
     Then each reaches the committed after-snapshot and the two agree
     Examples:
@@ -127,7 +127,7 @@ Feature: Apply every typed semio TABLE mutation to a real 50-row survey table, a
   @level-exhaustive
   @mode-differential
   Scenario: The derived survey table still carries exactly what the real CSV carries
-    Given the real committed survey source local://📊️reuse-marketplaces.csv
+    Given the real committed survey source local://🧪️reuse-marketplaces/📊️.csv
     And the table document derived from it local://📊️reuse-marketplaces.dsl.semio
     When each implementation re-tokenizes the source with its own RFC 4180 reader and rebuilds the table from it
     Then the rebuilt table equals the committed derived document and the two implementations agree on all 600 fields
@@ -136,7 +136,7 @@ Feature: Apply every typed semio TABLE mutation to a real 50-row survey table, a
   @level-long
   @mode-round-trip
   Scenario: Re-emit both encodings of the demo sheet and of the real survey table from the parsed documents
-    Given the committed demo sheet asset://🏅️standards/🔖️v1/🪆️subsets/✳️table/📚️examples/📃️sheet/🖼️assets/🗣️example.dsl.semio
+    Given the committed demo sheet asset://🏅️standards/🔖️v1/🪆️subsets/✳️table/📚️examples/📃️sheet/🖼️assets/🗣️.dsl.semio
     And its committed binary twin asset://🏅️standards/🔖️v1/🪆️subsets/✳️table/📚️examples/📃️sheet/🖼️assets/🎒️.pack.semio
     And the real survey table local://📊️reuse-marketplaces.dsl.semio
     And its binary twin local://📊️reuse-marketplaces.pack.semio

@@ -119,7 +119,7 @@ Feature: Route every typed semio ENVELOPE mutation into the subset arm it names
   @level-exhaustive
   @mode-conformance
   Scenario: no-mutation leaves the committed value-subset envelope exactly as it stands
-    Given the committed before-envelope asset://🏅️standards/🔖️v1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄set-snapshot/🧪️tests/replaces-the-envelope-wrapping-a-value-subset/📸️snapshot/⬅️before/🔣️component.json
+    Given the committed before-envelope asset://🏅️standards/🔖️v1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄set-snapshot/🧪️tests/replaces-the-envelope-wrapping-a-value-subset/📸️snapshot/⬅️before/🔣️.json
     When the nullary mutation is applied through apply_semio_mutation
       """
       {"mutation": "noMutation"}
@@ -130,7 +130,7 @@ Feature: Route every typed semio ENVELOPE mutation into the subset arm it names
   @level-exhaustive
   @mode-property
   Scenario: Undoing no-mutation is itself no-mutation
-    Given the committed before-envelope asset://🏅️standards/🔖️v1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄set-snapshot/🧪️tests/replaces-the-envelope-wrapping-a-value-subset/📸️snapshot/⬅️before/🔣️component.json
+    Given the committed before-envelope asset://🏅️standards/🔖️v1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄set-snapshot/🧪️tests/replaces-the-envelope-wrapping-a-value-subset/📸️snapshot/⬅️before/🔣️.json
     When the nullary mutation is applied through apply_semio_mutation
       """
       {"mutation": "noMutation"}
@@ -142,9 +142,9 @@ Feature: Route every typed semio ENVELOPE mutation into the subset arm it names
   @level-exhaustive
   @mode-conformance
   Scenario: set-snapshot replaces the committed value-subset envelope wholesale
-    Given the committed before-envelope asset://🏅️standards/🔖️v1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄set-snapshot/🧪️tests/replaces-the-envelope-wrapping-a-value-subset/📸️snapshot/⬅️before/🔣️component.json
-    And the committed mutation fixture asset://🏅️standards/🔖️v1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄set-snapshot/🧪️tests/replaces-the-envelope-wrapping-a-value-subset/🦠️mutation/🔣️component.json
-    And the committed after-envelope asset://🏅️standards/🔖️v1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄set-snapshot/🧪️tests/replaces-the-envelope-wrapping-a-value-subset/📸️snapshot/➡️after/🔣️component.json
+    Given the committed before-envelope asset://🏅️standards/🔖️v1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄set-snapshot/🧪️tests/replaces-the-envelope-wrapping-a-value-subset/📸️snapshot/⬅️before/🔣️.json
+    And the committed mutation fixture asset://🏅️standards/🔖️v1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄set-snapshot/🧪️tests/replaces-the-envelope-wrapping-a-value-subset/🦠️mutation/🔣️.json
+    And the committed after-envelope asset://🏅️standards/🔖️v1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄set-snapshot/🧪️tests/replaces-the-envelope-wrapping-a-value-subset/📸️snapshot/➡️after/🔣️.json
     When set-snapshot is applied through apply_semio_mutation
     Then the envelope still carries the value subset, raises no diagnostic, and no longer matches the document it started from
 
@@ -152,8 +152,8 @@ Feature: Route every typed semio ENVELOPE mutation into the subset arm it names
   @level-exhaustive
   @mode-property
   Scenario: Undoing set-snapshot restores the committed before-envelope
-    Given the committed before-envelope asset://🏅️standards/🔖️v1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄set-snapshot/🧪️tests/replaces-the-envelope-wrapping-a-value-subset/📸️snapshot/⬅️before/🔣️component.json
-    And the committed mutation fixture asset://🏅️standards/🔖️v1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄set-snapshot/🧪️tests/replaces-the-envelope-wrapping-a-value-subset/🦠️mutation/🔣️component.json
+    Given the committed before-envelope asset://🏅️standards/🔖️v1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄set-snapshot/🧪️tests/replaces-the-envelope-wrapping-a-value-subset/📸️snapshot/⬅️before/🔣️.json
+    And the committed mutation fixture asset://🏅️standards/🔖️v1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄set-snapshot/🧪️tests/replaces-the-envelope-wrapping-a-value-subset/🦠️mutation/🔣️.json
     When set-snapshot is applied through apply_semio_mutation
     And the mutation's own computed inverse is applied through apply_semio_mutation
     Then the envelope still carries the value subset, raises no diagnostic, and matches the document it started from
@@ -162,7 +162,7 @@ Feature: Route every typed semio ENVELOPE mutation into the subset arm it names
   @level-exhaustive
   @mode-error
   Scenario: A wrapped image mutation against a value envelope is refused, not applied
-    Given the committed before-envelope asset://🏅️standards/🔖️v1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄set-snapshot/🧪️tests/replaces-the-envelope-wrapping-a-value-subset/📸️snapshot/⬅️before/🔣️component.json
+    Given the committed before-envelope asset://🏅️standards/🔖️v1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄set-snapshot/🧪️tests/replaces-the-envelope-wrapping-a-value-subset/📸️snapshot/⬅️before/🔣️.json
     When a wrapped image set-dimensions mutation is applied through apply_semio_mutation
     Then the outcome carries mutation.target-missing and the envelope still matches the document it started from
 
@@ -170,7 +170,7 @@ Feature: Route every typed semio ENVELOPE mutation into the subset arm it names
   @level-exhaustive
   @mode-conformance
   Scenario: Only set-snapshot can retype the envelope from one subset to another
-    Given the committed before-envelope asset://🏅️standards/🔖️v1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄set-snapshot/🧪️tests/replaces-the-envelope-wrapping-a-value-subset/📸️snapshot/⬅️before/🔣️component.json
+    Given the committed before-envelope asset://🏅️standards/🔖️v1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄set-snapshot/🧪️tests/replaces-the-envelope-wrapping-a-value-subset/📸️snapshot/⬅️before/🔣️.json
     When set-snapshot is applied with an envelope wrapping an empty image snapshot
     Then the envelope carries the image subset, raises no diagnostic, and no longer matches the document it started from
 
@@ -178,8 +178,8 @@ Feature: Route every typed semio ENVELOPE mutation into the subset arm it names
   @level-long
   @mode-round-trip
   Scenario: Rebuild the committed envelope from an empty one, and reproduce the real envelope artifact byte for byte
-    Given the committed before-envelope asset://🏅️standards/🔖️v1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄set-snapshot/🧪️tests/replaces-the-envelope-wrapping-a-value-subset/📸️snapshot/⬅️before/🔣️component.json
-    And the real committed text artifact asset://🏅️standards/🔖️v1/🪆️subsets/✳️any/📚️examples/🌐️envelope/🖼️assets/🗣️example.dsl.semio
+    Given the committed before-envelope asset://🏅️standards/🔖️v1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄set-snapshot/🧪️tests/replaces-the-envelope-wrapping-a-value-subset/📸️snapshot/⬅️before/🔣️.json
+    And the real committed text artifact asset://🏅️standards/🔖️v1/🪆️subsets/✳️any/📚️examples/🌐️envelope/🖼️assets/🗣️.dsl.semio
     And its committed binary twin asset://🏅️standards/🔖️v1/🪆️subsets/✳️any/📚️examples/🌐️envelope/🖼️assets/🎒️.pack.semio
     When the empty envelope is replaced with the committed one through apply_semio_mutation
     And the text artifact is parsed and printed back to DSL, and the binary twin is decoded and re-encoded

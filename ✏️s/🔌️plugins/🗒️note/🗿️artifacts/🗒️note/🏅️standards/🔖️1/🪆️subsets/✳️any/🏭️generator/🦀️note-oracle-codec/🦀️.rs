@@ -3,7 +3,7 @@
 //! Every BEFORE/AFTER byte pair this binary's `generate` command writes is built DIRECTLY by a
 //! third-party library — never by executing note's own (currently non-building) production
 //! serializers, and never by "applying" a mutation in code: both states of every recipe are
-//! independently authored in `recipes()` below, exactly the shape `…💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/✳️any/🏭️generator/📜️script.ts`
+//! independently authored in `recipes()` below, exactly the shape `…💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/✳️markup/🏭️generator/📜️script.ts`
 //! and `…✳️cad/🔬️probes/🦀️oracle-probe/src/main.rs` (the sibling this file's structure mirrors)
 //! already use.
 //!

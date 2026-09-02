@@ -5,10 +5,17 @@
 
 pub use crate::artifacts::mathematical::schema::mutations::MathematicalMutation;
 
-use crate::artifacts::mathematical::schema::mutations::{
-    change_coefficient::mutation::ChangeCoefficient, change_graph_directed::mutation::ChangeGraphDirected, change_node_label::mutation::ChangeNodeLabel, connect_nodes::mutation::ConnectNodes, create_node::mutation::CreateNode,
-    delete_node::mutation::DeleteNode, delete_nodes::mutation::DeleteNodes, disconnect_nodes::mutation::DisconnectNodes, insert_point::mutation::InsertPoint, move_node::mutation::MoveNode, move_point::mutation::MovePoint,
-    remove_point::mutation::RemovePoint, replace_graph::mutation::ReplaceGraph, replace_points::mutation::ReplacePoints, update_graph_algorithm::mutation::UpdateGraphAlgorithm,
+// 🪆️ Direct absolute paths, not the `schema::mutations` shim: these 14 leaf modules moved to
+// their real owning subset (ticket
+// 26/09/02/SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION),
+// so they are no longer reachable through `✳️any::schema::mutations::<name>`.
+use crate::artifacts::mathematical::standards::v1::subsets::{
+    equation::schema::mutations::change_coefficient::mutation::ChangeCoefficient,
+    geometry::schema::mutations::{insert_point::mutation::InsertPoint, move_point::mutation::MovePoint, remove_point::mutation::RemovePoint, replace_points::mutation::ReplacePoints},
+    graph::schema::mutations::{
+        change_graph_directed::mutation::ChangeGraphDirected, change_node_label::mutation::ChangeNodeLabel, connect_nodes::mutation::ConnectNodes, create_node::mutation::CreateNode, delete_node::mutation::DeleteNode,
+        delete_nodes::mutation::DeleteNodes, disconnect_nodes::mutation::DisconnectNodes, move_node::mutation::MoveNode, replace_graph::mutation::ReplaceGraph, update_graph_algorithm::mutation::UpdateGraphAlgorithm,
+    },
 };
 use crate::artifacts::mathematical::standards::v1::subsets::any::schema::snapshot::EquationNodeLabel;
 use crate::artifacts::mathematical::{MathematicalGraph, MathematicalPoint};

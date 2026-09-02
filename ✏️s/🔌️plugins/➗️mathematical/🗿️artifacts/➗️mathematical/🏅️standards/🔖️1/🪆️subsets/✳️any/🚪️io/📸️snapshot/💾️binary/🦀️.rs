@@ -127,7 +127,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn command_envelope_round_trip_holds_for_an_applied_operation() {
-        use crate::artifacts::mathematical::mutations::update_graph_algorithm::mutation::UpdateGraphAlgorithm;
+        use crate::artifacts::mathematical::standards::v1::subsets::graph::schema::mutations::update_graph_algorithm::mutation::UpdateGraphAlgorithm;
         use crate::artifacts::mathematical::op::MathematicalMutation;
         use protocol::{ArtifactId, Edit, SchemaId};
         use store::{create_document_envelope, ArtifactCommand, ArtifactStore};

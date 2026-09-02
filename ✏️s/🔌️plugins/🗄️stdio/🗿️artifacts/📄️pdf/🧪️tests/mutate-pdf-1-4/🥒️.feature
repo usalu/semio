@@ -1,7 +1,7 @@
 @capability-pdf-1-4-mutate
 @oracle-lopdf-pdf-1-4-mutate
 @comparison-semantic-pdf-v1
-@mutations-pdf-1-4-any
+@mutations-pdf-1-4-base
 Feature: Apply every concrete PDF 1.4 ANY mutation to a real document
   Every scenario copies the committed 65-page thesis before changing it.
   Forward operations must change the independently read projection. Inverse scenarios call

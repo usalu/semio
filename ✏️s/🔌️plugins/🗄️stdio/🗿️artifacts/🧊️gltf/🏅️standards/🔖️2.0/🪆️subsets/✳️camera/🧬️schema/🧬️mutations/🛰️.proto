@@ -1,0 +1,15 @@
+syntax = "proto3";
+package stdio.gltf.mutation.camera;
+import "🌱️🎥️create-camera/🛰️.proto";
+import "🗑️🎥️delete-camera/🛰️.proto";
+import "🚚️🎥️move-camera/🛰️.proto";
+import "🔀️🎥️reorder-cameras/🛰️.proto";
+
+message GltfCameraMutation {
+  oneof mutation {
+    GltfCreateCameraPayloadV1 create_camera = 1;
+    GltfDeleteCameraPayloadV1 delete_camera = 2;
+    GltfMoveCameraPayloadV1 move_camera = 3;
+    GltfReorderCamerasPayloadV1 reorder_cameras = 4;
+  }
+}

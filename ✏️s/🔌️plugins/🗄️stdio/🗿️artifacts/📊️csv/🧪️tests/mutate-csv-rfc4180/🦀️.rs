@@ -25,7 +25,7 @@ const KINDS: &[&str] = &["no-mutation", "set-snapshot", "set-has-header", "inser
 //#endregion 🔖️Kinds
 
 //#region 🔖️Input
-const INPUT: &str = "shared://📊️reuse-marketplaces.csv";
+const INPUT: &str = "shared://🧪️reuse-marketplaces/📊️.csv";
 /// 📑️ The real fixture's own baseline reading: record 0 is its header row.
 const BASELINE_HAS_HEADER: bool = true;
 

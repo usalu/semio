@@ -8,7 +8,7 @@ Feature: Apply every typed semio OBJECT mutation to the real committed crate obj
   `🐍️component.py` beside this file is that implementation — the carrier, the DSL grammar, the pack
   frame and all nine verbs, written in Python from the committed specification documents alone
   (`../../🏅️standards/🔖️v1/🪆️subsets/✳️object/🧬️schema/📸️snapshot/📝️text/📖️component.grammar.semio`,
-  `…/📸️snapshot/💾️binary/📡️component.protocol.semio`, `…/📸️snapshot/🔣️component.json`,
+  `…/📸️snapshot/💾️binary/📡️component.protocol.semio`, `…/📸️snapshot/🔣️.json`,
   `…/🧬️schema/🧬️mutations/📝️text/📖️component.grammar.semio`, the semio envelope in
   `🧰️framework/🛍️products/💻️os/🔨️modules/🧬️semio/🦀️component.rs` and the one dialect-coordinate codec
   `ArtifactRef::to_uri` in `🧰️framework/🔨️modules/🚪️io/🧬️schema/🦀️component.rs`), importing nothing
@@ -54,7 +54,7 @@ Feature: Apply every typed semio OBJECT mutation to the real committed crate obj
   @level-exhaustive
   @mode-differential
   Scenario Outline: Apply <id> to the real committed crate object
-    Given the real committed object artifact asset://🏅️standards/🔖️v1/🪆️subsets/✳️object/📚️examples/📦️crate/🖼️assets/🗣️example.dsl.semio
+    Given the real committed object artifact asset://🏅️standards/🔖️v1/🪆️subsets/✳️object/📚️examples/📦️crate/🖼️assets/🗣️.dsl.semio
     When the <id> mutation is applied to the prepared object parsed from it
       """
       <mutation>
@@ -76,7 +76,7 @@ Feature: Apply every typed semio OBJECT mutation to the real committed crate obj
   @level-exhaustive
   @mode-differential
   Scenario Outline: Undoing <id> restores the prepared crate object
-    Given the real committed object artifact asset://🏅️standards/🔖️v1/🪆️subsets/✳️object/📚️examples/📦️crate/🖼️assets/🗣️example.dsl.semio
+    Given the real committed object artifact asset://🏅️standards/🔖️v1/🪆️subsets/✳️object/📚️examples/📦️crate/🖼️assets/🗣️.dsl.semio
     When the <id> mutation is applied to the prepared object parsed from it and each side undoes it with its own computed inverse
       """
       <mutation>
@@ -98,9 +98,9 @@ Feature: Apply every typed semio OBJECT mutation to the real committed crate obj
   @level-exhaustive
   @mode-differential
   Scenario Outline: Apply <id> to its committed handcrafted specification vector
-    Given the committed before-snapshot asset://🏅️standards/🔖️v1/🪆️subsets/✳️object/🧬️schema/🧬️mutations/<dir>/🧪️tests/<fixture>/📸️snapshot/⬅️before/🔣️component.json
-    And the committed mutation payload asset://🏅️standards/🔖️v1/🪆️subsets/✳️object/🧬️schema/🧬️mutations/<dir>/🧪️tests/<fixture>/🦠️mutation/🔣️component.json
-    And the committed after-snapshot asset://🏅️standards/🔖️v1/🪆️subsets/✳️object/🧬️schema/🧬️mutations/<dir>/🧪️tests/<fixture>/📸️snapshot/➡️after/🔣️component.json
+    Given the committed before-snapshot asset://🏅️standards/🔖️v1/🪆️subsets/✳️object/🧬️schema/🧬️mutations/<dir>/🧪️tests/<fixture>/📸️snapshot/⬅️before/🔣️.json
+    And the committed mutation payload asset://🏅️standards/🔖️v1/🪆️subsets/✳️object/🧬️schema/🧬️mutations/<dir>/🧪️tests/<fixture>/🦠️mutation/🔣️.json
+    And the committed after-snapshot asset://🏅️standards/🔖️v1/🪆️subsets/✳️object/🧬️schema/🧬️mutations/<dir>/🧪️tests/<fixture>/📸️snapshot/➡️after/🔣️.json
     When both implementations apply the committed mutation to the committed before-snapshot
     Then each reaches the committed after-snapshot and the two agree
     Examples:
@@ -119,7 +119,7 @@ Feature: Apply every typed semio OBJECT mutation to the real committed crate obj
   @level-long
   @mode-round-trip
   Scenario: Re-emit both committed encodings of the real crate object from the parsed document
-    Given the real committed object artifact asset://🏅️standards/🔖️v1/🪆️subsets/✳️object/📚️examples/📦️crate/🖼️assets/🗣️example.dsl.semio
+    Given the real committed object artifact asset://🏅️standards/🔖️v1/🪆️subsets/✳️object/📚️examples/📦️crate/🖼️assets/🗣️.dsl.semio
     And its committed binary twin asset://🏅️standards/🔖️v1/🪆️subsets/✳️object/📚️examples/📦️crate/🖼️assets/🎒️.pack.semio
     When each implementation parses the text artifact, prints it back, decodes the binary twin and re-encodes it
     Then both reproduce the two committed files byte for byte and agree on the object and on the digests of what they emitted

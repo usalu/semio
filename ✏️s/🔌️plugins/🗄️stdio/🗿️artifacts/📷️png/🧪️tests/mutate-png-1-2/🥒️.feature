@@ -1,5 +1,5 @@
 @capability-png-1-2-mutate
-@oracle-png-png-1-2-mutate
+@oracle-png-png-1-2-mutate-reader
 @comparison-semantic-raster-v1
 @mutations-png-1-2-any
 Feature: Apply every typed PNG 1.2 mutation to a real-world document
@@ -43,7 +43,7 @@ Feature: Apply every typed PNG 1.2 mutation to a real-world document
   @level-exhaustive
   @mode-differential
   Scenario Outline: Apply <id> to the real document
-    Given the real input document shared://🖼️rathaus-ahlen-grundriss.png
+    Given the real input document shared://🧪️rathaus-ahlen-grundriss/🖼️.png
     When the <id> mutation is applied with its parameters
       """
       {"kind": "<id>", "params": <params>}
@@ -71,7 +71,7 @@ Feature: Apply every typed PNG 1.2 mutation to a real-world document
   @level-exhaustive
   @mode-property
   Scenario Outline: Undoing <id> restores the document
-    Given the real input document shared://🖼️rathaus-ahlen-grundriss.png
+    Given the real input document shared://🧪️rathaus-ahlen-grundriss/🖼️.png
     When the <id> mutation is applied with its parameters
       """
       {"kind": "<id>", "params": <params>}
@@ -101,7 +101,7 @@ Feature: Apply every typed PNG 1.2 mutation to a real-world document
   @level-long
   @mode-round-trip
   Scenario: Decode and re-encode the real document without passing bytes through
-    Given the real input document shared://🖼️rathaus-ahlen-grundriss.png
+    Given the real input document shared://🧪️rathaus-ahlen-grundriss/🖼️.png
     When the document is decoded, printed to the text codec, reparsed and re-encoded
     Then the output is not a byte-for-byte copy of the input
     And the oracle and the subject agree on the semantic projection

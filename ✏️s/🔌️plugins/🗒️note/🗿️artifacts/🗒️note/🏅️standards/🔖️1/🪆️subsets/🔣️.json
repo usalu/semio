@@ -2,8 +2,29 @@
   "artifact": "s.note.note",
   "standard": "1",
   "subsets": {
-    "*": {
-      "name": "Unconstrained note 1"
+    "ink": {
+      "name": "Ink -- ink-stroke drawing content and the pencil/eraser tool defaults it is drawn with (edit-block-ink-stroke, change-pencil-width, change-block-ink-width, change-eraser-radius)"
+    },
+    "text": {
+      "name": "Text -- a text block's rich-text paragraph content (edit-block-text)"
+    },
+    "math": {
+      "name": "Math -- a math block's TeX source (edit-block-math)"
+    },
+    "table": {
+      "name": "Table -- a table block's row/column structure (insert-table-row, remove-table-row, insert-table-column, remove-table-column)"
+    },
+    "asset": {
+      "name": "Asset -- the id-keyed image asset pool, independent of any block (create-asset, replace-asset-payload, delete-asset)"
+    },
+    "block": {
+      "name": "Block -- kind-agnostic block lifecycle and placement over the id-keyed, z-order-meaningful, group-nestable block tree (create-block, delete-block, delete-blocks, duplicate-block, duplicate-blocks, move-block-to-container, drag-blocks, rename-block, change-block-visible, change-block-locked, move-block, resize-block, change-block-font-size)"
+    },
+    "canvas": {
+      "name": "Canvas -- canvas-wide grid and snap tool settings, not block content (change-grid-visible, change-grid-spacing, change-grid-subdivisions, change-grid-opacity, change-snap-enabled, change-snap-grid-spacing)"
+    },
+    "document": {
+      "name": "Document -- the document's own identity field (rename-note)"
     }
   }
 }

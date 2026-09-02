@@ -1,0 +1,54 @@
+{
+  "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json",
+  "schemaVersion": 2,
+  "_comment": "Ticket 26/09/02/SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION: split out of the former `✳️any` catch-all. buildingSMART BCF-XML 2.1 stores each topic's screen-capture image as its own `snapshot.png` file inside the topic folder, sibling to but distinct from `markup.bcf` and `viewpoint.bcfv`. `set-viewpoint-snapshot` is that file's own mutation, owned here rather than by `✳️markup`, for the same family-module reuse rationale as `../../✳️viewpoint/🧪️oracle/🔣️.json`.",
+  "oracles": [],
+  "noOracleDecisions": [],
+  "comparisonProfiles": [],
+  "mutationManifests": [
+    {
+      "schema": "semio.repository-test.mutation-manifest/v2",
+      "artifact": "s.stdio.bcf",
+      "standard": "2.1",
+      "subset": "snapshot",
+      "standardDirectoryName": "🔖️2.1",
+      "subsetDirectoryName": "✳️snapshot",
+      "mutations": [
+        {
+          "id": "set-viewpoint-snapshot",
+          "capability": "bcf-2-1-snapshot-mutate",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "set-viewpoint-snapshot",
+            "bridgeVersion": 1,
+            "variant": "SetViewpointSnapshot"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "bcf-2-1-snapshot-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "jszip-bcf-2-1-mutate-reader"
+            }
+          ],
+          "payloadSchema": "../🧬️schema/🧬️mutations/📸set-viewpoint-snapshot/🦀️.rs#SetViewpointSnapshot"
+        }
+      ]
+    }
+  ],
+  "fixtureManifests": [],
+  "mutationCatalogs": [
+    {
+      "id": "bcf-2.1-snapshot",
+      "capability": "bcf-2-1-snapshot-mutate",
+      "standardDirectoryName": "🔖️2.1",
+      "subsetDirectoryName": "✳️snapshot",
+      "vectors": [],
+      "kinds": [
+        "set-viewpoint-snapshot"
+      ]
+    }
+  ]
+}

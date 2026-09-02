@@ -1,8 +1,9 @@
 {
   "title": "Reimplement Kurbo-Backed Geometry Types First-Party",
   "emoji": "📐️",
-  "status": "open",
+  "status": "closed",
   "description": "Replace semio-framework-geometry's kurbo-backed Point, Vec2, Affine, Rect, RoundedRectRadii, RoundedRect, Circle, Line, Arc, CubicBez, and BezPath storage and production behavior with first-party Rust value types and algorithms. Inventory all repository consumers first. Preserve kurbo only as a dev-dependency oracle, add deterministic differential tests including tolerance-sensitive Shape path generation, verify native/browser/wasm32-wasip2 consumers, and prove kurbo is absent from shipped plugin dependency graphs.",
+  "summary": "Completed and audited the first-party geometry migration. Geometry value types and tolerance-sensitive path generation no longer require production kurbo; renderer conversions are host-local and kurbo is a geometry dev-dependency oracle only. Added deterministic public-API differential tests. Geometry passes native and wasm32-wasip2 checks, 17 direct dependents pass a combined native check, the Nx raster suite passes 3/3, geometry differential tests pass 5/5, and puzzle/flow/trinity/animate WASI reverse trees contain no kurbo. Unrelated pre-existing broad-test and puzzle schema failures are documented.",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/2602"
   },

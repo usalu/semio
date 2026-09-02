@@ -27,7 +27,7 @@ const KINDS: &[&str] = &["change-jfif-header", "replace-quant-table", "remove-qu
 //#endregion 🔖️Kinds
 
 //#region 🔖️Input
-const INPUT: &str = "shared://🖼️abbau-aufbau-masterarbeit-grundriss.jpg";
+const INPUT: &str = "shared://🧪️abbau-aufbau-masterarbeit-grundriss/🖼️.jpg";
 
 /// 🧫️ Copies the immutable fixture into the work directory and returns the mutable copy's bytes.
 fn mutable_input(ctx: &Context) -> Result<Vec<u8>, String> {

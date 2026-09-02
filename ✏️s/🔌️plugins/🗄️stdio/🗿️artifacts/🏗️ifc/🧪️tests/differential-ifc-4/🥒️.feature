@@ -14,7 +14,7 @@ Feature: Produce every schema-expressible IFC4 mutation twice, in two independen
   other; neither is derived from the other.
 
   The artifact is the real one this subset already commits and is not substituted for anything
-  smaller: `shared://🏗️nakagin-capsule-tower.ifc`, a real IfcOpenShell 0.8.4.post1 export of Kisho
+  smaller: `shared://🧪️nakagin-capsule-tower/🏗️.ifc`, a real IfcOpenShell 0.8.4.post1 export of Kisho
   Kurokawa's Nakagin Capsule Tower, `FILE_SCHEMA(('IFC4'))`, **2 496 437 bytes and 24 792 entity
   instances**. The whole entity graph is compared on every scenario, not a sampled corner of it.
   Every scenario copies the fixture into the case work directory before touching it; the committed
@@ -63,7 +63,7 @@ Feature: Produce every schema-expressible IFC4 mutation twice, in two independen
   @level-exhaustive
   @mode-differential
   Scenario Outline: Both implementations apply <id> to the real 24792-entity exchange structure
-    Given the real input document shared://🏗️nakagin-capsule-tower.ifc
+    Given the real input document shared://🧪️nakagin-capsule-tower/🏗️.ifc
     When the <id> mutation is applied with its parameters
       """
       {"kind": "<id>", "params": <params>}
@@ -83,7 +83,7 @@ Feature: Produce every schema-expressible IFC4 mutation twice, in two independen
   @level-exhaustive
   @mode-differential
   Scenario Outline: Both implementations undo <id> and restore the real exchange structure
-    Given the real input document shared://🏗️nakagin-capsule-tower.ifc
+    Given the real input document shared://🧪️nakagin-capsule-tower/🏗️.ifc
     When the <id> mutation is applied with its parameters
       """
       {"kind": "<id>", "params": <params>}
@@ -104,6 +104,6 @@ Feature: Produce every schema-expressible IFC4 mutation twice, in two independen
   @level-long
   @mode-differential
   Scenario: Both implementations decode and re-encode the real exchange structure from the model alone
-    Given the real input document shared://🏗️nakagin-capsule-tower.ifc
+    Given the real input document shared://🧪️nakagin-capsule-tower/🏗️.ifc
     When the document is decoded into each implementation's own model and re-encoded from it alone
     Then both independently re-encoded documents carry the same semantic projection

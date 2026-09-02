@@ -52,7 +52,7 @@ fn moved_the_document(kind: &str, mutated: &Json, base: &Json) -> Result<(), Str
 //#endregion 🔖️Projection
 
 //#region 🔖️Input
-const INPUT: &str = "shared://🧊️hexagonal-cut-concrete-forest-left.stl";
+const INPUT: &str = "shared://🧪️hexagonal-cut-concrete-forest-left/🧊️.stl";
 
 /// 🧫️ Copies the immutable fixture into the work directory and returns the mutable copy's bytes.
 fn mutable_input(ctx: &Context) -> Result<Vec<u8>, String> {

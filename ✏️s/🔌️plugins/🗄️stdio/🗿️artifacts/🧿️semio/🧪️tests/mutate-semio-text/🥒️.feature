@@ -62,7 +62,7 @@ Feature: Apply every typed semio TEXT mutation to a real published article, agai
   @level-exhaustive
   @mode-differential
   Scenario Outline: Apply <id> to the real published article
-    Given the real article local://🗣️zukunft-bau-entwerfen-mit-bestand.dsl.semio
+    Given the real article local://🧪️zukunft-bau-entwerfen-mit-bestand/🗣️.dsl.semio
     When the <id> mutation is applied to the article parsed from it
       """
       <mutation>
@@ -82,7 +82,7 @@ Feature: Apply every typed semio TEXT mutation to a real published article, agai
   @level-exhaustive
   @mode-differential
   Scenario Outline: Undoing <id> restores the real published article
-    Given the real article local://🗣️zukunft-bau-entwerfen-mit-bestand.dsl.semio
+    Given the real article local://🧪️zukunft-bau-entwerfen-mit-bestand/🗣️.dsl.semio
     When the <id> mutation is applied to the article parsed from it and each side undoes it with its own computed inverse
       """
       <mutation>
@@ -102,9 +102,9 @@ Feature: Apply every typed semio TEXT mutation to a real published article, agai
   @level-exhaustive
   @mode-differential
   Scenario Outline: Apply <id> to its committed handcrafted specification vector
-    Given the committed before-snapshot asset://🏅️standards/🔖️v1/🪆️subsets/✳️text/🧬️schema/🧬️mutations/<dir>/🧪️tests/<fixture>/📸️snapshot/⬅️before/🔣️component.json
-    And the committed mutation payload asset://🏅️standards/🔖️v1/🪆️subsets/✳️text/🧬️schema/🧬️mutations/<dir>/🧪️tests/<fixture>/🦠️mutation/🔣️component.json
-    And the committed after-snapshot asset://🏅️standards/🔖️v1/🪆️subsets/✳️text/🧬️schema/🧬️mutations/<dir>/🧪️tests/<fixture>/📸️snapshot/➡️after/🔣️component.json
+    Given the committed before-snapshot asset://🏅️standards/🔖️v1/🪆️subsets/✳️text/🧬️schema/🧬️mutations/<dir>/🧪️tests/<fixture>/📸️snapshot/⬅️before/🔣️.json
+    And the committed mutation payload asset://🏅️standards/🔖️v1/🪆️subsets/✳️text/🧬️schema/🧬️mutations/<dir>/🧪️tests/<fixture>/🦠️mutation/🔣️.json
+    And the committed after-snapshot asset://🏅️standards/🔖️v1/🪆️subsets/✳️text/🧬️schema/🧬️mutations/<dir>/🧪️tests/<fixture>/📸️snapshot/➡️after/🔣️.json
     When both implementations apply the committed mutation to the committed before-snapshot
     Then each reaches the committed after-snapshot and the two agree
     Examples:
@@ -121,9 +121,9 @@ Feature: Apply every typed semio TEXT mutation to a real published article, agai
   @level-long
   @mode-round-trip
   Scenario: Re-emit both encodings of the committed note and of the real published article
-    Given the real committed text artifact asset://🏅️standards/🔖️v1/🪆️subsets/✳️text/📚️examples/📃️note/🖼️assets/🗣️example.dsl.semio
+    Given the real committed text artifact asset://🏅️standards/🔖️v1/🪆️subsets/✳️text/📚️examples/📃️note/🖼️assets/🗣️.dsl.semio
     And its committed binary twin asset://🏅️standards/🔖️v1/🪆️subsets/✳️text/📚️examples/📃️note/🖼️assets/🎒️.pack.semio
-    And the real article local://🗣️zukunft-bau-entwerfen-mit-bestand.dsl.semio
+    And the real article local://🧪️zukunft-bau-entwerfen-mit-bestand/🗣️.dsl.semio
     And its binary twin local://🎒️.pack.semio
     When each implementation parses all four files, prints both documents back and re-encodes both packs
     Then all four files are reproduced byte for byte and the two implementations agree on both documents and on the digests of what they emitted

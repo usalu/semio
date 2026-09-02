@@ -1,5 +1,5 @@
 @capability-gif-87a-mutate
-@oracle-gif-87a-mutate
+@oracle-gif-87a-any-mutate-reader
 @comparison-semantic-raster-v1
 @mutations-gif-87a-any
 Feature: Apply every typed GIF87a mutation to a real derived document
@@ -13,7 +13,7 @@ Feature: Apply every typed GIF87a mutation to a real derived document
   already-decoded palette indices were cropped out of each — 400×400 out of frame 0 at (200,200),
   400×400 out of frame 20 at (50,150) and 32×32 out of frame 40 at (120,180) — and frame 0's real
   256-colour local table was promoted to this file's own Global Color Table so a fourth, inserted
-  image can reference it without carrying its own. The result is `shared://🖼️dancing-87a-large.gif`,
+  image can reference it without carrying its own. The result is `shared://🧪️dancing-87a-large/🖼️.gif`,
   117 704 bytes over a 400×400 logical screen, against 2 936 bytes over a 16×16 one for the
   derivation this case used to rest on. Every scenario copies the immutable fixture into the case
   work directory before touching it; the fixture itself is never written to.
@@ -71,7 +71,7 @@ Feature: Apply every typed GIF87a mutation to a real derived document
   @level-exhaustive
   @mode-differential
   Scenario Outline: Apply <id> to the real document
-    Given the real GIF87a input document shared://🖼️dancing-87a-large.gif
+    Given the real GIF87a input document shared://🧪️dancing-87a-large/🖼️.gif
     When the <id> mutation is applied with its parameters
       """
       {"kind": "<id>", "params": <params>}
@@ -96,7 +96,7 @@ Feature: Apply every typed GIF87a mutation to a real derived document
   @level-exhaustive
   @mode-differential
   Scenario Outline: Undoing <id> restores the original document
-    Given the real GIF87a input document shared://🖼️dancing-87a-large.gif
+    Given the real GIF87a input document shared://🧪️dancing-87a-large/🖼️.gif
     When the <id> mutation is applied and then its own inverse, computed from the pre-mutation document, is applied on top
       """
       {"kind": "<id>", "params": <params>}
@@ -121,7 +121,7 @@ Feature: Apply every typed GIF87a mutation to a real derived document
   @level-long
   @mode-round-trip
   Scenario: Decode and re-encode both real documents without passing bytes through
-    Given the real GIF87a input document shared://🖼️dancing-87a-large.gif
-    And the 16x16 derivation this case used to rest on shared://🖼️dancing-87a.gif
+    Given the real GIF87a input document shared://🧪️dancing-87a-large/🖼️.gif
+    And the 16x16 derivation this case used to rest on shared://🧪️dancing-87a/🖼️.gif
     When each document is fully parsed into the typed snapshot and re-encoded from that snapshot alone, never by copying or splicing the source bytes
     Then the re-encoded bytes of each are not bit-identical to its input and project to the same semantic content that input does

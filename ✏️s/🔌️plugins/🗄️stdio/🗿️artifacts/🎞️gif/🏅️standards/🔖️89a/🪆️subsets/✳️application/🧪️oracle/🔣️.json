@@ -1,0 +1,278 @@
+{
+  "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json",
+  "schemaVersion": 2,
+  "_comment": "Ticket 26/09/02/SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION: split out of the former `✳️any` catch-all. The GIF89a Specification (CompuServe, 1990) §26 defines the Application Extension as a self-contained, optional block (block label 0x21 0xFF) identifying an 11-byte application identifier/auth-code plus opaque application sub-blocks -- the mechanism `add-app-extension`/`remove-app-extension` expose directly, and that the de-facto NETSCAPE2.0 looping sub-block (`set-loop-count`) is layered on top of. All three are owned here rather than by `✳️base`, for the same family-module reuse rationale as `../../✳️graphic-control/🧪️oracle/🔣️.json`.",
+  "oracles": [],
+  "noOracleDecisions": [],
+  "comparisonProfiles": [],
+  "mutationManifests": [
+    {
+      "schema": "semio.repository-test.mutation-manifest/v2",
+      "artifact": "s.stdio.gif",
+      "standard": "89a",
+      "subset": "application",
+      "standardDirectoryName": "🔖️89a",
+      "subsetDirectoryName": "✳️application",
+      "mutations": [
+        {
+          "id": "add-app-extension",
+          "capability": "gif-89a-application-mutate",
+          "payloadSchema": "../🧬️schema/🧬️mutations/🧩add-app-extension/🦀️.rs#AddAppExtension",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "add-app-extension",
+            "bridgeVersion": 1,
+            "variant": "GifMutation::AddAppExtension"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "gif-89a-application-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "gif-89a-extension-reader"
+            }
+          ],
+          "carriers": [
+            "gif"
+          ],
+          "invariants": {
+            "local": [
+              "application-extension-identifier-authcode-data-agree"
+            ],
+            "enclosing": [
+              "gif-reencode-round-trip-agrees-with-reference-decoder"
+            ]
+          }
+        },
+        {
+          "id": "remove-app-extension",
+          "capability": "gif-89a-application-mutate",
+          "payloadSchema": "../🧬️schema/🧬️mutations/➖remove-app-extension/🦀️.rs#RemoveAppExtension",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "remove-app-extension",
+            "bridgeVersion": 1,
+            "variant": "GifMutation::RemoveAppExtension"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "gif-89a-application-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "gif-89a-extension-reader"
+            }
+          ],
+          "carriers": [
+            "gif"
+          ],
+          "invariants": {
+            "local": [
+              "application-extension-count-agrees"
+            ],
+            "enclosing": [
+              "gif-reencode-round-trip-agrees-with-reference-decoder"
+            ]
+          }
+        },
+        {
+          "id": "set-loop-count",
+          "capability": "gif-89a-application-mutate",
+          "payloadSchema": "../🧬️schema/🧬️mutations/🔁set-loop-count/🦀️.rs#SetLoopCount",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "set-loop-count",
+            "bridgeVersion": 1,
+            "variant": "GifMutation::SetLoopCount"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "gif-89a-application-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "gif-89a-any-mutate-reader"
+            }
+          ],
+          "carriers": [
+            "gif"
+          ],
+          "invariants": {
+            "local": [
+              "netscape-loop-extension-count-agrees"
+            ],
+            "enclosing": [
+              "gif-reencode-round-trip-agrees-with-reference-decoder"
+            ]
+          }
+        }
+      ]
+    }
+  ],
+  "fixtureManifests": [
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "extension-add-app-extension",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.gif",
+        "standard": "89a",
+        "subset": "application"
+      },
+      "mutation": "add-app-extension",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before-gif",
+          "path": "../🧫️fixtures/add-app-extension/before.gif",
+          "mediaType": "image/gif",
+          "sha256": "sha256:6df429ba4ab20b107f8fa16df9a6aaaf0bd809ea8618ec611c644091072769f9",
+          "bytes": 96
+        },
+        {
+          "role": "expected-after-gif",
+          "path": "../🧫️fixtures/add-app-extension/after.gif",
+          "mediaType": "image/gif",
+          "sha256": "sha256:2e9219c08264ecdb49075a841c42f2aa94f1224f0f4deb45c7c913c6b77ae6a8",
+          "bytes": 115
+        }
+      ],
+      "provenance": {
+        "source": "generated",
+        "license": "public-domain (synthetic, no third-party content embedded)"
+      },
+      "generator": {
+        "oracle": "gif-89a-extension-reader",
+        "packageVersion": "11.3.0",
+        "engineFamily": "pillow",
+        "engineVersion": "11.3.0",
+        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/🔖️89a/🪆️subsets/✳️base/🏭️generator/📜️script.ts extensions",
+        "platform": "darwin"
+      },
+      "comparisonProfile": "semantic-gif-89a-extension-v1",
+      "reproducible": true,
+      "family": "mechanical",
+      "notes": "A Pillow-written GIF pair differing only in the extension block this kind touches. gif 0.13's high-level Decoder, this subset's other reader, consumes extension blocks on the way to frames and never surfaces them; its documented low-level StreamingDecoder does. Observability was checked through that reader before the pair was written.",
+      "comparisonPipeline": "gif-89a-extension-compare-v1"
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "extension-remove-app-extension",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.gif",
+        "standard": "89a",
+        "subset": "application"
+      },
+      "mutation": "remove-app-extension",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before-gif",
+          "path": "../🧫️fixtures/remove-app-extension/before.gif",
+          "mediaType": "image/gif",
+          "sha256": "sha256:2e9219c08264ecdb49075a841c42f2aa94f1224f0f4deb45c7c913c6b77ae6a8",
+          "bytes": 115
+        },
+        {
+          "role": "expected-after-gif",
+          "path": "../🧫️fixtures/remove-app-extension/after.gif",
+          "mediaType": "image/gif",
+          "sha256": "sha256:6df429ba4ab20b107f8fa16df9a6aaaf0bd809ea8618ec611c644091072769f9",
+          "bytes": 96
+        }
+      ],
+      "provenance": {
+        "source": "generated",
+        "license": "public-domain (synthetic, no third-party content embedded)"
+      },
+      "generator": {
+        "oracle": "gif-89a-extension-reader",
+        "packageVersion": "11.3.0",
+        "engineFamily": "pillow",
+        "engineVersion": "11.3.0",
+        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/🔖️89a/🪆️subsets/✳️base/🏭️generator/📜️script.ts extensions",
+        "platform": "darwin"
+      },
+      "comparisonProfile": "semantic-gif-89a-extension-v1",
+      "reproducible": true,
+      "family": "mechanical",
+      "notes": "A Pillow-written GIF pair differing only in the extension block this kind touches. gif 0.13's high-level Decoder, this subset's other reader, consumes extension blocks on the way to frames and never surfaces them; its documented low-level StreamingDecoder does. Observability was checked through that reader before the pair was written.",
+      "comparisonPipeline": "gif-89a-extension-compare-v1"
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "set-loop-count-applied",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.gif",
+        "standard": "89a",
+        "subset": "application"
+      },
+      "mutation": "set-loop-count",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before-gif",
+          "path": "../🧫️fixtures/set-loop-count-applied/before.gif",
+          "mediaType": "image/gif",
+          "sha256": "sha256:16b92f04551d8cf8ddeb501db7ca2a5d70ee20d0a31bb6fa7400faa2a8988cc8",
+          "bytes": 149
+        },
+        {
+          "role": "expected-after-gif",
+          "path": "../🧫️fixtures/set-loop-count-applied/after.gif",
+          "mediaType": "image/gif",
+          "sha256": "sha256:a6d4c0aaf8a43e1dc5a7df7c0657c3830b1823975f56df0e05b5503b9b13d389",
+          "bytes": 149
+        }
+      ],
+      "generator": {
+        "oracle": "gif-89a-any-mutate-reader",
+        "packageVersion": "0.13.3",
+        "engineFamily": "gif",
+        "engineVersion": "0.13.3",
+        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/🔖️89a/🪆️subsets/✳️base/🏭️generator/📜️script.ts build --only set-loop-count-applied",
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "MIT OR Apache-2.0 (gif)",
+        "attribution": "Generated with gif (MIT OR Apache-2.0) via the standalone reader binary in 🏭️generator/🦀️engine/src/reader_main.rs",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "semantic-gif-89a-reader-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "Only the NETSCAPE2.0 loop count changes."
+    }
+  ],
+  "mutationCatalogs": [
+    {
+      "id": "gif-89a-application",
+      "capability": "gif-89a-application-mutate",
+      "standardDirectoryName": "🔖️89a",
+      "subsetDirectoryName": "✳️application",
+      "vectors": [],
+      "kinds": [
+        "add-app-extension",
+        "remove-app-extension",
+        "set-loop-count"
+      ]
+    }
+  ]
+}

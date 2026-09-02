@@ -13,7 +13,7 @@ Feature: Apply every typed DAG mutation to the real committed pipeline and to it
   LIBRARY is a different judgement from declining a SECOND IMPLEMENTATION, and only the first was ever
   made here. `mutate-puzzle-2d-1` and `mutate-puzzle-3d-1` took Python second
   implementations over this same `.dsl.semio` carrier in this wave, so the same is writable for this
-  subset from `🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🔣️component.json`, the rules of
+  subset from `🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🔣️.json`, the rules of
   `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/📓️derivation-rules.md` and the
   committed vectors this feature already replays. What blocks it TODAY is stated in the decision and
   is one edit: this case's vectors are not declared as `asset://` fixtures — the `Examples` table
@@ -39,7 +39,7 @@ Feature: Apply every typed DAG mutation to the real committed pipeline and to it
 
   Each `mutate-<kind>` scenario therefore does two things the committed vectors alone cannot do
   between them. It replays that kind's committed vector and requires the exact `(code, severity,
-  target)` triple the vector's `🎯️outcome/🔣️component.json` declares — three different triples live
+  target)` triple the vector's `🎯️outcome/🔣️.json` declares — three different triples live
   in this vocabulary and they are not interchangeable: a missing node is the Error-level
   `mutation.target-missing`, a colliding id is the Fatal `mutation.duplicate-id`, and a duplicate
   entry in a reorder list is the Fatal `mutation.invariant`. Then it applies the real-effect payload
@@ -117,6 +117,6 @@ Feature: Apply every typed DAG mutation to the real committed pipeline and to it
   @level-long
   @mode-round-trip
   Scenario: Read the real committed pipeline through its own DSL carrier and print it back
-    Given the real committed text artifact asset://🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio
+    Given the real committed text artifact asset://🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/🗣️.dsl.semio
     When the artifact is parsed, printed back to `.dag.dsl.semio` and parsed again
     Then every decoding agrees on the same five-node pipeline over four edges, and the printed text reproduces the committed file byte for byte

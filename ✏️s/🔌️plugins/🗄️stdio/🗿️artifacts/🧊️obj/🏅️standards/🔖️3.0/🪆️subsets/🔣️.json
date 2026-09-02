@@ -2,8 +2,11 @@
   "artifact": "s.stdio.obj",
   "standard": "3.0",
   "subsets": {
-    "*": {
-      "name": "Unconstrained obj 3.0"
+    "geometry": {
+      "name": "Wavefront OBJ 3.0 geometry statements -- v/vt/vn/f/g/o/s and this document's own state (vertices, texture coordinates, normals, faces, groups, objects, smoothing groups, unrecognized statements), plus the whole-document set-snapshot/no-mutation surface. The shared reader/writer for the whole file lives here; the material-reference subset reuses it (family-module pattern) rather than duplicating it."
+    },
+    "material": {
+      "name": "Wavefront OBJ 3.0 material-library reference -- `mtllib`/`usemtl` statements, which name and select a companion .mtl material library rather than declaring this file's own geometry."
     }
   }
 }

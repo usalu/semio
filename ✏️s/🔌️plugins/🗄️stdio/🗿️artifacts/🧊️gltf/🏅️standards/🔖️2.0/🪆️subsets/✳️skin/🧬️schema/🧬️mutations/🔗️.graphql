@@ -1,0 +1,13 @@
+# 🧬 Skin slice of the glTF direct mutation discriminator roster.
+# create-skin
+# delete-skin
+# move-skin
+# reorder-skins
+enum GltfSkinMutationKind {
+  CREATE_SKIN
+  DELETE_SKIN
+  MOVE_SKIN
+  REORDER_SKINS
+}
+scalar GltfSkinMutationPayload
+input GltfSkinMutationInput { kind: GltfSkinMutationKind!, payload: GltfSkinMutationPayload! }

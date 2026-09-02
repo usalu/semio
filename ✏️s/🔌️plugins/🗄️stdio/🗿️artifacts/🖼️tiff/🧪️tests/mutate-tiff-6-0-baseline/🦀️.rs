@@ -37,7 +37,7 @@ const KINDS: &[&str] = &["no-mutation", "set-snapshot", "set-compression", "set-
 
 /// 🖼️ The real scanned TIFF, shared with the `✳️any` case rather than copied.
 #[cfg(feature = "sut")]
-const SCAN: &str = "shared://🖼️abbau-aufbau-masterarbeit-grundriss.tiff";
+const SCAN: &str = "shared://🧪️abbau-aufbau-masterarbeit-grundriss/🖼️.tiff";
 //#endregion 🔖️Kinds
 
 //#region 🔖️Oracle

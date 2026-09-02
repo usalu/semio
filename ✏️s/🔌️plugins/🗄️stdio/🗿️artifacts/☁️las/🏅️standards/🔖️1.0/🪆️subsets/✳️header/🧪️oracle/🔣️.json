@@ -1,0 +1,416 @@
+{
+  "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json",
+  "schemaVersion": 2,
+  "_comment": "🧩️ This subset's own contribution to the repository test platform — the LAS 1.0 `any` mutation vocabulary and the reference implementation that exercises it, plus this subset's own comparison profile: no shared 'point cloud' family module exists yet, and LAS is currently the only artifact in that domain, so `semantic-las-v1` is declared here rather than in the shared stdio manifest.",
+  "oracles": [
+    {
+      "id": "las-1-0-any-mutate",
+      "ecosystem": "rust",
+      "package": "las",
+      "version": "0.11",
+      "capabilities": [
+        "las-1-0-any-mutate",
+        "las-1-0-vlr-mutate",
+        "las-1-0-points-mutate"
+      ],
+      "comparisonProfiles": [
+        "semantic-las-v1"
+      ],
+      "license": "MIT OR Apache-2.0",
+      "testOnly": true,
+      "homepage": "https://github.com/las-rs/las",
+      "rationale": "The reference ASPRS LAS reader/writer of the Rust ecosystem. Every declared `LasMutation` kind is performed against this subset's OWN `las::raw::{Header,Vlr,Point}` types (the crate's byte-exact typed mirror of the LAS 1.0 public header block / VLR / point-data-format-0-3 records), not its friendlier `las::{Reader,Writer,Builder}` façade: the façade auto-recomputes `bounds`/`points_by_return` from whatever points are actually written and offers no way to override them, while this subset's own `LasHeader` (see its doc comment) treats bounds/points-by-return as directly retained, non-structural content — real-world LAS files frequently carry an inaccurate one, and `SetBounds`/`SetPointsByReturn` need to be able to set an arbitrary value independent of the real point distribution to be a checked mutation rather than a no-op. The raw types give exactly that control while still being the crate's own (de)serialization, so the oracle stays a genuine second producer. `SetVersion` scenarios are kept within the LAS 1.0-1.2 family (no LAS 1.3/1.4 minor value): `las::raw::Header::write_to` appends waveform/EVLR/large-file header extensions once `version.supports(..)` reports true for those newer minors, growing the header past the fixed 227 bytes this subset's own `encode_las` always emits (its own `EncodeScopeNote` states plainly: 'no LAS 1.3/1.4 extensions') — exercising 1.3/1.4 would be testing a real capability gap in the SUBJECT under the banner of a version-label mutation, not the mutation itself.",
+      "hostPath": "✏️s/🔌️plugins/🗄️stdio/🧪️oracle/📦️packages/🦀️rust",
+      "kind": "third-party-library",
+      "engine": {
+        "family": "las-rs",
+        "implementation": "las Rust ASPRS LAS reader/writer",
+        "version": "0.11"
+      },
+      "productionReachable": false,
+      "networkDuringExecution": false
+    }
+  ],
+  "noOracleDecisions": [],
+  "comparisonProfiles": [
+    {
+      "id": "semantic-las-v1",
+      "description": "LAS point clouds compared by the non-structural header content (version, identifiers, creation date, scale/offset, bounds, points-by-return) plus the full VLR list and the full point list, each point resolved to real-world x/y/z via that same header's scale/offset. `headerSize`/`offsetToPointData`/`numberOfVlrs`/`pointDataFormatId`/`pointDataRecordLength`/`numberOfPointRecords` are STRUCTURAL — always recomputed from the real vlrs/points content by both this subset's own `encode_las` and the oracle's raw writer — and are never part of the projection; a point-count or VLR-count discrepancy still fails the comparison because it shows up directly as an array-length difference in `vlrs`/`points`. `file_source_id`/`global_encoding`/`guid` are out of this subset's contracted field list (skipped on decode, left zero on encode by `decode_las`/`encode_las` alike) and are likewise never projected.",
+      "tolerance": 0.001,
+      "ignoreKeys": []
+    }
+  ],
+  "mutationCatalogs": [
+    {
+      "id": "las-1-0-any",
+      "capability": "las-1-0-any-mutate",
+      "standardDirectoryName": "🔖️1.0",
+      "subsetDirectoryName": "✳️header",
+      "vectors": [
+        {
+          "mutationId": "set-snapshot",
+          "sourceMutationDirectoryName": "📄set-snapshot",
+          "mutationDirectoryName": "📄set-snapshot",
+          "scenarios": [
+            {
+              "id": "lifts-the-second-point-and-stretches-the-z-bound",
+              "directoryName": "🧪️lifts-the-second-point-and-stretches-the-z-bound"
+            }
+          ]
+        }
+      ],
+      "kinds": [
+        "no-mutation",
+        "set-snapshot",
+        "set-version",
+        "set-system-identifier",
+        "set-software-info",
+        "set-creation-date",
+        "set-scale-and-offset",
+        "set-bounds",
+        "set-points-by-return"
+      ]
+    }
+  ],
+  "mutationManifests": [
+    {
+      "schema": "semio.repository-test.mutation-manifest/v2",
+      "artifact": "s.stdio.las",
+      "standard": "1.0",
+      "subset": "header",
+      "standardDirectoryName": "🔖️1.0",
+      "subsetDirectoryName": "✳️header",
+      "mutations": [
+        {
+          "id": "no-mutation",
+          "capability": "las-1-0-any-mutate",
+          "payloadSchema": "../🧬️schema/🧬️mutations/🦀️.rs#NoMutation",
+          "outcomes": [
+            "no-op"
+          ],
+          "productionDispatch": {
+            "operation": "no-mutation",
+            "bridgeVersion": 1,
+            "variant": "LasMutation::NoMutation"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "las-1-0-any-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "las-1-0-any-mutate"
+            }
+          ],
+          "carriers": [
+            "las"
+          ],
+          "invariants": {
+            "local": [
+              "byte-identical-round-trip"
+            ],
+            "enclosing": [
+              "las-reencode-round-trip-agrees-with-reference-reader"
+            ]
+          }
+        },
+        {
+          "id": "set-snapshot",
+          "capability": "las-1-0-any-mutate",
+          "payloadSchema": "../🧬️schema/🧬️mutations/🦀️.rs#SetSnapshot",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "set-snapshot",
+            "bridgeVersion": 1,
+            "variant": "LasMutation::SetSnapshot"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "las-1-0-any-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "las-1-0-any-mutate"
+            }
+          ],
+          "carriers": [
+            "las"
+          ],
+          "invariants": {
+            "local": [
+              "replacement-snapshot-reproduces-exactly-or-reports-no-op"
+            ],
+            "enclosing": [
+              "las-reencode-round-trip-agrees-with-reference-reader"
+            ]
+          }
+        },
+        {
+          "id": "set-version",
+          "capability": "las-1-0-any-mutate",
+          "payloadSchema": "../🧬️schema/🧬️mutations/🦀️.rs#SetVersion",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "set-version",
+            "bridgeVersion": 1,
+            "variant": "LasMutation::SetVersion"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "las-1-0-any-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "las-1-0-any-mutate"
+            }
+          ],
+          "carriers": [
+            "las"
+          ],
+          "invariants": {
+            "local": [
+              "header-version-major-minor-agree"
+            ],
+            "enclosing": [
+              "las-reencode-round-trip-agrees-with-reference-reader"
+            ]
+          }
+        },
+        {
+          "id": "set-system-identifier",
+          "capability": "las-1-0-any-mutate",
+          "payloadSchema": "../🧬️schema/🧬️mutations/🦀️.rs#SetSystemIdentifier",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "set-system-identifier",
+            "bridgeVersion": 1,
+            "variant": "LasMutation::SetSystemIdentifier"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "las-1-0-any-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "las-1-0-any-mutate"
+            }
+          ],
+          "carriers": [
+            "las"
+          ],
+          "invariants": {
+            "local": [
+              "header-system-identifier-agrees"
+            ],
+            "enclosing": [
+              "las-reencode-round-trip-agrees-with-reference-reader"
+            ]
+          }
+        },
+        {
+          "id": "set-software-info",
+          "capability": "las-1-0-any-mutate",
+          "payloadSchema": "../🧬️schema/🧬️mutations/🦀️.rs#SetSoftwareInfo",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "set-software-info",
+            "bridgeVersion": 1,
+            "variant": "LasMutation::SetSoftwareInfo"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "las-1-0-any-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "las-1-0-any-mutate"
+            }
+          ],
+          "carriers": [
+            "las"
+          ],
+          "invariants": {
+            "local": [
+              "header-generating-software-agrees"
+            ],
+            "enclosing": [
+              "las-reencode-round-trip-agrees-with-reference-reader"
+            ]
+          }
+        },
+        {
+          "id": "set-creation-date",
+          "capability": "las-1-0-any-mutate",
+          "payloadSchema": "../🧬️schema/🧬️mutations/🦀️.rs#SetCreationDate",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "set-creation-date",
+            "bridgeVersion": 1,
+            "variant": "LasMutation::SetCreationDate"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "las-1-0-any-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "las-1-0-any-mutate"
+            }
+          ],
+          "carriers": [
+            "las"
+          ],
+          "invariants": {
+            "local": [
+              "header-creation-day-of-year-and-year-agree"
+            ],
+            "enclosing": [
+              "las-reencode-round-trip-agrees-with-reference-reader"
+            ]
+          }
+        },
+        {
+          "id": "set-scale-and-offset",
+          "capability": "las-1-0-any-mutate",
+          "payloadSchema": "../🧬️schema/🧬️mutations/🦀️.rs#SetScaleAndOffset",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "set-scale-and-offset",
+            "bridgeVersion": 1,
+            "variant": "LasMutation::SetScaleAndOffset"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "las-1-0-any-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "las-1-0-any-mutate"
+            }
+          ],
+          "carriers": [
+            "las"
+          ],
+          "invariants": {
+            "local": [
+              "header-scale-and-offset-agree-and-real-world-coordinates-reproduce"
+            ],
+            "enclosing": [
+              "las-reencode-round-trip-agrees-with-reference-reader"
+            ]
+          }
+        },
+        {
+          "id": "set-bounds",
+          "capability": "las-1-0-any-mutate",
+          "payloadSchema": "../🧬️schema/🧬️mutations/🦀️.rs#SetBounds",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "set-bounds",
+            "bridgeVersion": 1,
+            "variant": "LasMutation::SetBounds"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "las-1-0-any-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "las-1-0-any-mutate"
+            }
+          ],
+          "carriers": [
+            "las"
+          ],
+          "invariants": {
+            "local": [
+              "header-max-min-bounds-agree-independent-of-real-point-distribution"
+            ],
+            "enclosing": [
+              "las-reencode-round-trip-agrees-with-reference-reader"
+            ]
+          }
+        },
+        {
+          "id": "set-points-by-return",
+          "capability": "las-1-0-any-mutate",
+          "payloadSchema": "../🧬️schema/🧬️mutations/🦀️.rs#SetPointsByReturn",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "set-points-by-return",
+            "bridgeVersion": 1,
+            "variant": "LasMutation::SetPointsByReturn"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "las-1-0-any-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "las-1-0-any-mutate"
+            }
+          ],
+          "carriers": [
+            "las"
+          ],
+          "invariants": {
+            "local": [
+              "header-points-by-return-counts-agree-independent-of-real-points"
+            ],
+            "enclosing": [
+              "las-reencode-round-trip-agrees-with-reference-reader"
+            ]
+          }
+        }
+      ]
+    }
+  ],
+  "fixtureManifests": [
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "survey-strip",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.las",
+        "standard": "1.0",
+        "subset": "header"
+      },
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "primary-las",
+          "path": "../🧫️fixtures/survey-strip/survey-strip.las",
+          "mediaType": "application/vnd.las",
+          "sha256": "sha256:e452a27f1bc94c4311067b60e9d2b4f704c89f3aa287dee3d9cc9167604c8af8",
+          "bytes": 495
+        }
+      ],
+      "generator": {
+        "oracle": "las-1-0-any-mutate",
+        "packageVersion": "0.11",
+        "engineFamily": "las-rs",
+        "engineVersion": "0.11",
+        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/☁️las/🏅️standards/🔖️1.0/🪆️subsets/✳️header/🏭️generator/📜️script.ts generate",
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "public-domain (synthetic, no third-party content embedded)"
+      },
+      "comparisonProfile": "semantic-las-v1",
+      "reproducible": true,
+      "family": "mechanical",
+      "notes": "A single base input document exercising all 15 declared las@1.0 mutation kinds (2 VLRs, 6 points spanning classification/intensity/return-number/scan-angle, bounds and points-by-return deliberately divergent from the real point distribution so those two kinds are checked mutations, not no-ops). LAS itself declares no physical length/angle unit convention; 751 units, 62 prefixes is schema-required,  and  are placeholders, not claims. Verified to read back correctly through both las::Reader (6/6 points) and this subset's own oracle projection."
+    }
+  ]
+}
