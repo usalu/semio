@@ -1191,7 +1191,7 @@ mod tests {
             assert!(matches!(dispatch.job.step(&mut context), StepOutcome::CheckpointReady(_)));
         }
         dispatch.job.begin_close();
-        let fixture: serde_json::Value = serde_json::from_str(include_str!("🧹️wire-retirement/🧪️fixture/🔣️.json")).unwrap();
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("🧹️wire-retirement/🔣️fixture.json")).unwrap();
         let law = &fixture["shortClose"];
         let mut released = 0;
         for row in law["steps"].as_array().unwrap() {

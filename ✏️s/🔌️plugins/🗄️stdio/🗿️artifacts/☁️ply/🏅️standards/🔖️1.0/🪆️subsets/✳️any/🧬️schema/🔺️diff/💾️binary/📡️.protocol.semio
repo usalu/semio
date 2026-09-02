@@ -1,0 +1,42 @@
+dialect protocol
+protocol stdio.ply.diff
+version 1
+schema stdio.ply.diff
+start diff
+
+# 🎫️26/08/10/ARTIFACT-SYSTEM-OVERHAUL-REAL-CODECS-RUNTIME-REUSE-EVOLUTION FG3: real binary
+# diff-frame `protocol::DiffCodec::encode_diff`/`decode_diff` for `PlyDiff` — upgraded this
+# program (P2-FG3) from the F6-era `print_diff().into_bytes()` text-as-binary shortcut (100% of
+# stdio's `DiffCodec` impls were still on that shortcut per the P2-W0 census; FG1's own closer
+# report flagged leaving one un-upgraded as a real defect to not repeat). `PlyDiff` is a STRUCT
+# of three PLAIN `Option<T>` fields (`format`/`comments`/`elements`, struct declaration order) —
+# no tri-state `Option<Option<T>>` fields at all (unlike gif89a's own `gct`/`loop_count`), so
+# every field here uses a simple 2-way presence flag, never the 3-way flag/`protocol-cond-cannot-
+# chain` workaround.
+#
+# `format` is FIXED-width (one byte, `PlyFormat`'s 3 unit variants) so its presence flag guards a
+# plain conditional field, no length prefix needed. `comments` (a `Vec<String>` whole-replace) and
+# `elements` (`PlyElementsDiff` — the real name-keyed removed/modified + index-keyed added
+# triple, itself recursively nesting `PlyElement`/`PlyElementDiff`/`PlyRowsDiff`/`PlyProperty`/
+# `PlyValue`) are both length-prefixed opaque byte blobs (`<name>_len varint` +
+# `Array(u8, Field(<name>_len))`) — `Prim::Ref` to a struct/enum still unconditionally errors at
+# walk time (`protocol-prim-ref-recursion`, confirmed unchanged since P2-M2 by direct re-read of
+# `walk_fields`, not assumed), so their own internal shape isn't further protocol-walkable; the
+# Rust `encode_diff`/`decode_diff` side (`../🦀️.rs`'s `RealBinaryPrimitives`/
+# `RealBinaryDiffFrame` regions) IS genuinely, fully structured real binary (real varint counts/
+# lengths, real per-item recursive encoding, incl. `PlyValue::List`'s own self-recursion and
+# `PlyProperty`'s data-carrying variants) — this is purely a limit on how deep the PROTOCOL
+# DESCRIPTION can validate structurally, same documented limitation as every other stdio pilot's
+# own nested-payload field (gif89a's own sibling protocol file, `📖️grammar-recipe.md` §2.5).
+framing record
+
+field format_flag u8
+field format_value u8 if format_flag eq 1
+
+field comments_flag u8
+field comments_len varint if comments_flag eq 1
+field comments_value Array(u8, Field(comments_len)) if comments_flag eq 1
+
+field elements_flag u8
+field elements_len varint if elements_flag eq 1
+field elements_value Array(u8, Field(elements_len)) if elements_flag eq 1

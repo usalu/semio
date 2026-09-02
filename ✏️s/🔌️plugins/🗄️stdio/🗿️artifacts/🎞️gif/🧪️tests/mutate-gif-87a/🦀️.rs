@@ -1,7 +1,7 @@
 //! 🦀️ GIF87a mutation-oracle case — Rust adapter.
 //!
 //! `oracle` drives the registered `gif` reference crate (`../../🏅️standards/🔖️87a/🪆️subsets/✳️any/
-//! 🧪️oracle/🦀️component.rs`), `subject` drives this repository's own `decode_gif`/`apply_gif_mutation`/
+//! 🦀️oracle.rs`), `subject` drives this repository's own `decode_gif`/`apply_gif_mutation`/
 //! `encode_gif` round trip, and both results are read back by that same module's independent
 //! `project_gif_87a` reader before the `semantic-raster-v1` profile compares them. The subject half
 //! is gated behind the generated host's `sut` feature so the oracle-only run never compiles the
@@ -29,7 +29,7 @@ const INPUT: &str = "shared://🖼️dancing-87a-large.gif";
 const SMALL_INPUT: &str = "shared://🖼️dancing-87a.gif";
 
 /// 🏷️ Mirrors `GifMutation::KINDS` (`../../🏅️standards/🔖️87a/🪆️subsets/✳️any/🧬️schema/🧬️mutations/
-/// 🦀️component.rs`) as a literal, like the OBJ/PDF adapters' own `SCENARIOS` constants — the
+/// 🦀️.rs`) as a literal, like the OBJ/PDF adapters' own `SCENARIOS` constants — the
 /// oracle-only host never links the production plugin crate, so this loop cannot import the
 /// constant from it. `kinds_match_enum_variants_and_manifest_catalog` (in that mutations module)
 /// is what keeps this list honest against the enum.
@@ -116,7 +116,7 @@ mod subject {
 
     //#region 🔖️JsonBridge
     /// 🌉️ Mirrors the oracle's own JSON bridge (`../../🏅️standards/🔖️87a/🪆️subsets/✳️any/🧪️oracle/
-    /// 🦀️component.rs`) but builds the REAL `GifMutation`/`GifSnapshot` this repository's own codec
+    /// 🦀️.rs`) but builds the REAL `GifMutation`/`GifSnapshot` this repository's own codec
     /// consumes, independently of that mirror — the two are never allowed to call into each other.
     fn num(json: &Json, key: &str) -> Option<f64> {
         match json.get(key) {
@@ -202,7 +202,7 @@ mod subject {
 
     /// ↩️ The real inverse of `mutation`, relative to `original` (the PRE-mutation snapshot) —
     /// transcribed from `GifMutation::inverse` (`../../🏅️standards/🔖️87a/🪆️subsets/✳️any/🧬️schema/
-    /// 🧬️mutations/🦀️component.rs`) rather than calling it, so this adapter needs no dependency on
+    /// 🧬️mutations/🦀️.rs`) rather than calling it, so this adapter needs no dependency on
     /// the `protocol::Mutation` trait beyond what the plugin crate already re-exports through
     /// `apply_gif_mutation`.
     fn inverse_mutation(original: &GifSnapshot, mutation: &GifMutation) -> GifMutation {

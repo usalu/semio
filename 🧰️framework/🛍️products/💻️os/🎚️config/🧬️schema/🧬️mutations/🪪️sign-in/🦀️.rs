@@ -169,7 +169,7 @@ pub fn inverse_identity_config_mutation_steps(mutation: &IdentityConfigMutation,
 
 //#region 🧪️Tests
 #[cfg(test)]
-#[path = "🧪️tests/replaces-the-active-session-with-a-second-account/🦀️component.rs"]
+#[path = "🧪️tests/replaces-the-active-session-with-a-second-account/🦀️.rs"]
 mod tests_replaces_the_active_session_with_a_second_account;
 
 #[cfg(test)]

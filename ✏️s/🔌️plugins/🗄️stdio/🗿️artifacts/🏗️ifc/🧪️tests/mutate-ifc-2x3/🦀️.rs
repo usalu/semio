@@ -2,7 +2,7 @@
 //! (`ifc-2x3-any`, 4 kinds) gets a `mutate-<kind>` and an `inverse-<kind>` scenario, plus one
 //! identity round trip. `ruststep` 0.4 can only READ Part-21 text (confirmed empirically — see the
 //! feature file's own description, the same finding the sibling `step/🔖️ap214/✳️any` subset already
-//! made), so the oracle dispatcher (`../../🏅️standards/🔖️2x3/🪆️subsets/✳️any/🧪️oracle/🦀️component.rs`)
+//! made), so the oracle dispatcher (`../../🏅️standards/🔖️2x3/🪆️subsets/✳️any/🦀️oracle.rs`)
 //! performs every kind with its own from-scratch Part-21 writer against a `ruststep`-parsed
 //! document, independent of this subset's own `Ifc2x3Snapshot`/`step::engine::part21` codec; the
 //! subject fully parses into `Ifc2x3Snapshot` and re-serializes from it alone (no byte pass-
@@ -16,7 +16,7 @@ use semio_s_plugin_stdio_test_oracle::artifacts::ifc::standards::v2x3::subsets::
 
 //#region 🔖️Kinds
 /// 🏷️ Mirrors this subset's own `Ifc2x3Mutation::KINDS` (`../../🏅️standards/🔖️2x3/🪆️subsets/✳️any/
-/// 🧬️schema/🧬️mutations/🦀️component.rs`). Kept as a plain literal here rather than imported since
+/// 🧬️schema/🧬️mutations/🦀️.rs`). Kept as a plain literal here rather than imported since
 /// this adapter's oracle-only build never links the subject crate — the contract gate (mutation
 /// coverage against the `ifc-2x3-any` catalog) is what keeps the two lists honest against each other.
 const KINDS: &[&str] = &["set-snapshot", "upsert-instance", "remove-instance", "set-header"];
@@ -272,7 +272,7 @@ mod subject {
 
     //#region 🔖️ValueGrammar
     /// 🔤️ The same `{"t":..., "v":...}` wire grammar the oracle dispatcher speaks
-    /// (`../../🏅️standards/🔖️2x3/🪆️subsets/✳️any/🧪️oracle/🦀️component.rs`'s own `value_from_json`),
+    /// (`../../🏅️standards/🔖️2x3/🪆️subsets/✳️any/🦀️oracle.rs`'s own `value_from_json`),
     /// independently re-implemented here against `Part21Value` rather than `ruststep::ast::
     /// Parameter`. `Part21Value::Typed` carries a `Vec` (general value list) where `Parameter::
     /// Typed` carries a single boxed value; this grammar's `typed` case only ever needs one
@@ -345,7 +345,7 @@ mod subject {
     //#region 🔖️Codec
     /// 📐️ Full parse → typed mutation → re-serialize from the model alone — the no-byte-pass-
     /// through rule this wave exists to enforce. `decode_ifc2x3`/`encode_ifc2x3` are this subset's
-    /// own real codec (`../../🏅️standards/🔖️2x3/🪆️subsets/✳️any/🚪️io/🦀️component.rs`): standard-
+    /// own real codec (`../../🏅️standards/🔖️2x3/🪆️subsets/✳️any/🚪️io/🦀️.rs`): standard-
     /// specific `FILE_SCHEMA` validation plus the shared `step::engine::part21` tokenizer/writer.
     fn apply_and_encode(input: &[u8], spec: &Json) -> Result<Vec<u8>, String> {
         let snapshot = decode_ifc2x3(input)?;

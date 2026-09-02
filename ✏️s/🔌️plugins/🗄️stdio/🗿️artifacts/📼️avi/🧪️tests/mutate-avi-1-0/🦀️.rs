@@ -5,7 +5,7 @@
 //! from this repository's only real video — see the feature file's own header) into the case work
 //! directory first; the committed fixture is never written to. `oracle` drives the registered
 //! independent `riff`-composed codec
-//! (`../../🏅️standards/🔖️1.0/🪆️subsets/✳️base/🧪️oracle/🦀️component.rs`'s own
+//! (`../../🏅️standards/🔖️1.0/🪆️subsets/✳️base/🦀️oracle.rs`'s own
 //! `oracle_apply_mutation`/`oracle_apply_mutation_inverse`); `subject` drives this repository's own
 //! `decode_avi`/`encode_avi`/`apply_avi_mutation` over the full 12-kind `AviMutation` vocabulary.
 //! Both results are read back by the SAME independent `project_avi_1_0` before the
@@ -18,7 +18,7 @@ use semio_s_plugin_stdio_test_oracle::law;
 
 //#region 🔖️Kinds
 /// 📇️ Kebab-case spelling of every `AviMutation` variant, mirrored from
-/// `../../🏅️standards/🔖️1.0/🪆️subsets/✳️base/🧬️schema/🧬️mutations/🦀️component.rs`'s own `KINDS` --
+/// `../../🏅️standards/🔖️1.0/🪆️subsets/✳️base/🧬️schema/🧬️mutations/🦀️.rs`'s own `KINDS` --
 /// duplicated rather than imported because the ORACLE-only build of this adapter must never link
 /// `semio-s-plugin-stdio`.
 const KINDS: &[&str] = &[

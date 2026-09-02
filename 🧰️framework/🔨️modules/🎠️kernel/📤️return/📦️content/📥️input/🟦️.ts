@@ -1,10 +1,10 @@
 //#region 📥️OwnedInputContract
 import { OwnedShardReturn, OwnedShardReturnPage, type ShardActorActivationLease } from "../../../../🎭️actor/📦️packages/🟦️typescript/🧵️shard-client.ts";
-import { actorInstanceLifetimeEquals, type ActorInstanceLifetime } from "../../../../🎭️actor/🚪️lifetime/🟦️component.ts";
-import type { ActorUiPatchReceipt } from "../../../../🎭️actor/🚪️lifetime/🩹️patch/🟦️component.ts";
-import type { OwnedUiInstance } from "../../../../🖱️ui/🧬️contract/🧵️retained/🏘️instance/🟦️component.ts";
-import { OwnedUiOperationPayloadBuilder, OwnedUiOperationInputCopied, OwnedUiOperationInputCancelled } from "../../../../🖱️ui/🧬️contract/🧵️retained/🩹️operations/📥️wire/📄️pages/🟦️component.ts";
-import { OwnedUiResidentPayload, OwnedUiResidentPayloadSourceRelease, OwnedUiResidentBuilderRetirement, type OwnedUiResidentInstance } from "../../../../🖱️ui/🧬️contract/🧵️retained/💾️resident/🟦️component.ts";
+import { actorInstanceLifetimeEquals, type ActorInstanceLifetime } from "../../../../🎭️actor/🚪️lifetime/🟦️.ts";
+import type { ActorUiPatchReceipt } from "../../../../🎭️actor/🚪️lifetime/🩹️patch/🟦️.ts";
+import type { OwnedUiInstance } from "../../../../🖱️ui/🧬️contract/🧵️retained/🏘️instance/🟦️.ts";
+import { OwnedUiOperationPayloadBuilder, OwnedUiOperationInputCopied, OwnedUiOperationInputCancelled } from "../../../../🖱️ui/🧬️contract/🧵️retained/🩹️operations/📥️wire/📄️pages/🟦️.ts";
+import { OwnedUiResidentPayload, OwnedUiResidentPayloadSourceRelease, OwnedUiResidentBuilderRetirement, type OwnedUiResidentInstance } from "../../../../🖱️ui/🧬️contract/🧵️retained/💾️resident/🟦️.ts";
 import { KernelReturnContentFraming, KernelReturnUiOperationHeader, type KernelReturnUiFieldName } from "../🟦️.ts";
 
 export type KernelReturnInputGrant = { readonly maxItems: number; readonly maxBytes: number };

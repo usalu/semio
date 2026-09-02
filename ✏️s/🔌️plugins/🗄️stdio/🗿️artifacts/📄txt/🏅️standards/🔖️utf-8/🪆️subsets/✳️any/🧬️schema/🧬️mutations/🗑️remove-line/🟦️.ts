@@ -1,5 +1,5 @@
 /** 🧬 remove-line canonical direct payload. */
-import { TxtProtobufReader, coerceTxtMutationUInt32Variable, failTxtMutationDecode, txtExact, txtOwn, txtProtobufKey } from '../../🔨️modules/🧬️mutation-support/🟦️component.ts';
+import { TxtProtobufReader, coerceTxtMutationUInt32Variable, failTxtMutationDecode, txtExact, txtOwn, txtProtobufKey } from '../../🔨️modules/🧬️mutation-support/🟦️.ts';
 export interface RemoveLinePayload { readonly index: number }
 
 const decode = (value: unknown, path: string): RemoveLinePayload => {

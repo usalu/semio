@@ -2,7 +2,7 @@
 //! `Ifc2x3CobieMutation` kind (`ifc-2x3-cobie`, 7 kinds) gets a `mutate-<kind>` and an
 //! `inverse-<kind>` scenario, plus one identity round trip. `ruststep` 0.4 can only READ Part-21
 //! text, so the oracle dispatcher
-//! (`../../🏅️standards/🔖️2x3/🪆️subsets/✳️cobie/🧪️oracle/🦀️component.rs`) performs every kind against a
+//! (`../../🏅️standards/🔖️2x3/🪆️subsets/✳️cobie/🦀️oracle.rs`) performs every kind against a
 //! `ruststep`-parsed document and re-serializes through the standard-level from-scratch writer,
 //! independent of this repository's own `step::engine::part21` codec; the subject fully parses into
 //! `Ifc2x3Snapshot` and re-serializes from it alone (no byte pass-through). Both results are read
@@ -14,7 +14,7 @@ use semio_s_plugin_stdio_test_oracle::artifacts::ifc::standards::v2x3::subsets::
 
 //#region 🔖️Kinds
 /// 🏷️ Mirrors this subset's own `Ifc2x3CobieMutation::KINDS`
-/// (`../../🏅️standards/🔖️2x3/🪆️subsets/✳️cobie/🧬️schema/🧬️mutations/🦀️component.rs`). The contract
+/// (`../../🏅️standards/🔖️2x3/🪆️subsets/✳️cobie/🧬️schema/🧬️mutations/🦀️.rs`). The contract
 /// gate (mutation coverage against the `ifc-2x3-cobie` catalog) keeps the two lists honest.
 const KINDS: &[&str] = &["no-mutation", "set-snapshot", "set-view-definition", "set-facility-name", "set-floor-elevation", "set-space", "set-type-assignment"];
 //#endregion 🔖️Kinds

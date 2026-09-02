@@ -37,7 +37,7 @@ input(owner + "/🟦️.ts");
 const vector = JSON.parse(input(owner + "/🔣️.json").toString("utf8"));
 const grammar = JSON.parse(input(owner + "/🧬️schema/🔣️.json").toString("utf8"));
 const source = input(sourcePath).toString("utf8");
-input(library + "/🔍️discovery/🟦️component.ts");
+input(library + "/🔍️discovery/🟦️.ts");
 input(library + "/🔣️taxonomy.json");
 const syntax = ts.createSourceFile(sourcePath, source, ts.ScriptTarget.Latest, true);
 const compilers = [

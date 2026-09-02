@@ -1,4 +1,4 @@
-//! 📦️ Package glue — wiring only. Domain lives at the owner `🦀️component.rs` files.
+//! 📦️ Package glue — wiring only. Domain lives at the owner `🦀️.rs` files.
 //!
 //! The crate's `[lib] name` is `protocol`: every replica, authority and plugin crate speaks the
 //! replication contract through that one canonical name.
@@ -24,13 +24,13 @@ pub mod codec {
 #[path = "../../🚰️source/🦀️.rs"]
 pub mod source;
 
-#[path = "../../../⚠️diagnostic/🦀️component.rs"]
+#[path = "../../../⚠️diagnostic/🦀️.rs"]
 pub mod diagnostic;
 
-#[path = "../../../⚠️diagnostic/📍️span/🦀️component.rs"]
+#[path = "../../../⚠️diagnostic/📍️span/🦀️.rs"]
 pub mod span;
 
-#[path = "../../../🌱️value/🦀️component.rs"]
+#[path = "../../../🌱️value/🦀️.rs"]
 pub mod value;
 
 #[path = "../../🆔️ids/🦀️.rs"]

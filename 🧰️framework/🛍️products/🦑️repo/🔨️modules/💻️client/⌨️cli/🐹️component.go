@@ -18598,13 +18598,13 @@ var policies = []PolicyDef{
 		ID:          "repo",
 		Name:        "Repo",
 		Description: "Validates strict repo command implementation parity and ticket tracking",
-		Scopes:      []string{"go/repo/main.go", "js/vscode/package.json", "graphql/repo/🔗️schema.graphql"},
+		Scopes:      []string{"go/repo/main.go", "js/vscode/package.json", "graphql/repo/🔗️.graphql"},
 		Priority:    BreachPriorityHigh,
 		Groups: []Territory{
 			{
 				Name:        "Parity",
 				Description: "Command parity breachs",
-				Scopes:      []string{"go/repo/main.go", "js/vscode/package.json", "graphql/repo/🔗️schema.graphql"},
+				Scopes:      []string{"go/repo/main.go", "js/vscode/package.json", "graphql/repo/🔗️.graphql"},
 				Kinds: []Statute{
 					BreachRepoMissingCommand,
 					BreachRepoMissingTicketTracking,

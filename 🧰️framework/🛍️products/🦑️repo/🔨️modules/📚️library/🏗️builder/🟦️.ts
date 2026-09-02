@@ -1,7 +1,7 @@
 import { createHash } from "node:crypto";
 import { closeSync, constants, fstatSync, fsyncSync, lstatSync, mkdirSync, openSync, readSync, writeFileSync, type BigIntStats, type Stats } from "node:fs";
 import { basename, dirname, isAbsolute, join, parse, relative, resolve, sep } from "node:path";
-import { canonicalPrimaryFilenameForKind, generatorContractIdsForOutputPath, semanticDirectoryKindId, taxonomyRelativePathIsExcluded, type Taxonomy } from "../🔍️discovery/🟦️component.ts";
+import { canonicalPrimaryFilenameForKind, generatorContractIdsForOutputPath, semanticDirectoryKindId, taxonomyRelativePathIsExcluded, type Taxonomy } from "../🔍️discovery/🟦️.ts";
 
 export type ArtifactScaffoldOwner = Readonly<{ kind: "subset"; subsetPath: string } | { kind: "surface"; subsetPath: string; role: string }>;
 export type ArtifactScaffoldLeaf = Readonly<{ path: string; content: string }>;

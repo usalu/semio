@@ -5,7 +5,7 @@
   "displayName": "Change Part2d Hidden",
   "emoji": "🙈",
   "aggregateVariant": "ChangePart2dHidden",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": "change-part2d-hidden",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

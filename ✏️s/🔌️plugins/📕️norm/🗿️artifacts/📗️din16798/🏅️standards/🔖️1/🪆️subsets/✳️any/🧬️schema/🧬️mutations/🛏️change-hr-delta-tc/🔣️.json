@@ -5,7 +5,7 @@
   "displayName": "Change Hr Delta Tc",
   "emoji": "🛏️",
   "aggregateVariant": "ChangeHrDeltaTC",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

@@ -5,7 +5,7 @@
   "displayName": "Create Camera Calibration",
   "emoji": "🔭",
   "aggregateVariant": "CreateCameraCalibration",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": "create-camera-calibration",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

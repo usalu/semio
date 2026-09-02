@@ -1,0 +1,3 @@
+# stdio.semio.cad diff text (DiffCodec) representation -- no semio envelope; see
+# ../🔗️.graphql for the decoded diff's real schema.
+type Document { payload: String! }

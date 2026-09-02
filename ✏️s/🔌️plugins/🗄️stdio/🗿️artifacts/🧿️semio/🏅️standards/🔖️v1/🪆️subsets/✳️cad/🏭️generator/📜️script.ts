@@ -29,7 +29,7 @@
 // writes `<root>/<recipe>/<file>`. Absent it, the committed 🧫️fixtures directory is the root.
 //
 // @see ../🔬️probes/🦀️oracle-probe/src/main.rs — the builders and the ruststep verification
-// @see ../🧪️oracle/🔣️.json — the fixture manifests these files are hashed into
+// @see ../🔣️oracle.json — the fixture manifests these files are hashed into
 
 //#endregion 🧲️Header
 

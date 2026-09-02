@@ -5,7 +5,7 @@
   "displayName": "Change Delta Tau Stud Mpa",
   "emoji": "🌎️",
   "aggregateVariant": "ChangeDeltaTauStudMpa",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

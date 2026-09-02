@@ -5,7 +5,7 @@
   "displayName": "Change Retrofit Rk Kn",
   "emoji": "🐞",
   "aggregateVariant": "ChangeRetrofitRKKn",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

@@ -5,7 +5,7 @@
   "displayName": "Update Bridge Inputs",
   "emoji": "🏗️",
   "aggregateVariant": "UpdateBridgeInputs",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

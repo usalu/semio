@@ -5,7 +5,7 @@
   "displayName": "Change Anchor F Uk Mpa",
   "emoji": "🐳",
   "aggregateVariant": "ChangeAnchorFUkMpa",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

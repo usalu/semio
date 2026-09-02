@@ -1,0 +1,23 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://semio.tech/schema/s/trinity/rewrite/mutation.json",
+  "title": "RewriteRuleMutation",
+  "oneOf": [
+    { "$ref": "./🖼️edit-before-fixture/🔣️.schema.json" },
+    { "$ref": "./🔍️edit-lhs/🔣️.schema.json" },
+    { "$ref": "./🎯️edit-rhs/🔣️.schema.json" },
+    { "$ref": "./🔧️change-parameter-binding/🔣️.schema.json" },
+    { "$ref": "./🧹️remove-parameter-binding/🔣️.schema.json" },
+    { "$ref": "./📐️change-rule-layout-point/🔣️.schema.json" },
+    { "$ref": "./🗑️remove-rule-layout-point/🔣️.schema.json" }
+  ],
+  "x-semio-mutationKinds": [
+    "edit-before-fixture",
+    "edit-lhs",
+    "edit-rhs",
+    "change-parameter-binding",
+    "remove-parameter-binding",
+    "change-rule-layout-point",
+    "remove-rule-layout-point"
+  ]
+}

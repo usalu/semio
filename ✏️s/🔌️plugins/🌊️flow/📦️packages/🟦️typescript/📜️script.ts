@@ -2,7 +2,7 @@
 /** 🌊️ `@semio-tech/flow-js` router: `bun ./📜️script.ts test`. */
 import { resolve } from "node:path";
 import Ajv from "ajv";
-import { BundleScript, ScriptRouter, resolveTestLevel, runBundleScriptMain, runVitest } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts";
+import { BundleScript, ScriptRouter, resolveTestLevel, runBundleScriptMain, runVitest } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 
 class TestScript extends BundleScript {
   run(segments: string[]): void {
@@ -122,7 +122,7 @@ function sourceOracle(fixture: Fixture, source: string, retainedSource = ""): bo
 
 async function globalOracle(fixture: Fixture, source: string, pluginRoot: string): Promise<boolean> {
   if (fixture.owner === "FlowPlayApp") {
-    const duplicate = await Bun.file(resolve(pluginRoot, "🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📋️duplicate-widget/🦀️component.rs")).text();
+    const duplicate = await Bun.file(resolve(pluginRoot, "🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📋️duplicate-widget/🦀️.rs")).text();
     return fixture.globals.length === 0
       && !source.includes("with_process_flow_eval_session")
       && !source.includes("PROCESS_FLOW_EVAL_SESSION")
@@ -137,11 +137,11 @@ class ActionCohortAuditScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     const flowRoot = resolve(this.root, "../..");
     const noteRoot = resolve(flowRoot, "../🗒️note");
-    const schema = await Bun.file(resolve(flowRoot, "🧪️action-cohort/🔣️schema.json")).json();
+    const schema = await Bun.file(resolve(flowRoot, "🔣️action-cohort.schema.json")).json();
     const validate = new Ajv({ allErrors: true, strict: true }).compile(schema);
     const fixtures = [
-      await Bun.file(resolve(flowRoot, "🧪️action-cohort/🔣️component.json")).json() as Fixture,
-      await Bun.file(resolve(noteRoot, "🧪️action-cohort/🔣️component.json")).json() as Fixture,
+      await Bun.file(resolve(flowRoot, "🔣️action-cohort.json")).json() as Fixture,
+      await Bun.file(resolve(noteRoot, "🔣️action-cohort.json")).json() as Fixture,
     ];
     const scope = segments[0] ?? "all";
     if (!["all", "flow", "note"].includes(scope)) throw new Error(`unknown action-cohort scope ${scope}`);
@@ -152,7 +152,7 @@ class ActionCohortAuditScript extends BundleScript {
       const pluginRoot = fixture.owner === "FlowPlayApp" ? flowRoot : noteRoot;
       const source = await Bun.file(resolve(pluginRoot, fixture.source)).text();
       const retainedSource = fixture.owner === "NotePlayApp"
-        ? await Bun.file(resolve(pluginRoot, "🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧵️retained/🦀️component.rs")).text()
+        ? await Bun.file(resolve(pluginRoot, "🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧵️retained/🦀️.rs")).text()
         : "";
       if (!sourceOracle(fixture, source, retainedSource) || !(await globalOracle(fixture, source, pluginRoot))) throw new Error(`${fixture.owner} diverged from source truth`);
       const first = fixture.groups.find((group) => group.status === "BatchOnlyPendingRewrite")!.routes[0]!;

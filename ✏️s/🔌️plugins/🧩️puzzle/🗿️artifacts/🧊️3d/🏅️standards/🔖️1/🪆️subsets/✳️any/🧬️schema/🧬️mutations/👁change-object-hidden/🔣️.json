@@ -5,7 +5,7 @@
   "displayName": "Change Object Hidden",
   "emoji": "👁",
   "aggregateVariant": "ChangeObjectHidden",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": "change-object-hidden",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

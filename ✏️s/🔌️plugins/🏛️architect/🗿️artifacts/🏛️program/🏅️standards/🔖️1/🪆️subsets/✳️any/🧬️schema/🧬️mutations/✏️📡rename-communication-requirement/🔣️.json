@@ -5,7 +5,7 @@
   "displayName": "Rename Communication Requirement",
   "emoji": "✏️📡",
   "aggregateVariant": "RenameCommunicationRequirement",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

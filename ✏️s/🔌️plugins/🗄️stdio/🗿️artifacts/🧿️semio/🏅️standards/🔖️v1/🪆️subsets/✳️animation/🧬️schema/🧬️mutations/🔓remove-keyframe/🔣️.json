@@ -5,7 +5,7 @@
   "displayName": "Remove Keyframe",
   "emoji": "🔓",
   "aggregateVariant": "RemoveKeyframe",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

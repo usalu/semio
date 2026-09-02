@@ -5,7 +5,7 @@
   "displayName": "Change Reference Hidden",
   "emoji": "👁",
   "aggregateVariant": "ChangeReferenceHidden",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": "change-reference-hidden",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

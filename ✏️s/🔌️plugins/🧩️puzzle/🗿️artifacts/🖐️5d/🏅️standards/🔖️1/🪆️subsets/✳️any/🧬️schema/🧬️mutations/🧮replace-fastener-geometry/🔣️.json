@@ -5,7 +5,7 @@
   "displayName": "Replace Fastener Geometry",
   "emoji": "🧮",
   "aggregateVariant": "ReplaceFastenerGeometry",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": "replace-fastener-geometry",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

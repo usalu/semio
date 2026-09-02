@@ -9,7 +9,7 @@ use store::{ArtifactDsl, ArtifactPack};
 
 //#region 🧫️NeutralFixture
 fn vectors() -> Value {
-    serde_json::from_str(include_str!("🔣️vectors.json")).expect("domain neutral vectors")
+    serde_json::from_str(include_str!("🔣️.json")).expect("domain neutral vectors")
 }
 
 fn decode<T: DeserializeOwned>(value: &Value) -> T {

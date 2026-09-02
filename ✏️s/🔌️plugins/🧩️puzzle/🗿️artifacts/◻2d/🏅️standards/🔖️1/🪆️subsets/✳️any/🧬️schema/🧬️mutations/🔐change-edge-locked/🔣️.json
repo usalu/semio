@@ -5,7 +5,7 @@
   "displayName": "Change Edge Locked",
   "emoji": "🔐",
   "aggregateVariant": "ChangeEdgeLocked",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": "change-edge-locked",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

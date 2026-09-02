@@ -5,7 +5,7 @@
   "displayName": "Rename Block",
   "emoji": "🔖️",
   "aggregateVariant": "RenameBlock",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": "rename-block",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

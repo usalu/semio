@@ -1,7 +1,7 @@
 //! 🦀️ Imperative-program exhaustive mutation case — Rust adapter. Ticket 26/08/23/END-TO-END-
 //! TESTING-REFACTOR. Recorded no-oracle decision
 //! `imperative-1-nested-step-list-mutation-semantics`
-//! (`../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️oracle/🔣️.json`): `imperative.document` is a
+//! (`../../🏅️standards/🔖️1/🪆️subsets/✳️any/🔣️oracle.json`): `imperative.document` is a
 //! semio-NATIVE program document with no third-party reader or writer, so `oracle` here reads the
 //! committed, independently handcrafted per-kind specification fixtures
 //! (`../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/<slug>/🧪️tests/<fixture>/`)
@@ -31,19 +31,19 @@
 //!
 //! **How the fixture reaches typed values.** The generated test host links only
 //! `semio-repo-test-host` and, behind `sut`, this plugin's own crate — no `serde`, no `serde_json`,
-//! and this crate's `protocol`/`store` extern-crate aliases are private (`📦️glue.rs`). The subset's
+//! and this crate's `protocol`/`store` extern-crate aliases are private (`🦀️.rs`). The subset's
 //! own production code exports the bridges instead: `decode_imperative_snapshot_json`/
 //! `encode_imperative_snapshot_json`/`parse_imperative_dsl`/`print_imperative_dsl`
-//! (`…/🧬️schema/📸️snapshot/🦀️component.rs`) and `decode_imperative_mutation_json`/
+//! (`…/🧬️schema/📸️snapshot/🦀️.rs`) and `decode_imperative_mutation_json`/
 //! `seed_imperative_flow_json`/`apply_imperative_mutation_reporting`/
 //! `inverse_imperative_mutation_steps`/`imperative_program_summary`
-//! (`…/🧬️schema/🧬️mutations/🦀️component.rs`).
+//! (`…/🧬️schema/🧬️mutations/🦀️.rs`).
 
 use semio_repo_test_host::{parse_json, Adapter, Context, Json, Outcome};
 
 //#region 🔖️Kinds
 /// 🏷️ Mirrors `ImperativeMutation::KINDS` (`../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/
-/// 🧬️mutations/🦀️component.rs`) — duplicated, not imported, because the oracle-only build must not
+/// 🧬️mutations/🦀️.rs`) — duplicated, not imported, because the oracle-only build must not
 /// link the subject crate. The contract's mutation-coverage gate keeps this list honest against the
 /// catalog; `kinds_match_the_enum_and_the_catalog` in that production file keeps it honest against
 /// the enum.
@@ -52,7 +52,7 @@ const KINDS: &[&str] = &["create-step", "delete-step", "reorder-steps", "edit-st
 /// 🗣️ The real committed program document — one `s.stdio.semio@v1/flow` child and one
 /// `s.stdio.semio@v1/text` child, both carried as hex-encoded handles.
 #[cfg(feature = "sut")]
-const DSL_ASSET: &str = "asset://🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio";
+const DSL_ASSET: &str = "asset://🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/🗣️.dsl.semio";
 //#endregion 🔖️Kinds
 
 //#region 🔖️Fixtures
@@ -62,28 +62,28 @@ const DSL_ASSET: &str = "asset://🏅️standards/🔖️1/🪆️subsets/✳️
 fn fixture_text(kind: &str) -> (&'static str, &'static str, &'static str, &'static str) {
     match kind {
         "create-step" => (
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌱create-step/🧪️tests/rejects-a-duplicate-step-id-at-the-root-path/📸️snapshot/⬅️before/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌱create-step/🧪️tests/rejects-a-duplicate-step-id-at-the-root-path/🦠️mutation/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌱create-step/🧪️tests/rejects-a-duplicate-step-id-at-the-root-path/📸️snapshot/➡️after/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌱create-step/🧪️tests/rejects-a-duplicate-step-id-at-the-root-path/🎯️outcome/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌱create-step/🧪️tests/rejects-a-duplicate-step-id-at-the-root-path/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌱create-step/🧪️tests/rejects-a-duplicate-step-id-at-the-root-path/🦠️mutation/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌱create-step/🧪️tests/rejects-a-duplicate-step-id-at-the-root-path/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌱create-step/🧪️tests/rejects-a-duplicate-step-id-at-the-root-path/🎯️outcome/🔣️.json"),
         ),
         "delete-step" => (
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-step/🧪️tests/rejects-a-root-step-id-addressed-inside-a-branch-body/📸️snapshot/⬅️before/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-step/🧪️tests/rejects-a-root-step-id-addressed-inside-a-branch-body/🦠️mutation/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-step/🧪️tests/rejects-a-root-step-id-addressed-inside-a-branch-body/📸️snapshot/➡️after/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-step/🧪️tests/rejects-a-root-step-id-addressed-inside-a-branch-body/🎯️outcome/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-step/🧪️tests/rejects-a-root-step-id-addressed-inside-a-branch-body/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-step/🧪️tests/rejects-a-root-step-id-addressed-inside-a-branch-body/🦠️mutation/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-step/🧪️tests/rejects-a-root-step-id-addressed-inside-a-branch-body/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-step/🧪️tests/rejects-a-root-step-id-addressed-inside-a-branch-body/🎯️outcome/🔣️.json"),
         ),
         "reorder-steps" => (
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔀reorder-steps/🧪️tests/warns-that-an-over-clamped-index-leaves-the-tail-step-in-place/📸️snapshot/⬅️before/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔀reorder-steps/🧪️tests/warns-that-an-over-clamped-index-leaves-the-tail-step-in-place/🦠️mutation/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔀reorder-steps/🧪️tests/warns-that-an-over-clamped-index-leaves-the-tail-step-in-place/📸️snapshot/➡️after/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔀reorder-steps/🧪️tests/warns-that-an-over-clamped-index-leaves-the-tail-step-in-place/🎯️outcome/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔀reorder-steps/🧪️tests/warns-that-an-over-clamped-index-leaves-the-tail-step-in-place/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔀reorder-steps/🧪️tests/warns-that-an-over-clamped-index-leaves-the-tail-step-in-place/🦠️mutation/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔀reorder-steps/🧪️tests/warns-that-an-over-clamped-index-leaves-the-tail-step-in-place/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔀reorder-steps/🧪️tests/warns-that-an-over-clamped-index-leaves-the-tail-step-in-place/🎯️outcome/🔣️.json"),
         ),
         "edit-step-params" => (
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔧edit-step-params/🧪️tests/warns-that-step-1-already-carries-the-requested-params/📸️snapshot/⬅️before/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔧edit-step-params/🧪️tests/warns-that-step-1-already-carries-the-requested-params/🦠️mutation/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔧edit-step-params/🧪️tests/warns-that-step-1-already-carries-the-requested-params/📸️snapshot/➡️after/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔧edit-step-params/🧪️tests/warns-that-step-1-already-carries-the-requested-params/🎯️outcome/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔧edit-step-params/🧪️tests/warns-that-step-1-already-carries-the-requested-params/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔧edit-step-params/🧪️tests/warns-that-step-1-already-carries-the-requested-params/🦠️mutation/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔧edit-step-params/🧪️tests/warns-that-step-1-already-carries-the-requested-params/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔧edit-step-params/🧪️tests/warns-that-step-1-already-carries-the-requested-params/🎯️outcome/🔣️.json"),
         ),
         other => panic!("mutate-imperative-1: no specification vector registered for kind {other:?}"),
     }

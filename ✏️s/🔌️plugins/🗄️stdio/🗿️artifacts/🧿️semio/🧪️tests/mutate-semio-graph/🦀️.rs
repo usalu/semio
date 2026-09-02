@@ -4,7 +4,7 @@
 //! This file is the subject half only. The oracle is `🐍️component.py` beside it: an independent
 //! Python implementation of the same carrier and the same eleven-verb vocabulary, written from the
 //! committed grammar, protocol and JSON schema, registered as `semio-graph-python-independent` in
-//! `../../🏅️standards/🔖️v1/🪆️subsets/✳️graph/🧪️oracle/🔣️.json`. Registering oracle
+//! `../../🏅️standards/🔖️v1/🪆️subsets/✳️graph/🔣️oracle.json`. Registering oracle
 //! handlers here as well would put this repository's answer on both sides of the comparison, which
 //! is the exact failure the platform exists to prevent — so it registers none.
 //!
@@ -24,7 +24,7 @@ use semio_repo_test_host::{Context, Json};
 
 //#region 🔖️Kinds
 /// 🏷️ Mirrors `SemioGraphMutation::KINDS` (`../../🏅️standards/🔖️v1/🪆️subsets/✳️graph/🧬️schema/
-/// 🧬️mutations/🦀️component.rs`) — duplicated, not imported, because registration happens before the
+/// 🧬️mutations/🦀️.rs`) — duplicated, not imported, because registration happens before the
 /// subject crate is necessarily linked. `kinds_match_the_enum_and_the_catalog` in that production
 /// file keeps the list honest against the enum, and the contract's mutation-coverage gate keeps it
 /// honest against the catalog and this feature.
@@ -43,7 +43,7 @@ const TOWER_DSL: &str = "local://🗣️nakagin-capsule-tower.dsl.semio";
 /// reproducing it is a cross-language byte agreement, not a codec agreeing with itself.
 #[cfg(feature = "sut")]
 const TOWER_PACK: &str = "local://🎒️nakagin-capsule-tower.pack.semio";
-const WIRES_DSL: &str = "asset://🏅️standards/🔖️v1/🪆️subsets/✳️graph/📚️examples/🕸️wires/🖼️assets/🗣️example.dsl.semio";
+const WIRES_DSL: &str = "asset://🏅️standards/🔖️v1/🪆️subsets/✳️graph/📚️examples/🕸️wires/🖼️assets/🗣️.dsl.semio";
 /// 🎒️ The same graph in its binary envelope, written by a separate codec from the DSL text.
 #[cfg(feature = "sut")]
 const WIRES_PACK: &str = "asset://🏅️standards/🔖️v1/🪆️subsets/✳️graph/📚️examples/🕸️wires/🖼️assets/🎒️example.pack.semio";

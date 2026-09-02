@@ -5,7 +5,7 @@
   "displayName": "Change Ida Class",
   "emoji": "🌵",
   "aggregateVariant": "ChangeIdaClass",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

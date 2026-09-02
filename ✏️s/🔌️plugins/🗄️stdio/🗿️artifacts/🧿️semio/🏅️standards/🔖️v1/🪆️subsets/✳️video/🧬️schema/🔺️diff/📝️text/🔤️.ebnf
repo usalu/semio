@@ -1,0 +1,27 @@
+(* stdio.semio.video diff text grammar (video wave) — one line, empty if unchanged; see
+   📖️.grammar.semio for the fully-spelled-out dialect-native version of this same shape,
+   incl. the three-separate-token option-tag detail. *)
+diff = [ "streams=", triple ] ;
+triple = "[", index list, "];[", modified list, "];[", added list, "]" ;
+index list = [ index, { ",", index } ] ;
+index = digit, { digit } ;
+modified list = [ modified entry, { ",", modified entry } ] ;
+modified entry = index, ":", stream diff ;
+added list = [ added entry, { ",", added entry } ] ;
+added entry = index, ":", stream ;
+stream diff = "[", opt kind, ",", opt codec, ",", opt width, ",", opt height, ",", opt rate, ",", opt samples, "]" ;
+opt kind = "[0]" | "[1,", kind, "]" ;
+kind = "V" | "A" | "S" ;
+opt samples = "[0]" | "[1,", triple, "]" ;
+opt width = "[0]" | "[1,", { digit }, "]" ;
+opt height = "[0]" | "[1,", { digit }, "]" ;
+opt codec = "[0]" | "[1,", hex string, "]" ;
+opt rate = "[0]" | "[1,", rational, "]" ;
+stream = "[", kind, ",", hex string, ",", { digit }, ",", { digit }, ",", rational, ",", sample list, "]" ;
+sample list = "[", [ sample, { ",", sample } ], "]" ;
+sample = "[", { digit }, ",", bool, ",", hex string, "]" ;
+rational = "[", { digit }, ",", { digit }, "]" ;
+bool = "0" | "1" ;
+hex string = { hex digit, hex digit } ;
+digit = "0" | "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9" ;
+hex digit = digit | "a" | "b" | "c" | "d" | "e" | "f" ;

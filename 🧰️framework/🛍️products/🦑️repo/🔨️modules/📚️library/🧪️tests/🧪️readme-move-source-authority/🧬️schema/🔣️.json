@@ -22,7 +22,7 @@
         "packageCommand": { "const": "nx run @semio-tech/repo-lib:test-readme-move-source-authority" },
         "command": { "const": "bun ./📜️script.ts test readme-move-source-authority" },
         "route": { "const": "readme-move-source-authority" },
-        "source": { "const": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧪️readme-move-source-authority/🟦️.ts" },
+        "source": { "const": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🟦️readme-move-source-authority.ts" },
         "launchName": { "const": "🧹clean🧩️taxonomy🧪️readme-move-source-authority" },
         "launchCommand": { "const": "bun nx run @semio-tech/repo-lib:test-readme-move-source-authority --skip-nx-cache" },
         "launchGroup": { "const": "4_gate" },

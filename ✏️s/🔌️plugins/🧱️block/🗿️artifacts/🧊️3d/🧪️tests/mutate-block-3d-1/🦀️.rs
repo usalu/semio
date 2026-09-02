@@ -2,7 +2,7 @@
 //! `26/08/23/END-TO-END-TESTING-REFACTOR`.
 //!
 //! Recorded no-oracle decision `block-3d-mutation-semantics`
-//! (`../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️oracle/🔣️.json`): this is a semio-NATIVE
+//! (`../../🏅️standards/🔖️1/🪆️subsets/✳️any/🔣️oracle.json`): this is a semio-NATIVE
 //! document and `Block3dMutation` IS its specification, so there is nothing third-party to register. What
 //! stands in for an oracle is named there and exercised here: the committed
 //! `(before, mutation, diff, outcome, after)` quintets under
@@ -25,7 +25,7 @@
 //! `apply(inverse(m), apply(m, base)) == base` stays with the production `inverse()` implementation
 //! and the per-leaf fixture tests that already exercise it.
 //!
-//! @see ../../../../../🗄️stdio/🧪️oracle/⚖️law/🦀️component.rs — the shared law helpers.
+//! @see ../../../../../🗄️stdio/🧪️oracle/⚖️law/🦀️.rs — the shared law helpers.
 
 use semio_repo_test_host::{Adapter, Context, Json, Outcome};
 
@@ -37,7 +37,7 @@ use semio_repo_test_host::{Adapter, Context, Json, Outcome};
 /// implicit `🦀️component/` child directory.
 #[path = "."]
 mod shared {
-    #[path = "../../../../../🗄️stdio/🧪️oracle/⚖️law/🦀️component.rs"]
+    #[path = "../../../../../🗄️stdio/🧪️oracle/⚖️law/🦀️.rs"]
     pub mod law;
 }
 use shared::law;
@@ -45,7 +45,7 @@ use shared::law;
 
 //#region 🔖️Vocabulary
 /// 🏷️ Mirrors `Block3dMutation::KINDS`
-/// (`../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs`) — duplicated, not
+/// (`../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs`) — duplicated, not
 /// imported, because this host must not link the plugin crate.
 /// `kinds_match_the_enum_and_the_catalog` in that production file keeps the const honest against the
 /// enum and the manifest; the contract's coverage gate keeps this list honest against the
@@ -278,7 +278,7 @@ fn footprint(ctx: &Context) -> Result<Outcome, String> {
 /// the committed file is pretty-printed and the writer is compact, so a handler that returned the
 /// input unread would be caught here.
 fn round_trip(ctx: &Context) -> Result<Outcome, String> {
-    const SNAPSHOT: &str = "asset://🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✏️rename-object-kind/🧪️tests/renames-object-kind-to-pod/📸️snapshot/⬅️before/🔣️component.json";
+    const SNAPSHOT: &str = "asset://🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✏️rename-object-kind/🧪️tests/renames-object-kind-to-pod/📸️snapshot/⬅️before/🔣️.json";
     let committed = ctx.fixture_bytes(SNAPSHOT)?;
     let parsed = ctx.fixture_json(SNAPSHOT)?;
     let reserialized = parsed.to_string();

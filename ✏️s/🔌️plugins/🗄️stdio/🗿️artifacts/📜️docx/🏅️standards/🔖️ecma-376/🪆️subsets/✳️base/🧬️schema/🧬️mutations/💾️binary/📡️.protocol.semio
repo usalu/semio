@@ -1,0 +1,38 @@
+dialect protocol
+protocol stdio.docx.mutations
+version 1
+schema stdio.docx
+start record
+
+# FG-wave: REAL binary op frame (`format u8 | tag u8 | variant payload`), replacing F6's
+# `print_op().into_bytes()` text-as-binary shortcut (`../../🦀️.rs`'s old
+# `OpBinary::encode_op`/`decode_op`). `tag` is the `DocxMutation` variant ordinal, in the SAME 0-11
+# order `encode_op`'s own match uses (`NoMutation` dropped, EVERY ordinal renumbered 0-based:
+# `SetSnapshot`=0, `InsertBlock`=1, `RemoveBlock`=2, `SetBlockContent`=3, `SetRunText`=4,
+# `SetRunFormatting`=5, `InsertStyle`=6, `RemoveStyle`=7, `SetStyleName`=8, `SetStyleBasedOn`=9,
+# `SetPart`=10, `RemovePart`=11) -- both REAL fixed fields, individually protocol-walked, matching
+# `📰xml/…/🧬️mutations/💾️binary/📡️.protocol.semio`'s own `format`/`tag` header shape.
+#
+# Past that header, the variant's own payload is one opaque trailing `bytes` chain: several
+# variants (`InsertBlock`/`SetBlockContent`'s `block: DocxBlock`, `SetSnapshot`'s whole
+# `DocxSnapshot`, `InsertStyle`'s `style: DocxStyle`) carry the SAME genuinely recursive/
+# data-carrying payloads `../🔺️diff/💾️binary/📡️.protocol.semio` already hits
+# (`protocol-prim-ref-recursion`, `📖️grammar-recipe.md` §5) -- once ANY variant's payload is
+# structurally unwalkable, bundling every variant's payload into the SAME opaque tail (rather than
+# partially structuring only the simpler, flat-field variants) is the honest, minimal-surface
+# choice, same reasoning `../🔺️diff/💾️binary/📡️.protocol.semio`'s own doc comment gives.
+#
+# The Rust `encode_op`/`decode_op` side stays genuinely, fully structured past this header -- real
+# LEB128-varint-framed `DocxBlockPath`/collection encoders and recursive per-variant binary
+# sub-encoders (`enc_block_path_bin`/`enc_docx_snapshot_bin`/`enc_opc_package_bin`/
+# `enc_docx_document_bin`, `../../🦀️.rs`'s own `OpBinaryCodec` region), reusing this
+# artifact's `../🔺️diff/🦀️.rs` `pub(crate)` binary primitives
+# (`write_str_lp`/`write_bytes_lp`/`enc_block_bin`/`enc_style_bin`/`enc_opc_part_bin`/
+# `enc_rel_bin`/`enc_target_mode_bin`) rather than re-deriving them a second time -- round-trip
+# tested independently of this protocol description, same honest-boundary treatment
+# `📖️grammar-recipe.md` §2.5 documents.
+framing record
+header fixed 2
+field format u8
+field tag u8
+chain payload bytes

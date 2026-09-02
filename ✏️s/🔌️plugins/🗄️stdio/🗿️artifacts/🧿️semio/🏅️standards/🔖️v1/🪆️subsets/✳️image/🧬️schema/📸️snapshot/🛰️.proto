@@ -1,0 +1,32 @@
+syntax = "proto3";
+// 🧬️ SemioImageSnapshot schema — real facet mirror of the Rust `🦀️.rs` sibling.
+package semio.s_stdio_semio_image.snapshot;
+
+enum SemioColorspace {
+  RGB = 0;
+  RGBA = 1;
+  GRAYSCALE = 2;
+  GRAYSCALE_ALPHA = 3;
+  INDEXED = 4;
+}
+
+message SemioImageFrame {
+  uint32 delay_ms = 1;
+  bytes rgba8 = 2;
+}
+
+message SemioImageMetadataEntry {
+  string key = 1;
+  string value = 2;
+}
+
+message SemioImageSnapshot {
+  string schema = 1;
+  uint32 width = 2;
+  uint32 height = 3;
+  SemioColorspace colorspace = 4;
+  uint32 bit_depth = 5;
+  repeated SemioImageFrame frames = 6;
+  optional bytes icc = 7;
+  repeated SemioImageMetadataEntry metadata = 8;
+}

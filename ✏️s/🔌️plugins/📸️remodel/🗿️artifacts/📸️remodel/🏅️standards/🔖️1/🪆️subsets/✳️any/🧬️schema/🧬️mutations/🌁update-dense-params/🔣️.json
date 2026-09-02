@@ -5,7 +5,7 @@
   "displayName": "Update Dense Params",
   "emoji": "🌁",
   "aggregateVariant": "UpdateDenseParams",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": "update-dense-params",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

@@ -50,16 +50,16 @@
         {
           "sourcePath": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/Cargo.toml",
           "destinationPath": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/Cargo.toml",
-          "sourceHash": "87379ad73bdb3209522852ea49d2f47246461dfc2ab6e52795d25c801ee35fb6",
-          "sourceSize": 8382,
+          "sourceHash": "29769ba7f177b7c44fb41a0548a7df5ff34c61baf09dea59673801a1841bd979",
+          "sourceSize": 8479,
           "disposition": "metadata",
           "sourceRole": null
         },
         {
           "sourcePath": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/Trunk.toml",
           "destinationPath": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/Trunk.toml",
-          "sourceHash": "8dad00ccd64ae107f30d9d9a7eaa07d143e4da7b4cf1c2871ad6420d55235fe2",
-          "sourceSize": 632,
+          "sourceHash": "ca41592231057dcbe3ab4fbe348a399f14ab41f5af416c644c3ad9e9f36f9802",
+          "sourceSize": 618,
           "disposition": "metadata",
           "sourceRole": null
         },
@@ -74,14 +74,14 @@
         {
           "sourcePath": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/package.json",
           "destinationPath": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/package.json",
-          "sourceHash": "e7c455993f139f3aa863c90ceb3da0373fe028659fffd27fef7bfca07b846cbd",
-          "sourceSize": 1291,
+          "sourceHash": "3a51ab191611fc5540eb7ef6354858e9811a2d4dbfd8c6eb8681f40a7ffbc499",
+          "sourceSize": 1286,
           "disposition": "metadata",
           "sourceRole": null
         },
         {
-          "sourcePath": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🌐️index.html",
-          "destinationPath": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/🌐️index.html",
+          "sourcePath": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🌐️.html",
+          "destinationPath": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/🌐️.html",
           "sourceHash": "cb6b24fb3af02c5cf6a7dcd6607f0a6833aa8899c195afacae9f0b46d2b80ba3",
           "sourceSize": 1121,
           "disposition": "metadata",
@@ -90,24 +90,24 @@
         {
           "sourcePath": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🎠️runtime.rs",
           "destinationPath": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/🎠️runtime/🦀️.rs",
-          "sourceHash": "fc14b444b223abec34322d044cf9aa8049edae4f3164e619bb2edadfd663a9b2",
-          "sourceSize": 13328,
+          "sourceHash": "bf724e1950e422cc9f42046dc063cdb25d6ef920131e3d115cc5c1c1b33f0127",
+          "sourceSize": 13320,
           "disposition": "implementation",
           "sourceRole": "implementation"
         },
         {
           "sourcePath": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/📋️project.json",
           "destinationPath": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/📋️project.json",
-          "sourceHash": "b1f27f3b4efc4aaea91e77bad9dec2dbb1f8a304586eabbda4c58be0aed00e22",
-          "sourceSize": 5664,
+          "sourceHash": "f171e06e6f1d64f33d2c364e2ceca14df053e4e948b4a0f70a65aec6629784e9",
+          "sourceSize": 6015,
           "disposition": "metadata",
           "sourceRole": null
         },
         {
           "sourcePath": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/📜️script.ts",
           "destinationPath": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/📜️script.ts",
-          "sourceHash": "9f75e62bb6a54b8041e6b891c81e341e0edbae9784ce0ded3e3eda7f6c0d28e6",
-          "sourceSize": 18790,
+          "sourceHash": "d676bed1b8692832e18fae92337757bdbea5995243d438d688f689562ca9daf1",
+          "sourceSize": 20234,
           "disposition": "metadata",
           "sourceRole": null
         },
@@ -120,26 +120,26 @@
           "sourceRole": "implementation"
         },
         {
-          "sourcePath": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/📦️glue.rs",
+          "sourcePath": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️.rs",
           "destinationPath": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/🧊️renderer/🦀️.rs",
-          "sourceHash": "214c5ece5918ed0c3255828da5ac0f9441ddc164b7b2efa88cd879b5f6c01c28",
-          "sourceSize": 829553,
+          "sourceHash": "37cee605a2fac2913a343be9d9cd1e8632afee3e55ce056a4d6b6e3c752bf20f",
+          "sourceSize": 830190,
           "disposition": "implementation",
           "sourceRole": "implementation"
         },
         {
-          "sourcePath": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/📦️index.ts",
+          "sourcePath": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🟦️.ts",
           "destinationPath": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/🧊️renderer-boot/🟦️.ts",
-          "sourceHash": "4a8234a6f1cf7781ab4abc394e5e9dc6cb125f7a9c5b7f3a5f8735b2861049e0",
-          "sourceSize": 7738,
+          "sourceHash": "d49f1a97468bfbe1e990f9db70e4ab8992be8b2c78fb60df750a629f312198c0",
+          "sourceSize": 7734,
           "disposition": "implementation",
           "sourceRole": "implementation"
         },
         {
           "sourcePath": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🟦️typescript/🐚️plugin-bridge.ts",
           "destinationPath": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/🐚️plugin-bridge/🟦️.ts",
-          "sourceHash": "e383b9b555dca8dbd7c5cd54864651b6271010da3d91cef01697d01770b8a9ce",
-          "sourceSize": 25329,
+          "sourceHash": "914da7ee66cc1b82b8b7e2ce70e02f3adce4af74a1e71e4c2d80a927f39982c2",
+          "sourceSize": 24150,
           "disposition": "implementation",
           "sourceRole": "implementation"
         },
@@ -154,8 +154,8 @@
         {
           "sourcePath": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🟦️typescript/🟨️frame-worker.js",
           "destinationPath": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/🧵️frame-worker/🤖️generated/🟨️.js",
-          "sourceHash": "e9aacb469938553608d11e6083843e7ddd185e568bc17de1a0b501451b608f8b",
-          "sourceSize": 647557,
+          "sourceHash": "c04a9bc9b3094399225902d6ed15ce4b661140ef8359db9c3a238ebff26a7a6e",
+          "sourceSize": 641961,
           "disposition": "generated",
           "sourceRole": "implementation"
         },
@@ -218,32 +218,32 @@
         {
           "sourcePath": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️kernel_seam.rs",
           "destinationPath": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/🪢️kernel-seam/🦀️.rs",
-          "sourceHash": "7221dbebddf2d3097b2fba08b5fef1e0ca4aea38fe630d48b4fbcb82836aec47",
-          "sourceSize": 12739,
+          "sourceHash": "630e28ec0c4d88192a9a313a2de2bd2b1240c47a6b67c49421a232b2756c5c69",
+          "sourceSize": 12735,
           "disposition": "implementation",
           "sourceRole": "implementation"
         },
         {
           "sourcePath": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️lib.rs",
           "destinationPath": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/📚️library/🦀️.rs",
-          "sourceHash": "eb1a9c90ea4a687c6d5d3dbb77415ed8a2851bd8b31b471822bede955662cc8b",
-          "sourceSize": 679,
+          "sourceHash": "7948262a7efb32ffc01e4884d961d3055aa858426c85c6da51cbca1739dff142",
+          "sourceSize": 675,
           "disposition": "adapter",
           "sourceRole": "unresolved"
         },
         {
           "sourcePath": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️os_host.rs",
           "destinationPath": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/🏠️os-host/🦀️.rs",
-          "sourceHash": "5d6331d940fb7b3897b002c3b4f0a561f946bc220ee3303177025c4df7ccb9d9",
-          "sourceSize": 31590,
+          "sourceHash": "39e556bf94e18a7805c28eebf2a9901480e41a644f95fbd0a9bbbafaab7615c4",
+          "sourceSize": 31586,
           "disposition": "implementation",
           "sourceRole": "implementation"
         },
         {
           "sourcePath": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️render_snapshot.rs",
           "destinationPath": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/📸️render-snapshot/🦀️.rs",
-          "sourceHash": "79b276f26372f81fec9c484e7e8f45366bc14f20ff43427f6976738304d1aca1",
-          "sourceSize": 11528,
+          "sourceHash": "15672a3dcf347a3598fa9e32a75bd241d497097eb8c2167b9fc9643655ed54a7",
+          "sourceSize": 11519,
           "disposition": "implementation",
           "sourceRole": "implementation"
         },
@@ -266,14 +266,14 @@
         {
           "sourcePath": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️winit_app.rs",
           "destinationPath": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/🪟️winit-app/🦀️.rs",
-          "sourceHash": "ea46cdbf206cc743a98c29556fe6978cf6e4da9cb26ccc61e9690ed660856ce3",
-          "sourceSize": 45750,
+          "sourceHash": "5a3d421cf559ce8f2afa2787fd7cf038e270044e1163d529bf95ac9cb3b7003d",
+          "sourceSize": 45746,
           "disposition": "implementation",
           "sourceRole": "implementation"
         },
         {
           "sourcePath": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🧪️browser-frame-transport.test.ts",
-          "destinationPath": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/🧪️tests/🧪️browser-frame-transport/🟦️.ts",
+          "destinationPath": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/🧪️tests/🟦️browser-frame-transport.ts",
           "sourceHash": "0c424a9c55af60b7d16b2f0dd7d567a9c394115031bbd9fc21ac0abb660fe143",
           "sourceSize": 16208,
           "disposition": "implementation",
@@ -281,7 +281,7 @@
         },
         {
           "sourcePath": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🧪️browser-interactive-job-port.test.ts",
-          "destinationPath": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/🧪️tests/🧪️browser-interactive-job-port/🟦️.ts",
+          "destinationPath": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/🧪️tests/🟦️browser-interactive-job-port.ts",
           "sourceHash": "f2946f61609c69d0dd3b49cdbb15aa2ade7ccb956057bf973b849a550d13c5a7",
           "sourceSize": 21297,
           "disposition": "implementation",
@@ -289,15 +289,15 @@
         },
         {
           "sourcePath": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🧪️index.test.ts",
-          "destinationPath": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/🧪️tests/🧪️package-integration/🟦️.ts",
-          "sourceHash": "8385b349365381fb6ef40fe2c1f1fcf9a98185abae10107c06a56703c608bd8c",
-          "sourceSize": 4979,
+          "destinationPath": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/🧪️tests/🟦️package-integration.ts",
+          "sourceHash": "8d72101d10781d48bdb303034910f4fb21410e21033a19e47a1dee568142cfa5",
+          "sourceSize": 6161,
           "disposition": "implementation",
           "sourceRole": "implementation"
         },
         {
           "sourcePath": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🧪️vitest.config.ts",
-          "destinationPath": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/🟦️typescript/🧪️tests/🟦️.ts",
+          "destinationPath": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/🟦️typescript/🧪️test/🟦️s.ts",
           "sourceHash": "c1b2fbb4b08d67a1b0ccd86d4913ad92b1692ee4d2cd21ecdf8556643139a4b8",
           "sourceSize": 211,
           "disposition": "tool-metadata",
@@ -353,12 +353,12 @@
           "id": "library-adapter-replacement",
           "sourcePath": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️lib.rs",
           "destinationPath": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/📚️library/🦀️.rs",
-          "oldValue": "//! 🧪️ Renderer target boundary.\n//!\n//! Browser and native presentation compile only where `winit` has a platform backend. WASI keeps\n//! the renderer's owned bounded-mailbox protocol available without linking a window system.\n\n#[cfg(target_arch = \"wasm32\")]\nextern crate semio_framework_async as wasm_bindgen_futures;\n\n#[cfg(not(target_os = \"wasi\"))]\n#[macro_export]\nmacro_rules! action_args_json {\n    ($($tt:tt)*) => {\n        semio_framework::optional_json_to_dsl(Some(serde_json::json!($($tt)*)))\n    };\n}\n\n#[cfg(not(target_os = \"wasi\"))]\ninclude!(\"📦️glue.rs\");\n\n#[cfg(target_os = \"wasi\")]\n#[path = \"🦀️runtime_mailbox_core.rs\"]\npub mod runtime_mailbox_core;\n",
+          "oldValue": "//! 🧪️ Renderer target boundary.\n//!\n//! Browser and native presentation compile only where `winit` has a platform backend. WASI keeps\n//! the renderer's owned bounded-mailbox protocol available without linking a window system.\n\n#[cfg(target_arch = \"wasm32\")]\nextern crate semio_framework_async as wasm_bindgen_futures;\n\n#[cfg(not(target_os = \"wasi\"))]\n#[macro_export]\nmacro_rules! action_args_json {\n    ($($tt:tt)*) => {\n        semio_framework::optional_json_to_dsl(Some(serde_json::json!($($tt)*)))\n    };\n}\n\n#[cfg(not(target_os = \"wasi\"))]\ninclude!(\"🦀️.rs\");\n\n#[cfg(target_os = \"wasi\")]\n#[path = \"🦀️runtime_mailbox_core.rs\"]\npub mod runtime_mailbox_core;\n",
           "newValue": "//! 🧊️ Renderer library package adapter.\n\n#[cfg(not(target_os = \"wasi\"))]\n#[path = \"../../../🧊️renderer/📇️registry/🦀️.rs\"]\nmod renderer_registration;\n\n#[cfg(not(target_os = \"wasi\"))]\ninclude!(\"../../../🧊️renderer/🦀️.rs\");\n\n#[cfg(target_os = \"wasi\")]\n#[path = \"../../../📮️runtime-mailbox-core/🦀️.rs\"]\npub mod runtime_mailbox_core;\n"
         },
         {
           "id": "renderer-registration-merge",
-          "sourcePath": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/📦️glue.rs",
+          "sourcePath": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️.rs",
           "destinationPath": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/🧊️renderer/🦀️.rs",
           "oldValue": "// 🧊️ Raw wgpu WASM renderer for declarative framework UiNode trees.\n",
           "newValue": "#[cfg(target_arch = \"wasm32\")]\nextern crate semio_framework_async as wasm_bindgen_futures;\n\n// 🧊️ Raw wgpu WASM renderer for declarative framework UiNode trees.\n"
@@ -369,7 +369,7 @@
           "id": "wgpu-renderer-registration",
           "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/🧊️renderer/📇️registry/🦀️.rs",
           "originSourcePath": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️lib.rs",
-          "originSourceHash": "eb1a9c90ea4a687c6d5d3dbb77415ed8a2851bd8b31b471822bede955662cc8b",
+          "originSourceHash": "7948262a7efb32ffc01e4884d961d3055aa858426c85c6da51cbca1739dff142",
           "language": "rust",
           "expectedRole": "implementation",
           "content": "//! 📇️ Renderer macro registration.\n\n#[cfg(not(target_os = \"wasi\"))]\n#[macro_export]\nmacro_rules! action_args_json {\n    ($($tt:tt)*) => {\n        semio_framework::optional_json_to_dsl(Some(serde_json::json!($($tt)*)))\n    };\n}\n\n"
@@ -395,14 +395,14 @@
           "id": "cargo-kernel-renderer-prose",
           "kind": "reference-path",
           "sourcePath": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/Cargo.toml",
-          "oldValue": "# vocabulary the native kernel thread (`📦️glue.rs`'s `kernel_runtime` module) drives directly — see\n",
+          "oldValue": "# vocabulary the native kernel thread (`🦀️.rs`'s `kernel_runtime` module) drives directly — see\n",
           "newValue": "# vocabulary the native kernel thread (`../../🧊️renderer/🦀️.rs`'s `kernel_runtime` module) drives directly — see\n"
         },
         {
           "id": "cargo-worker-pool-prose",
           "kind": "reference-path",
           "sourcePath": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/Cargo.toml",
-          "oldValue": "# — `📦️glue.rs::renderer_worker_pool()` is the ONE process-wide pool this crate injects into both\n",
+          "oldValue": "# — `🦀️.rs::renderer_worker_pool()` is the ONE process-wide pool this crate injects into both\n",
           "newValue": "# — `../../🧊️renderer/🦀️.rs::renderer_worker_pool()` is the ONE process-wide pool this crate injects into both\n"
         },
         {
@@ -416,14 +416,14 @@
           "id": "script-scale-renderer-prose",
           "kind": "reference-path",
           "sourcePath": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/📜️script.ts",
-          "oldValue": " * headless scale-bench mode (`scale_bench::run` in `📦️glue.rs`) — no ShellState/GPU/winit, no plugin\n",
+          "oldValue": " * headless scale-bench mode (`scale_bench::run` in `🦀️.rs`) — no ShellState/GPU/winit, no plugin\n",
           "newValue": " * headless scale-bench mode (`scale_bench::run` in `../../🧊️renderer/🦀️.rs`) — no ShellState/GPU/winit, no plugin\n"
         },
         {
           "id": "node-renderer-prose",
           "kind": "reference-path",
-          "sourcePath": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/📦️index.ts",
-          "oldValue": " * comment on `semio_wgpu_mount` in `📦️glue.rs` for why a real one isn't wired up yet), so this remains a\n",
+          "sourcePath": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🟦️.ts",
+          "oldValue": " * comment on `semio_wgpu_mount` in `🦀️.rs` for why a real one isn't wired up yet), so this remains a\n",
           "newValue": " * comment on `semio_wgpu_mount` in `../🧊️renderer/🦀️.rs` for why a real one isn't wired up yet), so this remains a\n"
         },
         {
@@ -450,7 +450,7 @@
         {
           "id": "native-bench-command-prose",
           "kind": "reference-path",
-          "sourcePath": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/📦️glue.rs",
+          "sourcePath": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️.rs",
           "oldValue": "/// OS threads (see `Env`'s own doc for what this fixed for budgets 3/5/6). `bun ./📜️script.ts bench plugins --renderer native`\n",
           "newValue": "/// OS threads (see `Env`'s own doc for what this fixed for budgets 3/5/6). `bun nx run @semio-tech/framework-os-dev:bench -- plugins --renderer native`\n"
         },
@@ -472,15 +472,15 @@
           "id": "cargo-build-logo-watch",
           "kind": "cargo-runtime-coordinate",
           "sourcePath": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/build.rs",
-          "oldValue": "    println!(\"cargo:rerun-if-changed={}\", manifest_dir.join(\"../../../../🔣️semio_logo.svg\").display());\n",
-          "newValue": "    println!(\"cargo:rerun-if-changed={}\", manifest_dir.join(\"../../../../🔣️semio_logo.svg\").display());\n"
+          "oldValue": "    println!(\"cargo:rerun-if-changed={}\", manifest_dir.join(\"../../../../🔣️.svg\").display());\n",
+          "newValue": "    println!(\"cargo:rerun-if-changed={}\", manifest_dir.join(\"../../../../🔣️.svg\").display());\n"
         },
         {
           "id": "cargo-build-logo-output",
           "kind": "cargo-runtime-coordinate",
           "sourcePath": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/build.rs",
-          "oldValue": "    fs::copy(manifest_dir.join(\"../../../../🔣️semio_logo.svg\"), out_dir.join(\"🔣️semio_logo.svg\")).expect(\"copy semio logo\");\n",
-          "newValue": "    fs::copy(manifest_dir.join(\"../../../../🔣️semio_logo.svg\"), out_dir.join(\"🔣️semio_logo.svg\")).expect(\"copy semio logo\");\n"
+          "oldValue": "    fs::copy(manifest_dir.join(\"../../../../🔣️.svg\"), out_dir.join(\"🔣️.svg\")).expect(\"copy semio logo\");\n",
+          "newValue": "    fs::copy(manifest_dir.join(\"../../../../🔣️.svg\"), out_dir.join(\"🔣️.svg\")).expect(\"copy semio logo\");\n"
         },
         {
           "id": "cargo-build-module-output",
@@ -499,7 +499,7 @@
         {
           "id": "native-asset-manifest-base",
           "kind": "cargo-runtime-coordinate",
-          "sourcePath": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/📦️glue.rs",
+          "sourcePath": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️.rs",
           "oldValue": "        return Ok(std::path::Path::new(env!(\"CARGO_MANIFEST_DIR\")).join(\"../../../..\").join(url.trim_start_matches('/')));\n",
           "newValue": "        return Ok(std::path::Path::new(env!(\"CARGO_MANIFEST_DIR\")).join(\"../../../..\").join(url.trim_start_matches('/')));\n"
         },
@@ -599,7 +599,7 @@
           "kind": "tool-producer",
           "sourcePath": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🧪️vitest.config.ts",
           "oldValue": "import { defineConfig } from \"vitest/config\";\n\nexport default defineConfig({\n  test: {\n    name: \"@semio-tech/framework-renderer-wgpu\",\n    environment: \"node\",\n    coverage: { include: [\"index.ts\"] },\n  },\n});\n",
-          "newValue": "import { defineConfig } from \"vitest/config\";\n\nexport default defineConfig({\n  root: \"../..\",\n  test: {\n    name: \"@semio-tech/framework-renderer-wgpu\",\n    environment: \"node\",\n    include: [\"🧪️tests/🧪️browser-frame-transport/🟦️.ts\",\"🧪️tests/🧪️browser-interactive-job-port/🟦️.ts\",\"🧪️tests/🧪️package-integration/🟦️.ts\"],\n    coverage: { include: [\"🧊️renderer-boot/🟦️.ts\"] },\n  },\n});\n"
+          "newValue": "import { defineConfig } from \"vitest/config\";\n\nexport default defineConfig({\n  root: \"../..\",\n  test: {\n    name: \"@semio-tech/framework-renderer-wgpu\",\n    environment: \"node\",\n    include: [\"🧪️tests/🟦️browser-frame-transport.ts\",\"🧪️tests/🟦️browser-interactive-job-port.ts\",\"🧪️tests/🟦️package-integration.ts\"],\n    coverage: { include: [\"🧊️renderer-boot/🟦️.ts\"] },\n  },\n});\n"
         }
       ],
       "joinedPathBindings": [
@@ -641,7 +641,7 @@
           "crateTypes": [
             "cdylib"
           ],
-          "path": "🦀️component.rs"
+          "path": "🦀️.rs"
         },
         "cargoLockRelativePath": "Cargo.lock",
         "cargoLockVersion": 4,
@@ -654,7 +654,7 @@
             "async-spawn"
           ]
         },
-        "componentRelativePath": "🦀️component.rs",
+        "componentRelativePath": "🦀️.rs",
         "witRelativePath": "🧬️schema/📜️world.wit",
         "witPackage": "semio:jcoprobe@0.1.0",
         "witWorld": "jcoprobe",
@@ -673,13 +673,13 @@
         {
           "sourcePath": "🧰️framework/🛍️products/💻️os/🧫️fixtures/🔌️jcoprobe/👽️guest/Cargo.toml",
           "destinationPath": "🧰️framework/🛍️products/💻️os/🧫️fixtures/🔌️jcoprobe/👽️guest/📦️packages/🦀️rust/Cargo.toml",
-          "sourceHash": "41cac3870bbc659710d902b34a66f69a621a3a9cd39a10d5bb551e937fd3da2c",
-          "sourceSize": 584,
+          "sourceHash": "09c106555573c3381ba248ca5dfa2f63d05e71fbb21793544bb7a58095f5bef3",
+          "sourceSize": 575,
           "disposition": "metadata",
           "sourceRole": null
         },
         {
-          "sourcePath": "🧰️framework/🛍️products/💻️os/🧫️fixtures/🔌️jcoprobe/👽️guest/🦀️component.rs",
+          "sourcePath": "🧰️framework/🛍️products/💻️os/🧫️fixtures/🔌️jcoprobe/👽️guest/🦀️.rs",
           "destinationPath": "🧰️framework/🛍️products/💻️os/🧫️fixtures/🔌️jcoprobe/👽️guest/🧩️component/🦀️.rs",
           "sourceHash": "4181cae50df16ea732298a1fdfa8e37889d05f8721cf67af9605d3a94738f571",
           "sourceSize": 2383,
@@ -819,14 +819,14 @@
     },
     {
       "packageId": "wgpu-renderer",
-      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🦀️component.rs",
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🦀️.rs",
       "transformId": "wgpu-engine-relative",
       "occurrenceCount": 5,
       "ownership": "authored"
     },
     {
       "packageId": "wgpu-renderer",
-      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏃️run/🦀️component.rs",
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏃️run/🦀️.rs",
       "transformId": "wgpu-owner-glue",
       "occurrenceCount": 5,
       "ownership": "authored"
@@ -840,15 +840,15 @@
     },
     {
       "packageId": "wgpu-renderer",
-      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🧵️shard/🦀️component.rs",
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🧵️shard/🦀️.rs",
       "transformId": "wgpu-owner-runtime-shard",
       "occurrenceCount": 1,
       "ownership": "authored"
     },
     {
       "packageId": "wgpu-renderer",
-      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/📦️glue.rs",
-      "destinationPath": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/📦️glue.rs",
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️.rs",
+      "destinationPath": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/🦀️.rs",
       "transformId": "wgpu-owner-runtime-self",
       "occurrenceCount": 1,
       "ownership": "authored"
@@ -872,7 +872,7 @@
     },
     {
       "packageId": "jcoprobe-guest",
-      "path": "🧰️framework/🛍️products/💻️os/🧫️fixtures/🔌️jcoprobe/👽️guest/🦀️component.rs",
+      "path": "🧰️framework/🛍️products/💻️os/🧫️fixtures/🔌️jcoprobe/👽️guest/🦀️.rs",
       "destinationPath": "🧰️framework/🛍️products/💻️os/🧫️fixtures/🔌️jcoprobe/👽️guest/📦️packages/🦀️rust/🦀️component.rs",
       "transformId": "jco-prose",
       "occurrenceCount": 1,
@@ -889,8 +889,8 @@
       "destinationToken": "../../📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/"
     },
     "wgpu-owner-glue": {
-      "sourceToken": "🎯️targets/🧊️wgpu/📦️glue.rs",
-      "destinationToken": "🎯️targets/🧊️wgpu/📦️packages/🦀️rust/📦️glue.rs"
+      "sourceToken": "🎯️targets/🧊️wgpu/🦀️.rs",
+      "destinationToken": "🎯️targets/🧊️wgpu/📦️packages/🦀️rust/🦀️.rs"
     },
     "wgpu-owner-runtime-shard": {
       "sourceToken": "🎯️targets/🧊️wgpu/\n    /// 🎠️runtime.rs",

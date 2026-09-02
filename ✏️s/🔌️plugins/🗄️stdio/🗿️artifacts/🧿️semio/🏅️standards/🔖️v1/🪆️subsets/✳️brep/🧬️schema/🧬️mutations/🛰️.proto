@@ -1,0 +1,43 @@
+syntax = "proto3";
+// 🧬️ SemioBrepMutation facet mirror — see the sibling 🦀️.rs for the real source of
+// truth. SMO's approved 13-verb brep vocabulary; `create-loop`/`delete-loop` deliberately absent.
+package semio.s_stdio_semio_brep.mutations;
+
+import "../📸️snapshot/🛰️.proto";
+
+enum BrepMutationKind {
+  CREATE_VERTEX = 0;
+  DELETE_VERTEX = 1;
+  CREATE_EDGE = 2;
+  DELETE_EDGE = 3;
+  CREATE_FACE = 4;
+  DELETE_FACE = 5;
+  CREATE_SHELL = 6;
+  DELETE_SHELL = 7;
+  CREATE_SOLID = 8;
+  DELETE_SOLID = 9;
+  REPLACE_CURVE = 10;
+  REPLACE_SURFACE = 11;
+  MOVE_VERTEX = 12;
+}
+
+message SemioBrepMutation {
+  BrepMutationKind mutation = 1;
+  optional string id = 2;
+  optional string vertex_id = 3;
+  optional string edge_id = 4;
+  optional string face_id = 5;
+  optional semio.s_stdio_semio_brep.snapshot.SemioPoint3 point = 6;
+  optional semio.s_stdio_semio_brep.snapshot.SemioPoint3 new_point = 7;
+  optional string start_vertex = 8;
+  optional string end_vertex = 9;
+  optional semio.s_stdio_semio_brep.snapshot.BrepCurve curve = 10;
+  optional semio.s_stdio_semio_brep.snapshot.BrepCurve new_curve = 11;
+  optional string outer_loop = 12;
+  repeated string inner_loops = 13;
+  optional semio.s_stdio_semio_brep.snapshot.BrepSurface surface = 14;
+  optional semio.s_stdio_semio_brep.snapshot.BrepSurface new_surface = 15;
+  optional bool orientation = 16;
+  repeated semio.s_stdio_semio_brep.snapshot.BrepShellFace faces = 17;
+  repeated semio.s_stdio_semio_brep.snapshot.BrepSolidShell shells = 18;
+}

@@ -5,7 +5,7 @@
   "displayName": "Replace Dense",
   "emoji": "☁️",
   "aggregateVariant": "ReplaceDense",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": "replace-dense",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

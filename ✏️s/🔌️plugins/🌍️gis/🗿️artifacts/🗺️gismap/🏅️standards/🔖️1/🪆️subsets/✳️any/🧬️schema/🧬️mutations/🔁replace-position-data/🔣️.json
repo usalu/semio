@@ -5,7 +5,7 @@
   "displayName": "Replace Position Data",
   "emoji": "🔁",
   "aggregateVariant": "ReplacePositionData",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": "replace-position-data",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

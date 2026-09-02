@@ -5,7 +5,7 @@
   "displayName": "Replace Tracks",
   "emoji": "🚂",
   "aggregateVariant": "ReplaceTracks",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": "replace-tracks",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

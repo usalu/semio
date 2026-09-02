@@ -6,9 +6,9 @@ third-party library in any ecosystem speaks, so the second producer THE STANDARD
 second IMPLEMENTATION, written in another language from the format's own committed specification:
 
 * the envelope — the mandatory `semio <envelope-id>.dsl v<version>` preamble line — is specified in
-  `🧰️framework/🛍️products/💻️os/🔨️modules/🧬️semio/🦀️component.rs`'s envelope section;
+  `🧰️framework/🛍️products/💻️os/🔨️modules/🧬️semio/🦀️.rs`'s envelope section;
 * the DSL body is the committed grammar
-  `../../🏅️standards/🔖️v1/🪆️subsets/✳️animation/🧬️schema/📸️snapshot/📝️text/📖️component.grammar.semio`
+  `../../🏅️standards/🔖️v1/🪆️subsets/✳️animation/🧬️schema/📸️snapshot/📝️text/📖️.grammar.semio`
   — `document = artifact-mark schema-line timelines-line`,
   `timeline = "[" option-name "," channel-list "]"`,
   `channel = "[" target "," interpolation "," keyframe-list "]"`,
@@ -16,7 +16,7 @@ second IMPLEMENTATION, written in another language from the format's own committ
   `interpolation = "l" | "s" | "c"`, `keyframe = "[" number "," value "]"` and
   `value = "S" ":" number | "V" ":" point3 | "Q" ":" quat | "W" ":" number-list`;
 * the thirteen verbs and their positional argument lists are the committed grammar
-  `…/🧬️schema/🧬️mutations/📝️text/📖️component.grammar.semio`, and their JSON wire form is this
+  `…/🧬️schema/🧬️mutations/📝️text/📖️.grammar.semio`, and their JSON wire form is this
   case's committed per-kind specification vectors under `🧫️fixtures/`.
 
 Two leaves the grammar states by reference rather than in full, and how each was settled:
@@ -75,7 +75,7 @@ LETTER_INTERPOLATION = {letter: kind for kind, letter in INTERPOLATION_LETTER.it
 DOCUMENT_SCHEMA = "s.stdio.semio.animation"
 DSL_PREAMBLE = "semio s.stdio.semio.animation.dsl v1"
 
-WALK_DSL = "asset://🏅️standards/🔖️v1/🪆️subsets/✳️any/📚️examples/🚶️walk/🖼️assets/🗣️example.dsl.semio"
+WALK_DSL = "asset://🏅️standards/🔖️v1/🪆️subsets/✳️any/📚️examples/🚶️walk/🖼️assets/🗣️.dsl.semio"
 
 # endregion 🔖️Vocabulary
 

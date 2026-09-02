@@ -1,7 +1,7 @@
 //! 🦀️ Opening-preferences exhaustive mutation case — Rust adapter. Ticket 26/08/23/END-TO-END-
 //! TESTING-REFACTOR. Recorded no-oracle decision
 //! `os-config-opening-preferences-mutation-semantics`
-//! (`../../../../../🎚️config/🧪️oracle/🔣️.json`): `os.config.opening` is this operating
+//! (`../../../../../🎚️config/🔣️oracle.json`): `os.config.opening` is this operating
 //! system's own preference record with no third-party implementation, so `oracle` here reads the
 //! committed, independently handcrafted per-kind specification fixtures
 //! (`../../../../../🎚️config/🧬️schema/🧬️mutations/<slug>/🧪️tests/<fixture>/`) literally — no
@@ -10,7 +10,7 @@
 //! vocabulary.
 //!
 //! **Why the case sits here rather than beside the vocabulary.** `🎚️config` has no crate of its
-//! own. `📦️glue.rs` in `🖥️host/📦️packages/🦀️rust` is the ONE place `OpeningConfigMutation` is
+//! own. `🦀️.rs` in `🖥️host/📦️packages/🦀️rust` is the ONE place `OpeningConfigMutation` is
 //! mounted, and the generated test host resolves its subject crate by walking UP from the case
 //! owner — from `🎚️config` that walk reaches the OS kernel, which does not expose the facet at all.
 //! The feature says the same thing in prose so a reader is not left guessing.
@@ -46,16 +46,16 @@ const KINDS: &[&str] = &["set-default-app", "clear-default-app"];
 fn fixture_text(kind: &str) -> (&'static str, &'static str, &'static str, &'static str) {
     match kind {
         "set-default-app" => (
-            include_str!("../../../../../🎚️config/🧬️schema/🧬️mutations/📌️set-default-app/🧪️tests/repins-the-cad-editor-to-the-drafting-app/📸️snapshot/⬅️before/🔣️component.json"),
-            include_str!("../../../../../🎚️config/🧬️schema/🧬️mutations/📌️set-default-app/🧪️tests/repins-the-cad-editor-to-the-drafting-app/🦠️mutation/🔣️component.json"),
-            include_str!("../../../../../🎚️config/🧬️schema/🧬️mutations/📌️set-default-app/🧪️tests/repins-the-cad-editor-to-the-drafting-app/📸️snapshot/➡️after/🔣️component.json"),
-            include_str!("../../../../../🎚️config/🧬️schema/🧬️mutations/📌️set-default-app/🧪️tests/repins-the-cad-editor-to-the-drafting-app/🎯️outcome/🔣️component.json"),
+            include_str!("../../../../../🎚️config/🧬️schema/🧬️mutations/📌️set-default-app/🧪️tests/repins-the-cad-editor-to-the-drafting-app/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../../../../🎚️config/🧬️schema/🧬️mutations/📌️set-default-app/🧪️tests/repins-the-cad-editor-to-the-drafting-app/🦠️mutation/🔣️.json"),
+            include_str!("../../../../../🎚️config/🧬️schema/🧬️mutations/📌️set-default-app/🧪️tests/repins-the-cad-editor-to-the-drafting-app/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../../../../🎚️config/🧬️schema/🧬️mutations/📌️set-default-app/🧪️tests/repins-the-cad-editor-to-the-drafting-app/🎯️outcome/🔣️.json"),
         ),
         "clear-default-app" => (
-            include_str!("../../../../../🎚️config/🧬️schema/🧬️mutations/🧹clear-default-app/🧪️tests/unpins-the-cad-editor-and-keeps-the-viewer-pin/📸️snapshot/⬅️before/🔣️component.json"),
-            include_str!("../../../../../🎚️config/🧬️schema/🧬️mutations/🧹clear-default-app/🧪️tests/unpins-the-cad-editor-and-keeps-the-viewer-pin/🦠️mutation/🔣️component.json"),
-            include_str!("../../../../../🎚️config/🧬️schema/🧬️mutations/🧹clear-default-app/🧪️tests/unpins-the-cad-editor-and-keeps-the-viewer-pin/📸️snapshot/➡️after/🔣️component.json"),
-            include_str!("../../../../../🎚️config/🧬️schema/🧬️mutations/🧹clear-default-app/🧪️tests/unpins-the-cad-editor-and-keeps-the-viewer-pin/🎯️outcome/🔣️component.json"),
+            include_str!("../../../../../🎚️config/🧬️schema/🧬️mutations/🧹clear-default-app/🧪️tests/unpins-the-cad-editor-and-keeps-the-viewer-pin/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../../../../🎚️config/🧬️schema/🧬️mutations/🧹clear-default-app/🧪️tests/unpins-the-cad-editor-and-keeps-the-viewer-pin/🦠️mutation/🔣️.json"),
+            include_str!("../../../../../🎚️config/🧬️schema/🧬️mutations/🧹clear-default-app/🧪️tests/unpins-the-cad-editor-and-keeps-the-viewer-pin/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../../../../🎚️config/🧬️schema/🧬️mutations/🧹clear-default-app/🧪️tests/unpins-the-cad-editor-and-keeps-the-viewer-pin/🎯️outcome/🔣️.json"),
         ),
         other => panic!("mutate-os-config-opening: no specification vector registered for kind {other:?}"),
     }

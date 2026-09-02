@@ -1,0 +1,115 @@
+# 🔺️ Forms diff schema — sparse field delta over the artifact. Mirrors Rust `FormsDiff` (sibling
+# `🦀️.rs`), field-for-field including the `FormsStepsDelta`/`FormsStepPatch` DeltaHelpers
+# region every mutation triad still builds internally, even though `FormsDiff` itself no longer
+# carries a bare `steps` field (ticket 26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM).
+
+type FormsDiff {
+  schema: String @state(class: ARTIFACT)
+  id: String @state(class: ARTIFACT)
+  version: String @state(class: ARTIFACT)
+  title: String @state(class: ARTIFACT)
+  structure: ArtifactLink @state(class: ARTIFACT) @child(kind: "s.stdio.semio.value")
+  results: ArtifactLink @state(class: ARTIFACT) @child(kind: "s.stdio.semio.table")
+  selectedIds: FormsStringList @state(class: PRESENCE)
+  currentStepIndex: Int @state(class: CONFIG)
+  tryValues: [FormsTryValuesEntry!] @state(class: CONFIG)
+  locale: String @state(class: CONFIG)
+  contributionsJson: String @state(class: CONFIG)
+}
+
+type FormsTryValuesEntry {
+  key: String!
+  value: [String!]!
+}
+
+scalar DslValue
+
+type FormQuestionOption {
+  value: String!
+  label: String!
+}
+
+type FormVectorField {
+  key: String!
+  label: String
+  value: Float
+}
+
+type FormExprConst {
+  value: DslValue!
+}
+
+type FormExprVar {
+  name: String!
+}
+
+type FormExprEq {
+  left: FormExpr!
+  right: FormExpr!
+}
+
+type FormExprAnd {
+  items: [FormExpr!]!
+}
+
+type FormExprOr {
+  items: [FormExpr!]!
+}
+
+type FormExprTruthy {
+  expr: FormExpr!
+}
+
+union FormExpr = FormExprConst | FormExprVar | FormExprEq | FormExprAnd | FormExprOr | FormExprTruthy
+
+type FormQuestion {
+  id: String!
+  label: String!
+  kind: String!
+  description: String
+  required: Boolean
+  placeholder: String
+  default: DslValue
+  min: Float
+  max: Float
+  step: Float
+  unit: String
+  text: String
+  options: [FormQuestionOption!]
+  fields: [FormVectorField!]
+  schema: String
+  src: String
+  accept: String
+  fixtureSlug: String
+  params: DslValue
+  condition: FormExpr
+}
+
+type FormStep {
+  id: String!
+  title: String!
+  description: String
+  blocks: [FormQuestion!]!
+}
+
+type FormsStringList {
+  values: [String!]!
+}
+
+type FormsStepsDelta {
+  added: [FormStep!]!
+  removed: [String!]!
+  patched: [FormsStepPatchEntry!]!
+  reordered: [String!]
+}
+
+type FormsStepPatchEntry {
+  id: String!
+  patch: FormsStepPatch!
+}
+
+type FormsStepPatch {
+  title: String
+  description: String
+  blocks: [FormQuestion!]
+}

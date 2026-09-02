@@ -5,7 +5,7 @@
   "displayName": "Create Generation",
   "emoji": "➕",
   "aggregateVariant": "CreateGeneration",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

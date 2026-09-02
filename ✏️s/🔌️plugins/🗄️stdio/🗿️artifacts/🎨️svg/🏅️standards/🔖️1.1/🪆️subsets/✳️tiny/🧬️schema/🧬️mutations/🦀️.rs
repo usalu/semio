@@ -17,7 +17,7 @@
 //! `blocklists_agree_with_the_subset_conformance_checker` below holds the two against each other,
 //! element by element and attribute by attribute, so they cannot drift apart silently.
 //!
-//! @see ../../🧪️oracle/🔣️.json — the catalog `KINDS` below must match exactly.
+//! @see ../../🔣️oracle.json — the catalog `KINDS` below must match exactly.
 //! @see ../../../../../../🧪️tests/mutate-svg-1-1-tiny/🥒️.feature — the case that exercises it.
 
 use crate::artifacts::svg::schema::diff::{diff_at_path, diff_set_snapshot, SvgAttrAdded, SvgAttrModified, SvgAttributesDiff, SvgChildAdded, SvgChildrenDiff, SvgDiff, SvgElementDiff, SvgNodeDiff};
@@ -81,7 +81,7 @@ pub enum SvgTinyMutation {
 }
 
 /// 📇️ Kebab-case spelling of every `SvgTinyMutation` variant, in declaration order — the exact
-/// `kinds` list `../../🧪️oracle/🔣️.json`'s `mutationCatalogs` entry declares. The framework
+/// `kinds` list `../../🔣️oracle.json`'s `mutationCatalogs` entry declares. The framework
 /// never parses this enum; `kinds_matches_enum_variants_and_manifest` below is what keeps the two
 /// declarations honest against each other.
 pub const KINDS: &[&str] = &["set-snapshot", "stamp-base-profile", "insert-tiny-element", "remove-element", "set-tiny-attribute", "set-text", "set-view-box", "set-transform", "strip-non-tiny"];
@@ -319,7 +319,7 @@ mod tests {
         let spelled: Vec<&'static str> = every.iter().map(kind_of).collect();
         assert_eq!(spelled, KINDS.to_vec(), "KINDS must spell every variant, in declaration order");
 
-        let manifest = include_str!("../../🧪️oracle/🔣️.json");
+        let manifest = include_str!("../../🔣️oracle.json");
         for kind in KINDS {
             assert!(manifest.contains(&format!("\"{kind}\"")), "the oracle manifest's catalog does not declare {kind:?}");
         }

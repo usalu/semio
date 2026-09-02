@@ -29,7 +29,7 @@ pub mod mesh;
 //#region 🔖️Rigid
 /// @emoji 🌀️ Single-precision rigid-body algebra: vectors, points, unit quaternions, isometries —
 /// the framework-owned replacement for the `nalgebra` surface plugins used to reach for directly.
-#[path = "../../🌀️rigid/🦀️component.rs"]
+#[path = "../../🌀️rigid/🦀️.rs"]
 pub mod rigid;
 //#endregion 🔖️Rigid
 
@@ -37,6 +37,6 @@ pub mod rigid;
 /// @emoji 🧿️ BVH-accelerated triangle-mesh collision queries: shape-vs-shape intersection and
 /// winding-number point containment — the framework-owned replacement for `parry3d::shape` plus
 /// `parry3d::query::intersection_test`.
-#[path = "../../🧿️collision/🦀️component.rs"]
+#[path = "../../🧿️collision/🦀️.rs"]
 pub mod collision;
 //#endregion 🔖️Collision

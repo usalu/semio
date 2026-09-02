@@ -8,7 +8,7 @@
     "temp/compose"
   ],
   "baseStructuralGolden": {
-    "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🧫️fixtures/🧪️nested-cargo-package-authority/🔣️.json",
+    "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🧫️fixtures/🔣️nested-cargo-package-authority.json",
     "sha256": "88619870710263fe4e968714a903dace8c2dc79c619fdc5df87950cf21653972",
     "mappingCount": 36,
     "referenceOwnership": "carry-forward-exactly-unless-overridden"
@@ -96,7 +96,7 @@
     ],
     [
       "wgpu-renderer",
-      "📦️glue.rs",
+      "🦀️.rs",
       "b4869021b74b86466fbeef3798547bb2cb40381482f03d47f8fd14acf00a7790",
       "implementation",
       "move-edit",
@@ -106,7 +106,7 @@
     ],
     [
       "wgpu-renderer",
-      "📦️index.ts",
+      "🟦️.ts",
       "4a8234a6f1cf7781ab4abc394e5e9dc6cb125f7a9c5b7f3a5f8735b2861049e0",
       "implementation",
       "move-edit",
@@ -290,7 +290,7 @@
       "0c424a9c55af60b7d16b2f0dd7d567a9c394115031bbd9fc21ac0abb660fe143",
       "implementation",
       "move-edit",
-      "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/🧪️tests/🧪️browser-frame-transport/🟦️.ts",
+      "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/🧪️tests/🟦️browser-frame-transport.ts",
       179,
       "authored"
     ],
@@ -300,7 +300,7 @@
       "f2946f61609c69d0dd3b49cdbb15aa2ade7ccb956057bf973b849a550d13c5a7",
       "implementation",
       "move-edit",
-      "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/🧪️tests/🧪️browser-interactive-job-port/🟦️.ts",
+      "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/🧪️tests/🟦️browser-interactive-job-port.ts",
       184,
       "authored"
     ],
@@ -310,7 +310,7 @@
       "8385b349365381fb6ef40fe2c1f1fcf9a98185abae10107c06a56703c608bd8c",
       "implementation",
       "move-edit",
-      "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/🧪️tests/🧪️package-integration/🟦️.ts",
+      "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/🧪️tests/🟦️package-integration.ts",
       175,
       "authored"
     ],
@@ -320,13 +320,13 @@
       "c1b2fbb4b08d67a1b0ccd86d4913ad92b1692ee4d2cd21ecdf8556643139a4b8",
       "unresolved",
       "move-tool-metadata",
-      "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/🟦️typescript/🧪️tests/🟦️.ts",
+      "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/🟦️typescript/🧪️test/🟦️s.ts",
       194,
       "authored"
     ],
     [
       "jcoprobe-guest",
-      "🦀️component.rs",
+      "🦀️.rs",
       "4181cae50df16ea732298a1fdfa8e37889d05f8721cf67af9605d3a94738f571",
       "implementation",
       "move-edit",
@@ -340,7 +340,7 @@
       "Cargo.toml",
       "Trunk.toml",
       "package.json",
-      "🌐️index.html",
+      "🌐️.html",
       "📋️project.json",
       "📜️script.ts"
     ],

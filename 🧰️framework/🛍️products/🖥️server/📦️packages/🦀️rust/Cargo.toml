@@ -14,7 +14,7 @@ workspace = true
 
 [lib]
 name = "server"
-path = "📦️glue.rs"
+path = "🦀️.rs"
 
 [dependencies]
 semio-framework-async = { workspace = true }

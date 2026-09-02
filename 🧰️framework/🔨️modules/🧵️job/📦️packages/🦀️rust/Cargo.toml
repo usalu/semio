@@ -14,7 +14,7 @@ workspace = true
 
 [lib]
 name = "semio_framework_job"
-path = "📦️glue.rs"
+path = "🦀️.rs"
 
 [features]
 # 🧪️ Turns on `semio_framework_async::testkit::ManualRuntime` for this crate's own scope/runtime

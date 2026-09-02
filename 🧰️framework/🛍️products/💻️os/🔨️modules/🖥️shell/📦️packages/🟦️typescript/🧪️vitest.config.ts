@@ -9,7 +9,7 @@ export default defineConfig({
   root,
   resolve: {
     alias: {
-      "@semio-tech/framework-os-shell": resolve(root, "🟦️glue.ts"),
+      "@semio-tech/framework-os-shell": resolve(root, "🟦️.ts"),
     },
   },
   test: {
@@ -17,8 +17,8 @@ export default defineConfig({
     mode: "test",
     environment: "node",
     include: [],
-    coverage: { include: ["../../🟦️component.ts"] },
-    includeSource: ["../../🟦️component.ts"],
+    coverage: { include: ["../../🟦️.ts"] },
+    includeSource: ["../../🟦️.ts"],
     passWithNoTests: false,
   },
 });

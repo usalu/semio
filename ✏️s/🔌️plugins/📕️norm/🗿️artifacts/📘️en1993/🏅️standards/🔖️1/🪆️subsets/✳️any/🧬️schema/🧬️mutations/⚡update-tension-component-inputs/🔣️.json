@@ -5,7 +5,7 @@
   "displayName": "Update Tension Component Inputs",
   "emoji": "⚡",
   "aggregateVariant": "UpdateTensionComponentInputs",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

@@ -5,11 +5,11 @@
   "displayName": "Remove Output Intent",
   "emoji": "🧽️",
   "aggregateVariant": "RemoveOutputIntent",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
-  "invertibility": "non-invertible",
-  "diffParticipation": "detect",
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "apply-only",
   "outcomeClasses": [
     "applied"
   ],

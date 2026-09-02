@@ -2,7 +2,7 @@
 //! reader corpus. Sibling to `main.rs` (which builds the untouched `pattern-strip.gif` behind
 //! the pre-existing `gif-89a-any-mutate` CROSS-SEMIO oracle) — this binary is a SEPARATE,
 //! independent implementation backing the NEW `gif-89a-any-mutate-reader` THIRD-PARTY-LIBRARY
-//! oracle, never sharing code with `🧪️oracle/🦀️component.rs`.
+//! oracle, never sharing code with `🦀️oracle.rs`.
 //!
 //! Two subcommands:
 //!   build   <recipe-id> <out-dir>   — writes <out-dir>/<recipe-id>/before.gif [and after.gif]
@@ -22,7 +22,7 @@
 //! [`project_gif`] uses only `gif::Decoder`'s public getters: `width`/`height`/`global_palette`/
 //! `bg_color`/`repeat`, and per frame `next_frame_info` + `read_into_buffer`. Checked directly
 //! against `gif` 0.13.3's source (`reader/mod.rs`, `reader/decoder.rs`, `reader/converter.rs`) —
-//! not assumed from `🧪️oracle/🦀️component.rs`'s own (different) technique:
+//! not assumed from `🦀️oracle.rs`'s own (different) technique:
 //!
 //! - **Readable**: width, height, global palette, background colour index (`Decoder::bg_color`
 //!   — a real public getter; only the ENCODE side has no setter, which is a write gap this
@@ -36,7 +36,7 @@
 //!   `gif::Decoder`'s public surface can read any of them back. `set-pixel-aspect-ratio`,
 //!   `insert-comment`, `remove-comment`, `add-app-extension`, `remove-app-extension` are therefore
 //!   genuinely un-witnessable by a reader built on this crate's public API alone — registered
-//!   `<capability>-uncarried` in `../../../🧪️oracle/🔣️.json`, never routed around with the same
+//!   `<capability>-uncarried` in `../../../🔣️oracle.json`, never routed around with the same
 //!   raw-block scan `component.rs` uses (that would just be a second hand-rolled GIF parser
 //!   wearing a reader's name).
 //!
@@ -57,8 +57,8 @@
 //! pixel digest, exactly like every other geometry-preserving mutation here. This is a real,
 //! source-verified finding, not a reproduction of `component.rs`'s own (broader) claim.
 //!
-//! @see ../../../🧪️oracle/🔣️.json — the `gif-89a-any-mutate-reader` oracle and the recipe fixtures.
-//! @see ../../../🧪️oracle/🦀️component.rs — the CROSS-SEMIO computing oracle this binary shares
+//! @see ../../../🔣️oracle.json — the `gif-89a-any-mutate-reader` oracle and the recipe fixtures.
+//! @see ../../../🦀️oracle.rs — the CROSS-SEMIO computing oracle this binary shares
 //!      nothing with (same crate, different mechanism, registered separately and untouched).
 
 use std::borrow::Cow;
@@ -96,7 +96,7 @@ struct GifDoc {
 
 //#region 🔖️Interlace
 /// 🔀️ GIF §20's own four-pass row visiting order — written independently here (not shared with
-/// `🧪️oracle/🖼️raster/🦀️component.rs`'s `gif_interlace_row_order`, on the same "a fixed grammar
+/// `🧪️oracle/🖼️raster/🦀️.rs`'s `gif_interlace_row_order`, on the same "a fixed grammar
 /// rule is worth restating over adding a dependency" reasoning the 87a sibling generator already
 /// documents for itself).
 fn interlace_row_order(height: usize) -> Vec<usize> {

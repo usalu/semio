@@ -12,8 +12,8 @@
 
 // #region 🔌️Adapters
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { createByteLru, createBoundedSet, createLeadingTrailingDebounce, MapRenderer } from "./🟦️component.tsx";
-import type { MapWasmSession } from "../WasmSessionLoader/🟦️component.tsx";
+import { createByteLru, createBoundedSet, createLeadingTrailingDebounce, MapRenderer } from "./🟦️.tsx";
+import type { MapWasmSession } from "../WasmSessionLoader/🟦️.tsx";
 // #endregion 🔌️Adapters
 
 const bytes = (n: number): ArrayBuffer => new ArrayBuffer(n);

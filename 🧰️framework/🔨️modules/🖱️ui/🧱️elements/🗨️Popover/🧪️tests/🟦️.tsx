@@ -2,8 +2,8 @@
 import * as React from "react";
 import { fireEvent, render, waitFor } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
-import { ActionDropdown } from "../../⚡️ActionGroup/🟦️component.tsx";
-import { Popover, PopoverAnchor, PopoverContent, PopoverTrigger, resolvePopoverPlacement } from "../🟦️component.tsx";
+import { ActionDropdown } from "../../⚡️ActionGroup/🟦️.tsx";
+import { Popover, PopoverAnchor, PopoverContent, PopoverTrigger, resolvePopoverPlacement } from "../🟦️.tsx";
 // #endregion 🔌️Adapters
 
 // #region 🗨️PopoverMatrix

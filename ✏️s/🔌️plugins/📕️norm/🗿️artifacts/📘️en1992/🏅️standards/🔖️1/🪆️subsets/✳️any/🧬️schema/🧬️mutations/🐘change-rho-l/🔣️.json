@@ -5,7 +5,7 @@
   "displayName": "Change Rho L",
   "emoji": "🐘",
   "aggregateVariant": "ChangeRhoL",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

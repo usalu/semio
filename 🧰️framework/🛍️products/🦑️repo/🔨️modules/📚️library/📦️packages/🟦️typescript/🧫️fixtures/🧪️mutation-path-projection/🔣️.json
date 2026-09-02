@@ -11,30 +11,30 @@
     "changedMutationRows": 126,
     "changedMutationSources": 125
   },
-  "sourceGlob": "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/*/🧪️tests/*/🦀️component.rs",
+  "sourceGlob": "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/*/🧪️tests/*/🦀️.rs",
   "bundle": [
     {
-      "source": "🦀️component.rs",
+      "source": "🦀️.rs",
       "destination": "🦀️.rs"
     },
     {
-      "source": "🦠️mutation/🔣️component.json",
+      "source": "🦠️mutation/🔣️.json",
       "destination": "🦠️mutation/🔣️.json"
     },
     {
-      "source": "📸️snapshot/⬅️before/🔣️component.json",
+      "source": "📸️snapshot/⬅️before/🔣️.json",
       "destination": "📸️snapshot/⬅️before/🔣️.json"
     },
     {
-      "source": "📸️snapshot/➡️after/🔣️component.json",
+      "source": "📸️snapshot/➡️after/🔣️.json",
       "destination": "📸️snapshot/➡️after/🔣️.json"
     },
     {
-      "source": "🔺️diff/🔣️component.json",
+      "source": "🔺️diff/🔣️.json",
       "destination": "🔺️diff/🔣️.json"
     },
     {
-      "source": "🎯️outcome/🔣️component.json",
+      "source": "🎯️outcome/🔣️.json",
       "destination": "🎯️outcome/🔣️.json"
     }
   ],

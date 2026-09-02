@@ -1,0 +1,132 @@
+{
+  "$id": "https://semio.tech/schema/s.stdio.semio.drawing/mutation.json",
+  "title": "SemioDrawingMutation",
+  "description": "Mirrors the real Rust 🧬️mutations/🦀️.rs -- 17 SMO-approved verb-dispatch variants (📌️important.md's binding vocabulary ruling; no `setSnapshot`/`set*` -- banned/superseded vocabulary, and no `SetSnapshot` variant at all). Externally tagged: `{ \"<PascalCaseVariantName>\": { ...leaf-struct fields } }`, confirmed against the committed `<kind>/🧪️tests/*/🦠️mutation/🔣️.json` fixtures -- none of the leaf structs carry `#[serde(rename_all = ...)]`, so every leaf's own field names are the literal Rust snake_case names verbatim. `NodePath` addresses a scene-graph node (`DrawNode` carries no stable id): `layer` selects `layers[layer]`, `path` is a chain of child indices from that layer's root (`path == []` = the root itself).",
+  "oneOf": [
+    {
+      "type": "object", "required": ["CreateLayer"], "additionalProperties": false,
+      "properties": { "CreateLayer": {
+        "type": "object", "required": ["index", "layer"], "additionalProperties": false,
+        "properties": { "index": { "type": "integer", "minimum": 0 }, "layer": { "$ref": "../📸️snapshot/🔣️.json#/$defs/DrawLayer" } }
+      } }
+    },
+    {
+      "type": "object", "required": ["DeleteLayer"], "additionalProperties": false,
+      "properties": { "DeleteLayer": {
+        "type": "object", "required": ["id"], "additionalProperties": false,
+        "properties": { "id": { "type": "string" } }
+      } }
+    },
+    {
+      "type": "object", "required": ["CreateNode"], "additionalProperties": false,
+      "properties": { "CreateNode": {
+        "type": "object", "required": ["parent", "index", "node"], "additionalProperties": false,
+        "properties": { "parent": { "$ref": "#/$defs/NodePath" }, "index": { "type": "integer", "minimum": 0 }, "node": { "$ref": "../📸️snapshot/🔣️.json#/$defs/DrawNode" } }
+      } }
+    },
+    {
+      "type": "object", "required": ["DeleteNode"], "additionalProperties": false,
+      "properties": { "DeleteNode": {
+        "type": "object", "required": ["at"], "additionalProperties": false,
+        "properties": { "at": { "$ref": "#/$defs/NodePath" } }
+      } }
+    },
+    {
+      "type": "object", "required": ["MoveNode"], "additionalProperties": false,
+      "properties": { "MoveNode": {
+        "type": "object", "required": ["at", "new_origin"], "additionalProperties": false,
+        "properties": { "at": { "$ref": "#/$defs/NodePath" }, "new_origin": { "$ref": "../📸️snapshot/🔣️.json#/$defs/SemioPoint2" } }
+      } }
+    },
+    {
+      "type": "object", "required": ["DragNodes"], "additionalProperties": false,
+      "properties": { "DragNodes": {
+        "type": "object", "required": ["ats", "offset"], "additionalProperties": false,
+        "properties": { "ats": { "type": "array", "items": { "$ref": "#/$defs/NodePath" } }, "offset": { "$ref": "../📸️snapshot/🔣️.json#/$defs/SemioPoint2" } }
+      } }
+    },
+    {
+      "type": "object", "required": ["RotateNode"], "additionalProperties": false,
+      "properties": { "RotateNode": {
+        "type": "object", "required": ["at", "new_rotation"], "additionalProperties": false,
+        "properties": { "at": { "$ref": "#/$defs/NodePath" }, "new_rotation": { "$ref": "../📸️snapshot/🔣️.json#/$defs/Quaternion" } }
+      } }
+    },
+    {
+      "type": "object", "required": ["ScaleNode"], "additionalProperties": false,
+      "properties": { "ScaleNode": {
+        "type": "object", "required": ["at", "new_scale"], "additionalProperties": false,
+        "properties": { "at": { "$ref": "#/$defs/NodePath" }, "new_scale": { "$ref": "../📸️snapshot/🔣️.json#/$defs/Point3" } }
+      } }
+    },
+    {
+      "type": "object", "required": ["ReorderNodes"], "additionalProperties": false,
+      "properties": { "ReorderNodes": {
+        "type": "object", "required": ["parent", "from", "to"], "additionalProperties": false,
+        "properties": { "parent": { "$ref": "#/$defs/NodePath" }, "from": { "type": "integer", "minimum": 0 }, "to": { "type": "integer", "minimum": 0 } }
+      } }
+    },
+    {
+      "type": "object", "required": ["GroupNodes"], "additionalProperties": false,
+      "properties": { "GroupNodes": {
+        "type": "object", "required": ["parent", "indices", "transform"], "additionalProperties": false,
+        "properties": { "parent": { "$ref": "#/$defs/NodePath" }, "indices": { "type": "array", "items": { "type": "integer", "minimum": 0 } }, "transform": { "$ref": "../📸️snapshot/🔣️.json#/$defs/Transform" } }
+      } }
+    },
+    {
+      "type": "object", "required": ["UngroupNode"], "additionalProperties": false,
+      "properties": { "UngroupNode": {
+        "type": "object", "required": ["at"], "additionalProperties": false,
+        "properties": { "at": { "$ref": "#/$defs/NodePath" } }
+      } }
+    },
+    {
+      "type": "object", "required": ["FlattenNode"], "additionalProperties": false,
+      "properties": { "FlattenNode": {
+        "type": "object", "required": ["at"], "additionalProperties": false,
+        "properties": { "at": { "$ref": "#/$defs/NodePath" } }
+      } }
+    },
+    {
+      "type": "object", "required": ["UnflattenNode"], "additionalProperties": false,
+      "properties": { "UnflattenNode": {
+        "type": "object", "required": ["at", "original"], "additionalProperties": false,
+        "properties": { "at": { "$ref": "#/$defs/NodePath" }, "original": { "$ref": "../📸️snapshot/🔣️.json#/$defs/DrawNode" } }
+      } }
+    },
+    {
+      "type": "object", "required": ["ReplacePath"], "additionalProperties": false,
+      "properties": { "ReplacePath": {
+        "type": "object", "required": ["at", "new_segments"], "additionalProperties": false,
+        "properties": { "at": { "$ref": "#/$defs/NodePath" }, "new_segments": { "type": "array", "items": { "$ref": "../📸️snapshot/🔣️.json#/$defs/PathSegment" } } }
+      } }
+    },
+    {
+      "type": "object", "required": ["ReplaceFill"], "additionalProperties": false,
+      "properties": { "ReplaceFill": {
+        "type": "object", "required": ["style_name", "new_fill"], "additionalProperties": false,
+        "properties": { "style_name": { "type": "string" }, "new_fill": { "oneOf": [{ "$ref": "../📸️snapshot/🔣️.json#/$defs/Rgba" }, { "type": "null" }] } }
+      } }
+    },
+    {
+      "type": "object", "required": ["ChangeStrokeColor"], "additionalProperties": false,
+      "properties": { "ChangeStrokeColor": {
+        "type": "object", "required": ["style_name", "new_color"], "additionalProperties": false,
+        "properties": { "style_name": { "type": "string" }, "new_color": { "oneOf": [{ "$ref": "../📸️snapshot/🔣️.json#/$defs/Rgba" }, { "type": "null" }] } }
+      } }
+    },
+    {
+      "type": "object", "required": ["ChangeStrokeWidth"], "additionalProperties": false,
+      "properties": { "ChangeStrokeWidth": {
+        "type": "object", "required": ["style_name", "new_width"], "additionalProperties": false,
+        "properties": { "style_name": { "type": "string" }, "new_width": { "type": ["number", "null"] } }
+      } }
+    }
+  ],
+  "$defs": {
+    "NodePath": {
+      "type": "object", "required": ["layer", "path"],
+      "properties": { "layer": { "type": "integer", "minimum": 0 }, "path": { "type": "array", "items": { "type": "integer", "minimum": 0 } } }
+    }
+  }
+}

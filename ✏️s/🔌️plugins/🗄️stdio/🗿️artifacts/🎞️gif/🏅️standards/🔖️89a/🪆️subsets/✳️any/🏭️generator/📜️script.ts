@@ -9,7 +9,7 @@
 //
 // The bytes this file produces are written entirely by the real `gif` 0.13 encoder
 // (`🦀️engine/src/main.rs`) — the SAME crate registered as `gif-89a-any-mutate` in
-// `../🧪️oracle/🔣️.json` — never by this repository's own `encode_gif`. This script only marshals:
+// `../🔣️oracle.json` — never by this repository's own `encode_gif`. This script only marshals:
 // it builds and invokes the Rust binary and reports what it wrote; it computes no GIF bytes itself.
 //
 // Generation and execution are SEPARATE operations, per the shared framework's own rule (a normal
@@ -26,7 +26,7 @@
 //   build/build-manifests        — the per-kind before/after recipe corpus, backs the NEW
 //                                   `gif-89a-any-mutate-reader` (third-party-library), via
 //                                   `🦀️engine/src/reader_main.rs` (its own independent codec, never
-//                                   sharing code with `main.rs` or `🧪️oracle/🦀️component.rs`).
+//                                   sharing code with `main.rs` or `🦀️oracle.rs`).
 //
 //   bun 📜️script.ts build          [--only <recipe-id>] [--out <dir>]   # writes <out>/<id>/{before,after}.gif
 //   bun 📜️script.ts build-manifests [--only <recipe-id>]                 # prints the fixtureManifests block (JSON)
@@ -59,7 +59,7 @@ type ReaderOutcome = "applied" | "no-op";
 type ReaderRecipe = Readonly<{ id: string; mutation: string; outcome: ReaderOutcome; notes: string }>;
 
 /** 🍳️ Mirrors `RECIPE_IDS`/`recipe()` in `🦀️engine/src/reader_main.rs` verbatim — one entry per
- *  WITNESSABLE `GifMutation` (89a) kind (16 of 21 — see `../🧪️oracle/🔣️.json`'s `-uncarried`
+ *  WITNESSABLE `GifMutation` (89a) kind (16 of 21 — see `../🔣️oracle.json`'s `-uncarried`
  *  entries for the other 5, and `reader.rs`'s own header docstring for why). Every kind here
  *  applies `["applied"]` per the real dispatch (`../🧬️schema/🧬️mutations/🦀️.rs:288`,
  *  `MutationOutcome::new(...)` uniform for all 21 kinds, no per-kind rejection branch) EXCEPT
@@ -266,7 +266,7 @@ async function main(argv: readonly string[]): Promise<number> {
   // The crate cannot WRITE them — `ExtensionData` has only `Control` and `Repetitions` — so Pillow
   // writes: `comment=` emits the 0xFE block, and `loop=` on a multi-frame save emits the 0xFF
   // NETSCAPE2.0 application block. Writer and reader are two different third-party implementations.
-  if (command === "extensions" || command === "extension-manifests") {
+  if (command === "extensions" || command === "extensions-manifests") {
     const WRITER = String.raw`
 import os, sys
 from PIL import Image
@@ -422,7 +422,7 @@ print(kind + ': written')
     }], null, 2)}\n`);
     return 0;
   }
-  console.error(`usage: 📜️script.ts <generate|manifests|build|build-manifests|extensions|extension-manifests> [--out <dir>] [--only <recipe-id>]`);
+  console.error(`usage: 📜️script.ts <generate|manifests|build|build-manifests|extensions|extensions-manifests|aspect|aspect-manifests> [--out <dir>] [--only <recipe-id>]`);
   return 2;
 }
 

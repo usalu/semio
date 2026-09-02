@@ -5,17 +5,20 @@
   "displayName": "Change Jfif Header",
   "emoji": "📐️",
   "aggregateVariant": "ChangeJfifHeader",
-  "payloadSchema": "🔣️payload.schema.json",
-  "textOpcode": null,
-  "binaryTag": null,
-  "invertibility": "non-invertible",
-  "diffParticipation": "none",
+  "payloadSchema": "🔣️.schema.json",
+  "textOpcode": "change-jfif-header",
+  "binaryTag": 2,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "apply-only",
   "outcomeClasses": [
     "applied"
   ],
   "composition": "atomic",
   "requiredLanguageSurfaces": [
     "rust",
+    "typescript",
+    "graphql",
+    "protobuf",
     "json-schema",
     "text",
     "binary"

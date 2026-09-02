@@ -8,7 +8,7 @@
     "contractId": { "const": "artifact-empty-facet-authority-registration-v1" },
     "command": { "const": "artifact-empty-facet-authority" },
     "target": { "const": "test-artifact-empty-facet-authority" },
-    "source": { "const": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧪️artifact-empty-facet-authority/🟦️.ts" },
+    "source": { "const": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🟦️artifact-empty-facet-authority.ts" },
     "runner": { "const": "runTestBudgeted" },
     "budget": { "const": "default" },
     "launchName": { "const": "🧹clean🧩️taxonomy🧪️artifact-empty-facet-authority" },

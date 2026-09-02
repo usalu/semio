@@ -21,6 +21,6 @@
   },
   "bundleKind": "asset",
   "exports": {
-    ".": "./📦️index.ts"
+    ".": "./🟦️.ts"
   }
 }

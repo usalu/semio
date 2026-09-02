@@ -1,7 +1,0 @@
-syntax = "proto3";
-// 📝️ SemioTableDiff text line — descriptive twin of 📖️component.grammar.semio.
-package semio.s_stdio_semio_table.diff.text;
-
-message SemioTableDiffTextLine {
-  string line = 1; // "" | "columns=[...]" | "rows=[...]" | "columns=[...];rows=[...]"
-}

@@ -24,7 +24,7 @@ wasm-opt = false
 
 [lib]
 crate-type = ["cdylib", "rlib"]
-path = "📦️glue.rs"
+path = "🦀️.rs"
 
 [dependencies]
 semio-framework-plugin = { path = "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust", features = ["component-guest"], package = "semio-framework-plugin" }
@@ -36,7 +36,7 @@ semio-framework = { path = "../../../../../../../🧰️framework/📦️package
 semio-s-plugin-cad = { path = "../../../../../📐️cad/📦️packages/🦀️rust", package = "semio-s-plugin-cad", default-features = false }
 # 🏢️ Supplies the `protocol`/`store` crate-alias targets (`CompositeMutationKind`/`Planner`/
 # `ArtifactPack`) every plugin/extension crate aliases locally in its own glue — see cad's own
-# `📦️glue.rs` `extern crate semio_framework_os_kernel as protocol/store` lines.
+# `🦀️.rs` `extern crate semio_framework_os_kernel as protocol/store` lines.
 semio-framework-os-kernel = { path = "../../../../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-framework-os-kernel" }
 # 🌱️ `#[derive(ToValue, FromValue)]` — `CreateBuildingStorey`/`BuildingStructureSummary` satisfy
 # `CompositeMutationKind`'s supertrait bound this way, not `serde::Serialize`/`DeserializeOwned`.

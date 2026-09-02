@@ -5,7 +5,7 @@
   "displayName": "Change Accidental Speed Km H",
   "emoji": "🕹️",
   "aggregateVariant": "ChangeAccidentalSpeedKmH",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

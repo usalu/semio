@@ -1,0 +1,43 @@
+dialect grammar
+grammar stdio.semio.image.mutations
+extension semio
+start op
+
+# ARTIFACT-SYSTEM-OVERHAUL-REAL-CODECS-RUNTIME-REUSE-EVOLUTION image wave: real one-line
+# `OpText::print_op`/`parse_op` shape ALREADY emitted by `🧬️mutations/🦀️.rs`
+# (`print_image_mutation`/`parse_image_mutation`) — `tag:args` (no space; `:` separates the
+# keyword from its positional, comma-separated argument list). Every keyword/tag token below is
+# copied verbatim from the real `format!(...)` call sites in that file's `print_image_mutation`,
+# not invented.
+op = no-op | set-snapshot | set-dimensions | set-colorspace | set-bit-depth | set-icc | insert-frame | remove-frame | move-frame | set-frame-delay | set-frame-pixels | set-metadata-entry | remove-metadata-entry
+
+no-op = "no"
+set-snapshot = "setSnapshot" ":" snapshot
+set-dimensions = "setDimensions" ":" INT "," INT
+set-colorspace = "setColorspace" ":" colorspace
+set-bit-depth = "setBitDepth" ":" INT
+set-icc = "setIcc" ":" option-hex
+insert-frame = "insertFrame" ":" INT "," frame
+remove-frame = "removeFrame" ":" INT
+move-frame = "moveFrame" ":" INT "," INT
+set-frame-delay = "setFrameDelay" ":" INT "," INT
+set-frame-pixels = "setFramePixels" ":" INT "," hex
+set-metadata-entry = "setMetadataEntry" ":" hex "," hex
+remove-metadata-entry = "removeMetadataEntry" ":" hex
+
+# `enc_snapshot` — the same full-VALUE codec `📸️snapshot/🦀️.rs`'s own text DSL grammar
+# declares (restated here so this leaf grammar is self-contained, matching the repo's existing
+# per-facet convention): width, height, colorspace, bitDepth, icc-option, frames, metadata.
+snapshot = "[" INT "," INT "," colorspace "," INT "," option-hex "," "[" frame-list? "]" "," "[" entry-list? "]" "]"
+frame-list = frame {"," frame}*
+frame = "[" INT "," hex "]"
+entry-list = entry {"," entry}*
+entry = "[" hex "," hex "]"
+colorspace = "r" | "a" | "g" | "y" | "i"
+option-hex = "[" "0" "]" | "[" "1" "," hex "]"
+
+# `hex` (bare `hex`, deliberately NOT defined as a production here) is the framework's built-in
+# `hex` MACRO — a run of lowercase hex digits, incl. the empty string. `Symbol::Ref` already falls
+# back from "no production of this name" to "macro of this name", so referencing `hex` with no
+# matching production routes here automatically (recipe pitfall #2 — a hand-rolled `{INT|IDENT}*`
+# production would silently swallow the next literal keyword token instead).

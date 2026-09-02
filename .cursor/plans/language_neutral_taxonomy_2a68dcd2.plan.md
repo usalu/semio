@@ -46,7 +46,7 @@ isProject: false
 
 ## Problem
 
-The repo declares Shape V2 tree purity in [🔣️taxonomy.json](🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json) `_treePurityComment`: inside an owner tree only a per-language leaf file, the `📦️packages` folder, and plain component folders may exist, and `📦️packages/<lang>/` holds ONLY packaging code, never data. That rule is **declared but not enforced** — the check exists in [🔍️discovery/🟦️component.ts](🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🟦️component.ts) `collectPackagingViolations` (lines 1162-1169), but its output lands in `discoverBurndown().packagingViolations`, which no gate reads. Consequently 21 folders and ~95 files of language-neutral content sit inside language leaves.
+The repo declares Shape V2 tree purity in [🔣️taxonomy.json](🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json) `_treePurityComment`: inside an owner tree only a per-language leaf file, the `📦️packages` folder, and plain component folders may exist, and `📦️packages/<lang>/` holds ONLY packaging code, never data. That rule is **declared but not enforced** — the check exists in [🔍️discovery/🟦️.ts](🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🟦️.ts) `collectPackagingViolations` (lines 1162-1169), but its output lands in `discoverBurndown().packagingViolations`, which no gate reads. Consequently 21 folders and ~95 files of language-neutral content sit inside language leaves.
 
 The canonical example is WIT: 12 `.wit` files (827 lines) forming package `semio:framework@1.0.0` live at `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/📜️wit/`. WIT is a language-neutral IDL consumed by the Rust guest, the Rust host, and (indirectly, via jco's `--map semio:framework/host=./🟨️host-shim.js`) TypeScript. Its lowest common owner is the `🔌️plugin` module, not the Rust leaf.
 
@@ -70,7 +70,7 @@ So introduce one. A schema facet's **kind** is derived structurally from which n
 }
 ```
 
-Every existing facet carries `🔣️component.json`, resolves to kind `🧬️data`, and its required format set is exactly today's five — **blast radius zero**. `validateTaxonomy()` gains a `SchemaFacetKindContract` region asserting: `normativeFormat` values are pairwise distinct, each kind's `formats` includes its own `normativeFormat`, every `formats` entry exists in `schemaFormats`, and every `schemaFormats` key is claimed by at least one kind. The `fieldCasing` enum in `validateTaxonomy()` (🟦️component.ts:684) must grow `"kebab"` for WIT identifiers.
+Every existing facet carries `🔣️component.json`, resolves to kind `🧬️data`, and its required format set is exactly today's five — **blast radius zero**. `validateTaxonomy()` gains a `SchemaFacetKindContract` region asserting: `normativeFormat` values are pairwise distinct, each kind's `formats` includes its own `normativeFormat`, every `formats` entry exists in `schemaFormats`, and every `schemaFormats` key is claimed by at least one kind. The `fieldCasing` enum in `validateTaxonomy()` (🟦️.ts:684) must grow `"kebab"` for WIT identifiers.
 
 Then a single shared helper `schemaFacetFormats(facetAbs)` replaces the five raw `Object.entries(schemaFormats)` loops. A facet carrying no normative leaf becomes a new breach ("undeclared schema facet kind") rather than silently unvalidated.
 
@@ -82,16 +82,16 @@ Three statutes in one new `policyPackageLanguagePurityBreaches`, registered in `
 - **Files inside `📦️packages/<lang>[/🎯️targets/<t>]/`** must be packaging files — promote `collectPackagingViolations` from burndown to breach.
 - **Directories inside `📦️packages/<lang>/`** must be `🎯️targets` or an ecosystem-declared packaging dir. New taxonomy keys: global `packagingDirNames: ["🎯️targets"]` plus per-ecosystem `ecosystems.<lang>.packagingDirNames` (`🦀️rust: ["benches"]`, `🐍️python` importable package dir).
 
-The scanner must honour `.gitignore`, not walk the raw filesystem. `**/pkg/` and `**/🤖️generated/` are already ignored (`.gitignore:87,98`), so the four wasm-pack `pkg/` folders are ignored build output, not source violations — they need no migration, only exclusion. A raw walk also finds three phantom `📦️packages` roots inside build output that `git check-ignore` confirms are ignored (`storybook-static/asset/📦️packages`, `🧑️‍💻️dev/dist/asset/📦️packages`, `🧑️‍💻️dev/📦️packages/🟦️typescript/fixture/dist/asset/📦️packages`); the last one would otherwise be misread as a nested-packages violation. Reuse the existing `SEMANTIC_SKIP_DIRS` / `semanticWalk` skip discipline in `🔍️discovery/🟦️component.ts` rather than inventing a second exclusion list.
+The scanner must honour `.gitignore`, not walk the raw filesystem. `**/pkg/` and `**/🤖️generated/` are already ignored (`.gitignore:87,98`), so the four wasm-pack `pkg/` folders are ignored build output, not source violations — they need no migration, only exclusion. A raw walk also finds three phantom `📦️packages` roots inside build output that `git check-ignore` confirms are ignored (`storybook-static/asset/📦️packages`, `🧑️‍💻️dev/dist/asset/📦️packages`, `🧑️‍💻️dev/📦️packages/🟦️typescript/fixture/dist/asset/📦️packages`); the last one would otherwise be misread as a nested-packages violation. Reuse the existing `SEMANTIC_SKIP_DIRS` / `semanticWalk` skip discipline in `🔍️discovery/🟦️.ts` rather than inventing a second exclusion list.
 
 ### 3. WIT lands as a neutral schema facet
 
-New facet `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧬️schema/📜️component.wit`, one file holding `package semio:framework@1.0.0;` plus all 11 interfaces and `world actor`. Rationale: WIT resolves a *directory* as one package and treats subdirectories as `deps`, so per-interface child folders would break bindgen; and the repo already precedents one spec file per facet covering many rules (`📖️component.grammar.semio`). WIT `interface` blocks are the region mechanism.
+New facet `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧬️schema/📜️component.wit`, one file holding `package semio:framework@1.0.0;` plus all 11 interfaces and `world actor`. Rationale: WIT resolves a *directory* as one package and treats subdirectories as `deps`, so per-interface child folders would break bindgen; and the repo already precedents one spec file per facet covering many rules (`📖️.grammar.semio`). WIT `interface` blocks are the region mechanism.
 
 Both bindgen sites repoint:
 
-- `🔌️plugin/🦀️component.rs:18-21` and `:324-327`: `path: "📜️wit"` → `path: "../🧬️schema"` (relative to crate root `📦️packages/🦀️rust/`)
-- `🔌️plugin/🖥️host/🦀️component.rs:17-22` and `:3567-3574`: `path: "../../../📦️packages/🦀️rust/📜️wit"` → `path: "../../🧬️schema"`
+- `🔌️plugin/🦀️.rs:18-21` and `:324-327`: `path: "📜️wit"` → `path: "../🧬️schema"` (relative to crate root `📦️packages/🦀️rust/`)
+- `🔌️plugin/🖥️host/🦀️.rs:17-22` and `:3567-3574`: `path: "../../../📦️packages/🦀️rust/📜️wit"` → `path: "../../🧬️schema"`
 
 Blocking pre-existing defect surfaced by this work: `📜️world.wit` defines only `world actor`, but Rust still requests `world: "plugin-world"` (host:18) and `world: "extension-world"` (guest:325, host:3568). Those worlds no longer exist, so the plugin crates cannot compile today. The WIT migration must reconcile this — the honest fix is deleting the dead `extension-world` guest/host bindgen blocks and repointing the host to `world: "actor"`, since `describe()` → `PackageDescriptor.role` already distinguishes plugin from extension at runtime per `📜️world.wit:6`.
 
@@ -99,7 +99,7 @@ Blocking pre-existing defect surfaced by this work: `📜️world.wit` defines o
 
 Disjoint owner trees, each with its own reference updates.
 
-- **M1 plugin WIT** — 12 files merged into `🔌️plugin/🧬️schema/📜️component.wit`; 4 bindgen sites; doc refs at `🔌️plugin/🦀️component.rs:9688,9907,9921,15817`, `🖥️host/🦀️component.rs:27`, `🎠️kernel/🦀️component.rs:242,772,886,900,921`, `🛂️manifest/🟦️component.ts:1064`; dead-world reconciliation.
+- **M1 plugin WIT** — 12 files merged into `🔌️plugin/🧬️schema/📜️component.wit`; 4 bindgen sites; doc refs at `🔌️plugin/🦀️.rs:9688,9907,9921,15817`, `🖥️host/🦀️.rs:27`, `🎠️kernel/🦀️.rs:242,772,886,900,921`, `🛂️manifest/🟦️.ts:1064`; dead-world reconciliation.
 - **M2 plugin TS** — `📦️packages/🟦️typescript/{📇️registry,🪟️window-kits,🏪️store}/` → `🔌️plugin/{📇️registry,🪟️window-kits,🏪️store}/`; registry generator `📇️registry/📜️script.ts` output paths and its `📋️project.json`; `🌐plugin-web-materialize.ts` and `🏪️store/📜️store.ts` imports; root `📜️script.ts` `runWorkspaceCodegen()` target path.
 - **M3 styling** — `🔣️tokens.json`, `🎨️theme/`, `🎨️tailwind/`, `🤖️generated/`, `🤖️generated.rs`, `net/`, `🟦️vite-elements-assets.ts` → `🎨️styling/` root; `🟦️tokens.generated.ts` from the TS leaf; `generateStylingArtifacts()` in `🎨️styling/📦️packages/🦀️rust/📜️script.ts` plus the TS and Python wrappers.
 - **M4 print** — `📦️packages/🟦️typescript/{asset,📄️template}/` → `📓️print/{🖼️assets,📄️template}/` (29 files); `📓️print/📦️packages/🟦️typescript/📜️script.ts` path constants.
@@ -117,7 +117,7 @@ Files touched by more than one wave get exactly one owning agent for the whole r
 
 - `📜️script.ts` (root, 15264 lines) → W2 agent only
 - `🔣️taxonomy.json` → W1 agent only
-- `🔍️discovery/🟦️component.ts` → W1 agent only
+- `🔍️discovery/🟦️.ts` → W1 agent only
 - `.vscode/launch.json` → W5 agent only
 - `.gitignore` → M6 agent only
 - `Cargo.toml` (root) and `Cargo.lock` → M1 agent only

@@ -1,6 +1,6 @@
 //! 🧬️ Procedural2d artifact — semantic document mutation dispatch enum. Every variant is a
 //! single-field tuple wrapping a handcrafted `protocol::MutationKind` payload: eight live in the
-//! `🧬️mutations/<slug>/` triad leaves wired by `📦️glue.rs` (their directory/module names are
+//! `🧬️mutations/<slug>/` triad leaves wired by `🦀️.rs` (their directory/module names are
 //! leftovers of the generic slots they were repurposed from — see this ticket's wave2 report for
 //! the glue.rs rename that would align them), the rest — those with no pre-wired slot — live inline
 //! below as `mod <slug> { 🦠️mutation / 🔺️diff / ↩️inverse }` regions, same shape, same file.
@@ -10,8 +10,8 @@
 
 //#region 📖️SemioGrammar
 /// 📖️ Normative handcrafted text grammar for this facet (`dialect grammar`).
-pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️component.grammar.semio");
-pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️component.grammar.semio");
+pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️.grammar.semio");
+pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.grammar.semio");
 //#endregion 📖️SemioGrammar
 
 use crate::artifacts::procedural2d::diff::Procedural2dDiff;
@@ -21,7 +21,7 @@ use flow::FlowFixture;
 use protocol::Mutation;
 use serde::{Deserialize, Serialize};
 use store::{ArtifactEnvelope, ArtifactStore};
-/// 🧵 Sibling triad-leaf modules wired by `📦️glue.rs` under eight pre-existing (pre-semantic)
+/// 🧵 Sibling triad-leaf modules wired by `🦀️.rs` under eight pre-existing (pre-semantic)
 /// directory slots — their directory/module names are leftovers of the generic slots each was
 /// repurposed from (`sharedFileRequests` in this ticket's wave2 report has the glue.rs rename that
 /// would align them; not editable here — glue.rs is shared with the sibling `procedural3d` artifact).
@@ -60,7 +60,7 @@ pub enum Procedural2dMutation {
 
 //#region 🏷️Kinds
 /// 🏷️ The kebab-case spelling of every [`Procedural2dMutation`] variant, in declaration order — the exact
-/// vocabulary the `procedural-2d-1-any` mutation catalog (`../../🧪️oracle/🔣️.json`) declares and
+/// vocabulary the `procedural-2d-1-any` mutation catalog (`../../🔣️oracle.json`) declares and
 /// the `mutate-procedural-2d-1` exhaustive case measures itself against. The framework never parses Rust, so
 /// `kinds_match_the_enum_and_the_catalog` below is what keeps this list honest against both.
 pub const KINDS: &[&str] = &[
@@ -453,7 +453,7 @@ mod tests {
         for (kind, descriptor) in KINDS.iter().zip(descriptors.iter()) {
             assert_eq!(*kind, descriptor.kind, "KINDS must match #[derive(dsl::Mutations)]'s own declaration order and spelling");
         }
-        let manifest = include_str!("../../🧪️oracle/🔣️.json");
+        let manifest = include_str!("../../🔣️oracle.json");
         for kind in KINDS {
             assert!(manifest.contains(&format!("\"{kind}\"")), "KINDS entry {kind:?} must also appear in the committed oracle manifest's catalog");
         }

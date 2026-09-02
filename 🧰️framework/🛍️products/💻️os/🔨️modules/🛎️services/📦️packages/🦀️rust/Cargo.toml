@@ -14,13 +14,13 @@ workspace = true
 
 [lib]
 name = "semio_framework_os_services"
-path = "📦️glue.rs"
+path = "🦀️.rs"
 
 [dependencies]
 # 🧵️ INTERACTIVE-JOB-RUNTIME-REFACTOR Phase 1 packet P1b: `entrypoint` unlocks
 # `semio_framework_async::block_on` — the future-polling bridge every `WorkerPool` job submitted by
 # `ScopeTable::spawn_scoped`/`TimerWheel::spawn_driver`/`HttpPool::spawn_refill_driver` uses to turn
-# its own worker into that task's executor (see `🦀️component.rs`'s module doc), and
+# its own worker into that task's executor (see `🦀️.rs`'s module doc), and
 # `TokioHostRuntime::block_on`'s own inherent bridge delegates to directly. Workspace-internal
 # feature flag on an already-present dependency, not a new third-party dependency.
 semio-framework-async = { workspace = true, features = ["entrypoint"] }
@@ -35,7 +35,7 @@ semio-framework-job = { workspace = true }
 # 🧵️ INTERACTIVE-JOB-RUNTIME-REFACTOR Phase 1 packet P1b: this crate no longer builds a
 # `tokio::runtime::Runtime` of any flavor — `semio_framework_async::WorkerPool` (via
 # `global_worker_pool`) is now the ONE owner of real OS threads a `TokioHostRuntime` and every
-# service built on it schedules onto (see `🦀️component.rs`'s module doc's tokio-containment note).
+# service built on it schedules onto (see `🦀️.rs`'s module doc's tokio-containment note).
 # The remaining tokio surface is `sync` (a pure, runtime-context-free `oneshot`/`Semaphore`/`Notify`
 # — none of the three need an entered `Runtime` to function) and `macros` (the `select!` macro, also
 # runtime-context-free — it is plain manual polling, not a scheduler). `rt`/`rt-multi-thread`/`time`
@@ -49,7 +49,7 @@ tokio = { workspace = true, features = ["sync", "macros"] }
 # deterministic-clock `HostAsyncRuntime` test double it gates) is DROPPED here — every test that used
 # to drive `ManualRuntime`'s injected clock now drives a real `semio_framework_async::WorkerPool` on
 # the real wall clock instead (`TimerWheel::spawn_driver`/`HttpPool::spawn_refill_driver` no longer
-# accept a generic `R: HostAsyncRuntime` at all — see `🦀️component.rs`), so nothing in this crate's
+# accept a generic `R: HostAsyncRuntime` at all — see `🦀️.rs`), so nothing in this crate's
 # own suite constructs a `ManualRuntime` any more. `entrypoint` is already unified in from the main
 # dependency above (`cargo test` merges regular and dev-dependency features for one crate into a
 # single compilation), listed again here only so this crate's OWN test suite's need for `block_on` is

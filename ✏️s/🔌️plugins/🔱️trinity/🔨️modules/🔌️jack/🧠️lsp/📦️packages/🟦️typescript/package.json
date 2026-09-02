@@ -11,7 +11,7 @@
     "id": "trinity-jack-lsp-worker"
   },
   "exports": {
-    ".": "./📦️index.ts"
+    ".": "./🟦️.ts"
   },
   "devDependencies": {
     "typescript": "^5.9.3",

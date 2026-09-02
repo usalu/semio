@@ -1,0 +1,15 @@
+syntax = "proto3";
+// 🧬️ SemioBrepArtifact schema — full artifact state, mirrors SemioBrepSnapshot field for field.
+package semio.s_stdio_semio_brep.artifact;
+
+import "📸️snapshot/🛰️.proto";
+
+message SemioBrepArtifact {
+  string schema = 1;
+  repeated semio.s_stdio_semio_brep.snapshot.BrepVertex vertices = 2;
+  repeated semio.s_stdio_semio_brep.snapshot.BrepEdge edges = 3;
+  repeated semio.s_stdio_semio_brep.snapshot.BrepLoop loops = 4;
+  repeated semio.s_stdio_semio_brep.snapshot.BrepFace faces = 5;
+  repeated semio.s_stdio_semio_brep.snapshot.BrepShell shells = 6;
+  repeated semio.s_stdio_semio_brep.snapshot.BrepSolid solids = 7;
+}

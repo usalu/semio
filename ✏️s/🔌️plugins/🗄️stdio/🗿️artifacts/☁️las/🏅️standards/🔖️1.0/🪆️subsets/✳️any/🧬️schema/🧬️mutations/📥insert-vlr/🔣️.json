@@ -5,7 +5,7 @@
   "displayName": "Insert Vlr",
   "emoji": "📥",
   "aggregateVariant": "InsertVlr",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

@@ -75,7 +75,7 @@ pub enum SemioAnimationMutation {
 
 /// 🏷️ The declared kebab-case mutation vocabulary of `s.stdio.semio.animation`, in enum
 /// declaration order — what the `mutate-semio-animation` case's completeness gate counts against
-/// and what `../../🧪️oracle/🔣️.json`'s catalog repeats. Unlike its audio/video siblings
+/// and what `../../🔣️oracle.json`'s catalog repeats. Unlike its audio/video siblings
 /// this subset's wire keywords are the two-letter `OP_KEYWORDS` tags (`IT`, `KV`, …), so the two
 /// tables are related only by position; `kinds_match_the_enum_and_the_catalog` below asserts that
 /// positional agreement rather than string equality.
@@ -145,7 +145,7 @@ pub fn apply_semio_animation_mutation(snapshot: &mut SemioAnimationSnapshot, mut
 
 /// ↩️ Free-function face of [`SemioAnimationMutation`]'s own `protocol::Mutation::inverse`. `Mutation` is
 /// declared by the os-kernel, which is an INTERNAL dependency of this plugin (aliased `protocol` in
-/// `📦️glue.rs`) and is therefore not nameable by a consumer that links only this crate — a
+/// `🦀️.rs`) and is therefore not nameable by a consumer that links only this crate — a
 /// generated test host being the concrete case. Paired with [`apply_semio_animation_mutation`] it makes the
 /// undo law reachable without importing a trait the caller cannot name.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -458,7 +458,7 @@ mod tests {
             seen[ordinal] = true;
         }
         assert!(seen.iter().all(|hit| *hit), "every declared variant must be represented in demo_mutation_cases");
-        let manifest = include_str!("../../🧪️oracle/🔣️.json");
+        let manifest = include_str!("../../🔣️oracle.json");
         for kind in KINDS {
             assert!(manifest.contains(&format!("\"{kind}\"")), "KINDS entry {kind:?} must also appear in the committed oracle manifest's catalog");
         }
@@ -517,9 +517,9 @@ mod tests {
 
 //#region 🧪️FixtureCases
 /// 🧪️ Handcrafted `📄set-snapshot` fixture cases, wired from this tree's own mutations root so
-/// `📦️glue.rs` stays untouched (`#[path]` on a non-inline module resolves against this file's own
+/// `🦀️.rs` stays untouched (`#[path]` on a non-inline module resolves against this file's own
 /// directory).
 #[cfg(test)]
-#[path = "📄set-snapshot/🧪️tests/steps-the-spin-channel-and-appends-a-keyframe/🦀️component.rs"]
+#[path = "📄set-snapshot/🧪️tests/steps-the-spin-channel-and-appends-a-keyframe/🦀️.rs"]
 mod set_snapshot_steps_the_spin_channel_and_appends_a_keyframe;
 //#endregion 🧪️FixtureCases

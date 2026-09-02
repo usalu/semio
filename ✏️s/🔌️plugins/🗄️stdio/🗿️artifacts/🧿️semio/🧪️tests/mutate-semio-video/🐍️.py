@@ -6,15 +6,15 @@ third-party library in any ecosystem speaks, so the second producer THE STANDARD
 second IMPLEMENTATION, written in another language from the format's own committed specification:
 
 * the envelope — the mandatory `semio <envelope-id>.dsl v<version>` preamble line — is specified in
-  `🧰️framework/🛍️products/💻️os/🔨️modules/🧬️semio/🦀️component.rs`'s envelope section;
+  `🧰️framework/🛍️products/💻️os/🔨️modules/🧬️semio/🦀️.rs`'s envelope section;
 * the DSL body is the committed grammar
-  `../../🏅️standards/🔖️v1/🪆️subsets/✳️video/🧬️schema/📸️snapshot/📝️text/📖️component.grammar.semio`
+  `../../🏅️standards/🔖️v1/🪆️subsets/✳️video/🧬️schema/📸️snapshot/📝️text/📖️.grammar.semio`
   — `document = artifact-mark schema-line streams-line`,
   `stream = "[" kind "," hex "," INT "," INT "," rational "," "[" sample-list? "]" "]"`,
   `sample = "[" INT "," bool "," hex "]"`, `rational = "[" INT "," INT "]"`,
   `kind = "V" | "A" | "S"` and `bool = "0" | "1"`;
 * the nine verbs and their named argument lists are the committed grammar
-  `…/🧬️schema/🧬️mutations/📝️text/📖️component.grammar.semio`, and their JSON wire form is this
+  `…/🧬️schema/🧬️mutations/📝️text/📖️.grammar.semio`, and their JSON wire form is this
   case's committed per-kind specification vectors under `🧫️fixtures/`.
 
 `hex` is declared by both grammars to be the framework's built-in `hex` MACRO, and their own notes
@@ -67,7 +67,7 @@ RECORDING_DSL = "local://🗣️bauen-mit-bestand-ausschnitt.dsl.semio"
 #: 🎥️ The tiny committed clip, kept for the BYTE half of the identity law and for the tie to the
 #: committed specification vectors: its file was written by the RUST codec, so this implementation
 #: reproducing it is a cross-language byte agreement the recording cannot restate.
-CLIP_DSL = "asset://🏅️standards/🔖️v1/🪆️subsets/✳️any/📚️examples/🎥️clip/🖼️assets/🗣️example.dsl.semio"
+CLIP_DSL = "asset://🏅️standards/🔖️v1/🪆️subsets/✳️any/📚️examples/🎥️clip/🖼️assets/🗣️.dsl.semio"
 
 # endregion 🔖️Vocabulary
 

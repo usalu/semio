@@ -5,7 +5,7 @@
   "displayName": "Change Construction Activity",
   "emoji": "🪟",
   "aggregateVariant": "ChangeConstructionActivity",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

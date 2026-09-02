@@ -3,7 +3,7 @@
 //! Every scenario copies the committed 193,275-byte real stream into the case work
 //! directory first; the committed file is never written to. `oracle` drives the registered `id3`
 //! 1.17 reference composed with a hand-written ISO/IEC 11172-3 frame walker
-//! (`../../🏅️standards/🔖️mpeg1-layer3/🪆️subsets/✳️any/🧪️oracle/🦀️component.rs`), `subject` drives
+//! (`../../🏅️standards/🔖️mpeg1-layer3/🪆️subsets/✳️any/🦀️oracle.rs`), `subject` drives
 //! this repository's own decode/apply/encode round trip, and both results are read back through the
 //! same independent projection before `semantic-mp3-mpeg1-layer3-v1` compares them. The subject
 //! half is gated behind the generated host's `sut` feature so the oracle-only run never compiles
@@ -19,7 +19,7 @@ use semio_s_plugin_stdio_test_oracle::law::{inverse_restores_within, mutation_is
 
 //#region 🔖️Kinds
 /// 🧾️ Mirrors `Mp3Mutation`'s declared vocabulary
-/// (`../../🏅️standards/🔖️mpeg1-layer3/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs`) — kept
+/// (`../../🏅️standards/🔖️mpeg1-layer3/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs`) — kept
 /// in sync by the contract phase's `mutation-kind-uncovered`/`mutation-kind-undeclared` gates,
 /// which fail loudly if this list and the catalog ever drift apart, and by the oracle module's own
 /// `kinds_match_the_catalog_and_the_vocabulary` test.
@@ -28,7 +28,7 @@ const KINDS: [&str; 4] = ["set-snapshot", "set-id3v2", "set-frames", "set-id3v1"
 
 //#region 🔖️Profile
 /// 📏️ `semantic-mp3-mpeg1-layer3-v1`'s own declared writer freedom
-/// (`../../🏅️standards/🔖️mpeg1-layer3/🪆️subsets/✳️any/🧪️oracle/🔣️.json`), mirrored here so
+/// (`../../🏅️standards/🔖️mpeg1-layer3/🪆️subsets/✳️any/🔣️oracle.json`), mirrored here so
 /// an in-handler law check is exactly as strict as the profile the case is measured by, never
 /// stricter. Every projected value is an exact integer, a boolean or a string, so the tolerance is
 /// genuinely zero rather than a nominal one.
@@ -186,7 +186,7 @@ mod subject {
     }
 
     /// ↩️ Mirrors `Mp3Mutation::inverse()`
-    /// (`../../🏅️standards/🔖️mpeg1-layer3/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs`)
+    /// (`../../🏅️standards/🔖️mpeg1-layer3/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs`)
     /// independently — the generated oracle-role host never links `protocol`, so the trait method
     /// itself is unreachable here. Every variant of this vocabulary is a whole-layer replace, so
     /// its inverse is the same verb carrying the layer `base` already had.

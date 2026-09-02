@@ -5,7 +5,7 @@
   "displayName": "Change Vortex Kind Default Cable Kind",
   "emoji": "🔌",
   "aggregateVariant": "ChangeVortexKindDefaultCableKind",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": "change-vortex-kind-default-cable-kind",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

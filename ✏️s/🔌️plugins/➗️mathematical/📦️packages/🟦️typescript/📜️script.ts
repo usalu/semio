@@ -2,7 +2,7 @@
 /** ➗️ Mathematical source, schema, and publication-authority laws. */
 import { resolve } from "node:path";
 import Ajv from "ajv";
-import { BundleScript, ScriptRouter, runBundleScriptMain } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts";
+import { BundleScript, ScriptRouter, runBundleScriptMain } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 type Lane = "Artifact" | "Config";
 type Fixture = { schema: string; owner: "MathematicalPlayApp"; source: string; routes: { id: string; lane: Lane }[]; laws: Record<string, boolean>; ui: { locales: ["en", "de"]; accessibleLabels: boolean; customizableUi: boolean } };
 
@@ -23,8 +23,8 @@ function oracle(fixture: Fixture, source: string): boolean {
 class TestScript extends BundleScript {
   async run(): Promise<void> {
     const plugin = resolve(this.root, "../..");
-    const fixture = await Bun.file(resolve(plugin, "🧪️publication-authority/🔣️component.json")).json() as Fixture;
-    const schema = await Bun.file(resolve(plugin, "🧪️publication-authority/🔣️schema.json")).json();
+    const fixture = await Bun.file(resolve(plugin, "🔣️publication-authority.json")).json() as Fixture;
+    const schema = await Bun.file(resolve(plugin, "🔣️publication-authority.schema.json")).json();
     const validate = new Ajv({ allErrors: true, strict: true }).compile(schema);
     if (!validate(fixture)) throw new Error(`Mathematical fixture failed strict Ajv: ${JSON.stringify(validate.errors)}`);
     const source = await Bun.file(resolve(plugin, fixture.source)).text();

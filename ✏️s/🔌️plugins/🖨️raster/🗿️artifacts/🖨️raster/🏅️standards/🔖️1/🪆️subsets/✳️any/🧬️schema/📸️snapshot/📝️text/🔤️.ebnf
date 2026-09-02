@@ -1,0 +1,46 @@
+(* ebnf raster.raster.snapshot *)
+(* Below: ISO-14977-style mirror of the normative 📖️.grammar.semio (same production
+   names, kebab-case -> "space case"). This facet's .semio defines no header/body/payload
+   envelope (`start document`); the two lines above are preserved verbatim from the prior
+   identity fix for traceability but are not referenced below. *)
+document = header, body ;
+header = 'schema', space, 'raster.raster.snapshot', newline ;
+
+artifact mark = 'semio raster.raster.dsl v1' ;
+document = artifact mark, schema line, id line, title line, layers line, assets line ;
+schema line = 'schema', '=', hex ;
+id line = 'id', '=', hex ;
+title line = 'title', '=', opt hex ;
+layers line = 'layers', '=', '[', [ layer items ], ']' ;
+layer items = layer, { ',', layer } ;
+assets line = 'assets', '=', '[', [ asset items ], ']' ;
+asset items = asset entry, { ',', asset entry } ;
+opt hex = '[0]'
+     | '[1,', hex, ']' ;
+opt u32 = '[0]'
+     | '[1,', number, ']' ;
+layer = pixel layer
+     | group layer
+     | adjustment layer ;
+pixel layer = 'p', '[', hex, ',', hex, ',', bool, ',', number, ',', hex, ',', transform, ',', opt mask, ',', opt u32, ',', opt u32, ',', opt hex, ']' ;
+group layer = 'g', '[', hex, ',', hex, ',', bool, ',', number, ',', hex, ',', transform, ',', opt mask, ',', '[', [ layer items ], ']', ']' ;
+adjustment layer = 'a', '[', hex, ',', hex, ',', bool, ',', number, ',', hex, ',', transform, ',', hex, ',', '[', [ param items ], ']', ']' ;
+param items = param entry, { ',', param entry } ;
+param entry = '[', hex, ',', hex, ']' ;
+transform = '[', number, ',', number, ',', number, ',', number, ',', number, ']' ;
+opt mask = '[0]'
+     | '[1,', mask, ']' ;
+mask = '[', bool, ',', bool, ',', bool, ',', opt u32, ',', opt u32, ']' ;
+asset entry = '[', hex, ',', child handle, ']' ;
+child handle = '[', hex, ',', hex, ']' ;
+bool = 'true'
+     | 'false' ;
+number = int
+     | float ;
+
+(* Framework dialect-primitive terminals, given one concrete definition each for a
+   self-contained mirror (not defined in the .semio itself — ticket-reported deviation). *)
+hex = { digit | 'a' | 'b' | 'c' | 'd' | 'e' | 'f' } ;
+int = [ '-' ], digit, { digit } ;
+float = [ '-' ], digit, { digit }, '.', digit, { digit } ;
+digit = '0' | '1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9' ;

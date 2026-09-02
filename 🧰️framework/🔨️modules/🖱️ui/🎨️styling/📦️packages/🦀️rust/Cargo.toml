@@ -3,7 +3,7 @@ name = "semio-framework-ui-styling"
 version = "0.1.0"
 edition = "2021"
 rust-version = "1.88"
-description = "Framework-neutral styling tokens generated from ui/styling/🔣️tokens.json"
+description = "Framework-neutral styling tokens generated from ui/styling/🔣️.json"
 
 
 [package.metadata.semio]
@@ -13,4 +13,4 @@ id = "ui-styling"
 [lints]
 workspace = true
 [lib]
-path = "📦️glue.rs"
+path = "🦀️.rs"

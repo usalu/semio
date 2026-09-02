@@ -3,7 +3,7 @@
 //!
 //! **This file no longer serves the oracle role.** The reference for `semio-v1-presentation-mutate`
 //! is the registered oracle `semio-presentation-python-independent` (`../../🏅️standards/🔖️v1/
-//! 🪆️subsets/✳️presentation/🧪️oracle/🔣️.json`) — an independent Python implementation of the
+//! 🪆️subsets/✳️presentation/🔣️oracle.json`) — an independent Python implementation of the
 //! semio presentation carrier, document's own recursive `DocBlock` grammar and all fifteen verbs,
 //! written from the committed grammar and protocol documents and living beside this file as
 //! `🐍️component.py`. The runner dispatches the oracle role there and the subject role here, and
@@ -38,7 +38,7 @@ use semio_repo_test_host::Adapter;
 
 //#region 🔖️Kinds
 /// 🏷️ Mirrors `SemioPresentationMutation::KINDS` (`../../🏅️standards/🔖️v1/🪆️subsets/✳️presentation/
-/// 🧬️schema/🧬️mutations/🦀️component.rs`) — duplicated, not imported, because the oracle-only build
+/// 🧬️schema/🧬️mutations/🦀️.rs`) — duplicated, not imported, because the oracle-only build
 /// must not link the subject crate. The contract's mutation-coverage gate keeps this list honest
 /// against the catalog; `kinds_match_the_enum_and_the_catalog` in that production file keeps it
 /// honest against the enum.
@@ -88,7 +88,7 @@ mod subject {
     const TALK_PACK: &str = "local://🎒️talk.pack.semio";
     /// 📽️ The committed example deck, kept because it is the artifact this subset's own
     /// `fixture_honesty_law` pins to `demo_semio_presentation_snapshot()`.
-    const DECK_DSL: &str = "asset://🏅️standards/🔖️v1/🪆️subsets/✳️any/📚️examples/📽️deck/🖼️assets/🗣️example.dsl.semio";
+    const DECK_DSL: &str = "asset://🏅️standards/🔖️v1/🪆️subsets/✳️any/📚️examples/📽️deck/🖼️assets/🗣️.dsl.semio";
     const DECK_PACK: &str = "asset://🏅️standards/🔖️v1/🪆️subsets/✳️any/📚️examples/📽️deck/🖼️assets/🎒️example.pack.semio";
 
     /// 🧫️ Every fixture URI of one scheme the scenario's steps name, in step order — including the

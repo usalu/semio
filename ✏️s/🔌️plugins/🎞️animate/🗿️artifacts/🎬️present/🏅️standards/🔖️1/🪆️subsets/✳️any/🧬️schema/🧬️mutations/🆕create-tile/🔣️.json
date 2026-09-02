@@ -5,7 +5,7 @@
   "displayName": "Create Tile",
   "emoji": "🆕",
   "aggregateVariant": "CreateTile",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": "create-tile",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

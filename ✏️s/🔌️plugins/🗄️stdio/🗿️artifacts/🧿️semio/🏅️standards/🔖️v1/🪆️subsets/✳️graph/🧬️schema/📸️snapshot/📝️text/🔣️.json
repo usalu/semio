@@ -1,0 +1,37 @@
+{
+  "$id": "https://semio.tech/schema/s.stdio.semio.graph.snapshot/text.json",
+  "title": "SemioGraphSnapshotDsl",
+  "description": "Text-encoding mirror of the snapshot facet — see ../🔣️.json for the canonical facet schema.",
+  "type": "object",
+  "properties": {
+    "schema": { "type": "string" },
+    "nodes": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" },
+          "kind": { "type": "string" },
+          "label": { "type": "string" },
+          "x": { "type": "string" },
+          "y": { "type": "string" },
+          "ports": { "type": "array", "items": { "type": "object" } },
+          "properties": { "type": "array", "items": { "type": "string" } }
+        }
+      }
+    },
+    "edges": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" },
+          "source": { "type": "string" },
+          "target": { "type": "string" },
+          "kind": { "type": "string" },
+          "label": { "type": "string" }
+        }
+      }
+    }
+  }
+}

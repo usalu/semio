@@ -1,6 +1,6 @@
 //! 🦀️ DAG exhaustive mutation case — Rust adapter. Ticket 26/08/23/END-TO-END-TESTING-REFACTOR.
 //! Recorded no-oracle decision `dag-1-port-directed-graph-mutation-semantics`
-//! (`../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️oracle/🔣️.json`): `dag.dag` is a semio-NATIVE
+//! (`../../🏅️standards/🔖️1/🪆️subsets/✳️any/🔣️oracle.json`): `dag.dag` is a semio-NATIVE
 //! port-directed computation graph with no third-party reader or writer, so `oracle` here reads the
 //! committed, independently handcrafted per-kind specification fixtures
 //! (`../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/<slug>/🧪️tests/<fixture>/`)
@@ -31,18 +31,18 @@
 //!
 //! **How the fixture reaches typed values.** The generated test host links only
 //! `semio-repo-test-host` and, behind `sut`, this plugin's own crate — no `serde`, no `serde_json`,
-//! and this crate's `protocol`/`store` extern-crate aliases are private (`📦️glue.rs`). The subset's
+//! and this crate's `protocol`/`store` extern-crate aliases are private (`🦀️.rs`). The subset's
 //! own production code exports the bridges instead: `decode_dag_snapshot_json`/
 //! `encode_dag_snapshot_json`/`parse_dag_dsl`/`print_dag_dsl`/`dag_scene_summary`
-//! (`…/🧬️schema/📸️snapshot/🦀️component.rs`) and `decode_dag_mutation_json`/
+//! (`…/🧬️schema/📸️snapshot/🦀️.rs`) and `decode_dag_mutation_json`/
 //! `apply_dag_mutation_reporting`/`inverse_dag_mutation_steps`/`seed_dag_working_scene_with`
-//! (`…/🧬️schema/🧬️mutations/🦀️component.rs`).
+//! (`…/🧬️schema/🧬️mutations/🦀️.rs`).
 
 use semio_repo_test_host::{parse_json, Adapter, Context, Json, Outcome};
 
 //#region 🔖️Kinds
 /// 🏷️ Mirrors `DagMutation::KINDS` (`../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/
-/// 🦀️component.rs`) — duplicated, not imported, because the oracle-only build must not link the
+/// 🦀️.rs`) — duplicated, not imported, because the oracle-only build must not link the
 /// subject crate. The contract's mutation-coverage gate keeps this list honest against the catalog;
 /// `kinds_match_the_enum_and_the_catalog` in that production file keeps it honest against the enum.
 const KINDS: &[&str] = &[
@@ -65,7 +65,7 @@ const KINDS: &[&str] = &[
 /// 🗣️ The real committed pipeline — `slider → scale → combine → screen` with `mode` feeding
 /// `combine`'s second input, five nodes over four edges.
 #[cfg(feature = "sut")]
-const DSL_ASSET: &str = "asset://🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio";
+const DSL_ASSET: &str = "asset://🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/🗣️.dsl.semio";
 //#endregion 🔖️Kinds
 
 //#region 🔖️Fixtures
@@ -75,88 +75,88 @@ const DSL_ASSET: &str = "asset://🏅️standards/🔖️1/🪆️subsets/✳️
 fn fixture_text(kind: &str) -> (&'static str, &'static str, &'static str, &'static str) {
     match kind {
         "create-node" => (
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌱create-node/🧪️tests/rejects-a-duplicate-node-id/📸️snapshot/⬅️before/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌱create-node/🧪️tests/rejects-a-duplicate-node-id/🦠️mutation/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌱create-node/🧪️tests/rejects-a-duplicate-node-id/📸️snapshot/➡️after/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌱create-node/🧪️tests/rejects-a-duplicate-node-id/🎯️outcome/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌱create-node/🧪️tests/rejects-a-duplicate-node-id/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌱create-node/🧪️tests/rejects-a-duplicate-node-id/🦠️mutation/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌱create-node/🧪️tests/rejects-a-duplicate-node-id/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌱create-node/🧪️tests/rejects-a-duplicate-node-id/🎯️outcome/🔣️.json"),
         ),
         "delete-node" => (
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-node/🧪️tests/rejects-deleting-a-missing-node/📸️snapshot/⬅️before/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-node/🧪️tests/rejects-deleting-a-missing-node/🦠️mutation/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-node/🧪️tests/rejects-deleting-a-missing-node/📸️snapshot/➡️after/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-node/🧪️tests/rejects-deleting-a-missing-node/🎯️outcome/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-node/🧪️tests/rejects-deleting-a-missing-node/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-node/🧪️tests/rejects-deleting-a-missing-node/🦠️mutation/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-node/🧪️tests/rejects-deleting-a-missing-node/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-node/🧪️tests/rejects-deleting-a-missing-node/🎯️outcome/🔣️.json"),
         ),
         "rename-node" => (
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏷️rename-node/🧪️tests/rejects-renaming-a-missing-node/📸️snapshot/⬅️before/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏷️rename-node/🧪️tests/rejects-renaming-a-missing-node/🦠️mutation/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏷️rename-node/🧪️tests/rejects-renaming-a-missing-node/📸️snapshot/➡️after/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏷️rename-node/🧪️tests/rejects-renaming-a-missing-node/🎯️outcome/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏷️rename-node/🧪️tests/rejects-renaming-a-missing-node/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏷️rename-node/🧪️tests/rejects-renaming-a-missing-node/🦠️mutation/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏷️rename-node/🧪️tests/rejects-renaming-a-missing-node/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏷️rename-node/🧪️tests/rejects-renaming-a-missing-node/🎯️outcome/🔣️.json"),
         ),
         "change-node-name" => (
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔤change-node-name/🧪️tests/rejects-renaming-the-label-of-a-missing-node/📸️snapshot/⬅️before/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔤change-node-name/🧪️tests/rejects-renaming-the-label-of-a-missing-node/🦠️mutation/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔤change-node-name/🧪️tests/rejects-renaming-the-label-of-a-missing-node/📸️snapshot/➡️after/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔤change-node-name/🧪️tests/rejects-renaming-the-label-of-a-missing-node/🎯️outcome/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔤change-node-name/🧪️tests/rejects-renaming-the-label-of-a-missing-node/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔤change-node-name/🧪️tests/rejects-renaming-the-label-of-a-missing-node/🦠️mutation/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔤change-node-name/🧪️tests/rejects-renaming-the-label-of-a-missing-node/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔤change-node-name/🧪️tests/rejects-renaming-the-label-of-a-missing-node/🎯️outcome/🔣️.json"),
         ),
         "move-node" => (
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/↔️move-node/🧪️tests/rejects-moving-a-missing-node/📸️snapshot/⬅️before/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/↔️move-node/🧪️tests/rejects-moving-a-missing-node/🦠️mutation/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/↔️move-node/🧪️tests/rejects-moving-a-missing-node/📸️snapshot/➡️after/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/↔️move-node/🧪️tests/rejects-moving-a-missing-node/🎯️outcome/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/↔️move-node/🧪️tests/rejects-moving-a-missing-node/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/↔️move-node/🧪️tests/rejects-moving-a-missing-node/🦠️mutation/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/↔️move-node/🧪️tests/rejects-moving-a-missing-node/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/↔️move-node/🧪️tests/rejects-moving-a-missing-node/🎯️outcome/🔣️.json"),
         ),
         "resize-node" => (
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐resize-node/🧪️tests/rejects-resizing-a-missing-node/📸️snapshot/⬅️before/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐resize-node/🧪️tests/rejects-resizing-a-missing-node/🦠️mutation/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐resize-node/🧪️tests/rejects-resizing-a-missing-node/📸️snapshot/➡️after/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐resize-node/🧪️tests/rejects-resizing-a-missing-node/🎯️outcome/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐resize-node/🧪️tests/rejects-resizing-a-missing-node/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐resize-node/🧪️tests/rejects-resizing-a-missing-node/🦠️mutation/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐resize-node/🧪️tests/rejects-resizing-a-missing-node/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐resize-node/🧪️tests/rejects-resizing-a-missing-node/🎯️outcome/🔣️.json"),
         ),
         "change-node-icon" => (
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖼️change-node-icon/🧪️tests/rejects-reiconing-a-missing-node/📸️snapshot/⬅️before/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖼️change-node-icon/🧪️tests/rejects-reiconing-a-missing-node/🦠️mutation/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖼️change-node-icon/🧪️tests/rejects-reiconing-a-missing-node/📸️snapshot/➡️after/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖼️change-node-icon/🧪️tests/rejects-reiconing-a-missing-node/🎯️outcome/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖼️change-node-icon/🧪️tests/rejects-reiconing-a-missing-node/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖼️change-node-icon/🧪️tests/rejects-reiconing-a-missing-node/🦠️mutation/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖼️change-node-icon/🧪️tests/rejects-reiconing-a-missing-node/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖼️change-node-icon/🧪️tests/rejects-reiconing-a-missing-node/🎯️outcome/🔣️.json"),
         ),
         "change-node-abbreviation" => (
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔡change-node-abbreviation/🧪️tests/rejects-reabbreviating-a-missing-node/📸️snapshot/⬅️before/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔡change-node-abbreviation/🧪️tests/rejects-reabbreviating-a-missing-node/🦠️mutation/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔡change-node-abbreviation/🧪️tests/rejects-reabbreviating-a-missing-node/📸️snapshot/➡️after/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔡change-node-abbreviation/🧪️tests/rejects-reabbreviating-a-missing-node/🎯️outcome/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔡change-node-abbreviation/🧪️tests/rejects-reabbreviating-a-missing-node/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔡change-node-abbreviation/🧪️tests/rejects-reabbreviating-a-missing-node/🦠️mutation/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔡change-node-abbreviation/🧪️tests/rejects-reabbreviating-a-missing-node/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔡change-node-abbreviation/🧪️tests/rejects-reabbreviating-a-missing-node/🎯️outcome/🔣️.json"),
         ),
         "change-node-operator-kind" => (
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧮change-node-operator-kind/🧪️tests/rejects-rebinding-the-operator-of-a-missing-node/📸️snapshot/⬅️before/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧮change-node-operator-kind/🧪️tests/rejects-rebinding-the-operator-of-a-missing-node/🦠️mutation/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧮change-node-operator-kind/🧪️tests/rejects-rebinding-the-operator-of-a-missing-node/📸️snapshot/➡️after/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧮change-node-operator-kind/🧪️tests/rejects-rebinding-the-operator-of-a-missing-node/🎯️outcome/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧮change-node-operator-kind/🧪️tests/rejects-rebinding-the-operator-of-a-missing-node/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧮change-node-operator-kind/🧪️tests/rejects-rebinding-the-operator-of-a-missing-node/🦠️mutation/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧮change-node-operator-kind/🧪️tests/rejects-rebinding-the-operator-of-a-missing-node/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧮change-node-operator-kind/🧪️tests/rejects-rebinding-the-operator-of-a-missing-node/🎯️outcome/🔣️.json"),
         ),
         "replace-node-kind" => (
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔁replace-node-kind/🧪️tests/rejects-rekinding-a-missing-node/📸️snapshot/⬅️before/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔁replace-node-kind/🧪️tests/rejects-rekinding-a-missing-node/🦠️mutation/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔁replace-node-kind/🧪️tests/rejects-rekinding-a-missing-node/📸️snapshot/➡️after/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔁replace-node-kind/🧪️tests/rejects-rekinding-a-missing-node/🎯️outcome/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔁replace-node-kind/🧪️tests/rejects-rekinding-a-missing-node/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔁replace-node-kind/🧪️tests/rejects-rekinding-a-missing-node/🦠️mutation/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔁replace-node-kind/🧪️tests/rejects-rekinding-a-missing-node/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔁replace-node-kind/🧪️tests/rejects-rekinding-a-missing-node/🎯️outcome/🔣️.json"),
         ),
         "replace-node-properties" => (
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗃️replace-node-properties/🧪️tests/rejects-repropertying-a-missing-node/📸️snapshot/⬅️before/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗃️replace-node-properties/🧪️tests/rejects-repropertying-a-missing-node/🦠️mutation/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗃️replace-node-properties/🧪️tests/rejects-repropertying-a-missing-node/📸️snapshot/➡️after/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗃️replace-node-properties/🧪️tests/rejects-repropertying-a-missing-node/🎯️outcome/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗃️replace-node-properties/🧪️tests/rejects-repropertying-a-missing-node/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗃️replace-node-properties/🧪️tests/rejects-repropertying-a-missing-node/🦠️mutation/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗃️replace-node-properties/🧪️tests/rejects-repropertying-a-missing-node/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗃️replace-node-properties/🧪️tests/rejects-repropertying-a-missing-node/🎯️outcome/🔣️.json"),
         ),
         "reorder-nodes" => (
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔀reorder-nodes/🧪️tests/rejects-a-duplicate-id-in-the-order/📸️snapshot/⬅️before/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔀reorder-nodes/🧪️tests/rejects-a-duplicate-id-in-the-order/🦠️mutation/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔀reorder-nodes/🧪️tests/rejects-a-duplicate-id-in-the-order/📸️snapshot/➡️after/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔀reorder-nodes/🧪️tests/rejects-a-duplicate-id-in-the-order/🎯️outcome/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔀reorder-nodes/🧪️tests/rejects-a-duplicate-id-in-the-order/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔀reorder-nodes/🧪️tests/rejects-a-duplicate-id-in-the-order/🦠️mutation/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔀reorder-nodes/🧪️tests/rejects-a-duplicate-id-in-the-order/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔀reorder-nodes/🧪️tests/rejects-a-duplicate-id-in-the-order/🎯️outcome/🔣️.json"),
         ),
         "connect-nodes" => (
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔗connect-nodes/🧪️tests/rejects-a-missing-source-node/📸️snapshot/⬅️before/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔗connect-nodes/🧪️tests/rejects-a-missing-source-node/🦠️mutation/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔗connect-nodes/🧪️tests/rejects-a-missing-source-node/📸️snapshot/➡️after/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔗connect-nodes/🧪️tests/rejects-a-missing-source-node/🎯️outcome/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔗connect-nodes/🧪️tests/rejects-a-missing-source-node/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔗connect-nodes/🧪️tests/rejects-a-missing-source-node/🦠️mutation/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔗connect-nodes/🧪️tests/rejects-a-missing-source-node/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔗connect-nodes/🧪️tests/rejects-a-missing-source-node/🎯️outcome/🔣️.json"),
         ),
         "disconnect-nodes" => (
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️disconnect-nodes/🧪️tests/rejects-disconnecting-a-missing-edge/📸️snapshot/⬅️before/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️disconnect-nodes/🧪️tests/rejects-disconnecting-a-missing-edge/🦠️mutation/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️disconnect-nodes/🧪️tests/rejects-disconnecting-a-missing-edge/📸️snapshot/➡️after/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️disconnect-nodes/🧪️tests/rejects-disconnecting-a-missing-edge/🎯️outcome/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️disconnect-nodes/🧪️tests/rejects-disconnecting-a-missing-edge/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️disconnect-nodes/🧪️tests/rejects-disconnecting-a-missing-edge/🦠️mutation/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️disconnect-nodes/🧪️tests/rejects-disconnecting-a-missing-edge/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️disconnect-nodes/🧪️tests/rejects-disconnecting-a-missing-edge/🎯️outcome/🔣️.json"),
         ),
         other => panic!("mutate-dag-1: no specification vector registered for kind {other:?}"),
     }
@@ -230,7 +230,7 @@ mod subject {
 
     //#region 🔖️Laws
     /// 🚫️ The refusal law: the committed vector must be refused with exactly the `(code, severity,
-    /// target)` triple its `🎯️outcome/🔣️component.json` declares, the document must come back
+    /// target)` triple its `🎯️outcome/🔣️.json` declares, the document must come back
     /// byte-identical to the committed `➡️after`, and — the part only this artifact can state — the
     /// content-addressed child handle must NOT have been re-minted. A refusal that quietly rebuilt
     /// the child would produce an identical scene under a new digest, which is the shape of bug a

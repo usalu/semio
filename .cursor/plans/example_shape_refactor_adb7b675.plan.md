@@ -1,6 +1,6 @@
 ---
 name: Example Shape Refactor
-overview: Replace the ad-hoc `📚️examples` layout (110 roots, 4 plural asset dirs, 315 dead `🦀️component.rs` shims, hardcoded labels in app manifests) with a single self-describing per-example unit — `📚️examples/<emoji-slug>/{🦀️component.rs, 🟦️component.ts, 🖼️assets/, 🧪️tests/}` — enforced by taxonomy, policy and the fixture sweep, and executed by a wave-based workforce of parallel agents.
+overview: Replace the ad-hoc `📚️examples` layout (110 roots, 4 plural asset dirs, 315 dead `🦀️.rs` shims, hardcoded labels in app manifests) with a single self-describing per-example unit — `📚️examples/<emoji-slug>/{🦀️.rs, 🟦️.ts, 🖼️assets/, 🧪️tests/}` — enforced by taxonomy, policy and the fixture sweep, and executed by a wave-based workforce of parallel agents.
 todos:
   - id: w0-ticket
     content: "W0: confirm repo MCP reachable, open ticket under goal R26-02/UPDATED-DOCS/UPDATED-USER-DOCS/UPDATED-EXAMPLES, freeze 🧾️inventory.json and 📋️shards.json in the ticket folder"
@@ -9,7 +9,7 @@ todos:
     content: "W1a (Grok): rewrite 🔣️taxonomy.json example vocabulary, root 📜️script.ts policy rules (artifact/app examples, empty assets, dead leaves, component-file parent), registry validateTaxonomyTree + discoverExamplesForPlayground, discovery validateTaxonomy, 🧪️index.test.ts locks, and the new `examples` command group"
     status: completed
   - id: w1b-runtime
-    content: "W1b (Grok, parallel with W1a): add ExampleSource type + App::example_source to the OS kernel plugin module and rewrite 🧪️fixture-sweep/🦀️component.rs for the new layout"
+    content: "W1b (Grok, parallel with W1a): add ExampleSource type + App::example_source to the OS kernel plugin module and rewrite 🧪️fixture-sweep/🦀️.rs for the new layout"
     status: completed
   - id: w2-pilot
     content: "W2 (Grok, serial gate): migrate 🧩️puzzle end to end with real handcrafted examples, glue wiring, tests and vitest config; go green on its nx test + policy; write 📐️pattern.md as the canonical template"
@@ -65,10 +65,10 @@ isProject: false
 ## Current state (measured, not assumed)
 
 - **110** `📚️examples` roots: 53 under `🗿️artifacts/<artifact>/`, 52 under `🎛️apps/<app>/⚙️engine/`, 1 plugin-root (`💡️reasoning`), 4 framework. **2** are empty.
-- **700** `.semio` files repo-wide, of which **429** are example assets. The other **271** are facet specs (`📖️component.grammar.semio`, `📡️component.protocol.semio`) and framework grammars that stay exactly where they are — no shard may move them.
+- **700** `.semio` files repo-wide, of which **429** are example assets. The other **271** are facet specs (`📖️.grammar.semio`, `📡️.protocol.semio`) and framework grammars that stay exactly where they are — no shard may move them.
 - The **429** example assets are buried two levels deep in plural dirs: `📚️examples/♻️reuse/🗣️dsls/♻️reuse/🧬️component.<plugin>.<artifact>.dsl.semio`. Flow and dag have a doubly-nested `♻️reuse/♻️reuse/`.
-- **315** `🦀️component.rs` shims under `📚️examples` are **dead code**: `rg '#\[path[^]]*📚️examples'` returns zero hits, so no `📦️glue.rs` ever declares them. Only the **124** `include_str!`/`include_bytes!` sites in facet files actually load assets.
-- Example identity is not in the tree at all — it is hardcoded in Rust `create_*_app()` builders as `.example(id, LocalizedLabel::native("Nakagin Capsule Tower", "Nakagin Kapselturm"), payload, "list-tree")`, duplicated again in `ActionArgOption` dropdown lists and again in `🗣️terminology`. See [ShellHost/🟦️component.tsx](🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨️engine/🧱️elements/ShellHost/🟦️component.tsx) lines 3938-3977.
+- **315** `🦀️.rs` shims under `📚️examples` are **dead code**: `rg '#\[path[^]]*📚️examples'` returns zero hits, so no `📦️glue.rs` ever declares them. Only the **124** `include_str!`/`include_bytes!` sites in facet files actually load assets.
+- Example identity is not in the tree at all — it is hardcoded in Rust `create_*_app()` builders as `.example(id, LocalizedLabel::native("Nakagin Capsule Tower", "Nakagin Kapselturm"), payload, "list-tree")`, duplicated again in `ActionArgOption` dropdown lists and again in `🗣️terminology`. See [ShellHost/🟦️.tsx](🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨️engine/🧱️elements/ShellHost/🟦️.tsx) lines 3938-3977.
 - Placeholder names dominate (`♻️reuse`, `♻️default`, `📕️default`, `♻️semio`) and most `.pack.semio` / `.spr.semio` are 64-byte header-only stubs.
 - **28 of 32** plugins have no `🧪️vitest.config.ts`, so no TS test can run inside them.
 - Storybook puzzle stories import paths that no longer exist (`s/plugin/puzzle/...`, `📚️examples/🧩️concrete-forest.puzzle3d`).
@@ -81,8 +81,8 @@ isProject: false
     🔺️diff 🗣️dsl 🎒️pack 🔧️op 📡️spr ⚙️engine        (facets unchanged)
     📚️examples/
       🏗️nakagin-capsule-tower/
-        🦀️component.rs        example definition: id, labels, icon, asset consts
-        🟦️component.ts        same definition for TS consumers
+        🦀️.rs        example definition: id, labels, icon, asset consts
+        🟦️.ts        same definition for TS consumers
         🖼️assets/
           🗣️tower.dsl.semio
           🎒️tower.pack.semio
@@ -96,7 +96,7 @@ isProject: false
           🟦️test.ts
   🎛️apps/<app>/
     📚️examples/🎬️demo-session/          moved up, out of ⚙️engine
-      🦀️component.rs
+      🦀️.rs
       🖼️assets/🎮️demo.cmd.semio
       🧪️tests/🦀️test.rs
 ```
@@ -105,7 +105,7 @@ Laws:
 
 - **Example dir**: emoji + VS16 + kebab-case slug, one dir per demonstrable scenario. Placeholders (`♻️reuse`, `♻️default`, `📕️default`, `♻️semio`) are deleted, not renamed.
 - **Assets**: free-form name, prefixed by asset-kind emoji — `🗣️` dsl, `🔧️` op, `📡️` spr, `🎒️` pack, `🔺️` diff, `🎮️` cmd. Non-semio media allowed flat with `🖼️` image, `🧊️` mesh, `📄️` document, `🎬️` video. Multiple assets and versions per example are expected; the plural dirs `🗣️dsls/🎒️packs/🔧️ops/📡️sprs` are gone.
-- **Definition leaf**: `🦀️component.rs` is the single source of truth for id, localized label, icon and asset bytes. It is wired in the plugin's `📦️glue.rs` under a new `//#region 📚️Examples`, exactly like every other taxonomy leaf.
+- **Definition leaf**: `🦀️.rs` is the single source of truth for id, localized label, icon and asset bytes. It is wired in the plugin's `📦️glue.rs` under a new `//#region 📚️Examples`, exactly like every other taxonomy leaf.
 - **Tests**: `🧪️tests/🦀️test.rs` (declared `#[cfg(test)]` in `📦️glue.rs` beside its example) and `🧪️tests/🟦️test.ts` (picked up by a per-plugin `🧪️vitest.config.ts`). Tests read assets from `🖼️assets/` via `include_str!` / `node:fs` — never via bundler-specific `?raw`, so they run in vitest and node alike.
 - **No dead files**: every file under `📚️examples` is either reachable from `📦️glue.rs`/`📦️index.ts` or is an asset referenced by a definition leaf.
 
@@ -114,7 +114,7 @@ flowchart LR
   taxonomy["🔣️taxonomy.json"] --> policy["script.ts policy"]
   taxonomy --> registry["plugin-registry check"]
   taxonomy --> sweep["🧪️fixture-sweep"]
-  assets["🖼️assets/*.semio"] --> leaf["📚️examples/slug/🦀️component.rs"]
+  assets["🖼️assets/*.semio"] --> leaf["📚️examples/slug/🦀️.rs"]
   assets --> tests["🧪️tests/🦀️test.rs"]
   leaf --> glue["📦️glue.rs region 📚️Examples"]
   glue --> app["create_app().example_source(...)"]
@@ -144,9 +144,9 @@ flowchart LR
 
 **Registry** — [📇️registry/📜️script.ts](🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/📇️registry/📜️script.ts): rewrite `validateTaxonomyTree` (940-1024) for the new shape and `discoverExamplesForPlayground` (302-342) to read emoji-slug dirs and the definition leaf instead of legacy `*.json` basenames.
 
-**Discovery + locks** — `validateTaxonomy` in [🔍️discovery/🟦️component.ts](🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🟦️component.ts) (144-188) and the assertions in [🧪️index.test.ts](🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🧪️index.test.ts) (1117-1133, 1175-1187).
+**Discovery + locks** — `validateTaxonomy` in [🔍️discovery/🟦️.ts](🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🟦️.ts) (144-188) and the assertions in [🧪️index.test.ts](🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🧪️index.test.ts) (1117-1133, 1175-1187).
 
-**Fixture sweep** — [🧪️fixture-sweep/🦀️component.rs](🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/🧪️fixture-sweep/🦀️component.rs), 722 lines: rewrite `example_dirs` walk, `repo_wide_semio_example_kind_coverage` (306-336), and all 38 hardcoded pilot `include_`* paths.
+**Fixture sweep** — [🧪️fixture-sweep/🦀️.rs](🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/🧪️fixture-sweep/🦀️.rs), 722 lines: rewrite `example_dirs` walk, `repo_wide_semio_example_kind_coverage` (306-336), and all 38 hardcoded pilot `include_`* paths.
 
 **Runtime example type** — OS kernel plugin module: add an `ExampleSource` value type and `App::example_source(...)` so `create_*_app()` consumes the definition leaf instead of restating labels. This is what removes the triplicated titles across manifest, action args and terminology.
 

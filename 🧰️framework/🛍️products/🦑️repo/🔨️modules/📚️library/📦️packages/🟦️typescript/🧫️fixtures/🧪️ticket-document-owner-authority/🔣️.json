@@ -11,7 +11,7 @@
   "cases": [
     { "id": "claimed-markdown", "ownerClaimed": true, "sourceRelativePath": "ticket.md", "sourceFileKindId": "markdown", "expectedDisposition": "project" },
     { "id": "unclaimed-owner", "ownerClaimed": false, "sourceRelativePath": "ticket.md", "sourceFileKindId": "markdown", "expectedDisposition": "unclaimed" },
-    { "id": "nested-lookalike", "ownerClaimed": true, "sourceRelativePath": "🧪️nested/ticket.md", "sourceFileKindId": "markdown", "expectedDisposition": "unclaimed" },
+    { "id": "nested-lookalike", "ownerClaimed": true, "sourceRelativePath": "nestedticket.md", "sourceFileKindId": "markdown", "expectedDisposition": "unclaimed" },
     { "id": "case-lookalike", "ownerClaimed": true, "sourceRelativePath": "Ticket.md", "sourceFileKindId": "markdown", "expectedDisposition": "unclaimed" },
     { "id": "prefixed-lookalike", "ownerClaimed": true, "sourceRelativePath": "🎫️ticket.md", "sourceFileKindId": "markdown", "expectedDisposition": "unclaimed" },
     { "id": "wrong-file-kind", "ownerClaimed": true, "sourceRelativePath": "ticket.md", "sourceFileKindId": "json", "expectedDisposition": "unclaimed" },

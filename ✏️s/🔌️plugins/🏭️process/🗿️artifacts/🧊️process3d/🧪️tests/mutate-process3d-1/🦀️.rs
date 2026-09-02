@@ -1,6 +1,6 @@
 //! 🏭️ `process.process3d` exhaustive mutation case — Rust adapter. Ticket 26/08/23/END-TO-END-TESTING-
 //! REFACTOR. Recorded no-oracle decision `process3d-mutation-semantics`
-//! (`../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️oracle/🔣️.json`, which also records why G-code
+//! (`../../🏅️standards/🔖️1/🪆️subsets/✳️any/🔣️oracle.json`, which also records why G-code
 //! parsers and STEP/BREP kernels were surveyed and DECLINED).
 //!
 //! One document, three collection shapes, and a vocabulary derived from the difference: `steps` is an
@@ -20,7 +20,7 @@
 //! **Where the assertions live.** A recorded no-oracle case runs NO oracle role — the runner resolves an
 //! oracle implementation from the feature's `@oracle-` tag and this feature has none — so every law this
 //! case claims is asserted inside the SUBJECT handlers, through the shared law module
-//! `✏️s/🔌️plugins/🗄️stdio/🧪️oracle/⚖️law/🦀️component.rs` that the stdio subsets use. The oracle handlers
+//! `✏️s/🔌️plugins/🗄️stdio/🧪️oracle/⚖️law/🦀️.rs` that the stdio subsets use. The oracle handlers
 //! below still answer with the committed vector read literally, so the reference side exists the moment a
 //! second producer ever does. The subject half is gated behind the generated host's `sut` feature so the
 //! oracle-only run never compiles the local implementation.
@@ -28,7 +28,7 @@
 use semio_repo_test_host::{parse_json, Adapter, Context, Json, Outcome};
 
 //#region 🔖️Kinds
-/// 🏷️ Mirrors `KINDS` in `../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs` — duplicated, not
+/// 🏷️ Mirrors `KINDS` in `../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs` — duplicated, not
 /// imported, because the oracle-only build must not link the subject crate. The contract's
 /// mutation-coverage gate keeps this list honest against the catalog, and that file's own
 /// `kinds_match_the_enum_and_the_catalog` keeps it honest against both the enum and the manifest.
@@ -59,7 +59,7 @@ const UNOBSERVABLE: &[&str] = &[];
 
 /// 🗣️ The real committed document this artifact ships as its own example.
 #[cfg(feature = "sut")]
-const DSL_ASSET: &str = "asset://🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio";
+const DSL_ASSET: &str = "asset://🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/🗣️.dsl.semio";
 //#endregion 🔖️Kinds
 
 //#region 🔖️Fixtures
@@ -77,116 +77,116 @@ struct Vector {
 fn vector(kind: &str) -> Vector {
     match kind {
         "create-step" => Vector {
-            before: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌱create-step/🧪️tests/accepts-a-rip-cut-step-and-changes-nothing/📸️snapshot/⬅️before/🔣️component.json"),
-            mutation: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌱create-step/🧪️tests/accepts-a-rip-cut-step-and-changes-nothing/🦠️mutation/🔣️component.json"),
-            after: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌱create-step/🧪️tests/accepts-a-rip-cut-step-and-changes-nothing/📸️snapshot/➡️after/🔣️component.json"),
-            diff: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌱create-step/🧪️tests/accepts-a-rip-cut-step-and-changes-nothing/🔺️diff/🔣️component.json"),
-            outcome: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌱create-step/🧪️tests/accepts-a-rip-cut-step-and-changes-nothing/🎯️outcome/🔣️component.json"),
+            before: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌱create-step/🧪️tests/accepts-a-rip-cut-step-and-changes-nothing/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌱create-step/🧪️tests/accepts-a-rip-cut-step-and-changes-nothing/🦠️mutation/🔣️.json"),
+            after: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌱create-step/🧪️tests/accepts-a-rip-cut-step-and-changes-nothing/📸️snapshot/➡️after/🔣️.json"),
+            diff: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌱create-step/🧪️tests/accepts-a-rip-cut-step-and-changes-nothing/🔺️diff/🔣️.json"),
+            outcome: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌱create-step/🧪️tests/accepts-a-rip-cut-step-and-changes-nothing/🎯️outcome/🔣️.json"),
         },
         "delete-step" => Vector {
-            before: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-step/🧪️tests/accepts-a-step-id-and-changes-nothing/📸️snapshot/⬅️before/🔣️component.json"),
-            mutation: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-step/🧪️tests/accepts-a-step-id-and-changes-nothing/🦠️mutation/🔣️component.json"),
-            after: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-step/🧪️tests/accepts-a-step-id-and-changes-nothing/📸️snapshot/➡️after/🔣️component.json"),
-            diff: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-step/🧪️tests/accepts-a-step-id-and-changes-nothing/🔺️diff/🔣️component.json"),
-            outcome: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-step/🧪️tests/accepts-a-step-id-and-changes-nothing/🎯️outcome/🔣️component.json"),
+            before: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-step/🧪️tests/accepts-a-step-id-and-changes-nothing/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-step/🧪️tests/accepts-a-step-id-and-changes-nothing/🦠️mutation/🔣️.json"),
+            after: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-step/🧪️tests/accepts-a-step-id-and-changes-nothing/📸️snapshot/➡️after/🔣️.json"),
+            diff: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-step/🧪️tests/accepts-a-step-id-and-changes-nothing/🔺️diff/🔣️.json"),
+            outcome: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-step/🧪️tests/accepts-a-step-id-and-changes-nothing/🎯️outcome/🔣️.json"),
         },
         "rename-step" => Vector {
-            before: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏷️rename-step/🧪️tests/accepts-a-new-label-and-changes-nothing/📸️snapshot/⬅️before/🔣️component.json"),
-            mutation: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏷️rename-step/🧪️tests/accepts-a-new-label-and-changes-nothing/🦠️mutation/🔣️component.json"),
-            after: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏷️rename-step/🧪️tests/accepts-a-new-label-and-changes-nothing/📸️snapshot/➡️after/🔣️component.json"),
-            diff: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏷️rename-step/🧪️tests/accepts-a-new-label-and-changes-nothing/🔺️diff/🔣️component.json"),
-            outcome: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏷️rename-step/🧪️tests/accepts-a-new-label-and-changes-nothing/🎯️outcome/🔣️component.json"),
+            before: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏷️rename-step/🧪️tests/accepts-a-new-label-and-changes-nothing/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏷️rename-step/🧪️tests/accepts-a-new-label-and-changes-nothing/🦠️mutation/🔣️.json"),
+            after: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏷️rename-step/🧪️tests/accepts-a-new-label-and-changes-nothing/📸️snapshot/➡️after/🔣️.json"),
+            diff: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏷️rename-step/🧪️tests/accepts-a-new-label-and-changes-nothing/🔺️diff/🔣️.json"),
+            outcome: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏷️rename-step/🧪️tests/accepts-a-new-label-and-changes-nothing/🎯️outcome/🔣️.json"),
         },
         "change-step-enabled" => Vector {
-            before: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔘change-step-enabled/🧪️tests/accepts-a-disable-flag-and-changes-nothing/📸️snapshot/⬅️before/🔣️component.json"),
-            mutation: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔘change-step-enabled/🧪️tests/accepts-a-disable-flag-and-changes-nothing/🦠️mutation/🔣️component.json"),
-            after: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔘change-step-enabled/🧪️tests/accepts-a-disable-flag-and-changes-nothing/📸️snapshot/➡️after/🔣️component.json"),
-            diff: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔘change-step-enabled/🧪️tests/accepts-a-disable-flag-and-changes-nothing/🔺️diff/🔣️component.json"),
-            outcome: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔘change-step-enabled/🧪️tests/accepts-a-disable-flag-and-changes-nothing/🎯️outcome/🔣️component.json"),
+            before: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔘change-step-enabled/🧪️tests/accepts-a-disable-flag-and-changes-nothing/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔘change-step-enabled/🧪️tests/accepts-a-disable-flag-and-changes-nothing/🦠️mutation/🔣️.json"),
+            after: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔘change-step-enabled/🧪️tests/accepts-a-disable-flag-and-changes-nothing/📸️snapshot/➡️after/🔣️.json"),
+            diff: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔘change-step-enabled/🧪️tests/accepts-a-disable-flag-and-changes-nothing/🔺️diff/🔣️.json"),
+            outcome: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔘change-step-enabled/🧪️tests/accepts-a-disable-flag-and-changes-nothing/🎯️outcome/🔣️.json"),
         },
         "change-step-origin" => Vector {
-            before: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧷change-step-origin/🧪️tests/accepts-a-machine-provenance-and-changes-nothing/📸️snapshot/⬅️before/🔣️component.json"),
-            mutation: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧷change-step-origin/🧪️tests/accepts-a-machine-provenance-and-changes-nothing/🦠️mutation/🔣️component.json"),
-            after: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧷change-step-origin/🧪️tests/accepts-a-machine-provenance-and-changes-nothing/📸️snapshot/➡️after/🔣️component.json"),
-            diff: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧷change-step-origin/🧪️tests/accepts-a-machine-provenance-and-changes-nothing/🔺️diff/🔣️component.json"),
-            outcome: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧷change-step-origin/🧪️tests/accepts-a-machine-provenance-and-changes-nothing/🎯️outcome/🔣️component.json"),
+            before: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧷change-step-origin/🧪️tests/accepts-a-machine-provenance-and-changes-nothing/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧷change-step-origin/🧪️tests/accepts-a-machine-provenance-and-changes-nothing/🦠️mutation/🔣️.json"),
+            after: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧷change-step-origin/🧪️tests/accepts-a-machine-provenance-and-changes-nothing/📸️snapshot/➡️after/🔣️.json"),
+            diff: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧷change-step-origin/🧪️tests/accepts-a-machine-provenance-and-changes-nothing/🔺️diff/🔣️.json"),
+            outcome: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧷change-step-origin/🧪️tests/accepts-a-machine-provenance-and-changes-nothing/🎯️outcome/🔣️.json"),
         },
         "replace-step-measure" => Vector {
-            before: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐replace-step-measure/🧪️tests/accepts-a-bore-measure-and-changes-nothing/📸️snapshot/⬅️before/🔣️component.json"),
-            mutation: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐replace-step-measure/🧪️tests/accepts-a-bore-measure-and-changes-nothing/🦠️mutation/🔣️component.json"),
-            after: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐replace-step-measure/🧪️tests/accepts-a-bore-measure-and-changes-nothing/📸️snapshot/➡️after/🔣️component.json"),
-            diff: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐replace-step-measure/🧪️tests/accepts-a-bore-measure-and-changes-nothing/🔺️diff/🔣️component.json"),
-            outcome: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐replace-step-measure/🧪️tests/accepts-a-bore-measure-and-changes-nothing/🎯️outcome/🔣️component.json"),
+            before: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐replace-step-measure/🧪️tests/accepts-a-bore-measure-and-changes-nothing/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐replace-step-measure/🧪️tests/accepts-a-bore-measure-and-changes-nothing/🦠️mutation/🔣️.json"),
+            after: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐replace-step-measure/🧪️tests/accepts-a-bore-measure-and-changes-nothing/📸️snapshot/➡️after/🔣️.json"),
+            diff: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐replace-step-measure/🧪️tests/accepts-a-bore-measure-and-changes-nothing/🔺️diff/🔣️.json"),
+            outcome: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐replace-step-measure/🧪️tests/accepts-a-bore-measure-and-changes-nothing/🎯️outcome/🔣️.json"),
         },
         "reorder-steps" => Vector {
-            before: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔀reorder-steps/🧪️tests/accepts-a-target-index-and-changes-nothing/📸️snapshot/⬅️before/🔣️component.json"),
-            mutation: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔀reorder-steps/🧪️tests/accepts-a-target-index-and-changes-nothing/🦠️mutation/🔣️component.json"),
-            after: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔀reorder-steps/🧪️tests/accepts-a-target-index-and-changes-nothing/📸️snapshot/➡️after/🔣️component.json"),
-            diff: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔀reorder-steps/🧪️tests/accepts-a-target-index-and-changes-nothing/🔺️diff/🔣️component.json"),
-            outcome: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔀reorder-steps/🧪️tests/accepts-a-target-index-and-changes-nothing/🎯️outcome/🔣️component.json"),
+            before: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔀reorder-steps/🧪️tests/accepts-a-target-index-and-changes-nothing/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔀reorder-steps/🧪️tests/accepts-a-target-index-and-changes-nothing/🦠️mutation/🔣️.json"),
+            after: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔀reorder-steps/🧪️tests/accepts-a-target-index-and-changes-nothing/📸️snapshot/➡️after/🔣️.json"),
+            diff: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔀reorder-steps/🧪️tests/accepts-a-target-index-and-changes-nothing/🔺️diff/🔣️.json"),
+            outcome: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔀reorder-steps/🧪️tests/accepts-a-target-index-and-changes-nothing/🎯️outcome/🔣️.json"),
         },
         "create-machine" => Vector {
-            before: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏭create-machine/🧪️tests/adds-a-drill-press-to-the-workshop/📸️snapshot/⬅️before/🔣️component.json"),
-            mutation: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏭create-machine/🧪️tests/adds-a-drill-press-to-the-workshop/🦠️mutation/🔣️component.json"),
-            after: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏭create-machine/🧪️tests/adds-a-drill-press-to-the-workshop/📸️snapshot/➡️after/🔣️component.json"),
-            diff: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏭create-machine/🧪️tests/adds-a-drill-press-to-the-workshop/🔺️diff/🔣️component.json"),
-            outcome: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏭create-machine/🧪️tests/adds-a-drill-press-to-the-workshop/🎯️outcome/🔣️component.json"),
+            before: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏭create-machine/🧪️tests/adds-a-drill-press-to-the-workshop/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏭create-machine/🧪️tests/adds-a-drill-press-to-the-workshop/🦠️mutation/🔣️.json"),
+            after: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏭create-machine/🧪️tests/adds-a-drill-press-to-the-workshop/📸️snapshot/➡️after/🔣️.json"),
+            diff: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏭create-machine/🧪️tests/adds-a-drill-press-to-the-workshop/🔺️diff/🔣️.json"),
+            outcome: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏭create-machine/🧪️tests/adds-a-drill-press-to-the-workshop/🎯️outcome/🔣️.json"),
         },
         "delete-machine" => Vector {
-            before: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/❌delete-machine/🧪️tests/empties-the-workshop-of-the-saw/📸️snapshot/⬅️before/🔣️component.json"),
-            mutation: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/❌delete-machine/🧪️tests/empties-the-workshop-of-the-saw/🦠️mutation/🔣️component.json"),
-            after: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/❌delete-machine/🧪️tests/empties-the-workshop-of-the-saw/📸️snapshot/➡️after/🔣️component.json"),
-            diff: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/❌delete-machine/🧪️tests/empties-the-workshop-of-the-saw/🔺️diff/🔣️component.json"),
-            outcome: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/❌delete-machine/🧪️tests/empties-the-workshop-of-the-saw/🎯️outcome/🔣️component.json"),
+            before: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/❌delete-machine/🧪️tests/empties-the-workshop-of-the-saw/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/❌delete-machine/🧪️tests/empties-the-workshop-of-the-saw/🦠️mutation/🔣️.json"),
+            after: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/❌delete-machine/🧪️tests/empties-the-workshop-of-the-saw/📸️snapshot/➡️after/🔣️.json"),
+            diff: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/❌delete-machine/🧪️tests/empties-the-workshop-of-the-saw/🔺️diff/🔣️.json"),
+            outcome: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/❌delete-machine/🧪️tests/empties-the-workshop-of-the-saw/🎯️outcome/🔣️.json"),
         },
         "rename-machine" => Vector {
-            before: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔖rename-machine/🧪️tests/retitles-the-saw/📸️snapshot/⬅️before/🔣️component.json"),
-            mutation: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔖rename-machine/🧪️tests/retitles-the-saw/🦠️mutation/🔣️component.json"),
-            after: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔖rename-machine/🧪️tests/retitles-the-saw/📸️snapshot/➡️after/🔣️component.json"),
-            diff: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔖rename-machine/🧪️tests/retitles-the-saw/🔺️diff/🔣️component.json"),
-            outcome: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔖rename-machine/🧪️tests/retitles-the-saw/🎯️outcome/🔣️component.json"),
+            before: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔖rename-machine/🧪️tests/retitles-the-saw/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔖rename-machine/🧪️tests/retitles-the-saw/🦠️mutation/🔣️.json"),
+            after: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔖rename-machine/🧪️tests/retitles-the-saw/📸️snapshot/➡️after/🔣️.json"),
+            diff: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔖rename-machine/🧪️tests/retitles-the-saw/🔺️diff/🔣️.json"),
+            outcome: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔖rename-machine/🧪️tests/retitles-the-saw/🎯️outcome/🔣️.json"),
         },
         "change-machine-icon" => Vector {
-            before: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎨change-machine-icon/🧪️tests/swaps-the-saw-icon/📸️snapshot/⬅️before/🔣️component.json"),
-            mutation: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎨change-machine-icon/🧪️tests/swaps-the-saw-icon/🦠️mutation/🔣️component.json"),
-            after: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎨change-machine-icon/🧪️tests/swaps-the-saw-icon/📸️snapshot/➡️after/🔣️component.json"),
-            diff: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎨change-machine-icon/🧪️tests/swaps-the-saw-icon/🔺️diff/🔣️component.json"),
-            outcome: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎨change-machine-icon/🧪️tests/swaps-the-saw-icon/🎯️outcome/🔣️component.json"),
+            before: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎨change-machine-icon/🧪️tests/swaps-the-saw-icon/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎨change-machine-icon/🧪️tests/swaps-the-saw-icon/🦠️mutation/🔣️.json"),
+            after: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎨change-machine-icon/🧪️tests/swaps-the-saw-icon/📸️snapshot/➡️after/🔣️.json"),
+            diff: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎨change-machine-icon/🧪️tests/swaps-the-saw-icon/🔺️diff/🔣️.json"),
+            outcome: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎨change-machine-icon/🧪️tests/swaps-the-saw-icon/🎯️outcome/🔣️.json"),
         },
         "replace-machine-capabilities" => Vector {
-            before: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔁replace-machine-capabilities/🧪️tests/trades-the-blade-cut-for-a-gated-pocket-cut/📸️snapshot/⬅️before/🔣️component.json"),
-            mutation: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔁replace-machine-capabilities/🧪️tests/trades-the-blade-cut-for-a-gated-pocket-cut/🦠️mutation/🔣️component.json"),
-            after: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔁replace-machine-capabilities/🧪️tests/trades-the-blade-cut-for-a-gated-pocket-cut/📸️snapshot/➡️after/🔣️component.json"),
-            diff: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔁replace-machine-capabilities/🧪️tests/trades-the-blade-cut-for-a-gated-pocket-cut/🔺️diff/🔣️component.json"),
-            outcome: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔁replace-machine-capabilities/🧪️tests/trades-the-blade-cut-for-a-gated-pocket-cut/🎯️outcome/🔣️component.json"),
+            before: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔁replace-machine-capabilities/🧪️tests/trades-the-blade-cut-for-a-gated-pocket-cut/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔁replace-machine-capabilities/🧪️tests/trades-the-blade-cut-for-a-gated-pocket-cut/🦠️mutation/🔣️.json"),
+            after: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔁replace-machine-capabilities/🧪️tests/trades-the-blade-cut-for-a-gated-pocket-cut/📸️snapshot/➡️after/🔣️.json"),
+            diff: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔁replace-machine-capabilities/🧪️tests/trades-the-blade-cut-for-a-gated-pocket-cut/🔺️diff/🔣️.json"),
+            outcome: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔁replace-machine-capabilities/🧪️tests/trades-the-blade-cut-for-a-gated-pocket-cut/🎯️outcome/🔣️.json"),
         },
         "move-stock" => Vector {
-            before: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📍move-stock/🧪️tests/lifts-and-tilts-the-stock/📸️snapshot/⬅️before/🔣️component.json"),
-            mutation: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📍move-stock/🧪️tests/lifts-and-tilts-the-stock/🦠️mutation/🔣️component.json"),
-            after: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📍move-stock/🧪️tests/lifts-and-tilts-the-stock/📸️snapshot/➡️after/🔣️component.json"),
-            diff: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📍move-stock/🧪️tests/lifts-and-tilts-the-stock/🔺️diff/🔣️component.json"),
-            outcome: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📍move-stock/🧪️tests/lifts-and-tilts-the-stock/🎯️outcome/🔣️component.json"),
+            before: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📍move-stock/🧪️tests/lifts-and-tilts-the-stock/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📍move-stock/🧪️tests/lifts-and-tilts-the-stock/🦠️mutation/🔣️.json"),
+            after: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📍move-stock/🧪️tests/lifts-and-tilts-the-stock/📸️snapshot/➡️after/🔣️.json"),
+            diff: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📍move-stock/🧪️tests/lifts-and-tilts-the-stock/🔺️diff/🔣️.json"),
+            outcome: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📍move-stock/🧪️tests/lifts-and-tilts-the-stock/🎯️outcome/🔣️.json"),
         },
         "change-stock-label" => Vector {
-            before: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔤change-stock-label/🧪️tests/relabels-the-oak-beam-as-planed/📸️snapshot/⬅️before/🔣️component.json"),
-            mutation: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔤change-stock-label/🧪️tests/relabels-the-oak-beam-as-planed/🦠️mutation/🔣️component.json"),
-            after: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔤change-stock-label/🧪️tests/relabels-the-oak-beam-as-planed/📸️snapshot/➡️after/🔣️component.json"),
-            diff: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔤change-stock-label/🧪️tests/relabels-the-oak-beam-as-planed/🔺️diff/🔣️component.json"),
-            outcome: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔤change-stock-label/🧪️tests/relabels-the-oak-beam-as-planed/🎯️outcome/🔣️component.json"),
+            before: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔤change-stock-label/🧪️tests/relabels-the-oak-beam-as-planed/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔤change-stock-label/🧪️tests/relabels-the-oak-beam-as-planed/🦠️mutation/🔣️.json"),
+            after: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔤change-stock-label/🧪️tests/relabels-the-oak-beam-as-planed/📸️snapshot/➡️after/🔣️.json"),
+            diff: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔤change-stock-label/🧪️tests/relabels-the-oak-beam-as-planed/🔺️diff/🔣️.json"),
+            outcome: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔤change-stock-label/🧪️tests/relabels-the-oak-beam-as-planed/🎯️outcome/🔣️.json"),
         },
         "replace-stock-solid" => Vector {
-            before: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧊replace-stock-solid/🧪️tests/reissues-the-stock-brep-child-handle/📸️snapshot/⬅️before/🔣️component.json"),
-            mutation: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧊replace-stock-solid/🧪️tests/reissues-the-stock-brep-child-handle/🦠️mutation/🔣️component.json"),
-            after: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧊replace-stock-solid/🧪️tests/reissues-the-stock-brep-child-handle/📸️snapshot/➡️after/🔣️component.json"),
-            diff: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧊replace-stock-solid/🧪️tests/reissues-the-stock-brep-child-handle/🔺️diff/🔣️component.json"),
-            outcome: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧊replace-stock-solid/🧪️tests/reissues-the-stock-brep-child-handle/🎯️outcome/🔣️component.json"),
+            before: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧊replace-stock-solid/🧪️tests/reissues-the-stock-brep-child-handle/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧊replace-stock-solid/🧪️tests/reissues-the-stock-brep-child-handle/🦠️mutation/🔣️.json"),
+            after: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧊replace-stock-solid/🧪️tests/reissues-the-stock-brep-child-handle/📸️snapshot/➡️after/🔣️.json"),
+            diff: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧊replace-stock-solid/🧪️tests/reissues-the-stock-brep-child-handle/🔺️diff/🔣️.json"),
+            outcome: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧊replace-stock-solid/🧪️tests/reissues-the-stock-brep-child-handle/🎯️outcome/🔣️.json"),
         },
         "change-cursor" => Vector {
-            before: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⏱️change-cursor/🧪️tests/pins-the-replay-cursor-to-two-steps/📸️snapshot/⬅️before/🔣️component.json"),
-            mutation: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⏱️change-cursor/🧪️tests/pins-the-replay-cursor-to-two-steps/🦠️mutation/🔣️component.json"),
-            after: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⏱️change-cursor/🧪️tests/pins-the-replay-cursor-to-two-steps/📸️snapshot/➡️after/🔣️component.json"),
-            diff: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⏱️change-cursor/🧪️tests/pins-the-replay-cursor-to-two-steps/🔺️diff/🔣️component.json"),
-            outcome: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⏱️change-cursor/🧪️tests/pins-the-replay-cursor-to-two-steps/🎯️outcome/🔣️component.json"),
+            before: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⏱️change-cursor/🧪️tests/pins-the-replay-cursor-to-two-steps/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⏱️change-cursor/🧪️tests/pins-the-replay-cursor-to-two-steps/🦠️mutation/🔣️.json"),
+            after: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⏱️change-cursor/🧪️tests/pins-the-replay-cursor-to-two-steps/📸️snapshot/➡️after/🔣️.json"),
+            diff: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⏱️change-cursor/🧪️tests/pins-the-replay-cursor-to-two-steps/🔺️diff/🔣️.json"),
+            outcome: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⏱️change-cursor/🧪️tests/pins-the-replay-cursor-to-two-steps/🎯️outcome/🔣️.json"),
         },
         other => panic!("mutate-process3d-1: no committed specification vector is registered for kind {other:?}"),
     }

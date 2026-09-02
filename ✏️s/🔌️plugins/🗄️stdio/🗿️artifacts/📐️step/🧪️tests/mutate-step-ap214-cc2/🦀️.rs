@@ -12,7 +12,7 @@
 //! `@mode-differential`. The re-serializer is this standard's own from-scratch Part-21 writer, and
 //! the §4.3 ladder classification the oracle applies is re-derived from the standard rather than
 //! called out of the production `engine::ladder` — both live once, at the standard level
-//! (`../../🏅️standards/🔖️ap214/🧪️oracle/🦀️component.rs`), shared by all seven `ap214` subsets.
+//! (`../../🏅️standards/🔖️ap214/🦀️oracle.rs`), shared by all seven `ap214` subsets.
 //!
 //! ⚖️ Both law-bearing scenario families assert IN ROLE, without needing a subject: `inverse-<kind>`
 //! applies the mutation and then the independently computed inverse and requires the original

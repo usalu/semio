@@ -5,19 +5,23 @@
   "displayName": "Change Language",
   "emoji": "🌐",
   "aggregateVariant": "ChangeLanguage",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": "change-language",
-  "binaryTag": null,
+  "binaryTag": 2,
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
   "outcomeClasses": [
-    "info",
-    "applied"
+    "applied",
+    "warning"
   ],
   "composition": "atomic",
   "requiredLanguageSurfaces": [
     "rust",
+    "typescript",
+    "graphql",
+    "protobuf",
     "json-schema",
-    "text"
+    "text",
+    "binary"
   ]
 }

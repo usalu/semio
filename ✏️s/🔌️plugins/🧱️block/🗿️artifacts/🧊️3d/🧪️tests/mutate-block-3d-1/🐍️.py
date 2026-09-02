@@ -14,9 +14,9 @@ way over the same carrier, and this file follows it.
 
 **What it was written from.**
 
-* ``🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🔣️component.json`` — the eleven members of
+* ``🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🔣️.json`` — the eleven members of
   `Block3dSnapshot`.
-* ``…/🧬️schema/🧬️mutations/🔣️component.json`` — the thirty-seven verbs and their argument lists.
+* ``…/🧬️schema/🧬️mutations/🔣️.json`` — the thirty-seven verbs and their argument lists.
 * rules 1, 2 and 7 of
   `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/📓️derivation-rules.md` — the
   object-kind scalars, the four id-keyed collections, and absolute `move`/`resize` for the spatial
@@ -26,7 +26,7 @@ way over the same carrier, and this file follows it.
   `name` its payload carries (the name belongs to the catalogue child alone), and that an
   `attribute` is addressed by `key` while every other record is addressed by `id`.
 
-**No Rust was read to write this.** `🦀️component.rs` beside this file registers the SUBJECT half
+**No Rust was read to write this.** `🦀️.rs` beside this file registers the SUBJECT half
 only.
 
 **Three kinds this implementation REFUSES, by clause rather than by absence.** `create-vortex-kind`,

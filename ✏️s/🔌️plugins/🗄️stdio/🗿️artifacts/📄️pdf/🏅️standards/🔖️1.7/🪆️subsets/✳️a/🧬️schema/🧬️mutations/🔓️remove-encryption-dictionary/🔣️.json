@@ -5,11 +5,11 @@
   "displayName": "Remove Encryption Dictionary",
   "emoji": "🔓️",
   "aggregateVariant": "RemoveEncryptionDictionary",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
-  "invertibility": "non-invertible",
-  "diffParticipation": "detect",
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "apply-only",
   "outcomeClasses": [
     "applied"
   ],

@@ -1,0 +1,77 @@
+syntax = "proto3";
+package semio.s_stdio_html.mutation;
+
+import "s_stdio_html/snapshot.proto";
+
+message NodePath {
+  repeated uint64 segments = 1;
+}
+
+message HtmlMutation {
+  oneof mutation {
+    SetSnapshot set_snapshot = 2;
+    SetDoctype set_doctype = 3;
+    InsertNode insert_node = 4;
+    RemoveNode remove_node = 5;
+    SetElementName set_element_name = 6;
+    SetAttribute set_attribute = 7;
+    SetText set_text = 8;
+    SetComment set_comment = 9;
+    SetRawText set_raw_text = 10;
+  }
+}
+
+// 📸️ `snapshot`'s real shape lives in the sibling `../📸️snapshot/🛰️.proto`.
+message SetSnapshot {
+  bytes snapshot = 1;
+}
+
+message SetDoctype {
+  optional string doctype = 1;
+}
+
+// ➕️ Inserts `node` at `index` among the children of the element addressed by `parent`.
+message InsertNode {
+  NodePath parent = 1;
+  uint64 index = 2;
+  semio.s_stdio_html.snapshot.HtmlNode node = 3;
+}
+
+// ➖️ Removes the child at `index` among the children of the element addressed by `parent`.
+message RemoveNode {
+  NodePath parent = 1;
+  uint64 index = 2;
+}
+
+// 🏷️ Renames the element addressed by `path`.
+message SetElementName {
+  NodePath path = 1;
+  string name = 2;
+}
+
+// 🏷️ Tri-state: unset `value` = remove the attribute, present with `is_valueless = true` = set it
+// valueless, present with `is_valueless = false` = set it to `value.value`.
+message SetAttribute {
+  NodePath path = 1;
+  string name = 2;
+  optional AttrValue value = 3;
+}
+message AttrValue {
+  bool is_valueless = 1;
+  string value = 2;
+}
+
+message SetText {
+  NodePath path = 1;
+  string text = 2;
+}
+
+message SetComment {
+  NodePath path = 1;
+  string text = 2;
+}
+
+message SetRawText {
+  NodePath path = 1;
+  string text = 2;
+}

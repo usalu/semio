@@ -5,7 +5,7 @@
   "displayName": "Delete Support",
   "emoji": "🗑",
   "aggregateVariant": "DeleteSupport",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": "delete-support",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

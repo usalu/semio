@@ -5,7 +5,7 @@
   "displayName": "Change Snap Enabled",
   "emoji": "🧲️",
   "aggregateVariant": "ChangeSnapEnabled",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": "change-snap-enabled",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

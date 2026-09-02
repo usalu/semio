@@ -1,0 +1,16 @@
+syntax = "proto3";
+// 🔺️ SemioGraphDiff schema — real facet mirror of the Rust `🦀️.rs` sibling.
+package semio.s_stdio_semio_graph.diff;
+
+import "../📸️snapshot/🛰️.proto";
+
+message SemioGraphNodeListDiff {
+  repeated semio.s_stdio_semio_graph.snapshot.SemioGraphNode values = 1;
+}
+message SemioGraphEdgeListDiff {
+  repeated semio.s_stdio_semio_graph.snapshot.SemioGraphEdge values = 1;
+}
+message SemioGraphDiff {
+  optional SemioGraphNodeListDiff nodes = 1;
+  optional SemioGraphEdgeListDiff edges = 2;
+}

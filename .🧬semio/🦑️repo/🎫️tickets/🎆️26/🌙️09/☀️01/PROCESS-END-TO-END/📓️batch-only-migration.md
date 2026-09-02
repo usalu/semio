@@ -2,7 +2,7 @@
 
 ## Why this is end-to-end work, not test cleanup
 `validate_ui_dispatch_classification`
-(`🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️component.rs:11924`) admits a UI dispatch only when the
+(`🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️.rs:11924`) admits a UI dispatch only when the
 command's registry classification is `InteractiveJobClassification::Migrated`; `qualified_tool_proof`
 (same file, `:18989`) additionally refuses any typed command that owns no tool proof; and
 `unsupported_publication_contracts` (`:19148`) rejects the `Artifact` lane outright unless the app
@@ -26,28 +26,28 @@ factory stays the eight config-scan verbs it already carried.
 
 | id | what the handler emits | lane |
 | --- | --- | --- |
-| `setSnapshot` | `reset_process3d_document_effect` only (`🎮️commands/📄️artifact/🦀️component.rs:29-41`) | `HostOnly` |
+| `setSnapshot` | `reset_process3d_document_effect` only (`🎮️commands/📄️artifact/🦀️.rs:29-41`) | `HostOnly` |
 | `setActiveExample` | `reset_process3d_document_effect` only (same file, `:54-68`) | `HostOnly` |
-| `setStock` | `reset_process3d_document_effect` only (`🎮️commands/🪵️stock/🦀️component.rs:23-42`) | `HostOnly` |
-| `importModelFile` | `reset_process3d_document_effect` only (`🎮️commands/📤️media/🦀️component.rs:80-95`) | `HostOnly` |
+| `setStock` | `reset_process3d_document_effect` only (`🎮️commands/🪵️stock/🦀️.rs:23-42`) | `HostOnly` |
+| `importModelFile` | `reset_process3d_document_effect` only (`🎮️commands/📤️media/🦀️.rs:80-95`) | `HostOnly` |
 | `exportModel` | `Effect::DownloadMediaExport` only (same file, `:21-46`) | `HostOnly` |
-| `addStep` | `insert_step_mutations` → `CreateStep` (+ `ChangeCursor`) (`🎮️commands/🪜️step/🦀️component.rs:29-61`) | `Artifact` |
+| `addStep` | `insert_step_mutations` → `CreateStep` (+ `ChangeCursor`) (`🎮️commands/🪜️step/🦀️.rs:29-61`) | `Artifact` |
 | `removeStep` | `remove_step_mutations` → `DeleteStep` (+ `ChangeCursor`) (same file, `:72-85`) | `Artifact` |
 | `removeSelectedStep` | same, keyed off `ctx.interaction` (same file, `:99-117`) | `Artifact` |
 | `moveStep` | `ReorderSteps` (same file, `:130-141`) | `Artifact` |
 | `updateStep` | `RenameStep` + `ChangeStepEnabled` + `ChangeStepOrigin` + `ReplaceStepMeasure` (same file, `:161-181`) | `Artifact` |
 | `setStepEnabled` | `ChangeStepEnabled` (same file, `:192-201`) | `Artifact` |
-| `addWorkshopMachine` | `CreateMachine` (`🎮️commands/🛠️workshop/🦀️component.rs:39-55`) | `Artifact` |
+| `addWorkshopMachine` | `CreateMachine` (`🎮️commands/🛠️workshop/🦀️.rs:39-55`) | `Artifact` |
 | `removeWorkshopMachine` | `DeleteMachine` (same file, `:67-79`) | `Artifact` |
 | `updateWorkshopMachine` | `RenameMachine`/`ChangeMachineIcon`/`ReplaceMachineCapabilities` (same file, `:97-121`) | `Artifact` |
-| `patchInspector` | one of `RenameMachine`/`ReplaceMachineCapabilities`/`ChangeStockLabel`/`MoveStock` (`🎮️commands/🔎️inspector/🦀️component.rs:118-130`) | `Artifact` |
-| `setCursor` | `ChangeCursor` (`🎮️commands/⏱️cursor/🦀️component.rs:26-36`) | `Artifact` |
+| `patchInspector` | one of `RenameMachine`/`ReplaceMachineCapabilities`/`ChangeStockLabel`/`MoveStock` (`🎮️commands/🔎️inspector/🦀️.rs:118-130`) | `Artifact` |
+| `setCursor` | `ChangeCursor` (`🎮️commands/⏱️cursor/🦀️.rs:26-36`) | `Artifact` |
 | `stepCursor` | `ChangeCursor` (same file, `:49-59`) | `Artifact` |
 | `stepCursorBack` | `ChangeCursor` (same file, `:70-80`) | `Artifact` |
 | `stepCursorForward` | `ChangeCursor` (same file, `:91-101`) | `Artifact` |
-| `worldPointerDown` | `insert_step_mutations` + `set_active_utility_effect` (`🎮️commands/🌍️world/🦀️component.rs:52-77`) | `Artifact` |
+| `worldPointerDown` | `insert_step_mutations` + `set_active_utility_effect` (`🎮️commands/🌍️world/🦀️.rs:52-77`) | `Artifact` |
 | `worldFaceDragEnd` | `insert_step_mutations` (same file, `:92-112`) | `Artifact` |
-| `engagementSubmit` | `ChangeCursor` for `back`/`forward`/`all` **and** `SetEngagementInput` on every word (`🎮️commands/🎛️engagement/🦀️component.rs:19-46`) | `Artifact` + `Config` |
+| `engagementSubmit` | `ChangeCursor` for `back`/`forward`/`all` **and** `SetEngagementInput` on every word (`🎮️commands/🎛️engagement/🦀️.rs:19-46`) | `Artifact` + `Config` |
 
 `engagementSubmit` is the only two-lane row. `worldPointerDown` emits a host effect too, but effects
 never force `HostOnly` — `engagementAbort` already publishes on `Config` while emitting one.
@@ -79,7 +79,7 @@ lane implements. It:
 
 The host always drives this lane with a fixed
 `ArtifactStoreOneItemGrant { maximum_items: 1, maximum_bytes: TYPED_OPERATION_RESULT_PAGE_BYTES }` —
-4 KiB, always (`🔌️plugin/🦀️component.rs:12979`). A gate written as
+4 KiB, always (`🔌️plugin/🦀️.rs:12979`). A gate written as
 `grant.maximum_bytes < process3d_document_bytes(base)?` would return `Blocked` forever the moment a
 timeline or a workshop outgrew one page — a silent stall instead of a loud rejection. Nothing compares
 the grant to the preflight footprint at admission (`begin_apply_one_owned` only checks
@@ -122,3 +122,28 @@ entries are `"migrated"` (verified by walking the JSON: exactly the twenty-two i
 Three pre-existing `create_process3d_app().definition` accesses in the test module were fixed to
 `create_process3d_app()` — `create_process3d_app` returns an `AppDefinition`, which has no
 `.definition` field, so those tests could not compile.
+
+## Note on the mid-ticket repo-wide rename
+While this migration was in flight a peer session renamed every `🦀️component.rs` to `🦀️.rs`
+repo-wide and consolidated the editor's sibling modules into the editor root file (it grew from
+~2 700 to ~3 100 lines). Every edit in this ticket survived that rename intact — verified by
+re-grepping the new
+`✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs`
+(the new factory, both grant constants, both new tests present; zero `PROCESS3D_BATCH_ONLY_TOOL_IDS`
+or `BatchOnlyPendingRewrite` occurrences) and by re-running the TS route audit, which passes against
+the renamed path. Every path in this document is the post-rename one.
+
+## Verification status at hand-off (2026-09-01 22:34 CEST)
+| gate | command | result |
+| --- | --- | --- |
+| route audit (independent oracle) | `npx nx run @semio-tech/process-js:test` | **PASS** — `routes=33; migrated=33; bounded=25; resumable=8; batchOnly=0` |
+| parse + format of the edited file | `rustfmt --edition 2021 --config-path rustfmt.toml --check …/✏️editor/🦀️.rs` | parses; only two PRE-EXISTING diffs (`:288` resumable-list wrapping, `:2722` `host_contributions…`), none in the new regions |
+| declaration cross-check | static walk of the source | bounded 25 == its `PUBLICATION_CONTRACTS` == its proof rows; resumable 8 likewise; their union == the 33 `app_commands!` rows; all 33 manifest classifications `Migrated`; none missing |
+| `cargo check -p semio-framework` | ran | **0 errors** at 22:05 |
+| `cargo check -p semio-s-plugin-process` | ran repeatedly 22:05–22:34 | **NOT verified.** Never reached a clean compile inside the window; the peer's serde→`ToValue` migration oscillated the shared crates (2 → 41 → 2 → 9 → 0-by-loose-pattern), then a repo-wide `🦀️component.rs` → `🦀️.rs` rename landed at ~22:24, and from 22:31 cargo cannot resolve the workspace at all: `error: multiple workspace roots found in the same workspace` — a peer added `[workspace]` to `✏️s/🔌️plugins/🗄️stdio/🧪️oracle/📦️packages/🦀️rust/Cargo.toml` without the matching `exclude` entry in the contended root `Cargo.toml` (which this ticket must not edit). |
+| `cargo test -p semio-s-plugin-process` | not reachable | **NOT run** — blocked by the same workspace-root error |
+
+Nothing red was ever attributable to a file this ticket touched: every error observed lived in
+`semio-framework-os-kernel`, `semio-framework-plugin-host`, `semio-framework-server`,
+`🧰️framework/🔨️modules/📡️replication`, `🧰️framework/🔨️modules/📡️spr`, or the root workspace manifest.
+Re-run both cargo commands once the root `Cargo.toml` excludes the stdio oracle crate.

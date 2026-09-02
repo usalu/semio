@@ -1,0 +1,31 @@
+# 🧬️ SemioValueSnapshot facet mirror — mirrors the `🦀️.rs` sibling's real fields.
+enum SemioValueKind { NULL BOOL INT FLOAT STR BYTES LIST MAP REF }
+
+type ValueId {
+  value: String!
+}
+
+type SemioValue {
+  kind: SemioValueKind!
+  value: String
+  lexeme: String
+  items: [SemioValue!]
+  entries: [SemioValueEntry!]
+  id: ValueId
+}
+
+type SemioValueEntry {
+  key: String!
+  value: SemioValue!
+}
+
+type SemioValueNode {
+  id: ValueId!
+  value: SemioValue!
+}
+
+type SemioValueSnapshot {
+  schema: String! @state(class: ARTIFACT)
+  root: SemioValue! @state(class: ARTIFACT)
+  nodes: [SemioValueNode!]! @state(class: ARTIFACT)
+}

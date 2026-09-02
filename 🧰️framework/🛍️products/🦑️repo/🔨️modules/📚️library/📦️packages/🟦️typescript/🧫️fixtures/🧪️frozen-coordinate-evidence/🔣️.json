@@ -3,7 +3,7 @@
   "contract": "frozenCoordinateEvidenceContracts",
   "contractId": "cad-draw-projection-vectors-v1",
   "registration": {
-    "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🧫️fixtures/🧪️cad-draw-path-projection/🔣️.json",
+    "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🧫️fixtures/🔣️cad-draw-path-projection.json",
     "sha256": "1410a74ccc87561fd4a4b91db7d503614fe21ddce8bc78dee923d8237820f3e0",
     "schemaVersion": 1,
     "coordinates": [

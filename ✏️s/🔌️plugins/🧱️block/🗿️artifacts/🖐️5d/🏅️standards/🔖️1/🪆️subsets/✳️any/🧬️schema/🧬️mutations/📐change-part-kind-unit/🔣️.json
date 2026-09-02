@@ -5,7 +5,7 @@
   "displayName": "Change Part Kind Unit",
   "emoji": "📐",
   "aggregateVariant": "ChangePartKindUnit",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": "change-part-kind-unit",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

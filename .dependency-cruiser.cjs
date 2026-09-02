@@ -48,8 +48,8 @@ function assertFocusedBoundarySemantics() {
   ];
   const runtimeSources = [
     "compose/client/lib/sketchpad/js/boot.tsx",
-    "✏️s/🔌️plugins/📐️cad/📦️packages/🟦️typescript/📦️index.ts",
-    "🌎️hub/🔨️modules/example/🟦️component.ts",
+    "✏️s/🔌️plugins/📐️cad/📦️packages/🟦️typescript/🟦️.ts",
+    "🌎️hub/🔨️modules/example/🟦️.ts",
     "♻️mit-bestand/🧺️demonstrator/🤖️generated/🟦️plugins.ts",
     "♻️mit-bestand/🧺️demonstrator/runtime.config.ts",
   ];
@@ -67,10 +67,10 @@ function assertFocusedBoundarySemantics() {
   }
   const rendererAllows = rendererRule.to.pathNot.map((pattern) => new RegExp(pattern, "u"));
   const allowedRendererTargets = [
-    "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/Shell/🟦️component.tsx",
-    "🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx",
-    "🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🟦️typescript/📦️index.ts",
-    "🧰️framework/📦️packages/🟦️typescript/🟦️glue.ts",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/Shell/🟦️.tsx",
+    "🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/🟦️.tsx",
+    "🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🟦️typescript/🟦️.ts",
+    "🧰️framework/📦️packages/🟦️typescript/🟦️.ts",
     "node_modules/react/index.js",
     "node_modules/react-dom/client.js",
     "node_modules/vitest/dist/index.js",
@@ -82,7 +82,7 @@ function assertFocusedBoundarySemantics() {
     "node_modules/three/build/three.module.js",
     "🧰️framework/🔨️modules/🎠️kernel/🟦️.ts",
     "🧰️framework/🔨️modules/📡️replication/📦️packages/🟦️typescript/🟦️.ts",
-    "🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/🟦️glue.ts",
+    "🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/🟦️.ts",
     "♻️mit-bestand/🧺️demonstrator/🟦️brand.ts",
   ];
   const allowed = (candidate) => rendererAllows.some((pattern) => pattern.test(candidate));
@@ -294,7 +294,7 @@ function sModulesNoPluginsRule() {
  * runtime infrastructure that doesn't exist yet — a follow-up ticket, not mechanical cleanup.
  *
  * `📐️cad` is a SECOND, newly-discovered real violation (W7, not previously investigated by any earlier
- * wave of this ticket): `🔨️modules/🏃️runtime/🟦️component.ts` and `🔨️modules/📐️brepjs/🟦️component.ts`
+ * wave of this ticket): `🔨️modules/🏃️runtime/🟦️.ts` and `🔨️modules/📐️brepjs/🟦️.ts`
  * (both plugin-core, outside `🧩️extensions/`) statically `import`/`import()` all 4 of cad's own
  * extensions (`@semio-tech/cad-js-module-{spatial-shape,aec-building,aec-building-energy,aec-building-
  * structure}`) to build `CAD_MODULE_REGISTRARS` — a composition-root that registers each installed

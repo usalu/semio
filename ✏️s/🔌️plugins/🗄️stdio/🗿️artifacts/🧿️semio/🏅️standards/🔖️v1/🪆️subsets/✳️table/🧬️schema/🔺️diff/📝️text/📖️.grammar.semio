@@ -1,0 +1,30 @@
+dialect grammar
+grammar stdio.semio.table.diff
+extension semio
+start document
+
+# UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM table wave: real one-line `DiffCodec::print_diff`/`parse_diff`
+# shape ALREADY emitted by `🔺️diff/🦀️.rs` (`print_table_diff`/`parse_table_diff`). `table`
+# has TWO mutable fields (`columns`, `rows`) — present fields join with `;` on one physical line;
+# `document` accepts every combination: neither, either alone, or both.
+document = field-list?
+field-list = field {";" field}*
+field = columns-field | rows-field
+columns-field = "columns" "=" "[" column-list? "]"
+column-list = column {"," column}*
+column = "[" hex "," cell-kind "]"
+cell-kind = "n" | "b" | "i" | "f" | "s" | "y"
+
+rows-field = "rows" "=" "[" row-list? "]"
+row-list = row {"," row}*
+row = "[" list-item* "]"
+
+# `value`/`list-item`/`map-item`/`bit` reused verbatim from ✳️value's own grammar (row cells are
+# `Vec<SemioValue>`, encoded via that subset's `enc_semio_value`).
+value = "Z" | "B" "[" bit "]" | "I" "[" hex "]" | "F" "[" hex "]" | "S" "[" hex "]" | "Y" "[" hex "]" | "L" "[" list-item* "]" | "M" "[" map-item* "]" | "R" "[" hex "]"
+list-item = value ","?
+map-item = hex ":" value ","?
+bit = "0" | "1"
+
+# `hex` (bare `hex`, deliberately NOT defined as a production here) is the framework's built-in
+# `hex` MACRO — a run of lowercase hex digits, incl. the empty string.

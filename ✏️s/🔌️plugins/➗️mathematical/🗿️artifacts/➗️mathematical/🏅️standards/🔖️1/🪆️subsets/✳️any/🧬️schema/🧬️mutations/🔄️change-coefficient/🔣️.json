@@ -5,7 +5,7 @@
   "displayName": "Change Coefficient",
   "emoji": "🔄️",
   "aggregateVariant": "ChangeCoefficient",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

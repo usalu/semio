@@ -5,7 +5,7 @@
   "displayName": "Create Resilience Requirement",
   "emoji": "🌱💪",
   "aggregateVariant": "CreateResilienceRequirement",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

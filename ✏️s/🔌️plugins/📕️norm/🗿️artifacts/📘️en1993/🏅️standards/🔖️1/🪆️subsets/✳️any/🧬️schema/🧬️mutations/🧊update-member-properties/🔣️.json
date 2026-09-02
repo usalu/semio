@@ -5,7 +5,7 @@
   "displayName": "Update Member Properties",
   "emoji": "🧊",
   "aggregateVariant": "UpdateMemberProperties",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

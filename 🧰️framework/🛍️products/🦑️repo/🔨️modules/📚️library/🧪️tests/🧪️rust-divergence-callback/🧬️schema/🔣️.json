@@ -242,8 +242,8 @@
     },
     "oracle": {
       "const": {
-        "manifestInput": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🧫️fixtures/🧪️rust-physical-reference-context/🧪️oracle/⚙️.toml",
-        "sourceInput": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧪️rust-divergence-callback/🦀️.rs"
+        "manifestInput": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🧫️fixtures/🧪️rust-physical-reference-context/⚙️oracle.toml",
+        "sourceInput": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🦀️rust-divergence-callback.rs"
       }
     },
     "retention": {
@@ -261,7 +261,7 @@
         "projectPath": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📋️project.json",
         "routerPath": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📜️script.ts",
         "packagePath": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/package.json",
-        "testPath": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧪️rust-divergence-callback/🟦️.ts",
+        "testPath": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🟦️rust-divergence-callback.ts",
         "launchPaths": [
           ".vscode/🧩️launch.seed.jsonc",
           ".vscode/launch.json"

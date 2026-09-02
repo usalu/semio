@@ -5,18 +5,21 @@
   "displayName": "Rename Vcs",
   "emoji": "✏️",
   "aggregateVariant": "RenameVcs",
-  "payloadSchema": "🔣️payload.schema.json",
-  "textOpcode": "rename-vcs",
+  "payloadSchema": "🔣️.schema.json",
+  "textOpcode": null,
   "binaryTag": null,
-  "invertibility": "explicit-mutation",
+  "invertibility": "self",
   "diffParticipation": "detect",
   "outcomeClasses": [
-    "info",
-    "applied"
+    "applied",
+    "warning"
   ],
   "composition": "atomic",
   "requiredLanguageSurfaces": [
     "rust",
+    "typescript",
+    "graphql",
+    "protobuf",
     "json-schema"
   ]
 }

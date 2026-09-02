@@ -69,7 +69,7 @@ Each stylesheet layer owns the globs for its own module, so an app entry only de
    - [demonstrator globals.css](♻️mit-bestand/🧺️demonstrator/🎨️globals.css)
    - [.storybook/globals.css](.storybook/globals.css), dropping the two stale `♾️infinite` globs now covered centrally
 
-4. Plugin-side renderers keep their own class sources. Only two exist: [cad renderer](✏️s/🔌️plugins/📐️cad/🔨️modules/📺️renderer/🟦️component.tsx) and [animate present renderer](✏️s/🔌️plugins/🎞️animate/🎛️apps/🎬️present/📺️renderer/⚛️react/🟦️component.tsx). The animate present [globals.css](✏️s/🔌️plugins/🎞️animate/🎛️apps/🎬️present/📺️renderer/⚛️react/🎨️globals.css) currently declares nothing and gains `@source "."`; the s plugin renderer globs stay in the app entries that host them (os dev, storybook), since `🧰️framework` must not reference `✏️s`.
+4. Plugin-side renderers keep their own class sources. Only two exist: [cad renderer](✏️s/🔌️plugins/📐️cad/🔨️modules/📺️renderer/🟦️.tsx) and [animate present renderer](✏️s/🔌️plugins/🎞️animate/🎛️apps/🎬️present/📺️renderer/⚛️react/🟦️.tsx). The animate present [globals.css](✏️s/🔌️plugins/🎞️animate/🎛️apps/🎬️present/📺️renderer/⚛️react/🎨️globals.css) currently declares nothing and gains `@source "."`; the s plugin renderer globs stay in the app entries that host them (os dev, storybook), since `🧰️framework` must not reference `✏️s`.
 
 5. Pure UI consumers ([compose desktop](compose/client/ui/desktop/globals.css), sketchpad entries, [präsentation](♻️mit-bestand/🎤️präsentation/📅️33.projektetage/🎨️globals.css)) drop their now-redundant UI react `@source` line and keep their own directories.
 
@@ -83,7 +83,7 @@ Each stylesheet layer owns the globs for its own module, so an app entry only de
 - Playwright probe in the ticket folder re-running the ancestor dump: assert the node graph host height is within a few pixels of the 900px viewport (not 196374) and `document.body.scrollHeight === clientHeight`, plus a screenshot for the record.
 - Repeat the probe for a second and third app family (block 3d, gis 2d) and for the demonstrator, to confirm no regression there.
 - Run the verify script so the widened path check passes, plus the ui and renderer vitest suites.
-- Remove the temporary `[DEBUG] contributionsJson flowExtension count` log added to [ShellHost](🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellHost/🟦️component.tsx) in the last commit once the apps are confirmed working.
+- Remove the temporary `[DEBUG] contributionsJson flowExtension count` log added to [ShellHost](🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellHost/🟦️.tsx) in the last commit once the apps are confirmed working.
 
 ## Ticket
 

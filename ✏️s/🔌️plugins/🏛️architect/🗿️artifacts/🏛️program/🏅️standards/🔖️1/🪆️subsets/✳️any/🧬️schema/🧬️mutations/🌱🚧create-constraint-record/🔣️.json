@@ -5,7 +5,7 @@
   "displayName": "Create Constraint Record",
   "emoji": "🌱🚧",
   "aggregateVariant": "CreateConstraintRecord",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

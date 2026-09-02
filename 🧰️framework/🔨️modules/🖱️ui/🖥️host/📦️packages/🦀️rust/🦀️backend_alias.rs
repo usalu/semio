@@ -9,7 +9,7 @@
 //! costs exactly one line here.
 //!
 //! ⚠️ **UNVERIFIED until the four sibling backend packets land.** Checked 2026-08-20: `backend-metal`,
-//! `backend-d3d12`, `backend-vulkan` and `backend-webgpu` are all still scaffolds — each `📦️glue.rs`
+//! `backend-d3d12`, `backend-vulkan` and `backend-webgpu` are all still scaffolds — each `🦀️.rs`
 //! is an empty `//#region Backend` block with no `pub type`/`pub struct` of its own yet. The four type
 //! names below (`MetalBackend`, `D3d12Backend`, `VulkanBackend`, `WebGpuBackend`) come from this
 //! packet's own brief and from `ui_render::backend`'s docstring, not from a real `impl GraphicsBackend`

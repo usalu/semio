@@ -72,7 +72,7 @@
       "hostPath": "✏️s/🔌️plugins/🗄️stdio/🧪️oracle/📦️packages/🦀️rust",
       "productionDebt": {
         "reachableFrom": [
-          "🧰️framework/🛍️products/💻️os/🖥️host/🦀️component.rs"
+          "🧰️framework/🛍️products/💻️os/🖥️host/🦀️.rs"
         ],
         "owner": "🧰️framework/🛍️products/💻️os/🖥️host",
         "plan": "The OS host rasterizes SVG to PNG through this crate, so it is production-reachable TODAY. Discovered by the oracle-purity gate when png was registered — the gate did its job. Phase 7 target: the rasterizer's PNG writing belongs behind ✏️s/🔌️plugins/🗄️stdio's own encode_png, at which point this entry loses its productionDebt and testOnly becomes a fact."
@@ -211,8 +211,8 @@
       "hostPath": "✏️s/🔌️plugins/🗄️stdio/🧪️oracle/📦️packages/🦀️rust",
       "productionDebt": {
         "reachableFrom": [
-          "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️present/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🎥️video/🦀️component.rs",
-          "🧰️framework/🔨️modules/🗺️surface/🗺️tiled-map/🦀️component.rs"
+          "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️present/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🎥️video/🦀️.rs",
+          "🧰️framework/🔨️modules/🗺️surface/🗺️tiled-map/🦀️.rs"
         ],
         "owner": "🧰️framework/🔨️modules/🗺️surface",
         "plan": "The `image` crate is production-reachable TODAY from two places: the 🎞️animate plugin's video engine and 🧰️framework/🔨️modules/🗺️surface's tiled-map. Discovered by the oracle-purity gate the moment `image` was registered — the gate did its job. Phase 7 target: both call sites want raster decode/encode that ✏️s/🔌️plugins/🗄️stdio already implements, so routing them through decode_bmp / decode_tiff / decode_jpg retires the dependency and this record with it."
@@ -244,8 +244,8 @@
       "hostPath": "✏️s/🔌️plugins/🗄️stdio/🧪️oracle/📦️packages/🦀️rust",
       "productionDebt": {
         "reachableFrom": [
-          "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️present/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🎥️video/🦀️component.rs",
-          "🧰️framework/🔨️modules/🗺️surface/🗺️tiled-map/🦀️component.rs"
+          "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️present/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🎥️video/🦀️.rs",
+          "🧰️framework/🔨️modules/🗺️surface/🗺️tiled-map/🦀️.rs"
         ],
         "owner": "🧰️framework/🔨️modules/🗺️surface",
         "plan": "The `image` crate is production-reachable TODAY from two places: the 🎞️animate plugin's video engine and 🧰️framework/🔨️modules/🗺️surface's tiled-map. Discovered by the oracle-purity gate the moment `image` was registered — the gate did its job. Phase 7 target: both call sites want raster decode/encode that ✏️s/🔌️plugins/🗄️stdio already implements, so routing them through decode_bmp / decode_tiff / decode_jpg retires the dependency and this record with it."
@@ -277,8 +277,8 @@
       "hostPath": "✏️s/🔌️plugins/🗄️stdio/🧪️oracle/📦️packages/🦀️rust",
       "productionDebt": {
         "reachableFrom": [
-          "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️present/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🎥️video/🦀️component.rs",
-          "🧰️framework/🔨️modules/🗺️surface/🗺️tiled-map/🦀️component.rs"
+          "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️present/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🎥️video/🦀️.rs",
+          "🧰️framework/🔨️modules/🗺️surface/🗺️tiled-map/🦀️.rs"
         ],
         "owner": "🧰️framework/🔨️modules/🗺️surface",
         "plan": "The `image` crate is production-reachable TODAY from two places: the 🎞️animate plugin's video engine and 🧰️framework/🔨️modules/🗺️surface's tiled-map. Discovered by the oracle-purity gate the moment `image` was registered — the gate did its job. Phase 7 target: both call sites want raster decode/encode that ✏️s/🔌️plugins/🗄️stdio already implements, so routing them through decode_bmp / decode_tiff / decode_jpg retires the dependency and this record with it."

@@ -1,0 +1,7 @@
+syntax = "proto3";
+// 📝️ Text-wire representation: preamble line + hex-encoded JSON body (real shape: 🅰️.g4).
+package semio.stdio_semio_drawing_snapshot.text;
+message SemioDrawingSnapshotText {
+  string preamble = 1; // always "semio stdio.semio.drawing.dsl v1"
+  string hex_body = 2;
+}

@@ -10,7 +10,7 @@ pub use semio_framework_os_kernel::os_spr;
 pub mod engine;
 pub use engine::*;
 
-#[path = "../../../../🛍️products/💻️os/🔨️modules/⚙️engine/🦀️component.rs"]
+#[path = "../../../../🛍️products/💻️os/🔨️modules/⚙️engine/🦀️.rs"]
 pub mod os_engine;
 pub use os_engine::{Engine, EngineCache, EngineFault, EngineHandle as KernelEngineHandle, EngineKey};
 

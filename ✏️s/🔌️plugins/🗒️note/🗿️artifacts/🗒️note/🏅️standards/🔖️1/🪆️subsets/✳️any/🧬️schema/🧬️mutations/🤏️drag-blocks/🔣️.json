@@ -5,7 +5,7 @@
   "displayName": "Drag Blocks",
   "emoji": "🤏️",
   "aggregateVariant": "DragBlocks",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": "drag-blocks",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

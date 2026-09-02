@@ -1,4 +1,0 @@
-; abnf stdio.csv diff (binary) — protocol::OpBinary: raw UTF-8 JSON bytes of CsvDiff,
-; NOT wrapped in the shared `.semio` envelope (contrast with ../../📸️snapshot/💾️binary/).
-document = payload
-payload = *OCTET   ; UTF-8 JSON object per sibling ../📝️text/📖️component.grammar.semio

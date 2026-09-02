@@ -5,7 +5,7 @@
   "displayName": "Change Cellar Ventilation M3 H",
   "emoji": "🧯",
   "aggregateVariant": "ChangeCellarVentilationM3H",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

@@ -5,7 +5,7 @@
   "displayName": "Delete Grip Kind",
   "emoji": "❌",
   "aggregateVariant": "DeleteGripKind",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": "delete-grip-kind",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

@@ -12,10 +12,10 @@
 //!   oracle (`dxf-crate-r12-mutate`). Untouched in content; still written as `<out>/drafting-plate/
 //!   drafting-plate.dxf`.
 //! * one dedicated `<kind>-applied` / `<kind>-no-op` / `<kind>-rejected-<reason>` recipe per
-//!   WITNESSABLE mutation kind (`../../🧪️oracle/🔣️.json`'s `mutationCatalogs[].kinds`, 19 total) —
+//!   WITNESSABLE mutation kind (`../../🔣️oracle.json`'s `mutationCatalogs[].kinds`, 19 total) —
 //!   the new corpus this retrofit adds, each written as `<out>/<recipe-id>/before.dxf[
 //!   +after.dxf]`. A `-rejected-*` recipe writes ONLY `before.dxf`: the mutation described in its own
-//!   comment is refused by the real production dispatch (`../../🧬️schema/🔺️diff/🦀️component.rs`'s
+//!   comment is refused by the real production dispatch (`../../🧬️schema/🔺️diff/🦀️.rs`'s
 //!   `validate_indexed_targets`/`validate_named_targets`, read directly, never assumed) before any
 //!   DXF encoding would even happen, so there is no legal `after` state to write.
 //!
@@ -26,7 +26,7 @@
 //!   build <recipe-id> <out-dir>   — writes `<out-dir>/<recipe-id>/…`
 //!   project <path-to-dxf>         — decodes a real DXF file and prints a typed JSON projection on
 //!                                   stdout, the exact shape `semantic-dxf-r12-v1` compares (mirrors
-//!                                   `../../🧪️oracle/🦀️component.rs`'s own `project_dxf_r12` shape,
+//!                                   `../../🦀️oracle.rs`'s own `project_dxf_r12` shape,
 //!                                   independently re-derived here since that module is gated behind
 //!                                   the `oracles` feature of a host crate this standalone binary
 //!                                   never links)
@@ -53,7 +53,7 @@ use std::path::Path;
 const FIXED_STAMP_HEADER: &str = "  0\nSECTION\n  2\nHEADER\n  9\n$ACADVER\n  1\nAC1009\n  9\n$TDCREATE\n 40\n2461281.0\n  9\n$TDUPDATE\n 40\n2461281.0\n  0\nENDSEC\n  0\nEOF\n";
 
 // 📖 `set-header-var`'s real dispatch (`🧬️schema/🧬️mutations/🦀️.rs` `DxfMutation::diff` ->
-// `diff_set_header_var`, `🧬️schema/🔺️diff/🦀️component.rs:1774`) branches only on whether the
+// `diff_set_header_var`, `🧬️schema/🔺️diff/🦀️.rs:1774`) branches only on whether the
 // target name already exists in `header_vars`: if it does, it emits a single `modified` entry
 // against that unique name (always valid — `validate_named_targets` only rejects a modify when the
 // name is ABSENT or duplicated, and a well-formed document never has either for its own $INSBASE);
@@ -175,7 +175,7 @@ fn encode(drawing: &Drawing) -> Vec<u8> {
 
 //#region 🔖️OrderedRebuild
 /// 🧱️ `dxf::Drawing::add_*` only appends; a true insert-at-`index` needs the whole ordered
-/// collection rebuilt — same small pattern `../../🧪️oracle/🦀️component.rs`'s own `imp` module uses
+/// collection rebuilt — same small pattern `../../🦀️oracle.rs`'s own `imp` module uses
 /// (independently re-derived here, never imported: that module is gated behind a host crate this
 /// binary never links).
 fn insert_layer_at(drawing: &mut Drawing, index: usize, layer: Layer) {
@@ -229,9 +229,9 @@ enum RecipeOutput {
 }
 
 /// 🎯 One recipe per witnessable `(mutation, outcome)` coordinate declared in
-/// `../../🧪️oracle/🔣️.json`'s `mutationManifests`, PLUS the pre-existing `drafting-plate`. Every
+/// `../../🔣️oracle.json`'s `mutationManifests`, PLUS the pre-existing `drafting-plate`. Every
 /// `-applied`/`-no-op` `after` touches EXACTLY the field(s) the real dispatch
-/// (`../../🧬️schema/🧬️mutations/🦀️.rs` + `../../🧬️schema/🔺️diff/🦀️component.rs`, both read directly,
+/// (`../../🧬️schema/🧬️mutations/🦀️.rs` + `../../🧬️schema/🔺️diff/🦀️.rs`, both read directly,
 /// never assumed) would touch for that kind against `base_doc()`. Every `-rejected-*` recipe names,
 /// in its own match arm comment, the exact validation function and branch that refuses it — `before`
 /// only, no `after`.
@@ -267,13 +267,13 @@ fn recipe(id: &str) -> Option<RecipeOutput> {
         // collides with the base's own existing "DIMS": DxfDiff::between's named_between computes
         // a `modified` entry for the first "DIMS" match AND an `added` entry for the second, and
         // `validate_named_targets`'s add-path rejects it (`present(key)` is true for a name that
-        // already exists in `base` — 🔺️diff/🦀️component.rs:1571) — `invalid-add-target`. No `after`
+        // already exists in `base` — 🔺️diff/🦀️.rs:1571) — `invalid-add-target`. No `after`
         // state is producible through the real dispatch, so only `before.dxf` is written; the
         // payload that would be rejected is never itself encoded (rejected recipes never are).
         "set-snapshot-rejected-duplicate-layer" => Some(RecipeOutput::Pair(before, None)),
 
         // 🧬 SetHeaderVar{name:"$INSBASE"} — the one generic $VAR `dxf`'s fixed Header struct
-        // persists unconditionally on an R12 save (../../🧪️oracle/🦀️component.rs's own
+        // persists unconditionally on an R12 save (../../🦀️oracle.rs's own
         // 🔖️HeaderVar note, independently reconfirmed against the generated writer).
         "set-header-var-applied" => {
             let mut after = base_doc();
@@ -291,7 +291,7 @@ fn recipe(id: &str) -> Option<RecipeOutput> {
         // 🧬 RemoveHeaderVar{name:"$SEMIO_TEST_MISSING_VAR"} — a name no real DXF writer emits, so
         // it is genuinely absent from `base.header_vars`: validate_named_targets's removal path
         // requires `unique(key)` (occurrences == Some(1)); an absent key is `None`, not `Some(1)`,
-        // so this is `invalid-remove-target` (🔺️diff/🦀️component.rs:1551) regardless of which
+        // so this is `invalid-remove-target` (🔺️diff/🦀️.rs:1551) regardless of which
         // reference library reads the bytes — a carrier-independent rejection.
         "remove-header-var-rejected-missing" => Some(RecipeOutput::Pair(before, None)),
 
@@ -535,7 +535,7 @@ fn linetype_json(l: &LineType) -> String {
     format!("{{\"name\":{},\"description\":{}}}", json_str(&l.name), json_str(&l.description))
 }
 
-/// 📄️ Semantic projection of one entity — the exact field set `../../🧪️oracle/🦀️component.rs`'s
+/// 📄️ Semantic projection of one entity — the exact field set `../../🦀️oracle.rs`'s
 /// own `entity_to_json` produces for the six typed kinds this subset's mutations construct
 /// (line/circle/arc/text/solid/insert); any other kind projects as `{"entityKind":"other"}` plus
 /// its layer, mirroring that module's own fallback.
@@ -558,7 +558,7 @@ fn block_json(b: &Block) -> String {
 }
 
 /// 📄️ Whole-document semantic projection, the exact shape `semantic-dxf-r12-v1` compares —
-/// independently re-derived from `../../🧪️oracle/🦀️component.rs`'s own `project_dxf_r12` (same
+/// independently re-derived from `../../🦀️oracle.rs`'s own `project_dxf_r12` (same
 /// field names, same field set), never imported from it.
 fn project_json(drawing: &Drawing) -> String {
     let layers: Vec<String> = drawing.layers().map(layer_json).collect();

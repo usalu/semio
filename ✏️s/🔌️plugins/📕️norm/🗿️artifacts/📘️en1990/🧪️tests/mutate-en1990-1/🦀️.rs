@@ -1,7 +1,7 @@
 //! 🦀️ EN 1990 exhaustive mutation case — Rust adapter. Ticket
 //! 26/08/23/END-TO-END-TESTING-REFACTOR, wave 14 (the no-oracle conversion). The recorded
 //! no-oracle decision `en1990-1-mutation-semantics` is gone from
-//! `../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️oracle/🔣️.json`, because a reference now
+//! `../../🏅️standards/🔖️1/🪆️subsets/✳️any/🔣️oracle.json`, because a reference now
 //! exists to compare against: `s.norm.en1990` is a
 //! semio-native artifact with no third-party reader or writer, so its reference is a second
 //! IMPLEMENTATION: the independent Python `🐍️component.py` beside this file, registered as the
@@ -22,7 +22,7 @@
 //! `✏️s/🔌️plugins/🗄️stdio/🧪️oracle/⚖️law` module (`law::mutation_is_observable`,
 //! `law::inverse_restores`, `law::round_trip_preserves`, `law::carrier_is_exact`) that the
 //! stdio mutation cases use, reached through the `oracleHostPackages` entry this plugin
-//! declares in `✏️s/🔌️plugins/📕️norm/🧪️oracle/🔣️.json`. What `parity` adds on top is the
+//! declares in `✏️s/🔌️plugins/📕️norm/🔣️oracle.json`. What `parity` adds on top is the
 //! one thing a single implementation can never provide: that a second implementation, written in
 //! another language from the same written specification, reaches the same document.
 //!
@@ -32,9 +32,9 @@
 //! unreachable from here. The subset's own production code therefore exports the bridges
 //! (`decode_en1990_snapshot_json`/`encode_en1990_snapshot_json`,
 //! `decode_en1990_dsl`/`encode_en1990_dsl`, `decode_en1990_pack`/`encode_en1990_pack` in
-//! `../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️component.rs`;
+//! `../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs`;
 //! `decode_en1990_mutation_json`, `apply_en1990_mutation`, `inverse_en1990_mutation` in
-//! `../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs`), whose
+//! `../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs`), whose
 //! signatures name only reachable types. This side reaches the committed vectors through
 //! `include_str!` and the Python side through the `asset://` URIs the feature declares, so both
 //! read the SAME committed bytes and neither holds a Rust or Python literal transcribed beside
@@ -53,7 +53,7 @@ use semio_repo_test_host::{digest, parse_json, Adapter, Context, Json, Outcome};
 use semio_s_plugin_stdio_test_oracle::law;
 
 //#region 🔖️Kinds
-/// 🏷️ Mirrors `En1990Mutation::KINDS` (`../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs`) —
+/// 🏷️ Mirrors `En1990Mutation::KINDS` (`../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs`) —
 /// duplicated, not imported, because the oracle-only build must not link the subject crate. The
 /// contract's mutation-coverage gate keeps this list honest against the catalog;
 /// `kinds_match_the_enum_and_the_catalog` in that production file keeps it honest against the enum.
@@ -88,64 +88,64 @@ const PACK_ASSET: &str = "asset://🏅️standards/🔖️1/🪆️subsets/✳�
 fn fixture_text(kind: &str) -> (&'static str, &'static str, &'static str, &'static str) {
     match kind {
         "change-annex" => (
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐷set-snapshot/🧪️tests/switches-the-national-annex-from-de-to-en/📸️snapshot/⬅️before/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐷set-snapshot/🧪️tests/switches-the-national-annex-from-de-to-en/🦠️mutation/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐷set-snapshot/🧪️tests/switches-the-national-annex-from-de-to-en/📸️snapshot/➡️after/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐷set-snapshot/🧪️tests/switches-the-national-annex-from-de-to-en/🎯️outcome/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐷set-snapshot/🧪️tests/switches-the-national-annex-from-de-to-en/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐷set-snapshot/🧪️tests/switches-the-national-annex-from-de-to-en/🦠️mutation/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐷set-snapshot/🧪️tests/switches-the-national-annex-from-de-to-en/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐷set-snapshot/🧪️tests/switches-the-national-annex-from-de-to-en/🎯️outcome/🔣️.json"),
         ),
         "change-permanent-action" => (
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐐change-permanent-action/🧪️tests/raises-the-permanent-action-to-62-5-kn/📸️snapshot/⬅️before/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐐change-permanent-action/🧪️tests/raises-the-permanent-action-to-62-5-kn/🦠️mutation/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐐change-permanent-action/🧪️tests/raises-the-permanent-action-to-62-5-kn/📸️snapshot/➡️after/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐐change-permanent-action/🧪️tests/raises-the-permanent-action-to-62-5-kn/🎯️outcome/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐐change-permanent-action/🧪️tests/raises-the-permanent-action-to-62-5-kn/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐐change-permanent-action/🧪️tests/raises-the-permanent-action-to-62-5-kn/🦠️mutation/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐐change-permanent-action/🧪️tests/raises-the-permanent-action-to-62-5-kn/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐐change-permanent-action/🧪️tests/raises-the-permanent-action-to-62-5-kn/🎯️outcome/🔣️.json"),
         ),
         "change-resistance" => (
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐘change-resistance/🧪️tests/raises-the-design-resistance-to-320-kn/📸️snapshot/⬅️before/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐘change-resistance/🧪️tests/raises-the-design-resistance-to-320-kn/🦠️mutation/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐘change-resistance/🧪️tests/raises-the-design-resistance-to-320-kn/📸️snapshot/➡️after/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐘change-resistance/🧪️tests/raises-the-design-resistance-to-320-kn/🎯️outcome/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐘change-resistance/🧪️tests/raises-the-design-resistance-to-320-kn/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐘change-resistance/🧪️tests/raises-the-design-resistance-to-320-kn/🦠️mutation/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐘change-resistance/🧪️tests/raises-the-design-resistance-to-320-kn/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐘change-resistance/🧪️tests/raises-the-design-resistance-to-320-kn/🎯️outcome/🔣️.json"),
         ),
         "change-consequence-class" => (
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐑change-consequence-class/🧪️tests/escalates-the-building-from-cc2-to-cc3/📸️snapshot/⬅️before/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐑change-consequence-class/🧪️tests/escalates-the-building-from-cc2-to-cc3/🦠️mutation/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐑change-consequence-class/🧪️tests/escalates-the-building-from-cc2-to-cc3/📸️snapshot/➡️after/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐑change-consequence-class/🧪️tests/escalates-the-building-from-cc2-to-cc3/🎯️outcome/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐑change-consequence-class/🧪️tests/escalates-the-building-from-cc2-to-cc3/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐑change-consequence-class/🧪️tests/escalates-the-building-from-cc2-to-cc3/🦠️mutation/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐑change-consequence-class/🧪️tests/escalates-the-building-from-cc2-to-cc3/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐑change-consequence-class/🧪️tests/escalates-the-building-from-cc2-to-cc3/🎯️outcome/🔣️.json"),
         ),
         "change-seismic-action" => (
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦄change-seismic-action/🧪️tests/enables-the-seismic-situation-with-an-85-kn-a-ed/📸️snapshot/⬅️before/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦄change-seismic-action/🧪️tests/enables-the-seismic-situation-with-an-85-kn-a-ed/🦠️mutation/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦄change-seismic-action/🧪️tests/enables-the-seismic-situation-with-an-85-kn-a-ed/📸️snapshot/➡️after/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦄change-seismic-action/🧪️tests/enables-the-seismic-situation-with-an-85-kn-a-ed/🎯️outcome/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦄change-seismic-action/🧪️tests/enables-the-seismic-situation-with-an-85-kn-a-ed/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦄change-seismic-action/🧪️tests/enables-the-seismic-situation-with-an-85-kn-a-ed/🦠️mutation/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦄change-seismic-action/🧪️tests/enables-the-seismic-situation-with-an-85-kn-a-ed/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦄change-seismic-action/🧪️tests/enables-the-seismic-situation-with-an-85-kn-a-ed/🎯️outcome/🔣️.json"),
         ),
         "insert-variable-action" => (
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐴insert-variable-action/🧪️tests/seeds-the-first-variable-action-q-snow-at-12-5-kn/📸️snapshot/⬅️before/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐴insert-variable-action/🧪️tests/seeds-the-first-variable-action-q-snow-at-12-5-kn/🦠️mutation/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐴insert-variable-action/🧪️tests/seeds-the-first-variable-action-q-snow-at-12-5-kn/📸️snapshot/➡️after/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐴insert-variable-action/🧪️tests/seeds-the-first-variable-action-q-snow-at-12-5-kn/🎯️outcome/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐴insert-variable-action/🧪️tests/seeds-the-first-variable-action-q-snow-at-12-5-kn/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐴insert-variable-action/🧪️tests/seeds-the-first-variable-action-q-snow-at-12-5-kn/🦠️mutation/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐴insert-variable-action/🧪️tests/seeds-the-first-variable-action-q-snow-at-12-5-kn/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐴insert-variable-action/🧪️tests/seeds-the-first-variable-action-q-snow-at-12-5-kn/🎯️outcome/🔣️.json"),
         ),
         "remove-variable-action" => (
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐎remove-variable-action/🧪️tests/refuses-to-remove-action-0-from-an-unseeded-child-slot/📸️snapshot/⬅️before/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐎remove-variable-action/🧪️tests/refuses-to-remove-action-0-from-an-unseeded-child-slot/🦠️mutation/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐎remove-variable-action/🧪️tests/refuses-to-remove-action-0-from-an-unseeded-child-slot/📸️snapshot/➡️after/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐎remove-variable-action/🧪️tests/refuses-to-remove-action-0-from-an-unseeded-child-slot/🎯️outcome/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐎remove-variable-action/🧪️tests/refuses-to-remove-action-0-from-an-unseeded-child-slot/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐎remove-variable-action/🧪️tests/refuses-to-remove-action-0-from-an-unseeded-child-slot/🦠️mutation/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐎remove-variable-action/🧪️tests/refuses-to-remove-action-0-from-an-unseeded-child-slot/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐎remove-variable-action/🧪️tests/refuses-to-remove-action-0-from-an-unseeded-child-slot/🎯️outcome/🔣️.json"),
         ),
         "change-variable-action-category" => (
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐮change-variable-action-category/🧪️tests/refuses-to-recategorise-a-missing-action-0/📸️snapshot/⬅️before/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐮change-variable-action-category/🧪️tests/refuses-to-recategorise-a-missing-action-0/🦠️mutation/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐮change-variable-action-category/🧪️tests/refuses-to-recategorise-a-missing-action-0/📸️snapshot/➡️after/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐮change-variable-action-category/🧪️tests/refuses-to-recategorise-a-missing-action-0/🎯️outcome/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐮change-variable-action-category/🧪️tests/refuses-to-recategorise-a-missing-action-0/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐮change-variable-action-category/🧪️tests/refuses-to-recategorise-a-missing-action-0/🦠️mutation/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐮change-variable-action-category/🧪️tests/refuses-to-recategorise-a-missing-action-0/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐮change-variable-action-category/🧪️tests/refuses-to-recategorise-a-missing-action-0/🎯️outcome/🔣️.json"),
         ),
         "change-variable-action-value" => (
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦌change-variable-action-value/🧪️tests/refuses-to-revalue-a-missing-action-0/📸️snapshot/⬅️before/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦌change-variable-action-value/🧪️tests/refuses-to-revalue-a-missing-action-0/🦠️mutation/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦌change-variable-action-value/🧪️tests/refuses-to-revalue-a-missing-action-0/📸️snapshot/➡️after/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦌change-variable-action-value/🧪️tests/refuses-to-revalue-a-missing-action-0/🎯️outcome/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦌change-variable-action-value/🧪️tests/refuses-to-revalue-a-missing-action-0/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦌change-variable-action-value/🧪️tests/refuses-to-revalue-a-missing-action-0/🦠️mutation/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦌change-variable-action-value/🧪️tests/refuses-to-revalue-a-missing-action-0/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦌change-variable-action-value/🧪️tests/refuses-to-revalue-a-missing-action-0/🎯️outcome/🔣️.json"),
         ),
         "reorder-variable-actions" => (
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐗reorder-variable-actions/🧪️tests/refuses-to-move-action-0-to-slot-1-in-an-empty-list/📸️snapshot/⬅️before/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐗reorder-variable-actions/🧪️tests/refuses-to-move-action-0-to-slot-1-in-an-empty-list/🦠️mutation/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐗reorder-variable-actions/🧪️tests/refuses-to-move-action-0-to-slot-1-in-an-empty-list/📸️snapshot/➡️after/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐗reorder-variable-actions/🧪️tests/refuses-to-move-action-0-to-slot-1-in-an-empty-list/🎯️outcome/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐗reorder-variable-actions/🧪️tests/refuses-to-move-action-0-to-slot-1-in-an-empty-list/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐗reorder-variable-actions/🧪️tests/refuses-to-move-action-0-to-slot-1-in-an-empty-list/🦠️mutation/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐗reorder-variable-actions/🧪️tests/refuses-to-move-action-0-to-slot-1-in-an-empty-list/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐗reorder-variable-actions/🧪️tests/refuses-to-move-action-0-to-slot-1-in-an-empty-list/🎯️outcome/🔣️.json"),
         ),
         other => panic!("mutate-en1990-1: no committed fixture is registered for kind {other:?}"),
     }
@@ -157,7 +157,7 @@ fn canonical(text: &str) -> Json {
     parse_json(text).unwrap_or_else(|error| panic!("committed fixture JSON must parse: {error}"))
 }
 
-/// 🎯️ The status the committed `🎯️outcome/🔣️component.json` declares for one kind — `applied` or
+/// 🎯️ The status the committed `🎯️outcome/🔣️.json` declares for one kind — `applied` or
 /// `rejected` — read out of the committed file rather than transcribed beside it, so the contract a
 /// row is held to cannot drift away from the vector that states it.
 #[cfg(feature = "sut")]
@@ -170,7 +170,7 @@ fn committed_status(kind: &str) -> String {
 //#region 🔖️Carrier
 /// 🧵️ The canonical carrier bytes as a comparable projection: the envelope preamble, every body line
 /// as written, and the digest and length of what was emitted. `.dsl.semio` has no grammar document in
-/// this repository — the committed `📖️component.grammar.semio` is the repository-wide `payload = OCTET+`
+/// this repository — the committed `📖️.grammar.semio` is the repository-wide `payload = OCTET+`
 /// placeholder — so the identity scenario compares the two implementations at the carrier level rather
 /// than mapping carrier tokens onto the snapshot's enum spellings, a mapping nothing states. The
 /// independent Python implementation builds the identical shape from ITS re-emission, and `digest` is
@@ -198,7 +198,7 @@ mod subject {
     use semio_s_plugin_stdio_test_oracle::law;
 
     //#region 🔖️FixtureDecode
-    /// 🧫️ Decodes the SAME committed fixture text `../🦀️component.rs::fixture_text` embeds, through
+    /// 🧫️ Decodes the SAME committed fixture text `../🦀️.rs::fixture_text` embeds, through
     /// this subset's own production JSON bridge — real deserialization of the committed bytes, never
     /// a Rust literal transcribed beside them.
     fn snapshot_of(text: &str, label: &str, kind: &str) -> Result<En1990Snapshot, String> {

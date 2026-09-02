@@ -60,7 +60,7 @@
       "capabilities": [
         "class-name-conflict-resolution"
       ],
-      "rationale": "cn() resolves conflicts over a finite table of REPOSITORY-OWNED utility families (ui-surface/ui-glass/ui-veil fills, px-single/px-tiny spacing, text-element sizing, border-accent colours). tailwind-merge and every other third-party merger resolve against Tailwind's default scale and know none of these families, so agreeing with one would prove nothing and disagreeing with it would prove nothing either. Choosing such a library purely to satisfy the workflow would be selecting a weak oracle mechanically. The group table in 🟦️component.ts is the specification, and the vectors in the feature carry it.",
+      "rationale": "cn() resolves conflicts over a finite table of REPOSITORY-OWNED utility families (ui-surface/ui-glass/ui-veil fills, px-single/px-tiny spacing, text-element sizing, border-accent colours). tailwind-merge and every other third-party merger resolve against Tailwind's default scale and know none of these families, so agreeing with one would prove nothing and disagreeing with it would prove nothing either. Choosing such a library purely to satisfy the workflow would be selecting a weak oracle mechanically. The group table in 🟦️.ts is the specification, and the vectors in the feature carry it.",
       "substitutes": [
         "specification-vectors",
         "metamorphic-laws"

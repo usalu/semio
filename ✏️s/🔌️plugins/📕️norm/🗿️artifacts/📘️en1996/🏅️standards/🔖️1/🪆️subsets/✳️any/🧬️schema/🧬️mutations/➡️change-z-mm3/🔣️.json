@@ -5,7 +5,7 @@
   "displayName": "Change Z Mm3",
   "emoji": "➡️",
   "aggregateVariant": "ChangeZMm3",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

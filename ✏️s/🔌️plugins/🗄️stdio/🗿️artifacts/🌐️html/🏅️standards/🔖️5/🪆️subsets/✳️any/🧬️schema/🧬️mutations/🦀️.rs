@@ -71,7 +71,7 @@ pub enum HtmlMutation {
 }
 
 /// 📇️ Kebab-case spelling of every `HtmlMutation` variant, in declaration order -- the exhaustive
-/// mutation catalog `../🧪️oracle/🔣️.json`'s `kinds` array is required to match verbatim
+/// mutation catalog `../🔣️oracle.json`'s `kinds` array is required to match verbatim
 /// (`kinds_const_matches_enum_variants_in_declaration_order` below is what keeps that honest; the
 /// framework never parses Rust to check it itself).
 pub const KINDS: &[&str] = &["set-snapshot", "set-doctype", "insert-node", "remove-node", "set-element-name", "set-attribute", "set-text", "set-comment", "set-raw-text"];
@@ -678,7 +678,7 @@ mod tests {
 
     //#region kinds_law
     /// 🎯️ kinds_const_matches_enum_variants_in_declaration_order: `KINDS` is the ONLY thing the
-    /// wave 7 catalog contract (`../🧪️oracle/🔣️.json`'s `kinds` array) is checked against,
+    /// wave 7 catalog contract (`../🔣️oracle.json`'s `kinds` array) is checked against,
     /// so it must genuinely enumerate every variant, in order, with the exact `OpText` keyword the
     /// case's adapter registers `mutate-<kind>`/`inverse-<kind>` scenario ids under.
     #[semio_framework_async_macros::async_test]
@@ -708,14 +708,14 @@ mod tests {
 
 //#region 🧪️FixtureTests
 // 🧪️ Handcrafted mutation fixtures (contract D1, ticket 26/08/20/COMPOSE-TO-PUZZLE5D-MIGRATION),
-// one case per mutation leaf. Wired HERE and not in `📦️glue.rs`: that file is shared with the
+// one case per mutation leaf. Wired HERE and not in `🦀️.rs`: that file is shared with the
 // agents migrating the other stdio artifacts, so the production mounts there stay untouched while
 // this artifact owns its own test mount. `#[path = "."]` re-bases the children on this file's own
 // directory, which is what makes the leaf-relative path below resolve.
 #[cfg(test)]
 #[path = "."]
 mod fixture_tests {
-    #[path = "📄set-snapshot/🧪️tests/declares-the-document-language-on-the-root-html-element/🦀️component.rs"]
+    #[path = "📄set-snapshot/🧪️tests/declares-the-document-language-on-the-root-html-element/🦀️.rs"]
     mod tests_set_snapshot_declares_the_document_language_on_the_root_html_element;
 }
 //#endregion 🧪️FixtureTests

@@ -1,0 +1,39 @@
+dialect grammar
+grammar playbook.playbook
+extension playbook
+use family-scene
+start document
+
+# Real grammar for `PlaybookSnapshot::print_dsl`/`parse_dsl`
+# (📸️snapshot/🦀️.rs's `print_playbook_snapshot_body`/`parse_playbook_snapshot_body`,
+# lines 123-155) — a hand-rolled hex/bracket `key=value` line codec, one line per field, same
+# convention `raster.document`/`forms.forms` use. This REPLACES the stale, cross-plugin
+# copy-pasted "canvas layer" template (`layers { shape/path/text { canvas-field* } }`,
+# `add-layer`/`set-stroke`/`move-layer`/`set-fill`) this file previously carried — see
+# `.🧬semio/…/STUBS-AND-PLACEHOLDERS-COMPLETION/📓️grammar-envelope-transcription.md` for how that
+# mismatch was discovered (the real committed fixture is a flat hex attribute-list, structurally
+# nothing like a layered canvas). Confirmed byte-for-byte against the real committed fixture
+# `📚️examples/🎬️demo/🖼️assets/🗣️.dsl.semio`:
+#
+#   semio playbook.playbook.dsl v1
+#   schema=706c6179626f6f6b2e70726f6772616d
+#   id=706c6179626f6f6b
+#   version=31
+#   title=[0]
+#   document=[<hex-child-id>,<hex-target-uri>]
+#   flow=[<hex-child-id>,<hex-target-uri>]
+artifact-mark = "semio playbook.playbook.dsl v1"
+document = artifact-mark schema-line id-line version-line title-line document-line flow-line
+
+schema-line = "schema" "=" hex
+id-line = "id" "=" hex
+version-line = "version" "=" hex
+title-line = "title" "=" opt-hex
+document-line = "document" "=" child-handle
+flow-line = "flow" "=" child-handle
+
+opt-hex = "[0]" | "[1," hex "]"
+child-handle = "[" hex "," hex "]"
+
+# `hex` (bare, deliberately not defined as a local production) is the framework's built-in `hex`
+# macro — every hex-bracket-encoded leaf string is `enc_str` (lowercase-hex UTF-8 bytes).

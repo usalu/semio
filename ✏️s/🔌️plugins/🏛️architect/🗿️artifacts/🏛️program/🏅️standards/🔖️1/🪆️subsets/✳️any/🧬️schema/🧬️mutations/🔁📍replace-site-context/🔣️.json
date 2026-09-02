@@ -5,7 +5,7 @@
   "displayName": "Replace Site Context",
   "emoji": "🔁📍",
   "aggregateVariant": "ReplaceSiteContext",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

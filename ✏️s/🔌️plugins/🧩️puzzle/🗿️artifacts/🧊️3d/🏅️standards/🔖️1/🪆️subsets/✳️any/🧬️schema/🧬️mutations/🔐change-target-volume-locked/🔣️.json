@@ -5,7 +5,7 @@
   "displayName": "Change Target Volume Locked",
   "emoji": "🔐",
   "aggregateVariant": "ChangeTargetVolumeLocked",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": "change-target-volume-locked",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

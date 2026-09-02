@@ -5,18 +5,19 @@
   "displayName": "Delete Artifact",
   "emoji": "🗑️",
   "aggregateVariant": "DeleteArtifact",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": "delete-artifact",
-  "binaryTag": null,
+  "binaryTag": 1,
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
   "outcomeClasses": [
-    "error",
-    "applied"
+    "applied",
+    "error"
   ],
   "composition": "atomic",
   "requiredLanguageSurfaces": [
     "rust",
+    "typescript",
     "json-schema",
     "text",
     "binary"

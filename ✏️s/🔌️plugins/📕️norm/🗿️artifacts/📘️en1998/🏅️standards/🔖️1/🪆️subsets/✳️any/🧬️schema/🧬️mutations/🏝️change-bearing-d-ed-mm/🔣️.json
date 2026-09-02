@@ -5,7 +5,7 @@
   "displayName": "Change Bearing D Ed Mm",
   "emoji": "🏝️",
   "aggregateVariant": "ChangeBearingDEdMm",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

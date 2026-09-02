@@ -1,6 +1,6 @@
 //! 🦀️ VCS checkpoint exhaustive mutation case — Rust adapter. Ticket 26/08/23/END-TO-END-TESTING-
 //! REFACTOR. Recorded no-oracle decision `vcs-1-checkpoint-mutation-semantics`
-//! (`../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️oracle/🔣️.json`): `s.vcs.vcs` is a
+//! (`../../🏅️standards/🔖️1/🪆️subsets/✳️any/🔣️oracle.json`): `s.vcs.vcs` is a
 //! semio-NATIVE checkpoint document with no third-party reader or writer, so `oracle` here reads
 //! the committed, independently handcrafted per-kind specification fixtures
 //! (`../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/<slug>/🧪️tests/<fixture>/`)
@@ -13,7 +13,7 @@
 //! so every law this case claims is asserted INSIDE the subject handler. `mutate-<kind>` checks
 //! three things at once: the applied snapshot IS the committed after-snapshot, the ONE projection
 //! member the feature's `moves` column names is the only member that moved, and the diagnostic
-//! codes the implementation raised are the ones the committed `🎯️outcome/🔣️component.json`
+//! codes the implementation raised are the ones the committed `🎯️outcome/🔣️.json`
 //! declares. `inverse-<kind>` checks that the mutation's own computed inverse restores the
 //! committed before-snapshot exactly. A handler that merely returned `Ok` would report a pass
 //! having checked nothing at all.
@@ -29,12 +29,12 @@
 //!
 //! **How the fixture reaches typed values.** The generated test host links only
 //! `semio-repo-test-host` and, behind `sut`, this plugin's own crate — no `serde`, no `serde_json`,
-//! and this crate's `protocol`/`store` extern-crate aliases are private (`📦️glue.rs`), so neither
+//! and this crate's `protocol`/`store` extern-crate aliases are private (`🦀️.rs`), so neither
 //! `protocol::Mutation` nor a `serde` derive is nameable from here. The subset's own production
 //! code exports the bridges instead, whose signatures name only reachable types:
 //! `decode_vcs_snapshot_json`/`encode_vcs_snapshot_json`/`parse_vcs_dsl`/`print_vcs_dsl`
-//! (`…/🧬️schema/📸️snapshot/🦀️component.rs`) and `decode_vcs_mutation_json`/
-//! `apply_vcs_mutation_reporting`/`inverse_vcs_mutation_steps` (`…/🧬️schema/🧬️mutations/🦀️component.rs`).
+//! (`…/🧬️schema/📸️snapshot/🦀️.rs`) and `decode_vcs_mutation_json`/
+//! `apply_vcs_mutation_reporting`/`inverse_vcs_mutation_steps` (`…/🧬️schema/🧬️mutations/🦀️.rs`).
 //! Both roles read the SAME committed bytes — the oracle role via `include_str!`, the subject role
 //! by decoding that same text. The subject half is gated behind the generated host's `sut` feature
 //! so the oracle-only run never compiles the local implementation.
@@ -43,7 +43,7 @@ use semio_repo_test_host::{parse_json, Adapter, Context, Json, Outcome};
 
 //#region 🔖️Kinds
 /// 🏷️ Mirrors `VcsDemoMutation::KINDS` (`../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/
-/// 🧬️mutations/🦀️component.rs`) — duplicated, not imported, because the oracle-only build must not
+/// 🧬️mutations/🦀️.rs`) — duplicated, not imported, because the oracle-only build must not
 /// link the subject crate. The contract's mutation-coverage gate keeps this list honest against the
 /// catalog; `kinds_match_the_enum_and_the_catalog` in that production file keeps it honest against
 /// the enum. No `no-mutation`, no `set-snapshot`: whole-document replace is banned vocabulary here.
@@ -51,7 +51,7 @@ const KINDS: &[&str] = &["rename-vcs", "change-counter", "change-notes", "change
 
 /// 🗣️ The real committed checkpoint — "VCS Demo" at counter 2, status `draft`, tags `alpha` then `beta`.
 #[cfg(feature = "sut")]
-const DSL_ASSET: &str = "asset://🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio";
+const DSL_ASSET: &str = "asset://🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/🗣️.dsl.semio";
 //#endregion 🔖️Kinds
 
 //#region 🔖️Fixtures
@@ -62,40 +62,40 @@ const DSL_ASSET: &str = "asset://🏅️standards/🔖️1/🪆️subsets/✳️
 fn fixture_text(kind: &str) -> (&'static str, &'static str, &'static str, &'static str) {
     match kind {
         "rename-vcs" => (
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✏️rename-vcs/🧪️tests/retitles-the-document/📸️snapshot/⬅️before/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✏️rename-vcs/🧪️tests/retitles-the-document/🦠️mutation/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✏️rename-vcs/🧪️tests/retitles-the-document/📸️snapshot/➡️after/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✏️rename-vcs/🧪️tests/retitles-the-document/🎯️outcome/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✏️rename-vcs/🧪️tests/retitles-the-document/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✏️rename-vcs/🧪️tests/retitles-the-document/🦠️mutation/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✏️rename-vcs/🧪️tests/retitles-the-document/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✏️rename-vcs/🧪️tests/retitles-the-document/🎯️outcome/🔣️.json"),
         ),
         "change-counter" => (
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔢change-counter/🧪️tests/sets-counter-to-seven/📸️snapshot/⬅️before/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔢change-counter/🧪️tests/sets-counter-to-seven/🦠️mutation/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔢change-counter/🧪️tests/sets-counter-to-seven/📸️snapshot/➡️after/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔢change-counter/🧪️tests/sets-counter-to-seven/🎯️outcome/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔢change-counter/🧪️tests/sets-counter-to-seven/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔢change-counter/🧪️tests/sets-counter-to-seven/🦠️mutation/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔢change-counter/🧪️tests/sets-counter-to-seven/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔢change-counter/🧪️tests/sets-counter-to-seven/🎯️outcome/🔣️.json"),
         ),
         "change-notes" => (
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📝change-notes/🧪️tests/rewrites-the-notes/📸️snapshot/⬅️before/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📝change-notes/🧪️tests/rewrites-the-notes/🦠️mutation/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📝change-notes/🧪️tests/rewrites-the-notes/📸️snapshot/➡️after/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📝change-notes/🧪️tests/rewrites-the-notes/🎯️outcome/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📝change-notes/🧪️tests/rewrites-the-notes/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📝change-notes/🧪️tests/rewrites-the-notes/🦠️mutation/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📝change-notes/🧪️tests/rewrites-the-notes/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📝change-notes/🧪️tests/rewrites-the-notes/🎯️outcome/🔣️.json"),
         ),
         "change-status" => (
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚦change-status/🧪️tests/draft-to-review/📸️snapshot/⬅️before/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚦change-status/🧪️tests/draft-to-review/🦠️mutation/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚦change-status/🧪️tests/draft-to-review/📸️snapshot/➡️after/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚦change-status/🧪️tests/draft-to-review/🎯️outcome/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚦change-status/🧪️tests/draft-to-review/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚦change-status/🧪️tests/draft-to-review/🦠️mutation/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚦change-status/🧪️tests/draft-to-review/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚦change-status/🧪️tests/draft-to-review/🎯️outcome/🔣️.json"),
         ),
         "add-tag" => (
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏷️add-tag/🧪️tests/appends-urgent-tag/📸️snapshot/⬅️before/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏷️add-tag/🧪️tests/appends-urgent-tag/🦠️mutation/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏷️add-tag/🧪️tests/appends-urgent-tag/📸️snapshot/➡️after/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏷️add-tag/🧪️tests/appends-urgent-tag/🎯️outcome/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏷️add-tag/🧪️tests/appends-urgent-tag/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏷️add-tag/🧪️tests/appends-urgent-tag/🦠️mutation/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏷️add-tag/🧪️tests/appends-urgent-tag/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏷️add-tag/🧪️tests/appends-urgent-tag/🎯️outcome/🔣️.json"),
         ),
         "remove-tag" => (
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️remove-tag/🧪️tests/detaches-the-review-tag/📸️snapshot/⬅️before/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️remove-tag/🧪️tests/detaches-the-review-tag/🦠️mutation/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️remove-tag/🧪️tests/detaches-the-review-tag/📸️snapshot/➡️after/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️remove-tag/🧪️tests/detaches-the-review-tag/🎯️outcome/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️remove-tag/🧪️tests/detaches-the-review-tag/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️remove-tag/🧪️tests/detaches-the-review-tag/🦠️mutation/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️remove-tag/🧪️tests/detaches-the-review-tag/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️remove-tag/🧪️tests/detaches-the-review-tag/🎯️outcome/🔣️.json"),
         ),
         other => panic!("mutate-vcs-1: no specification vector registered for kind {other:?}"),
     }
@@ -134,7 +134,7 @@ mod subject {
     use semio_s_plugin_vcs::artifacts::vcs::standards::v1::subsets::any::schema::snapshot::{decode_vcs_snapshot_json, encode_vcs_snapshot_json, parse_vcs_dsl, print_vcs_dsl, VcsSnapshot};
 
     //#region 🔖️FixtureDecode
-    /// 🧫️ Decodes the SAME committed fixture text `../🦀️component.rs::fixture_text` embeds, through
+    /// 🧫️ Decodes the SAME committed fixture text `../🦀️.rs::fixture_text` embeds, through
     /// this subset's own production JSON bridge — real deserialization of the committed bytes,
     /// never a Rust literal transcribed beside them.
     fn snapshot_of(text: &str, label: &str, kind: &str) -> Result<VcsSnapshot, String> {

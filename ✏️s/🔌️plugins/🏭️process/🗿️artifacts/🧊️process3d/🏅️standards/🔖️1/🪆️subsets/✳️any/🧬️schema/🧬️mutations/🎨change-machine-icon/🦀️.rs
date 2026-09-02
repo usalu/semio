@@ -1,7 +1,6 @@
 //! 🔧 `change-machine-icon` payload — changes an id-keyed [`WorkshopMachine`]'s `icon_id`.
 
 use crate::artifacts::process3d::diff::Process3dDiff;
-use crate::artifacts::process3d::mutations::change_machine_icon::ChangeMachineIcon;
 use crate::artifacts::process3d::mutations::Process3dMutation;
 use crate::artifacts::process3d::{Process3dSnapshot, Workshop};
 use semio_framework_value_derive::{FromValue, ToValue};

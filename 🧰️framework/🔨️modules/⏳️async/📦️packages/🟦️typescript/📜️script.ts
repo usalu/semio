@@ -2,14 +2,14 @@
 /** ⏳️ `@semio-tech/framework-async` TS package router: `bun ./📜️script.ts info`. No web-host
  * implementation exists yet — `WebAsyncScope` (`../../🟦️.ts`) is a documented seam only,
  * so there is nothing to build or test on the TS side of this module today. */
-import { BundleScript, ScriptRouter, runBundleScriptMain } from "../../../../🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts";
+import { BundleScript, ScriptRouter, runBundleScriptMain } from "../../../../🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 
 class InfoScript extends BundleScript {
   run(): void {
     console.log(
       "@semio-tech/framework-async: owned-schema mirror + the documented (unimplemented) WebAsyncScope seam. " +
         "The concrete HostAsyncRuntime lives in Rust only (semio-framework-async, packet R2's tokio-backed " +
-        "implementation). Nothing to build or test on the TS side yet — see 🟦️component.ts.",
+        "implementation). Nothing to build or test on the TS side yet — see 🟦️.ts.",
     );
   }
 }

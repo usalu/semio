@@ -4,7 +4,7 @@ import { lstatSync, readFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 import Ajv from "ajv";
 import { findNodeAtLocation, getNodeValue, parseTree } from "jsonc-parser";
-import { loadCatalogTaxonomy, validateFrozenCoordinateEvidenceContracts } from "../../🔍️discovery/🟦️component.ts";
+import { loadCatalogTaxonomy, validateFrozenCoordinateEvidenceContracts } from "../../🔍️discovery/🟦️.ts";
 import { canonicalJson, frozenCoordinateEvidenceCoordinates } from "../../🧹️normalization/🟦️.ts";
 
 const vector = JSON.parse(readFileSync(join(import.meta.dir, "🔣️.json"), "utf8"));
@@ -27,7 +27,7 @@ test("historical escaped-source vectors bind one JSON string layer and an explic
 });
 
 for (const row of vector.cases) test("historical escaped-source authority: " + row.id, () => {
-  const contract = { path: "🧪️tests/🧪️history/🔣️.json", sha256: sha(row.source), schemaVersion: null, ...(row.rootKind ? { rootKind: row.rootKind } : {}), coordinates: [{ pointer: row.pointer, kind: "source", representation: "json-escaped-source-path" }] };
+  const contract = { path: "🧪️tests/🔣️history.json", sha256: sha(row.source), schemaVersion: null, ...(row.rootKind ? { rootKind: row.rootKind } : {}), coordinates: [{ pointer: row.pointer, kind: "source", representation: "json-escaped-source-path" }] };
   const run = () => frozenCoordinateEvidenceCoordinates(contract.path, Buffer.from(row.source), { history: contract } as never);
   if (!row.accepted) expect(run).toThrow(/frozen-coordinate-evidence-invalid/u);
   else {
@@ -37,7 +37,7 @@ for (const row of vector.cases) test("historical escaped-source authority: " + r
 });
 
 test("escaped-source authority retains exact representation root digest and selector boundaries", () => {
-  const source = vector.cases[0].source, bytes = Buffer.from(source), path = "🧪️tests/🧪️history/🔣️.json";
+  const source = vector.cases[0].source, bytes = Buffer.from(source), path = "🧪️tests/🔣️history.json";
   const contract = { path, sha256: sha(source), schemaVersion: null, rootKind: "array", coordinates: [{ pointer: "/0/path", kind: "source", representation: "json-escaped-source-path" }] };
   const run = (value: any, input = bytes) => frozenCoordinateEvidenceCoordinates(value.path, input, { history: value });
   expect(validateFrozenCoordinateEvidenceContracts({ history: contract })).toEqual([]);

@@ -5,19 +5,22 @@
   "displayName": "Remove Data Property",
   "emoji": "🧹️",
   "aggregateVariant": "RemoveDataProperty",
-  "payloadSchema": "🔣️payload.schema.json",
-  "textOpcode": null,
-  "binaryTag": null,
+  "payloadSchema": "🔣️.schema.json",
+  "textOpcode": "remove-data-property",
+  "binaryTag": 7,
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
   "outcomeClasses": [
-    "error",
-    "info",
-    "applied"
+    "applied",
+    "warning",
+    "error"
   ],
   "composition": "atomic",
   "requiredLanguageSurfaces": [
     "rust",
+    "typescript",
+    "graphql",
+    "protobuf",
     "json-schema",
     "text",
     "binary"

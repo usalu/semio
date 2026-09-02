@@ -21,7 +21,7 @@ ports = { react = 6106, wgpu = 6206 }
 
 [lib]
 crate-type = ["cdylib", "rlib"]
-path = "📦️glue.rs"
+path = "🦀️.rs"
 
 [dependencies]
 semio-s-plugin-stdio = { path = "../../../🗄️stdio/📦️packages/🦀️rust", package = "semio-s-plugin-stdio", default-features = false }
@@ -33,6 +33,17 @@ semio-framework-dispatch-macros = { path = "../../../../../🧰️framework/🔨
 semio-framework-schema = { path = "../../../../../🧰️framework/🔨️modules/🧬️schema/📦️packages/🦀️rust", package = "semio-framework-schema" }
 semio-framework-value-derive = { path = "../../../../../🧰️framework/🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust", package = "semio-framework-value-derive" }
 pack = { path = "../../../../../🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust", package = "semio-framework-pack" }
+# 🏢️ Architecturally pinned, not "not yet converted": `🗿️artifacts/🔋️model/🦀️.rs`'s
+#    `energy_structure_from_model`/`energy_model_from_structure` (the sole lossless `Model` <->
+#    `s.stdio.semio.value` bridge) calls `serde_json::to_value`/`from_value` directly on
+#    `crate::model::Model`, whose own derive requires `Serialize`/`Deserialize` transitively across
+#    its 40 fields and the ~44-file engine tree under `🔨️modules/⚡️simulation/⚙️engine/`. `Model`
+#    ALSO derives `ToValue`/`FromValue` now, and `DslValue::Number` has UInt/Int/Float fidelity
+#    (ticket 26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS), so the original
+#    "would lose int/float fidelity" reason for staying on serde_json no longer holds at the
+#    DslValue layer — but rewriting the bridge itself to route through `ToValue`/`FromValue` instead
+#    of `serde_json::Value` is a real, unstarted code change, out of this batch's scope. See that
+#    file's own docstring for the full rationale.
 serde = { workspace = true }
 serde_json = { workspace = true }
 

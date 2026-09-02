@@ -1,0 +1,96 @@
+dialect grammar
+grammar stdio.bcf.mutations
+extension bcf
+start document
+comment none
+
+# FG-wave: real one-line `OpText::print_op`/`parse_op` shape ALREADY emitted by
+# `../../🦀️.rs` (`print_bcf_mutation`/`parse_bcf_mutation`), replacing the F6-era
+# `*OCTET` hex-dump placeholder. Grammar: `keyword arg=value arg=value ...` (space-separated), one
+# alternative per `BcfMutation` variant -- every keyword/arg-name token below is copied verbatim
+# from the real `format!(...)` call sites, not invented.
+#
+# `hex` (bare `hex`, referenced but deliberately NOT defined as a production) is the framework's
+# built-in `hex` MACRO -- `📖️grammar-recipe.md` §1.3(f)/§3 pitfall 2, used here for every
+# `enc_str`/`enc_bytes` (hex-encoded UTF-8 string / raw byte) field. `[0]`/`[1,x]` is
+# `encode_option`'s uniform tri-state shape (`📖️grammar-recipe.md` §1.4); `viewpoint-ref`'s
+# `Option<Option<String>>` nests it twice (`opt-opt-hex`).
+document = set-snapshot | set-version | insert-topic | remove-topic | set-topic-markup | insert-comment | remove-comment | set-comment | insert-viewpoint | remove-viewpoint | set-viewpoint-camera | set-viewpoint-components | set-viewpoint-snapshot
+
+set-snapshot = "set-snapshot" "snapshot" "=" bcf-snapshot
+set-version = "set-version" "version" "=" hex
+insert-topic = "insert-topic" "topic" "=" topic
+remove-topic = "remove-topic" "guid" "=" hex
+set-topic-markup = "set-topic-markup" "guid" "=" hex "title" "=" opt-hex "description" "=" opt-hex "status" "=" opt-hex "priority" "=" opt-hex "labels" "=" opt-label-list "creation-date" "=" opt-hex "creation-author" "=" opt-hex
+insert-comment = "insert-comment" "topic-guid" "=" hex "comment" "=" bcf-comment
+remove-comment = "remove-comment" "topic-guid" "=" hex "guid" "=" hex
+set-comment = "set-comment" "topic-guid" "=" hex "guid" "=" hex "date" "=" opt-hex "author" "=" opt-hex "text" "=" opt-hex "viewpoint-ref" "=" opt-opt-hex
+insert-viewpoint = "insert-viewpoint" "topic-guid" "=" hex "viewpoint" "=" viewpoint
+remove-viewpoint = "remove-viewpoint" "topic-guid" "=" hex "guid" "=" hex
+set-viewpoint-camera = "set-viewpoint-camera" "topic-guid" "=" hex "guid" "=" hex "camera" "=" opt-camera
+set-viewpoint-components = "set-viewpoint-components" "topic-guid" "=" hex "guid" "=" hex "components" "=" opt-components
+set-viewpoint-snapshot = "set-viewpoint-snapshot" "topic-guid" "=" hex "guid" "=" hex "snapshot" "=" opt-hex
+
+# ── Tri-state wrappers (`encode_option`, `📖️grammar-recipe.md` §1.4) ─────────────────────────────
+opt-hex = "[" "0" "]" | "[" "1" "," hex "]"
+opt-opt-hex = "[" "0" "]" | "[" "1" "," opt-hex "]"
+opt-label-list = "[" "0" "]" | "[" "1" "," label-list "]"
+opt-camera = "[" "0" "]" | "[" "1" "," camera "]"
+opt-components = "[" "0" "]" | "[" "1" "," components "]"
+bool-lit = "0" | "1"
+# 🧭️ A raw (non-hex-encoded) numeric literal -- `enc_point3`/`enc_camera`'s own `{}`-formatted f64
+# fields (`p.x`/`field_of_view`/...) print as plain decimal text (Rust's `Display` for a
+# whole-number f64 omits the trailing `.0`, e.g. `60.0` -> `"60"`), so this covers BOTH lexer
+# shapes the same real value can take, matching the recipe's own `step-value = FLOAT | DOTENUM |
+# INT` worked example for exactly this "may or may not have a fractional part" case.
+bcf-float = INT | FLOAT
+
+# ── Restated whole-item value shapes -- verbatim from this artifact's own `../🔺️diff/🦀️.rs`
+# `enc_bcf_snapshot`/`enc_topic`/`enc_comment`/`enc_viewpoint`/`enc_camera`/`enc_point3`/
+# `enc_components`/`enc_visibility`/`enc_coloring`/`enc_part` (reused, per that file's own
+# `pub(crate)` primitives-reuse note, by THIS file's `OpText`/`OpBinary` impl too) ───────────────
+label-list = "[" label-item* "]"
+label-item = hex ","?
+
+# `BcfSnapshot` -- `[schema,version,topics,parts]` (`enc_bcf_snapshot`, `SetSnapshot`'s whole-payload
+# encoding only).
+bcf-snapshot = "[" hex "," hex "," topics-list "," parts-list "]"
+topics-list = "[" topic-item* "]"
+topic-item = topic ","?
+parts-list = "[" part-item* "]"
+part-item = part ","?
+
+# `BcfTopic` -- `[guid,title,description,status,priority,labels,creation-date,creation-author,comments,viewpoints]`.
+topic = "[" hex "," hex "," hex "," hex "," hex "," label-list "," hex "," hex "," comments-list "," viewpoints-list "]"
+comments-list = "[" comment-item* "]"
+comment-item = bcf-comment ","?
+viewpoints-list = "[" viewpoint-item* "]"
+viewpoint-item = viewpoint ","?
+
+# `BcfComment` -- `[guid,date,author,text,viewpoint-ref]`. Named `bcf-comment`, NOT the bare
+# `comment` this value's own real name would suggest -- `comment` collides with the five RESERVED
+# header-directive keywords (`extension`/`use`/`start`/`comment`/`string`,
+# `📖️grammar-recipe.md` §3 pitfall 3); `parse_grammar`'s unified header/production loop parses ANY
+# leading ident matching one of those five words as a header directive, WHEREVER it appears in the
+# file (same collision xml's own grammar file's `xml-comment` rename documents).
+bcf-comment = "[" hex "," hex "," hex "," hex "," opt-hex "]"
+
+# `BcfViewpoint` -- `[guid,camera,components,snapshot]`.
+viewpoint = "[" hex "," opt-camera "," opt-components "," opt-hex "]"
+
+# `BcfCamera` -- `P[view-point,direction,up-vector,field-of-view]` (Perspective) /
+# `O[...,view-to-world-scale]` (Orthogonal) -- single-letter tag prefix, the `xs:choice` made
+# concrete (same convention docx's own `x-node` `E`/`T`/`D`/`M`/`P` tags use).
+camera = "P" "[" point3 "," point3 "," point3 "," bcf-float "]" | "O" "[" point3 "," point3 "," point3 "," bcf-float "]"
+point3 = "[" bcf-float "," bcf-float "," bcf-float "]"
+
+# `BcfComponents` -- `[selection,visibility,coloring]`; `BcfVisibility` -- `[default,exceptions]`;
+# `BcfColoring` -- `[color,components]`.
+components = "[" label-list "," visibility "," coloring-list "]"
+visibility = "[" bool-lit "," label-list "]"
+coloring-list = "[" coloring-item* "]"
+coloring-item = coloring ","?
+coloring = "[" hex "," label-list "]"
+
+# `BcfRawPart` -- `[name,data]`.
+part = "[" hex "," hex "]"

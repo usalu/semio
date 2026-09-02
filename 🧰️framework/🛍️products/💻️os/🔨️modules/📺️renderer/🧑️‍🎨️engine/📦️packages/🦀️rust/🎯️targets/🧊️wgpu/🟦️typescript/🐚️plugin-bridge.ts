@@ -5,7 +5,7 @@
  * and for `🟦️boot.ts`'s own retired `PluginWorkerClient` (one dedicated `Worker` per plugin, the
  * OLD synchronous-ish request/response ABI). `loadPluginModule` now drives a real actor through the
  * kernel's `ActivationRegistry` over `ShardClient` (bounded shard-worker pool, `actorId`-multiplexed) —
- * copying `PluginRuntime/🟦️component.tsx`'s shape exactly, as this packet's brief requires, rather than
+ * copying `PluginRuntime/🟦️.tsx`'s shape exactly, as this packet's brief requires, rather than
  * inventing a second worker-management scheme. `pluginHandleForBridge` then adapts the typed
  * {@link WgpuPluginHandle} down to the raw string-in/string-out JS surface
  * `ProgramBridge/🧊️component.rs`'s `js_sys::Reflect::get(handle, "createApp"/"handleAction"/...)` still
@@ -16,7 +16,7 @@
  * Reuse decisions (see `📓️terra-wgpu-web-shard-report.md` for the full write-up):
  * - `ActivationRegistry`/`Effect`/`InvocationResponse`/`PluginManifest`/`SemioFaultError`/`TurnOutcome`/
  *   `createTurnOutcomeBroadcast` come from `@semio-tech/framework` (already a dependency — that
- *   package's `🟦️glue.ts` re-exports the whole kernel + manifest modules).
+ *   package's `🟦️.ts` re-exports the whole kernel + manifest modules).
  * - `AppChannelClient` + the pack/fault codec come from `@semio-tech/framework-os` (NEW dependency
  *   added to this package's `package.json` — a pure sync/protocol package, no React in its import
  *   graph, the same package `PluginRuntime` itself depends on for this exact class).
@@ -71,7 +71,7 @@ import {
 import { AppChannelClient, AppChannelRequestSequence, decodeFaultFromWire, decodePackValue, encodePackValue, faultDisplayMessage } from "@semio-tech/framework-os";
 import { createShardCommandIngressPages, ShardClient, type ShardCommandIngressPage, type ShardEventEnvelope } from "../../../../../../../../../../🔨️modules/🎭️actor/📦️packages/🟦️typescript/🧵️shard-client.ts";
 import { createPooledActorRuntime, DEFAULT_SHARD_BUDGET, type PooledActorRuntime } from "../../../../../../../../../../🔨️modules/🎭️actor/📦️packages/🟦️typescript/🧵️shard-runtime.ts";
-import { rendererResidentLedger } from "../../../../../💾️resident/🟦️component.ts";
+import { rendererResidentLedger } from "../../../../../💾️resident/🟦️.ts";
 import {
   applyUiPatchToRetained,
   coerceTurnResult,
@@ -140,7 +140,7 @@ function applyRetainedWindowPatches(actorId: string, uiPatches: readonly WireUiP
 /** 🖼️ Channel v12 retired the per-verb `render`/`renderWithDocument` `AppCommand` — rebuilt here as a
  * raw `"surface-visible"` turn event, reading back whatever this SAME turn's `TurnResult.uiPatches`
  * produced (or the retained tree if nothing changed). Only the ONE "window" surface renders this wave
- * (`⚛️reactor/🦀️component.rs`'s `dirty_render` loop hardcodes it) — `bodyKey`/`viewState` are accepted
+ * (`⚛️reactor/🦀️.rs`'s `dirty_render` loop hardcodes it) — `bodyKey`/`viewState` are accepted
  * for ABI compatibility but not yet threaded through, matching `PluginRuntime`'s own identical gap. */
 async function performRender(actorId: string, instanceId: number, bodyKey: string): Promise<unknown> {
   const result = await submitTurn(actorId, [{ kind: "surface-visible", payload: { surface: { instance: instanceId, surface: bodyKey } } }]);
@@ -232,7 +232,7 @@ export async function loadPluginModule(pluginId: string, moduleUrl: string, sign
   /** 📤️📥️ Backs `channelHandle.enqueue`/`.outcomes` below — one broadcast per `loadPluginModule` call,
    * matching the handle's own lifetime: every instance this call's `createApp` ever opens shares it,
    * and each instance's `AppChannelClient` filters to its own `instanceId` (`pumpOutcomes`'s own doc in
-   * `💻️os/🟦️component.ts`). Mirrors `PluginRuntime`'s own `turnOutcomes`/`loadPluginModule` exactly. */
+   * `💻️os/🟦️.ts`). Mirrors `PluginRuntime`'s own `turnOutcomes`/`loadPluginModule` exactly. */
   const turnOutcomes = createTurnOutcomeBroadcast<TurnOutcome>();
 
   /** 🔀️ Frames every `AppCommand`/`AppFrame` `AppChannelClient` sends through — one `"app-command"`

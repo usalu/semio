@@ -10,7 +10,7 @@
 // Every recipe's BEFORE and AFTER `.png` bytes are built DIRECTLY by the sibling standalone
 // `🦀️png-codec` binary, which depends on nothing but `png` 0.18.1 (crates.io, MIT OR Apache-2.0) —
 // never by "applying" this repository's own `PngMutation` dispatch, and never by consulting this
-// subset's own `🧪️oracle/🦀️component.rs` (which computes what a mutation SHOULD produce and is
+// subset's own `🦀️oracle.rs` (which computes what a mutation SHOULD produce and is
 // registered `cross-semio-implementation`, not a reader). This file only shells out per recipe and
 // turns the bytes the codec wrote into a fixture bundle + manifest entry; it computes no PNG
 // semantics of its own.
@@ -149,7 +149,7 @@ async function main(argv: readonly string[]): Promise<number> {
     // so a timestamp change and an unknown-chunk insert or remove are invisible to it. Pillow writes
     // both (`PngInfo.add`) and reads them back through `PngImagePlugin.ChunkStream`, which walks the
     // chunk sequence and validates every CRC.
-    if (command === "chunks" || command === "chunk-manifests") {
+    if (command === "chunks" || command === "chunks-manifests") {
       const WRITER = String.raw`
 import os, sys
 from PIL import Image, PngImagePlugin
@@ -227,7 +227,7 @@ print(kind + ': written')
       process.stdout.write(`${JSON.stringify(entries, null, 2)}\n`);
       return 0;
     }
-    console.error(`[png generator] unknown command ${JSON.stringify(command)} — expected generate | manifests | chunks | chunk-manifests`);
+    console.error(`[png generator] unknown command ${JSON.stringify(command)} — expected generate | manifests | chunks | chunks-manifests`);
     return 1;
   }
 

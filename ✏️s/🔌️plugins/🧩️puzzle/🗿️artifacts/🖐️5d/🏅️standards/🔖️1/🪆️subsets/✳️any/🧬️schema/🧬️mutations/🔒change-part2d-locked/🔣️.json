@@ -5,7 +5,7 @@
   "displayName": "Change Part2d Locked",
   "emoji": "🔒",
   "aggregateVariant": "ChangePart2dLocked",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": "change-part2d-locked",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

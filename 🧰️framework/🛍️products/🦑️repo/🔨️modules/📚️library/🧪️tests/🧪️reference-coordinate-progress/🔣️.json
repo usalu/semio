@@ -19,7 +19,7 @@
   "registration": {
     "target": "test-reference-coordinate-progress",
     "command": "reference-coordinate-progress",
-    "testPath": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧪️reference-coordinate-progress/🟦️.ts",
+    "testPath": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🟦️reference-coordinate-progress.ts",
     "launchName": "🧹clean🧩️taxonomy🧪️reference-coordinate-progress",
     "group": "4_gate",
     "order": 410.21,

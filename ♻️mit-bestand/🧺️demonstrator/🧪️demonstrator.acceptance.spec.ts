@@ -3,7 +3,7 @@
 // Specs: End-to-end acceptance coverage for the "Entwerfen mit Bestand" demonstrator's six live panes.
 // Summary: For every `DEMONSTRATOR_PANES` entry, deep-links straight to `/#<paneId>` (the fast path that
 // boots exactly that one pane immediately instead of waiting through the 1.5s/35s sequential-boot queue —
-// see `📦️index.tsx`'s `paneIdFromLocationHash`/`useSequentialPaneBoot`), waits for that pane's own
+// see `🟦️.tsx`'s `paneIdFromLocationHash`/`useSequentialPaneBoot`), waits for that pane's own
 // `FrameworkOsShell` to report readiness via the per-shell `data-shell-ready`/`data-shell-error` beacon
 // (`ShellHost/🟦️component.tsx`'s `#region 🔖️ReadinessBeacon`), asserts its declared window(s) attach, and
 // asserts each window actually carries rendered content (not an empty surface, not the "wird vorbereitet"
@@ -247,7 +247,7 @@ async function tableRowCount(container: Locator): Promise<{ readonly hasScene: b
 
 /** @emoji 🗺️ `TiledMapHost` has no content-count DOM attribute (unlike the other three surfaces), so this
  * falls back to sampling the rendered canvas for more than one distinct pixel color — the same
- * "did anything actually paint" question `capturePanePoster` (`📦️index.tsx`) answers for its poster
+ * "did anything actually paint" question `capturePanePoster` (`🟦️.tsx`) answers for its poster
  * capture, just read-only here. Map tiles are proxied same-origin by the dev server
  * (`vite-elements-assets.ts`'s `createTileProxyMiddleware`), so this canvas is not cross-origin-tainted. */
 async function tiledMapHasVisibleContent(container: Locator): Promise<{ readonly hasScene: boolean; readonly painted: boolean }> {

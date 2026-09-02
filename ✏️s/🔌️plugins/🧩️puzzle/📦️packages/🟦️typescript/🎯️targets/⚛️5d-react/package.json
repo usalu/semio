@@ -7,7 +7,7 @@
   "private": true,
   "bundleKind": "library",
   "exports": {
-    ".": "./📦️index.tsx"
+    ".": "./🟦️.tsx"
   },
   "scripts": {
     "test": "bun nx run @semio-tech/puzzle-5d-react:test"

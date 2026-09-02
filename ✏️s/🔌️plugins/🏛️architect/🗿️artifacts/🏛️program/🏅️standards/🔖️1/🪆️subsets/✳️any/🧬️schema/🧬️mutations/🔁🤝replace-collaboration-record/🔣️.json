@@ -5,7 +5,7 @@
   "displayName": "Replace Collaboration Record",
   "emoji": "🔁🤝",
   "aggregateVariant": "ReplaceCollaborationRecord",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

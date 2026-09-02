@@ -13,7 +13,7 @@ id = "schema"
 [lints]
 workspace = true
 [lib]
-path = "📦️glue.rs"
+path = "🦀️.rs"
 
 [features]
 default = []

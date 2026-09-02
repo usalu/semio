@@ -1,0 +1,47 @@
+{
+  "name": "@semio-tech/fixture-generator-stdio-jpg-jfif-1-01-document",
+  "targets": {
+    "🏭️generator": {
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts generate",
+        "forwardAllArgs": true
+      }
+    },
+    "🏭️generator-manifests": {
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts manifests",
+        "forwardAllArgs": true
+      }
+    },
+    "🏭️generator-libjpeg": {
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts libjpeg",
+        "forwardAllArgs": true
+      }
+    },
+    "🏭️generator-libjpeg-manifests": {
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts libjpeg-manifests",
+        "forwardAllArgs": true
+      }
+    },
+    "🏭️generator-markers": {
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts markers",
+        "forwardAllArgs": true
+      }
+    },
+    "🏭️generator-markers-manifests": {
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts markers-manifests",
+        "forwardAllArgs": true
+      }
+    }
+  }
+}

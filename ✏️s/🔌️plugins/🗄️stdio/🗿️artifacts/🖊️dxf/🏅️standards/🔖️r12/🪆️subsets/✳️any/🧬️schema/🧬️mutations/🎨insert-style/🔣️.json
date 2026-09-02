@@ -5,7 +5,7 @@
   "displayName": "Insert Style",
   "emoji": "🎨",
   "aggregateVariant": "InsertStyle",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

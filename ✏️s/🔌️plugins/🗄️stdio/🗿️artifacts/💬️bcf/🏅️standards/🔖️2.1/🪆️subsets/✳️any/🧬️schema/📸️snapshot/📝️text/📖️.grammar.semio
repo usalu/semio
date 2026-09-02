@@ -1,0 +1,118 @@
+dialect grammar
+grammar stdio.bcf.snapshot
+extension xml
+start document
+comment none
+string double raw
+string single raw
+
+# FG-wave: `stdio.bcf` (BCF-XML 2.1, "bcfzip") -- DEVIATION from this ticket's own brief, which
+# frames the whole OPC-family wave (docx/xlsx/pptx/bcf) as "OPC container (protocol) + contained
+# XML parts (grammar, following xml's own FG1 family)". Confirmed by direct read of THIS
+# artifact's own real Rust codec (not assumed): `⚙️engine/🦀️.rs`'s own module doc
+# comment states outright "`bcfzip` is NOT an OPC package (no content-types/relationships
+# apparatus) so this artifact builds its own simple wrapper directly on `zip::ZipEntry` rather
+# than reusing `zip::opc::OpcPackage`" (confirmed again by `📸️snapshot/🦀️.rs`'s own doc
+# comment and this ticket's own `p2-w0-recon-report.md` bcf row, which quotes the same lines) --
+# `encode_bcf`/`decode_bcf` call `zip::engine::encode_zip`/`decode_zip` DIRECTLY, never
+# `zip::opc::{encode_opc,decode_opc}`. So THIS grammar facet models bcf's own real, non-OPC XML
+# parts -- `bcf.version`, `<guid>/markup.bcf`, `<guid>/<guid>.bcfv` -- never
+# `[Content_Types].xml`/`_rels/.rels`/a namespaced document body the way docx/xlsx/pptx's own
+# grammar facets do (this file's binary sibling, `../💾️binary/📡️.protocol.semio`, still
+# restates the SAME real ZIP 2.0 container layout docx/zip's own files establish -- the container
+# framing IS byte-identical zip, only the XML PARTS this container carries differ, per bcf's own
+# non-OPC part-naming scheme).
+#
+# Real element/attribute vocabulary traced directly from this artifact's own real Rust codec:
+# - `bcf.version`: `<Version VersionId="..">` + optional `<DetailedVersion>` text child --
+#   `⚙️engine/🦀️.rs`'s `parse_bcf_version`/`bcf_version_bytes` (:74-96).
+# - `<guid>/markup.bcf`: `<Markup>` with one required `<Topic Guid=".." TopicStatus="..">` (real
+#   BCF-XML 2.1 `markup.xsd`: `Title`/`Priority`/`Labels`*/`CreationDate`/`CreationAuthor`/
+#   `Description` are CHILD ELEMENTS, never attributes -- the Phase-1 F5 defect this rewrite fixed,
+#   per this file's own `⚙️engine` module doc), zero-or-more sibling `<Comment Guid="..">`
+#   (`Date`/`Author`/`Comment` children + optional self-closing `<Viewpoint Guid=".."/>`), and
+#   zero-or-more `<Viewpoints Guid="..">` reference entries (`<Viewpoint>` filename text +
+#   optional `<Snapshot>` filename text) -- `parse_markup_bcf`/`markup_bcf_bytes` (:116-229).
+# - `<guid>/<guid>.bcfv`: `<VisualizationInfo Guid="..">` with optional `<Components>`
+#   (`Selection`?/`Visibility`(`DefaultVisibility` attr + optional `Exceptions`)/`Coloring`?, each
+#   a list of self-closing `<Component IfcGuid=".."/>`) and optional `<PerspectiveCamera>` /
+#   `<OrthogonalCamera>` (the `xs:choice` BCF-XML 2.1 `visinfo.xsd` makes -- `CameraViewPoint`/
+#   `CameraDirection`/`CameraUpVector` self-closing `X`/`Y`/`Z` triples + `FieldOfView`/
+#   `ViewToWorldScale` text) -- `parse_visualization_info`/`visualization_info_bytes` (:364-393).
+#
+# `comment none`: XML has no `#`-comment syntax, same rationale xml's/docx's own grammar files
+# document. `string double raw` + `string single raw`: every attribute value here is quoted and
+# captured VERBATIM (this artifact's real parser only entity-decodes element CONTENT text, never
+# attribute values -- same genuine parser quirk xml's own grammar file documents, inherited
+# verbatim since bcf reuses the real `stdio.xml` codec for every XML concern, per this artifact's
+# own engine module doc: "never a hand-rolled parser here").
+#
+# `<`/`>` below are the P2-M1-promoted single-char terminals (LT/GT); this vocabulary never needs
+# `&`/`;`/`:` (no entities, no namespace-prefixed names -- unlike docx's `w:`-prefixed OPC body).
+document = part+
+part = version-part | markup-part | visinfo-part
+
+# `<?xml version="1.0" encoding="UTF-8"?>` -- every part's fixed prolog, `xml_bytes` (:65-70).
+declaration = LT "?" "xml" "version" "=" TEXT "encoding" "=" TEXT "?" GT
+# 🧭️ ELEMENT CONTENT text (`<Title>`/`<Date>`/`<Author>`/`<Comment>`/`<Viewpoint>` filename/...) --
+# wider than docx's/xml's own `{IDENT|INT|FLOAT}+` because this artifact's own real fixture
+# content genuinely needs it, confirmed live (a real conformance-test bisection, not assumed): an
+# ISO-8601 `<CreationDate>`/`<Date>` value (`2024-01-01T00:00:00+00:00`) lexes as an alternating
+# `Int`/`Ident` run interrupted by bare `Colon`(`:`)/`Plus`(`+`) tokens (the shared lexer's digit
+# rule only swallows a `-` into a number when immediately followed by a DIGIT -- `:`/`+` never
+# qualify, so they fall through to their own real single-char tokens); a `<CreationAuthor>`/
+# `<Author>` email value (`ueli@example.com`) needs `At`(`@`) the same way; and a hyphenated GUID
+# used as CONTENT (`<Viewpoint>`/`<Snapshot>` filename text, `<guid>.bcfv`/`<guid>.png`) needs bare
+# `Minus`(`-`) whenever a segment boundary hyphen is followed by a LETTER rather than a digit (only
+# the digit case gets absorbed into the preceding `Int`). All four (`:`/`+`/`@`/`-`) are ALREADY
+# real single-char lexer tokens (no grammar-alphabet change needed) -- `Symbol::Literal` matches by
+# TOKEN TEXT alone, independent of token kind, the same trick xml's/docx's own grammar files
+# already document for their own punctuation literals.
+text-run = {IDENT | INT | FLOAT | ":" | "+" | "@" | "-"}+
+
+# ── bcf.version ─────────────────────────────────────────────────────────────────────────────────
+version-part = declaration LT "Version" "VersionId" "=" TEXT GT version-detail? LT "/" "Version" GT
+version-detail = LT "DetailedVersion" GT text-run LT "/" "DetailedVersion" GT
+
+# ── <guid>/markup.bcf ───────────────────────────────────────────────────────────────────────────
+markup-part = declaration LT "Markup" GT topic comment-elem* viewpoints-elem* LT "/" "Markup" GT
+
+topic = LT "Topic" "Guid" "=" TEXT "TopicStatus" "=" TEXT GT title-elem priority-elem? labels-elem* creation-date-elem? creation-author-elem? description-elem? LT "/" "Topic" GT
+title-elem = LT "Title" GT text-run LT "/" "Title" GT
+priority-elem = LT "Priority" GT text-run LT "/" "Priority" GT
+labels-elem = LT "Labels" GT text-run LT "/" "Labels" GT
+creation-date-elem = LT "CreationDate" GT text-run LT "/" "CreationDate" GT
+creation-author-elem = LT "CreationAuthor" GT text-run LT "/" "CreationAuthor" GT
+description-elem = LT "Description" GT text-run LT "/" "Description" GT
+
+comment-elem = LT "Comment" "Guid" "=" TEXT GT date-elem author-elem comment-text-elem comment-viewpoint-ref? LT "/" "Comment" GT
+date-elem = LT "Date" GT text-run LT "/" "Date" GT
+author-elem = LT "Author" GT text-run LT "/" "Author" GT
+comment-text-elem = LT "Comment" GT text-run LT "/" "Comment" GT
+comment-viewpoint-ref = LT "Viewpoint" "Guid" "=" TEXT "/" GT
+
+viewpoints-elem = LT "Viewpoints" "Guid" "=" TEXT GT viewpoint-file-elem snapshot-file-elem? LT "/" "Viewpoints" GT
+viewpoint-file-elem = LT "Viewpoint" GT text-run LT "/" "Viewpoint" GT
+snapshot-file-elem = LT "Snapshot" GT text-run LT "/" "Snapshot" GT
+
+# ── <guid>/<guid>.bcfv ──────────────────────────────────────────────────────────────────────────
+visinfo-part = declaration LT "VisualizationInfo" "Guid" "=" TEXT GT components-elem? camera-elem? LT "/" "VisualizationInfo" GT
+
+components-elem = LT "Components" GT selection-elem? visibility-elem coloring-elem? LT "/" "Components" GT
+selection-elem = LT "Selection" GT component-elem* LT "/" "Selection" GT
+component-elem = LT "Component" "IfcGuid" "=" TEXT "/" GT
+visibility-elem = LT "Visibility" "DefaultVisibility" "=" TEXT GT exceptions-elem? LT "/" "Visibility" GT
+exceptions-elem = LT "Exceptions" GT component-elem* LT "/" "Exceptions" GT
+coloring-elem = LT "Coloring" GT color-elem* LT "/" "Coloring" GT
+color-elem = LT "Color" "Color" "=" TEXT GT component-elem* LT "/" "Color" GT
+
+# `xs:choice` -- exactly one of `PerspectiveCamera`/`OrthogonalCamera`, never both (`BcfCamera`'s
+# own Rust enum shape, `parse_camera`/`camera_element`).
+camera-elem = perspective-camera | orthogonal-camera
+perspective-camera = LT "PerspectiveCamera" GT camera-view-point camera-direction camera-up-vector field-of-view-elem LT "/" "PerspectiveCamera" GT
+orthogonal-camera = LT "OrthogonalCamera" GT camera-view-point camera-direction camera-up-vector view-to-world-scale-elem LT "/" "OrthogonalCamera" GT
+camera-view-point = LT "CameraViewPoint" "X" "=" TEXT "Y" "=" TEXT "Z" "=" TEXT "/" GT
+camera-direction = LT "CameraDirection" "X" "=" TEXT "Y" "=" TEXT "Z" "=" TEXT "/" GT
+camera-up-vector = LT "CameraUpVector" "X" "=" TEXT "Y" "=" TEXT "Z" "=" TEXT "/" GT
+field-of-view-elem = LT "FieldOfView" GT text-run LT "/" "FieldOfView" GT
+view-to-world-scale-elem = LT "ViewToWorldScale" GT text-run LT "/" "ViewToWorldScale" GT

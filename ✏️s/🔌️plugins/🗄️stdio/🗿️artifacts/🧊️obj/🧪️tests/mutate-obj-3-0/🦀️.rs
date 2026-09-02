@@ -1,7 +1,7 @@
 //! 🦀️ OBJ 3.0 mutation case — Rust adapter. Exhaustive: every declared `ObjMutation` kind
 //! (`obj-3-0-any`, 22 kinds) gets a `mutate-<kind>` and an `inverse-<kind>` scenario, plus one
 //! identity round trip. The oracle performs every kind by direct OBJ-grammar manipulation
-//! (`../../🏅️standards/🔖️3.0/🪆️subsets/✳️any/🧪️oracle/🦀️component.rs`, independent of this
+//! (`../../🏅️standards/🔖️3.0/🪆️subsets/✳️any/🦀️oracle.rs`, independent of this
 //! subset's own decode/encode/mutation code); the subject fully parses into `ObjSnapshot` and
 //! re-serializes from it alone (no byte pass-through). Both results are read back by the
 //! INDEPENDENT `tobj` reader before the `semantic-mesh-v1` profile compares them.
@@ -70,7 +70,7 @@ fn json_spec(kind: &str, params: Json) -> Json {
 
 //#region 🔖️Profile
 /// 📏️ `semantic-obj-3-0-v1`'s own declared tolerances (`../../🏅️standards/🔖️3.0/🪆️subsets/✳️any/
-/// 🧪️oracle/🔣️.json`), mirrored here so an in-handler law check is exactly as strict as the
+/// 🔣️oracle.json`), mirrored here so an in-handler law check is exactly as strict as the
 /// profile the case is measured by — never stricter, which would invent a failure the comparison
 /// itself would forgive.
 const OBJ_WRITER_FREEDOM: &[&str] = &["byteLength", "fileSize", "precision"];

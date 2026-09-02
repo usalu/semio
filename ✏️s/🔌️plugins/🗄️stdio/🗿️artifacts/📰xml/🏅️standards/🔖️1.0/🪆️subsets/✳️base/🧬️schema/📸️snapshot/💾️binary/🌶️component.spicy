@@ -1,6 +1,0 @@
-module StdioXmlSnapshot;
-# Semio envelope wrapping the JSON serialization of XmlDocument (not raw XML octets) -- see the
-# sibling ../🔣️component.json XmlDocument shape for what `json_payload` decodes to.
-type Document = unit {
-    json_payload: bytes &eod;
-};

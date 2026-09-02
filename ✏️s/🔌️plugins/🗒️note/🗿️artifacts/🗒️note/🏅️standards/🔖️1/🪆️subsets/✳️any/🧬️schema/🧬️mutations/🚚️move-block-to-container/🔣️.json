@@ -5,7 +5,7 @@
   "displayName": "Move Block To Container",
   "emoji": "🚚️",
   "aggregateVariant": "MoveBlockToContainer",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": "move-block-to-container",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

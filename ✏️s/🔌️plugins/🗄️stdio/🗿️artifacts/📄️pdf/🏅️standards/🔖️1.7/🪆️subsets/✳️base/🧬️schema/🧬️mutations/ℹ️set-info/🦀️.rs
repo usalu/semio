@@ -46,7 +46,7 @@ mod tests {
 }
 //#endregion 🧪️Tests
 
-#[path = "💾️binary/🦀️component.rs"]
+#[path = "💾️binary/🦀️.rs"]
 pub mod binary;
-#[path = "📝️text/🦀️component.rs"]
+#[path = "📝️text/🦀️.rs"]
 pub mod text;

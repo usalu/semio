@@ -34,7 +34,7 @@
           "unique-nonoverlapping-proof-spans"
         ],
         "preservedFiniteCheckpoint": {
-          "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧪️rust-finite-target-consumption/🟦️.ts",
+          "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🟦️rust-finite-target-consumption.ts",
           "sha256": "949e9c2b3166f5d30cde120c3e93f473ca7b55c3b7cc4552d88155796cafb546",
           "tests": 74,
           "assertions": 313
@@ -143,7 +143,7 @@
         "command": "bun ./📜️script.ts test rust-writable-path-authority",
         "packageCommand": "nx run @semio-tech/repo-lib:test-rust-writable-path-authority",
         "route": "rust-writable-path-authority",
-        "testPath": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧪️rust-writable-path-authority/🟦️.ts",
+        "testPath": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🟦️rust-writable-path-authority.ts",
         "launchPaths": [
           ".vscode/🧩️launch.seed.jsonc",
           ".vscode/launch.json"

@@ -5,7 +5,7 @@
   "displayName": "Rename Infrastructure Requirement",
   "emoji": "✏️🏗️",
   "aggregateVariant": "RenameInfrastructureRequirement",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

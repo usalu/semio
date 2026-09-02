@@ -1,0 +1,34 @@
+dialect protocol
+protocol xml.snapshot
+version 1
+schema stdio.xml
+start body
+
+# P2-FG1: `stdio.xml` is TEXT-NATIVE (per the P2 plan's own classification, W0 census row) -- there
+# is no "binary XML"; the pack container IS the SEMIO envelope wrapping the artifact's own real
+# wire text verbatim (`ArtifactPack::encode_pack_with` in ../../🦀️.rs:
+# `xml_document_to_text(&self.doc).into_bytes()` passed straight to `store::semio_format::
+# wrap_binary` -- no `pack_rt::encode_document` structured record, because `XmlNode` is a
+# genuinely recursive, data-carrying enum with no `RecordSpec` to walk against, same reason
+# `#[derive(dsl::DslArtifact)]` is unusable here). Replaces the pre-Phase-2 placeholder that
+# (falsely) described the payload as a JSON serialization of `XmlDocument` -- the real codec was
+# fixed this wave to stop routing through `serde_json` at all (see `../../🦀️.rs`'s
+# `ArtifactPack` impl doc comment), so this file's own description now matches reality.
+#
+# The framework-level SEMIO envelope itself (magic `0x8953454D0D0A1A0A` + LE u32 token length +
+# UTF-8 token) is described ONCE, at
+# `🧰️framework/🛍️products/💻️os/🔨️modules/🧬️semio/📡️protocol/📡️.protocol.semio`
+# (P2-M3 deliverable 3) -- this file does NOT re-describe that framing. Cross-artifact `use
+# semio.envelope` is not yet functional (confirmed unchanged through every pilot, see
+# `📖️grammar-recipe.md` §2.1), so the envelope is deliberately NOT re-inlined here either -- this
+# file models the bytes as if the walk already starts AT the payload, past the envelope, matching
+# how `m5_handcrafted_protocol_conformance`'s own harness unwraps the envelope before handing bytes
+# to `walk_protocol`.
+#
+# The payload itself is opaque, unstructured UTF-8 bytes at the BINARY layer by construction (its
+# real internal grammar -- element/attribute/content-node recursion -- is
+# ../📝️text/📖️.grammar.semio's job, not the protocol dialect's; XML nesting has no fixed
+# byte width to declare here) -- `chain ... utf8` is the honest boundary, the same treatment
+# json's own snapshot protocol gives its RFC8259 text payload.
+framing record
+chain payload utf8

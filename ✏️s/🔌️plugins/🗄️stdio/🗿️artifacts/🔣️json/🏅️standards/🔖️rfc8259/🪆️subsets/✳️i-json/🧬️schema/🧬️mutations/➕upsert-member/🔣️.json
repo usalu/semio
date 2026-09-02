@@ -5,7 +5,7 @@
   "displayName": "Upsert Member",
   "emoji": "➕",
   "aggregateVariant": "UpsertMember",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

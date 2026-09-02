@@ -3,7 +3,7 @@
 //!
 //! `NoMutation` was dropped: `#[derive(dsl::Mutations)]` requires every variant to wrap exactly one
 //! leaf payload, and its sentinel verb `no` is not in `APPROVED_VERBS` — see
-//! `🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🎮️command/🦀️component.rs`. Every variant is now a
+//! `🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🎮️command/🦀️.rs`. Every variant is now a
 //! tuple variant wrapping its own mutation leaf (`./*/🦀️.rs`), and this file's `agg_diff`/
 //! `agg_inverse` carry the handcrafted semantics every leaf's `MutationKind` impl delegates back to.
 
@@ -66,7 +66,7 @@ pub enum SemioVideoMutation {
 
 /// 🏷️ The declared kebab-case mutation vocabulary of `s.stdio.semio.video`, in enum declaration
 /// order — what the `mutate-semio-video` case's completeness gate counts against and what
-/// `../../🧪️oracle/🔣️.json`'s catalog repeats. The framework never parses Rust, so
+/// `../../🔣️oracle.json`'s catalog repeats. The framework never parses Rust, so
 /// `kinds_match_the_enum_and_the_catalog` below is what keeps this declaration honest.
 pub const KINDS: &[&str] = &["set-snapshot", "insert-stream", "remove-stream", "set-stream-meta", "insert-sample", "remove-sample", "set-sample-data", "set-sample-flags"];
 //#endregion 🔖️Mutations
@@ -83,7 +83,7 @@ pub fn apply_semio_video_mutation(snapshot: &mut SemioVideoSnapshot, mutation: &
 
 /// ↩️ Free-function face of [`SemioVideoMutation`]'s own `protocol::Mutation::inverse`. `Mutation` is
 /// declared by the os-kernel, which is an INTERNAL dependency of this plugin (aliased `protocol` in
-/// `📦️glue.rs`) and is therefore not nameable by a consumer that links only this crate — a
+/// `🦀️.rs`) and is therefore not nameable by a consumer that links only this crate — a
 /// generated test host being the concrete case. Paired with [`apply_semio_video_mutation`] it makes the
 /// undo law reachable without importing a trait the caller cannot name.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -383,7 +383,7 @@ mod tests {
             assert_eq!(KINDS[ordinal], print_semio_video_mutation(&mutation).split(' ').next().unwrap_or_default(), "KINDS[{ordinal}] must be the keyword {mutation:?} prints");
         }
         assert!(seen.iter().all(|hit| *hit), "every declared variant must be represented in sample_mutations");
-        let manifest = include_str!("../../🧪️oracle/🔣️.json");
+        let manifest = include_str!("../../🔣️oracle.json");
         for kind in KINDS {
             assert!(manifest.contains(&format!("\"{kind}\"")), "KINDS entry {kind:?} must also appear in the committed oracle manifest's catalog");
         }
@@ -658,9 +658,9 @@ mod tests {
 
 //#region 🧪️FixtureCases
 /// 🧪️ Handcrafted `📄set-snapshot` fixture cases, wired from this tree's own mutations root so
-/// `📦️glue.rs` stays untouched (`#[path]` on a non-inline module resolves against this file's own
+/// `🦀️.rs` stays untouched (`#[path]` on a non-inline module resolves against this file's own
 /// directory).
 #[cfg(test)]
-#[path = "📄set-snapshot/🧪️tests/retimes-the-track-and-promotes-a-sample-to-a-keyframe/🦀️component.rs"]
+#[path = "📄set-snapshot/🧪️tests/retimes-the-track-and-promotes-a-sample-to-a-keyframe/🦀️.rs"]
 mod set_snapshot_retimes_the_track_and_promotes_a_sample_to_a_keyframe;
 //#endregion 🧪️FixtureCases

@@ -1,0 +1,101 @@
+dialect grammar
+grammar stdio.png.diff
+start diff
+
+# Real one-line `print_diff`/`parse_diff` form this artifact's hand-rolled `DiffCodec` emits
+# (🔺️diff/🦀️.rs `print_png_diff`/`parse_png_diff`) — a space-separated `name=value`
+# token per changed top-level scalar/tri-state field, `text-chunks`/`chunk-order`/
+# `unknown-chunks` printed as the real removed/modified/added COLLECTION-TRIPLE
+# (`name{[removed];[modified];[added]}`, csv's own first-landed shape, P2-P1 csv report §2) —
+# NOT the pre-F6 serde-JSON shape this file used to describe.
+comment none
+
+# Field order matches `PngDiff`'s own struct field order exactly (`print_png_diff` always
+# emits in this order; `parse_png_diff` itself accepts any subset/order via a token-keyed
+# loop, but the Recognizer only needs to accept what `print_diff` ACTUALLY emits). Kept on
+# ONE physical line — this dialect's sequence parsing stops at the first Newline token, no
+# line-continuation syntax exists (P2-P1 csv report §3 item 1; confirmed live this wave).
+diff = width-clause? height-clause? bit-depth-clause? color-type-clause? interlace-clause? plte-clause? trns-clause? gama-clause? chrm-clause? srgb-clause? phys-clause? time-clause? bkgd-clause? text-chunks-clause? pixels-clause? chunk-order-clause? unknown-chunks-clause?
+
+width-clause = "width" "=" INT
+height-clause = "height" "=" INT
+bit-depth-clause = "bit-depth" "=" INT
+color-type-clause = "color-type" "=" INT
+interlace-clause = "interlace" "=" bit
+gama-clause = "gama" "=" int-opt
+srgb-clause = "srgb" "=" int-opt
+pixels-clause = "pixels" "=" hex
+
+# `plte`'s OUTER tri-state (`Option<Option<PngPlteDiff>>`) wraps the SAME bare
+# removed/modified/added triple body `enc_triple_body` prints (no `plte{` keyword prefix —
+# unlike text-chunks/chunk-order/unknown-chunks below, `plte=` already labels it).
+plte-clause = "plte" "=" plte-diff-opt
+plte-diff-opt = "[" "0" "]" | "[" "1" "," "[" removed-list? "]" ";" "[" plte-modified-list? "]" ";" "[" plte-added-list? "]" "]"
+plte-modified-list = plte-modified {"," plte-modified}*
+plte-modified = INT ":" rgb-value
+plte-added-list = plte-added {"," plte-added}*
+plte-added = INT ":" rgb-value
+rgb-value = "[" INT "," INT "," INT "]"
+
+trns-clause = "trns" "=" transparency-opt
+transparency-opt = "[" "0" "]" | "[" "1" "," transparency-value "]"
+transparency-value = "I" "[" hex "]" | "G" "[" INT "]" | "R" "[" INT "," INT "," INT "]"
+
+chrm-clause = "chrm" "=" chromaticities-opt
+chromaticities-opt = "[" "0" "]" | "[" "1" "," chromaticities-value "]"
+chromaticities-value = "[" INT "," INT "," INT "," INT "," INT "," INT "," INT "," INT "]"
+
+phys-clause = "phys" "=" physical-dims-opt
+physical-dims-opt = "[" "0" "]" | "[" "1" "," physical-dims-value "]"
+physical-dims-value = "[" INT "," INT "," bit "]"
+
+time-clause = "time" "=" timestamp-opt
+timestamp-opt = "[" "0" "]" | "[" "1" "," timestamp-value "]"
+timestamp-value = "[" INT "," INT "," INT "," INT "," INT "," INT "]"
+
+bkgd-clause = "bkgd" "=" background-opt
+background-opt = "[" "0" "]" | "[" "1" "," background-value "]"
+background-value = "G" "[" INT "]" | "R" "[" INT "," INT "," INT "]" | "I" "[" INT "]"
+
+int-opt = "[" "0" "]" | "[" "1" "," INT "]"
+bit = "0" | "1"
+
+# The FIRST real collection-triple grammar productions for this artifact (P2-P1 csv report
+# §2's copy-pasteable shape): `<name>-clause = "<name>" "{" "[" removed-list? "]" ";"
+# "[" modified-list? "]" ";" "[" added-list? "]" "}"`. `<key>` is `INT` (index-keyed —
+# `text_chunks`/`chunk_order`/`unknown_chunks` are all index-keyed per the recipe's own key-kind
+# table: PNG explicitly permits duplicate tEXt keywords, so keyword identity is unsound as a
+# diff key, matching `PngTextChunk`'s own doc comment).
+removed-list = INT {"," INT}*
+
+text-chunks-clause = "text-chunks" "{" "[" removed-list? "]" ";" "[" text-chunk-modified-list? "]" ";" "[" text-chunk-added-list? "]" "}"
+text-chunk-modified-list = text-chunk-modified {"," text-chunk-modified}*
+text-chunk-modified = INT ":" text-chunk-diff-value
+text-chunk-added-list = text-chunk-added {"," text-chunk-added}*
+text-chunk-added = INT ":" text-chunk-value
+
+# `PngTextChunkDiff` — sparse per-field patch, positional `[keyword?,value?,compressed?,kind?,
+# language_tag?,translated_keyword?]`, each an `encode_option`-tagged tri-state per field
+# (`enc_text_chunk_diff`).
+text-chunk-diff-value = "[" str-opt "," str-opt "," bit-opt "," int-opt "," str-opt "," str-opt "]"
+str-opt = "[" "0" "]" | "[" "1" "," hex "]"
+bit-opt = "[" "0" "]" | "[" "1" "," bit "]"
+text-chunk-value = "[" hex "," hex "," bit "," INT "," hex "," hex "]"
+
+chunk-order-clause = "chunk-order" "{" "[" removed-list? "]" ";" "[" chunk-order-modified-list? "]" ";" "[" chunk-order-added-list? "]" "}"
+chunk-order-modified-list = chunk-order-modified {"," chunk-order-modified}*
+chunk-order-modified = INT ":" chunk-marker-value
+chunk-order-added-list = chunk-order-added {"," chunk-order-added}*
+chunk-order-added = INT ":" chunk-marker-value
+chunk-marker-value = "IHDR" | "PLTE" | "TRNS" | "GAMA" | "CHRM" | "SRGB" | "PHYS" | "TIME" | "BKGD" | "IDAT" | "IEND" | "TEXT" "[" INT "]" | "UNKN" "[" INT "]"
+
+unknown-chunks-clause = "unknown-chunks" "{" "[" removed-list? "]" ";" "[" unknown-chunk-modified-list? "]" ";" "[" unknown-chunk-added-list? "]" "}"
+unknown-chunk-modified-list = unknown-chunk-modified {"," unknown-chunk-modified}*
+unknown-chunk-modified = INT ":" chunk-value
+unknown-chunk-added-list = unknown-chunk-added {"," unknown-chunk-added}*
+unknown-chunk-added = INT ":" chunk-value
+chunk-value = "[" hex "," hex "]"
+
+# `hex` (bare `hex`, deliberately NOT defined as a production) is the framework's built-in
+# `hex` MACRO — see ../../🧬️mutations/📝️text/📖️.grammar.semio's own `hex` doc comment
+# for why a macro, not a `{INT | IDENT}*`-shaped production, is required here.

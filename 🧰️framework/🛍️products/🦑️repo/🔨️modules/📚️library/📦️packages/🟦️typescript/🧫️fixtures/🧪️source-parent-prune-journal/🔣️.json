@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "scope": "🧪️tests/🧪️fixture",
   "files": {
-    "tests/🟦️component.ts": "export const value = 1;\n",
+    "tests/🟦️.ts": "export const value = 1;\n",
     "📦️packages/🦀️rust/🦀️component.rs": "pub fn value() -> u32 { 1 }\n",
     "📦️packages/🦀️rust/📜️script.ts": ""
   },

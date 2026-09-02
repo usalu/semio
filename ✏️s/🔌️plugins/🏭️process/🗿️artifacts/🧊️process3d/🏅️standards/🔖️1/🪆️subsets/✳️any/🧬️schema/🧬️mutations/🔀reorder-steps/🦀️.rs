@@ -2,7 +2,6 @@
 //! ordered timeline (order is user-meaningful here, unlike the unordered `machines` collection).
 
 use crate::artifacts::process3d::diff::Process3dDiff;
-use crate::artifacts::process3d::mutations::reorder_steps::ReorderSteps;
 use crate::artifacts::process3d::mutations::Process3dMutation;
 use crate::artifacts::process3d::Process3dSnapshot;
 use semio_framework_value_derive::{FromValue, ToValue};

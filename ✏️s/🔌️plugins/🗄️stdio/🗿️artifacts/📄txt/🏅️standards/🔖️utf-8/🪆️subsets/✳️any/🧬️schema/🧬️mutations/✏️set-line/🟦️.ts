@@ -1,5 +1,5 @@
 /** 🧬 set-line canonical direct payload. */
-import { TxtProtobufReader, coerceTxtMutationUInt32Variable, failTxtMutationDecode, txtExact, txtOwn, txtProtobufKey, txtProtobufString, txtUnicode } from '../../🔨️modules/🧬️mutation-support/🟦️component.ts';
+import { TxtProtobufReader, coerceTxtMutationUInt32Variable, failTxtMutationDecode, txtExact, txtOwn, txtProtobufKey, txtProtobufString, txtUnicode } from '../../🔨️modules/🧬️mutation-support/🟦️.ts';
 export interface SetLinePayload { readonly index: number; readonly text: string }
 
 const decode = (value: unknown, path: string): SetLinePayload => {

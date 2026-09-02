@@ -2,7 +2,7 @@
 //! (`ifc-4-any`, 11 kinds) gets a `mutate-<kind>` and an `inverse-<kind>` scenario, plus one identity
 //! round trip. `ruststep` 0.4 can only READ Part-21 text (confirmed empirically — see the feature
 //! file's own description), so the oracle dispatcher (`../../🏅️standards/🔖️4/🪆️subsets/✳️any/🧪️oracle/
-//! 🦀️component.rs`) performs every kind with its own from-scratch Part-21 writer against a
+//! 🦀️.rs`) performs every kind with its own from-scratch Part-21 writer against a
 //! `ruststep`-parsed document, independent of this subset's own `IfcSnapshot`/`step::engine::part21`
 //! codec; the subject fully parses into `IfcSnapshot` and re-serializes from it alone (no byte
 //! pass-through). Both results are read back by the INDEPENDENT `ruststep` reader
@@ -15,7 +15,7 @@ use semio_s_plugin_stdio_test_oracle::artifacts::ifc::standards::v4::subsets::an
 
 //#region 🔖️Kinds
 /// 🏷️ Mirrors this subset's own `IfcMutation::KINDS` (`../../🏅️standards/🔖️4/🪆️subsets/✳️any/
-/// 🧬️schema/🧬️mutations/🦀️component.rs`). Kept as a plain literal here rather than imported since
+/// 🧬️schema/🧬️mutations/🦀️.rs`). Kept as a plain literal here rather than imported since
 /// this adapter's oracle-only build never links the subject crate — the contract gate (mutation
 /// coverage against the `ifc-4-any` catalog) is what keeps the two lists honest against each other.
 const KINDS: &[&str] = &["no-mutation", "set-snapshot", "set-file-description", "set-file-name", "set-file-schema", "insert-entity", "remove-entity", "set-entity-name", "set-entity-arg", "insert-entity-arg", "remove-entity-arg"];
@@ -60,7 +60,7 @@ fn json_spec(kind: &str, params: Json) -> Json {
 /// ↩️ The semantically correct inverse spec for one forward `(kind, params)` pair against the
 /// pristine real Nakagin Capsule Tower fixture's own known real header/entity values — id/index-
 /// aware, mirroring the same `IfcMutation::inverse()` semantics `../../🏅️standards/🔖️4/🪆️subsets/
-/// ✳️any/🧬️schema/🧬️mutations/🦀️component.rs` documents, computed independently here since neither
+/// ✳️any/🧬️schema/🧬️mutations/🦀️.rs` documents, computed independently here since neither
 /// the oracle nor this adapter can reach that subject-side method.
 fn inverse_spec(kind: &str) -> Json {
     match kind {
@@ -248,7 +248,7 @@ mod subject {
 
     //#region 🔖️ValueGrammar
     /// 🔤️ The same `{"t":..., "v":...}` wire grammar the oracle dispatcher speaks
-    /// (`../../🏅️standards/🔖️4/🪆️subsets/✳️any/🧪️oracle/🦀️component.rs`'s own `value_from_json`),
+    /// (`../../🏅️standards/🔖️4/🪆️subsets/✳️any/🦀️oracle.rs`'s own `value_from_json`),
     /// independently re-implemented here against `IfcValue` rather than `ruststep::ast::Parameter`.
     fn value_from_json(value: &Json) -> Result<IfcValue, String> {
         match str_field(value, "t")?.as_str() {
@@ -261,7 +261,7 @@ mod subject {
             "reference" => Ok(IfcValue::Reference(u64_field(value, "v")?)),
             "aggregate" => Ok(IfcValue::Aggregate(value.array("v").iter().map(value_from_json).collect::<Result<Vec<_>, String>>()?)),
             // 📎️ Mirrors the oracle dispatcher's own `value_from_json` (`../../🏅️standards/🔖️4/
-            // 🪆️subsets/✳️any/🧪️oracle/🦀️component.rs`), which speaks a single nested `v` value for
+            // 🪆️subsets/✳️any/🦀️oracle.rs`), which speaks a single nested `v` value for
             // `typed` (matching `ruststep::ast::Parameter::Typed`'s own `Box<Parameter>` shape) —
             // wrapped into `IfcValue::TypedValue`'s `Vec<IfcValue>` field, its production shape.
             "typed" => Ok(IfcValue::TypedValue { name: str_field(value, "name")?, items: vec![value_from_json(value.get("v").ok_or("typed value requires a v field")?)?] }),
@@ -284,7 +284,7 @@ mod subject {
             // 🧭️ `NoMutation` was dropped from the enum (a wrapped variant is required by
             // `#[derive(dsl::Mutations)]`), but `no-mutation` stays a real, deliberately-tested
             // scenario id at this test-harness/oracle level (see this subset's own `../../🏅️
-            // standards/🔖️4/🪆️subsets/✳️any/🧪️oracle/🔣️.json` catalog, which still declares it).
+            // standards/🔖️4/🪆️subsets/✳️any/🔣️oracle.json` catalog, which still declares it).
             // A `SetSnapshot` carrying `base` back to itself is the same true no-op: it goes
             // through the full apply/diff/re-serialize pipeline and changes nothing.
             "no-mutation" => IfcMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: base.clone() }),

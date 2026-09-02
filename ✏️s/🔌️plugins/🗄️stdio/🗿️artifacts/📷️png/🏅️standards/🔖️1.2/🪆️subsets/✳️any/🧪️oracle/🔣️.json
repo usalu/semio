@@ -1,7 +1,7 @@
 {
   "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json",
   "schemaVersion": 2,
-  "_comment": "🧩️ This subset's own contribution to the repository test platform, distinct from the shared ✏️s/🔌️plugins/🗄️stdio/🧪️oracle/🔣️.json manifest: that file registers the `png` reference crate under the `png-raster` capability its own create-and-round-trip-png case exercises; this file registers the SAME package under a distinct id and the `png-1-2-mutate` capability this subset's exhaustive mutation case (`mutate-png-1-2`) actually tags, per the wave 7 fleet brief's oracle-registration gotcha (reusing the shared entry fails the contract with `oracle-capability-mismatch`).",
+  "_comment": "🧩️ This subset's own contribution to the repository test platform, distinct from the shared ✏️s/🔌️plugins/🗄️stdio/🔣️oracle.json manifest: that file registers the `png` reference crate under the `png-raster` capability its own create-and-round-trip-png case exercises; this file registers the SAME package under a distinct id and the `png-1-2-mutate` capability this subset's exhaustive mutation case (`mutate-png-1-2`) actually tags, per the wave 7 fleet brief's oracle-registration gotcha (reusing the shared entry fails the contract with `oracle-capability-mismatch`).",
   "oracles": [
     {
       "id": "png-png-1-2-mutate",
@@ -17,14 +17,14 @@
       "license": "MIT OR Apache-2.0",
       "testOnly": true,
       "homepage": "https://github.com/image-rs/image-png",
-      "rationale": "🫥️ RECLASSIFIED. The third-party crate here does REAL codec work — it decodes the artifact and will reject a malformed one — but that is not what the mutation test turns on. What the OUTPUT OF A MUTATION SHOULD BE is computed by this owner's own `🧪️oracle/🦀️component.rs`, whose `apply_kind` dispatch is a second implementation of this subset's mutation semantics. Its own doc comment says so: it \"deliberately mirrors\" the production `diff` rather than diverging from it. Both halves of the comparison therefore read the same specification, and a misreading of it produces two agreeing wrong answers.\n\nThe honest split is that the crate discharges \"the result is a well-formed file of this format\", and NOT \"the mutation computed the right answer\". Only the second is what a mutation oracle is for, so this is a `cross-semio-implementation`: a required SUPPLEMENT, never a substitute. A qualifying third-party reference for the mutation semantics is still owed.",
+      "rationale": "🫥️ RECLASSIFIED. The third-party crate here does REAL codec work — it decodes the artifact and will reject a malformed one — but that is not what the mutation test turns on. What the OUTPUT OF A MUTATION SHOULD BE is computed by this owner's own `🦀️oracle.rs`, whose `apply_kind` dispatch is a second implementation of this subset's mutation semantics. Its own doc comment says so: it \"deliberately mirrors\" the production `diff` rather than diverging from it. Both halves of the comparison therefore read the same specification, and a misreading of it produces two agreeing wrong answers.\n\nThe honest split is that the crate discharges \"the result is a well-formed file of this format\", and NOT \"the mutation computed the right answer\". Only the second is what a mutation oracle is for, so this is a `cross-semio-implementation`: a required SUPPLEMENT, never a substitute. A qualifying third-party reference for the mutation semantics is still owed.",
       "hostPath": "✏️s/🔌️plugins/🗄️stdio/🧪️oracle/📦️packages/🦀️rust",
       "productionDebt": {
         "reachableFrom": [
-          "🧰️framework/🛍️products/💻️os/🖥️host/🦀️component.rs"
+          "🧰️framework/🛍️products/💻️os/🖥️host/🦀️.rs"
         ],
         "owner": "🧰️framework/🛍️products/💻️os/🖥️host",
-        "plan": "Same pre-existing production reachability the shared ✏️s/🔌️plugins/🗄️stdio/🧪️oracle/🔣️.json `png` entry already records (the OS host rasterizes SVG to PNG through this crate) — the dependency-classification gate classifies by reachability, not manifest placement, so registering the SAME package under a second id/capability here surfaces the same debt a second time rather than hiding it. Phase 7 target: once the OS host's PNG writing moves behind ✏️s/🔌️plugins/🗄️stdio's own encode_png, both this entry and the shared one lose their productionDebt and testOnly becomes a fact."
+        "plan": "Same pre-existing production reachability the shared ✏️s/🔌️plugins/🗄️stdio/🔣️oracle.json `png` entry already records (the OS host rasterizes SVG to PNG through this crate) — the dependency-classification gate classifies by reachability, not manifest placement, so registering the SAME package under a second id/capability here surfaces the same debt a second time rather than hiding it. Phase 7 target: once the OS host's PNG writing moves behind ✏️s/🔌️plugins/🗄️stdio's own encode_png, both this entry and the shared one lose their productionDebt and testOnly becomes a fact."
       },
       "kind": "cross-semio-implementation",
       "engine": {
@@ -53,8 +53,8 @@
       "testOnly": true,
       "productionDebt": {
         "reachableFrom": [
-          "🧰️framework/🛍️products/💻️os/🖥️host/🦀️component.rs",
-          "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodel/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🖼️images/🦀️component.rs"
+          "🧰️framework/🛍️products/💻️os/🖥️host/🦀️.rs",
+          "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodel/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🖼️images/🦀️.rs"
         ],
         "owner": "🧰️framework/🛍️products/💻️os/🖥️host",
         "plan": "Same pre-existing production reachability the sibling `png-png-1-2-mutate` entry already records against the OS host path — the dependency-classification gate classifies by reachability, not manifest placement, so registering the SAME package under a THIRD id/capability here surfaces the same debt again rather than hiding it. This entry additionally names remodel's own image-editing engine, a second real, non-test `png::Encoder`/`png::Decoder` call site the sibling entry does not list. Phase 7 target unchanged: once the OS host's PNG writing moves behind ✏️s/🔌️plugins/🗄️stdio's own encode_png and remodel's image engine does the same, every one of these entries loses its productionDebt and testOnly becomes a fact."
@@ -68,7 +68,7 @@
         "linux-arm64",
         "win32-x64"
       ],
-      "rationale": "📖️ A READER, and that is the whole point of registering it separately.\n\nThis subset also carries a `🧪️oracle/🦀️component.rs` that COMPUTES what each mutation should produce. That entry is registered `cross-semio-implementation` and does not discharge anything, because both halves of such a comparison descend from one reading of the specification.\n\nThis entry is a different mechanism. The expected state is not computed at all — it is COMMITTED, as the `after` half of a byte-reproducible fixture written directly by `png` 0.18.1's own `Encoder`/`Writer`. `png` then decodes both sides with its own `Decoder`, and the comparison is over what it recovered. The probes say so in their own header: \"Everything here MARSHALS and READS; nothing here applies a mutation or predicts what one should.\"\n\nSo the judge is a third-party implementation of the format, and nothing in this repository predicts the answer it is judging. That is what makes it qualifying where the sibling `png-png-1-2-mutate` entry is not.\n\nPRODUCTION REACHABLE, measured rather than copied from the sibling entry's own claim: `🧰️framework/🛍️products/💻️os/🖥️host/🦀️component.rs` uses `png::{BitDepth, ColorType, Encoder}` directly to rasterize SVG to PNG for a real, registered OS media-export handler (`register_os_media_export_handler_kind(artifact_kind, \"png\", ...)`); `✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodel/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🖼️images/🦀️component.rs` uses `png::Encoder`/`png::Decoder` directly in its own (non-test) image-editing engine. All three of `os/host`, `remodel` and `lowpoly`'s own `Cargo.toml` declare `png = \"0.17.16\"` as a real, non-optional, non-dev dependency. `🔒️dependencies.json`'s repo-root entry for `png` (`productionReachable: false`, version `0.17.16`) is STALE against this source evidence and against this subset's own pre-existing `png-png-1-2-mutate` registration, which already records `productionReachable: true` with a `productionDebt` naming the same OS host path — not corrected here because touching a shared, generated, repo-root ledger is out of this ticket's PNG-only scope, but the discrepancy is recorded so it is not mistaken for agreement.\n\n12 of this subset's 15 declared kinds are witnessable through `png::Info`'s public fields (`width`, `height`, `bit_depth`, `color_type`, `interlaced`, `palette`, `trns`, `gama_chunk`, `chrm_chunk`, `srgb`, `pixel_dims`, `bkgd`, `uncompressed_latin1_text`) plus the decoded pixel sample buffer for `replace-pixels`. Three are not: `png::Info` 0.18.1 has no `tIME` field at all, and the decoder skips unrecognised ancillary chunks entirely rather than surfacing them (`src/decoder/stream.rs`'s own `SkippedAncillaryChunk`, with no public accessor) — `change-timestamp`, `insert-unknown-chunk` and `remove-unknown-chunk` are registered `png-1-2-mutate-uncarried` rather than discharged. Full research: `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️27/SUBSET-SCOPED-EXTERNAL-ORACLE-MUTATION-TESTING/📓️png-reader-witnessability.md`, independently re-verified against the vendored crate source (`~/.cargo/registry/src/*/png-0.18.1/`) while building this retrofit."
+      "rationale": "📖️ A READER, and that is the whole point of registering it separately.\n\nThis subset also carries a `🦀️oracle.rs` that COMPUTES what each mutation should produce. That entry is registered `cross-semio-implementation` and does not discharge anything, because both halves of such a comparison descend from one reading of the specification.\n\nThis entry is a different mechanism. The expected state is not computed at all — it is COMMITTED, as the `after` half of a byte-reproducible fixture written directly by `png` 0.18.1's own `Encoder`/`Writer`. `png` then decodes both sides with its own `Decoder`, and the comparison is over what it recovered. The probes say so in their own header: \"Everything here MARSHALS and READS; nothing here applies a mutation or predicts what one should.\"\n\nSo the judge is a third-party implementation of the format, and nothing in this repository predicts the answer it is judging. That is what makes it qualifying where the sibling `png-png-1-2-mutate` entry is not.\n\nPRODUCTION REACHABLE, measured rather than copied from the sibling entry's own claim: `🧰️framework/🛍️products/💻️os/🖥️host/🦀️.rs` uses `png::{BitDepth, ColorType, Encoder}` directly to rasterize SVG to PNG for a real, registered OS media-export handler (`register_os_media_export_handler_kind(artifact_kind, \"png\", ...)`); `✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodel/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🖼️images/🦀️.rs` uses `png::Encoder`/`png::Decoder` directly in its own (non-test) image-editing engine. All three of `os/host`, `remodel` and `lowpoly`'s own `Cargo.toml` declare `png = \"0.17.16\"` as a real, non-optional, non-dev dependency. `🔒️dependencies.json`'s repo-root entry for `png` (`productionReachable: false`, version `0.17.16`) is STALE against this source evidence and against this subset's own pre-existing `png-png-1-2-mutate` registration, which already records `productionReachable: true` with a `productionDebt` naming the same OS host path — not corrected here because touching a shared, generated, repo-root ledger is out of this ticket's PNG-only scope, but the discrepancy is recorded so it is not mistaken for agreement.\n\n12 of this subset's 15 declared kinds are witnessable through `png::Info`'s public fields (`width`, `height`, `bit_depth`, `color_type`, `interlaced`, `palette`, `trns`, `gama_chunk`, `chrm_chunk`, `srgb`, `pixel_dims`, `bkgd`, `uncompressed_latin1_text`) plus the decoded pixel sample buffer for `replace-pixels`. Three are not: `png::Info` 0.18.1 has no `tIME` field at all, and the decoder skips unrecognised ancillary chunks entirely rather than surfacing them (`src/decoder/stream.rs`'s own `SkippedAncillaryChunk`, with no public accessor) — `change-timestamp`, `insert-unknown-chunk` and `remove-unknown-chunk` are registered `png-1-2-mutate-uncarried` rather than discharged. Full research: `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️27/SUBSET-SCOPED-EXTERNAL-ORACLE-MUTATION-TESTING/📓️png-reader-witnessability.md`, independently re-verified against the vendored crate source (`~/.cargo/registry/src/*/png-0.18.1/`) while building this retrofit."
     },
     {
       "id": "pillow-png-1-2-chunk-reader",
@@ -121,7 +121,7 @@
   "comparisonProfiles": [
     {
       "id": "semantic-png-1-2-v1",
-      "description": "PNG 1.2 documents compared structurally through `png` 0.18.1's own decode: the four normative IHDR fields (width, height, bitDepth, colorType) plus interlaced; the palette as an ordered list of RGB triples (palette index is pixel-sample identity for an Indexed image); tRNS, gAMA (as its exact scaled integer, never a lossy float), cHRM (all eight scaled-integer coordinates), the sRGB rendering intent, pHYs, bKGD and every tEXt chunk as an ordered list of (keyword, text) pairs — all kept as real typed values so a diff names the exact field, per this fleet's own opaque-payload precedent. The decoded pixel sample buffer projects as a size+digest pair rather than raw bytes, the same treatment `semantic-avi-v1` gives a movi chunk payload. Distinct from the repository-wide `semantic-raster-v1` profile (defined in `✏️s/🔌️plugins/🗄️stdio/🧪️oracle/🔣️.json`), which explicitly IGNORES gamma and ancillary chunks — this profile exists because this subset's mutation vocabulary is made almost entirely of the fields that one deliberately canonicalizes away.",
+      "description": "PNG 1.2 documents compared structurally through `png` 0.18.1's own decode: the four normative IHDR fields (width, height, bitDepth, colorType) plus interlaced; the palette as an ordered list of RGB triples (palette index is pixel-sample identity for an Indexed image); tRNS, gAMA (as its exact scaled integer, never a lossy float), cHRM (all eight scaled-integer coordinates), the sRGB rendering intent, pHYs, bKGD and every tEXt chunk as an ordered list of (keyword, text) pairs — all kept as real typed values so a diff names the exact field, per this fleet's own opaque-payload precedent. The decoded pixel sample buffer projects as a size+digest pair rather than raw bytes, the same treatment `semantic-avi-v1` gives a movi chunk payload. Distinct from the repository-wide `semantic-raster-v1` profile (defined in `✏️s/🔌️plugins/🗄️stdio/🔣️oracle.json`), which explicitly IGNORES gamma and ancillary chunks — this profile exists because this subset's mutation vocabulary is made almost entirely of the fields that one deliberately canonicalizes away.",
       "arrays": "ordered",
       "ignoreKeys": [],
       "pipeline": "png-1-2-crate-compare-v1"
@@ -653,7 +653,7 @@
         {
           "id": "change-background",
           "capability": "png-1-2-mutate",
-          "payloadSchema": "🔣️payload.schema.json",
+          "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "applied"
           ],
@@ -673,7 +673,7 @@
         {
           "id": "change-chromaticities",
           "capability": "png-1-2-mutate",
-          "payloadSchema": "🔣️payload.schema.json",
+          "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "applied"
           ],
@@ -693,7 +693,7 @@
         {
           "id": "change-gamma",
           "capability": "png-1-2-mutate",
-          "payloadSchema": "🔣️payload.schema.json",
+          "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "applied"
           ],
@@ -713,7 +713,7 @@
         {
           "id": "change-header",
           "capability": "png-1-2-mutate",
-          "payloadSchema": "🔣️payload.schema.json",
+          "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "applied"
           ],
@@ -733,7 +733,7 @@
         {
           "id": "change-physical-dims",
           "capability": "png-1-2-mutate",
-          "payloadSchema": "🔣️payload.schema.json",
+          "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "applied"
           ],
@@ -753,7 +753,7 @@
         {
           "id": "change-srgb-intent",
           "capability": "png-1-2-mutate",
-          "payloadSchema": "🔣️payload.schema.json",
+          "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "applied"
           ],
@@ -773,7 +773,7 @@
         {
           "id": "change-timestamp",
           "capability": "png-1-2-mutate",
-          "payloadSchema": "🔣️payload.schema.json",
+          "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "applied"
           ],
@@ -793,7 +793,7 @@
         {
           "id": "change-transparency",
           "capability": "png-1-2-mutate",
-          "payloadSchema": "🔣️payload.schema.json",
+          "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "applied"
           ],
@@ -813,7 +813,7 @@
         {
           "id": "insert-text-chunk",
           "capability": "png-1-2-mutate",
-          "payloadSchema": "🔣️payload.schema.json",
+          "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "applied"
           ],
@@ -833,7 +833,7 @@
         {
           "id": "insert-unknown-chunk",
           "capability": "png-1-2-mutate",
-          "payloadSchema": "🔣️payload.schema.json",
+          "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "applied"
           ],
@@ -853,7 +853,7 @@
         {
           "id": "remove-text-chunk",
           "capability": "png-1-2-mutate",
-          "payloadSchema": "🔣️payload.schema.json",
+          "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "applied"
           ],
@@ -873,7 +873,7 @@
         {
           "id": "remove-unknown-chunk",
           "capability": "png-1-2-mutate",
-          "payloadSchema": "🔣️payload.schema.json",
+          "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "applied"
           ],
@@ -893,7 +893,7 @@
         {
           "id": "replace-palette",
           "capability": "png-1-2-mutate",
-          "payloadSchema": "🔣️payload.schema.json",
+          "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "applied"
           ],
@@ -913,7 +913,7 @@
         {
           "id": "replace-pixels",
           "capability": "png-1-2-mutate",
-          "payloadSchema": "🔣️payload.schema.json",
+          "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "applied"
           ],
@@ -933,7 +933,7 @@
         {
           "id": "replace-text-chunk",
           "capability": "png-1-2-mutate",
-          "payloadSchema": "🔣️payload.schema.json",
+          "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "applied"
           ],

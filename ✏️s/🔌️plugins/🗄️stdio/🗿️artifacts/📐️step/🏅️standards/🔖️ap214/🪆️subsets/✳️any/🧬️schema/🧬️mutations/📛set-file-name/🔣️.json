@@ -5,7 +5,7 @@
   "displayName": "Set File Name",
   "emoji": "📛",
   "aggregateVariant": "SetFileName",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": "set-file-name",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

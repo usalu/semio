@@ -4,7 +4,7 @@
 //! insert an entity, set an argument, remove an argument — eleven verbs that know nothing about
 //! AP214 and would be identical for any Part-21 file on earth. A conformance class is not a grammar,
 //! it is a FILTER, and the only edits that belong to it are the ones that move a document across the
-//! filter. Every variant below is one rule of `check_cc1_conformance` (`../🦀️component.rs`'s
+//! filter. Every variant below is one rule of `check_cc1_conformance` (`../🦀️.rs`'s
 //! `derived_analysis`), and there are no others because that function reads no other axis:
 //!
 //! | kind | rule | code |
@@ -27,9 +27,9 @@
 //! has for a document outside itself. That is recorded here rather than hidden behind a promotion
 //! verb CC1 must not have.
 //!
-//! @see ../../../✳️any/🚪️io/🪜️ladder/🦀️component.rs — the class-neutral edit implementations all six
+//! @see ../../../✳️any/🚪️io/🪜️ladder/🦀️.rs — the class-neutral edit implementations all six
 //!      `✳️ccN` vocabularies route through, so each axis has ONE implementation and six callers.
-//! @see ../🧪️oracle/🔣️.json — the `step-ap214-cc1` catalog `KINDS` is checked against.
+//! @see ../🔣️oracle.json — the `step-ap214-cc1` catalog `KINDS` is checked against.
 
 use crate::artifacts::step::schema::diff::StepDiff;
 use crate::artifacts::step::standards::v_ap214::engine::ladder::{self, ClassEdit};
@@ -75,7 +75,7 @@ pub enum StepCc1Mutation {
 }
 
 /// 📇️ Kebab-case spelling of every `StepCc1Mutation` variant, in declaration order — the
-/// `step-ap214-cc1` catalog in `../../🧪️oracle/🔣️.json` must match verbatim.
+/// `step-ap214-cc1` catalog in `../../🔣️oracle.json` must match verbatim.
 pub const KINDS: &[&str] = &["set-snapshot", "set-file-schema", "set-product-identity", "remove-shape-representation"];
 
 impl StepCc1Mutation {
@@ -222,7 +222,7 @@ mod tests {
 
         apply_step_cc1_mutation(&mut snapshot, &StepCc1Mutation::SetProductIdentity(set_product_identity::SetProductIdentity { identity: None }));
         assert!(!has_product_definition_chain(&snapshot.to_part21_document()));
-        apply_step_cc1_mutation(&mut snapshot, &StepCc1Mutation::SetFileSchema { schemas: vec!["IFC4".into()] });
+        apply_step_cc1_mutation(&mut snapshot, &StepCc1Mutation::SetFileSchema(set_file_schema::SetFileSchema { schemas: vec!["IFC4".into()] }));
         let diagnostics = check_cc1_conformance(&snapshot);
         assert_eq!(diagnostics.len(), 2, "one hard FILE_SCHEMA violation and one soft product-chain warning: {diagnostics:?}");
     }

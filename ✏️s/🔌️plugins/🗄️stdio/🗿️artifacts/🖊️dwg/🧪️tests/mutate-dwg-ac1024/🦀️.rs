@@ -8,7 +8,7 @@
 //! codepage 30 = ANSI_1252), not against invented ones.
 //!
 //! No differential oracle is registered (`../../🏅️standards/🔖️ac1024/🪆️subsets/✳️any/🧪️oracle/
-//! 🔣️component.json`'s `noOracleDecisions`: DWG is proprietary, LibreDWG is GPL-3.0 C, and no
+//! 🔣️.json`'s `noOracleDecisions`: DWG is proprietary, LibreDWG is GPL-3.0 C, and no
 //! permissively licensed Rust DWG reader exists), so the platform never dispatches the oracle role
 //! for this feature. The handlers below are registered anyway — the shape every stdio case has — and
 //! they compute a REAL answer from an independently hand-written preamble reader/writer that never

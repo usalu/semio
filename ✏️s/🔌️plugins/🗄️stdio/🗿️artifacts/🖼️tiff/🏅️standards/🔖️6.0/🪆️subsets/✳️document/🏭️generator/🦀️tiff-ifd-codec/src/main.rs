@@ -33,7 +33,7 @@
 //! built DIRECTLY by this binary's own typed `IfdSpec`/`write_doc` below, handed straight to
 //! `tiff::encoder::TiffEncoder` — never by "applying" this repository's own `TiffMutation`
 //! dispatch, and never by importing this subset's own `🚪️io::{decode_tiff, encode_tiff}` or its
-//! `🧪️oracle/🦀️component.rs` (that module computes what a mutation SHOULD produce and is read-only
+//! `🦀️oracle.rs` (that module computes what a mutation SHOULD produce and is read-only
 //! spec reference for this file, never a dependency).
 //!
 //! Two subcommands:
@@ -74,7 +74,7 @@ fn json_str(s: &str) -> String {
 }
 
 /// #️⃣️ Dependency-free FNV-1a 64-bit digest, hex-formatted — same choice and same rationale the
-/// sibling `🧪️oracle/🦀️component.rs` documents for its own `samplesDigest`: TIFF is lossless, so an
+/// sibling `🦀️oracle.rs` documents for its own `samplesDigest`: TIFF is lossless, so an
 /// exact digest is the right compact stand-in for "every sample survived" without materializing a
 /// `Json::Number` per byte.
 fn fnv1a_hex(bytes: &[u8]) -> String {
@@ -169,7 +169,7 @@ fn write_doc(ifds: &[IfdSpec]) -> Vec<u8> {
 //#region 🔖️Read
 /// 📥️ Walks the WHOLE IFD chain (`more_images`/`next_image`), collecting every IFD's tags (file
 /// order, `StripOffsets`/`StripByteCounts` excluded — layout-computed offsets into THIS file, never
-/// semantic content, same exclusion the sibling `🧪️oracle/🦀️component.rs` documents for its own
+/// semantic content, same exclusion the sibling `🦀️oracle.rs` documents for its own
 /// projection) plus, where the IFD decodes as a well-formed baseline image, a size+digest of its
 /// raster — never raw sample bytes past this function, per this artifact's opaque-payload
 /// convention for large pixel data.

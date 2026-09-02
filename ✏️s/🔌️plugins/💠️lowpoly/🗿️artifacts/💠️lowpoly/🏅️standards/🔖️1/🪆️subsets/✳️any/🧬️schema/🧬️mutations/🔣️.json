@@ -1,0 +1,212 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s.lowpoly.lowpoly/mutations.json",
+  "title": "LowpolyMutation",
+  "description": "Seventeen-variant mutation dispatch envelope — real facet mirror of the Rust `LowpolyMutation` enum (`dsl::Mutations`-derived). serde's default externally-tagged representation: exactly one key, the PascalCase Rust variant name, whose value is that variant's payload — confirmed against every mutation family's committed `🧪️tests/…/🦠️mutation/🔣️.json` fixture. Each branch references its sibling `<mutation>/🔣️.schema.json` leaf rather than duplicating it.",
+  "oneOf": [
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "CreateObject"
+      ],
+      "properties": {
+        "CreateObject": {
+          "$ref": "🌱️create-object/🔣️.schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "DeleteObject"
+      ],
+      "properties": {
+        "DeleteObject": {
+          "$ref": "💀️delete-object/🔣️.schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ReorderObjects"
+      ],
+      "properties": {
+        "ReorderObjects": {
+          "$ref": "🔀️reorder-objects/🔣️.schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "RenameObject"
+      ],
+      "properties": {
+        "RenameObject": {
+          "$ref": "🏷️rename-object/🔣️.schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ChangeObjectSmoothShading"
+      ],
+      "properties": {
+        "ChangeObjectSmoothShading": {
+          "$ref": "🔘️change-object-smooth-shading/🔣️.schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "MoveObject"
+      ],
+      "properties": {
+        "MoveObject": {
+          "$ref": "↗️move-object/🔣️.schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "RotateObject"
+      ],
+      "properties": {
+        "RotateObject": {
+          "$ref": "🔄️rotate-object/🔣️.schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ScaleObject"
+      ],
+      "properties": {
+        "ScaleObject": {
+          "$ref": "📐️scale-object/🔣️.schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "CreateMesh"
+      ],
+      "properties": {
+        "CreateMesh": {
+          "$ref": "🕸️create-mesh/🔣️.schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "DeleteMesh"
+      ],
+      "properties": {
+        "DeleteMesh": {
+          "$ref": "🧨delete-mesh/🔣️.schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "InsertPaintLayer"
+      ],
+      "properties": {
+        "InsertPaintLayer": {
+          "$ref": "➕️insert-paint-layer/🔣️.schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "RemovePaintLayer"
+      ],
+      "properties": {
+        "RemovePaintLayer": {
+          "$ref": "➖️remove-paint-layer/🔣️.schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "RenamePaintLayer"
+      ],
+      "properties": {
+        "RenamePaintLayer": {
+          "$ref": "🔖️rename-paint-layer/🔣️.schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ChangePaintLayerVisible"
+      ],
+      "properties": {
+        "ChangePaintLayerVisible": {
+          "$ref": "👁️change-paint-layer-visible/🔣️.schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ChangePaintLayerOpacity"
+      ],
+      "properties": {
+        "ChangePaintLayerOpacity": {
+          "$ref": "🌫️change-paint-layer-opacity/🔣️.schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ChangePaintLayerBlendMode"
+      ],
+      "properties": {
+        "ChangePaintLayerBlendMode": {
+          "$ref": "🎛️change-paint-layer-blend-mode/🔣️.schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "EditPaintLayer"
+      ],
+      "properties": {
+        "EditPaintLayer": {
+          "$ref": "🎨️edit-paint-layer/🔣️.schema.json"
+        }
+      }
+    }
+  ]
+}

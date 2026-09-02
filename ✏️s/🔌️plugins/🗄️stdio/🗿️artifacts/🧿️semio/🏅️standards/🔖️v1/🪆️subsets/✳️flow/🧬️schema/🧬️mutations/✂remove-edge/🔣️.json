@@ -5,7 +5,7 @@
   "displayName": "Remove Edge",
   "emoji": "✂",
   "aggregateVariant": "RemoveEdge",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

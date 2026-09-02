@@ -1,0 +1,50 @@
+dialect grammar
+grammar stdio.stl.mutations
+extension stl
+start document
+
+# FG1: real `OpText::print_op`/`parse_op` shape — F6's hand-rolled `print_stl_op`/`parse_stl_op`
+# (🧬️mutations/🦀️.rs), replacing the F6-era placeholder that described a serde-JSON
+# `{"mutation":"...", ...}` wire struct the codec never emits (F6 reverted the `dsl::DslOps` derive
+# after a real, reproduced `dsl`-grammar bug — see `f6-stl-report.md` and this artifact's own
+# `🧬️mutations`/`🔺️diff` module doc comments for the full root-cause citation; out of this wave's
+# ownership boundary to fix). One keyword line, space-separated `key=value` tokens, every variant's
+# args ALWAYS present (no sparse omission, unlike the sibling diff grammar). Every keyword/field-key
+# token below is copied verbatim from `print_stl_op`'s real match arms, not invented:
+#   set-snapshot snapshot=[<hex>,<hex>,[<triangle>,...]]
+#   set-solid-name name=<hex>
+#   insert-triangle index=<INT> triangle=[<vec3>,<vertices>]
+#   remove-triangle index=<INT>
+#   set-triangle-normal index=<INT> normal=<vec3>
+#   set-triangle-vertices index=<INT> vertices=<vertices>
+# `name`/`solid_name`/`schema` (inside `snapshot=`) are lowercase hex (`hex_encode_str`) — the
+# mandatory `hex` MACRO (bare `hex`, no matching production — `Symbol::Ref` falls back
+# production-then-macro), never a hand-rolled `{INT|IDENT}*` (P2-P1-fix Bug 3). `normal`/`vertices`/
+# `triangle`/`snapshot`'s numeric payload reuses the exact `[...]`-bracketed grammar
+# `🔺️diff::component`'s `enc_vec3`/`enc_vertices`/`enc_triangle` primitives emit — every array level
+# gets its own bracket (the depth marker `dsl`'s own flat `Shape::Tuple` printer is missing), which
+# is exactly what sidesteps that bug: `split_top_level`'s bracket-depth-aware comma split recovers
+# nesting unambiguously.
+document = set-snapshot | set-solid-name | insert-triangle | remove-triangle | set-triangle-normal | set-triangle-vertices
+
+set-snapshot = "set-snapshot" "snapshot" "=" snapshot-value
+set-solid-name = "set-solid-name" "name" "=" hex
+insert-triangle = "insert-triangle" "index" "=" INT "triangle" "=" triangle-value
+remove-triangle = "remove-triangle" "index" "=" INT
+set-triangle-normal = "set-triangle-normal" "index" "=" INT "normal" "=" vec3-value
+set-triangle-vertices = "set-triangle-vertices" "index" "=" INT "vertices" "=" vertices-value
+
+# `enc_snapshot`: `[hex(schema),hex(solid_name),[triangle,triangle,...]]` — the one type
+# `🔺️diff::component`'s own primitives don't need (only `SetSnapshot`'s payload does), defined in
+# `🧬️mutations::component`'s own `enc_snapshot`/`dec_snapshot`.
+snapshot-value = "[" hex "," hex "," "[" triangle-list? "]" "]"
+triangle-list = triangle-value {"," triangle-value}*
+
+# `enc_triangle`/`enc_vertices`/`enc_vec3` — copied verbatim from `🔺️diff::component`'s own value
+# grammar (see that facet's grammar for the identical productions, reused here since `stl`'s
+# mutations facet reuses `diff`'s codec primitives directly, same intra-artifact pattern `svg`'s
+# `SvgMutation` uses over `SvgDiff`'s primitives).
+triangle-value = "[" vec3-value "," vertices-value "]"
+vertices-value = "[" vec3-value "," vec3-value "," vec3-value "]"
+vec3-value = "[" number "," number "," number "]"
+number = INT | FLOAT

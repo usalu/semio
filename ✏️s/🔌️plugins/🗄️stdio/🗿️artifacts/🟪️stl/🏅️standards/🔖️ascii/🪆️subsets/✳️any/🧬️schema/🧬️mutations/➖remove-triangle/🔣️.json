@@ -5,7 +5,7 @@
   "displayName": "Remove Triangle",
   "emoji": "➖",
   "aggregateVariant": "RemoveTriangle",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

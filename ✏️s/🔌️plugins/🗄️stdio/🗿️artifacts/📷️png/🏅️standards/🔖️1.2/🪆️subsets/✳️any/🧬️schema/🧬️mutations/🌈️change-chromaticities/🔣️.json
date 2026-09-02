@@ -5,17 +5,20 @@
   "displayName": "Change Chromaticities",
   "emoji": "🌈️",
   "aggregateVariant": "ChangeChromaticities",
-  "payloadSchema": "🔣️payload.schema.json",
-  "textOpcode": null,
-  "binaryTag": null,
-  "invertibility": "non-invertible",
-  "diffParticipation": "none",
+  "payloadSchema": "🔣️.schema.json",
+  "textOpcode": "change-chromaticities",
+  "binaryTag": 6,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "apply-only",
   "outcomeClasses": [
     "applied"
   ],
   "composition": "atomic",
   "requiredLanguageSurfaces": [
     "rust",
+    "typescript",
+    "graphql",
+    "protobuf",
     "json-schema",
     "text",
     "binary"

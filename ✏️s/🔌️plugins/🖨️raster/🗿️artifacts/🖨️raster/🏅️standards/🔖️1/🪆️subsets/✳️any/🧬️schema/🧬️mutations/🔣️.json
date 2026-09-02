@@ -1,0 +1,22 @@
+{
+  "$id": "https://semio.tech/schema/s/raster/raster/mutation.json",
+  "title": "RasterMutation",
+  "oneOf": [
+    { "title": "CreateLayer", "type": "object", "additionalProperties": false, "required": ["mutation", "parentId", "index", "layer"], "properties": { "mutation": { "const": "createLayer" }, "parentId": { "type": ["string", "null"] }, "index": { "type": "integer", "minimum": 0 }, "layer": { "$ref": "#/$defs/RasterLayerNode" } } },
+    { "title": "DeleteLayer", "type": "object", "additionalProperties": false, "required": ["mutation", "layerId"], "properties": { "mutation": { "const": "deleteLayer" }, "layerId": { "type": "string" } } },
+    { "title": "ReorderLayers", "type": "object", "additionalProperties": false, "required": ["mutation", "layerId", "index"], "properties": { "mutation": { "const": "reorderLayers" }, "layerId": { "type": "string" }, "parentId": { "type": ["string", "null"] }, "index": { "type": "integer", "minimum": 0 } } },
+    { "title": "RenameLayer", "type": "object", "additionalProperties": false, "required": ["mutation", "layerId", "newName"], "properties": { "mutation": { "const": "renameLayer" }, "layerId": { "type": "string" }, "newName": { "type": "string" } } },
+    { "title": "ChangeLayerVisible", "type": "object", "additionalProperties": false, "required": ["mutation", "layerId", "newVisible"], "properties": { "mutation": { "const": "changeLayerVisible" }, "layerId": { "type": "string" }, "newVisible": { "type": "boolean" } } },
+    { "title": "ChangeLayerOpacity", "type": "object", "additionalProperties": false, "required": ["mutation", "layerId", "newOpacity"], "properties": { "mutation": { "const": "changeLayerOpacity" }, "layerId": { "type": "string" }, "newOpacity": { "type": "number" } } },
+    { "title": "ChangeLayerBlendMode", "type": "object", "additionalProperties": false, "required": ["mutation", "layerId", "newBlendMode"], "properties": { "mutation": { "const": "changeLayerBlendMode" }, "layerId": { "type": "string" }, "newBlendMode": { "type": "string" } } },
+    { "title": "MoveLayer", "type": "object", "additionalProperties": false, "required": ["mutation", "layerId", "newX", "newY"], "properties": { "mutation": { "const": "moveLayer" }, "layerId": { "type": "string" }, "newX": { "type": "number" }, "newY": { "type": "number" } } },
+    { "title": "ResizeLayer", "type": "object", "additionalProperties": false, "required": ["mutation", "layerId", "newWidth", "newHeight"], "properties": { "mutation": { "const": "resizeLayer" }, "layerId": { "type": "string" }, "newWidth": { "type": "integer", "minimum": 0 }, "newHeight": { "type": "integer", "minimum": 0 } } },
+    { "title": "ChangeLayerAdjustmentKind", "type": "object", "additionalProperties": false, "required": ["mutation", "layerId", "newAdjustmentKind"], "properties": { "mutation": { "const": "changeLayerAdjustmentKind" }, "layerId": { "type": "string" }, "newAdjustmentKind": { "type": "string" } } },
+    { "title": "AddLayerAsset", "type": "object", "additionalProperties": false, "required": ["mutation", "assetId", "asset"], "properties": { "mutation": { "const": "addLayerAsset" }, "assetId": { "type": "string" }, "asset": { "$ref": "#/$defs/RasterImageAsset" } } },
+    { "title": "RemoveLayerAsset", "type": "object", "additionalProperties": false, "required": ["mutation", "assetId"], "properties": { "mutation": { "const": "removeLayerAsset" }, "assetId": { "type": "string" } } }
+  ],
+  "$defs": {
+    "RasterLayerNode": { "type": "object", "description": "see ../📸️snapshot/🔣️.json" },
+    "RasterImageAsset": { "type": "object", "required": ["mime", "data"], "properties": { "mime": { "type": "string" }, "data": { "type": "string", "contentEncoding": "base64" } } }
+  }
+}

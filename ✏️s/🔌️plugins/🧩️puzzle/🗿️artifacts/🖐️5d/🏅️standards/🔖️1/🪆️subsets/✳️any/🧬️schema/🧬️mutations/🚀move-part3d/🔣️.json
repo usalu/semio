@@ -5,7 +5,7 @@
   "displayName": "Move Part3d",
   "emoji": "🚀",
   "aggregateVariant": "MovePart3d",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": "move-part3d",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

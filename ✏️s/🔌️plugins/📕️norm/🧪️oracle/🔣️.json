@@ -1,7 +1,7 @@
 {
   "$schema": "../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json",
   "schemaVersion": 2,
-  "_comment": "🧩️ This plugin's contribution to the repository test platform. The framework discovers this file by convention (`testContributionDirName` in 🔣️taxonomy.json) and never names this plugin or any standard it owns. Nothing format-specific lives here: the fifteen norm artifacts are all semio-native, so every (non-)oracle registration and every mutation catalog sits with its own subset, at `🗿️artifacts/<artifact>/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️oracle/🔣️.json`. What this root manifest carries is the ONE thing a subset cannot declare for itself: an `oracleHostPackage` reaches a case through its owner's ANCESTORS, and a case owned by `🗿️artifacts/<artifact>` is not a descendant of the subset that declares the catalog.",
+  "_comment": "🧩️ This plugin's contribution to the repository test platform. The framework discovers this file by convention (`testContributionDirName` in 🔣️taxonomy.json) and never names this plugin or any standard it owns. Nothing format-specific lives here: the fifteen norm artifacts are all semio-native, so every (non-)oracle registration and every mutation catalog sits with its own subset, at `🗿️artifacts/<artifact>/🏅️standards/🔖️1/🪆️subsets/✳️any/🔣️oracle.json`. What this root manifest carries is the ONE thing a subset cannot declare for itself: an `oracleHostPackage` reaches a case through its owner's ANCESTORS, and a case owned by `🗿️artifacts/<artifact>` is not a descendant of the subset that declares the catalog.",
   "oracles": [],
   "noOracleDecisions": [],
   "oracleHostPackages": [

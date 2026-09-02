@@ -5,7 +5,7 @@
   "displayName": "Change Data Center Supply C",
   "emoji": "🧰",
   "aggregateVariant": "ChangeDataCenterSupplyC",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

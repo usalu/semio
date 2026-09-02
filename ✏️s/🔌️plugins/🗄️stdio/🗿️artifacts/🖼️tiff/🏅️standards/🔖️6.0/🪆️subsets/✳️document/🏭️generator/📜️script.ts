@@ -49,7 +49,7 @@ type Recipe = Readonly<{ id: string; mutation: string; notes: string }>;
 /** 🍳️ Mirrors `RECIPE_IDS`/`recipe()` in `🦀️tiff-ifd-codec/src/main.rs` verbatim, minus
  *  `change-byte-order-applied` (the codec refuses to build it — see this file's own header). One
  *  entry per witnessable declared `TiffMutation` kind; every outcome is `applied` per this
- *  subset's own catalog (`../🧪️oracle/🔣️.json` — all 6 kinds declare `outcomes: ["applied"]` only). */
+ *  subset's own catalog (`../🔣️oracle.json` — all 6 kinds declare `outcomes: ["applied"]` only). */
 const RECIPES: readonly Recipe[] = [
   { id: "insert-ifd-applied", mutation: "insert-ifd", notes: "A second, smaller IFD is appended after the first — ifdCount 1 -> 2." },
   { id: "remove-ifd-applied", mutation: "remove-ifd", notes: "The second IFD of a two-IFD document is dropped — ifdCount 2 -> 1." },

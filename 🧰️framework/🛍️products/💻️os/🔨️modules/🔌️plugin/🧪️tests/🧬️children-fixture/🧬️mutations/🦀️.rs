@@ -32,7 +32,7 @@ impl protocol::OpBinary for ChildrenTestMutation {
 //#region 🧪️ChildrenMutationTests
 #[cfg(test)]
 mod tests {
-    include!("../🧪️tests/🦀️.rs");
+    include!("../🧪️test/🦀️s.rs");
 }
 //#endregion 🧪️ChildrenMutationTests
 

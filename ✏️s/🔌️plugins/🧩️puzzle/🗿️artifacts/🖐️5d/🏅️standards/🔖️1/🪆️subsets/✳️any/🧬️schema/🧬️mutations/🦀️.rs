@@ -59,7 +59,7 @@ pub enum Puzzle5dMutation {
 
 //#region 🏷️Kinds
 /// 🏷️ The kebab-case spelling of every [`Puzzle5dMutation`] variant, in declaration order — the exact
-/// vocabulary the `puzzle-5d-1-any` mutation catalog (`../../🧪️oracle/🔣️.json`) declares and
+/// vocabulary the `puzzle-5d-1-any` mutation catalog (`../../🔣️oracle.json`) declares and
 /// the `mutate-puzzle-5d-1` exhaustive case measures itself against. The framework never parses Rust, so
 /// `kinds_match_the_enum_and_the_catalog` below is what keeps this list honest against both.
 pub const KINDS: &[&str] = &[
@@ -298,7 +298,7 @@ pub fn inverse_puzzle5d_mutation(projection: &Puzzle5dSnapshot, mutation: &Puzzl
 // rather than hand-splicing JSON per mutation kind — mirrors `puzzle2d`'s bridge exactly.
 //
 // 🧩️ Ticket 26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM W4d: `Puzzle5dDocument.kind_catalogs:
-// Option<Value>` (the app's own untyped scratch fixture, `✏️editor/🦀️component.rs`) still carries
+// Option<Value>` (the app's own untyped scratch fixture, `✏️editor/🦀️.rs`) still carries
 // the LEGACY embedded-catalog shape end to end — the catalogue panel / mesh-resolution UI reads it
 // directly and `kit:in` media import writes it directly, both untouched by this migration since they
 // never round-trip through the typed `Puzzle5dSnapshot`. But `serde_json::to_value(a_document)` DOES
@@ -663,7 +663,7 @@ mod tests {
         for (kind, descriptor) in KINDS.iter().zip(descriptors.iter()) {
             assert_eq!(*kind, descriptor.kind, "KINDS must match #[derive(dsl::Mutations)]'s own declaration order and spelling");
         }
-        let manifest = include_str!("../../🧪️oracle/🔣️.json");
+        let manifest = include_str!("../../🔣️oracle.json");
         for kind in KINDS {
             assert!(manifest.contains(&format!("\"{kind}\"")), "KINDS entry {kind:?} must also appear in the committed oracle manifest's catalog");
         }

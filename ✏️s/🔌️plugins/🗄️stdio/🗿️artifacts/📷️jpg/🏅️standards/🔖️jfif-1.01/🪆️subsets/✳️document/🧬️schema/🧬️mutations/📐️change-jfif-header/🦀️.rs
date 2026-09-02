@@ -17,9 +17,9 @@ pub struct ChangeJfifHeaderMutation {
 //#endregion Payload
 
 //#region Facets
-#[path = "💾️binary/🦀️component.rs"]
+#[path = "💾️binary/🦀️.rs"]
 pub mod binary;
-#[path = "📝️text/🦀️component.rs"]
+#[path = "📝️text/🦀️.rs"]
 pub mod text;
 //#endregion Facets
 
@@ -67,8 +67,8 @@ pub fn contribute(base: &JpgSnapshot, version: (u8, u8), density_units: JfifDens
 
 #[cfg(test)]
 pub(crate) fn test_case() -> JpgMutation {
-    serde_json::from_str(include_str!("🧪️tests/direct-behavior/🦠️mutation/🔣️component.json")).expect("committed change-jfif-header payload")
+    serde_json::from_str(include_str!("🧪️tests/direct-behavior/🦠️mutation/🔣️.json")).expect("committed change-jfif-header payload")
 }
 #[cfg(test)]
-#[path = "🧪️tests/direct-behavior/🦀️component.rs"]
+#[path = "🧪️tests/direct-behavior/🦀️.rs"]
 mod tests_direct_behavior;

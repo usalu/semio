@@ -5,7 +5,7 @@
   "displayName": "Add Author",
   "emoji": "👤",
   "aggregateVariant": "AddAuthor",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": "add-author",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

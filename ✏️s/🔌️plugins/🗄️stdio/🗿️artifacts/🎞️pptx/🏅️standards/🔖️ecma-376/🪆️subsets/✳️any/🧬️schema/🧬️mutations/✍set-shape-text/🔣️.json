@@ -5,7 +5,7 @@
   "displayName": "Set Shape Text",
   "emoji": "✍",
   "aggregateVariant": "SetShapeText",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

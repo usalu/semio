@@ -24,7 +24,7 @@ wasm-opt = false
 
 [lib]
 crate-type = ["cdylib", "rlib"]
-path = "📦️glue.rs"
+path = "🦀️.rs"
 
 [dependencies]
 semio_s_plugin_process = { path = "../../../../../../../✏️s/🔌️plugins/🏭️process/📦️packages/🦀️rust", package = "semio-s-plugin-process" }

@@ -5,7 +5,7 @@
   "displayName": "Set Spatial Node",
   "emoji": "🧭",
   "aggregateVariant": "SetSpatialNode",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

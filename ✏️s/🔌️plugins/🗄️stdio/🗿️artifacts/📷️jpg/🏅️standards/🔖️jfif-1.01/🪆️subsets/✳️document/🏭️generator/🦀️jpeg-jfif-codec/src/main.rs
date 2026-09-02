@@ -2,10 +2,10 @@
 //! public JPEG encoder/decoder. Zero dependencies beyond `image` itself (see this crate's own
 //! Cargo.toml — its own `[workspace]`, isolated from the repository's root workspace and Cargo.lock).
 //!
-//! This binary is the code `../../🧪️oracle/🔣️.json`'s reader oracle registration
+//! This binary is the code `../../🔣️oracle.json`'s reader oracle registration
 //! (`image-jpeg-jfif-1-01-mutate-reader`) points at. It never links against, calls, or copies
-//! logic from this subset's own `🚪️io/🦀️component.rs` (the production JFIF codec) or its
-//! `🧪️oracle/🦀️component.rs` (the reclassified `cross-semio-implementation` oracle, which COMPUTES
+//! logic from this subset's own `🚪️io/🦀️.rs` (the production JFIF codec) or its
+//! `🦀️oracle.rs` (the reclassified `cross-semio-implementation` oracle, which COMPUTES
 //! mutation results and therefore shares a spec reading with production) — every recipe below is a
 //! literal, hand-picked byte value written directly by `image`'s own encoder, never a mutation
 //! applied to a document.
@@ -53,10 +53,10 @@
 //!
 //! `replace-quant-table`, `remove-quant-table`, `replace-huffman-table`, `remove-huffman-table` and
 //! `change-restart-interval` are not just unreadable through `image` — this subset's OWN production
-//! encoder (`../../🚪️io/🦀️component.rs::encode_jpg`) provably never carries them into the bytes at
+//! encoder (`../../🚪️io/🦀️.rs::encode_jpg`) provably never carries them into the bytes at
 //! all: it regenerates fresh Annex K DQT/DHT tables scaled by `re_encode_quality` on every encode
 //! and never emits a DRI/restart marker (confirmed directly in that file, and independently
-//! documented in this subset's own `🧪️oracle/🦀️component.rs` module docstring). A perfect reader
+//! documented in this subset's own `🦀️oracle.rs` module docstring). A perfect reader
 //! would still have nothing to witness, so these five recipes below hand-author `before == after`
 //! byte-identically — the literal truth of what production does with them — rather than fabricate a
 //! difference no encoder in this repository can produce.
@@ -144,7 +144,7 @@ const DEFAULT_QUALITY: u8 = 90;
 const LOW_QUALITY: u8 = 20;
 
 /// 🧪 One recipe: `before` always, `after` for this catalog's own `applied`-only vocabulary (this
-/// subset registers no `rejected` outcomes — see `../../🧪️oracle/🔣️.json`). See the module
+/// subset registers no `rejected` outcomes — see `../../🔣️oracle.json`). See the module
 /// docstring for exactly why each of the ten kinds is shaped the way it is below.
 fn recipe(id: &str) -> Option<(Vec<u8>, Vec<u8>)> {
     let base = base_image();

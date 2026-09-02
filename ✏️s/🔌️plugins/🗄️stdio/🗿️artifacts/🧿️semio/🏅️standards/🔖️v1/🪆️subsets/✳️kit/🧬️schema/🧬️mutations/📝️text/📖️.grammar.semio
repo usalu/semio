@@ -1,0 +1,39 @@
+dialect grammar
+grammar stdio.semio.kit.mutations
+extension semio
+start op
+
+# UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM kit wave (W2c, second COMPOSITE subset). Real one-line
+# `OpText::print_op`/`parse_op` shape ALREADY emitted by `../📝️text/🦀️.rs`
+# (`print_kit_mutation`/`parse_kit_mutation`) — `tag:args` (no space). Fifteen keywords: closed
+# composition verbs (`create`/`delete`×3 slots, `bind`/`unbind`/`change` for the one LINK slot) plus
+# closed domain verbs (`add`/`remove`/`rename` for types, `add`/`remove`/`edit` for designs) per
+# `📓️taxonomy.md`'s `APPROVED_VERBS`.
+op = create-object | delete-object | create-model | delete-model | create-properties | delete-properties | bind-representation | unbind-representation | change-representation-pin | add-type | remove-type | rename-type | add-design | remove-design | edit-design
+
+create-object = "createObject" ":" hex "," hex
+delete-object = "deleteObject" ":" hex
+create-model = "createModel" ":" hex "," hex
+delete-model = "deleteModel" ":" hex
+create-properties = "createProperties" ":" hex "," hex
+delete-properties = "deleteProperties"
+
+bind-representation = "bindRepresentation" ":" hex "," pin "," hex
+unbind-representation = "unbindRepresentation" ":" INT
+change-representation-pin = "changeRepresentationPin" ":" INT "," pin
+pin = "[" "h" "]" | "[" "c" "," hex "]" | "[" "s" "," hex "," INT "," hex "]"
+
+add-type = "addType" ":" hex "," hex "," hex
+remove-type = "removeType" ":" hex
+rename-type = "renameType" ":" hex "," hex
+
+add-design = "addDesign" ":" hex "," hex
+remove-design = "removeDesign" ":" hex
+edit-design = "editDesign" ":" hex "," "[" {piece {"," piece}*}? "]" "," "[" {connection {"," connection}*}? "]"
+piece = "[" hex "," hex "," transform "]"
+connection = "[" hex "," hex "," hex "," hex "," hex "]"
+transform = "[" number "," number "," number "," number "," number "," number "," number "," number "," number "," number "]"
+number = INT | FLOAT
+
+# `hex` (bare, deliberately NOT defined as a production here) is the framework's built-in `hex`
+# MACRO — every id/name/uri/role string routes through it.

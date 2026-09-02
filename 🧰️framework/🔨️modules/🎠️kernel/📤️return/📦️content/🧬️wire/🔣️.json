@@ -6,7 +6,7 @@
   "lengthIsAllocationPermission": false,
   "recordMayCrossPages": true,
   "finalPageEndsAtEndRecord": true,
-  "declarationSource": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧬️schema/📜️component.wit",
+  "declarationSource": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧬️schema/📜️.wit",
   "primitiveEncoding": {
     "u8": "one-byte",
     "u16": "canonical-unsigned-leb128",

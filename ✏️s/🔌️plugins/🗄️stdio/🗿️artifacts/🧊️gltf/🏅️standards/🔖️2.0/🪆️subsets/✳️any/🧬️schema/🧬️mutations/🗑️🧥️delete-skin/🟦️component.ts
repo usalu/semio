@@ -1,7 +1,0 @@
-/** 🦠️ delete-skin executable structural glTF command. */
-import type { GltfOrthographic, GltfPerspective, GltfSnapshot } from '../../📸️snapshot/🟦️component.ts';
-import { clone, insert, order, position, reject, remove, relocate, reorder, repair, type GltfMutationRejection, type GltfStructuralResult } from '../../🔨️modules/🧬️mutation-support/🗂️top-level-collections/🟦️component.ts';
-export const GltfDeleteSkinDescriptor = { id: 's.stdio.gltf.mutation.delete-skin.v1', version: 1, touchedPathPattern: 'document/skins', referencePolicy: 'all typed skin references are remapped, repaired, or rejected' } as const;
-export interface GltfDeleteSkinPayload { index: number }
-export const validateGltfDeleteSkin = (payload: GltfDeleteSkinPayload, base: GltfSnapshot): GltfMutationRejection | undefined => { const index = position(payload.index, base.document.skins.length, 'document/skins'); if (index) return index;  return undefined; };
-export const applyGltfDeleteSkin = (base: GltfSnapshot, payload: GltfDeleteSkinPayload): GltfStructuralResult => { const rejection = validateGltfDeleteSkin(payload, base); if (rejection) return { accepted: false, rejection }; try { const next = clone(base); remove(next, 'skins', payload.index); return { accepted: true, snapshot: clone(next) }; } catch (error) { return { accepted: false, rejection: typeof error === 'object' && error && 'code' in error ? error as GltfMutationRejection : reject('gltf.mutation.apply-failed', 'document/skins', String(error)) }; } };

@@ -1,0 +1,9 @@
+(* CsvMutation's wire text IS its JSON serialization (protocol::OpText — serde_json),
+   tagged on "mutation" per 🦀️.rs's enum. Real variant tags, not a placeholder. *)
+mutation = "{", '"mutation"', ":", tag, { ",", member }, "}" ;
+tag = '"setSnapshot"'
+    | '"setHasHeader"'
+    | '"insertRecord"'
+    | '"removeRecord"'
+    | '"setField"' ;
+member = string, ":", json value ;

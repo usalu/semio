@@ -5,7 +5,7 @@
   "displayName": "Change D Mm",
   "emoji": "🕷️",
   "aggregateVariant": "ChangeDMm",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

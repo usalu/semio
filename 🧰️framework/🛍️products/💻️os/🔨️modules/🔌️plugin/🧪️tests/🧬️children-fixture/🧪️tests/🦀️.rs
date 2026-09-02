@@ -2,7 +2,7 @@
 use super::*;
 use protocol::{Mutation, MutationDiff, OpBinary, OpText};
 
-fn cases() -> serde_json::Value { serde_json::from_str(include_str!("../🔣️cases.json")).expect("children mutation cases") }
+fn cases() -> serde_json::Value { serde_json::from_str(include_str!("../🔣️.json")).expect("children mutation cases") }
 
 #[test]
 fn empty_roster_has_no_fabricated_leaf() {

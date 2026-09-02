@@ -5,7 +5,7 @@
   "displayName": "Update Analysis Settings",
   "emoji": "🎛",
   "aggregateVariant": "UpdateAnalysisSettings",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": "update-analysis-settings",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

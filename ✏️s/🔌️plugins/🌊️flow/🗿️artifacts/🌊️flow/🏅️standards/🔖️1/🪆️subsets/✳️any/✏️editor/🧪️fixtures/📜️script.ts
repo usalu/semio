@@ -11,7 +11,7 @@ const hostWire = await Bun.file(new URL("./🔎️host-wire.json", import.meta.u
 const hostWireSchema = await Bun.file(new URL("./🔎️host-wire.schema.json", import.meta.url)).json();
 const validateHostWire = new Ajv({ strict: true, allErrors: true }).compile(hostWireSchema);
 assert(validateHostWire(hostWire), JSON.stringify(validateHostWire.errors));
-const hostCommandSource = await Bun.file(new URL("../🦀️component.rs", import.meta.url)).text();
+const hostCommandSource = await Bun.file(new URL("../🦀️.rs", import.meta.url)).text();
 const hostCommandRows = [...hostCommandSource.slice(hostCommandSource.indexOf("pub enum FlowCommand"), hostCommandSource.indexOf("// 🧷️ `app_commands!")).matchAll(/"([^"]+)" as "[^"]+" =>/g)].map(match => match[1]);
 assert.equal(new Set(hostWire.cases.map((row: any) => row.id)).size, 6);
 for (const row of hostWire.cases) {
@@ -65,8 +65,8 @@ console.log("[DEBUG] Flow artifact recipe fixtures=4 hostileRejections=4 semanti
 
 //#region 🎚️ParameterIntent
 const parameter = await Bun.file(new URL("../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🎚️parameter/📨️intent/🔣️fixture.json", import.meta.url)).json();
-const parameterSchema = await Bun.file(new URL("../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🎚️parameter/📨️intent/🔣️schema.json", import.meta.url)).json();
-const parameterFixtureSchema = await Bun.file(new URL("../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🎚️parameter/📨️intent/🔣️fixture.schema.json", import.meta.url)).json();
+const parameterSchema = await Bun.file(new URL("../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🎚️parameter/📨️intent/🔣️.schema.json", import.meta.url)).json();
+const parameterFixtureSchema = await Bun.file(new URL("../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🎚️parameter/📨️intent/🔣️.schema.json", import.meta.url)).json();
 const parameterAjv = new Ajv({ strict: true, allErrors: true });
 const validateParameter = parameterAjv.compile(parameterSchema);
 const validateParameterFixture = parameterAjv.compile(parameterFixtureSchema);
@@ -167,7 +167,7 @@ for (const mutate of [
   mutate(mutant);
   assert(!validateLabels(mutant));
 }
-const artifactSource = await Bun.file(new URL("../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📄️artifact/🦀️component.rs", import.meta.url)).text();
+const artifactSource = await Bun.file(new URL("../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📄️artifact/🦀️.rs", import.meta.url)).text();
 assert.match(artifactSource, /InputSlider\s*\{\s*id: String,\s*label: String,/);
 assert.match(artifactSource, /Widget::InputSlider \{ label, \.\. \} => \(label\.clone\(\), label\.clone\(\)/);
 //#endregion 🏷️AuthoredSliderLabels

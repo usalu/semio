@@ -1,6 +1,6 @@
 //! 🧮️ The semio math framework: one crate for every mathematical domain the OS kernel, the s-modules and the plugins compute with.
 //!
-//! Each domain is a `🦀️component.rs` in the owner tree; this entry file is pure wiring.
+//! Each domain is a `🦀️.rs` in the owner tree; this entry file is pure wiring.
 
 // 🔀️ R3/R7 (math-dedyn): `async fn` in a public trait warns because auto trait bounds (`Send`)
 // cannot be named on it — answered STRUCTURALLY here, not by the compiler's suggested `+ Send`.

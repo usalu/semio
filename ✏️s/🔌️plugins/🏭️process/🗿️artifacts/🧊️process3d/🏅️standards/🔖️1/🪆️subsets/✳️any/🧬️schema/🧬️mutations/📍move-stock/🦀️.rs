@@ -1,10 +1,9 @@
 //! 🧱 Process3d mutation — `MoveStock` (repurposes the pre-migration `🧱set-stock/` triad dir —
 //! glue.rs path-includes this exact directory outside this facet's writable boundary, so the
 //! directory name stays `🧱set-stock`; see the migration report's `sharedFileRequests` for the
-//! rename once a later pass can touch `📦️glue.rs`).
+//! rename once a later pass can touch `🦀️.rs`).
 
 use crate::artifacts::process3d::diff::Process3dDiff;
-use crate::artifacts::process3d::mutations::move_stock::MoveStock;
 use crate::artifacts::process3d::mutations::Process3dMutation;
 use crate::artifacts::process3d::{Pose, Process3dSnapshot};
 use semio_framework_value_derive::{FromValue, ToValue};

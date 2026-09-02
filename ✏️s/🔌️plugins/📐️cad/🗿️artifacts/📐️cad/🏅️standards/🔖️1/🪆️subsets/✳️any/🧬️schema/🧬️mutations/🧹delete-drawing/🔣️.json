@@ -5,7 +5,7 @@
   "displayName": "Delete Drawing",
   "emoji": "🧹",
   "aggregateVariant": "DeleteDrawing",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": "delete-drawing",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

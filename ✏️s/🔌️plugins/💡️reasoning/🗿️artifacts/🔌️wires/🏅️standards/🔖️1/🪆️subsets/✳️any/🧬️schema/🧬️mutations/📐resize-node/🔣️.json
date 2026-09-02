@@ -5,7 +5,7 @@
   "displayName": "Resize Node",
   "emoji": "📐",
   "aggregateVariant": "ResizeNode",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": "resize-node",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

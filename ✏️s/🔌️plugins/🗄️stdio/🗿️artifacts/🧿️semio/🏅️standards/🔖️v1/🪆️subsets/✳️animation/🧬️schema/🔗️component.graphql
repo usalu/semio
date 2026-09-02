@@ -1,6 +1,0 @@
-# 🧬️ SemioAnimationArtifact schema — full artifact state, mirrors SemioAnimationSnapshot field for
-# field (see `📸️snapshot/🔗️component.graphql` for the nested `AnimTimeline` shape).
-type SemioAnimationArtifact {
-  schema: String! @state(class: ARTIFACT)
-  timelines: [AnimTimeline!]! @state(class: ARTIFACT)
-}

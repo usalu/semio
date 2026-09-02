@@ -1,0 +1,30 @@
+(* ebnf layout.layout.snapshot *)
+(* Below: ISO-14977-style mirror of the normative 📖️.grammar.semio (same production
+   names, kebab-case -> "space case"). This facet's .semio defines no header/body/payload
+   envelope (`start document`); the two lines above are preserved verbatim from the prior
+   identity fix for traceability but are not referenced below. *)
+document = header, body ;
+header = 'schema', space, 'layout.layout.snapshot', newline ;
+
+artifact mark = 'semio layout.layout.dsl v1' ;
+document = artifact mark, schema line, name line, grid line, paragraph styles line, character styles line, stories line, links line, parent pages line, spreads line, pages line, print target line, data fields json line, background drawing line, referenced model line ;
+schema line = 'schema', '=', hex ;
+name line = 'name', '=', hex ;
+grid line = 'grid', '=', json hex ;
+paragraph styles line = 'paragraphStyles', '=', json hex ;
+character styles line = 'characterStyles', '=', json hex ;
+stories line = 'stories', '=', json hex ;
+links line = 'links', '=', json hex ;
+parent pages line = 'parentPages', '=', json hex ;
+spreads line = 'spreads', '=', json hex ;
+pages line = 'pages', '=', json hex ;
+print target line = 'printTarget', '=', json hex ;
+data fields json line = 'dataFieldsJson', '=', json hex ;
+background drawing line = 'backgroundDrawing', '=', json hex ;
+referenced model line = 'referencedModel', '=', json hex ;
+json hex = hex ;
+
+(* Framework dialect-primitive terminals, given one concrete definition each for a
+   self-contained mirror (not defined in the .semio itself — ticket-reported deviation). *)
+hex = { digit | 'a' | 'b' | 'c' | 'd' | 'e' | 'f' } ;
+digit = '0' | '1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9' ;

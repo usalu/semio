@@ -14,9 +14,16 @@ workspace = true
 [lib]
 name = "neural_engine"
 crate-type = ["rlib"]
-path = "📦️glue.rs"
+path = "🦀️.rs"
 
 [dependencies]
 semio-framework-replication = { path = "../../../../../../../🔨️modules/📡️replication/📦️packages/🦀️rust" }
+# 🎒️ `pack::json::to_json_string` — the evaluator's pending-extension branch needs a JSON string of
+# a `Dictionary` for its host-bound `input_json` payload (RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-
+# AND-ARTIFACTS, 26/09/01, tenth-seam pass). No cycle: `pack` depends on `replication`, not the
+# reverse, and this crate already depends on `replication` directly.
+pack = { path = "../../../../../../../🔨️modules/🎒️pack/📦️packages/🦀️rust", package = "semio-framework-pack" }
+
+[dev-dependencies]
 serde = { version = "1.0.219", features = ["derive"] }
 serde_json = "1.0.140"

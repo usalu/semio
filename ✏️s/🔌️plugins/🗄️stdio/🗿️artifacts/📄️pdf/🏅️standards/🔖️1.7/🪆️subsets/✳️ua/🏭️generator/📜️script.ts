@@ -9,7 +9,7 @@
 // conformance-class catalog.
 //
 // Every base/mutated pair `🦀️lopdf-engine/src/generate.rs` writes is produced by the SAME registered `lopdf`
-// 0.44 reference implementation named `lopdf-pdf-1-7-ua-mutate` in `../🧪️oracle/🔣️.json` —
+// 0.44 reference implementation named `lopdf-pdf-1-7-ua-mutate` in `../🔣️oracle.json` —
 // through `lopdf`'s own public COS API inside the standalone
 // `semio-s-plugin-stdio-test-oracle` crate, the identical engine the differential test case
 // `../../../../../../🧪️tests/mutate-pdf-1-7-ua` drives — never this repository's own production PDF
@@ -45,14 +45,14 @@ const SUBSET = "ua";
 const ORACLE_ID = "lopdf-pdf-1-7-ua-mutate-reader";
 const COMPARISON_PROFILE = "semantic-pdf-conformance-ua-v1";
 // 🧾️ Kept in step with `🦀️lopdf-engine/src/lib.rs::KINDS` (itself the same list as
-// `../🧪️oracle/🔣️.json`'s `pdf-1-7-ua` catalog) — `manifests` walks whichever recipe directories the
+// `../🔣️oracle.json`'s `pdf-1-7-ua` catalog) — `manifests` walks whichever recipe directories the
 // engine actually wrote rather than trusting this constant, so a drift here fails loudly as a
 // missing-directory error instead of silently under-registering a kind.
 // 🚫️`insert-encryption-dictionary` and `remove-encryption-dictionary` are NOT here: `lopdf` 0.44's
 // writer takes its encryption path whenever the trailer carries `/Encrypt` and then requires the
 // encryption state a real decryption would have recorded, so a synthetic encryption dictionary can be
 // neither written nor read back (`object ID 8 0 not found`). Both kinds are registered `-uncarried` in
-// `../🧪️oracle/🔣️.json` rather than routed around.
+// `../🔣️oracle.json` rather than routed around.
 const KINDS: readonly string[] = ["set-mark-info", "remove-mark-info", "set-struct-tree-root", "remove-struct-tree-root", "set-lang", "remove-lang", "set-display-doc-title", "remove-display-doc-title", "set-info-title", "embed-font-file", "remove-font-file"];
 //#endregion 🧬️Contract
 

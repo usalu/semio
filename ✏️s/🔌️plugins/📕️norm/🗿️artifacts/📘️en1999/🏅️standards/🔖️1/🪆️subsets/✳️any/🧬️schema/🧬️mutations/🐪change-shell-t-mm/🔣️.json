@@ -5,7 +5,7 @@
   "displayName": "Change Shell T Mm",
   "emoji": "🐪",
   "aggregateVariant": "ChangeShellTMm",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

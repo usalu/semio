@@ -5,7 +5,7 @@
   "displayName": "Insert Spatial Node",
   "emoji": "🏗",
   "aggregateVariant": "InsertSpatialNode",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

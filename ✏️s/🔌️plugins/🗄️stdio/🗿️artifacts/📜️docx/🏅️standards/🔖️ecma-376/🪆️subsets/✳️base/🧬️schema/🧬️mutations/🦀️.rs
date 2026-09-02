@@ -95,7 +95,7 @@ pub enum DocxMutation {
 }
 
 /// 📇️ Kebab-case spelling of every `DocxMutation` variant, in declaration order -- the exhaustive
-/// mutation catalog `../🧪️oracle/🔣️.json`'s `kinds` array is required to match verbatim
+/// mutation catalog `../🔣️oracle.json`'s `kinds` array is required to match verbatim
 /// (`kinds_const_matches_enum_variants_in_declaration_order` below is what keeps that honest; the
 /// framework never parses Rust to check it itself). Mirrors `print_docx_mutation`'s own keyword
 /// match entry-for-entry, so `KINDS[i]` is exactly what `print_op()` emits for the enum's `i`-th
@@ -386,11 +386,11 @@ impl OpText for DocxMutation {
 
 //#region 🔖️OpBinaryCodec
 /// 🧪️ FG-wave: real recursive binary primitives backing the upgraded `OpBinary` impl below --
-/// mirrors `📰xml/…/🧬️mutations/🦀️component.rs`'s own `enc_node_path_bin`/`enc_xml_snapshot_bin`
+/// mirrors `📰xml/…/🧬️mutations/🦀️.rs`'s own `enc_node_path_bin`/`enc_xml_snapshot_bin`
 /// shape, reusing `store::pack_rt::write_varint_u64`/`store::ByteReader` plus `DocxDiff`'s own
 /// `write_str_lp`/`read_str_lp`/`write_bytes_lp`/`read_bytes_lp`/`enc_block_bin`/`dec_block_bin`/
 /// `enc_style_bin`/`dec_style_bin`/`enc_opc_part_bin`/`dec_opc_part_bin`/`enc_rel_bin`/
-/// `dec_rel_bin` (`../🔺️diff/🦀️component.rs`, `pub(crate)` to this artifact).
+/// `dec_rel_bin` (`../🔺️diff/🦀️.rs`, `pub(crate)` to this artifact).
 use crate::artifacts::docx::schema::diff::{dec_block_bin, dec_opc_part_bin, dec_rel_bin, dec_style_bin, enc_block_bin, enc_opc_part_bin, enc_rel_bin, enc_style_bin, read_bytes_lp, read_str_lp, write_bytes_lp, write_str_lp};
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -538,7 +538,7 @@ fn dec_docx_snapshot_bin(reader: &mut store::ByteReader<'_>) -> Result<DocxSnaps
 //#endregion 🔖️OpBinaryCodec
 
 /// 🧪️ FG-wave: REAL binary op frame (`format u8 | tag u8 | variant payload`), matching
-/// `../💾️binary/📡️component.protocol.semio`'s `header fixed 2` + `chain payload bytes` shape --
+/// `../💾️binary/📡️.protocol.semio`'s `header fixed 2` + `chain payload bytes` shape --
 /// upgraded from F6's `print_op().into_bytes()` text-as-binary shortcut. `tag` is the
 /// `DocxMutation` variant ordinal, in the same 0-11 order `print_docx_mutation`'s own keyword
 /// match uses.
@@ -681,8 +681,8 @@ impl OpBinary for DocxMutation {
 //#region 🔖️DemoCases
 /// 🧪️ FG-wave: representative `DocxMutation` values -- one per variant -- the single source of
 /// truth reused by this file's own `mutation_diff_law`/`inverse_law`/`op_text_binary_roundtrip_law`
-/// tests below AND by `⚙️engine/🦀️component.rs`'s `ops_grammar_conformance_law`/`protocol_walk_law`
-/// conformance tests, same shape `📷️png/…/🧬️mutations/🦀️component.rs`'s own
+/// tests below AND by `⚙️engine/🦀️.rs`'s `ops_grammar_conformance_law`/`protocol_walk_law`
+/// conformance tests, same shape `📷️png/…/🧬️mutations/🦀️.rs`'s own
 /// `demo_mutation_cases()` establishes.
 #[cfg(test)]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -1241,7 +1241,7 @@ mod tests {
     /// carries (one instance per variant), must equal `KINDS` entry-for-entry -- the framework never
     /// parses Rust to check this itself (see `KINDS`'s own doc comment), so this test is the one
     /// thing that does. `KINDS` is also kept textually identical, by hand, to
-    /// `../🧪️oracle/🔣️.json`'s own `kinds` array.
+    /// `../🔣️oracle.json`'s own `kinds` array.
     #[test]
     fn kinds_const_matches_enum_variants_in_declaration_order() {
         let cases = demo_mutation_cases();
@@ -1258,14 +1258,14 @@ mod tests {
 
 //#region 🧪️FixtureTests
 // 🧪️ Handcrafted mutation fixtures (contract D1, ticket 26/08/20/COMPOSE-TO-PUZZLE5D-MIGRATION),
-// one case per mutation leaf. Wired HERE and not in `📦️glue.rs`: that file is shared with the
+// one case per mutation leaf. Wired HERE and not in `🦀️.rs`: that file is shared with the
 // agents migrating the other stdio artifacts, so the production mounts there stay untouched while
 // this artifact owns its own test mount. `#[path = "."]` re-bases the children on this file's own
 // directory, which is what makes the leaf-relative path below resolve.
 #[cfg(test)]
 #[path = "."]
 mod fixture_tests {
-    #[path = "📄set-snapshot/🧪️tests/bolds-the-tower-run-of-the-opening-paragraph/🦀️component.rs"]
+    #[path = "📄set-snapshot/🧪️tests/bolds-the-tower-run-of-the-opening-paragraph/🦀️.rs"]
     mod tests_set_snapshot_bolds_the_tower_run_of_the_opening_paragraph;
 }
 //#endregion 🧪️FixtureTests

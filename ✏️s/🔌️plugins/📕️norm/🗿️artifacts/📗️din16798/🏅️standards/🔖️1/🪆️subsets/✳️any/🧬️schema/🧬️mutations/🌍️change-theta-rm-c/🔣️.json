@@ -5,7 +5,7 @@
   "displayName": "Change Theta Rm C",
   "emoji": "🌍️",
   "aggregateVariant": "ChangeThetaRmC",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

@@ -74,7 +74,7 @@ pub enum LasMutation {
 
 //#region 🔖️Kinds
 /// 🧾️ Kebab-case spelling of every `LasMutation` variant, in declaration order — the vocabulary
-/// `../../🧪️oracle/🔣️.json`'s `las-1-0-any` catalog is measured against. Kept honest by
+/// `../../🔣️oracle.json`'s `las-1-0-any` catalog is measured against. Kept honest by
 /// `kinds_match_enum_and_catalog` below (the framework never parses Rust to learn this list).
 pub const KINDS: &[&str] = &[
     "set-snapshot",
@@ -356,7 +356,7 @@ impl protocol::OpText for LasMutation {
 /// twins backing the upgraded `OpBinary::encode_op`/`decode_op` below — replaces the old F6
 /// `print_las_mutation(self).into_bytes()` text-as-binary shortcut. Reuses the diff facet's own
 /// `write_bytes_lp`/`write_str_lp`/`enc_header_bin`/`enc_vlr_bin`/`enc_point_bin` primitives
-/// (`../🔺️diff/🦀️component.rs`'s `#region 🔖️BinaryDiffCodec`, `pub(crate)`) — `LasHeader`/
+/// (`../🔺️diff/🦀️.rs`'s `#region 🔖️BinaryDiffCodec`, `pub(crate)`) — `LasHeader`/
 /// `LasVlr`/`LasPoint` are the SAME real records whether embedded in a sparse diff-patch or (here)
 /// a whole `SetSnapshot`/`InsertVlr`/`InsertPoint`/`SetPoint` payload, so one binary encoder per
 /// record type, shared across both facets, is the correct de-duplication (not a second,
@@ -413,7 +413,7 @@ const TAG_SET_POINT: u8 = 13;
 
 impl protocol::OpBinary for LasMutation {
     /// ⚡️ REAL binary frame (`format u8 | tag u8 | <variant-specific fields>`), matching
-    /// `../💾️binary/📡️component.protocol.semio`'s `format`/`tag` leading fields exactly —
+    /// `../💾️binary/📡️.protocol.semio`'s `format`/`tag` leading fields exactly —
     /// upgraded from F6's `print_las_mutation(self).into_bytes()` text-as-binary shortcut. Every
     /// variant's payload is genuinely, individually field-by-field encoded below (see
     /// `#region 🔖️BinaryOpCodec` for the shared record encoders).
@@ -563,7 +563,7 @@ pub(crate) fn base_snapshot() -> LasSnapshot {
 
 /// 🧪️ Ticket 26/08/10/ARTIFACT-SYSTEM-OVERHAUL-REAL-CODECS-RUNTIME-REUSE-EVOLUTION: representative
 /// `LasMutation` cases, one per variant (14 total) — single source of truth shared by
-/// `op_text_binary_roundtrip_law` below AND `⚙️engine/🦀️component.rs`'s
+/// `op_text_binary_roundtrip_law` below AND `⚙️engine/🦀️.rs`'s
 /// `ops_grammar_conformance_law`/`protocol_walk_law` conformance tests, per CLAUDE.md (no
 /// duplicated literal case lists). Exercises `SetSnapshot` (whole-header + vlrs + points
 /// positional codec), both bare-tuple variants (`SetScaleAndOffset`/`SetBounds`), the `[u32; 5]`
@@ -1009,7 +1009,7 @@ mod tests {
     /// 🧪️ F6 (las): `OpText`/`OpBinary` round-trip law over the full 14-variant vocabulary
     /// (hand-rolled, `dsl::DslOps` blocked — see the `OpCodecs` region's doc comment), via
     /// `demo_mutation_cases()` — the single source of truth also reused by
-    /// `⚙️engine/🦀️component.rs`'s `ops_grammar_conformance_law`/`protocol_walk_law`.
+    /// `⚙️engine/🦀️.rs`'s `ops_grammar_conformance_law`/`protocol_walk_law`.
     #[test]
     fn op_text_binary_roundtrip_law() {
         for mutation in demo_mutation_cases() {
@@ -1072,7 +1072,7 @@ mod tests {
         let from_enum: Vec<&'static str> = samples.iter().map(kind_of).collect();
         assert_eq!(from_enum, KINDS, "KINDS must list every LasMutation variant, in declaration order");
 
-        let manifest = include_str!("../../🧪️oracle/🔣️.json");
+        let manifest = include_str!("../../🔣️oracle.json");
         let needle = "\"kinds\": [";
         let start = manifest.find(needle).expect("manifest declares a kinds array") + needle.len();
         let end = start + manifest[start..].find(']').expect("kinds array is closed");
@@ -1143,14 +1143,14 @@ mod tests {
 
 //#region 🧪️FixtureTests
 // 🧪️ Handcrafted mutation fixtures (contract D1, ticket 26/08/20/COMPOSE-TO-PUZZLE5D-MIGRATION),
-// one case per mutation leaf. Wired HERE and not in `📦️glue.rs`: that file is shared with the
+// one case per mutation leaf. Wired HERE and not in `🦀️.rs`: that file is shared with the
 // agents migrating the other stdio artifacts, so the production mounts there stay untouched while
 // this artifact owns its own test mount. `#[path = "."]` re-bases the children on this file's own
 // directory, which is what makes the leaf-relative path below resolve.
 #[cfg(test)]
 #[path = "."]
 mod fixture_tests {
-    #[path = "📄set-snapshot/🧪️tests/lifts-the-second-point-and-stretches-the-z-bound/🦀️component.rs"]
+    #[path = "📄set-snapshot/🧪️tests/lifts-the-second-point-and-stretches-the-z-bound/🦀️.rs"]
     mod tests_set_snapshot_lifts_the_second_point_and_stretches_the_z_bound;
 }
 //#endregion 🧪️FixtureTests

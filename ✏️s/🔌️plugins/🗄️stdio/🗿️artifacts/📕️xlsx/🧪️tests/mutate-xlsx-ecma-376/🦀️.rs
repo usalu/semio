@@ -2,7 +2,7 @@
 //!
 //! Every scenario copies the immutable real fixture into the case work directory first; the
 //! committed file is never written to. `oracle` handlers drive the registered `calamine` +
-//! `rust_xlsxwriter` reference pairing (via this subset's own `🧪️oracle/🦀️component.rs`), `subject`
+//! `rust_xlsxwriter` reference pairing (via this subset's own `🦀️oracle.rs`), `subject`
 //! handlers drive this repository's own decode/mutate/encode round trip, and both results are read
 //! back by the SAME independent reader (`project_xlsx_workbook`) before the `semantic-spreadsheet-v1`
 //! profile compares them. The subject half is gated behind the generated host's `sut` feature so the
@@ -13,7 +13,7 @@ use semio_s_plugin_stdio_test_oracle::artifacts::xlsx::standards::v_ecma_376::su
 
 //#region 🔖️Kinds
 /// 🧾️ Test-case-local mirror of the `xlsx-ecma-376-any` catalog. Duplicated, not imported, from
-/// `../../🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs::KINDS` — that
+/// `../../🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs::KINDS` — that
 /// module lives in the SUBJECT crate, and the oracle role must not link the subject crate at all
 /// (fleet brief §5.3), while this loop registers handlers for both roles from one list. That other
 /// `KINDS` carries its own test proving it matches the enum AND the catalog manifest; a mismatch
@@ -49,7 +49,7 @@ fn kind_spec(kind: &str, params: Json) -> Json {
 /// value every OTHER declared kind leaves untouched — real arithmetic on the real fixture's baseline,
 /// not a placeholder: `insert-sheet`/`remove-sheet`/`rename-sheet`/`set-cell`/`remove-cell` never
 /// touch `shared_strings` (their `diff_*` functions all set `shared_strings: None`, confirmed by
-/// reading `../../🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs`); every
+/// reading `../../🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️.rs`); every
 /// cell value this case's scenarios write is a literal (`XlsxCellValue::InlineString`/`Number`/
 /// `Boolean`), never a `SharedString` reference, so `set-cell`/`insert-sheet` cannot grow the pool
 /// either. `set-snapshot`'s target is ALWAYS built with an empty `shared_strings` (this case never
@@ -346,19 +346,14 @@ mod subject {
         value.array(key).iter().map(|entry| Ok(XlsxSheet { name: entry.str("name"), cells: xlsx_cells_from_json(entry, "cells")? })).collect()
     }
 
-    fn mutation_from_spec(spec: &Json) -> Result<XlsxMutation, String> {
+    fn mutation_from_spec(spec: &Json, base: &XlsxSnapshot) -> Result<XlsxMutation, String> {
         let params = spec.get("params").cloned().unwrap_or(Json::Null);
         let number = |key: &str| match params.get(key) {
             Some(Json::Number(value)) => Some(*value),
             _ => None,
         };
         Ok(match spec.str("kind").as_str() {
-            // 🚧 `XlsxMutation` dropped its unit `NoMutation` variant (see this subset's
-            // `🧬️mutations/🦀️.rs`: `#[derive(dsl::Mutations)]` requires every variant to wrap
-            // exactly one leaf payload). The `🧪️oracle/🔣️.json` `kinds` array and this
-            // feature's own scenarios still declare `no-mutation` — an unresolved spec conflict,
-            // not something this test adapter can silently pick a side on. Left failing loudly.
-            "no-mutation" => return Err("no-mutation: XlsxMutation has no constructible representation for this kind since NoMutation was dropped as a unit variant".to_string()),
+            "no-mutation" => XlsxMutation::SetSnapshot(semio_s_plugin_stdio::artifacts::xlsx::standards::v_ecma_376::subsets::any::schema::mutations::set_snapshot::SetSnapshot { snapshot: base.clone() }),
             "set-snapshot" => {
                 let sheets = xlsx_sheets_from_json(&params, "sheets")?;
                 // 🩹 Always an EMPTY shared-string pool — this case's `set-snapshot` targets never
@@ -385,7 +380,7 @@ mod subject {
     pub fn mutate(ctx: &Context) -> Result<Outcome, String> {
         let mut snapshot = decode(&mutable_input(ctx)?)?;
         let spec = ctx.doc_json()?;
-        let mutation = mutation_from_spec(&spec)?;
+        let mutation = mutation_from_spec(&spec, &snapshot)?;
         apply_xlsx_mutation(&mut snapshot, &mutation);
         let output = encode_xlsx(&snapshot).map_err(|error| error.to_string())?;
         let projection = project(&spec.str("kind"), &output, snapshot.workbook.shared_strings.len())?;
@@ -396,8 +391,10 @@ mod subject {
         let input = mutable_input(ctx)?;
         let spec = ctx.doc_json()?;
         let mut snapshot = decode(&input)?;
-        apply_xlsx_mutation(&mut snapshot, &mutation_from_spec(&spec)?);
-        apply_xlsx_mutation(&mut snapshot, &mutation_from_spec(&inverse_spec(&input, &spec)?)?);
+        let mutation = mutation_from_spec(&spec, &snapshot)?;
+        apply_xlsx_mutation(&mut snapshot, &mutation);
+        let inverse = mutation_from_spec(&inverse_spec(&input, &spec)?, &snapshot)?;
+        apply_xlsx_mutation(&mut snapshot, &inverse);
         let output = encode_xlsx(&snapshot).map_err(|error| error.to_string())?;
         let projection = project(&spec.str("kind"), &output, snapshot.workbook.shared_strings.len())?;
         Ok(Outcome::with_raw(output, projection))

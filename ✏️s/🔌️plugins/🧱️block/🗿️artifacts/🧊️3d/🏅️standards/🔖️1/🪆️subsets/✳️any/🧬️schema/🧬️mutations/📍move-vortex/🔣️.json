@@ -5,7 +5,7 @@
   "displayName": "Move Vortex",
   "emoji": "📍",
   "aggregateVariant": "MoveVortex",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": "move-vortex",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

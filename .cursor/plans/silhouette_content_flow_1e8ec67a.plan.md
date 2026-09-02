@@ -61,8 +61,8 @@ flowchart TD
 
 ### 4. Bring ModeDock and window content into the shared model
 
-- Update [Canvas ModeDock chrome](/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/🧱️elements/🎨️Canvas/🟦️component.tsx) so `mode-dock-stack-body` is the full-stack clipped content plane rather than grid/flex row 2 beneath `ModeDockTabBar`; retain multi-tab active geometry, drag/drop targets, resizing, maximize, and mobile tab scrolling.
-- Adjust [Window](/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/🧱️elements/🪟️Window/🟦️component.tsx) only as needed so `window-body`, `PaneHost`, text scrollers, and edgeless 3D/canvas hosts size to the new full content plane without adding rectangular backgrounds or overflow clips.
+- Update [Canvas ModeDock chrome](/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/🧱️elements/🎨️Canvas/🟦️.tsx) so `mode-dock-stack-body` is the full-stack clipped content plane rather than grid/flex row 2 beneath `ModeDockTabBar`; retain multi-tab active geometry, drag/drop targets, resizing, maximize, and mobile tab scrolling.
+- Adjust [Window](/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/🧱️elements/🪟️Window/🟦️.tsx) only as needed so `window-body`, `PaneHost`, text scrollers, and edgeless 3D/canvas hosts size to the new full content plane without adding rectangular backgrounds or overflow clips.
 - In [UI styling](/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🟦️typescript/🎨️ui.css), retain the hard no-paint contract for `[data-window-silhouette-gap]`, add full-stack content/chrome-plane rules, and ensure scrollbars, hover strokes, focus indicators, and glass filters remain clipped to the silhouette.
 
 ### 5. Implement native wgpu parity

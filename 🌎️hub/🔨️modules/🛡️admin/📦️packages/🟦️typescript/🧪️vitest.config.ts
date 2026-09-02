@@ -15,17 +15,17 @@ export default defineConfig({
   plugins: [react()],
   resolve: {
     alias: [
-      { find: "@semio-tech/ui-react", replacement: resolve(repoRoot, "./🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx") },
-      { find: "@semio-tech/framework-os", replacement: resolve(repoRoot, "./🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/🟦️glue.ts") },
+      { find: "@semio-tech/ui-react", replacement: resolve(repoRoot, "./🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/🟦️.tsx") },
+      { find: "@semio-tech/framework-os", replacement: resolve(repoRoot, "./🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/🟦️.ts") },
     ],
   },
   test: {
     name: "@semio-tech/hub-admin",
     environment: "jsdom",
     include: ["🧪️admin.test.tsx"],
-    includeSource: ["../../🧱️elements/📚️I18n/🟦️component.tsx"],
-    coverage: { include: ["🧪️admin.test.tsx", "../../🧱️elements/**/🟦️component.tsx"] },
-    setupFiles: [resolve(dir, "🟦️vitest.setup.ts")],
+    includeSource: ["../../🧱️elements/📚️I18n/🟦️.tsx"],
+    coverage: { include: ["🧪️admin.test.tsx", "../../🧱️elements/**/🟦️.tsx"] },
+    setupFiles: [resolve(dir, "🟦️.ts")],
     passWithNoTests: false,
   },
 });

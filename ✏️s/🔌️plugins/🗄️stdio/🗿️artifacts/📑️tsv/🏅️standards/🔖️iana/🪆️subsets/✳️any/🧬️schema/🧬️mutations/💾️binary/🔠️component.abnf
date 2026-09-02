@@ -1,3 +1,0 @@
-; abnf stdio.tsv mutations (binary) — raw UTF-8 bytes of the hand-rolled mutation text, NOT
-; wrapped in the shared `.semio` binary envelope (see ../📝️text/📖️component.grammar.semio).
-document = *OCTET

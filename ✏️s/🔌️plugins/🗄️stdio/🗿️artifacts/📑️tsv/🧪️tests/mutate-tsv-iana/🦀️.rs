@@ -2,7 +2,7 @@
 //!
 //! Every scenario copies the immutable real fixture into the case work directory first; the
 //! committed file is never written to. `oracle` handlers drive the registered `csv` reference
-//! implementation (reconfigured for IANA TSV via this subset's own `🧪️oracle/🦀️component.rs`),
+//! implementation (reconfigured for IANA TSV via this subset's own `🦀️oracle.rs`),
 //! `subject` handlers drive this repository's own decode/mutate/encode round trip, and both results
 //! are read back by the SAME independent reader (`project_tsv_grid`) before the
 //! `semantic-tabular-mutate-v1` profile compares them. The subject half is gated behind the
@@ -15,7 +15,7 @@ use semio_s_plugin_stdio_test_oracle::law::{carrier_is_exact, inverse_restores, 
 
 //#region 🔖️Kinds
 /// 🧾️ Test-case-local mirror of the `tsv-iana-any` catalog. Duplicated, not imported, from
-/// `../../🏅️standards/🔖️iana/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs::KINDS` — that
+/// `../../🏅️standards/🔖️iana/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs::KINDS` — that
 /// module lives in the SUBJECT crate, and the oracle role must not link the subject crate at all
 /// (fleet brief §5.3), while this loop registers handlers for both roles from one list. That other
 /// `KINDS` carries its own test proving it matches the enum AND the catalog manifest; a mismatch

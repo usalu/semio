@@ -5,7 +5,7 @@
   "displayName": "Change En A Gr",
   "emoji": "🏔️",
   "aggregateVariant": "ChangeEnAGr",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

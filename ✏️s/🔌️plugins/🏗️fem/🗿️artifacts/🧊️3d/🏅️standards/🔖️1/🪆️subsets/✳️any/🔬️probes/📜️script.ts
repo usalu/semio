@@ -8,7 +8,7 @@
 // 🔬️ External measurement probes for `s.fem.fem3d@1/✳️any`.
 //
 // Everything here MARSHALS and INVOKES; nothing here computes geometry. `../🚪️io/📤️export/🧵️serializers/
-// 🗿️artifacts/🧊️obj/🔖️3.0/✳️any/🦀️component.rs` and the sibling `🟪️stl` leaf both bridge every
+// 🗿️artifacts/🧊️obj/🔖️3.0/✳️any/🦀️.rs` and the sibling `🟪️stl` leaf both bridge every
 // `FemSolid` through `crate::fem3d_engine::meshing::build_semio_mesh_snapshot` (triangulate the
 // outline+holes footprint, extrude by the solid's OWN `height`, offset by `base_z`, take the boundary
 // faces) into the real, already-oracled `s.stdio.semio@v1/✳️mesh` OBJ/STL bridge — so these ARE real
@@ -23,7 +23,7 @@
 // construction: `crate::fem3d_engine::meshing::build_semio_mesh_snapshot` reads only
 // `solid.{outline,holes,height,baseZ}` and consults nothing else on the document. There is no
 // "unsupported" branch below for that reason — this probe suite is never even asked about them; the
-// owning `🧪️oracle/🔣️.json`'s `mutationManifests` route those 22 kinds to no oracle at all.
+// owning `🔣️oracle.json`'s `mutationManifests` route those 22 kinds to no oracle at all.
 //
 // Usage — one probe per invocation, one typed report on stdout:
 //   bun 📜️script.ts mesh-import  --input <a.obj|a.stl>

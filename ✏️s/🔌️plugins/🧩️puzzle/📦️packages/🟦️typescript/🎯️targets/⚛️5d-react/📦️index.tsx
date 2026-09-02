@@ -3,7 +3,7 @@
 // #endregion 🧱️Header
 
 //#region 🔖️Types
-/** ⚓️ Part root plane policy aligned with {@link https://github.com/usalu/semio/blob/main/✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🦀️component.rs} puzzle5d schema. */
+/** ⚓️ Part root plane policy aligned with {@link https://github.com/usalu/semio/blob/main/✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🦀️.rs} puzzle5d schema. */
 export type Puzzle5dPartAnchor = "fixed" | "derived";
 
 /** 🧱️ Merged 5d part for topology flatten (sketchpad `2d` / `3d` presentation keys). */

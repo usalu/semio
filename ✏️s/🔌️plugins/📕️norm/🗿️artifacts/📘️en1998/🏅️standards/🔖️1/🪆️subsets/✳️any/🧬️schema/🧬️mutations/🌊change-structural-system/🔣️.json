@@ -5,7 +5,7 @@
   "displayName": "Change Structural System",
   "emoji": "🌊",
   "aggregateVariant": "ChangeStructuralSystem",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

@@ -198,8 +198,8 @@ test("reviewed fixture manifest agrees with independent JSON and immutable catal
 
 test("new permanent reviewed fixture directories use current registered canonical kinds", async () => {
   const taxonomy = JSON.parse(capture("🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json").bytes.toString("utf8"));
-  const discovery = await import("../../🔍️discovery/🟦️component.ts"), normalization = await import("../../🧹️normalization/🟦️.ts");
-  for (const path of ["🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🟦️component.ts", "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧹️normalization/🟦️.ts"]) capture(path);
+  const discovery = await import("../../🔍️discovery/🟦️.ts"), normalization = await import("../../🧹️normalization/🟦️.ts");
+  for (const path of ["🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🟦️.ts", "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧹️normalization/🟦️.ts"]) capture(path);
   const cases = [...vector.directoryCases, ...manifest.inputs.map((row: any) => ({ path: posix.dirname(row.path), kind: "fixture-case", parent: "fixtures" }))];
   for (const row of cases) expect(discovery.semanticDirectoryKindId(posix.basename(row.path), taxonomy, { parentKindId: row.parent }), row.path).toBe(row.kind);
   const inventory = normalization.inventoryTaxonomy({ repoRoot: root, scope: relative(root, import.meta.dir).replaceAll("\\", "/"), workers: 1 });

@@ -17,7 +17,7 @@
 // builders (`vertex`, `wireLoop`+`face`, `sewShells`, `solid`, `compound`) would construct either.
 //
 // @see ../📜️script.ts — the generator that runs these
-// @see ../../🧬️schema/🧬️mutations/🦀️component.rs — the 13-verb vocabulary this corpus exercises
+// @see ../../🧬️schema/🧬️mutations/🦀️.rs — the 13-verb vocabulary this corpus exercises
 
 //#endregion 🧲️Header
 

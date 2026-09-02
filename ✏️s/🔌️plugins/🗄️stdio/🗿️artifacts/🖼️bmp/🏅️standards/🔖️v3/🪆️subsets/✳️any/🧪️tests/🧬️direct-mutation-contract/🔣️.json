@@ -1,0 +1,96 @@
+{
+  "schemaVersion": 1,
+  "root": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️bmp/🏅️standards/🔖️v3/🪆️subsets/✳️any/🧬️schema/🧬️mutations",
+  "mutations": [
+    {
+      "kind": "change-header-fields",
+      "variant": "ChangeHeaderFields",
+      "directory": "📐️change-header-fields",
+      "textOpcode": "change-header-fields",
+      "binaryTag": 2,
+      "requiredFiles": [
+        "🦀️.rs",
+        "🔣️.json",
+        "🔣️.schema.json",
+        "🟦️.ts",
+        "🔗️.graphql",
+        "🛰️.proto",
+        "📝️text/🦀️.rs",
+        "💾️binary/🦀️.rs",
+        "🧪️test/🔣️s.json"
+      ]
+    },
+    {
+      "kind": "insert-palette-entry",
+      "variant": "InsertPaletteEntry",
+      "directory": "📥️insert-palette-entry",
+      "textOpcode": "insert-palette-entry",
+      "binaryTag": 3,
+      "requiredFiles": [
+        "🦀️.rs",
+        "🔣️.json",
+        "🔣️.schema.json",
+        "🟦️.ts",
+        "🔗️.graphql",
+        "🛰️.proto",
+        "📝️text/🦀️.rs",
+        "💾️binary/🦀️.rs",
+        "🧪️test/🔣️s.json"
+      ]
+    },
+    {
+      "kind": "remove-palette-entry",
+      "variant": "RemovePaletteEntry",
+      "directory": "📤️remove-palette-entry",
+      "textOpcode": "remove-palette-entry",
+      "binaryTag": 4,
+      "requiredFiles": [
+        "🦀️.rs",
+        "🔣️.json",
+        "🔣️.schema.json",
+        "🟦️.ts",
+        "🔗️.graphql",
+        "🛰️.proto",
+        "📝️text/🦀️.rs",
+        "💾️binary/🦀️.rs",
+        "🧪️test/🔣️s.json"
+      ]
+    },
+    {
+      "kind": "replace-palette-entry",
+      "variant": "ReplacePaletteEntry",
+      "directory": "🎨️replace-palette-entry",
+      "textOpcode": "replace-palette-entry",
+      "binaryTag": 5,
+      "requiredFiles": [
+        "🦀️.rs",
+        "🔣️.json",
+        "🔣️.schema.json",
+        "🟦️.ts",
+        "🔗️.graphql",
+        "🛰️.proto",
+        "📝️text/🦀️.rs",
+        "💾️binary/🦀️.rs",
+        "🧪️test/🔣️s.json"
+      ]
+    },
+    {
+      "kind": "replace-pixel-data",
+      "variant": "ReplacePixelData",
+      "directory": "🟪️replace-pixel-data",
+      "textOpcode": "replace-pixel-data",
+      "binaryTag": 6,
+      "requiredFiles": [
+        "🦀️.rs",
+        "🔣️.json",
+        "🔣️.schema.json",
+        "🟦️.ts",
+        "🔗️.graphql",
+        "🛰️.proto",
+        "📝️text/🦀️.rs",
+        "💾️binary/🦀️.rs",
+        "🧪️test/🔣️s.json"
+      ]
+    }
+  ]
+}

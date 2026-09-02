@@ -14,7 +14,7 @@ and that is what this file implements, from the specification, in another langua
 
 **What it was written from.**
 
-* ``🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔣️component.json`` — all twelve variants,
+* ``🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔣️.json`` — all twelve variants,
   their INTERNALLY tagged wire form (`{"mutation": "createLayer", "parentId": …, "index": …,
   "layer": …}`) and each one's required members, `additionalProperties: false`.
 * the twelve committed `(before, mutation, after, outcome)` specification vectors, which are where
@@ -23,16 +23,16 @@ and that is what this file implements, from the specification, in another langua
   `opacity`, `blendMode` and `transform` — `group` adds `mask` and `children`, `pixel` adds `mask`,
   `width`, `height` and `imageKey`, and `adjustment` adds `adjustmentKind` and `params` and carries
   no mask at all; and `assets` maps an asset id to a composed `s.stdio.semio@v1/image` child handle.
-* ``…/🧬️schema/🧬️mutations/📝️text/📖️component.grammar.semio`` — the twelve verbs and their
+* ``…/🧬️schema/🧬️mutations/📝️text/📖️.grammar.semio`` — the twelve verbs and their
   positional argument lists.
 
 **A defect in the specification, found while writing this and reported rather than worked around.**
-``…/🧬️schema/📸️snapshot/🔣️component.json`` does NOT describe this artifact: it is a verbatim copy of
+``…/🧬️schema/📸️snapshot/🔣️.json`` does NOT describe this artifact: it is a verbatim copy of
 `s.stdio.json`'s `JsonSnapshot` schema, `{schema, value}`, with the wrong `$id`. The mutation schema
 points at it for `RasterLayerNode` and therefore points at nothing. The document shape above was
 read off the twelve committed vectors instead, which agree with each other on every field.
 
-**No Rust was read to write this.** `🦀️component.rs` beside this file registers the SUBJECT half
+**No Rust was read to write this.** `🦀️.rs` beside this file registers the SUBJECT half
 only.
 """
 

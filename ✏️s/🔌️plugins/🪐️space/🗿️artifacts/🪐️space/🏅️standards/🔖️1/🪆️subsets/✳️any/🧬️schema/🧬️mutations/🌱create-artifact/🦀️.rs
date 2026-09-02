@@ -16,23 +16,23 @@ pub struct CreateArtifact {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub async fn create_artifact(artifact: SpaceArtifactRow) -> SSpaceMutation {
+pub fn create_artifact(artifact: SpaceArtifactRow) -> SSpaceMutation {
     SSpaceMutation::CreateArtifact(CreateArtifact { artifact })
 }
 
 impl protocol::MutationKind<SSpaceSnapshot, SSpaceMutation> for CreateArtifact {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "create", entity: "artifact", kind: "create-artifact", record: "CreatedArtifact" };
 
-    async fn diff(&self, base: &SSpaceSnapshot) -> protocol::MutationOutcome<SSpaceDiff> {
+    fn diff(&self, base: &SSpaceSnapshot) -> protocol::MutationOutcome<SSpaceDiff> {
         super::diff::diff(self, base)
     }
-    async fn inverse(&self, base: &SSpaceSnapshot) -> Vec<SSpaceMutation> {
+    fn inverse(&self, base: &SSpaceSnapshot) -> Vec<SSpaceMutation> {
         super::inverse::inverse(self, base)
     }
-    async fn label(&self) -> String {
+    fn label(&self) -> String {
         format!("Create artifact \"{}\"", self.artifact.id)
     }
-    async fn target(&self) -> Vec<String> {
+    fn target(&self) -> Vec<String> {
         vec![self.artifact.id.clone()]
     }
 }

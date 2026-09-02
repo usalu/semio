@@ -14,9 +14,9 @@ pub struct ReplacePaletteEntryMutation {
 //#endregion Payload
 
 //#region Facets
-#[path = "💾️binary/🦀️component.rs"]
+#[path = "💾️binary/🦀️.rs"]
 pub mod binary;
-#[path = "📝️text/🦀️component.rs"]
+#[path = "📝️text/🦀️.rs"]
 pub mod text;
 //#endregion Facets
 
@@ -50,8 +50,8 @@ impl protocol::MutationKind<BmpSnapshot, BmpMutation> for ReplacePaletteEntryMut
 
 #[cfg(test)]
 pub(crate) fn test_case() -> BmpMutation {
-    serde_json::from_str(include_str!("🧪️tests/direct-behavior/🦠️mutation/🔣️component.json")).expect("committed replace-palette-entry payload")
+    serde_json::from_str(include_str!("🧪️tests/direct-behavior/🦠️mutation/🔣️.json")).expect("committed replace-palette-entry payload")
 }
 #[cfg(test)]
-#[path = "🧪️tests/direct-behavior/🦀️component.rs"]
+#[path = "🧪️tests/direct-behavior/🦀️.rs"]
 mod tests_direct_behavior;

@@ -7,7 +7,7 @@ use super::super::{AddSynapse, AddWidget, ChangeLayout, ChangeSynapse, ChangeWid
 
 //#region 🧭️Fixtures
 fn fixture() -> FlowFixture {
-    let vectors = crate::os_pack::json::parse(include_str!("../../../🧬️schema/🔺️diff/🧪️tests/🧾️ownership/🔣️vectors.json")).expect("actual retained ownership vectors");
+    let vectors = crate::os_pack::json::parse(include_str!("../../../🧬️schema/🔺️diff/🧪️tests/🧾️ownership/🔣️.json")).expect("actual retained ownership vectors");
     crate::os_dsl::FromValue::from_value(crate::os_pack::json::to_dsl_value(vectors.get("base").expect("base fixture"))).expect("actual retained Flow fixture")
 }
 

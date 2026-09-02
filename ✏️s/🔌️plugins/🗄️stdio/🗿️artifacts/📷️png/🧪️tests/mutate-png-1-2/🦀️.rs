@@ -9,7 +9,7 @@
 //! never parses Rust to check it itself).
 //!
 //! The oracle side never touches this repository's own codec: `oracle_apply_mutation`/
-//! `oracle_undo_mutation` (this subset's own `🧪️oracle/🦀️component.rs`) perform every kind
+//! `oracle_undo_mutation` (this subset's own `🦀️oracle.rs`) perform every kind
 //! independently against the registered `png` reference crate. The subject side fully parses the
 //! real document into the typed `PngSnapshot` and re-serializes from it — never splices bytes.
 
@@ -19,8 +19,8 @@ use semio_s_plugin_stdio_test_oracle::artifacts::png::standards::v1_2::subsets::
 use semio_s_plugin_stdio_test_oracle::law;
 
 //#region 🔖️Kinds
-/// 📇️ Mirrors `../../🏅️standards/🔖️1.2/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs`'s own
-/// `KINDS` and `../../🏅️standards/🔖️1.2/🪆️subsets/✳️any/🧪️oracle/🔣️.json`'s
+/// 📇️ Mirrors `../../🏅️standards/🔖️1.2/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs`'s own
+/// `KINDS` and `../../🏅️standards/🔖️1.2/🪆️subsets/✳️any/🔣️oracle.json`'s
 /// `mutationCatalogs[0].kinds` — kept in the SAME declaration order in all three; a mismatch is
 /// caught loudly (either by the contract phase, or by the runner's own "no registration for
 /// scenario" error) rather than silently.

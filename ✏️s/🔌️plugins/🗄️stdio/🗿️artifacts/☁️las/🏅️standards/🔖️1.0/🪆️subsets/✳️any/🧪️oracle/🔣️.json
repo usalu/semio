@@ -88,7 +88,7 @@
         {
           "id": "no-mutation",
           "capability": "las-1-0-any-mutate",
-          "payloadSchema": "../🧬️schema/🧬️mutations/🦀️component.rs#NoMutation",
+          "payloadSchema": "../🧬️schema/🧬️mutations/🦀️.rs#NoMutation",
           "outcomes": [
             "no-op"
           ],
@@ -119,7 +119,7 @@
         {
           "id": "set-snapshot",
           "capability": "las-1-0-any-mutate",
-          "payloadSchema": "../🧬️schema/🧬️mutations/🦀️component.rs#SetSnapshot",
+          "payloadSchema": "../🧬️schema/🧬️mutations/🦀️.rs#SetSnapshot",
           "outcomes": [
             "applied",
             "no-op",
@@ -152,7 +152,7 @@
         {
           "id": "set-version",
           "capability": "las-1-0-any-mutate",
-          "payloadSchema": "../🧬️schema/🧬️mutations/🦀️component.rs#SetVersion",
+          "payloadSchema": "../🧬️schema/🧬️mutations/🦀️.rs#SetVersion",
           "outcomes": [
             "applied",
             "rejected"
@@ -184,7 +184,7 @@
         {
           "id": "set-system-identifier",
           "capability": "las-1-0-any-mutate",
-          "payloadSchema": "../🧬️schema/🧬️mutations/🦀️component.rs#SetSystemIdentifier",
+          "payloadSchema": "../🧬️schema/🧬️mutations/🦀️.rs#SetSystemIdentifier",
           "outcomes": [
             "applied",
             "rejected"
@@ -216,7 +216,7 @@
         {
           "id": "set-software-info",
           "capability": "las-1-0-any-mutate",
-          "payloadSchema": "../🧬️schema/🧬️mutations/🦀️component.rs#SetSoftwareInfo",
+          "payloadSchema": "../🧬️schema/🧬️mutations/🦀️.rs#SetSoftwareInfo",
           "outcomes": [
             "applied",
             "rejected"
@@ -248,7 +248,7 @@
         {
           "id": "set-creation-date",
           "capability": "las-1-0-any-mutate",
-          "payloadSchema": "../🧬️schema/🧬️mutations/🦀️component.rs#SetCreationDate",
+          "payloadSchema": "../🧬️schema/🧬️mutations/🦀️.rs#SetCreationDate",
           "outcomes": [
             "applied",
             "rejected"
@@ -280,7 +280,7 @@
         {
           "id": "set-scale-and-offset",
           "capability": "las-1-0-any-mutate",
-          "payloadSchema": "../🧬️schema/🧬️mutations/🦀️component.rs#SetScaleAndOffset",
+          "payloadSchema": "../🧬️schema/🧬️mutations/🦀️.rs#SetScaleAndOffset",
           "outcomes": [
             "applied",
             "rejected"
@@ -312,7 +312,7 @@
         {
           "id": "set-bounds",
           "capability": "las-1-0-any-mutate",
-          "payloadSchema": "../🧬️schema/🧬️mutations/🦀️component.rs#SetBounds",
+          "payloadSchema": "../🧬️schema/🧬️mutations/🦀️.rs#SetBounds",
           "outcomes": [
             "applied",
             "rejected"
@@ -344,7 +344,7 @@
         {
           "id": "set-points-by-return",
           "capability": "las-1-0-any-mutate",
-          "payloadSchema": "../🧬️schema/🧬️mutations/🦀️component.rs#SetPointsByReturn",
+          "payloadSchema": "../🧬️schema/🧬️mutations/🦀️.rs#SetPointsByReturn",
           "outcomes": [
             "applied",
             "rejected"
@@ -376,7 +376,7 @@
         {
           "id": "insert-vlr",
           "capability": "las-1-0-any-mutate",
-          "payloadSchema": "../🧬️schema/🧬️mutations/🦀️component.rs#InsertVlr",
+          "payloadSchema": "../🧬️schema/🧬️mutations/🦀️.rs#InsertVlr",
           "outcomes": [
             "applied",
             "rejected"
@@ -408,7 +408,7 @@
         {
           "id": "remove-vlr",
           "capability": "las-1-0-any-mutate",
-          "payloadSchema": "../🧬️schema/🧬️mutations/🦀️component.rs#RemoveVlr",
+          "payloadSchema": "../🧬️schema/🧬️mutations/🦀️.rs#RemoveVlr",
           "outcomes": [
             "applied",
             "rejected"
@@ -440,7 +440,7 @@
         {
           "id": "set-vlr-data",
           "capability": "las-1-0-any-mutate",
-          "payloadSchema": "../🧬️schema/🧬️mutations/🦀️component.rs#SetVlrData",
+          "payloadSchema": "../🧬️schema/🧬️mutations/🦀️.rs#SetVlrData",
           "outcomes": [
             "applied",
             "rejected"
@@ -472,7 +472,7 @@
         {
           "id": "insert-point",
           "capability": "las-1-0-any-mutate",
-          "payloadSchema": "../🧬️schema/🧬️mutations/🦀️component.rs#InsertPoint",
+          "payloadSchema": "../🧬️schema/🧬️mutations/🦀️.rs#InsertPoint",
           "outcomes": [
             "applied",
             "rejected"
@@ -504,7 +504,7 @@
         {
           "id": "remove-point",
           "capability": "las-1-0-any-mutate",
-          "payloadSchema": "../🧬️schema/🧬️mutations/🦀️component.rs#RemovePoint",
+          "payloadSchema": "../🧬️schema/🧬️mutations/🦀️.rs#RemovePoint",
           "outcomes": [
             "applied",
             "rejected"
@@ -536,7 +536,7 @@
         {
           "id": "set-point",
           "capability": "las-1-0-any-mutate",
-          "payloadSchema": "../🧬️schema/🧬️mutations/🦀️component.rs#SetPoint",
+          "payloadSchema": "../🧬️schema/🧬️mutations/🦀️.rs#SetPoint",
           "outcomes": [
             "applied",
             "rejected"

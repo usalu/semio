@@ -58,7 +58,7 @@ impl Default for UiDocumentLimits {
 }
 
 /// 🧮️ A rough, dependency-free proxy for a patch's wire cost — this crate has no `pack`/serde-json
-/// runtime dependency (see `📦️glue.rs`'s dependency-free guarantee), so this sums UTF-8 byte lengths
+/// runtime dependency (see `🦀️.rs`'s dependency-free guarantee), so this sums UTF-8 byte lengths
 /// of the ops' own text-bearing payloads plus a small fixed per-op overhead, rather than actually
 /// encoding the patch.
 // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md

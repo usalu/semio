@@ -2,21 +2,25 @@
   "schemaVersion": 1,
   "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️e/🧬️schema/🧬️mutations/📜️insert-javascript-action",
   "semanticKind": "insert-javascript-action",
-  "displayName": "Insert Javascript Action",
+  "displayName": "Insert JavaScript Action",
   "emoji": "📜️",
   "aggregateVariant": "InsertJavascriptAction",
-  "payloadSchema": "🔣️payload.schema.json",
-  "textOpcode": null,
-  "binaryTag": null,
-  "invertibility": "non-invertible",
-  "diffParticipation": "detect",
+  "payloadSchema": "🔣️.schema.json",
+  "textOpcode": "insert-javascript-action",
+  "binaryTag": 2,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "apply-only",
   "outcomeClasses": [
     "applied"
   ],
   "composition": "atomic",
   "requiredLanguageSurfaces": [
     "rust",
+    "typescript",
+    "graphql",
+    "protobuf",
     "json-schema",
-    "text"
+    "text",
+    "binary"
   ]
 }

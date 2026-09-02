@@ -5,7 +5,7 @@
   "displayName": "Insert Vml Part",
   "emoji": "🏷",
   "aggregateVariant": "InsertVmlPart",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

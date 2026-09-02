@@ -5,7 +5,7 @@
   "displayName": "Delete Solid",
   "emoji": "🗑🧊️",
   "aggregateVariant": "DeleteSolid",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": "delete-solid",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

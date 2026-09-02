@@ -5,7 +5,7 @@
   "displayName": "Replace Source",
   "emoji": "🖼",
   "aggregateVariant": "ReplaceSource",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": "replace-source",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

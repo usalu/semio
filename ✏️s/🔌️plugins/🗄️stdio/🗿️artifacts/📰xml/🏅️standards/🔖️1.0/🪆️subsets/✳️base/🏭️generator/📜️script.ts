@@ -10,7 +10,7 @@
 // Every recipe's BEFORE and AFTER `.xml` bytes are built DIRECTLY by the sibling standalone
 // `🦀️quick-xml-oracle-codec` binary, which depends on nothing but `quick-xml` 0.42 — never by
 // "applying" this repository's own `XmlMutation` dispatch or this subset's own
-// `🧪️oracle/🦀️component.rs` (which stays untouched, registered `cross-semio-implementation`). This
+// `🦀️oracle.rs` (which stays untouched, registered `cross-semio-implementation`). This
 // file only shells out per recipe and turns the bytes the codec wrote into a fixture bundle +
 // manifest entry; it computes no XML semantics of its own.
 //
@@ -46,7 +46,7 @@ type Recipe = Readonly<{ id: string; mutation: string; notes: string }>;
 
 /** 🍳️ Mirrors `RECIPE_IDS`/`recipe()` in `🦀️quick-xml-oracle-codec/src/main.rs` verbatim — one entry
  *  per declared `XmlMutation` kind in `xml-1-0-base`'s own `kinds` list. Every kind in this catalog
- *  declares only the `applied` outcome (see `../🧪️oracle/🔣️.json`'s own `mutationManifests`), so
+ *  declares only the `applied` outcome (see `../🔣️oracle.json`'s own `mutationManifests`), so
  *  there is no `-rejected-*` recipe in this corpus. */
 const RECIPES: readonly Recipe[] = [
   { id: "set-declaration-applied", mutation: "set-declaration", notes: "Whole-value replace of the declaration only (version/encoding/standalone); doctype, prolog and root untouched." },

@@ -91,7 +91,7 @@ pub enum SemioFlowMutation {
 /// 🏷️ The declared mutation vocabulary of `s.stdio.semio.flow`, in `SemioFlowMutation`'s own
 /// declaration order and kebab-case spelling — the single source of truth for the binary op frame's
 /// `tag` ordinal (see [`variant_ordinal`]), for `parse_flow_mutation`'s keyword match, and for the
-/// `semio-v1-flow` catalog in `../../🧪️oracle/🔣️.json`. The framework never parses Rust, so
+/// `semio-v1-flow` catalog in `../../🔣️oracle.json`. The framework never parses Rust, so
 /// `kinds_match_the_enum_and_the_catalog` below is what keeps all three honest.
 pub const KINDS: &[&str] = &["set-snapshot", "insert-node", "remove-node", "set-node-kind", "set-node-label", "set-node-position", "set-node-param", "remove-node-param", "insert-edge", "remove-edge", "set-edge-endpoints", "set-edge-kind"];
 //#endregion 🔖️Mutations
@@ -344,7 +344,7 @@ impl OpBinary for SemioFlowMutation {
 //#region 🔖️Demo
 /// 🌱 Shared fixture helpers + representative `SemioFlowMutation` cases (one per variant) —
 /// single source of truth for this facet's own tests AND `ops_grammar_conformance_law`/
-/// `protocol_walk_law` in `🎹️composer/🦀️component.rs`.
+/// `protocol_walk_law` in `🎹️composer/🦀️.rs`.
 #[cfg(test)]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn node(id: &str, kind: &str, label: &str, x: f64, y: f64) -> FlowNode {
@@ -464,7 +464,7 @@ mod tests {
             seen[ordinal] = true;
         }
         assert!(seen.iter().all(|hit| *hit), "demo_mutation_cases must reach every KINDS entry, missing {:?}", KINDS.iter().zip(seen.iter()).filter(|(_, hit)| !**hit).map(|(kind, _)| *kind).collect::<Vec<_>>());
-        let manifest = include_str!("../../🧪️oracle/🔣️.json");
+        let manifest = include_str!("../../🔣️oracle.json");
         for kind in KINDS {
             assert!(manifest.contains(&format!("\"{kind}\"")), "KINDS entry {kind:?} must also appear in the committed oracle manifest's catalog");
         }
@@ -525,9 +525,9 @@ mod tests {
 
 //#region 🧪️FixtureCases
 /// 🧪️ Handcrafted `📄set-snapshot` fixture cases, wired from this tree's own mutations root so
-/// `📦️glue.rs` stays untouched (`#[path]` on a non-inline module resolves against this file's own
+/// `🦀️.rs` stays untouched (`#[path]` on a non-inline module resolves against this file's own
 /// directory).
 #[cfg(test)]
-#[path = "📄set-snapshot/🧪️tests/relabels-and-repositions-the-transform-node/🦀️component.rs"]
+#[path = "📄set-snapshot/🧪️tests/relabels-and-repositions-the-transform-node/🦀️.rs"]
 mod set_snapshot_relabels_and_repositions_the_transform_node;
 //#endregion 🧪️FixtureCases

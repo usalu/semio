@@ -5,7 +5,7 @@
   "displayName": "Change Variable Action Category",
   "emoji": "🐮",
   "aggregateVariant": "ChangeVariableActionCategory",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

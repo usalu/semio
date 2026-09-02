@@ -1,0 +1,87 @@
+dialect grammar
+grammar semio.drawing.diff
+extension semio
+start document
+
+# drawing wave: real one-line `DiffCodec::print_diff`/`parse_diff` shape emitted by
+# `🔺️diff/🦀️.rs` (`print_drawing_diff`/`parse_drawing_diff`) — token-per-nonempty-field,
+# space-separated (space is lexer trivia, irrelevant at this dialect level). `styles`/`layers`
+# encode as the shared `engine::triples::enc_named_triple`/`enc_indexed_triple`
+# `[removed];[modified];[added]` bracket-depth-aware triple (recipe's own collection-triple shape,
+# §1.4); `canvas` is a single record (no collection). All 3 top-level fields are optional (an
+# unchanged diff prints as the empty string).
+document = canvas-line? styles-line? layers-line?
+
+canvas-line = "canvas" "=" canvas-diff
+
+styles-line = "styles" "=" styles-triple
+styles-triple = "[" styles-removed-list? "]" ";" "[" style-modified-list? "]" ";" "[" style-added-list? "]"
+styles-removed-list = hex {"," hex}*
+style-modified-list = style-modified {"," style-modified}*
+style-modified = hex ":" style-diff
+style-added-list = style {"," style}*
+
+layers-line = "layers" "=" layers-triple
+layers-triple = "[" layers-removed-list? "]" ";" "[" layer-modified-list? "]" ";" "[" layer-added-list? "]"
+layers-removed-list = number {"," number}*
+layer-modified-list = layer-modified {"," layer-modified}*
+layer-modified = number ":" layer-diff
+layer-added-list = layer-added {"," layer-added}*
+layer-added = number ":" layer
+
+# Entity diff grammars — field order matches `enc_canvas`/`enc_style_diff`/`enc_layer_diff` in
+# `🔺️diff/🦀️.rs` exactly (the authoritative source). Every `Option<T>` field is the
+# uniform `[0]` (unchanged) / `[1,<value>]` (Some) tri-state tag (recipe §1.4); `background`/
+# `fill`/`stroke`/`stroke_width`/`opacity` are DOUBLY tri-state (`Option<Option<T>>`).
+canvas-diff = "[" option-number "," option-number "," option-option-rgba "]"
+style-diff = "[" option-option-rgba "," option-option-rgba "," option-option-number "," option-option-number "]"
+layer-diff = "[" option-hex "," option-hex "," option-bool "," option-node-diff "]"
+
+# `DrawNodeDiff`: `P[segments,style]` / `T[value,at,style]` / `G[transform,children]`
+# (`children` a nested `IndexedTripleDiff<DrawNodeDiff,DrawNode>` triple, genuinely RECURSIVE) /
+# `I[at,width,height,mime,bytes]` / `R[node]` (kind-mismatch Replace fallback).
+node-diff = "P" "[" option-segment-list "," option-option-hex "]" | "T" "[" option-hex "," option-point2 "," option-option-hex "]" | "G" "[" option-transform "," option-children "]" | "I" "[" option-point2 "," option-number "," option-number "," option-hex "," option-hex "]" | "R" "[" node "]"
+
+option-children = "[" "0" "]" | "[" "1" "," children-triple "]"
+children-triple = "[" children-removed-list? "]" ";" "[" children-modified-list? "]" ";" "[" children-added-list? "]"
+children-removed-list = number {"," number}*
+children-modified-list = child-modified {"," child-modified}*
+child-modified = number ":" node-diff
+children-added-list = child-added {"," child-added}*
+child-added = number ":" node
+
+option-point2 = "[" "0" "]" | "[" "1" "," point2 "]"
+option-transform = "[" "0" "]" | "[" "1" "," transform "]"
+option-segment-list = "[" "0" "]" | "[" "1" "," segment-list "]"
+option-node-diff = "[" "0" "]" | "[" "1" "," node-diff "]"
+option-rgba = "[" "0" "]" | "[" "1" "," rgba "]"
+option-number = "[" "0" "]" | "[" "1" "," number "]"
+option-hex = "[" "0" "]" | "[" "1" "," hex "]"
+option-bool = "[" "0" "]" | "[" "1" "," bool "]"
+option-option-rgba = "[" "0" "]" | "[" "1" "," option-rgba "]"
+option-option-number = "[" "0" "]" | "[" "1" "," option-number "]"
+option-option-hex = "[" "0" "]" | "[" "1" "," option-hex "]"
+
+# `enc_style`/`enc_layer`/`enc_node`/`enc_path_segment` — the same full-VALUE codecs
+# `📸️snapshot/📝️text/📖️.grammar.semio` declares (restated here so this leaf grammar is
+# self-contained, matching the repo's existing per-facet convention).
+style = "[" hex "," option-rgba "," option-rgba "," option-number "," option-number "]"
+layer = "[" hex "," hex "," bool "," node "]"
+node = "P" "[" segment-list "," option-hex "]" | "T" "[" hex "," point2 "," option-hex "]" | "G" "[" transform "," node-list "]" | "I" "[" point2 "," number "," number "," hex "," hex "]"
+node-list = "[" node-items? "]"
+node-items = node {"," node}*
+segment = "M" "[" point2 "]" | "L" "[" point2 "]" | "C" "[" point2 "," point2 "," point2 "]" | "Q" "[" point2 "," point2 "]" | "A" "[" number "," number "," number "," bool "," bool "," point2 "]" | "Z"
+segment-list = "[" segment-items? "]"
+segment-items = segment {"," segment}*
+
+transform = "[" point3 "," quaternion "," point3 "]"
+point2 = "[" number "," number "]"
+point3 = "[" number "," number "," number "]"
+quaternion = "[" number "," number "," number "," number "]"
+rgba = "[" number "," number "," number "," number "]"
+bool = "0" | "1"
+number = INT | FLOAT
+
+# `hex` (bare `hex`, deliberately NOT defined as a production here) is the framework's built-in
+# `hex` MACRO — see the sibling `📸️snapshot/📝️text/📖️.grammar.semio`'s own `hex` doc
+# comment for why a hand-rolled `{INT|IDENT}*` production would be wrong here.

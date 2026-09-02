@@ -8,7 +8,7 @@
 //! `✳️any` owns the DOCUMENT vocabulary — the JFIF header, the quantization and Huffman tables by
 //! id, the restart interval, the retained segments, the raster and the re-encode quality. Not one
 //! of those kinds addresses whether the document IS baseline: that is a property of the frame
-//! header and the entropy-coding mode, and `check_baseline_conformance` (`../🦀️component.rs`) reads
+//! header and the entropy-coding mode, and `check_baseline_conformance` (`../🦀️.rs`) reads
 //! exactly five axes of it:
 //!
 //! | Axis | Diagnostic | Restriction |
@@ -38,7 +38,7 @@
 //!
 //! # Where this vocabulary is observable, and where it is not
 //!
-//! `encode_jpg` (`../../✳️any/🚪️io/🦀️component.rs`) writes a baseline file and nothing else, by
+//! `encode_jpg` (`../../✳️any/🚪️io/🦀️.rs`) writes a baseline file and nothing else, by
 //! construction: `out.extend_from_slice(&[0xFF, 0xC0])` for the frame marker, `precision: 8`, a
 //! fixed three-component 4:2:0 `comps` array with sampling factors 2x2/1x1/1x1, exactly four
 //! `write_dht` calls, and no DAC segment anywhere. Every axis this vocabulary addresses is
@@ -52,7 +52,7 @@
 //! report every kind as green while the mutation never reached a byte, which is the precise shape of
 //! shallow green ticket 26/08/23/END-TO-END-TESTING-REFACTOR exists to remove.
 //!
-//! The catalog `jpg-jfif-1-01-baseline` (`../../🧪️oracle/🔣️.json`) is therefore declared
+//! The catalog `jpg-jfif-1-01-baseline` (`../../🔣️oracle.json`) is therefore declared
 //! and claimed by `mutate-jpg-jfif-1-01-baseline`, and that case measures this vocabulary where its
 //! axes actually live: on the DECODED SNAPSHOT, against [`check_baseline_conformance`]'s verdict.
 //! Each kind must move its own axis and raise its own diagnostic; each inverse must restore the
@@ -60,8 +60,8 @@
 //! `identity-round-trip` is the one scenario that does touch bytes — decode, re-encode, and read
 //! both through the INDEPENDENT `image` reader the sibling `✳️any` subset registers.
 //!
-//! @see ../🦀️component.rs — this subset's conformance check, one axis per variant below.
-//! @see ../../✳️any/🧬️schema/🧬️mutations/🦀️component.rs — the DOCUMENT vocabulary this one is disjoint from.
+//! @see ../🦀️.rs — this subset's conformance check, one axis per variant below.
+//! @see ../../✳️any/🧬️schema/🧬️mutations/🦀️.rs — the DOCUMENT vocabulary this one is disjoint from.
 
 use crate::artifacts::jpg::standards::v_jfif_1_01::subsets::document::schema::diff::{JpgComponentDiff, JpgComponentModified, JpgComponentsDiff, JpgDiff, JpgFrameChange, JpgFrameFieldsDiff, JpgHuffmanTableAdded, JpgHuffmanTableKey, JpgHuffmanTablesDiff};
 use crate::artifacts::jpg::standards::v_jfif_1_01::subsets::document::schema::snapshot::{JpgFrameComponent, JpgHuffmanTable, JpgSnapshot};
@@ -118,7 +118,7 @@ pub enum JpgBaselineMutation {
 }
 
 /// 🏷️ Kebab-case spelling of every `JpgBaselineMutation` variant, in declaration order — the
-/// vocabulary the `jpg-jfif-1-01-baseline` mutation catalog (`../../🧪️oracle/🔣️.json`)
+/// vocabulary the `jpg-jfif-1-01-baseline` mutation catalog (`../../🔣️oracle.json`)
 /// declares and `mutate-jpg-jfif-1-01-baseline` measures itself against.
 /// `kinds_match_enum_variants_in_declaration_order` below is what keeps the two honest against the
 /// enum, and `kinds_match_the_committed_catalog` against the manifest.
@@ -343,7 +343,7 @@ mod tests {
     /// all until the completeness gate learned to see an unregistered one.
     #[test]
     fn kinds_match_the_committed_catalog() {
-        let manifest = include_str!("../../🧪️oracle/🔣️.json");
+        let manifest = include_str!("../../🔣️oracle.json");
         for kind in KINDS {
             assert!(manifest.contains(&format!("\"{kind}\"")), "KINDS entry {kind:?} must also appear in the committed oracle manifest's catalog");
         }

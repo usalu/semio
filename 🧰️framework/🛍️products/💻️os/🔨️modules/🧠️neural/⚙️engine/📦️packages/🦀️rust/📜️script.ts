@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
 /** 🧠️ Neural engine native and language-neutral lifecycle validation. */
-import { BundleScript, ScriptRouter, resolveTestLevel, runBundleScriptMain, runCargo } from "../../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts";
+import { BundleScript, ScriptRouter, resolveTestLevel, runBundleScriptMain, runCargo } from "../../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 
 //#region 🧪️Validation
 class TestScript extends BundleScript {

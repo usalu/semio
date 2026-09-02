@@ -1,0 +1,113 @@
+dialect grammar
+grammar stdio.jpg.diff
+extension jpg
+start document
+comment none
+
+# P2-FG2: real one-line `DiffCodec::print_diff`/`parse_diff` shape ALREADY emitted by
+# `../../🦀️.rs` (`print_jpg_diff`/`parse_jpg_diff`), replacing the pre-Phase-2 placeholder
+# that described a serde-JSON `JpgDiff` wire struct the codec never emits. Every keyword/tag token
+# below is copied verbatim from the real `format!(...)`/`token.strip_prefix(...)` call sites,
+# space-separated `name=value` tokens, absent token = unchanged.
+#
+# `hex` (bare `hex`, referenced below but deliberately NOT defined as a production in this file) is
+# the framework's built-in `hex` MACRO -- see `📖️grammar-recipe.md` §1.3(f)/§3 pitfall 2 (a
+# hand-rolled `{INT|IDENT}*` production never backtracks and would silently swallow a following
+# bareword literal like `frame=`/`sof-marker=`).
+document = width-tok? height-tok? pixels-tok? quality-tok? version-tok? density-units-tok? x-density-tok? y-density-tok? thumbnail-tok? frame-tok? sof-marker-tok? arithmetic-tok? quant-tables-tok? huffman-tables-tok? restart-interval-tok? other-segments-tok?
+width-tok = "width" "=" INT
+height-tok = "height" "=" INT
+pixels-tok = "pixels" "=" hex
+quality-tok = "re-encode-quality" "=" opt-u8
+version-tok = "jfif-version" "=" version-lit
+density-units-tok = "jfif-density-units" "=" INT
+x-density-tok = "jfif-x-density" "=" INT
+y-density-tok = "jfif-y-density" "=" INT
+thumbnail-tok = "jfif-thumbnail" "=" opt-thumbnail
+frame-tok = "frame" "=" frame-change
+sof-marker-tok = "sof-marker" "=" INT
+arithmetic-tok = "arithmetic" "=" INT
+quant-tables-tok = "quant-tables" "=" quant-tables-diff-body
+huffman-tables-tok = "huffman-tables" "=" huffman-tables-diff-body
+restart-interval-tok = "restart-interval" "=" opt-u16
+other-segments-tok = "other-segments" "=" other-segments-diff-body
+
+# `encode_option`'s uniform tri-state shape (`📖️grammar-recipe.md` §1.4): `[0]` (unchanged/None) /
+# `[1,<value>]` (Some). Reused structurally across every `Option<u8>`/`Option<u16>`/hex-carrying
+# tri-state field below -- these differ only in the wrapped VALUE's own shape, not the tag shape.
+opt-u8 = "[" "0" "]" | "[" "1" "," INT "]"
+opt-u16 = "[" "0" "]" | "[" "1" "," INT "]"
+opt-hex = "[" "0" "]" | "[" "1" "," hex "]"
+opt-thumbnail = "[" "0" "]" | "[" "1" "," thumbnail-lit "]"
+
+# `enc_version` -- `[major,minor]`. `enc_thumbnail` -- `[width,height,hex(rgb_data)]`.
+version-lit = "[" INT "," INT "]"
+thumbnail-lit = "[" INT "," INT "," hex "]"
+
+#region FrameChange
+# `enc_frame_change` -- `M[fields-diff]` (Modify) / `R[opt-frame-header]` (Replace).
+# `enc_frame_fields_diff` itself ALSO wraps its own 4-tuple in `[...]` (`format!("[{},{},{},{}]",
+# ...)`), so `M[...]` doubly-brackets it -- `frame-fields-diff-lit` below is that self-bracketing
+# literal, referenced INSIDE `frame-change`'s own outer `"M" "[" ... "]"` pair (real captured
+# output: `M[[opt-precision,opt-width,opt-height,opt-components]]`, confirmed against a real
+# `print_diff()` sample, not guessed).
+frame-change = "M" "[" frame-fields-diff-lit "]" | "R" "[" opt-frame-header "]"
+frame-fields-diff-lit = "[" opt-u8 "," opt-u16 "," opt-u16 "," opt-components-diff "]"
+opt-components-diff = "[" "0" "]" | "[" "1" "," components-diff-body "]"
+opt-frame-header = "[" "0" "]" | "[" "1" "," frame-header-lit "]"
+# `enc_frame_header` -- `[precision,width,height,[component*]]`.
+frame-header-lit = "[" INT "," INT "," INT "," "[" frame-component-item* "]" "]"
+frame-component-item = frame-component-lit ","?
+frame-component-lit = "[" INT "," INT "," INT "," INT "]"
+#endregion FrameChange
+
+#region ComponentsDiff
+# `enc_components_diff` -- id-keyed `[removed];[modified];[added]` (`📖️grammar-recipe.md` §1.4).
+components-diff-body = "[" comp-removed-item* "]" ";" "[" comp-modified-item* "]" ";" "[" comp-added-item* "]"
+comp-removed-item = INT ","?
+comp-modified-item = INT ":" component-diff-lit ","?
+comp-added-item = INT ":" frame-component-lit ","?
+# `enc_component_diff` -- `[opt-h,opt-v,opt-quant]`.
+component-diff-lit = "[" opt-u8 "," opt-u8 "," opt-u8 "]"
+#endregion ComponentsDiff
+
+#region QuantTablesDiff
+# `enc_quant_tables_diff` -- id-keyed triple.
+quant-tables-diff-body = "[" qt-removed-item* "]" ";" "[" qt-modified-item* "]" ";" "[" qt-added-item* "]"
+qt-removed-item = INT ","?
+qt-modified-item = INT ":" quant-table-diff-lit ","?
+qt-added-item = INT ":" quant-table-lit ","?
+# `enc_quant_table_diff` -- `[opt-precision,opt-values]`.
+quant-table-diff-lit = "[" opt-u8 "," opt-quant-values "]"
+opt-quant-values = "[" "0" "]" | "[" "1" "," "[" quant-value-item* "]" "]"
+quant-value-item = INT ","?
+# `enc_quant_table` -- `[id,precision,[64 decimal values]]` (bracketed decimal list -- not bytes,
+# so `hex` doesn't apply, `📖️grammar-recipe.md` §4's own noted convention for a fixed-64 table).
+quant-table-lit = "[" INT "," INT "," "[" quant-value-item* "]" "]"
+#endregion QuantTablesDiff
+
+#region HuffmanTablesDiff
+# `enc_huffman_tables_diff` -- `(class,id)`-compound-keyed triple.
+huffman-tables-diff-body = "[" ht-removed-item* "]" ";" "[" ht-modified-item* "]" ";" "[" ht-added-item* "]"
+ht-removed-item = huffman-key-lit ","?
+ht-modified-item = huffman-key-lit ":" huffman-table-diff-lit ","?
+ht-added-item = INT ":" huffman-table-lit ","?
+# `enc_huffman_key` -- `[class,id]`.
+huffman-key-lit = "[" INT "," INT "]"
+# `enc_huffman_table_diff` -- `[opt-hex(bits),opt-hex(values)]`.
+huffman-table-diff-lit = "[" opt-hex "," opt-hex "]"
+# `enc_huffman_table` -- `[id,class,hex(16 bits),hex(values)]`.
+huffman-table-lit = "[" INT "," INT "," hex "," hex "]"
+#endregion HuffmanTablesDiff
+
+#region OtherSegmentsDiff
+# `enc_other_segments_diff` -- index-keyed triple (position-transported absorb).
+other-segments-diff-body = "[" os-removed-item* "]" ";" "[" os-modified-item* "]" ";" "[" os-added-item* "]"
+os-removed-item = INT ","?
+os-modified-item = INT ":" segment-diff-lit ","?
+os-added-item = INT ":" segment-lit ","?
+# `enc_segment_diff` -- `[opt-marker,opt-hex(data)]`.
+segment-diff-lit = "[" opt-u8 "," opt-hex "]"
+# `enc_segment` -- `[marker,hex(data)]`.
+segment-lit = "[" INT "," hex "]"
+#endregion OtherSegmentsDiff

@@ -5,7 +5,7 @@
   "displayName": "Disconnect Widgets",
   "emoji": "✂️",
   "aggregateVariant": "DisconnectWidgets",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

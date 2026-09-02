@@ -1,0 +1,39 @@
+dialect protocol
+protocol stdio.pptx.diff
+version 1
+schema stdio.pptx
+start record
+
+# FG-wave: REAL binary diff frame, replacing F1's `print_diff().into_bytes()` text-as-binary
+# shortcut (`../../🦀️.rs`'s old `DiffCodec::encode_diff`/`decode_diff`) -- per this
+# ticket's own `📖️grammar-recipe.md` §4/§6 census, 100% of stdio's `DiffCodec` impls were still on
+# this shortcut before this pilot ladder. `format u8` + `flags u8` (bit0 = `opc` present, bit1 =
+# `presentation` present, bit2 = logical `xml_parts` replacement present -- `PptxDiff` has these
+# THREE independently-optional top-level fields) as two REAL fixed fields, individually protocol-walked -- the SAME `flags`-header shape
+# `📜️docx/…/🔺️diff/💾️binary/📡️.protocol.semio`'s own file already establishes for the
+# identical two-optional-field top-level diff shape (restated here, per-artifact bit assignment).
+#
+# Past that header, `opc`/`presentation`/`xml_parts` (whichever `flags` marks present, in that FIXED order)
+# are bundled into ONE opaque trailing `bytes` chain: `PptxOpcDiff`/`PptxPresentationDiff` both
+# recurse into genuinely data-carrying, recursive structures (`PptxShapeDiff`'s `Replace` variant
+# nests back through the whole `PptxShape` tree; `PptxSlidesDiff`/`PptxShapesDiff`/
+# `PptxParagraphsDiff`/`PptxRunsDiff` are all instances of the SAME generic
+# `IndexedTripleDiff<D,T>`/`NamedTripleDiff<K,D,T>` engine docx introduced) -- the SAME
+# `protocol-prim-ref-recursion` mechanism gap every other stdio artifact's diff payload hits
+# (`Prim::Ref` unconditionally errors in `walk_protocol`, confirmed unchanged through every pilot,
+# `📖️grammar-recipe.md` §5). Bundling both fields into one opaque tail, rather than partially
+# structuring only the non-recursive-looking one, is the honest, minimal-surface choice, same
+# reasoning docx's own file gives.
+#
+# The Rust `encode_diff`/`decode_diff` side stays genuinely, fully structured past this header --
+# real LEB128-varint-framed collection counts, per-field 1-byte tri-state presence tags, fixed
+# 8-byte little-endian `PptxTransform.{x,y,cx,cy}` fields, and recursive per-variant binary
+# sub-encoders for `PptxShape`/`PptxShapeDiff`/`PptxSlide`/`PptxSlideDiff`/`OpcPart`/
+# `PptxOpcPartDiff`/`OpcRelationship`/`PptxOpcRelDiff` (see `../../🦀️.rs`'s own
+# `🔖️BinaryCodecs` region) -- round-trip tested independently of this protocol description, same
+# honest-boundary treatment `📖️grammar-recipe.md` §2.5 documents.
+framing record
+header fixed 2
+field format u8
+field flags u8
+chain payload bytes

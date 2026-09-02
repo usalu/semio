@@ -79,7 +79,7 @@ pub enum SemioModelMutation {
 
 /// 🏷️ This subset's DECLARED mutation vocabulary, kebab-case, in enum declaration order — the one
 /// list the repository test platform's completeness gate measures `mutate-semio-model` against
-/// (catalog `semio-v1-model` in `../../🧪️oracle/🔣️.json`). It aliases [`OP_KEYWORDS`],
+/// (catalog `semio-v1-model` in `../../🔣️oracle.json`). It aliases [`OP_KEYWORDS`],
 /// which the binary op frame's `tag` byte already indexes by [`variant_ordinal`], so the vocabulary
 /// is declared exactly once and `kinds_match_the_enum_and_the_catalog` keeps that declaration
 /// honest against both the enum and the manifest.
@@ -94,7 +94,7 @@ pub fn apply_semio_model_mutation(snapshot: &mut SemioModelSnapshot, mutation: &
 }
 
 /// ↩️ `SemioModelMutation`'s own computed inverse, reachable from OUTSIDE this crate. `protocol` is
-/// a private `extern crate semio_framework_os_kernel as protocol` alias in `📦️glue.rs`, so an
+/// a private `extern crate semio_framework_os_kernel as protocol` alias in `🦀️.rs`, so an
 /// external caller — an owner-root test adapter is exactly that — cannot bring `protocol::Mutation`
 /// into scope and therefore cannot call the trait method at all. This wrapper's signature names
 /// only types this subset already exports (`kit`'s precedent for the same structural gap).
@@ -349,7 +349,7 @@ impl OpBinary for SemioModelMutation {
 //#region 🔖️Demo
 /// 🌱 Shared fixture helpers + representative `SemioModelMutation` cases (one per variant) —
 /// single source of truth for this facet's own tests AND `ops_grammar_conformance_law`/
-/// `protocol_walk_law` in `🎹️composer/🦀️component.rs`.
+/// `protocol_walk_law` in `🎹️composer/🦀️.rs`.
 #[cfg(test)]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn sample_transform() -> SemioTransform {
@@ -408,7 +408,7 @@ mod tests {
         let uncovered: Vec<&&str> = KINDS.iter().zip(&covered).filter(|(_, hit)| !**hit).map(|(kind, _)| kind).collect();
         assert!(uncovered.is_empty(), "semio-model: demo_mutation_cases carries no instance of {uncovered:?}, so those kinds are declared but never exercised");
 
-        let manifest: pack::JsonValue = pack::parse_json(include_str!("../../🧪️oracle/🔣️.json")).expect("the subset's own oracle manifest decodes");
+        let manifest: pack::JsonValue = pack::parse_json(include_str!("../../🔣️oracle.json")).expect("the subset's own oracle manifest decodes");
         let catalog = manifest["mutationCatalogs"].as_array().expect("the manifest declares mutationCatalogs").iter().find(|entry| entry["id"].as_str() == Some("semio-v1-model")).expect("the manifest declares the semio-v1-model catalog");
         let declared: Vec<&str> = catalog["kinds"].as_array().expect("the catalog declares kinds").iter().map(|kind| kind.as_str().expect("every declared kind is a string")).collect();
         assert!(KINDS.iter().all(|kind| declared.contains(kind)), "semio-model: every KINDS entry must also appear in the committed oracle manifest's catalog");
@@ -491,9 +491,9 @@ mod tests {
 
 //#region 🧪️FixtureCases
 /// 🧪️ Handcrafted `📄set-snapshot` fixture cases, wired from this tree's own mutations root so
-/// `📦️glue.rs` stays untouched (`#[path]` on a non-inline module resolves against this file's own
+/// `🦀️.rs` stays untouched (`#[path]` on a non-inline module resolves against this file's own
 /// directory).
 #[cfg(test)]
-#[path = "📄set-snapshot/🧪️tests/slides-the-wall-and-attaches-a-fire-rating-pset/🦀️component.rs"]
+#[path = "📄set-snapshot/🧪️tests/slides-the-wall-and-attaches-a-fire-rating-pset/🦀️.rs"]
 mod set_snapshot_slides_the_wall_and_attaches_a_fire_rating_pset;
 //#endregion 🧪️FixtureCases

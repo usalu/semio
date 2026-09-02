@@ -5,7 +5,7 @@
   "displayName": "Change H Tr Wk",
   "emoji": "🧹",
   "aggregateVariant": "ChangeHTrWK",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

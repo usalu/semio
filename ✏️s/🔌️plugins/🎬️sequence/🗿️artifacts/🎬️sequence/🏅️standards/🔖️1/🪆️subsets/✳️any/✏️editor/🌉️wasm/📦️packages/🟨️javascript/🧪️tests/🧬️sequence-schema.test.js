@@ -9,7 +9,7 @@ import {
 
 //#region 🧬️SchemaLaws
 
-const schemaUrl = new URL("../../../🧬️schema/🔣️component.json", import.meta.url);
+const schemaUrl = new URL("../../../🧬️schema/🔣️.json", import.meta.url);
 const schema = JSON.parse(readFileSync(fileURLToPath(schemaUrl), "utf8"));
 const operationCodes = Object.values(schema.operations);
 const eventCodes = Object.values(schema.events);

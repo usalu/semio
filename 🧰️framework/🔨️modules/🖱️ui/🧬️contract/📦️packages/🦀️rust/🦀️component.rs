@@ -21,7 +21,7 @@ use serde::{Deserialize, Serialize};
 /// `Terminology` axes, and its whole point (`From<LabelText>` wired to the `app_labels!` macro,
 /// no `From<&str>`) is a compile-time-checked-label enforcement mechanism that lives at the
 /// authoring boundary, not the wire boundary — and this crate must not depend on that package at
-/// all (no engine, no wgpu; see `📦️glue.rs`). This is therefore a minimal, independent transparent
+/// all (no engine, no wgpu; see `🦀️.rs`). This is therefore a minimal, independent transparent
 /// string. The localization/terminology resolution that used to happen via `LabelText::fill` still
 /// happens upstream of the runtime (manifest/host), before a `Label` ever reaches this contract.
 #[derive(Clone, Debug, Default, PartialEq, Eq, Hash, Serialize, Deserialize)]

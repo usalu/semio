@@ -5,17 +5,17 @@ import { defineConfig } from "vitest/config";
 // #endregion 🔌️Adapters
 
 const configDir = dirname(fileURLToPath(import.meta.url));
-const root = resolve(configDir, "../.."); // 🎠️kernel module root — owner of 🟦️component.ts
+const root = resolve(configDir, "../.."); // 🎠️kernel module root — owner of 🟦️.ts
 
 /**
  * @emoji 🧪️ Vitest for `@semio-tech/framework-kernel` (inline `import.meta.vitest` in
- * `🟦️component.ts`: `ActivationRegistry`, runtime metrics, `IoEntryGraph` routing, …).
+ * `🟦️.ts`: `ActivationRegistry`, runtime metrics, `IoEntryGraph` routing, …).
  *
  * `includeSource`/`coverage.include` use a glob (`*.ts`, non-recursive, scoped to this module's own
  * root) rather than an explicit filename array — the sibling `@semio-tech/framework-actor` config
  * lists `🧵️shard-client.ts`/`📬️mailbox.ts`/`🧵️turn-scheduler.ts` by name, and that style has already
  * caused a silent skip once (a new sibling test file never ran while the suite still reported green).
- * A glob picks up any future `.ts` file dropped next to `🟦️component.ts` with no config edit.
+ * A glob picks up any future `.ts` file dropped next to `🟦️.ts` with no config edit.
  *
  * `include` stays empty on purpose: leaving it equal to `includeSource`'s glob (as
  * `@semio-tech/framework-actor`/`framework-os`/`framework-os-mcp`/`framework-os-shell` all do) makes
@@ -34,7 +34,7 @@ export default defineConfig({
     environment: "jsdom",
     include: [],
     coverage: { include: ["*.ts"] },
-    includeSource: ["*.ts", "📤️return/📦️content/🟦️component.ts"],
+    includeSource: ["*.ts", "📤️return/📦️content/🟦️.ts"],
     passWithNoTests: false,
   },
 });

@@ -1,24 +1,38 @@
 //! 🗑️ Direct space-checkpoint removal mutation.
 use super::super::{CommitSpaceCheckpoint, SpaceHistoryMutation};
 use super::super::{SpaceHistoryDiff, SpaceHistorySnapshot};
-use serde::{Deserialize, Serialize};
 use semio_framework_value_derive::{FromValue, ToValue};
+#[cfg(test)]
+use serde::{Deserialize, Serialize};
 
 //#region 🔖️Payload
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, dsl::MutationLeaf)]
+/// @emoji 🗑️ serde stays TEST-ONLY: feeds `SpaceHistoryMutation`'s own `cfg_attr(test)` oracle
+/// derive (its sibling `serde_json` differential test). Production never serializes through serde.
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::MutationLeaf)]
+#[cfg_attr(test, derive(Serialize, Deserialize))]
 #[mutation_leaf(contract = ::protocol)]
-#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(test, serde(rename_all = "camelCase", deny_unknown_fields))]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
-pub struct RemoveSpaceCheckpoint { pub checkpoint_id: String }
+pub struct RemoveSpaceCheckpoint {
+    pub checkpoint_id: String,
+}
 //#endregion 🔖️Payload
 
 //#region ⚙️Semantics
 impl crate::os_spr::MutationKind<SpaceHistorySnapshot, SpaceHistoryMutation> for RemoveSpaceCheckpoint {
     const SEMANTICS: crate::os_spr::SemanticDescriptor = crate::os_spr::SemanticDescriptor { verb: "remove", entity: "space-checkpoint", kind: "remove-space-checkpoint", record: "RemovedSpaceCheckpoint" };
-    fn diff(&self, _base: &SpaceHistorySnapshot) -> crate::os_spr::MutationOutcome<SpaceHistoryDiff> { crate::os_spr::MutationOutcome::new(SpaceHistoryDiff { remove_checkpoint_id: Some(self.checkpoint_id.clone()), ..Default::default() }) }
-    fn inverse(&self, base: &SpaceHistorySnapshot) -> Vec<SpaceHistoryMutation> { base.checkpoints.iter().find(|value| value.id == self.checkpoint_id).map(|checkpoint| vec![SpaceHistoryMutation::CommitSpaceCheckpoint(CommitSpaceCheckpoint { checkpoint: checkpoint.clone() })]).unwrap_or_default() }
-    fn label(&self) -> String { format!("Remove space checkpoint {}", self.checkpoint_id) }
-    fn target(&self) -> Vec<String> { vec!["checkpoints".into(), self.checkpoint_id.clone()] }
+    fn diff(&self, _base: &SpaceHistorySnapshot) -> crate::os_spr::MutationOutcome<SpaceHistoryDiff> {
+        crate::os_spr::MutationOutcome::new(SpaceHistoryDiff { remove_checkpoint_id: Some(self.checkpoint_id.clone()), ..Default::default() })
+    }
+    fn inverse(&self, base: &SpaceHistorySnapshot) -> Vec<SpaceHistoryMutation> {
+        base.checkpoints.iter().find(|value| value.id == self.checkpoint_id).map(|checkpoint| vec![SpaceHistoryMutation::CommitSpaceCheckpoint(CommitSpaceCheckpoint { checkpoint: checkpoint.clone() })]).unwrap_or_default()
+    }
+    fn label(&self) -> String {
+        format!("Remove space checkpoint {}", self.checkpoint_id)
+    }
+    fn target(&self) -> Vec<String> {
+        vec!["checkpoints".into(), self.checkpoint_id.clone()]
+    }
 }
 //#endregion ⚙️Semantics
 

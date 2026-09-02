@@ -1,8 +1,0 @@
-; ABNF mirror (descriptive, not test-parsed — the real byte-level walker is
-; ../📡️component.protocol.semio, walked by dsl::walk_protocol) for s.stdio.semio.mesh diff
-; (binary) — REAL `DiffCodec::encode_diff`/`decode_diff` frame, replacing the old
-; `print_diff().into_bytes()` text-as-binary shortcut.
-document = format presence payload
-format   = OCTET     ; DIFF_BINARY_FORMAT, currently 1
-presence = OCTET     ; bit0=meshes, bit1=materials, bit2=textures
-payload  = *OCTET    ; 0-3 varint-length-prefixed UTF-8 blobs, one per bit set in `presence`

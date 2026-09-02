@@ -67,8 +67,8 @@ crate::impl_serde_op_codec!(DwgMutation, "dwg-mutation");
 //#region 🔖️Kinds
 impl DwgMutation {
     /// 🏷️ Kebab-case kind spelling — the exact vocabulary BOTH DWG catalogs declare
-    /// (`../../🧪️oracle/🔣️.json` and `../../../../🔖️ac1018/🪆️subsets/✳️any/🧪️oracle/
-    /// 🔣️component.json`), and the row ids of both cases' Scenario Outlines. Hand-matched rather
+    /// (`../../🔣️oracle.json` and `../../../../🔖️ac1018/🪆️subsets/✳️any/🧪️oracle/
+    /// 🔣️.json`), and the row ids of both cases' Scenario Outlines. Hand-matched rather
     /// than derived, so [`KINDS`] is checked against something with its own reason to be right; and
     /// exhaustive, so a variant added to the enum is a COMPILE error here rather than a silently
     /// uncatalogued kind.
@@ -130,7 +130,7 @@ mod tests {
         let from_kinds: std::collections::BTreeSet<&str> = KINDS.iter().copied().collect();
         assert_eq!(from_variants, from_kinds, "KINDS must equal every DwgMutation variant's kind()");
         assert_eq!(KINDS.len(), 2, "KINDS must list exactly the declared 2 kinds");
-        for manifest in [include_str!("../../🧪️oracle/🔣️.json"), include_str!("../../../../../🔖️ac1018/🪆️subsets/✳️any/🧪️oracle/🔣️.json")] {
+        for manifest in [include_str!("../../🔣️oracle.json"), include_str!("../../../../../🔖️ac1018/🪆️subsets/✳️any/🔣️oracle.json")] {
             for kind in KINDS {
                 assert!(manifest.contains(&format!("\"{kind}\"")), "a committed DWG catalog is missing kind {kind:?}");
             }
@@ -163,9 +163,9 @@ mod tests {
 
 //#region 🧪️FixtureCases
 /// 🧪️ Handcrafted `📄set-snapshot` fixture cases, wired from this tree's own mutations root so
-/// `📦️glue.rs` stays untouched (`#[path]` on a non-inline module resolves against this file's own
+/// `🦀️.rs` stays untouched (`#[path]` on a non-inline module resolves against this file's own
 /// directory).
 #[cfg(test)]
-#[path = "📄set-snapshot/🧪️tests/retitles-the-summary-and-records-the-last-editor/🦀️component.rs"]
+#[path = "📄set-snapshot/🧪️tests/retitles-the-summary-and-records-the-last-editor/🦀️.rs"]
 mod set_snapshot_retitles_the_summary_and_records_the_last_editor;
 //#endregion 🧪️FixtureCases

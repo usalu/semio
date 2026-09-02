@@ -5,7 +5,7 @@
   "displayName": "Add Compatibility Rule",
   "emoji": "➕",
   "aggregateVariant": "AddCompatibilityRule",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": "add-compatibility-rule",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

@@ -5,18 +5,23 @@
   "displayName": "Change Mesh Extra Data",
   "emoji": "✏️🕸️",
   "aggregateVariant": "ChangeMeshExtraData",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
-  "invertibility": "non-invertible",
-  "diffParticipation": "none",
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "detect",
   "outcomeClasses": [
-    "applied"
+    "applied",
+    "warning",
+    "error",
+    "fatal"
   ],
   "composition": "atomic",
   "requiredLanguageSurfaces": [
     "rust",
-    "json-schema",
-    "text"
+    "typescript",
+    "graphql",
+    "protobuf",
+    "json-schema"
   ]
 }

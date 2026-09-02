@@ -12,7 +12,7 @@ role = "hub"
 workspace = true
 
 [lib]
-path = "📦️glue.rs"
+path = "🦀️.rs"
 
 [[bin]]
 name = "os-hub"

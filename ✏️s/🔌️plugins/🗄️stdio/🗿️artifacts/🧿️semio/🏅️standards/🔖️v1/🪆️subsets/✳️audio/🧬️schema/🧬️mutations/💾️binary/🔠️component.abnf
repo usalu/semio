@@ -1,8 +1,0 @@
-; ABNF mirror (descriptive, not test-parsed — the real byte-level walker is
-; ../📡️component.protocol.semio, walked by dsl::walk_protocol) for stdio.semio.audio.mutations
-; (binary) — the REAL binary `SemioAudioMutation::encode_op`/`decode_op` frame, NOT the old
-; `print_op().into_bytes()` text-as-binary shortcut.
-document  = format tag payload
-format    = OCTET                ; OP_BINARY_FORMAT, currently 1
-tag       = OCTET                ; SemioAudioMutation variant ordinal, 0-9
-payload   = *OCTET                ; variant's own argument text — see ../../🦀️component.rs's print_audio_mutation_args

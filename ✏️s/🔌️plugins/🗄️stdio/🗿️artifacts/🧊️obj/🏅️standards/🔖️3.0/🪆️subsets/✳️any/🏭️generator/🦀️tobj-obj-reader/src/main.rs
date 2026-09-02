@@ -1,5 +1,5 @@
 //! 🔬️ Standalone `tobj`-only reader/recipe crate for `s.stdio.obj@3.0/✳️any` — the wrapper the
-//! `tobj-obj-3-0-mutate-reader` oracle (`../../🧪️oracle/🔣️.json`) points at.
+//! `tobj-obj-3-0-mutate-reader` oracle (`../../🔣️oracle.json`) points at.
 //!
 //! Two responsibilities, both marshalling-only:
 //!   * `build <recipe-id> <out-dir>` writes `<out-dir>/<recipe-id>/before.obj` [and `after.obj`],
@@ -260,7 +260,7 @@ const RECIPES: &[Recipe] = &[
     Recipe { id: "no-mutation-no-op", before: BASE_PLAIN, after: Some(BASE_PLAIN), notes: "Identity — the no-mutation scenario id applies nothing; before and after bytes are the same document, so the reader must witness zero difference." },
     Recipe { id: "set-snapshot-applied", before: BASE_PLAIN, after: Some(SET_SNAPSHOT_AFTER), notes: "SetSnapshot{snapshot:<a wholly different 1-triangle document>} — every declared row and the sole face differ; tobj sees a different vertexCount/triangleCount/positions." },
     Recipe { id: "set-vertex-applied", before: BASE_PLAIN, after: Some(SET_VERTEX_AFTER), notes: "SetVertex{index:1, vertex:{x:1,y:0,z:5}} on a vertex BOTH faces reference (in-place replace, no index shift) — tobj's resolved position for that corner moves from (1,0,0) to (1,0,5)." },
-    Recipe { id: "set-vertex-rejected-out-of-bounds", before: BASE_PLAIN, after: None, notes: "SetVertex{index:9, ...} — base.vertices.len() is 4; validate_indexed_targets's invalid-modify-index rejects (🧬️schema/🔺️diff/🦀️component.rs:843)." },
+    Recipe { id: "set-vertex-rejected-out-of-bounds", before: BASE_PLAIN, after: None, notes: "SetVertex{index:9, ...} — base.vertices.len() is 4; validate_indexed_targets's invalid-modify-index rejects (🧬️schema/🔺️diff/🦀️.rs:843)." },
     Recipe { id: "set-texcoord-applied", before: BASE_PLAIN, after: Some(SET_TEXCOORD_AFTER), notes: "SetTexcoord{index:1, texcoord:{u:0.9,v:0.1}} on a texcoord a face references — tobj's per-corner texcoords array moves." },
     Recipe { id: "set-texcoord-rejected-out-of-bounds", before: BASE_PLAIN, after: None, notes: "SetTexcoord{index:9, ...} — base.texcoords.len() is 4; invalid-modify-index rejects." },
     Recipe { id: "set-normal-applied", before: BASE_PLAIN, after: Some(SET_NORMAL_AFTER), notes: "SetNormal{index:0, normal:{x:0,y:0,z:-1}} (the sole declared normal, referenced by both faces) — tobj's per-corner normals array flips." },

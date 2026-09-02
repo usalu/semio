@@ -5,7 +5,7 @@
   "displayName": "Change Fatigue M",
   "emoji": "🐎",
   "aggregateVariant": "ChangeFatigueM",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

@@ -2,22 +2,25 @@
   "schemaVersion": 1,
   "owner": "✏️s/🔌️plugins/📜️imperative/🗿️artifacts/📜️imperative/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔧edit-step-params",
   "semanticKind": "edit-step-params",
-  "displayName": "Edit Step Params",
+  "displayName": "Edit Step Parameters",
   "emoji": "🔧",
   "aggregateVariant": "EditStepParams",
-  "payloadSchema": "🔣️payload.schema.json",
-  "textOpcode": null,
-  "binaryTag": null,
+  "payloadSchema": "🔣️.schema.json",
+  "textOpcode": "edit-step-params",
+  "binaryTag": 3,
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
   "outcomeClasses": [
-    "error",
-    "info",
-    "applied"
+    "applied",
+    "warning",
+    "error"
   ],
   "composition": "atomic",
   "requiredLanguageSurfaces": [
     "rust",
+    "typescript",
+    "graphql",
+    "protobuf",
     "json-schema",
     "text",
     "binary"

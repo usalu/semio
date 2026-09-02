@@ -5,7 +5,7 @@
   "displayName": "Set List Ordered",
   "emoji": "🔢",
   "aggregateVariant": "SetListOrdered",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

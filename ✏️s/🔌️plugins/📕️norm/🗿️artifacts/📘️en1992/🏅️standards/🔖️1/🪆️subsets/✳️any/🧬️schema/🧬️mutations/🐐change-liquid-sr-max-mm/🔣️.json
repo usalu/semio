@@ -5,7 +5,7 @@
   "displayName": "Change Liquid Sr Max Mm",
   "emoji": "🐐",
   "aggregateVariant": "ChangeLiquidSRMaxMm",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

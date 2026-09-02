@@ -9,7 +9,7 @@
     "packageCommand": "nx run @semio-tech/repo-lib:test-readme-move-source-authority",
     "command": "bun ./📜️script.ts test readme-move-source-authority",
     "route": "readme-move-source-authority",
-    "source": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧪️readme-move-source-authority/🟦️.ts",
+    "source": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🟦️readme-move-source-authority.ts",
     "launchName": "🧹clean🧩️taxonomy🧪️readme-move-source-authority",
     "launchCommand": "bun nx run @semio-tech/repo-lib:test-readme-move-source-authority --skip-nx-cache",
     "launchGroup": "4_gate",
@@ -28,7 +28,7 @@
     "revisionDigest": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd"
   },
   "source": {
-    "path": "🧪️owner/README.md",
+    "path": "ownerREADME.md",
     "destinationPath": "🧪️owner/📃️readme/📝️.md",
     "ownerId": "🧪️owner",
     "contents": "Reviewed protocol v2.\n",
@@ -37,7 +37,7 @@
   "inputs": [
     {
       "role": "schema",
-      "path": "🧪️authority/🔣️taxonomy.json",
+      "path": "🔣️authoritytaxonomy.json",
       "contents": "{\"schemaVersion\":7,\"currentSourceRevisions\":\"synthetic\"}\n",
       "mode": 420
     },
@@ -49,8 +49,8 @@
     },
     {
       "role": "expectation",
-      "path": "🧪️authority/🧪️expectation/🔣️.json",
-      "contents": "{\"documents\":{\"readme\":\"🧪️owner/README.md\"}}\n",
+      "path": "🧪️authority/🔣️expectation.json",
+      "contents": "{\"documents\":{\"readme\":\"ownerREADME.md\"}}\n",
       "postContents": "{\"documents\":{\"readme\":\"🧪️owner/📃️readme/📝️.md\"}}\n",
       "destinationPath": "🧪️authority/🧪️expectation/📃️current/🔣️.json",
       "mode": 420

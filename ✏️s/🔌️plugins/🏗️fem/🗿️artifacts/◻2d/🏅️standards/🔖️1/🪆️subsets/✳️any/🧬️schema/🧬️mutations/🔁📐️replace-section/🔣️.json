@@ -5,7 +5,7 @@
   "displayName": "Replace Section",
   "emoji": "🔁📐️",
   "aggregateVariant": "ReplaceSection",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": "replace-section",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

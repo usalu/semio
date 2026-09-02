@@ -1,0 +1,72 @@
+{
+  "schema": "semio.note.action-cohort.v1",
+  "owner": "NotePlayApp",
+  "source": "🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+  "routeCount": 36,
+  "retainedRoutes": ["setGridVisible", "setGridSpacing", "setCamera", "setCameraZoom", "setActiveUtility", "setLocale", "engagementInput", "navigatorEngagementInput", "loadRequest"],
+  "frameworkOwnedRoutes": [],
+  "groups": [
+    {
+      "status": "BatchOnlyPendingRewrite",
+      "lanes": ["Artifact"],
+      "routes": ["setGridSubdivisions", "setGridOpacity", "setSnapEnabled", "setSnapGridSpacing", "setPencilWidth", "setEraserRadius", "addBlock", "moveBlock", "deleteBlock", "deleteSelection", "duplicateBlock", "duplicateSelection", "patchBlocks", "nudgeSelection", "nudgeSelectionUp", "nudgeSelectionDown", "nudgeSelectionLeft", "nudgeSelectionRight", "nudgeSelectionUpFast", "nudgeSelectionDownFast", "nudgeSelectionLeftFast", "nudgeSelectionRightFast"],
+      "blocker": "The bounded NoteSnapshot materializer now owns nested strings, block trees, tables, ink points, assets, links, and typed text-child owners, but artifact mutation inverse/diff/apply still executes monolithically before that cursor and is not wired into one-item preparation. Each Artifact reducer remains pending until its semantic apply is cursorized end to end."
+    },
+    {
+      "status": "BatchOnlyPendingRewrite",
+      "lanes": ["Artifact", "Config"],
+      "routes": ["inkApplyEvents", "engagementSubmit"],
+      "blocker": "These routes can publish Artifact and Config together; their atomic semantic reducers and ink event diff/apply are still monolithic even though the post-root materializer is now bounded."
+    },
+    {
+      "status": "BatchOnlyPendingRewrite",
+      "lanes": ["HostOnly"],
+      "routes": ["setActiveExample", "setFixtureJson", "saveDownload"],
+      "blocker": "Example/import parsing and document export still parse or serialize a complete document in one reducer turn; retained parser/printer cursors are required."
+    },
+    {
+      "status": "Migrated",
+      "lanes": ["Artifact"],
+      "routes": ["setGridVisible", "setGridSpacing"]
+    },
+    {
+      "status": "Migrated",
+      "lanes": ["Config"],
+      "routes": ["setCamera", "setCameraZoom", "setActiveUtility", "setLocale", "engagementInput"]
+    },
+    {
+      "status": "Migrated",
+      "lanes": ["HostOnly"],
+      "routes": ["navigatorEngagementInput", "loadRequest"]
+    }
+  ],
+  "globals": [],
+  "scanThenMonolithRoutes": [],
+  "blockedSeams": [],
+  "materialization": {
+    "stringChunkBytes": 1024,
+    "typedTextOwnerPresent": true,
+    "typedTextOwnerAbsent": true,
+    "cancelDuringMetadataCopy": true,
+    "nestedSnapshotRoot": true,
+    "nestedBlockTree": true,
+    "assetMapCursor": true,
+    "linkedArtifactCursor": true,
+    "progressPreview": true,
+    "abandonmentTerminalEmptiness": true
+  },
+  "laws": {
+    "activationBeforeDecodeRejected": true,
+    "exactCensus": true,
+    "forgedProofRejected": true,
+    "factoryRequiresContract": true,
+    "exactArtifactScalarReducer": true,
+    "gridSpacingInvariantPreserved": true,
+    "artifactPreparationRejectsOtherMutations": true,
+    "hostOnlyExclusive": true,
+    "operationFreshness": true,
+    "storeAuthorityOwnsDigest": true,
+    "storeLaneRequiresPreparation": true,
+    "terminalWitnessRequired": true
+  }
+}

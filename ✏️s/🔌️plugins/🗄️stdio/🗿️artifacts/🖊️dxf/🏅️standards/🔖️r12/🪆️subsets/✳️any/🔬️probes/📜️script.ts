@@ -15,7 +15,7 @@
 // ENTITIES — including a block's own nested entity list — are ORDER-significant, matching the real
 // production dispatch's own index-addressed `DxfBlocksDiff`/`DxfEntitiesDiff`, read directly from
 // `../../../../../../../../.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️27/SUBSET-SCOPED-EXTERNAL-ORACLE-MUTATION-TESTING/📓️dxf-r12-any-reader-oracle-retrofit.md`'s
-// own citations of `🧬️schema/🔺️diff/🦀️component.rs`) — no DXF semantics computed here beyond that
+// own citations of `🧬️schema/🔺️diff/🦀️.rs`) — no DXF semantics computed here beyond that
 // comparison, only projection + compare. This subset's document has no large opaque binary
 // payloads (unlike AVI's movi chunks), so unlike that sibling probe suite there is nothing here to
 // hash: the engine's own typed projection is already the full comparable shape.

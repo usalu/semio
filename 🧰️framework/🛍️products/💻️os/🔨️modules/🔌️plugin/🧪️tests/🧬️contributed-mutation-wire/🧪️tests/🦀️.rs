@@ -5,7 +5,7 @@ use super::*;
 use protocol::{CompositeMutationKind, Mutation, MutationDiff, MutationKind, MutationLeaf, OpBinary};
 
 fn cases() -> serde_json::Value {
-    serde_json::from_str(include_str!("../🔣️cases.json")).expect("contributed wire neutral cases")
+    serde_json::from_str(include_str!("../🔣️.json")).expect("contributed wire neutral cases")
 }
 
 fn operation(delta: i32) -> WireTestMutation {

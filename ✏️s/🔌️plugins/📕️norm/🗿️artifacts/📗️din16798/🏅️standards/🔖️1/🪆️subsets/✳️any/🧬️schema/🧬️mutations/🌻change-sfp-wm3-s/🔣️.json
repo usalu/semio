@@ -5,7 +5,7 @@
   "displayName": "Change Sfp Wm3 S",
   "emoji": "🌻",
   "aggregateVariant": "ChangeSfpWM3S",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

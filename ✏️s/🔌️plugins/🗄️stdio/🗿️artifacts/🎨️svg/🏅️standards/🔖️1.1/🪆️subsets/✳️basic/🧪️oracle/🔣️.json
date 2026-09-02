@@ -17,7 +17,7 @@
       "license": "MIT",
       "testOnly": true,
       "homepage": "https://github.com/tafia/quick-xml",
-      "rationale": "quick-xml is a general streaming XML reader AND writer, not an SVG library and not a profile validator. This subset's oracle (../🧪️oracle/🦀️component.rs) builds its own element tree from quick-xml's event stream through the shared 📰markup family module, resolves clip-path url(#id) references and applies the profile's clip-to-text and excluded-raster-primitive rules from its own transcription of REC-SVGMobile-20030114, and re-serializes with quick-xml's Writer. It never imports this repository's own SVG codec or its check_svg_basic_conformance.",
+      "rationale": "quick-xml is a general streaming XML reader AND writer, not an SVG library and not a profile validator. This subset's oracle (../🦀️oracle.rs) builds its own element tree from quick-xml's event stream through the shared 📰markup family module, resolves clip-path url(#id) references and applies the profile's clip-to-text and excluded-raster-primitive rules from its own transcription of REC-SVGMobile-20030114, and re-serializes with quick-xml's Writer. It never imports this repository's own SVG codec or its check_svg_basic_conformance.",
       "hostPath": "✏️s/🔌️plugins/🗄️stdio/🧪️oracle/📦️packages/🦀️rust",
       "kind": "third-party-library",
       "engine": {

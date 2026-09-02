@@ -6,8 +6,8 @@ import Ajv from "ajv";
 import { produce } from "immer";
 import ts from "typescript";
 import { BundleScript, ScriptRouter, runBundleScriptMain } from "@semio-tech/repo-lib";
-import { OwnedResidentLedger } from "./🟦️component.ts";
-import * as resident from "./🟦️component.ts";
+import { OwnedResidentLedger } from "./🟦️.ts";
+import * as resident from "./🟦️.ts";
 import fixture from "./🧪️fixture.json";
 import fixtureSchema from "./🧪️schema.json";
 import capacitySchema from "./🧬️schema.json";
@@ -161,7 +161,7 @@ class TestScript extends BundleScript {
       const pool = new OwnedResidentLedger({ ...fixture.capacity, control: vector.control }); const owner = createOwner(pool); const dataCell = claimCell(pool); const current = pool.usage.data; const maximum = fixture.capacity.bytes - vector.control.bytes - current.bytes - 328; assert(owner.root.reserveExternalBacking(maximum, dataCell, grant).slot); const before = pool.usage; const denied = Object.freeze({}); assert.equal(pool.prepareAdmission(denied, "data", grant).kind, "blocked"); assert.deepEqual(pool.usage, before);
       const control = createOwner(pool, "control"); createPage(pool, control.root, 1, "control"); assert.equal(pool.prepareAdmission(Object.freeze({}), "control", grant).kind, "blocked"); closeLedger(pool);
     }
-    const probeSource = await Bun.file(`${import.meta.dir}/🟦️component.ts`).text(); const probeAst = ts.createSourceFile("resident.ts", probeSource, ts.ScriptTarget.ES2022, true); const probeFunction = probeAst.statements.find(item => ts.isFunctionDeclaration(item) && item.name?.text === "forward"); assert(probeFunction);
+    const probeSource = await Bun.file(`${import.meta.dir}/🟦️.ts`).text(); const probeAst = ts.createSourceFile("resident.ts", probeSource, ts.ScriptTarget.ES2022, true); const probeFunction = probeAst.statements.find(item => ts.isFunctionDeclaration(item) && item.name?.text === "forward"); assert(probeFunction);
     const probeCompiled = ts.transpileModule(probeFunction.getText(probeAst), { compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.ESNext } }); const probeForward: unknown = runInThisContext(`(() => { ${probeCompiled.outputText}; return forward; })()`); assert.equal(typeof probeForward, "function");
     for (const failure of fixture.closeChildren) {
       const pool = new OwnedResidentLedger(fixture.capacity); const owner = createOwner(pool); const source = createPage(pool, owner.root, 0); owner.root.beginClose(); const actual = resident.OwnedResidentPage.prototype.closeStep; const fault = Object.freeze({ close: failure }); let calls = 0;
@@ -181,7 +181,7 @@ class TestScript extends BundleScript {
     const custodyPool = new OwnedResidentLedger(fixture.capacity); const custodyOwner = createOwner(custodyPool); const custodyReader = createOwner(custodyPool); const custodyCell = claimCell(custodyPool); const custody = custodyOwner.root.reserveExternalBacking(4, custodyCell, grant).slot; assert(custody); custody.beginReceive(grant); const contents = new ArrayBuffer(4); new Uint8Array(contents).set([1, 2, 3, 4]); const receipt = custody.adoptTransferred(contents, grant).receipt; assert(resident.OwnedResidentBackingCustody.matches(receipt, custody)); const viewCell = claimCell(custodyPool); const view = custodyReader.root.beginRead(custody, viewCell, grant).reader; assert(view);
     custodyOwner.root.beginClose(); assert(!resident.OwnedResidentBackingCustody.matches(receipt, custody)); assert.equal(view.byteAt(3), 4); assert.equal(custodyOwner.root.closeStep(grant).kind, "blocked"); closeLedger(custodyPool); assert(!resident.OwnedResidentBackingCustody.matches(receipt, custody));
     const lostPool = new OwnedResidentLedger(fixture.capacity); const lostConsumer = Object.freeze({}); lostPool.prepareAdmission(lostConsumer, "data", grant); closeLedger(lostPool);
-    const program = ts.createProgram([`${import.meta.dir}/🟦️component.ts`], { strict: true, noEmit: true, target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.ESNext, moduleResolution: ts.ModuleResolutionKind.Bundler, types: [], lib: ["lib.es2022.d.ts", "lib.dom.d.ts"] });
+    const program = ts.createProgram([`${import.meta.dir}/🟦️.ts`], { strict: true, noEmit: true, target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.ESNext, moduleResolution: ts.ModuleResolutionKind.Bundler, types: [], lib: ["lib.es2022.d.ts", "lib.dom.d.ts"] });
     const diagnostics = ts.getPreEmitDiagnostics(program); assert.equal(diagnostics.length, 0, ts.formatDiagnosticsWithColorAndContext(diagnostics, { getCanonicalFileName: name => name, getCurrentDirectory: () => import.meta.dir, getNewLine: () => "\n" }));
     console.log(`[DEBUG] Resident capacity=${fixture.invalidCapacities.length} actualOverflow=2 ownerReader=1 partialExtent=${fixture.pageLengths.length} simultaneousRawUiScratch=1 postedCancel=1 unsubmittedCancel=1 transferredViewFault=1 controlAxes=${fixture.controlCases.length} childClose=${fixture.closeChildren.length} childFault=${fixture.childFaultFrontiers.length} privateDispatch=${admissionFixture.resourceKinds.length} quarantine=${admissionFixture.quarantine.length} domainRecord=1 recordOverflow=3 finalizerFrontiers=8 admissionFailures=${fixture.admissionFailures.length} admissionBootstrap=${admissionFixture.bootstrap.length} firstFault=${admissionFixture.faultKinds.length} resourceWrapper=${admissionFixture.resourceKinds.length} terminalAliasDetach=1 strictTS=0 oracle=Ajv+Immer+Buffer+BigInt`);
   }

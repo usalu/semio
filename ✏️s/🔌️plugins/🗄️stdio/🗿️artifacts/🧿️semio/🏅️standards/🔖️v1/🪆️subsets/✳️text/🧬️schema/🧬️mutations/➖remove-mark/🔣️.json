@@ -5,7 +5,7 @@
   "displayName": "Remove Mark",
   "emoji": "➖",
   "aggregateVariant": "RemoveMark",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

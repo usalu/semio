@@ -5,7 +5,7 @@
   "displayName": "Delete Issue",
   "emoji": "🗑️🐛",
   "aggregateVariant": "DeleteIssue",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

@@ -1,0 +1,6 @@
+; RFC 5234 ABNF mirror (descriptive, not test-walked — the real byte-level walker is
+; ../📡️.protocol.semio, walked by dsl::walk_protocol) for the SemioTextMutation op frame.
+op-frame    = format tag payload
+format      = OCTET                 ; OP_BINARY_FORMAT, currently 1
+tag         = OCTET                 ; variant ordinal, 0-6 (OP_KEYWORDS order)
+payload     = *OCTET                ; the variant's own argument tail (print_op's args)

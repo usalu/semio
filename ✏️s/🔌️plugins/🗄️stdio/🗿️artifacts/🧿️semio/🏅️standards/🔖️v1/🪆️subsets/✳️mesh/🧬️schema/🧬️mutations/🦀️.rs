@@ -92,7 +92,7 @@ use super::set_primitive_topology;
 
 //#region 🔖️Mutations
 /// 🧬️ Every variant wraps exactly one `protocol::MutationKind<SemioMeshSnapshot, SemioMeshMutation>`
-/// payload struct declared in the corresponding triad leaf's `🦠️mutation/🦀️component.rs`. Seventeen
+/// payload struct declared in the corresponding triad leaf's `🦠️mutation/🦀️.rs`. Seventeen
 /// triads: mesh lifecycle, primitive lifecycle + topology/geometry/material, material lifecycle +
 /// base-color/metallic/roughness, texture lifecycle + mime/bytes, then the one scalar reposition
 /// (`move-vertex`).
@@ -119,7 +119,7 @@ pub enum SemioMeshMutation {
 }
 
 /// 🏷️ Kebab-case spelling of every `SemioMeshMutation` variant, in declaration order — the
-/// vocabulary the `semio-v1-mesh` mutation catalog (`../../🧪️oracle/🔣️.json`) declares and
+/// vocabulary the `semio-v1-mesh` mutation catalog (`../../🔣️oracle.json`) declares and
 /// `mutate-semio-mesh`'s exhaustive test case measures itself against. `kinds_match_the_enum_and_
 /// the_catalog` below is what keeps this list honest against the enum, since the framework never
 /// parses Rust.
@@ -146,7 +146,7 @@ pub const KINDS: &[&str] = &[
 
 //#region 🔖️Apply
 /// ▶️ Applies a mutation to `snapshot` in place, returning the diff — kept from the pre-wave facet
-/// (consumed by `../🦀️component.rs`'s `SemioMeshBuilderConstruction::mutate`).
+/// (consumed by `../🦀️.rs`'s `SemioMeshBuilderConstruction::mutate`).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn apply_semio_mesh_mutation(snapshot: &mut SemioMeshSnapshot, mutation: &SemioMeshMutation) -> protocol::MutationOutcome<SemioMeshDiff> {
     use protocol::Mutation;
@@ -167,7 +167,7 @@ pub fn inverse_semio_mesh_mutation(mutation: &SemioMeshMutation, base: &SemioMes
 
 /// 📥️ Decodes this facet's own externally-tagged (`{"<VariantName>": {<snake_case payload>}}`)
 /// JSON projection — no `#[value(rename_all)]` sits on this enum or its payload structs, which is
-/// exactly the shape the committed `<kind>/🧪️tests/<fixture>/🦠️mutation/🔣️component.json` vectors
+/// exactly the shape the committed `<kind>/🧪️tests/<fixture>/🦠️mutation/🔣️.json` vectors
 /// carry — into a real [`SemioMeshMutation`]. `create-primitive`'s payload embeds a whole `MeshPrimitive`, so decoding it from the committed
 /// vector is the only way the adapter can exercise that kind without restating every coordinate.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -359,7 +359,7 @@ impl OpBinary for SemioMeshMutation {
 //#region 🔖️Demo
 /// 🌱 Shared fixture + representative `SemioMeshMutation` cases (one per variant) — single source
 /// of truth for this facet's own tests AND `ops_grammar_conformance_law`/`protocol_walk_law` in
-/// `🎹️composer/🦀️component.rs` (another session's file, read-only here).
+/// `🎹️composer/🦀️.rs` (another session's file, read-only here).
 #[cfg(test)]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn fixture() -> SemioMeshSnapshot {
@@ -575,7 +575,7 @@ mod tests {
         for (kind, descriptor) in KINDS.iter().zip(descriptors.iter()) {
             assert_eq!(*kind, descriptor.kind, "KINDS must match #[derive(dsl::Mutations)]'s own declaration order and spelling");
         }
-        let manifest = include_str!("../../🧪️oracle/🔣️.json");
+        let manifest = include_str!("../../🔣️oracle.json");
         for kind in KINDS {
             assert!(manifest.contains(&format!("\"{kind}\"")), "KINDS entry {kind:?} must also appear in the committed oracle manifest's catalog");
         }
@@ -586,45 +586,45 @@ mod tests {
 
 //#region 🧪️FixtureTests
 /// 🧪️ Handcrafted mutation fixtures (contract D1, ticket `26/08/20/COMPOSE-TO-PUZZLE5D-MIGRATION`)
-/// — one case per triad leaf, self-wired here rather than in `📦️glue.rs` so this subset owns its
+/// — one case per triad leaf, self-wired here rather than in `🦀️.rs` so this subset owns its
 /// own test surface. `#[path = "."]` re-roots the nested `#[path]`s at THIS file's directory (the
 /// `🧬️mutations` root) instead of the implicit `🦀️component/` child directory.
 #[cfg(test)]
 #[path = "."]
 mod fixture_tests {
-    #[path = "🌈change-material-base-color/🧪️tests/repaints-the-material-from-red-to-blue/🦀️component.rs"]
+    #[path = "🌈change-material-base-color/🧪️tests/repaints-the-material-from-red-to-blue/🦀️.rs"]
     mod tests_change_material_base_color_repaints_the_material_from_red_to_blue;
-    #[path = "⚙️change-material-metallic/🧪️tests/raises-the-metallic-factor-to-fully-metallic/🦀️component.rs"]
+    #[path = "⚙️change-material-metallic/🧪️tests/raises-the-metallic-factor-to-fully-metallic/🦀️.rs"]
     mod tests_change_material_metallic_raises_the_metallic_factor_to_fully_metallic;
-    #[path = "🧱change-material-roughness/🧪️tests/lowers-the-roughness-factor-to-a-quarter/🦀️component.rs"]
+    #[path = "🧱change-material-roughness/🧪️tests/lowers-the-roughness-factor-to-a-quarter/🦀️.rs"]
     mod tests_change_material_roughness_lowers_the_roughness_factor_to_a_quarter;
-    #[path = "🏷️change-texture-mime/🧪️tests/retags-the-texture-as-jpeg-without-touching-its-bytes/🦀️component.rs"]
+    #[path = "🏷️change-texture-mime/🧪️tests/retags-the-texture-as-jpeg-without-touching-its-bytes/🦀️.rs"]
     mod tests_change_texture_mime_retags_the_texture_as_jpeg_without_touching_its_bytes;
-    #[path = "🎨create-material/🧪️tests/adds-a-second-material-at-the-end/🦀️component.rs"]
+    #[path = "🎨create-material/🧪️tests/adds-a-second-material-at-the-end/🦀️.rs"]
     mod tests_create_material_adds_a_second_material_at_the_end;
-    #[path = "🕸️create-mesh/🧪️tests/adds-an-empty-second-mesh-at-the-end/🦀️component.rs"]
+    #[path = "🕸️create-mesh/🧪️tests/adds-an-empty-second-mesh-at-the-end/🦀️.rs"]
     mod tests_create_mesh_adds_an_empty_second_mesh_at_the_end;
-    #[path = "🔺create-primitive/🧪️tests/adds-a-second-primitive-inside-the-existing-mesh/🦀️component.rs"]
+    #[path = "🔺create-primitive/🧪️tests/adds-a-second-primitive-inside-the-existing-mesh/🦀️.rs"]
     mod tests_create_primitive_adds_a_second_primitive_inside_the_existing_mesh;
-    #[path = "🖼️create-texture/🧪️tests/adds-a-second-texture-at-the-end/🦀️component.rs"]
+    #[path = "🖼️create-texture/🧪️tests/adds-a-second-texture-at-the-end/🦀️.rs"]
     mod tests_create_texture_adds_a_second_texture_at_the_end;
-    #[path = "🚮delete-material/🧪️tests/removes-the-leading-material-and-keeps-the-trailing-one/🦀️component.rs"]
+    #[path = "🚮delete-material/🧪️tests/removes-the-leading-material-and-keeps-the-trailing-one/🦀️.rs"]
     mod tests_delete_material_removes_the_leading_material_and_keeps_the_trailing_one;
-    #[path = "🗑️delete-mesh/🧪️tests/removes-the-leading-mesh-and-keeps-the-trailing-one/🦀️component.rs"]
+    #[path = "🗑️delete-mesh/🧪️tests/removes-the-leading-mesh-and-keeps-the-trailing-one/🦀️.rs"]
     mod tests_delete_mesh_removes_the_leading_mesh_and_keeps_the_trailing_one;
-    #[path = "✂️delete-primitive/🧪️tests/removes-the-leading-primitive-and-keeps-the-trailing-one/🦀️component.rs"]
+    #[path = "✂️delete-primitive/🧪️tests/removes-the-leading-primitive-and-keeps-the-trailing-one/🦀️.rs"]
     mod tests_delete_primitive_removes_the_leading_primitive_and_keeps_the_trailing_one;
-    #[path = "🕳️delete-texture/🧪️tests/removes-the-leading-texture-and-keeps-the-trailing-one/🦀️component.rs"]
+    #[path = "🕳️delete-texture/🧪️tests/removes-the-leading-texture-and-keeps-the-trailing-one/🦀️.rs"]
     mod tests_delete_texture_removes_the_leading_texture_and_keeps_the_trailing_one;
-    #[path = "📍move-vertex/🧪️tests/lifts-the-third-vertex-of-the-triangle/🦀️component.rs"]
+    #[path = "📍move-vertex/🧪️tests/lifts-the-third-vertex-of-the-triangle/🦀️.rs"]
     mod tests_move_vertex_lifts_the_third_vertex_of_the_triangle;
-    #[path = "📐replace-primitive-geometry/🧪️tests/swaps-the-triangle-for-a-textured-quad/🦀️component.rs"]
+    #[path = "📐replace-primitive-geometry/🧪️tests/swaps-the-triangle-for-a-textured-quad/🦀️.rs"]
     mod tests_replace_primitive_geometry_swaps_the_triangle_for_a_textured_quad;
-    #[path = "📀replace-texture-bytes/🧪️tests/swaps-the-texture-payload-without-retagging-its-mime/🦀️component.rs"]
+    #[path = "📀replace-texture-bytes/🧪️tests/swaps-the-texture-payload-without-retagging-its-mime/🦀️.rs"]
     mod tests_replace_texture_bytes_swaps_the_texture_payload_without_retagging_its_mime;
-    #[path = "🔗set-primitive-material/🧪️tests/binds-the-primitive-to-the-existing-material/🦀️component.rs"]
+    #[path = "🔗set-primitive-material/🧪️tests/binds-the-primitive-to-the-existing-material/🦀️.rs"]
     mod tests_set_primitive_material_binds_the_primitive_to_the_existing_material;
-    #[path = "🔀set-primitive-topology/🧪️tests/switches-the-primitive-to-a-triangle-strip/🦀️component.rs"]
+    #[path = "🔀set-primitive-topology/🧪️tests/switches-the-primitive-to-a-triangle-strip/🦀️.rs"]
     mod tests_set_primitive_topology_switches_the_primitive_to_a_triangle_strip;
 }
 //#endregion 🧪️FixtureTests

@@ -5,7 +5,7 @@
   "displayName": "Change Edge Tips",
   "emoji": "🖇",
   "aggregateVariant": "ChangeEdgeTips",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": "change-edge-tips",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

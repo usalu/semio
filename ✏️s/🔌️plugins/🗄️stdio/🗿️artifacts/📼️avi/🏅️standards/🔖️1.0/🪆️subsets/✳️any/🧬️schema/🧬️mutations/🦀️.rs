@@ -56,7 +56,7 @@ pub enum AviMutation {
 }
 
 /// 📇️ Kebab-case spelling of every `AviMutation` variant, in declaration order -- the exhaustive
-/// mutation catalog `../../🧪️oracle/🔣️.json`'s `kinds` array is required to match verbatim
+/// mutation catalog `../../🔣️oracle.json`'s `kinds` array is required to match verbatim
 /// (`kinds_const_matches_enum_variants_in_declaration_order` below is what keeps that honest; the
 /// framework never parses Rust to check it itself).
 pub const KINDS: &[&str] = &[
@@ -365,9 +365,9 @@ mod tests {
 
 //#region 🧪️FixtureCases
 /// 🧪️ Handcrafted `📄set-snapshot` fixture cases, wired from this tree's own mutations root so
-/// `📦️glue.rs` stays untouched (`#[path]` on a non-inline module resolves against this file's own
+/// `🦀️.rs` stays untouched (`#[path]` on a non-inline module resolves against this file's own
 /// directory).
 #[cfg(test)]
-#[path = "📄set-snapshot/🧪️tests/promotes-the-second-movi-chunk-to-a-keyframe/🦀️component.rs"]
+#[path = "📄set-snapshot/🧪️tests/promotes-the-second-movi-chunk-to-a-keyframe/🦀️.rs"]
 mod set_snapshot_promotes_the_second_movi_chunk_to_a_keyframe;
 //#endregion 🧪️FixtureCases

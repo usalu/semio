@@ -1,0 +1,39 @@
+{
+  "edges": [],
+  "schema": "sequence.sequence",
+  "steps": [
+    {
+      "collapsed": false,
+      "id": "a",
+      "kind": "state.set",
+      "params": {
+        "key": "counter"
+      },
+      "slot": null,
+      "x": 10.0,
+      "y": 20.0
+    },
+    {
+      "collapsed": false,
+      "id": "b",
+      "kind": "log.print",
+      "params": {
+        "message": "hello"
+      },
+      "slot": null,
+      "x": 30.0,
+      "y": 40.0
+    },
+    {
+      "collapsed": false,
+      "id": "c",
+      "kind": "state.get",
+      "params": {
+        "key": "counter"
+      },
+      "slot": null,
+      "x": 50.0,
+      "y": 60.0
+    }
+  ]
+}

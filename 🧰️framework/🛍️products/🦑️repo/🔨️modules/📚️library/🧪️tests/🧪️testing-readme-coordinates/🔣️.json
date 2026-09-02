@@ -5,20 +5,20 @@
     "target": "test-testing-readme-coordinates",
     "command": "bun ./📜️script.ts test testing-readme-coordinates",
     "route": "testing-readme-coordinates",
-    "source": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧪️testing-readme-coordinates/🟦️.ts",
+    "source": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧪️test/🟦️ing-readme-coordinates.ts",
     "launchName": "🧹clean🧩️taxonomy🧪️testing-readme-coordinates",
     "launchCommand": "bun nx run @semio-tech/repo-lib:test-testing-readme-coordinates --skip-nx-cache",
     "launchGroup": "4_gate",
     "launchOrder": 410.192
   },
   "documents": {
-    "readme": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/README.md",
+    "readme": "🧰️framework/🛍️products/🦑️repo/🔨️modules/testREADME.md",
     "registry": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📇️registry/🔣️.json",
     "protocolSchema": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json",
     "taxonomy": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json"
   },
   "frozenAuthority": {
-    "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🧫️fixtures/🧪️readme-license-owner-authority/🔣️.json",
+    "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🧫️fixtures/🔣️readme-license-owner-authority.json",
     "sha256": "051394741822e92d51f3bda15ce64d84c236582c6927335c9c5e0ac3c18a1da4",
     "row": 31,
     "baselineCommit": "9f449b10659b95148c8bcb3f91ce583bf7446973",
@@ -77,7 +77,7 @@
     },
     {
       "id": "owner-oracle-manifest",
-      "value": "🧪️oracle/🔣️.json",
+      "value": "🔣️oracle.json",
       "count": 2,
       "target": null
     },
@@ -139,7 +139,7 @@
     "Every phase additionally accepts the full v2 selector set",
     "narrow any phase.",
     "A run directory is published with one atomic rename, never written in place",
-    "📇️registry/🔣️component.json",
+    "📇️registry/🔣️.json",
     "📇️registry/🔒️migration.json",
     "component.feature"
   ],

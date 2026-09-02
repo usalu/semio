@@ -5,7 +5,7 @@
   "displayName": "Create Change Record",
   "emoji": "🌱📝",
   "aggregateVariant": "CreateChangeRecord",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

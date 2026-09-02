@@ -11,7 +11,6 @@
 //! never the child's resolved content).
 
 use crate::artifacts::process3d::diff::Process3dDiff;
-use crate::artifacts::process3d::mutations::replace_stock_solid::ReplaceStockSolid;
 use crate::artifacts::process3d::mutations::Process3dMutation;
 use crate::artifacts::process3d::Process3dSnapshot;
 use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::SemioBrepSnapshot;

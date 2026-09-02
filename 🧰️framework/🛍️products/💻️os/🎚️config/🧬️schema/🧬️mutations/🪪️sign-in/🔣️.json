@@ -5,17 +5,18 @@
   "displayName": "Sign In",
   "emoji": "🪪️",
   "aggregateVariant": "SignIn",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
-  "invertibility": "non-invertible",
-  "diffParticipation": "none",
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "apply-only",
   "outcomeClasses": [
     "applied"
   ],
   "composition": "atomic",
   "requiredLanguageSurfaces": [
     "rust",
+    "typescript",
     "json-schema"
   ]
 }

@@ -1,7 +1,7 @@
 //! @emoji 📸 `RenderSnapshot` — the immutable, atomically-published frame artifact ticket
 //! `26/08/20/INTERACTIVE-JOB-RUNTIME-REFACTOR` Phase 3 (packet P3a) asks for, and
 //! [`RenderSnapshotSink`] — its publish/acquire mechanism, mirroring the actor crate's already-proven
-//! `SceneStore`/`SceneSnapshot` pattern (`🎭️actor/🦀️component.rs` ~1834-1918: `apply_patch`/
+//! `SceneStore`/`SceneSnapshot` pattern (`🎭️actor/🦀️.rs` ~1834-1918: `apply_patch`/
 //! `commit_frame`, Arc-based copy-on-write, readers hold snapshots indefinitely). **Not** a raw
 //! `Arc`+`AtomicPtr` scheme despite that being this packet's own first attempt — see
 //! [`RenderSnapshotSink`]'s own doc for the real use-after-free bug a concurrent stress test caught in

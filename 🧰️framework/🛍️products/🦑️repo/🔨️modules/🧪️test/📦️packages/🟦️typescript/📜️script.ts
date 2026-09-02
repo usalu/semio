@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
 /** 🧭️ `@semio-tech/repo-test` router: `bun ./📜️script.ts <lint|test [level]>`. */
-import { BundleScript, ScriptRouter, resolveTestLevel, runBundleScriptMain, runBunx, runTestBudgeted } from "../../../📚️library/📦️packages/🟦️typescript/📦️index.ts";
+import { BundleScript, ScriptRouter, resolveTestLevel, runBundleScriptMain, runBunx, runTestBudgeted } from "../../../📚️library/📦️packages/🟦️typescript/🟦️.ts";
 
 class LintScript extends BundleScript {
   run(): void {

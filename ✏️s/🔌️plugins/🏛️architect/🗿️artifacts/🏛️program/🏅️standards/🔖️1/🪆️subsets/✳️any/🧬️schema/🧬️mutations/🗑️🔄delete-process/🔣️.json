@@ -5,7 +5,7 @@
   "displayName": "Delete Process",
   "emoji": "🗑️🔄",
   "aggregateVariant": "DeleteProcess",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

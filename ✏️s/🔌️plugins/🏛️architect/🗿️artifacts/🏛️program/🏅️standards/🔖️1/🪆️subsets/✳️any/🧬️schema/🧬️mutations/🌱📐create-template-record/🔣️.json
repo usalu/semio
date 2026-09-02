@@ -5,7 +5,7 @@
   "displayName": "Create Template Record",
   "emoji": "🌱📐",
   "aggregateVariant": "CreateTemplateRecord",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

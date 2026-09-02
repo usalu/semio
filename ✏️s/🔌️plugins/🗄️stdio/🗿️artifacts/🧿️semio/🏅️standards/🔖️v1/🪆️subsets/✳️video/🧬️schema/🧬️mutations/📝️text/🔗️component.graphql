@@ -1,5 +1,0 @@
-# 📝️ Text representation mirror for `stdio.semio.video` (mutations) — one line. Structural shape
-# is ../🔗️component.graphql's SemioVideoMutation.
-type SemioVideoMutationTextLine {
-  line: String!
-}

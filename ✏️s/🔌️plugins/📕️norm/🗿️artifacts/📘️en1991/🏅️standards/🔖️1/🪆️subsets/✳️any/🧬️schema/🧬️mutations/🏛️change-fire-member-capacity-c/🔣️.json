@@ -5,7 +5,7 @@
   "displayName": "Change Fire Member Capacity C",
   "emoji": "🏛️",
   "aggregateVariant": "ChangeFireMemberCapacityC",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

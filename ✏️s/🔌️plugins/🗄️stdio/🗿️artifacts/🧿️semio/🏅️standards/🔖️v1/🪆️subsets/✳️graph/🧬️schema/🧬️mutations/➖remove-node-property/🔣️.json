@@ -5,7 +5,7 @@
   "displayName": "Remove Node Property",
   "emoji": "➖",
   "aggregateVariant": "RemoveNodeProperty",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

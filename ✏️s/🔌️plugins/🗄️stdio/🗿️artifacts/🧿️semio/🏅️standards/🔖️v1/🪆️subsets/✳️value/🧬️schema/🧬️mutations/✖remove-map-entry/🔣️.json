@@ -5,7 +5,7 @@
   "displayName": "Remove Map Entry",
   "emoji": "✖",
   "aggregateVariant": "RemoveMapEntry",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

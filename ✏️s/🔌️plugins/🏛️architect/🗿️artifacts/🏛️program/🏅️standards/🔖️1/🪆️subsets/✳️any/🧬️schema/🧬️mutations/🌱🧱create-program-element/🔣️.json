@@ -5,7 +5,7 @@
   "displayName": "Create Program Element",
   "emoji": "🌱🧱",
   "aggregateVariant": "CreateProgramElement",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

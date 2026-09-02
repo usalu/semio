@@ -5,7 +5,7 @@
   "displayName": "Insert Block",
   "emoji": "📦",
   "aggregateVariant": "InsertBlock",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

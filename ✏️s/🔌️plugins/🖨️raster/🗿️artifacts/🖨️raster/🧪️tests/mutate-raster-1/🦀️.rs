@@ -22,7 +22,7 @@ use semio_repo_test_host::Adapter;
 
 //#region 🔖️Kinds
 /// 🏷️ Mirrors `KINDS` in
-/// `../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs` — duplicated, not
+/// `../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs` — duplicated, not
 /// imported, because the oracle-only build must not link the subject crate. The contract's
 /// mutation-coverage gate keeps this list honest against the catalog and
 /// `kinds_match_the_enum_and_the_catalog` in that production file keeps it honest against the enum.
@@ -48,7 +48,7 @@ const KINDS: &[&str] = &[
 const UNOBSERVABLE: &[&str] = &["add-layer-asset", "remove-layer-asset"];
 
 /// 🚨️ The diagnostic code a declared no-op or refusal must raise, from the leaf's own committed
-/// `🎯️outcome/🔣️component.json`. A vector that stopped raising it would otherwise be
+/// `🎯️outcome/🔣️.json`. A vector that stopped raising it would otherwise be
 /// indistinguishable from a mutation that quietly did nothing. Read only by the subject role —
 /// the oracle role answers with the committed after-document, which already IS the declared outcome.
 #[cfg(feature = "sut")]
@@ -58,7 +58,7 @@ const DECLARED_CODE: &[(&str, &str)] = &[("remove-layer-asset", "mutation.target
 
 //#region 🔖️Fixtures
 /// 🚨️ The diagnostic code a declared no-op or refusal must raise, from the leaf's own committed
-/// `🎯️outcome/🔣️component.json`. A vector that stopped raising it would otherwise be
+/// `🎯️outcome/🔣️.json`. A vector that stopped raising it would otherwise be
 /// indistinguishable from a mutation that quietly did nothing. The three snapshot and mutation files
 /// themselves are read through the plan's declared fixtures instead, so both implementations read
 /// the SAME bytes and neither holds a transcription that could drift from what the other one read.
@@ -194,7 +194,7 @@ mod subject {
     /// The CARRIER identity is Rust-only and asserted here in role, on the artifact's own committed
     /// example: the reparsed document must agree with the first parse, and the reprinted text must
     /// reproduce the committed bytes. The byte half is `carrier_is_exact` rather than the wave's
-    /// usual no-pass-through tripwire because the committed `🗣️example.dsl.semio` is this codec's OWN
+    /// usual no-pass-through tripwire because the committed `🗣️.dsl.semio` is this codec's OWN
     /// canonical output, committed as the artifact's example.
     ///
     /// The DOCUMENT identity is what the Python reference can also produce: the document this

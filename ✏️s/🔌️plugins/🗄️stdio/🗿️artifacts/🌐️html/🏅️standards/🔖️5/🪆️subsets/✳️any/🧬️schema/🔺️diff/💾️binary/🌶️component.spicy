@@ -1,5 +1,0 @@
-module Stdio_html_diff;
-# UTF-8 bytes of print_diff's output, verbatim -- see the sibling ../📝️text/📖️component.grammar.semio.
-type Document = unit {
-    diff_text: bytes &eod;
-};

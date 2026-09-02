@@ -12,14 +12,14 @@
 // binary (`../🏭️generator/🦀️quick-xml-oracle-codec`, depends on nothing but `quick-xml` 0.42) via
 // its `project` subcommand — this file only shells out to it and performs the GATING structural
 // comparison itself, over the SAME JSON shape this subset's own `semantic-xml-v1` comparison profile
-// describes and this subset's own `🧪️oracle/🦀️component.rs::project_xml_1_0` independently produces
+// describes and this subset's own `🦀️oracle.rs::project_xml_1_0` independently produces
 // (declaration, doctype, prolog, and the full element tree with attributes as an unordered
 // name/value map) — no XML semantics computed here, only projection + compare.
 //
-// This subset ALSO carries a `🧪️oracle/🦀️component.rs` registered `cross-semio-implementation` —
+// This subset ALSO carries a `🦀️oracle.rs` registered `cross-semio-implementation` —
 // that module COMPUTES what a mutation should produce. This probe suite is a DIFFERENT mechanism:
 // the expected state is never computed, it is COMMITTED as the `after` half of a byte-reproducible
-// fixture, and `quick-xml` reads BOTH sides independently. See `../🧪️oracle/🔣️.json`'s own
+// fixture, and `quick-xml` reads BOTH sides independently. See `../🔣️oracle.json`'s own
 // `quick-xml-1-0-mutate-reader` oracle rationale.
 //
 // Usage — one probe per invocation, one typed report on stdout:

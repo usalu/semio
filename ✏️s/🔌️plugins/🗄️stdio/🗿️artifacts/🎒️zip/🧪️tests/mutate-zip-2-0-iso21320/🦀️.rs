@@ -4,7 +4,7 @@
 //! Every scenario copies the immutable real-world fixture into the case work directory first; the
 //! committed archive is never written to. `oracle` drives the registered `zip` reference
 //! implementation through this subset's own oracle module
-//! (`../../🏅️standards/🔖️2.0/🪆️subsets/✳️iso21320/🧪️oracle/🦀️component.rs`), which is the only
+//! (`../../🏅️standards/🔖️2.0/🪆️subsets/✳️iso21320/🦀️oracle.rs`), which is the only
 //! producer in the comparison that can honour a per-member compression method; `subject` drives this
 //! repository's own decode/mutate/encode round trip through the real `ZipIso21320Mutation`
 //! vocabulary. Both results are read back by the INDEPENDENT `zip` reader before the
@@ -17,8 +17,8 @@ use semio_s_plugin_stdio_test_oracle::law::{carrier_is_exact, inverse_restores, 
 
 //#region 🔖️Input
 /// 🦠️ Every declared `ZipIso21320Mutation` variant, kebab-case — mirrors
-/// `../../🏅️standards/🔖️2.0/🪆️subsets/✳️iso21320/🧬️schema/🧬️mutations/🦀️component.rs`'s `KINDS` and
-/// that subset's `🧪️oracle/🔣️.json` catalog. Declared locally rather than imported so the
+/// `../../🏅️standards/🔖️2.0/🪆️subsets/✳️iso21320/🧬️schema/🧬️mutations/🦀️.rs`'s `KINDS` and
+/// that subset's `🔣️oracle.json` catalog. Declared locally rather than imported so the
 /// oracle-only role's registration loop never has to link `semio-s-plugin-stdio`.
 const KINDS: &[&str] = &["set-snapshot", "set-archive-comment", "add-stored-entry", "add-deflated-entry", "remove-entry", "rename-entry", "set-entry-data"];
 

@@ -14,18 +14,18 @@ what this file implements, from the specification, in another language.
 
 **What it was written from.**
 
-* ``🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🔣️component.json`` — `JackSnapshot` is
+* ``🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🔣️.json`` — `JackSnapshot` is
   `schema`, `name`, `manifestId`, `manifest`, `camera`, `nodes`, `edges` and `rootNodeId`; a `Node`
   is `{id, kind, name, x, y, width, height, properties, ports}` and a `Port` is
   `{id, kind, direction, properties}`; an `Edge` is `{id, kind, source, target, properties}`; both
   property bags are open objects, everything else is `additionalProperties: false`.
-* ``…/🧬️schema/🧬️mutations/📝️text/📖️component.grammar.semio`` — the eight verbs and their positional
+* ``…/🧬️schema/🧬️mutations/📝️text/📖️.grammar.semio`` — the eight verbs and their positional
   argument lists, including `entity = "node" ":" id / "edge" ":" id` for the two property verbs.
 * the eight committed specification vectors, which give the INTERNALLY tagged wire form of each verb
   and — this is all they give — its REJECTION rule.
 
 **A defect in the specification, found while writing this and reported rather than worked around.**
-``…/🧬️schema/🧬️mutations/🔣️component.json`` does not describe the mutations at all: it is a verbatim
+``…/🧬️schema/🧬️mutations/🔣️.json`` does not describe the mutations at all: it is a verbatim
 copy of the snapshot schema, `title` changed to `JackMutation` and nothing else. The wire form was
 therefore read off the committed vectors, which spell it internally tagged and — inconsistently —
 mix camelCase discriminators with snake_case arguments (`new_name`, `new_value`).
@@ -42,7 +42,7 @@ delete that left a dangling edge behind would produce a document the format refu
 This implementation therefore cascades, and says so; the feature's `delete-node` row nevertheless
 addresses a node no edge names, so the cross-language comparison never rests on the inference.
 
-**No Rust was read to write this.** `🦀️component.rs` beside this file registers the SUBJECT half
+**No Rust was read to write this.** `🦀️.rs` beside this file registers the SUBJECT half
 only.
 """
 

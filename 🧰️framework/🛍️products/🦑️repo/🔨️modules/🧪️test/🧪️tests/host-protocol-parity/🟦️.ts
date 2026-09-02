@@ -9,7 +9,7 @@
 //#region 🔌️Adapters
 import { existsSync } from "node:fs";
 import { join, sep } from "node:path";
-import { defineTestAdapter, digest } from "../../📦️packages/🟦️typescript/📦️index.ts";
+import { defineTestAdapter, digest } from "../../📦️packages/🟦️typescript/🟦️.ts";
 //#endregion 🔌️Adapters
 
 //#region 🧭️Adapter

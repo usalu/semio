@@ -5,7 +5,7 @@
   "displayName": "Create User Profile",
   "emoji": "🌱🧑",
   "aggregateVariant": "CreateUserProfile",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

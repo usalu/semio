@@ -1,0 +1,6 @@
+/** 🧪️ Focused move-primitive-attribute mutation-law probe. */
+import type { GltfSnapshot } from '../../../📸️snapshot/🟦️.ts';
+import { applyGltfMovePrimitiveAttribute, type GltfMovePrimitiveAttributePayload } from '../../move-primitive-attribute/🟦️.ts';
+import { deriveGltfMovePrimitiveAttributeDiff } from '../../move-primitive-attribute/🔺️diff/🟦️.ts';
+import { deriveGltfMovePrimitiveAttributeInverse } from '../../move-primitive-attribute/↩️inverse/🟦️.ts';
+export const assertGltfMovePrimitiveAttributeLaws = (base: GltfSnapshot, payload: GltfMovePrimitiveAttributePayload) => { const applied = applyGltfMovePrimitiveAttribute(base, payload); if (!applied.accepted) return applied; const replay = applyGltfMovePrimitiveAttribute(base, payload); const direct = deriveGltfMovePrimitiveAttributeDiff(base, payload); const undo = deriveGltfMovePrimitiveAttributeInverse(base, payload); if (!replay.accepted || !direct.accepted || !undo.accepted || JSON.stringify(applied.snapshot) !== JSON.stringify(replay.snapshot) || JSON.stringify(applied.diff) !== JSON.stringify(replay.diff) || JSON.stringify(applied.touchedPaths) !== JSON.stringify(undo.touchedPaths)) throw new Error('move-primitive-attribute violates replay, direct-diff, or undo determinism'); return { applied, direct, undo }; };

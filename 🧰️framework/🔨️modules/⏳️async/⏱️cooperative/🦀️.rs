@@ -52,7 +52,7 @@ fn cooperative_maintenance_snapshot_contention_preserves_queued_job() {
 
 #[test]
 fn cooperative_maintenance_live_host_revisits_queued_owner() {
-    let source = include_str!("../../../🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️component.rs");
+    let source = include_str!("../../../🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️.rs");
     assert!(exact_live_pump_binding(source), "queued maintenance must retain one actual host pump opportunity");
     for hostile in [
         source.replace("pump_runtime_live_cooperative_turn(&cell)?;", "other_pump(&cell)?;"),

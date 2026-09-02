@@ -6,15 +6,15 @@ third-party library in any ecosystem speaks, so the second producer THE STANDARD
 second IMPLEMENTATION, written in another language from the format's own committed specification:
 
 * the envelope — the mandatory `semio <envelope-id>.dsl v<version>` preamble line — is specified in
-  `🧰️framework/🛍️products/💻️os/🔨️modules/🧬️semio/🦀️component.rs`'s envelope section, which is the
+  `🧰️framework/🛍️products/💻️os/🔨️modules/🧬️semio/🦀️.rs`'s envelope section, which is the
   carrier's normative description;
 * the DSL body is the committed grammar
-  `../../🏅️standards/🔖️v1/🪆️subsets/✳️audio/🧬️schema/📸️snapshot/📝️text/📖️component.grammar.semio`
+  `../../🏅️standards/🔖️v1/🪆️subsets/✳️audio/🧬️schema/📸️snapshot/📝️text/📖️.grammar.semio`
   — `document = artifact-mark schema-line sample-rate-line format-line channels-line tags-line`,
   `channel = "[" sample-list? "]"`, `tag = "[" hex "," hex "]"`, and
   `format = "pcm8" | "pcm16" | "pcm24" | "pcm32" | "f32" | "f64"`;
 * the ten verbs and their positional argument lists are the committed grammar
-  `…/🧬️schema/🧬️mutations/📝️text/📖️component.grammar.semio`, and their JSON wire form is this
+  `…/🧬️schema/🧬️mutations/📝️text/📖️.grammar.semio`, and their JSON wire form is this
   case's committed per-kind specification vectors under `🧫️fixtures/`.
 
 Two leaves the grammar states by reference rather than in full, and how each was settled:
@@ -75,7 +75,7 @@ RECORDING_DSL = "local://🗣️bauen-mit-bestand-ausschnitt.dsl.semio"
 #: committed specification vectors: its file was written by the RUST codec, so this implementation
 #: reproducing it is a cross-language byte agreement the recording — written by this implementation —
 #: cannot restate.
-TONE_DSL = "asset://🏅️standards/🔖️v1/🪆️subsets/✳️any/📚️examples/🎵️tone/🖼️assets/🗣️example.dsl.semio"
+TONE_DSL = "asset://🏅️standards/🔖️v1/🪆️subsets/✳️any/📚️examples/🎵️tone/🖼️assets/🗣️.dsl.semio"
 
 # endregion 🔖️Vocabulary
 

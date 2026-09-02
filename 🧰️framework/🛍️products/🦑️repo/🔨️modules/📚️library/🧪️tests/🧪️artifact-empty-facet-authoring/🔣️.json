@@ -18,7 +18,7 @@
     "🎭️modes/{mode}/🪟️windows/🪟️main/👥️presence/📝️.md", "🎭️modes/{mode}/🪟️windows/🪟️main/🫧️transient/📝️.md"
   ],
   "subsetLayout": [
-    "🦀️.rs", "🟦️.ts", "🧬️schema/🦀️.rs", "🧬️schema/🟦️.ts", "🚪️io/🦀️.rs", "🚪️io/🟦️.ts",
+    "🦀️.rs", "🟦️.ts", "🧬️schema/🦀️component.rs", "🧬️schema/🟦️.ts", "🚪️io/🦀️.rs", "🚪️io/🟦️.ts",
     "🚪️io/📸️snapshot/📝️text/🦀️.rs", "🚪️io/📸️snapshot/💾️binary/🦀️.rs",
     "🚪️io/🔺️diff/📝️text/🦀️.rs", "🚪️io/🔺️diff/💾️binary/🦀️.rs",
     "🚪️io/💡️inferences/📝️.md", "🚪️io/🧬️mutations/📝️.md",

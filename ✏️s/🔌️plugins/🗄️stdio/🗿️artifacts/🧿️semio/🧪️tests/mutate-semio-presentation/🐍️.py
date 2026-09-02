@@ -10,13 +10,13 @@ format's own committed specification:
 
 * the envelope — `semio <schema>.dsl v<version>` preamble for text, and the
   `0x89 'S' 'E' 'M' 0D 0A 1A 0A` magic + little-endian u32 token length + token for binary — is
-  specified in `🧰️framework/🛍️products/💻️os/🔨️modules/🧬️semio/🦀️component.rs`'s envelope section;
+  specified in `🧰️framework/🛍️products/💻️os/🔨️modules/🧬️semio/🦀️.rs`'s envelope section;
 * the DSL body is the committed grammar
-  `../../🏅️standards/🔖️v1/🪆️subsets/✳️presentation/🧬️schema/📸️snapshot/📝️text/📖️component.grammar.semio`
+  `../../🏅️standards/🔖️v1/🪆️subsets/✳️presentation/🧬️schema/📸️snapshot/📝️text/📖️.grammar.semio`
   — `document = artifact-mark schema-line masters-line layouts-line slides-line`, the four
   single-letter `shape` tags, the seven `placeholder-kind` letters, and document's own `block`
   family verbatim, with every numeric leaf printed as the decimal of `f64::to_bits()`;
-* the pack body is the committed protocol `…/📸️snapshot/💾️binary/📡️component.protocol.semio` and
+* the pack body is the committed protocol `…/📸️snapshot/💾️binary/📡️.protocol.semio` and
   its Kaitai mirror, which state the `format` byte and the varint-length-prefixed `schema` and then
   declare the collections an opaque `payload` chain — naming, though, exactly what is inside it:
   *"a data-carrying tagged `SlideShape` union whose `TextBox`/`Table` variants further embed
@@ -27,7 +27,7 @@ format's own committed specification:
   against a readable spelling; the derivation is then pinned by re-encoding that committed file byte
   for byte, which a misreading could not do;
 * the fifteen verbs, their argument lists and their JSON wire form are the committed grammar
-  `…/🧬️schema/🧬️mutations/📝️text/📖️component.grammar.semio`, the committed proto/JSON schema
+  `…/🧬️schema/🧬️mutations/📝️text/📖️.grammar.semio`, the committed proto/JSON schema
   mirrors and the committed `(before, mutation, after)` specification vectors in this case's own
   `🧫️fixtures/`, which pin each verb's semantics.
 
@@ -91,7 +91,7 @@ KINDS = (
 
 TALK_DSL = "local://🗣️talk.dsl.semio"
 TALK_PACK = "local://🎒️talk.pack.semio"
-DECK_DSL = "asset://🏅️standards/🔖️v1/🪆️subsets/✳️any/📚️examples/📽️deck/🖼️assets/🗣️example.dsl.semio"
+DECK_DSL = "asset://🏅️standards/🔖️v1/🪆️subsets/✳️any/📚️examples/📽️deck/🖼️assets/🗣️.dsl.semio"
 DECK_PACK = "asset://🏅️standards/🔖️v1/🪆️subsets/✳️any/📚️examples/📽️deck/🖼️assets/🎒️example.pack.semio"
 
 

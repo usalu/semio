@@ -5,7 +5,7 @@
   "displayName": "Scale Target Volume",
   "emoji": "📐",
   "aggregateVariant": "ScaleTargetVolume",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": "scale-target-volume",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

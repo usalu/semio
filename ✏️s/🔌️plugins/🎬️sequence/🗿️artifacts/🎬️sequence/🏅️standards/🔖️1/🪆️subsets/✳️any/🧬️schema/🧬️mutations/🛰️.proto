@@ -1,0 +1,24 @@
+syntax = "proto3";
+package semio.s.sequence.sequence.mutation;
+
+import "🌱create-step/🛰️.proto";
+import "🗑️delete-step/🛰️.proto";
+import "📍move-step/🛰️.proto";
+import "🔧edit-step-params/🛰️.proto";
+import "🗂️change-step-collapsed/🛰️.proto";
+import "🔗connect-steps/🛰️.proto";
+import "✂️disconnect-steps/🛰️.proto";
+import "🧬duplicate-step/🛰️.proto";
+
+message SequenceMutation {
+  oneof mutation {
+    CreateStep create_step = 1;
+    DeleteStep delete_step = 2;
+    MoveStep move_step = 3;
+    EditStepParams edit_step_params = 4;
+    ChangeStepCollapsed change_step_collapsed = 5;
+    ConnectSteps connect_steps = 6;
+    DisconnectSteps disconnect_steps = 7;
+    DuplicateStep duplicate_step = 8;
+  }
+}

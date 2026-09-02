@@ -5,7 +5,7 @@
   "displayName": "Set Block Entity Geometry",
   "emoji": "🔺",
   "aggregateVariant": "SetBlockEntityGeometry",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

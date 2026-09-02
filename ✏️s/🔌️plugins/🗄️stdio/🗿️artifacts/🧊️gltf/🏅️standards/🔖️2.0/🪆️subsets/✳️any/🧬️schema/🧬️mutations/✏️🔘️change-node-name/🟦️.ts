@@ -1,7 +1,7 @@
 /** 🧬️ Typed change-node-name apply and local restore operations. */
-import type { GltfSnapshot } from '../../📸️snapshot/🟦️component.ts';
-import { reject, run, type GltfLeafResult, type GltfMutationRejection } from '../../../🔨️modules/🧬️mutation-support/📚️top-level/🟦️component.ts';
-import { itemIndex } from '../../../🔨️modules/🧬️mutation-support/🧱️structure-geometry/🟦️component.ts';
+import type { GltfSnapshot } from '../../📸️snapshot/🟦️.ts';
+import { reject, run, type GltfLeafResult, type GltfMutationRejection } from '../../../🔨️modules/🧬️mutation-support/📚️top-level/🟦️.ts';
+import { itemIndex } from '../../../🔨️modules/🧬️mutation-support/🧱️structure-geometry/🟦️.ts';
 
 //#region 🔖️Payload
 export const GltfChangeNodeNameDescriptor = { id: 's.stdio.gltf.mutation.change-node-name.v1', version: 1, kind: 'change', touchedPaths: ['document/nodes/*/name'], referencePolicy: 'none' } as const;

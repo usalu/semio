@@ -5,7 +5,7 @@
   "displayName": "Set Relation",
   "emoji": "🔗",
   "aggregateVariant": "SetRelation",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

@@ -5,7 +5,7 @@
   "displayName": "Replace Trajectory",
   "emoji": "🛣️",
   "aggregateVariant": "ReplaceTrajectory",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": "replace-trajectory",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

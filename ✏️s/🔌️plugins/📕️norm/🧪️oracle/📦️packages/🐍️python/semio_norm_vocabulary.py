@@ -35,7 +35,7 @@ camelCase payload spellings the fifteen norm subsets committed — never from a 
 out of `🧬️mutations/**`.
 
 ⚠️ Honest boundary, the CARRIER. `.dsl.semio` has no specification here: every norm subset's committed
-`🧬️schema/📸️snapshot/📝️text/📖️component.grammar.semio` is the repository-wide placeholder whose whole
+`🧬️schema/📸️snapshot/📝️text/📖️.grammar.semio` is the repository-wide placeholder whose whole
 body is `payload = OCTET+`, and the framework's own DSL notation module publishes no grammar document
 either. `identity_handler` below therefore reads the committed artifact at the CARRIER level — the
 envelope preamble and the ordered `key=value` fields as written — a shape derived from those
@@ -47,7 +47,7 @@ cannot describe, and this module REFUSES them rather than guessing; that refusal
 finding about the specification, not a defect to be tuned away.
 
 🔗 Reached by the fifteen adapters through the `oracleHostPackage` this plugin's
-`🧪️oracle/🔣️.json` declares, which puts this directory on the generated host's import path.
+`🔣️oracle.json` declares, which puts this directory on the generated host's import path.
 """
 
 
@@ -696,7 +696,7 @@ def parse_dsl(envelope, text):
                     "identity-round-trip: this artifact's carrier cannot be read by a second implementation. %r is not a "
                     "`key=value` field: the notation nests records and tables and flattens nested records into "
                     "`key=key=value` runs with no delimiter, and this repository publishes no grammar for it — the "
-                    "subset's own `🧬️schema/📸️snapshot/📝️text/📖️component.grammar.semio` is the repository-wide "
+                    "subset's own `🧬️schema/📸️snapshot/📝️text/📖️.grammar.semio` is the repository-wide "
                     "`payload = OCTET+` placeholder and the framework's DSL notation module carries no grammar document "
                     "either. Reconstructing these bytes would mean inferring a grammar from one example rather than "
                     "reading a specification, so this implementation refuses instead of pretending. The mutation "
@@ -774,10 +774,10 @@ def vector(subset, ctx, kind):
     directory, fixture = subset.vectors[kind]
     stem = "%s/%s/🧪️tests/%s" % (subset.vector_root, directory, fixture)
     return (
-        read_json(ctx, "%s/📸️snapshot/⬅️before/🔣️component.json" % stem),
-        read_json(ctx, "%s/🦠️mutation/🔣️component.json" % stem),
-        read_json(ctx, "%s/📸️snapshot/➡️after/🔣️component.json" % stem),
-        read_json(ctx, "%s/🎯️outcome/🔣️component.json" % stem),
+        read_json(ctx, "%s/📸️snapshot/⬅️before/🔣️.json" % stem),
+        read_json(ctx, "%s/🦠️mutation/🔣️.json" % stem),
+        read_json(ctx, "%s/📸️snapshot/➡️after/🔣️.json" % stem),
+        read_json(ctx, "%s/🎯️outcome/🔣️.json" % stem),
     )
 
 

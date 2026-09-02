@@ -5,7 +5,7 @@
   "displayName": "Set Sample Precision",
   "emoji": "⚙",
   "aggregateVariant": "SetSamplePrecision",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

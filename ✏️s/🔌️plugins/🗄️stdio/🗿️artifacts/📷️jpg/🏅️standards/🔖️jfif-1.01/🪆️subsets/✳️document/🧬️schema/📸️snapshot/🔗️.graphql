@@ -1,0 +1,79 @@
+# 🧬️ JpgSnapshot schema facet — mirrors 🦀️.rs field-for-field.
+
+"📏️ JFIF APP0 units byte. ASPECT means x/y density are merely a pixel aspect ratio."
+enum JfifDensityUnits {
+  ASPECT
+  PIXELS_PER_INCH
+  PIXELS_PER_CM
+}
+
+"🖼️ JFIF APP0's optional embedded thumbnail — uncompressed 24-bit RGB."
+type JfifThumbnail {
+  width: Int!
+  height: Int!
+  rgbData: [Int!]!
+}
+
+"🧩️ One SOF0 frame component descriptor. Id-keyed within JpgFrameHeader.components."
+type JpgFrameComponent {
+  id: Int!
+  hSampling: Int!
+  vSampling: Int!
+  quantTableId: Int!
+}
+
+"🖼️ Baseline (SOF0) frame header."
+type JpgFrameHeader {
+  precision: Int!
+  width: Int!
+  height: Int!
+  components: [JpgFrameComponent!]!
+}
+
+"📊️ One DQT table (id-keyed within JpgSnapshot.quantTables). values is EXACT zigzag scan order."
+type JpgQuantTable {
+  id: Int!
+  precision: Int!
+  values: [Int!]!
+}
+
+"🌳️ DHT table class."
+enum JpgHuffmanClass {
+  DC
+  AC
+}
+
+"🌳️ One DHT table, keyed by (class, id) within JpgSnapshot.huffmanTables."
+type JpgHuffmanTable {
+  id: Int!
+  class: JpgHuffmanClass!
+  bits: [Int!]!
+  values: [Int!]!
+}
+
+"🗃️ An other APPn/COM segment retained verbatim. Index-keyed within JpgSnapshot.otherSegments."
+type JpgSegment {
+  marker: Int!
+  data: [Int!]!
+}
+
+"📸️ Complete stdio.jpg jfif-1.01 semantic snapshot. schema is an identity field, never diffed."
+type JpgSnapshot {
+  schema: String! @state(class: ARTIFACT)
+  width: Int! @state(class: ARTIFACT)
+  height: Int! @state(class: ARTIFACT)
+  pixels: [Int!]! @state(class: ARTIFACT)
+  reEncodeQuality: Int @state(class: ARTIFACT)
+  jfifVersion: [Int!]! @state(class: ARTIFACT)
+  jfifDensityUnits: JfifDensityUnits! @state(class: ARTIFACT)
+  jfifXDensity: Int! @state(class: ARTIFACT)
+  jfifYDensity: Int! @state(class: ARTIFACT)
+  jfifThumbnail: JfifThumbnail @state(class: ARTIFACT)
+  frame: JpgFrameHeader @state(class: ARTIFACT)
+  sofMarker: Int! @state(class: ARTIFACT)
+  arithmetic: Boolean! @state(class: ARTIFACT)
+  quantTables: [JpgQuantTable!]! @state(class: ARTIFACT)
+  huffmanTables: [JpgHuffmanTable!]! @state(class: ARTIFACT)
+  restartInterval: Int @state(class: ARTIFACT)
+  otherSegments: [JpgSegment!]! @state(class: ARTIFACT)
+}

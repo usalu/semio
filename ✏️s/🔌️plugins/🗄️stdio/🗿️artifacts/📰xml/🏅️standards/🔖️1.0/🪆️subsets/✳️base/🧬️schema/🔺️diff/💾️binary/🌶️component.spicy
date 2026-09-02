@@ -1,5 +1,0 @@
-module Stdio_xml_diff;
-# UTF-8 JSON encoding of XmlDiff -- see the sibling ../🔣️component.json shape.
-type Document = unit {
-    json_payload: bytes &eod;
-};

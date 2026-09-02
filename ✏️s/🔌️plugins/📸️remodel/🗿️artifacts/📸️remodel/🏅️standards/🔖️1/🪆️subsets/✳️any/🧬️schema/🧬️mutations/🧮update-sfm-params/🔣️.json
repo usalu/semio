@@ -5,7 +5,7 @@
   "displayName": "Update Sfm Params",
   "emoji": "🧮",
   "aggregateVariant": "UpdateSfmParams",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": "update-sfm-params",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

@@ -13,7 +13,7 @@ pub struct UpsertInstance {
 }
 
 impl protocol::MutationKind<Ifc2x3Snapshot, Ifc2x3Mutation> for UpsertInstance {
-    const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "update", entity: "instance", kind: "upsert-instance", record: "UpsertInstance" };
+    const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "instance", kind: "upsert-instance", record: "UpsertInstance" };
 
     fn diff(&self, base: &Ifc2x3Snapshot) -> protocol::MutationOutcome<<Ifc2x3Mutation as protocol::Mutation<Ifc2x3Snapshot>>::Diff> {
         agg_diff(&Ifc2x3Mutation::UpsertInstance(self.clone()), base)

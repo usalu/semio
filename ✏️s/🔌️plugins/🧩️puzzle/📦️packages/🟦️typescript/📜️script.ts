@@ -2,7 +2,7 @@
 /** 🧩️ `@semio-tech/puzzle-js` router: `bun ./📜️script.ts test`. */
 import { resolve } from "node:path";
 import Ajv from "ajv";
-import { BundleScript, ScriptRouter, resolveTestLevel, runBundleScriptMain, runVitest } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts";
+import { BundleScript, ScriptRouter, resolveTestLevel, runBundleScriptMain, runVitest } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 
 class TestScript extends BundleScript {
   run(segments: string[]): void {
@@ -151,8 +151,8 @@ function ownerOracle(owner: PublicationOwner, source: string): boolean {
 class PublicationAuthorityAuditScript extends BundleScript {
   async run(): Promise<void> {
     const puzzleRoot = resolve(this.root, "../..");
-    const fixture = await Bun.file(resolve(puzzleRoot, "🧪️publication-authority/🔣️component.json")).json() as PublicationFixture;
-    const schema = await Bun.file(resolve(puzzleRoot, "🧪️publication-authority/🔣️schema.json")).json();
+    const fixture = await Bun.file(resolve(puzzleRoot, "🔣️publication-authority.json")).json() as PublicationFixture;
+    const schema = await Bun.file(resolve(puzzleRoot, "🔣️publication-authority.schema.json")).json();
     const validate = new Ajv({ allErrors: true, strict: true }).compile(schema);
     if (!validate(fixture)) throw new Error(`Puzzle publication fixture failed Ajv validation: ${JSON.stringify(validate.errors)}`);
     if (!fixtureOracle(fixture)) throw new Error("Puzzle publication fixture failed the independent semantic oracle");

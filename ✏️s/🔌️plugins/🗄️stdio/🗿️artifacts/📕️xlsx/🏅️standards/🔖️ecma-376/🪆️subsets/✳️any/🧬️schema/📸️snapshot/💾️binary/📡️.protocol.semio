@@ -1,0 +1,117 @@
+dialect protocol
+protocol stdio.xlsx.snapshot
+version 1
+schema stdio.xlsx
+start entries
+framing chunked
+
+# FG-wave (xlsx follows docx's OPC pattern-setter, see this ticket's own brief): `stdio.xlsx`
+# (ECMA-376 SpreadsheetML) IS a ZIP/OPC package -- its own real codec (`⚙️engine/🦀️.rs`'s
+# `encode_xlsx`/`decode_xlsx`) delegates the ENTIRE byte-level container to
+# `crate::artifacts::zip::opc::{encode_opc, decode_opc}` (:519,523), which itself delegates to
+# `crate::artifacts::zip::engine::{encode_zip, decode_zip}` (confirmed real, not aspirational, per
+# this ticket's own `p2-w0-recon-report.md` xlsx row). So the real byte layout THIS file must
+# describe is exactly zip's own real ZIP 2.0 layout -- restated verbatim from
+# `🎒️zip/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/📸️snapshot/💾️binary/📡️.protocol.semio`
+# (the OPC family's own citation precedent this ticket's brief names, already restated once by
+# docx's own just-landed sibling file) since cross-artifact `use` does not resolve at walk time
+# (`📖️grammar-recipe.md` §2.1/§3) -- only `protocol`/`schema` differ from zip's own file; every
+# field, tag, and M2 construct below is identical to that file. Models the bytes as if the walk
+# already starts AT the payload, past the SEMIO envelope (M3's own guidance, not re-described here).
+#
+# Three real structures, in this exact block order (each `arm 0x504B....` tag literal is the
+# BIG-ENDIAN byte representation of the real on-disk 4-byte magic, e.g. `0x504B0304` decodes to
+# bytes `50 4B 03 04` = literal `PK\x03\x04`):
+#
+# 1. `entries` (repeat, forward from byte 0): local file headers + per-entry payload
+#    (`PK\x03\x04`) -- for xlsx this is every OPC part's compressed bytes: `[Content_Types].xml`,
+#    `_rels/.rels`, `xl/workbook.xml`, `xl/_rels/workbook.xml.rels`, every `xl/worksheets/
+#    sheetN.xml`, `xl/sharedStrings.xml`, and any unmodeled part this artifact's own raw-retention
+#    rule keeps verbatim (`xl/styles.xml`, themes, calc chain, …) -- until the first
+#    central-directory signature (`PK\x01\x02`) is seen.
+# 2. `eocd` (backward-scan): ZIP's End Of Central Directory record is genuinely NOT locatable by a
+#    forward walk (its own comment field is 0-65535 bytes) -- scans backward from EOF for
+#    `PK\x05\x06`, same real necessity zip's own file documents.
+# 3. `central_dir_start` (jump) + `central_directory` (repeat): `cd_offset`, decoded by the
+#    backward-scan block above, is the ABSOLUTE offset of the first central-directory record --
+#    `jump` repositions `pos` there (M2's cross-block field-env threading), then
+#    `central_directory` reads the real, repeated per-entry metadata (`PK\x01\x02`) until the EOCD
+#    signature (already fully captured by block 2) is seen again.
+#
+# Per M2's own report (`p2-m2-report.md`, deviation #1) and the plan's own explicit latitude: the
+# OPTIONAL per-entry `local_off` backward-jump-to-local-header cross-validation `decode_zip` also
+# performs is NOT modeled here -- `repeat`'s arm bodies cannot yet embed a `jump` sub-directive per
+# iteration (M2's own documented boundary, `repeat-cannot-embed-jump` in
+# `📖️grammar-recipe.md` §5) -- the central directory's own real per-entry fields (incl.
+# `local_off` itself, decoded but not dereferenced) are the honest, complete model this wave ships.
+#
+# Also NOT modeled: the optional trailing streaming data-descriptor (general-purpose bit 3) after
+# an entry's payload -- `encode_zip` NEVER emits one (always clears bit 3), matching zip's own
+# file's identical carve-out.
+#
+# Because this file declares `backward`/`jump` blocks, the walk is (correctly, per M2's own
+# documented exception) no longer required to land on exactly `bytes.len()`.
+
+# ── 1. Local file headers + payload, forward from byte 0 ──────────────────────────────────────
+repeat entries {
+  tag fixed 4
+  until 0x504B0102
+  arm 0x504B0304 {
+    version_needed u16
+    flags u16
+    method u16
+    dos_time u16
+    dos_date u16
+    crc32 u32
+    comp_size u32
+    uncomp_size u32
+    name_len u16
+    extra_len u16
+    name Array(u8, Field(name_len))
+    extra Array(u8, Field(extra_len))
+    payload Array(u8, Field(comp_size))
+  }
+  arm 0x504B0102 { }
+}
+
+# ── 2. EOCD, located by scanning backward from EOF for its own magic ──────────────────────────
+backward eocd magic 0x504B0506 {
+  disk_number u16
+  disk_cd u16
+  count u16
+  total_count u16
+  cd_size u32
+  cd_offset u32
+  comment_len u16
+  comment Array(u8, Field(comment_len))
+}
+
+# ── 3. Jump to the central directory's first record, then walk it forward, repeated ───────────
+jump central_dir_start from cd_offset { }
+
+repeat central_directory {
+  tag fixed 4
+  until 0x504B0506
+  arm 0x504B0102 {
+    version_made_by u16
+    version_needed u16
+    flags u16
+    method u16
+    dos_time u16
+    dos_date u16
+    crc32 u32
+    comp_size u32
+    uncomp_size u32
+    name_len u16
+    extra_len u16
+    comment_len u16
+    disk_start u16
+    internal_attrs u16
+    external_attrs u32
+    local_off u32
+    name Array(u8, Field(name_len))
+    extra Array(u8, Field(extra_len))
+    comment Array(u8, Field(comment_len))
+  }
+  arm 0x504B0506 { }
+}

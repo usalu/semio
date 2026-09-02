@@ -5,7 +5,7 @@
   "displayName": "Change Hr M Dot Kg S",
   "emoji": "🚿",
   "aggregateVariant": "ChangeHrMDotKgS",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

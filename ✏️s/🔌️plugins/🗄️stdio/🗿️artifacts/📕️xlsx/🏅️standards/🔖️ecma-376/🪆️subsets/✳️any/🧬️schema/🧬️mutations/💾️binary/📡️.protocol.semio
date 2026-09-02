@@ -1,0 +1,40 @@
+dialect protocol
+protocol stdio.xlsx.mutations
+version 1
+schema stdio.xlsx
+start record
+
+# FG-wave: REAL binary op frame (`format u8 | tag u8 | variant payload`), replacing F6's
+# `print_op().into_bytes()` text-as-binary shortcut (`../../🦀️.rs`'s old
+# `OpBinary::encode_op`/`decode_op`); confirmed still on that shortcut live (not assumed) by
+# direct read of this artifact's own file before this wave. `tag` is the `XlsxMutation` variant
+# ordinal, in the SAME order `print_xlsx_mutation`'s own keyword match uses (`SetSnapshot`=1,
+# `InsertSheet`=2, `RemoveSheet`=3, `RenameSheet`=4, `SetCell`=5, `RemoveCell`=6,
+# `InsertSharedString`=7, `RemoveSharedString`=8, `SetSharedString`=9 -- `NoMutation` was dropped,
+# ordinal 0 retired, not reassigned) -- both REAL fixed fields,
+# individually protocol-walked, matching docx's own `🧬️mutations/💾️binary/📡️.protocol.semio`
+# `format`/`tag` header shape (this wave's OPC pattern-setter).
+#
+# Past that header, the variant's own payload is one opaque trailing `bytes` chain: `SetSnapshot`'s
+# whole `XlsxSnapshot` (opc package + workbook) and `SetCell`'s direct `XlsxCellValue` payload
+# (whose `Formula.cached` self-nests) both carry the SAME genuinely recursive/data-carrying shapes
+# `../🔺️diff/💾️binary/📡️.protocol.semio` already hits (`protocol-prim-ref-recursion`,
+# `📖️grammar-recipe.md` §5) -- once ANY variant's payload is structurally unwalkable, bundling
+# every variant's payload into the SAME opaque tail (rather than partially structuring only the
+# simpler, flat-field variants) is the honest, minimal-surface choice, same reasoning docx's own
+# file gives.
+#
+# The Rust `encode_op`/`decode_op` side stays genuinely, fully structured past this header -- real
+# LEB128-varint-framed length-prefixed strings/bytes and recursive per-variant binary sub-encoders
+# (`enc_xlsx_snapshot_bin`/`enc_opc_package_bin`/`enc_workbook_bin`/`enc_cell_value_bin`,
+# `../../🦀️.rs`'s own `OpBinaryCodec` region), reusing this artifact's
+# `../🔺️diff/🦀️.rs` `pub(crate)` binary primitives (`write_str_lp`/`write_bytes_lp`/
+# `enc_part_bin`/`enc_rel_bin`/`enc_target_mode_bin`/`enc_sheet_bin`/`enc_cell_bin`/
+# `enc_cell_value_bin`) rather than re-deriving them a second time -- round-trip tested
+# independently of this protocol description, same honest-boundary treatment
+# `📖️grammar-recipe.md` §2.5 documents.
+framing record
+header fixed 2
+field format u8
+field tag u8
+chain payload bytes

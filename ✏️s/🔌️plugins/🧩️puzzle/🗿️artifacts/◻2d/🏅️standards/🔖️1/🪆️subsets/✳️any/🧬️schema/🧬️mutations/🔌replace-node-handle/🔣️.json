@@ -5,7 +5,7 @@
   "displayName": "Replace Node Handle",
   "emoji": "🔌",
   "aggregateVariant": "ReplaceNodeHandle",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": "replace-node-handle",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

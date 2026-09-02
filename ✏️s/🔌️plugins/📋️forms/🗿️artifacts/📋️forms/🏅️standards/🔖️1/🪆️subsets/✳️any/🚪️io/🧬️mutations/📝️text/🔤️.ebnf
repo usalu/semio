@@ -1,0 +1,43 @@
+(* ebnf forms.forms.mutations *)
+(* Below: ISO-14977-style mirror of the normative 📖️.grammar.semio (same production
+   names, kebab-case -> "space case"). This facet's .semio defines no header/body/payload
+   envelope (`start mutation`); the two lines above are preserved verbatim from the prior
+   identity fix for traceability but are not referenced below. *)
+document = header, body ;
+header = 'schema', space, 'forms.forms.mutations', newline ;
+
+mutation = create step
+     | delete step
+     | reorder step
+     | rename step
+     | change step description
+     | create block
+     | delete block
+     | move block to step
+     | replace block
+     | change form title ;
+create step = 'create-step', space, 'step=', step, space, 'index=', opt usize ;
+delete step = 'delete-step', space, 'id=', text ;
+reorder step = 'reorder-step', space, 'id=', text, space, 'to-index=', usize ;
+rename step = 'rename-step', space, 'id=', text, space, 'new-title=', text ;
+change step description = 'change-step-description', space, 'id=', text, space, 'new-description=', opt text ;
+create block = 'create-block', space, 'step-id=', text, space, 'block=', block, space, 'index=', opt usize ;
+delete block = 'delete-block', space, 'step-id=', text, space, 'id=', text ;
+move block to step = 'move-block-to-step', space, 'step-id=', text, space, 'block-id=', text, space, 'to-step-id=', text, space, 'index=', usize ;
+replace block = 'replace-block', space, 'step-id=', text, space, 'block=', block ;
+change form title = 'change-form-title', space, 'new-title=', opt text ;
+step = quoted text ;
+block = quoted text ;
+text = quoted text ;
+opt text = '-'
+     | quoted text ;
+usize = octet, { octet } ;
+opt usize = '-'
+     | usize ;
+quoted text = double quote, { octet }, double quote ;
+
+(* Framework dialect-primitive terminals, given one concrete definition each for a
+   self-contained mirror (not defined in the .semio itself — ticket-reported deviation). *)
+space = ' ' ;
+octet = ? any single raw byte ? ;
+double quote = '"' ;

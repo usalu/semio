@@ -15,7 +15,7 @@ repository's own subject.
 `importlib`, no cargo, no wasm, no semio module. The reader in `🔖️Part21Reader` was written from
 ISO 10303-21 clause 6 (`§6.4.2` control directives, `§6.2` doubled apostrophe) and clause 8
 (`§8.2.2`/`§8.2.3` header attribute order), not from
-`✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🧪️oracle/🦀️component.rs` and not from
+`✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🦀️oracle.rs` and not from
 the production `step::engine::part21` codec it is evidence about.
 
 🧫️ **The artifact is real and complex, and it is the one already committed.** `shared://🏗️nakagin-
@@ -46,7 +46,7 @@ primitive IS used here, but only as the inverse of `insert-entity`, and only beh
 `get_total_inverses(...) == 0` guard, so the cascading path is never silently taken.
 
 @see ../mutate-ifc-4/component.feature — the exhaustive eleven-kind case this one does not replace.
-@see ../../🏅️standards/🔖️4/🪆️subsets/✳️any/🧪️oracle/🔣️.json — this oracle's registration.
+@see ../../🏅️standards/🔖️4/🪆️subsets/✳️any/🔣️oracle.json — this oracle's registration.
 """
 
 from __future__ import annotations

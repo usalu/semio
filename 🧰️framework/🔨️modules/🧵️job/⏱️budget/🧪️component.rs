@@ -136,7 +136,7 @@ impl InteractiveJob for CompletionProbe {
 #[test]
 fn microsecond_exact_callback_quarantine_retains_original_output_and_session_identity() {
     assert!(install_microsecond_clock(now).is_ok());
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../⏱️trace/⏱️clock/🧪️contention/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../⏱️trace/⏱️clock/🔣️contention.json")).unwrap();
     let operation = allocate_operation_id();
     let generation = Generation(71);
     for law in fixture["verdicts"].as_array().unwrap().iter().filter(|law| !law["start"].is_null()) {

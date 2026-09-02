@@ -1,0 +1,215 @@
+# 🧬️ Layout snapshot schema — artifact-lane fields only, mirrors `📸️snapshot/🦀️.rs`'s
+# `LayoutSnapshot` field-for-field.
+
+type LayoutSnapshot {
+  schema: String! @state(class: ARTIFACT)
+  name: String! @state(class: ARTIFACT)
+  grid: GridSettings! @state(class: ARTIFACT)
+  paragraphStyles: [ParagraphStyle!]! @state(class: ARTIFACT)
+  characterStyles: [CharacterStyle!]! @state(class: ARTIFACT)
+  stories: [TextStory!]! @state(class: ARTIFACT)
+  links: [ImageLink!]! @state(class: ARTIFACT)
+  parentPages: [ParentPage!]! @state(class: ARTIFACT)
+  spreads: [Spread!]! @state(class: ARTIFACT)
+  pages: [Page!]! @state(class: ARTIFACT)
+  printTarget: String @state(class: ARTIFACT)
+  dataFieldsJson: String @state(class: ARTIFACT)
+  backgroundDrawing: LayoutDrawingChild @state(class: ARTIFACT) @child(kind: "s.stdio.semio.drawing")
+  referencedModel: ArtifactLink @state(class: ARTIFACT) @link(roles: ["model"])
+}
+
+type GridSettings {
+  baselineGrid: Float!
+  baselineOffset: Float!
+  snapToBaseline: Boolean!
+}
+
+type ParagraphStyle {
+  id: String!
+  name: String!
+  fontFamily: String!
+  fontSize: Float!
+  fontWeight: Int!
+  leading: Float!
+  tracking: Float!
+  alignment: String!
+}
+
+type CharacterStyle {
+  id: String!
+  name: String
+  fontFamily: String
+  fontSize: Float
+  fontWeight: Int
+  italic: Boolean
+  color: [Float!]
+  tracking: Float
+}
+
+type TextStyleRun {
+  start: Int!
+  end: Int!
+  paragraphStyleId: String
+  characterStyleId: String
+}
+
+type TextStory {
+  id: String!
+  content: String!
+  styleRuns: [TextStyleRun!]!
+}
+
+type ImageLink {
+  id: String!
+  path: String!
+  hash: String!
+  width: Int!
+  height: Int!
+  dpi: Int!
+  colorProfile: String
+  state: String
+  proxyDataUrl: String
+}
+
+type LayoutBounds {
+  x: Float!
+  y: Float!
+  w: Float!
+  h: Float!
+  rotation: Float!
+}
+
+type LayoutRect {
+  x: Float!
+  y: Float!
+  w: Float!
+  h: Float!
+}
+
+type PageMargins {
+  top: Float!
+  right: Float!
+  bottom: Float!
+  left: Float!
+}
+
+type PageColumns {
+  count: Int!
+  gutter: Float!
+}
+
+type Layer {
+  id: String!
+  name: String!
+  visible: Boolean!
+  locked: Boolean!
+  objectIds: [String!]!
+}
+
+union Frame = FrameRect | FrameText | FrameImage
+
+type FrameRect {
+  kind: String!
+  id: String!
+  layerId: String!
+  bounds: LayoutBounds!
+  locked: Boolean
+  visible: Boolean
+  fill: [Float!]
+  stroke: [Float!]
+}
+
+type FrameText {
+  kind: String!
+  id: String!
+  layerId: String!
+  bounds: LayoutBounds!
+  locked: Boolean
+  visible: Boolean
+  storyId: String!
+  threadNext: String
+  columns: Int!
+  inset: LayoutRect!
+  wrapMode: String!
+}
+
+type FrameImage {
+  kind: String!
+  id: String!
+  layerId: String!
+  bounds: LayoutBounds!
+  locked: Boolean
+  visible: Boolean
+  linkId: String!
+}
+
+type PageOverride {
+  objectId: String!
+  bounds: LayoutBounds
+  visible: Boolean
+  locked: Boolean
+}
+
+type ParentPage {
+  id: String!
+  name: String!
+  width: Float!
+  height: Float!
+  layerIds: [String!]!
+  layers: [Layer!]!
+  frames: [Frame!]!
+}
+
+type Page {
+  id: String!
+  name: String!
+  spreadId: String!
+  parentPageId: String
+  width: Float!
+  height: Float!
+  margins: PageMargins!
+  columns: PageColumns!
+  guides: [LayoutRect!]!
+  layerIds: [String!]!
+  layers: [Layer!]!
+  frames: [Frame!]!
+  overrides: [PageOverride!]!
+}
+
+type Spread {
+  id: String!
+  name: String!
+  pageIds: [String!]!
+}
+
+# 🌉️ Opaque mirror of `store::os_io::ArtifactRef` — a cross-cutting framework identity type, out of
+# this facet's own domain.
+type ArtifactRef { _placeholder: Boolean }
+
+# 🌉️ Mirrors `store::ArtifactChild<S>` (`#[serde(rename_all = "camelCase")]`, `childId`/`target`
+# fields only — the skip-serialized `localOwner`/phantom fields carry nothing on the wire).
+type ArtifactChildHandle {
+  childId: String!
+  target: ArtifactRef!
+}
+
+# 🌉️ Opaque mirror of `store::LinkPin` — a tagged enum (`Head` / `Checkpoint{id}` /
+# `Snapshot{blob}`), out of this facet's own domain.
+type LinkPin { _placeholder: Boolean }
+
+# 🌉️ Mirrors `store::ArtifactLink` (`target`/`pin`/`role`).
+type ArtifactLink {
+  target: ArtifactRef!
+  pin: LinkPin!
+  role: String!
+}
+
+# 🌉️ Opaque mirror of stdio's `SemioDrawingSnapshot` — a composed child subset from a different
+# plugin, out of this facet's own domain.
+type LayoutSemioDrawingSnapshot { _placeholder: Boolean }
+
+# 🌉️ Mirrors `crate::artifacts::layout::LayoutDrawingChild` (`handle`/`content`).
+type LayoutDrawingChild {
+  handle: ArtifactChildHandle!
+  content: LayoutSemioDrawingSnapshot!
+}

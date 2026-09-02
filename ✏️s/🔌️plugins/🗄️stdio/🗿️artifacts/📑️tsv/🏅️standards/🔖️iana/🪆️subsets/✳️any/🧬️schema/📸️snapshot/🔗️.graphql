@@ -1,0 +1,12 @@
+# 🧬️ TsvSnapshot schema facet — mirrors 🦀️.rs field-for-field.
+
+enum TsvLineEnding { LF CRLF }
+
+type TsvRow { fields: [String!]! }
+
+type TsvSnapshot {
+  schema: String!
+  records: [TsvRow!]!
+  trailingNewline: Boolean!
+  lineEnding: TsvLineEnding!
+}

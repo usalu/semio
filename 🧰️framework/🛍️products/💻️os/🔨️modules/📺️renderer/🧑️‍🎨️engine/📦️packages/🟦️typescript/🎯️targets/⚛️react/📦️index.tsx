@@ -585,7 +585,7 @@ import {
   usePresenceOverlayEntry,
   type UiPresenceOverlayEntry,
   type UiPresenceOverlayValue,
-} from "../../../../🧱️elements/Interpreter/🟦️component.tsx";
+} from "../../../../🧱️elements/Interpreter/🟦️.tsx";
 export {
   type UiInterpreterContext,
   usePluginSurfaceActions,
@@ -605,7 +605,7 @@ export {
   type UiPresenceOverlayEntry,
   type UiPresenceOverlayValue,
 };
-export { builtNodeToSnapshot, UiDocumentStore, emitIntent, useUiNode, useUiDocumentRoot, useUiDocumentRevision, type UiDocumentState } from "../../../../🧱️elements/UiDocumentStore/🟦️component.tsx";
+export { builtNodeToSnapshot, UiDocumentStore, emitIntent, useUiNode, useUiDocumentRoot, useUiDocumentRevision, type UiDocumentState } from "../../../../🧱️elements/UiDocumentStore/🟦️.tsx";
 //#endregion 🔖️UiInterpreter
 
 //#region 🔖️OsShell
@@ -646,7 +646,7 @@ import {
   derivePeerInteractionByDomain,
   peerIdsSelecting,
   peerIdsHovering,
-} from "../../../../🧱️elements/Shell/🟦️component.tsx";
+} from "../../../../🧱️elements/Shell/🟦️.tsx";
 export {
   UI_INSPECTOR_MIXED_PLACEHOLDER,
   type ViewModel,
@@ -689,12 +689,12 @@ import {
   initialShellState,
   type ActionPaneState,
   type ExtraWindowInstance,
-} from "../../../../🧱️elements/Shell/🟦️component.tsx";
+} from "../../../../🧱️elements/Shell/🟦️.tsx";
 export { actionStageKey, type CommandPanelState, type ShellState, type ShellAction, shellReducer, selectUiDevice, selectOpenConflicts, selectQuarantinedConflicts, initialShellState };
 //#endregion 🧮️ShellStore
 
 //#region ShellHelpers
-export type { ResolvedActionArgDef, ResolvedActionDefinition, ResolvedToolDefinition } from "../../../../🧱️elements/ShellHelpers/🟦️component.tsx";
+export type { ResolvedActionArgDef, ResolvedActionDefinition, ResolvedToolDefinition } from "../../../../🧱️elements/ShellHelpers/🟦️.tsx";
 import {
   NOTE_WORLD_NAVIGATION_ACTION_ID,
   buildNoteShellCommandAction,
@@ -790,19 +790,19 @@ import {
   type SyncPillState,
   computeSyncPillState,
   syncPillText,
-} from "../../../../🧱️elements/ShellHelpers/🟦️component.tsx";
+} from "../../../../🧱️elements/ShellHelpers/🟦️.tsx";
 export { NOTE_WORLD_NAVIGATION_ACTION_ID, buildNoteShellCommandAction, encodeEffectActionInvocation, encodeEffectCommandInvocation, TUTORIAL_RECORDING_EXCLUDED_ACTION_IDS, dispatchOpenedFiles, scheduleDispatchAction, sampleMediaFrameTimestampsMs, runTier2VideoFrames, type RequestMediaFramesArgs, runRequestMediaFrames, type SpaceShellPath, type ShellRoute, parseShellRoute, parseSpaceShellPath, appBreadcrumb, resolveAppBreadcrumb, resolveArtifactByAppId, appWindowLabel, studioPanelFocusingSpawned, viewStateWithSpacePanel, retitleWindowLayoutNode, resolveFrameworkLayoutSeed, classifyWindowLayoutChange, flattenPanelTabLeaves, panelTabDefinitionToNode, uiIntentToActionDescriptor, resolveUtilities, resolveUtilityNodes, type SelectionUtilityOptions, spawnedWindowChromeForKind, uiNodeToTreePanelConfig, synthesizeLocalizedLabel, resolveManifestLabel, shellLabel, shellTabIcon, shellTerminologyLabel, driverDisplayLabel, DEFAULT_PANEL_WIDTH_PX, createLatestAsyncDispatcher, createDirectionalAsyncDispatcher, type RevealCutoffStore, createRevealCutoffStore, worldRevealCutoffStore, PUZZLE3D_FILL_REVEAL_GROUP_ID, reconcileCommittedRevealCutoffs, isRevealCutoffHidden, createInFlightSkippingInterval, createCoalescingActionDispatcher, registeredPuzzle3dBrushMeshes, windowMeasureTreeContainsId, renderWindowMeasuresTree, renderStagedArgControl, actionRequiresStagedForm, isEditableEventTarget, keyboardEventMatchesChord, type KeybindingIntent, resolveKeybindingIntent, resolveUtilityActivation, actionCategoryId, actionCategories, buildActionCategoryTree, type WindowActionPaneProps, WindowActionPane, type ResolvedCommand, commandAddressKey, resolveCommands, commandCategories, buildOsCommands, dispatchOsCommand, buildCommandCategoryTree, buildCommandCategoryTabs, buildToolTabs, toolIdFromPanelTabId, preserveJsonIdentity, mergeRecordPreservingIdentity, type UiRefreshCache, introductionTargetsWindow, buildActiveUtilityByWindowId, buildUiRefreshRequest, applyUiRefreshResponseToCache, AUTO_CHECKIN_IDLE_MS, AUTO_CHECKIN_EDIT_THRESHOLD, AutoCheckinScheduler, canCheckIn, checkinActionText, checkinMessagePlaceholderText, checkinSubmitText, checkinCancelText, type SyncPillState, computeSyncPillState, syncPillText };
 export { pluginShouldEstablishSession };
 export { pluginShouldReceiveContributions };
 //#endregion ShellHelpers
 
 //#region Boot
-import { bootFrameworkOs } from "../../../../🧱️elements/Shell/🟦️component.tsx";
+import { bootFrameworkOs } from "../../../../🧱️elements/Shell/🟦️.tsx";
 export { bootFrameworkOs };
 //#endregion Boot
 
 //#region ErrorBoundary
-import { ShellFaultBoundary } from "../../../../🧱️elements/Shell/🟦️component.tsx";
+import { ShellFaultBoundary } from "../../../../🧱️elements/Shell/🟦️.tsx";
 export { ShellFaultBoundary };
 //#endregion ErrorBoundary
 
@@ -819,12 +819,12 @@ import {
   canonicalSurfaceId,
   reloadRetainsActiveApp,
   directoryCommandFromAction,
-} from "../../../../🧱️elements/ShellHost/🟦️component.tsx";
+} from "../../../../🧱️elements/ShellHost/🟦️.tsx";
 export { SetWindowTitleContext, SetWindowIconContext, useAppKeybindingsByActionId, useMapContextMenuSpecs, TutorialRecorder, type FrameworkOsShellProps, FrameworkOsShell, shellActorId, canonicalSurfaceId, reloadRetainsActiveApp, directoryCommandFromAction };
 //#endregion FrameworkOsShell
 
 //#region 🔖️plugin-runtime
-import { type PluginWasmHandle, loadPluginModule, adaptPluginHandle, fetchDescriptorManifest, resolveDescriptorBeforeRuntime, applyUiPatchToRetained, decodeWirePatchOps, serializeCommandIngressForActor, serializePerActor } from "../../../../🧱️elements/PluginRuntime/🟦️component.tsx";
+import { type PluginWasmHandle, loadPluginModule, adaptPluginHandle, fetchDescriptorManifest, resolveDescriptorBeforeRuntime, applyUiPatchToRetained, decodeWirePatchOps, serializeCommandIngressForActor, serializePerActor } from "../../../../🧱️elements/PluginRuntime/🟦️.tsx";
 export { type PluginWasmHandle, loadPluginModule, adaptPluginHandle, fetchDescriptorManifest, resolveDescriptorBeforeRuntime, applyUiPatchToRetained, decodeWirePatchOps, serializeCommandIngressForActor, serializePerActor };
 export type { PluginRegistryEntry };
 //#endregion 🔖️plugin-runtime
@@ -849,7 +849,7 @@ import {
   createWasmModuleLoader,
   resolveAppSurfaceSessionFactory,
   isFlowGraphScene,
-} from "../../../../🧱️elements/WasmSessionLoader/🟦️component.tsx";
+} from "../../../../🧱️elements/WasmSessionLoader/🟦️.tsx";
 export {
   createDemandFrameScheduler,
   createGraphSession,
@@ -882,12 +882,12 @@ import {
   useUIFind,
   useUIFindSafe,
   UIFind,
-} from "../../../../🧱️elements/ShellSearch/🟦️component.tsx";
+} from "../../../../🧱️elements/ShellSearch/🟦️.tsx";
 export { type UISearchItem, UISearch, type UIFindItem, type UIFindContextValue, UIFindProvider, useUIFind, useUIFindSafe, UIFind };
 //#endregion 🔖️ui-search-find
 
 //#region 🔖️sync-attach-card
-import { SyncAttachCard } from "../../../../🧱️elements/ShellSync/🟦️component.tsx";
+import { SyncAttachCard } from "../../../../🧱️elements/ShellSync/🟦️.tsx";
 export { SyncAttachCard };
 //#endregion 🔖️sync-attach-card
 
@@ -904,7 +904,7 @@ import {
   findPressedUtilityLeafId,
   findUtilityGroupPath,
   UtilityTree,
-} from "../../../../🧱️elements/UtilityTree/🟦️component.tsx";
+} from "../../../../🧱️elements/UtilityTree/🟦️.tsx";
 export {
   sortUtilityNodes,
   UTILITY_CATEGORIES,
@@ -938,7 +938,7 @@ import {
   type MarketplaceHostApi,
   FRAMEWORK_MARKETPLACE_TAB_ID,
   createFrameworkMarketplacePanelTab,
-} from "../../../../🧱️elements/ChromePanels/🟦️component.tsx";
+} from "../../../../🧱️elements/ChromePanels/🟦️.tsx";
 export {
   type DisplayHostApi,
   createFrameworkDisplayPanelTabs,
@@ -961,7 +961,7 @@ export {
 //#endregion 🔖️OsShell
 
 //#region 🔖️WorldTerrainLayerHost
-import { WorldTerrainLayer, parseWorldTerrainStyle, type WorldTerrainStyle } from "../../../../🧱️elements/WorldTerrainLayer/🟦️component.tsx";
+import { WorldTerrainLayer, parseWorldTerrainStyle, type WorldTerrainStyle } from "../../../../🧱️elements/WorldTerrainLayer/🟦️.tsx";
 export { WorldTerrainLayer, parseWorldTerrainStyle, type WorldTerrainStyle };
 //#endregion 🔖️WorldTerrainLayerHost
 
@@ -977,12 +977,12 @@ import {
   readCanvas2dSurfaceColors,
   CAMERA_SYNC_DEBOUNCE_MS,
   Canvas2dHost,
-} from "../../../../🧱️elements/Canvas2dHost/🟦️component.tsx";
+} from "../../../../🧱️elements/Canvas2dHost/🟦️.tsx";
 export { CANVAS_CAMERA_ZOOM_MIN, CANVAS_CAMERA_ZOOM_MAX, type CanvasCamera, clampCanvasZoom, worldToScreenLogical, screenToWorldLogical, wheelCameraAtScreen, readCanvas2dSurfaceColors, CAMERA_SYNC_DEBOUNCE_MS, Canvas2dHost };
 //#endregion 🔖️Canvas2dHost
 
 //#region 🔖️World3dHost
-import { world3dHoverActionArgs, world3dSelectionActionArgs, interactionTargetsForInstances, WORLD3D_DEFAULT_INTERACTION_GRANULARITY, type WorldInstanceRecord, worldMeshMaterialRevision, resolveMeshStyle, resolveMeshSelectionPreviewStyle, type SemanticColors, semanticColorsFromPalette, celebrateWorldInstances, isWorldInstanceCelebrating, mergeWorldViewportCamera, world3dViewportCameraSeedKey, buildWorldCameraDispatchArgs, worldCameraSetCameraDispatchArgs, worldCameraPoseApproxEqual, shouldReattachWorldViewportCamera, parseJsonArray, parseSelectionDomainsFromSession, selectionGroupsFromDomains, mapContextMenuSpecs, resolveWorldContextMenuTarget, worldInstancePickBlocked, resolveVortexPointerDownIntent, brushObjectPlacementArgs, isCurveOnlyWorldMesh, isWorldTransformGumballMode, gumballTransformDeltaBetweenPoses, type WorldGumballLivePreviewDelta, gumballLivePreviewDeltaBetweenPoses, applyGumballLivePreviewDeltaToPose, applyGumballLivePreviewPoseToObject3D, gumballConfigForTransformMode, worldGumballConfigForProjection, worldVortexMaterialRevision, brushPreviewGhostMeshUrl, worldSuggestionMenuOwnsWindow, suggestionMenuItems, resolveWorldMergeMode, meshBoundsCorners, raycastGroundPoint, parsePuzzle3dCatalogueDragPayload, snapWorldPointToGrid, subscribeWorldCatalogueDropPreview, getWorldCatalogueDropPreview, getWorldCatalogueDropPreviewServerSnapshot, setWorldCatalogueDropPreview, clearWorldCatalogueDropPreview, registerWorldCatalogueDropHost, worldCatalogueDropHostContainsPoint, type WorldSelectionPreview, subscribeWorldSelectionPreview, getWorldSelectionPreview, getWorldSelectionPreviewServerSnapshot, setWorldSelectionPreview, clearWorldSelectionPreview, beginInteractivePluginAction, endInteractivePluginAction, WindowInstanceIdContext, registerPendingWorldProjection, clearPendingWorldProjection, World3dHost } from "../../../../🧱️elements/World3dHost/🟦️component.tsx";
+import { world3dHoverActionArgs, world3dSelectionActionArgs, interactionTargetsForInstances, WORLD3D_DEFAULT_INTERACTION_GRANULARITY, type WorldInstanceRecord, worldMeshMaterialRevision, resolveMeshStyle, resolveMeshSelectionPreviewStyle, type SemanticColors, semanticColorsFromPalette, celebrateWorldInstances, isWorldInstanceCelebrating, mergeWorldViewportCamera, world3dViewportCameraSeedKey, buildWorldCameraDispatchArgs, worldCameraSetCameraDispatchArgs, worldCameraPoseApproxEqual, shouldReattachWorldViewportCamera, parseJsonArray, parseSelectionDomainsFromSession, selectionGroupsFromDomains, mapContextMenuSpecs, resolveWorldContextMenuTarget, worldInstancePickBlocked, resolveVortexPointerDownIntent, brushObjectPlacementArgs, isCurveOnlyWorldMesh, isWorldTransformGumballMode, gumballTransformDeltaBetweenPoses, type WorldGumballLivePreviewDelta, gumballLivePreviewDeltaBetweenPoses, applyGumballLivePreviewDeltaToPose, applyGumballLivePreviewPoseToObject3D, gumballConfigForTransformMode, worldGumballConfigForProjection, worldVortexMaterialRevision, brushPreviewGhostMeshUrl, worldSuggestionMenuOwnsWindow, suggestionMenuItems, resolveWorldMergeMode, meshBoundsCorners, raycastGroundPoint, parsePuzzle3dCatalogueDragPayload, snapWorldPointToGrid, subscribeWorldCatalogueDropPreview, getWorldCatalogueDropPreview, getWorldCatalogueDropPreviewServerSnapshot, setWorldCatalogueDropPreview, clearWorldCatalogueDropPreview, registerWorldCatalogueDropHost, worldCatalogueDropHostContainsPoint, type WorldSelectionPreview, subscribeWorldSelectionPreview, getWorldSelectionPreview, getWorldSelectionPreviewServerSnapshot, setWorldSelectionPreview, clearWorldSelectionPreview, beginInteractivePluginAction, endInteractivePluginAction, WindowInstanceIdContext, registerPendingWorldProjection, clearPendingWorldProjection, World3dHost } from "../../../../🧱️elements/World3dHost/🟦️.tsx";
 export { world3dHoverActionArgs, world3dSelectionActionArgs, interactionTargetsForInstances, WORLD3D_DEFAULT_INTERACTION_GRANULARITY, type WorldInstanceRecord, worldMeshMaterialRevision, resolveMeshStyle, resolveMeshSelectionPreviewStyle, type SemanticColors, semanticColorsFromPalette, celebrateWorldInstances, isWorldInstanceCelebrating, mergeWorldViewportCamera, world3dViewportCameraSeedKey, buildWorldCameraDispatchArgs, worldCameraSetCameraDispatchArgs, worldCameraPoseApproxEqual, shouldReattachWorldViewportCamera, parseJsonArray, parseSelectionDomainsFromSession, selectionGroupsFromDomains, mapContextMenuSpecs, resolveWorldContextMenuTarget, worldInstancePickBlocked, resolveVortexPointerDownIntent, brushObjectPlacementArgs, isCurveOnlyWorldMesh, isWorldTransformGumballMode, gumballTransformDeltaBetweenPoses, type WorldGumballLivePreviewDelta, gumballLivePreviewDeltaBetweenPoses, applyGumballLivePreviewDeltaToPose, applyGumballLivePreviewPoseToObject3D, gumballConfigForTransformMode, worldGumballConfigForProjection, worldVortexMaterialRevision, brushPreviewGhostMeshUrl, worldSuggestionMenuOwnsWindow, suggestionMenuItems, resolveWorldMergeMode, meshBoundsCorners, raycastGroundPoint, parsePuzzle3dCatalogueDragPayload, snapWorldPointToGrid, subscribeWorldCatalogueDropPreview, getWorldCatalogueDropPreview, getWorldCatalogueDropPreviewServerSnapshot, setWorldCatalogueDropPreview, clearWorldCatalogueDropPreview, registerWorldCatalogueDropHost, worldCatalogueDropHostContainsPoint, type WorldSelectionPreview, subscribeWorldSelectionPreview, getWorldSelectionPreview, getWorldSelectionPreviewServerSnapshot, setWorldSelectionPreview, clearWorldSelectionPreview, beginInteractivePluginAction, endInteractivePluginAction, WindowInstanceIdContext, registerPendingWorldProjection, clearPendingWorldProjection, World3dHost };
 //#endregion 🔖️World3dHost
 
@@ -1034,7 +1034,7 @@ import {
   sceneToSyncPack,
   SelectionAlignChrome,
   useClient,
-} from "../../../../🧱️elements/NodeGraph/🟦️component.tsx";
+} from "../../../../🧱️elements/NodeGraph/🟦️.tsx";
 export {
   alignModeToDag,
   catalogueGhostDescriptorJson,
@@ -1086,22 +1086,22 @@ export {
 //#endregion 🔖️NodeGraphHost
 
 //#region 🔖️TextEditorHost
-import { hostLabel, lineRangeAt, multiSpanReplace, TextEditorHost } from "../../../../🧱️elements/TextEditor/🟦️component.tsx";
+import { hostLabel, lineRangeAt, multiSpanReplace, TextEditorHost } from "../../../../🧱️elements/TextEditor/🟦️.tsx";
 export { hostLabel, lineRangeAt, multiSpanReplace, TextEditorHost };
 //#endregion 🔖️TextEditorHost
 
 //#region 🔖️TableHost
-import { TableHost } from "../../../../🧱️elements/Table/🟦️component.tsx";
+import { TableHost } from "../../../../🧱️elements/Table/🟦️.tsx";
 export { TableHost };
 //#endregion 🔖️TableHost
 
 //#region 🔖️Paint2dHost
-import { base64ToBytes, Paint2dHost } from "../../../../🧱️elements/Paint2dHost/🟦️component.tsx";
+import { base64ToBytes, Paint2dHost } from "../../../../🧱️elements/Paint2dHost/🟦️.tsx";
 export { base64ToBytes, Paint2dHost };
 //#endregion 🔖️Paint2dHost
 
 //#region 🔖️TiledMapHost
-import { TiledMapHost, resolveMapInteractionSync } from "../../../../🧱️elements/TiledMapHost/🟦️component.tsx";
+import { TiledMapHost, resolveMapInteractionSync } from "../../../../🧱️elements/TiledMapHost/🟦️.tsx";
 export { TiledMapHost, resolveMapInteractionSync };
 //#endregion 🔖️TiledMapHost
 
@@ -1125,7 +1125,7 @@ import {
   notifyPuzzle2dPeersGestureEnded,
   pushPuzzle2dFixtureDropPreview,
   Board2dHost,
-} from "../../../../🧱️elements/Board2dHost/🟦️component.tsx";
+} from "../../../../🧱️elements/Board2dHost/🟦️.tsx";
 export {
   board2dCameraActionArgs,
   parsePuzzle2dCatalogueDragPayload,
@@ -1149,7 +1149,7 @@ export {
 //#endregion 🔖️Board2dHost
 
 //#region 🔖️IconRenderHost
-import { IconRenderHost } from "../../../../🧱️elements/IconRenderHost/🟦️component.tsx";
+import { IconRenderHost } from "../../../../🧱️elements/IconRenderHost/🟦️.tsx";
 export { IconRenderHost };
 //#endregion 🔖️IconRenderHost
 
@@ -1207,7 +1207,7 @@ import {
   type InkMathRenderer,
   setInkMathRenderer,
   InkCanvasHost,
-} from "../../../../🧱️elements/InkCanvasHost/🟦️component.tsx";
+} from "../../../../🧱️elements/InkCanvasHost/🟦️.tsx";
 export {
   type Vec2,
   type InkCamera,
@@ -1265,22 +1265,22 @@ export {
 //#endregion 🔖️InkCanvasHost
 
 //#region 🔖️GraphTimelineHost
-import { GraphTimelineHost } from "../../../../🧱️elements/GraphTimelineHost/🟦️component.tsx";
+import { GraphTimelineHost } from "../../../../🧱️elements/GraphTimelineHost/🟦️.tsx";
 export { GraphTimelineHost };
 //#endregion 🔖️GraphTimelineHost
 
 //#region 🔖️BlockListHost
-import { BlockListHost } from "../../../../🧱️elements/BlockListHost/🟦️component.tsx";
+import { BlockListHost } from "../../../../🧱️elements/BlockListHost/🟦️.tsx";
 export { BlockListHost };
 //#endregion 🔖️BlockListHost
 
 //#region 🔖️DiffViewHost
-import { DiffViewHost } from "../../../../🧱️elements/DiffViewHost/🟦️component.tsx";
+import { DiffViewHost } from "../../../../🧱️elements/DiffViewHost/🟦️.tsx";
 export { DiffViewHost };
 //#endregion 🔖️DiffViewHost
 
 //#region 🔖️EventFeedHost
-import { EventFeedHost } from "../../../../🧱️elements/EventFeedHost/🟦️component.tsx";
+import { EventFeedHost } from "../../../../🧱️elements/EventFeedHost/🟦️.tsx";
 export { EventFeedHost };
 //#endregion 🔖️EventFeedHost
 
@@ -1289,7 +1289,7 @@ export { EventFeedHost };
  * `ui.presence.*`/`ui.checkin.*`/`ui.identity.*` chrome vocabulary consumed by `ShellHost`'s identity
  * bootstrap, directory-lane, and routing regions. This is new domain-neutral-looking chrome text, so
  * it would normally register into `uiChromeTranslationBundles` — but that dictionary lives in
- * `🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx`, outside this
+ * `🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/🟦️.tsx`, outside this
  * ticket's lease. Mirrors `ShellHelpers`' own `SurfaceRoleLabels` workaround for the identical
  * situation: a local `{en, de}` pair table resolved directly off a locale, English declared first,
  * no default language (CLAUDE.md). Appended only — never reorders or edits any key above this

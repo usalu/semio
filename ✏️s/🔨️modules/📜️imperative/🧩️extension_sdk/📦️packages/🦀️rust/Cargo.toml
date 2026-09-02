@@ -10,10 +10,19 @@ workspace = true
 
 [lib]
 crate-type = ["rlib"]
-path = "📦️glue.rs"
+path = "🦀️.rs"
 
 [dependencies]
 neural_engine = { path = "../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/📦️packages/🦀️rust", package = "semio-framework-os-kernel-neural-engine" }
-serde.workspace = true
+# 🎒️ `os_pack::json::to_json_string`/`from_json_str` + `DslValue`/`ToValue`/`FromValue` — this file's
+# own `semio_framework_os_kernel::DslValue::object(...)` call (TopicContribution region) already
+# assumed this dependency without declaring it (pre-existing gap, found and fixed while converting
+# `OperatorInfo`/`Dictionary` off serde — RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS,
+# 26/09/01, tenth-seam pass). No cycle: `os-kernel` only reaches this crate via its OWN
+# `[dev-dependencies]` (`imperative` plugin, test-only).
+semio-framework-os-kernel = { path = "../../../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust" }
+# 🔤️ `serde_json::Value`/`json!` only — `evaluate_request_json`/`evaluate_invoke`'s untyped
+# passthrough envelope, unrelated to `Dictionary`/`OperatorInfo`. Plain `serde` dropped: nothing in
+# this file references it directly any more (tenth-seam pass, see the docstring above).
 serde_json.workspace = true
 semio-framework = { path = "../../../../../../🧰️framework/📦️packages/🦀️rust", package = "semio-framework" }

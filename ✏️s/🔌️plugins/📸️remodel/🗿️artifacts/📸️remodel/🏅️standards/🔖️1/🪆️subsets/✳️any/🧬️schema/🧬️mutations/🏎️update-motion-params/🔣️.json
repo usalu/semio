@@ -5,7 +5,7 @@
   "displayName": "Update Motion Params",
   "emoji": "🏎️",
   "aggregateVariant": "UpdateMotionParams",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": "update-motion-params",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

@@ -5,7 +5,7 @@
   "displayName": "Delete Section",
   "emoji": "🗑📐️",
   "aggregateVariant": "DeleteSection",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": "delete-section",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

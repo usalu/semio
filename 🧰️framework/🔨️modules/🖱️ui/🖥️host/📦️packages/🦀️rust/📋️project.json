@@ -6,9 +6,9 @@
   "namedInputs": {
     "default": [
       "{projectRoot}/**/*",
-      "{workspaceRoot}/🧰️framework/🔨️modules/🌉️abi/🦀️component.rs",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🌉️abi/🦀️.rs",
       "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🖥️host/📥️input/🎟️admission/📜️script.ts",
-      "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🖥️host/📥️input/🎟️admission/🧪️tests/🔣️.json",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🖥️host/📥️input/🎟️admission/🧪️test/🔣️s.json",
       "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🖥️host/📥️input/🎟️admission/🧬️schema/🔣️.json",
       "sharedGlobals"
     ]

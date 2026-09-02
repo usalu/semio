@@ -5,7 +5,7 @@
   "displayName": "Rename Note",
   "emoji": "🏷️",
   "aggregateVariant": "RenameNote",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": "rename-note",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

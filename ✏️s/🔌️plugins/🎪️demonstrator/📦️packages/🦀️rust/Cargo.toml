@@ -15,7 +15,7 @@ package = "semio:demonstrator"
 # already-existing apps (procedural3d, cad, puzzle3d, sourcing-curate, process3d, gis2d) into ONE
 # wasm component instead of six — the framework/kernel SDK (`semio-framework-plugin`,
 # `semio-framework-os`) is statically linked exactly once, and the six panes share one plugin
-# worker/module via the existing `acquirePluginModule` lease pool (framework core `📦️index.ts`),
+# worker/module via the existing `acquirePluginModule` lease pool (framework core `🟦️.ts`),
 # instead of six separate workers each duplicating that linkage. Each source plugin
 # (procedural/cad/puzzle/sourcing/process/gis) keeps its own standalone playground rows unchanged
 # for its own non-demonstrator variants (e.g. `procedural3d`, `puzzle3d`) — only the six
@@ -109,7 +109,7 @@ cache = "openfreemap-vt"
 
 [lib]
 crate-type = ["cdylib", "rlib"]
-path = "📦️glue.rs"
+path = "🦀️.rs"
 
 [dependencies]
 semio-s-plugin-stdio = { path = "../../../🗄️stdio/📦️packages/🦀️rust", package = "semio-s-plugin-stdio", default-features = false }

@@ -5,7 +5,7 @@
   "displayName": "Rename Meeting Record",
   "emoji": "✏️🗓️",
   "aggregateVariant": "RenameMeetingRecord",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

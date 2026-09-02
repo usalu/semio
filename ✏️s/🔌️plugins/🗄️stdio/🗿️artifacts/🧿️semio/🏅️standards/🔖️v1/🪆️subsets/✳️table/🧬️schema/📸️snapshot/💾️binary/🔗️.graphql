@@ -1,0 +1,6 @@
+# 💾️ SemioTableSnapshot binary frame — descriptive twin of 📡️.protocol.semio.
+type SemioTableSnapshotFrame {
+  format: Int!
+  schema: String!
+  payload: String! # opaque base64: columns + rows
+}

@@ -4,7 +4,7 @@
 //! intrinsic pixel dimensions? Header/attribute reading only — never a full pixel decode, never a
 //! renderer. Built so a `wasm32-wasip2` guest component can answer that question for a widget's
 //! natural size (`preview_media_natural_size` in
-//! `🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🔌️ports/➡️directed/🕸️dag/🦀️component.rs`)
+//! `🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🔌️ports/➡️directed/🕸️dag/🦀️.rs`)
 //! without linking `image`/`usvg` and their ~50-crate dependency tail (ticket
 //! `26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS`,
 //! `🔍️research/📓️intrinsic-size-parser.md`).
@@ -440,7 +440,7 @@ mod tests {
     }
 
     fn corpus() -> Corpus {
-        serde_json::from_str(include_str!("🧪️tests/🔣️intrinsic-size-corpus.json")).expect("valid intrinsic-size fixture corpus")
+        serde_json::from_str(include_str!("🧪️tests/🔣️.json")).expect("valid intrinsic-size fixture corpus")
     }
 
     #[test]

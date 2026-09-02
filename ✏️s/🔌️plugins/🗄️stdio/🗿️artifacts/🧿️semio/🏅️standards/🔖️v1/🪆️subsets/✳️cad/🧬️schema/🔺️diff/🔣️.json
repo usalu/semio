@@ -1,0 +1,49 @@
+{
+  "$id": "https://semio.tech/schema/s.stdio.semio.cad/diff.json",
+  "title": "SemioCadDiff",
+  "description": "Real facet mirror of 🦀️.rs (source of truth) -- sparse, handcrafted, name/handle-keyed triples over ../📸️snapshot/🔣️.json's domain types.",
+  "definitions": {
+    "layerDiff": {
+      "type": "object",
+      "properties": { "colorIndex": { "type": "integer" }, "lineType": { "type": "string" }, "visible": { "type": "boolean" } }
+    },
+    "entityRecordDiff": {
+      "type": "object",
+      "properties": { "layer": { "type": "string" }, "entity": { "$ref": "../📸️snapshot/🔣️.json#/definitions/entity" } }
+    },
+    "blockDiff": {
+      "type": "object",
+      "properties": { "basePoint": { "$ref": "../📸️snapshot/🔣️.json#/definitions/point2" }, "entities": { "$ref": "#/definitions/entitiesDiff" } }
+    },
+    "layersDiff": {
+      "type": "object",
+      "properties": {
+        "removed": { "type": "array", "items": { "type": "string" } },
+        "modified": { "type": "array", "items": { "type": "object", "properties": { "key": { "type": "string" }, "diff": { "$ref": "#/definitions/layerDiff" } } } },
+        "added": { "type": "array", "items": { "$ref": "../📸️snapshot/🔣️.json#/definitions/layer" } }
+      }
+    },
+    "blocksDiff": {
+      "type": "object",
+      "properties": {
+        "removed": { "type": "array", "items": { "type": "string" } },
+        "modified": { "type": "array", "items": { "type": "object", "properties": { "key": { "type": "string" }, "diff": { "$ref": "#/definitions/blockDiff" } } } },
+        "added": { "type": "array", "items": { "$ref": "../📸️snapshot/🔣️.json#/definitions/block" } }
+      }
+    },
+    "entitiesDiff": {
+      "type": "object",
+      "properties": {
+        "removed": { "type": "array", "items": { "type": "string" } },
+        "modified": { "type": "array", "items": { "type": "object", "properties": { "key": { "type": "string" }, "diff": { "$ref": "#/definitions/entityRecordDiff" } } } },
+        "added": { "type": "array", "items": { "$ref": "../📸️snapshot/🔣️.json#/definitions/entityRecord" } }
+      }
+    }
+  },
+  "type": "object",
+  "properties": {
+    "layers": { "$ref": "#/definitions/layersDiff" },
+    "blocks": { "$ref": "#/definitions/blocksDiff" },
+    "entities": { "$ref": "#/definitions/entitiesDiff" }
+  }
+}

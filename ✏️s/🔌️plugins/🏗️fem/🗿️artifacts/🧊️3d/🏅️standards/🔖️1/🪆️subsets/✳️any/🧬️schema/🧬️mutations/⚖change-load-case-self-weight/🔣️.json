@@ -5,7 +5,7 @@
   "displayName": "Change Load Case Self Weight",
   "emoji": "⚖",
   "aggregateVariant": "ChangeLoadCaseSelfWeight",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": "change-load-case-self-weight",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

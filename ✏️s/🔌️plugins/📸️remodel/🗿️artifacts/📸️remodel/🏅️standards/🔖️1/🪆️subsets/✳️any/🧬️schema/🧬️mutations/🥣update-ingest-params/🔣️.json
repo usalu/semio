@@ -5,7 +5,7 @@
   "displayName": "Update Ingest Params",
   "emoji": "🥣",
   "aggregateVariant": "UpdateIngestParams",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": "update-ingest-params",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

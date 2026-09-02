@@ -91,7 +91,7 @@ ports = { react = 6105, wgpu = 6205 }
 
 [lib]
 crate-type = ["cdylib", "rlib"]
-path = "📦️glue.rs"
+path = "🦀️.rs"
 
 [features]
 default = []

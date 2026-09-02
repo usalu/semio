@@ -4,7 +4,7 @@
 //! Every scenario copies the real, committed `📰️macos-uttype-plist.xml` fixture into the case work
 //! directory first; the committed document is never written to. `oracle` drives the registered
 //! `quick-xml` reference implementation through THIS subset's own oracle module
-//! (`../../🏅️standards/🔖️1.0/🪆️subsets/✳️valid/🧪️oracle/🦀️component.rs`), whose DOCTYPE grammar and
+//! (`../../🏅️standards/🔖️1.0/🪆️subsets/✳️valid/🦀️oracle.rs`), whose DOCTYPE grammar and
 //! §2.8/§2.9 verdicts are written from the W3C text rather than from this repository's
 //! `check_valid_conformance`; `subject` drives this repository's own
 //! `XmlSnapshot::import_utf8`/`export_utf8` and `apply_xml_valid_mutation` over the full 8-kind
@@ -19,7 +19,7 @@ use semio_s_plugin_stdio_test_oracle::artifacts::xml::standards::v1_0::subsets::
 //#region 🔖️Kinds
 /// 📇️ Kebab-case spelling of every scenario row THIS CASE registers, oracle and subject alike --
 /// `no-mutation` plus every `XmlValidMutation` variant, mirrored from
-/// `../../🏅️standards/🔖️1.0/🪆️subsets/✳️valid/🧬️schema/🧬️mutations/🦀️component.rs`'s own `KINDS`.
+/// `../../🏅️standards/🔖️1.0/🪆️subsets/✳️valid/🧬️schema/🧬️mutations/🦀️.rs`'s own `KINDS`.
 /// `no-mutation` is NOT one of that production `KINDS`' entries -- it carries no `XmlValidMutation`
 /// variant of its own (dropped by the `26/08/29/S-END-TO-END` mutation-leaf migration: `no` is not
 /// an approved semantic verb) and is handled directly by `subject::mutate`/`subject::inverse` below

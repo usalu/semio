@@ -5,7 +5,7 @@
   "displayName": "Delete Change Record",
   "emoji": "🗑️📝",
   "aggregateVariant": "DeleteChangeRecord",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

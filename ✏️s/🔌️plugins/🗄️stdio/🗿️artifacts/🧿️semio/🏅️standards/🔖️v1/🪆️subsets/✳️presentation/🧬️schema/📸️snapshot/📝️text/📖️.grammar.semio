@@ -1,0 +1,91 @@
+dialect grammar
+grammar stdio.semio.presentation.snapshot
+extension semio
+start document
+
+# ARTIFACT-SYSTEM-OVERHAUL-REAL-CODECS-RUNTIME-REUSE-EVOLUTION presentation wave (following the
+# flow/model/brep/drawing/document pilots' proven template, `ws-codec-workflow-report.md` /
+# `ws-codec-document-report.md`). Real grammar for `SemioPresentationSnapshot::print_dsl`/
+# `parse_dsl` (📸️snapshot/🦀️.rs's `print_presentation_snapshot_body`/
+# `parse_presentation_snapshot_body`) — hand-rolled (`SlideShape`/`PlaceholderKind` are data-
+# carrying tagged enums with heterogeneous per-variant field sets; no `dsl::DslField`/`DslEnum` impl
+# exists for either). The `block` production family below is copied VERBATIM from `document`'s own
+# real, already-conformance-tested snapshot grammar (only `row`/`cell` renamed `doc-row`/`doc-cell`
+# to avoid colliding with this file's OWN `row`/`cell` productions for `SlideTableRow`/
+# `SlideTableCell`) — this facet's `enc_block`/`dec_block` (🔺️diff/🦀️.rs) is a direct
+# `pub(crate) use` re-export of `document::schema::diff::{enc_block, dec_block}`, never a local
+# reimplementation, so the wire shape is identical to document's own.
+#
+# `presentation` matches the fixture-honesty harness's own reconstructed body shape (mandatory
+# `semio stdio.semio.presentation.dsl v1` preamble stripped and replaced with the bare
+# `envelope_id()` token — `artifact-mark` below).
+artifact-mark = "s.stdio.semio.presentation"
+document = artifact-mark schema-line masters-line layouts-line slides-line
+
+schema-line = "schema" "=" hex
+
+masters-line = "masters" "=" "[" master-items? "]"
+master-items = master {"," master}*
+layouts-line = "layouts" "=" "[" layout-items? "]"
+layout-items = layout {"," layout}*
+slides-line = "slides" "=" "[" slide-items? "]"
+slide-items = slide {"," slide}*
+
+# `enc_master`/`enc_layout`/`enc_slide` (🔺️diff/🦀️.rs) — field order matches exactly (the
+# authoritative source, reused verbatim by this facet).
+master = "[" hex "," "[" shape-items? "]" "]"
+layout = "[" hex "," hex "," "[" shape-items? "]" "]"
+slide = "[" hex "," option-hex "," "[" shape-items? "]" "," "[" block-items? "]" "]"
+
+shape-items = shape {"," shape}*
+# `enc_shape`: `X[frame,blocks]` (TextBox) / `P[frame,image]` (Picture) / `T[frame,[row,...]]`
+# (Table) / `H[frame,kind]` (Placeholder) — tag is NOT `shapeKind`'s own serde tag letter-for-letter
+# (that's the serde JSON tag name), it is this facet's own single-uppercase-letter hex/bracket
+# convention, same as every other hand-rolled semio subset.
+shape = "X" "[" frame "," "[" block-items? "]" "]" | "P" "[" frame "," image "]" | "T" "[" frame "," "[" row-items? "]" "]" | "H" "[" frame "," placeholder-kind "]"
+
+# `enc_frame` — `[point2,width,height]`, width/height plain (non-optional) `f64` leaves.
+frame = "[" point2 "," INT "," INT "]"
+point2 = "[" INT "," INT "]"
+# `enc_image` (`SlidePictureImage`) — `[assetId,mime,bytes]`.
+image = "[" hex "," hex "," hex "]"
+# `enc_placeholder_kind` — single-letter tags for the 6 fieldless variants, `O[value]` for `Other`.
+placeholder-kind = "T" | "S" | "B" | "F" | "N" | "D" | "O" "[" hex "]"
+
+# `enc_table_row`/`enc_table_cell` (`SlideTableRow`/`SlideTableCell`, OWNED by this subset) — plain
+# `enc_list` output, single-bracket (NOT double — unlike document's own `DocTableRow`/`DocTableCell`
+# codec, this facet's row/cell encoders don't wrap a second time).
+row-items = row {"," row}*
+row = "[" cell-items? "]"
+cell-items = cell {"," cell}*
+cell = "[" block-items? "]"
+
+# `document::DocBlock` value grammar — copied verbatim from `document`'s own real snapshot grammar
+# (`../../../../✳️document/🧬️schema/📸️snapshot/📝️text/📖️.grammar.semio`), `row`/`cell`
+# renamed `doc-row`/`doc-cell` to avoid the name collision with this file's own `row`/`cell` above.
+block = "P" "[" option-hex "," "[" run-items? "]" "]" | "H" "[" INT "," option-hex "," "[" run-items? "]" "]" | "L" "[" bool "," "[" list-item-items? "]" "]" | "T" "[" "[" doc-row-items? "]" "]" | "C" "[" option-hex "," hex "]" | "Q" "[" "[" block-items? "]" "]" | "I" "[" hex "," hex "," option-num "," option-num "]" | "B" "[" "]"
+block-items = block {"," block}*
+
+run-items = run {"," run}*
+run = "[" hex "," run-style "]"
+run-style = "[" bool "," bool "," bool "," option-num "," option-hex "," option-hex "," option-hex "]"
+
+list-item-items = list-item {"," list-item}*
+list-item = "[" "[" block-items? "]" "]"
+
+doc-row-items = doc-row {"," doc-row}*
+doc-row = "[" "[" doc-cell-items? "]" "]"
+doc-cell-items = doc-cell {"," doc-cell}*
+doc-cell = "[" "[" block-items? "]" "]"
+
+option-hex = "[" "0" "]" | "[" "1" "," hex "]"
+# `enc_f64` prints `f64::to_bits()` (a `u64` bit pattern) as plain decimal digits, NOT a float
+# literal — every numeric leaf (`level: u8`, every `f64`) is a bare `INT` token, never `FLOAT`.
+option-num = "[" "0" "]" | "[" "1" "," INT "]"
+bool = "0" | "1"
+
+# `hex` (bare `hex`, deliberately NOT defined as a production here) is the framework's built-in
+# `hex` MACRO — a run of lowercase hex digits (`enc_str`/`hex_encode`'s own alphabet), incl. the
+# empty string. `Symbol::Ref`'s production->macro fallback resolves bare `hex` automatically, with
+# real backtracking — a hand-rolled `{INT|IDENT}*` production would be wrong here (see the grammar
+# recipe's own §3 pitfall #2).

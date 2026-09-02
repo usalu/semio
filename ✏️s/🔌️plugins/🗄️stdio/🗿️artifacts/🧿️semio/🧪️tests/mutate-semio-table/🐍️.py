@@ -7,15 +7,15 @@ a second IMPLEMENTATION, written in another language from the format's own commi
 
 * the envelope — `semio <plugin>.<artifact>.<component> v<version>` preamble for text, and the
   `0x89 'S' 'E' 'M' 0D 0A 1A 0A` magic + little-endian u32 token length + token for binary — is
-  specified in `🧰️framework/🛍️products/💻️os/🔨️modules/🧬️semio/🦀️component.rs`'s envelope region
+  specified in `🧰️framework/🛍️products/💻️os/🔨️modules/🧬️semio/🦀️.rs`'s envelope region
   (`wrap_text`/`split_text_preamble`/`wrap_binary`/`unwrap_binary`), the carrier's normative
   description;
 * the DSL body is the committed grammar
-  `../../🏅️standards/🔖️v1/🪆️subsets/✳️table/🧬️schema/📸️snapshot/📝️text/📖️component.grammar.semio`
+  `../../🏅️standards/🔖️v1/🪆️subsets/✳️table/🧬️schema/📸️snapshot/📝️text/📖️.grammar.semio`
   (`document = artifact-mark schema-line columns-line rows-line`, `column = "[" hex "," cell-kind
   "]"`, `cell-kind = "n"|"b"|"i"|"f"|"s"|"y"`, `row = "[" list-item* "]"`, and the tag-prefixed
   `SemioValue` production it restates from `✳️value`'s own grammar);
-* the pack body is the committed protocol `…/📸️snapshot/💾️binary/📡️component.protocol.semio`
+* the pack body is the committed protocol `…/📸️snapshot/💾️binary/📡️.protocol.semio`
   (`format u8`, then the varint-length-prefixed UTF-8 `schema`), whose description then stops at the
   repeated `columns`/`rows` records by its own admission and names their layout only in prose —
   "per-column varint-length-prefixed name + kind tag byte; per-row varint cell count + per-cell
@@ -24,13 +24,13 @@ a second IMPLEMENTATION, written in another language from the format's own commi
   order, then PINNING the derivation against the committed `🎒️example.pack.semio`: `pack_bytes`
   re-encodes that file byte for byte, which a misreading could not do;
 * the eight verbs and their argument lists are the committed grammar
-  `…/🧬️schema/🧬️mutations/📝️text/📖️component.grammar.semio` and the committed JSON schema
-  `…/🧬️mutations/🔣️component.json`, and what each verb MEANS is the committed per-kind
+  `…/🧬️schema/🧬️mutations/📝️text/📖️.grammar.semio` and the committed JSON schema
+  `…/🧬️mutations/🔣️.json`, and what each verb MEANS is the committed per-kind
   `(before, mutation, after)` specification vector under `…/🧬️mutations/<kind>/🧪️tests/<slug>/` —
   a worked example per verb, which is the vocabulary's own normative statement of its semantics.
 
 Nothing here imports, links, wraps or transliterates the Rust subject; no file under
-`🧬️schema/🧬️mutations/<kind>/{🦠️mutation,↩️inverse,🔺️diff}/🦀️component.rs` was read. Every function
+`🧬️schema/🧬️mutations/<kind>/{🦠️mutation,↩️inverse,🔺️diff}/🦀️.rs` was read. Every function
 was written against the documents above; where the two implementations disagree the disagreement is
 a finding, not something to tune away.
 
@@ -598,7 +598,7 @@ def derive_document_from_csv(raw: bytes) -> dict:
 
 
 # region 🔖️Scenario input
-SHEET_DSL = "asset://🏅️standards/🔖️v1/🪆️subsets/✳️table/📚️examples/📃️sheet/🖼️assets/🗣️example.dsl.semio"
+SHEET_DSL = "asset://🏅️standards/🔖️v1/🪆️subsets/✳️table/📚️examples/📃️sheet/🖼️assets/🗣️.dsl.semio"
 SHEET_PACK = "asset://🏅️standards/🔖️v1/🪆️subsets/✳️table/📚️examples/📃️sheet/🖼️assets/🎒️example.pack.semio"
 SURVEY_CSV = "local://📊️reuse-marketplaces.csv"
 SURVEY_DSL = "local://📊️reuse-marketplaces.dsl.semio"

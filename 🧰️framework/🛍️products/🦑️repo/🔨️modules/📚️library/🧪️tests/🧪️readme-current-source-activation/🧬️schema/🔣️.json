@@ -17,7 +17,7 @@
         "target": { "const": "test-readme-current-source-activation" },
         "command": { "const": "bun ./📜️script.ts test readme-current-source-activation" },
         "route": { "const": "readme-current-source-activation" },
-        "source": { "const": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧪️readme-current-source-activation/🟦️.ts" },
+        "source": { "const": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🟦️readme-current-source-activation.ts" },
         "launchName": { "const": "🧹clean🧩️taxonomy🧪️readme-current-source-activation" },
         "launchCommand": { "const": "bun nx run @semio-tech/repo-lib:test-readme-current-source-activation --skip-nx-cache" },
         "launchGroup": { "const": "4_gate" }, "launchOrder": { "const": 410.204 }
@@ -50,7 +50,7 @@
       "required": ["contractId", "removeField", "inputPatterns", "reason"],
       "properties": {
         "contractId": { "const": "plugin-registry" }, "removeField": { "const": "inputDiscovery" },
-        "inputPatterns": { "const": ["🧪️tests/🧪️unrelated-producer/🔣️.json"] }, "reason": { "type": "string", "minLength": 1 }
+        "inputPatterns": { "const": ["🧪️tests/🔣️unrelated-producer.json"] }, "reason": { "type": "string", "minLength": 1 }
       }
     },
     "laws": {

@@ -5,7 +5,7 @@
   "displayName": "Add Stream Frame",
   "emoji": "➕",
   "aggregateVariant": "AddStreamFrame",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": "add-stream-frame",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

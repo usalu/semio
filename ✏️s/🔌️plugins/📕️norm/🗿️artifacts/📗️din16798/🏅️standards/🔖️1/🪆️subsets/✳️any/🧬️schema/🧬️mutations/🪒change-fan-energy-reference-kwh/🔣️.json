@@ -5,7 +5,7 @@
   "displayName": "Change Fan Energy Reference Kwh",
   "emoji": "🪒",
   "aggregateVariant": "ChangeFanEnergyReferenceKwh",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

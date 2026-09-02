@@ -4,7 +4,7 @@
 //! This file is the subject half only. The oracle is `🐍️component.py` beside it: an independent
 //! Python implementation of the same carrier and the same fifteen-verb vocabulary, written from the
 //! committed grammar, protocol and JSON schema, registered as `semio-kit-python-independent` in
-//! `../../🏅️standards/🔖️v1/🪆️subsets/✳️kit/🧪️oracle/🔣️.json`. Registering oracle handlers
+//! `../../🏅️standards/🔖️v1/🪆️subsets/✳️kit/🔣️oracle.json`. Registering oracle handlers
 //! here as well would put this repository's answer on both sides of the comparison, which is the
 //! exact failure the platform exists to prevent — so it registers none.
 //!
@@ -28,7 +28,7 @@ use semio_repo_test_host::{Context, Json};
 
 //#region 🔖️Kinds
 /// 🏷️ Mirrors `SemioKitMutation::KINDS` (`../../🏅️standards/🔖️v1/🪆️subsets/✳️kit/🧬️schema/
-/// 🧬️mutations/🦀️component.rs`) — duplicated, not imported, because registration happens before the
+/// 🧬️mutations/🦀️.rs`) — duplicated, not imported, because registration happens before the
 /// subject crate is necessarily linked. `kinds_match_the_enum_and_the_catalog` in that production
 /// file keeps the list honest against the enum, and the contract's mutation-coverage gate keeps it
 /// honest against the catalog and this feature.
@@ -63,7 +63,7 @@ const TOWER_DSL: &str = "local://🗣️nakagin-capsule-tower.dsl.semio";
 /// reproducing it is a cross-language byte agreement, not a codec agreeing with itself.
 #[cfg(feature = "sut")]
 const TOWER_PACK: &str = "local://🎒️nakagin-capsule-tower.pack.semio";
-const FURNITURE_DSL: &str = "asset://🏅️standards/🔖️v1/🪆️subsets/✳️kit/📚️examples/🪑️furniture/🖼️assets/🗣️example.dsl.semio";
+const FURNITURE_DSL: &str = "asset://🏅️standards/🔖️v1/🪆️subsets/✳️kit/📚️examples/🪑️furniture/🖼️assets/🗣️.dsl.semio";
 /// 🎒️ The same kit in its binary envelope, written by a separate codec from the DSL text.
 #[cfg(feature = "sut")]
 const FURNITURE_PACK: &str = "asset://🏅️standards/🔖️v1/🪆️subsets/✳️kit/📚️examples/🪑️furniture/🖼️assets/🎒️example.pack.semio";

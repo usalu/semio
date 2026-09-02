@@ -5,7 +5,7 @@
   "displayName": "Change System Losses Kwh",
   "emoji": "🦦",
   "aggregateVariant": "ChangeSystemLossesKwh",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

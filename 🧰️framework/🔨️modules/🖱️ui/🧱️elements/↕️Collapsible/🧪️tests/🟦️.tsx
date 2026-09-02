@@ -2,7 +2,7 @@
 import { fireEvent, render } from "@testing-library/react";
 import * as React from "react";
 import { describe, expect, it, vi } from "vitest";
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "../🟦️component.tsx";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "../🟦️.tsx";
 // #endregion 🔌️Adapters
 
 // #region ↕️CollapsibleMatrix

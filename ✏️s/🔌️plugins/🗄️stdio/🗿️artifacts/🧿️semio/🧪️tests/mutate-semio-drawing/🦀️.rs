@@ -3,7 +3,7 @@
 //!
 //! **This file no longer serves the oracle role.** The reference for `semio-v1-drawing-mutate` is
 //! the registered oracle `semio-drawing-python-independent` (`../../🏅️standards/🔖️v1/🪆️subsets/
-//! ✳️drawing/🧪️oracle/🔣️.json`) — an independent Python implementation of the semio drawing
+//! ✳️drawing/🔣️oracle.json`) — an independent Python implementation of the semio drawing
 //! carrier, its recursive `DrawNode` tree and all seventeen verbs, written from the committed
 //! grammar and protocol documents and living beside this file as `🐍️component.py`. The runner
 //! dispatches the oracle role there and the subject role here, and compares the two projections
@@ -11,7 +11,7 @@
 //! repository's own answer on both sides of that comparison, which is the precise failure the
 //! platform exists to prevent.
 //!
-//! **The drawing under test is a real one.** `local://🗣️artifact.dsl.semio` and its binary twin were
+//! **The drawing under test is a real one.** `local://🗣️.dsl.semio` and its binary twin were
 //! derived ONCE from two real committed SVG documents —
 //! `🗿️artifacts/🎨️svg/🧫️fixtures/mouse.svg` and `…/🎨️svg/🧫️fixtures/qr-code.svg` — by an independent
 //! Python SVG reader built on `xml.etree` plus a path-data scanner written from the SVG 1.1 §8.3
@@ -38,7 +38,7 @@ use semio_repo_test_host::Adapter;
 
 //#region 🔖️Kinds
 /// 🏷️ Mirrors `SemioDrawingMutation::KINDS` (`../../🏅️standards/🔖️v1/🪆️subsets/✳️drawing/🧬️schema/
-/// 🧬️mutations/🦀️component.rs`) — duplicated, not imported, because the generated host builds this
+/// 🧬️mutations/🦀️.rs`) — duplicated, not imported, because the generated host builds this
 /// file with and without the subject crate. The contract's mutation-coverage gate keeps this list
 /// honest against the catalog; `kinds_match_the_enum_and_the_catalog` in that production file keeps
 /// it honest against the enum.
@@ -78,7 +78,7 @@ mod subject {
     //#region 🔖️Input
     /// 🖍️ The real derived drawing — the committed `mouse.svg` and `qr-code.svg` read once by an
     /// independent SVG reader and written out through the independent Python implementation.
-    const ARTIFACT_DSL: &str = "local://🗣️artifact.dsl.semio";
+    const ARTIFACT_DSL: &str = "local://🗣️.dsl.semio";
     /// 🎒️ The same drawing in its binary envelope, written by a separate codec from the DSL text.
     const ARTIFACT_PACK: &str = "local://🎒️artifact.pack.semio";
 

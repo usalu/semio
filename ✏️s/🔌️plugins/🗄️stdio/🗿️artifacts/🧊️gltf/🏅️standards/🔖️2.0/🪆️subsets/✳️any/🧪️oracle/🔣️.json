@@ -17,7 +17,7 @@
       "license": "MIT",
       "testOnly": true,
       "homepage": "https://github.com/maciejhirsz/json-rust",
-      "rationale": "🫥️ RECLASSIFIED, BY ITS OWN RATIONALE. This entry was registered `third-party-library` on the strength of the `json` crate, and its own text says why that does not hold: `json` is domain-BLIND, it knows nothing about glTF, so \"every one of the registered kinds' actual semantics is REIMPLEMENTED FROM SCRATCH\" in the sibling `🦀️component.rs`. The third-party component is a JSON tokenizer; the thing under test — what a glTF mutation should produce — is computed by 601 lines of this repository's own Rust. Both halves of the comparison then read the same specification, so a misreading of it produces two agreeing wrong answers. That is a `cross-semio-implementation`: a required SUPPLEMENT, never a substitute.\n\nIT ALSO OVERCLAIMED ITS SCOPE BY A FACTOR OF SEVENTEEN. Its `apply` dispatch implements exactly SEVEN kinds — bind/unbind-node-child, bind/unbind-scene-root-node, change-material-alpha-mode, change-material-double-sided, create-scene — and returns `mutation kind {other} has no oracle implementation` for everything else. The manifest nevertheless named it against all 120 of this subset's mutations. 120 mutations were counted as externally oracled on the strength of an implementation that refuses 113 of them.\n\nWHAT WOULD ACTUALLY DISCHARGE THESE. A domain-aware third-party glTF reader, which exists and is already vendored: `three` 0.182.0's `GLTFLoader` is registered and qualified for the sibling `s.stdio.semio@v1/✳️mesh` subset, where it reads real glTF geometry AND PBR material state. Pointing it at this subset is the work that would make these 120 honest; naming this entry was not.",
+      "rationale": "🫥️ RECLASSIFIED, BY ITS OWN RATIONALE. This entry was registered `third-party-library` on the strength of the `json` crate, and its own text says why that does not hold: `json` is domain-BLIND, it knows nothing about glTF, so \"every one of the registered kinds' actual semantics is REIMPLEMENTED FROM SCRATCH\" in the sibling `🦀️.rs`. The third-party component is a JSON tokenizer; the thing under test — what a glTF mutation should produce — is computed by 601 lines of this repository's own Rust. Both halves of the comparison then read the same specification, so a misreading of it produces two agreeing wrong answers. That is a `cross-semio-implementation`: a required SUPPLEMENT, never a substitute.\n\nIT ALSO OVERCLAIMED ITS SCOPE BY A FACTOR OF SEVENTEEN. Its `apply` dispatch implements exactly SEVEN kinds — bind/unbind-node-child, bind/unbind-scene-root-node, change-material-alpha-mode, change-material-double-sided, create-scene — and returns `mutation kind {other} has no oracle implementation` for everything else. The manifest nevertheless named it against all 120 of this subset's mutations. 120 mutations were counted as externally oracled on the strength of an implementation that refuses 113 of them.\n\nWHAT WOULD ACTUALLY DISCHARGE THESE. A domain-aware third-party glTF reader, which exists and is already vendored: `three` 0.182.0's `GLTFLoader` is registered and qualified for the sibling `s.stdio.semio@v1/✳️mesh` subset, where it reads real glTF geometry AND PBR material state. Pointing it at this subset is the work that would make these 120 honest; naming this entry was not.",
       "hostPath": "✏️s/🔌️plugins/🗄️stdio/🧪️oracle/📦️packages/🦀️rust",
       "kind": "cross-semio-implementation",
       "engine": {
@@ -1479,7 +1479,7 @@
         {
           "id": "add-required-extension",
           "capability": "gltf-2-0-mutate",
-          "payloadSchema": "🔣️payload.schema.json",
+          "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "applied"
           ],
@@ -1498,7 +1498,7 @@
         {
           "id": "add-used-extension",
           "capability": "gltf-2-0-mutate",
-          "payloadSchema": "🔣️payload.schema.json",
+          "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "applied"
           ],
@@ -1517,7 +1517,7 @@
         {
           "id": "bind-default-scene",
           "capability": "gltf-2-0-mutate",
-          "payloadSchema": "🔣️payload.schema.json",
+          "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "applied"
           ],
@@ -1536,7 +1536,7 @@
         {
           "id": "bind-morph-target-attribute",
           "capability": "gltf-2-0-mutate",
-          "payloadSchema": "🔣️payload.schema.json",
+          "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "applied"
           ],
@@ -1555,7 +1555,7 @@
         {
           "id": "bind-node-camera",
           "capability": "gltf-2-0-mutate",
-          "payloadSchema": "🔣️payload.schema.json",
+          "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "applied"
           ],
@@ -1574,7 +1574,7 @@
         {
           "id": "bind-node-child",
           "capability": "gltf-2-0-mutate",
-          "payloadSchema": "🔣️payload.schema.json",
+          "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "applied"
           ],
@@ -1593,7 +1593,7 @@
         {
           "id": "bind-node-mesh",
           "capability": "gltf-2-0-mutate",
-          "payloadSchema": "🔣️payload.schema.json",
+          "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "applied"
           ],
@@ -1612,7 +1612,7 @@
         {
           "id": "bind-node-skin",
           "capability": "gltf-2-0-mutate",
-          "payloadSchema": "🔣️payload.schema.json",
+          "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "applied"
           ],
@@ -1631,7 +1631,7 @@
         {
           "id": "bind-primitive-attribute",
           "capability": "gltf-2-0-mutate",
-          "payloadSchema": "🔣️payload.schema.json",
+          "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "applied"
           ],
@@ -1650,7 +1650,7 @@
         {
           "id": "bind-primitive-indices",
           "capability": "gltf-2-0-mutate",
-          "payloadSchema": "🔣️payload.schema.json",
+          "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "applied"
           ],
@@ -1669,7 +1669,7 @@
         {
           "id": "bind-primitive-material",
           "capability": "gltf-2-0-mutate",
-          "payloadSchema": "🔣️payload.schema.json",
+          "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "applied"
           ],
@@ -1688,7 +1688,7 @@
         {
           "id": "bind-scene-root-node",
           "capability": "gltf-2-0-mutate",
-          "payloadSchema": "🔣️payload.schema.json",
+          "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "applied"
           ],
@@ -1707,7 +1707,7 @@
         {
           "id": "change-asset-descriptive-metadata",
           "capability": "gltf-2-0-mutate",
-          "payloadSchema": "🔣️payload.schema.json",
+          "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "applied"
           ],
@@ -1726,7 +1726,7 @@
         {
           "id": "change-asset-extension-data",
           "capability": "gltf-2-0-mutate",
-          "payloadSchema": "🔣️payload.schema.json",
+          "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "applied"
           ],
@@ -1745,7 +1745,7 @@
         {
           "id": "change-asset-extra-data",
           "capability": "gltf-2-0-mutate",
-          "payloadSchema": "🔣️payload.schema.json",
+          "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "applied"
           ],
@@ -1764,7 +1764,7 @@
         {
           "id": "change-asset-version",
           "capability": "gltf-2-0-mutate",
-          "payloadSchema": "🔣️payload.schema.json",
+          "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "applied"
           ],
@@ -1783,7 +1783,7 @@
         {
           "id": "change-document-extension-data",
           "capability": "gltf-2-0-mutate",
-          "payloadSchema": "🔣️payload.schema.json",
+          "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "applied"
           ],
@@ -1802,7 +1802,7 @@
         {
           "id": "change-document-extra-data",
           "capability": "gltf-2-0-mutate",
-          "payloadSchema": "🔣️payload.schema.json",
+          "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "applied"
           ],
@@ -1821,7 +1821,7 @@
         {
           "id": "change-material-alpha-mode",
           "capability": "gltf-2-0-mutate",
-          "payloadSchema": "🔣️payload.schema.json",
+          "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "applied"
           ],
@@ -1840,7 +1840,7 @@
         {
           "id": "change-material-double-sided",
           "capability": "gltf-2-0-mutate",
-          "payloadSchema": "🔣️payload.schema.json",
+          "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "applied"
           ],
@@ -1859,7 +1859,7 @@
         {
           "id": "change-mesh-extension-data",
           "capability": "gltf-2-0-mutate",
-          "payloadSchema": "🔣️payload.schema.json",
+          "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "applied"
           ],
@@ -1878,7 +1878,7 @@
         {
           "id": "change-mesh-extra-data",
           "capability": "gltf-2-0-mutate",
-          "payloadSchema": "🔣️payload.schema.json",
+          "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "applied"
           ],
@@ -1897,7 +1897,7 @@
         {
           "id": "change-mesh-morph-weights",
           "capability": "gltf-2-0-mutate",
-          "payloadSchema": "🔣️payload.schema.json",
+          "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "applied"
           ],
@@ -1916,7 +1916,7 @@
         {
           "id": "change-mesh-name",
           "capability": "gltf-2-0-mutate",
-          "payloadSchema": "🔣️payload.schema.json",
+          "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "applied"
           ],
@@ -1935,7 +1935,7 @@
         {
           "id": "change-node-extension-data",
           "capability": "gltf-2-0-mutate",
-          "payloadSchema": "🔣️payload.schema.json",
+          "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "applied"
           ],
@@ -1954,7 +1954,7 @@
         {
           "id": "change-node-extra-data",
           "capability": "gltf-2-0-mutate",
-          "payloadSchema": "🔣️payload.schema.json",
+          "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "applied"
           ],
@@ -1973,7 +1973,7 @@
         {
           "id": "change-node-morph-weights",
           "capability": "gltf-2-0-mutate",
-          "payloadSchema": "🔣️payload.schema.json",
+          "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "applied"
           ],
@@ -2012,7 +2012,7 @@
         {
           "id": "change-node-transform",
           "capability": "gltf-2-0-mutate",
-          "payloadSchema": "🔣️payload.schema.json",
+          "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "applied"
           ],
@@ -2031,7 +2031,7 @@
         {
           "id": "change-primitive-extension-data",
           "capability": "gltf-2-0-mutate",
-          "payloadSchema": "🔣️payload.schema.json",
+          "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "applied"
           ],
@@ -2050,7 +2050,7 @@
         {
           "id": "change-primitive-extra-data",
           "capability": "gltf-2-0-mutate",
-          "payloadSchema": "🔣️payload.schema.json",
+          "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "applied"
           ],
@@ -2069,7 +2069,7 @@
         {
           "id": "change-primitive-topology-mode",
           "capability": "gltf-2-0-mutate",
-          "payloadSchema": "🔣️payload.schema.json",
+          "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "applied"
           ],
@@ -2088,7 +2088,7 @@
         {
           "id": "change-scene-extension-data",
           "capability": "gltf-2-0-mutate",
-          "payloadSchema": "🔣️payload.schema.json",
+          "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "applied"
           ],
@@ -2107,7 +2107,7 @@
         {
           "id": "change-scene-extra-data",
           "capability": "gltf-2-0-mutate",
-          "payloadSchema": "🔣️payload.schema.json",
+          "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "applied"
           ],
@@ -2126,7 +2126,7 @@
         {
           "id": "change-scene-name",
           "capability": "gltf-2-0-mutate",
-          "payloadSchema": "🔣️payload.schema.json",
+          "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "applied"
           ],
@@ -2145,7 +2145,7 @@
         {
           "id": "create-accessor",
           "capability": "gltf-2-0-mutate",
-          "payloadSchema": "🔣️payload.schema.json",
+          "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "applied"
           ],
@@ -2165,7 +2165,7 @@
         {
           "id": "create-animation",
           "capability": "gltf-2-0-mutate",
-          "payloadSchema": "🔣️payload.schema.json",
+          "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "applied"
           ],
@@ -2184,7 +2184,7 @@
         {
           "id": "create-buffer",
           "capability": "gltf-2-0-mutate",
-          "payloadSchema": "🔣️payload.schema.json",
+          "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "applied"
           ],
@@ -2204,7 +2204,7 @@
         {
           "id": "create-buffer-view",
           "capability": "gltf-2-0-mutate",
-          "payloadSchema": "🔣️payload.schema.json",
+          "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "applied"
           ],
@@ -2224,7 +2224,7 @@
         {
           "id": "create-camera",
           "capability": "gltf-2-0-mutate",
-          "payloadSchema": "🔣️payload.schema.json",
+          "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "applied"
           ],
@@ -2243,7 +2243,7 @@
         {
           "id": "create-image",
           "capability": "gltf-2-0-mutate",
-          "payloadSchema": "🔣️payload.schema.json",
+          "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "applied"
           ],
@@ -2263,7 +2263,7 @@
         {
           "id": "create-material",
           "capability": "gltf-2-0-mutate",
-          "payloadSchema": "🔣️payload.schema.json",
+          "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "applied"
           ],
@@ -2282,7 +2282,7 @@
         {
           "id": "create-mesh",
           "capability": "gltf-2-0-mutate",
-          "payloadSchema": "🔣️payload.schema.json",
+          "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "applied"
           ],
@@ -2301,7 +2301,7 @@
         {
           "id": "create-morph-target",
           "capability": "gltf-2-0-mutate",
-          "payloadSchema": "🔣️payload.schema.json",
+          "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "applied"
           ],
@@ -2320,7 +2320,7 @@
         {
           "id": "create-node",
           "capability": "gltf-2-0-mutate",
-          "payloadSchema": "🔣️payload.schema.json",
+          "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "applied"
           ],
@@ -2339,7 +2339,7 @@
         {
           "id": "create-primitive",
           "capability": "gltf-2-0-mutate",
-          "payloadSchema": "🔣️payload.schema.json",
+          "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "applied"
           ],
@@ -2358,7 +2358,7 @@
         {
           "id": "create-sampler",
           "capability": "gltf-2-0-mutate",
-          "payloadSchema": "🔣️payload.schema.json",
+          "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "applied"
           ],
@@ -2378,7 +2378,7 @@
         {
           "id": "create-scene",
           "capability": "gltf-2-0-mutate",
-          "payloadSchema": "🔣️payload.schema.json",
+          "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "applied"
           ],
@@ -2397,7 +2397,7 @@
         {
           "id": "create-skin",
           "capability": "gltf-2-0-mutate",
-          "payloadSchema": "🔣️payload.schema.json",
+          "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "applied"
           ],
@@ -2416,7 +2416,7 @@
         {
           "id": "create-texture",
           "capability": "gltf-2-0-mutate",
-          "payloadSchema": "🔣️payload.schema.json",
+          "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "applied"
           ],
@@ -2436,7 +2436,7 @@
         {
           "id": "delete-accessor",
           "capability": "gltf-2-0-mutate",
-          "payloadSchema": "🔣️payload.schema.json",
+          "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "applied"
           ],
@@ -2456,7 +2456,7 @@
         {
           "id": "delete-animation",
           "capability": "gltf-2-0-mutate",
-          "payloadSchema": "🔣️payload.schema.json",
+          "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "applied"
           ],
@@ -2475,7 +2475,7 @@
         {
           "id": "delete-buffer",
           "capability": "gltf-2-0-mutate",
-          "payloadSchema": "🔣️payload.schema.json",
+          "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "applied"
           ],
@@ -2495,7 +2495,7 @@
         {
           "id": "delete-buffer-view",
           "capability": "gltf-2-0-mutate",
-          "payloadSchema": "🔣️payload.schema.json",
+          "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "applied"
           ],
@@ -2515,7 +2515,7 @@
         {
           "id": "delete-camera",
           "capability": "gltf-2-0-mutate",
-          "payloadSchema": "🔣️payload.schema.json",
+          "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "applied"
           ],
@@ -2534,7 +2534,7 @@
         {
           "id": "delete-image",
           "capability": "gltf-2-0-mutate",
-          "payloadSchema": "🔣️payload.schema.json",
+          "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "applied"
           ],
@@ -2554,7 +2554,7 @@
         {
           "id": "delete-material",
           "capability": "gltf-2-0-mutate",
-          "payloadSchema": "🔣️payload.schema.json",
+          "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "applied"
           ],
@@ -2573,7 +2573,7 @@
         {
           "id": "delete-mesh",
           "capability": "gltf-2-0-mutate",
-          "payloadSchema": "🔣️payload.schema.json",
+          "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "applied"
           ],
@@ -2592,7 +2592,7 @@
         {
           "id": "delete-morph-target",
           "capability": "gltf-2-0-mutate",
-          "payloadSchema": "🔣️payload.schema.json",
+          "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "applied"
           ],
@@ -2611,7 +2611,7 @@
         {
           "id": "delete-node",
           "capability": "gltf-2-0-mutate",
-          "payloadSchema": "🔣️payload.schema.json",
+          "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "applied"
           ],
@@ -2630,7 +2630,7 @@
         {
           "id": "delete-primitive",
           "capability": "gltf-2-0-mutate",
-          "payloadSchema": "🔣️payload.schema.json",
+          "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "applied"
           ],
@@ -2649,7 +2649,7 @@
         {
           "id": "delete-sampler",
           "capability": "gltf-2-0-mutate",
-          "payloadSchema": "🔣️payload.schema.json",
+          "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "applied"
           ],
@@ -2669,7 +2669,7 @@
         {
           "id": "delete-scene",
           "capability": "gltf-2-0-mutate",
-          "payloadSchema": "🔣️payload.schema.json",
+          "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "applied"
           ],
@@ -2688,7 +2688,7 @@
         {
           "id": "delete-skin",
           "capability": "gltf-2-0-mutate",
-          "payloadSchema": "🔣️payload.schema.json",
+          "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "applied"
           ],
@@ -2707,7 +2707,7 @@
         {
           "id": "delete-texture",
           "capability": "gltf-2-0-mutate",
-          "payloadSchema": "🔣️payload.schema.json",
+          "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "applied"
           ],
@@ -2727,7 +2727,7 @@
         {
           "id": "move-accessor",
           "capability": "gltf-2-0-mutate",
-          "payloadSchema": "🔣️payload.schema.json",
+          "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "applied"
           ],
@@ -2747,7 +2747,7 @@
         {
           "id": "move-animation",
           "capability": "gltf-2-0-mutate",
-          "payloadSchema": "🔣️payload.schema.json",
+          "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "applied"
           ],
@@ -2766,7 +2766,7 @@
         {
           "id": "move-buffer",
           "capability": "gltf-2-0-mutate",
-          "payloadSchema": "🔣️payload.schema.json",
+          "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "applied"
           ],
@@ -2786,7 +2786,7 @@
         {
           "id": "move-buffer-view",
           "capability": "gltf-2-0-mutate",
-          "payloadSchema": "🔣️payload.schema.json",
+          "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "applied"
           ],
@@ -2806,7 +2806,7 @@
         {
           "id": "move-camera",
           "capability": "gltf-2-0-mutate",
-          "payloadSchema": "🔣️payload.schema.json",
+          "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "applied"
           ],
@@ -2825,7 +2825,7 @@
         {
           "id": "move-image",
           "capability": "gltf-2-0-mutate",
-          "payloadSchema": "🔣️payload.schema.json",
+          "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "applied"
           ],
@@ -2845,7 +2845,7 @@
         {
           "id": "move-material",
           "capability": "gltf-2-0-mutate",
-          "payloadSchema": "🔣️payload.schema.json",
+          "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "applied"
           ],
@@ -2864,7 +2864,7 @@
         {
           "id": "move-mesh",
           "capability": "gltf-2-0-mutate",
-          "payloadSchema": "🔣️payload.schema.json",
+          "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "applied"
           ],
@@ -2883,7 +2883,7 @@
         {
           "id": "move-morph-target",
           "capability": "gltf-2-0-mutate",
-          "payloadSchema": "🔣️payload.schema.json",
+          "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "applied"
           ],
@@ -2902,7 +2902,7 @@
         {
           "id": "move-morph-target-attribute",
           "capability": "gltf-2-0-mutate",
-          "payloadSchema": "🔣️payload.schema.json",
+          "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "applied"
           ],
@@ -2921,7 +2921,7 @@
         {
           "id": "move-node",
           "capability": "gltf-2-0-mutate",
-          "payloadSchema": "🔣️payload.schema.json",
+          "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "applied"
           ],
@@ -2940,7 +2940,7 @@
         {
           "id": "move-node-child",
           "capability": "gltf-2-0-mutate",
-          "payloadSchema": "🔣️payload.schema.json",
+          "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "rejected"
           ],
@@ -2959,7 +2959,7 @@
         {
           "id": "move-node-parent",
           "capability": "gltf-2-0-mutate",
-          "payloadSchema": "🔣️payload.schema.json",
+          "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "applied"
           ],
@@ -2978,7 +2978,7 @@
         {
           "id": "move-primitive",
           "capability": "gltf-2-0-mutate",
-          "payloadSchema": "🔣️payload.schema.json",
+          "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "applied"
           ],
@@ -2997,7 +2997,7 @@
         {
           "id": "move-primitive-attribute",
           "capability": "gltf-2-0-mutate",
-          "payloadSchema": "🔣️payload.schema.json",
+          "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "applied"
           ],
@@ -3016,7 +3016,7 @@
         {
           "id": "move-required-extension",
           "capability": "gltf-2-0-mutate",
-          "payloadSchema": "🔣️payload.schema.json",
+          "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "applied"
           ],
@@ -3035,7 +3035,7 @@
         {
           "id": "move-sampler",
           "capability": "gltf-2-0-mutate",
-          "payloadSchema": "🔣️payload.schema.json",
+          "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "applied"
           ],
@@ -3055,7 +3055,7 @@
         {
           "id": "move-scene",
           "capability": "gltf-2-0-mutate",
-          "payloadSchema": "🔣️payload.schema.json",
+          "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "applied"
           ],
@@ -3074,7 +3074,7 @@
         {
           "id": "move-scene-root-node",
           "capability": "gltf-2-0-mutate",
-          "payloadSchema": "🔣️payload.schema.json",
+          "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "rejected"
           ],
@@ -3093,7 +3093,7 @@
         {
           "id": "move-skin",
           "capability": "gltf-2-0-mutate",
-          "payloadSchema": "🔣️payload.schema.json",
+          "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "applied"
           ],
@@ -3112,7 +3112,7 @@
         {
           "id": "move-texture",
           "capability": "gltf-2-0-mutate",
-          "payloadSchema": "🔣️payload.schema.json",
+          "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "applied"
           ],
@@ -3132,7 +3132,7 @@
         {
           "id": "move-used-extension",
           "capability": "gltf-2-0-mutate",
-          "payloadSchema": "🔣️payload.schema.json",
+          "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "applied"
           ],
@@ -3151,7 +3151,7 @@
         {
           "id": "remove-required-extension",
           "capability": "gltf-2-0-mutate",
-          "payloadSchema": "🔣️payload.schema.json",
+          "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "applied"
           ],
@@ -3170,7 +3170,7 @@
         {
           "id": "remove-used-extension",
           "capability": "gltf-2-0-mutate",
-          "payloadSchema": "🔣️payload.schema.json",
+          "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "applied"
           ],
@@ -3189,7 +3189,7 @@
         {
           "id": "reorder-accessors",
           "capability": "gltf-2-0-mutate",
-          "payloadSchema": "🔣️payload.schema.json",
+          "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "applied"
           ],
@@ -3209,7 +3209,7 @@
         {
           "id": "reorder-animations",
           "capability": "gltf-2-0-mutate",
-          "payloadSchema": "🔣️payload.schema.json",
+          "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "applied"
           ],
@@ -3228,7 +3228,7 @@
         {
           "id": "reorder-buffer-views",
           "capability": "gltf-2-0-mutate",
-          "payloadSchema": "🔣️payload.schema.json",
+          "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "applied"
           ],
@@ -3248,7 +3248,7 @@
         {
           "id": "reorder-buffers",
           "capability": "gltf-2-0-mutate",
-          "payloadSchema": "🔣️payload.schema.json",
+          "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "applied"
           ],
@@ -3268,7 +3268,7 @@
         {
           "id": "reorder-cameras",
           "capability": "gltf-2-0-mutate",
-          "payloadSchema": "🔣️payload.schema.json",
+          "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "applied"
           ],
@@ -3287,7 +3287,7 @@
         {
           "id": "reorder-images",
           "capability": "gltf-2-0-mutate",
-          "payloadSchema": "🔣️payload.schema.json",
+          "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "applied"
           ],
@@ -3307,7 +3307,7 @@
         {
           "id": "reorder-materials",
           "capability": "gltf-2-0-mutate",
-          "payloadSchema": "🔣️payload.schema.json",
+          "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "applied"
           ],
@@ -3326,7 +3326,7 @@
         {
           "id": "reorder-meshs",
           "capability": "gltf-2-0-mutate",
-          "payloadSchema": "🔣️payload.schema.json",
+          "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "applied"
           ],
@@ -3345,7 +3345,7 @@
         {
           "id": "reorder-morph-target-attributes",
           "capability": "gltf-2-0-mutate",
-          "payloadSchema": "🔣️payload.schema.json",
+          "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "applied"
           ],
@@ -3364,7 +3364,7 @@
         {
           "id": "reorder-morph-targets",
           "capability": "gltf-2-0-mutate",
-          "payloadSchema": "🔣️payload.schema.json",
+          "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "applied"
           ],
@@ -3383,7 +3383,7 @@
         {
           "id": "reorder-node-children",
           "capability": "gltf-2-0-mutate",
-          "payloadSchema": "🔣️payload.schema.json",
+          "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "rejected"
           ],
@@ -3402,7 +3402,7 @@
         {
           "id": "reorder-nodes",
           "capability": "gltf-2-0-mutate",
-          "payloadSchema": "🔣️payload.schema.json",
+          "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "applied"
           ],
@@ -3421,7 +3421,7 @@
         {
           "id": "reorder-primitive-attributes",
           "capability": "gltf-2-0-mutate",
-          "payloadSchema": "🔣️payload.schema.json",
+          "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "applied"
           ],
@@ -3440,7 +3440,7 @@
         {
           "id": "reorder-primitives",
           "capability": "gltf-2-0-mutate",
-          "payloadSchema": "🔣️payload.schema.json",
+          "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "applied"
           ],
@@ -3459,7 +3459,7 @@
         {
           "id": "reorder-required-extensions",
           "capability": "gltf-2-0-mutate",
-          "payloadSchema": "🔣️payload.schema.json",
+          "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "applied"
           ],
@@ -3478,7 +3478,7 @@
         {
           "id": "reorder-samplers",
           "capability": "gltf-2-0-mutate",
-          "payloadSchema": "🔣️payload.schema.json",
+          "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "applied"
           ],
@@ -3498,7 +3498,7 @@
         {
           "id": "reorder-scene-root-nodes",
           "capability": "gltf-2-0-mutate",
-          "payloadSchema": "🔣️payload.schema.json",
+          "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "rejected"
           ],
@@ -3517,7 +3517,7 @@
         {
           "id": "reorder-scenes",
           "capability": "gltf-2-0-mutate",
-          "payloadSchema": "🔣️payload.schema.json",
+          "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "applied"
           ],
@@ -3536,7 +3536,7 @@
         {
           "id": "reorder-skins",
           "capability": "gltf-2-0-mutate",
-          "payloadSchema": "🔣️payload.schema.json",
+          "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "applied"
           ],
@@ -3555,7 +3555,7 @@
         {
           "id": "reorder-textures",
           "capability": "gltf-2-0-mutate",
-          "payloadSchema": "🔣️payload.schema.json",
+          "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "applied"
           ],
@@ -3575,7 +3575,7 @@
         {
           "id": "reorder-used-extensions",
           "capability": "gltf-2-0-mutate",
-          "payloadSchema": "🔣️payload.schema.json",
+          "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "applied"
           ],
@@ -3594,7 +3594,7 @@
         {
           "id": "unbind-default-scene",
           "capability": "gltf-2-0-mutate",
-          "payloadSchema": "🔣️payload.schema.json",
+          "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "applied"
           ],
@@ -3613,7 +3613,7 @@
         {
           "id": "unbind-morph-target-attribute",
           "capability": "gltf-2-0-mutate",
-          "payloadSchema": "🔣️payload.schema.json",
+          "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "applied"
           ],
@@ -3632,7 +3632,7 @@
         {
           "id": "unbind-node-camera",
           "capability": "gltf-2-0-mutate",
-          "payloadSchema": "🔣️payload.schema.json",
+          "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "applied"
           ],
@@ -3651,7 +3651,7 @@
         {
           "id": "unbind-node-child",
           "capability": "gltf-2-0-mutate",
-          "payloadSchema": "🔣️payload.schema.json",
+          "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "applied"
           ],
@@ -3670,7 +3670,7 @@
         {
           "id": "unbind-node-mesh",
           "capability": "gltf-2-0-mutate",
-          "payloadSchema": "🔣️payload.schema.json",
+          "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "applied"
           ],
@@ -3689,7 +3689,7 @@
         {
           "id": "unbind-node-skin",
           "capability": "gltf-2-0-mutate",
-          "payloadSchema": "🔣️payload.schema.json",
+          "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "applied"
           ],
@@ -3708,7 +3708,7 @@
         {
           "id": "unbind-primitive-attribute",
           "capability": "gltf-2-0-mutate",
-          "payloadSchema": "🔣️payload.schema.json",
+          "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "applied"
           ],
@@ -3727,7 +3727,7 @@
         {
           "id": "unbind-primitive-indices",
           "capability": "gltf-2-0-mutate",
-          "payloadSchema": "🔣️payload.schema.json",
+          "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "applied"
           ],
@@ -3746,7 +3746,7 @@
         {
           "id": "unbind-primitive-material",
           "capability": "gltf-2-0-mutate",
-          "payloadSchema": "🔣️payload.schema.json",
+          "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "applied"
           ],
@@ -3765,7 +3765,7 @@
         {
           "id": "unbind-scene-root-node",
           "capability": "gltf-2-0-mutate",
-          "payloadSchema": "🔣️payload.schema.json",
+          "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "applied"
           ],

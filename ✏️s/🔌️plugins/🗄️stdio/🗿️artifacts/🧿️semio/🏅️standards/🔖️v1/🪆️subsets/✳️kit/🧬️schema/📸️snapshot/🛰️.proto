@@ -1,0 +1,25 @@
+syntax = "proto3";
+// 🧬️ SemioKitSnapshot schema — real facet mirror of the Rust `🦀️.rs` sibling.
+package semio.s_stdio_semio_kit.snapshot;
+
+message ArtifactChildHandle { string child_id = 1; string target = 2; }
+message ArtifactLinkRef { string target = 1; bytes pin_wire = 2; string role = 3; }
+message SemioTransform {
+  double translation_x = 1; double translation_y = 2; double translation_z = 3;
+  double rotation_x = 4; double rotation_y = 5; double rotation_z = 6; double rotation_w = 7;
+  double scale_x = 8; double scale_y = 9; double scale_z = 10;
+}
+message SemioKitType { string id = 1; string name = 2; string category = 3; }
+message SemioKitPiece { string id = 1; string type_id = 2; SemioTransform transform = 3; }
+message SemioKitConnection { string id = 1; string connecting_piece_id = 2; string connecting_port = 3; string connected_piece_id = 4; string connected_port = 5; }
+message SemioKitDesign { string id = 1; string name = 2; repeated SemioKitPiece pieces = 3; repeated SemioKitConnection connections = 4; }
+
+message SemioKitSnapshot {
+  string schema = 1;
+  repeated SemioKitType types = 2;
+  repeated SemioKitDesign designs = 3;
+  repeated ArtifactChildHandle objects = 4;
+  repeated ArtifactChildHandle models = 5;
+  ArtifactChildHandle properties = 6;
+  repeated ArtifactLinkRef representations = 7;
+}

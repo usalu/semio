@@ -13,9 +13,9 @@ pub struct RemoveTextChunkMutation {
 //#endregion Payload
 
 //#region Facets
-#[path = "💾️binary/🦀️component.rs"]
+#[path = "💾️binary/🦀️.rs"]
 pub mod binary;
-#[path = "📝️text/🦀️component.rs"]
+#[path = "📝️text/🦀️.rs"]
 pub mod text;
 //#endregion Facets
 
@@ -66,8 +66,8 @@ pub fn chunk_order_remove_text_diff(order: &[PngChunkMarker], at: usize) -> PngC
 
 #[cfg(test)]
 pub(crate) fn test_case() -> PngMutation {
-    serde_json::from_str(include_str!("🧪️tests/direct-behavior/🦠️mutation/🔣️component.json")).expect("committed remove-text-chunk payload")
+    serde_json::from_str(include_str!("🧪️tests/direct-behavior/🦠️mutation/🔣️.json")).expect("committed remove-text-chunk payload")
 }
 #[cfg(test)]
-#[path = "🧪️tests/direct-behavior/🦀️component.rs"]
+#[path = "🧪️tests/direct-behavior/🦀️.rs"]
 mod tests_direct_behavior;

@@ -5,14 +5,14 @@
   "displayName": "Clear Page Text",
   "emoji": "🧹️",
   "aggregateVariant": "ClearPageText",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
-  "invertibility": "non-invertible",
-  "diffParticipation": "detect",
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "apply-only",
   "outcomeClasses": [
-    "error",
-    "applied"
+    "applied",
+    "error"
   ],
   "composition": "atomic",
   "requiredLanguageSurfaces": [

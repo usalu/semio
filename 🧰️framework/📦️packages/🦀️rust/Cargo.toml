@@ -12,7 +12,7 @@ id = "framework"
 [lints]
 workspace = true
 [lib]
-path = "📦️glue.rs"
+path = "🦀️.rs"
 
 [dependencies]
 semio-framework-ui-contract = { path = "../../🔨️modules/🖱️ui/🧬️contract/📦️packages/🦀️rust", package = "semio-framework-ui-contract" }

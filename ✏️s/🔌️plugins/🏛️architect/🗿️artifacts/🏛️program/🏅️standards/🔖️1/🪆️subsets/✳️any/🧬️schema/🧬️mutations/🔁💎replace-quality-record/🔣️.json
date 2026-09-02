@@ -5,7 +5,7 @@
   "displayName": "Replace Quality Record",
   "emoji": "🔁💎",
   "aggregateVariant": "ReplaceQualityRecord",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

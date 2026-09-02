@@ -5,7 +5,7 @@
   "displayName": "Change Liquid Es Mpa",
   "emoji": "🐴",
   "aggregateVariant": "ChangeLiquidESMpa",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

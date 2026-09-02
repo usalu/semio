@@ -1,12 +1,11 @@
 //! 🦀️ Architect program exhaustive mutation case — Rust adapter. Ticket `26/08/23/END-TO-END-TESTING-REFACTOR`.
 //!
-//! This file registers the SUBJECT half only. The reference half is `🐍️component.py` beside it — a
-//! second implementation of this document and its 266 mutations, in Python, registered as
-//! `architect-program-python-independent` in
-//! `../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️oracle/🔣️.json`. Registering a Rust oracle here
-//! would make this repository its own reference and manufacture a green self-comparison, so there
-//! is none. The laws this half claims are asserted inside the subject handlers through the shared
-//! `✏️s/🔌️plugins/🗄️stdio/🧪️oracle/⚖️law/🦀️component.rs` module, whose helpers are dependency-free
+//! The subject applies the 266 program mutations and exports each resulting document through the
+//! production ZIP serializer. The oracle reads those exact bytes through the approved `zip` crate;
+//! it never links the subject implementation. The older Python second implementation remains
+//! supplemental evidence, while this carrier reader is the qualifying third-party oracle. The laws
+//! this half claims are asserted inside the subject handlers through the shared
+//! `✏️s/🔌️plugins/🗄️stdio/🧪️oracle/⚖️law/🦀️.rs` module, whose helpers are dependency-free
 //! and format-neutral by their own doc comment; the Python half restates them by hand in its own
 //! `🔖️Laws` region, because the Python host exposes no `law` module.
 //!
@@ -25,10 +24,28 @@
 
 use semio_repo_test_host::Adapter;
 
+fn archive_projection(mut entries: Vec<(String, Vec<u8>)>) -> Result<semio_repo_test_host::Json, String> {
+    use semio_repo_test_host::{parse_json, Json};
+    entries.sort_by(|left, right| left.0.cmp(&right.0));
+    let projected = entries
+        .into_iter()
+        .map(|(name, bytes)| {
+            let text = String::from_utf8(bytes).map_err(|error| format!("{name} is not UTF-8 JSON: {error}"))?;
+            Ok(Json::Object(vec![("name".into(), Json::String(name)), ("rows".into(), parse_json(&text)?)]))
+        })
+        .collect::<Result<Vec<_>, String>>()?;
+    Ok(Json::Object(vec![("format".into(), Json::String("architect-program-registers-zip-v1".into())), ("entries".into(), Json::Array(projected))]))
+}
+
+fn archive_oracle(ctx: &semio_repo_test_host::Context) -> Result<semio_repo_test_host::Outcome, String> {
+    let raw = ctx.subject_raw_bytes("rust")?;
+    let entries = semio_s_plugin_stdio_test_oracle::archive::read_zip_entries(&raw)?.into_iter().map(|entry| (entry.name, entry.bytes)).collect();
+    Ok(semio_repo_test_host::Outcome::with_raw(raw, archive_projection(entries)?))
+}
+
 //#region 🔖️Kinds
-#[cfg(feature = "sut")]
 /// 🏷️ Mirrors `ProgramMutation::KINDS`
-/// (`../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs`) — duplicated, not
+/// (`../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs`) — duplicated, not
 /// imported, because the oracle-only build must not link the subject crate. The production module's
 /// own `kinds_match_the_enum_and_the_catalog` keeps that list honest against the enum and the
 /// catalog; the contract gate keeps this case honest against the catalog.
@@ -310,14 +327,7 @@ const KINDS: &[&str] = &[
 /// `mutation.target-missing`. Naming them here is a claim the reader can check against the vectors;
 /// the feature description states the same, and their `mutate` scenarios still assert the declared
 /// status and diagnostic code.
-const GUARD_VECTORS: &[&str] = &[
-    "delete-benchmark-record",
-    "rename-benchmark-record",
-    "replace-benchmark-record",
-    "delete-knowledge-record",
-    "rename-knowledge-record",
-    "replace-knowledge-record",
-];
+const GUARD_VECTORS: &[&str] = &["delete-benchmark-record", "rename-benchmark-record", "replace-benchmark-record", "delete-knowledge-record", "rename-knowledge-record", "replace-knowledge-record"];
 
 #[cfg(feature = "sut")]
 /// 🧫️ Where a `<vector>` cell from the feature's `Examples` tables is rooted, relative to this
@@ -326,17 +336,38 @@ const VECTORS: &str = "asset://🏅️standards/🔖️1/🪆️subsets/✳️an
 
 #[cfg(feature = "sut")]
 /// 📄️ The real committed example document, in this subset's own `.dsl.semio` text envelope.
-const EXAMPLE_ASSET: &str = "asset://🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio";
+const EXAMPLE_ASSET: &str = "asset://🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/🗣️.dsl.semio";
 //#endregion 🔖️Kinds
 
 //#region 🔖️Subject
 #[cfg(feature = "sut")]
 mod subject {
     use semio_repo_test_host::{parse_json, Context, Json, Outcome};
-    use semio_s_plugin_stdio_test_oracle::law;
+    use semio_s_plugin_architect::artifacts::program::io::export::serializers::artifacts::zip::v2_0::any as export_zip;
+    use semio_s_plugin_architect::artifacts::program::standards::v1::subsets::any::schema::mutations::{
+        apply_program_mutation_outcome, decode_program_mutation_json, decode_program_snapshot_json, encode_program_snapshot_json, inverse_program_mutation_steps, ProgramMutation,
+    };
     use semio_s_plugin_architect::artifacts::program::standards::v1::subsets::any::schema::snapshot::{parse_program_dsl, print_program_dsl};
-    use semio_s_plugin_architect::artifacts::program::standards::v1::subsets::any::schema::mutations::{apply_program_mutation_outcome, decode_program_mutation_json, decode_program_snapshot_json, encode_program_snapshot_json, inverse_program_mutation_steps, ProgramMutation};
     use semio_s_plugin_architect::artifacts::program::ProgramSnapshot;
+    use semio_s_plugin_stdio_test_oracle::law;
+
+    fn block_on<F: std::future::Future>(future: F) -> F::Output {
+        let mut future = std::pin::pin!(future);
+        let mut context = std::task::Context::from_waker(std::task::Waker::noop());
+        loop {
+            match future.as_mut().poll(&mut context) {
+                std::task::Poll::Ready(output) => return output,
+                std::task::Poll::Pending => std::thread::yield_now(),
+            }
+        }
+    }
+
+    fn carrier(snapshot: &ProgramSnapshot) -> Result<(Vec<u8>, Json), String> {
+        let archive = block_on(export_zip::serialize(snapshot)).map_err(|error| format!("program ZIP export failed: {error}"))?;
+        let projection = super::archive_projection(archive.entries.iter().map(|entry| (entry.name.clone(), entry.data.clone())).collect())?;
+        let raw = block_on(export_zip::serialize_raw_bytes(snapshot)).map_err(|error| format!("program ZIP encoding failed: {error}"))?;
+        Ok((raw, projection))
+    }
 
     //#region 🔖️VectorReading
     /// 🧫️ The scenario's own doc string, which carries the kind and the committed vector directory
@@ -361,7 +392,7 @@ mod subject {
     }
 
     fn mutation_at(ctx: &Context, vector: &str, kind: &str) -> Result<ProgramMutation, String> {
-        decode_program_mutation_json(&text_at(ctx, vector, "🦠️mutation/🔣️component.json")?).map_err(|error| format!("the committed mutation payload for {kind:?} must decode: {error}"))
+        decode_program_mutation_json(&text_at(ctx, vector, "🦠️mutation/🔣️.json")?).map_err(|error| format!("the committed mutation payload for {kind:?} must decode: {error}"))
     }
 
     fn projection(snapshot: &ProgramSnapshot) -> Result<Json, String> {
@@ -390,10 +421,10 @@ mod subject {
     /// the mutation actually moved the compared projection.
     pub fn mutate(ctx: &Context) -> Result<Outcome, String> {
         let (kind, vector, _spec) = addressed(ctx)?;
-        let base = snapshot_at(ctx, &vector, "📸️snapshot/⬅️before/🔣️component.json", &kind)?;
-        let expected = snapshot_at(ctx, &vector, "📸️snapshot/➡️after/🔣️component.json", &kind)?;
+        let base = snapshot_at(ctx, &vector, "📸️snapshot/⬅️before/🔣️.json", &kind)?;
+        let expected = snapshot_at(ctx, &vector, "📸️snapshot/➡️after/🔣️.json", &kind)?;
         let mutation = mutation_at(ctx, &vector, &kind)?;
-        let declared = parse_json(&text_at(ctx, &vector, "🎯️outcome/🔣️component.json")?)?;
+        let declared = parse_json(&text_at(ctx, &vector, "🎯️outcome/🔣️.json")?)?;
         let mut current = base.clone();
         let outcome = apply_program_mutation_outcome(&mut current, &mutation);
         let raised: Vec<String> = outcome.messages().iter().map(|message| message.code.0.clone()).collect();
@@ -405,7 +436,10 @@ mod subject {
             return Err(format!("mutate-{kind}: the applied snapshot is not the committed after-snapshot — {first}"));
         }
         law::mutation_is_observable(&kind, &produced, &before, super::GUARD_VECTORS)?;
-        Ok(Outcome::with_raw(produced.to_string().into_bytes(), produced))
+        let (raw, carrier_after) = carrier(&current)?;
+        let (_, carrier_before) = carrier(&base)?;
+        law::mutation_is_observable(&kind, &carrier_after, &carrier_before, super::GUARD_VECTORS)?;
+        Ok(Outcome::with_raw(raw, carrier_after))
     }
 
     /// ↩️ The inverse law, asserted in role: applying the kind and then its OWN computed inverse
@@ -413,7 +447,7 @@ mod subject {
     /// tolerance and no ignored key.
     pub fn inverse(ctx: &Context) -> Result<Outcome, String> {
         let (kind, vector, _spec) = addressed(ctx)?;
-        let base = snapshot_at(ctx, &vector, "📸️snapshot/⬅️before/🔣️component.json", &kind)?;
+        let base = snapshot_at(ctx, &vector, "📸️snapshot/⬅️before/🔣️.json", &kind)?;
         let mutation = mutation_at(ctx, &vector, &kind)?;
         let original = projection(&base)?;
         let mut current = base.clone();
@@ -423,13 +457,16 @@ mod subject {
         }
         let restored = projection(&current)?;
         law::inverse_restores(&kind, &restored, &original)?;
-        Ok(Outcome::with_raw(restored.to_string().into_bytes(), restored))
+        let (raw, carrier_restored) = carrier(&current)?;
+        let (_, carrier_original) = carrier(&base)?;
+        law::inverse_restores(&kind, &carrier_restored, &carrier_original)?;
+        Ok(Outcome::with_raw(raw, carrier_restored))
     }
 
     /// 🔁️ The real committed artifact, parsed and printed back. Two laws, both in role: the
     /// reparsed document must carry the same projection, and the printed text must reproduce the
     /// committed bytes EXACTLY. The exact-bytes half is `carrier_is_exact` rather than the wave's
-    /// usual no-byte-pass-through tripwire because the committed `🗣️example.dsl.semio` is this
+    /// usual no-byte-pass-through tripwire because the committed `🗣️.dsl.semio` is this
     /// subset's OWN printer's output — the repository generated it from this very codec — so
     /// reproducing it is the correct answer and any drift between the committed artifact and the
     /// printer is the defect this scenario exists to catch.
@@ -442,7 +479,10 @@ mod subject {
         let (before, after) = (projection(&parsed)?, projection(&reparsed)?);
         law::round_trip_preserves(&after, &before)?;
         law::carrier_is_exact(printed.as_bytes(), &committed)?;
-        Ok(Outcome::with_raw(printed.into_bytes(), after))
+        let (raw, carrier_after) = carrier(&reparsed)?;
+        let (_, carrier_before) = carrier(&parsed)?;
+        law::round_trip_preserves(&carrier_after, &carrier_before)?;
+        Ok(Outcome::with_raw(raw, carrier_after))
     }
     //#endregion 🔖️Handlers
 }
@@ -454,6 +494,10 @@ mod subject {
 pub fn adapter() -> Adapter {
     #[allow(unused_mut)]
     let mut built = Adapter::new("rust");
+    for kind in KINDS {
+        built = built.oracle(&format!("mutate-{kind}"), archive_oracle).oracle(&format!("inverse-{kind}"), archive_oracle);
+    }
+    built = built.oracle("identity-round-trip", archive_oracle);
     #[cfg(feature = "sut")]
     for kind in KINDS {
         built = built.subject(&format!("mutate-{kind}"), subject::mutate).subject(&format!("inverse-{kind}"), subject::inverse);

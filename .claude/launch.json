@@ -78,7 +78,7 @@
       "name": "map-harness",
       "runtimeExecutable": "bun",
       "runtimeArgs": [
-        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️29/GIS-MAP-END-TO-END/🧪️harness/📜️script.ts"
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️29/GIS-MAP-END-TO-END/📜️harnessscript.ts"
       ],
       "port": 6210
     },

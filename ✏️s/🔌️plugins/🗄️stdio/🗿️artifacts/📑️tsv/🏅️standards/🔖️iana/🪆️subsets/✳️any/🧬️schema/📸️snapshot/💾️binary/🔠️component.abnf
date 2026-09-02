@@ -1,7 +1,0 @@
-; abnf stdio.tsv snapshot (binary) — the shared `.semio` binary envelope wrapping the real
-; TSV text (store::semio_format::wrap_binary; magic/token-len/token per that codec).
-document   = magic token-len token payload
-magic      = %x89 %x53 %x45 %x4D %x0D %x0A %x1A %x0A   ; 8 bytes: 0x89 "SEM" CR LF SUB LF
-token-len  = 4OCTET                                     ; u32, little-endian
-token      = *OCTET                                     ; UTF-8 "stdio.tsv.pack v1", token-len bytes
-payload    = *OCTET                                     ; UTF-8 bytes of the TSV `file` production (see sibling ../📝️text/📖️component.grammar.semio)

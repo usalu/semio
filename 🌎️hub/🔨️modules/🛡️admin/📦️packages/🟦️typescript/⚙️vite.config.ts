@@ -4,7 +4,7 @@ import react from "@vitejs/plugin-react";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { defineConfig } from "vite";
-import { semioEmojiIndexHtmlVitePlugin } from "../../../../../🧰️framework/🔨️modules/🖱️ui/🎨️styling/🟦️vite-elements-assets.ts";
+import { semioEmojiIndexHtmlVitePlugin } from "../../../../../🧰️framework/🔨️modules/🖱️ui/🎨️styling/🟦️.ts";
 // #endregion 🔌️Adapters
 
 const dir = dirname(fileURLToPath(import.meta.url));
@@ -23,8 +23,8 @@ export default defineConfig({
   plugins: [semioEmojiIndexHtmlVitePlugin(dir), react(), tailwindcss()],
   resolve: {
     alias: [
-      { find: "@semio-tech/ui-react", replacement: resolve(repoRoot, "./🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx") },
-      { find: "@semio-tech/framework-os", replacement: resolve(repoRoot, "./🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/🟦️glue.ts") },
+      { find: "@semio-tech/ui-react", replacement: resolve(repoRoot, "./🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/🟦️.tsx") },
+      { find: "@semio-tech/framework-os", replacement: resolve(repoRoot, "./🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/🟦️.ts") },
     ],
   },
   server: {

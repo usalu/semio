@@ -1,6 +1,6 @@
 //! 🧬️ Assembly artifact — semantic document mutation dispatch enum. Every variant is a
 //! single-field tuple wrapping a handcrafted `protocol::MutationKind` payload, one per
-//! `🧬️mutations/<slug>/` triad leaf wired by `📦️glue.rs`. `#[derive(dsl::Mutations)]` generates
+//! `🧬️mutations/<slug>/` triad leaf wired by `🦀️.rs`. `#[derive(dsl::Mutations)]` generates
 //! `impl protocol::Mutation<AssemblySnapshot>` and `impl protocol::SemanticMutation<AssemblySnapshot>`
 //! from those payloads — no hand-written apply/diff/inverse dispatch here.
 
@@ -11,7 +11,7 @@ use serde::{Deserialize, Serialize};
 
 // 🧵 Deliberately NOT `use super::{create_slot, ...};` — this file's own `pub use X::mutation::x;`
 // builder re-exports below, glob-re-exported back into `mutations` by the sibling `pub use
-// component::*;` in `📦️glue.rs`, would collide with a bare-name import of the same sibling
+// component::*;` in `🦀️.rs`, would collide with a bare-name import of the same sibling
 // submodules (E0252, hit and fixed once already this wave) — fully qualifying each variant's
 // payload path below instead breaks that self-referential loop.
 
@@ -32,7 +32,7 @@ pub enum AssemblyMutation {
 
 //#region 🏷️Kinds
 /// 🏷️ The kebab-case spelling of every [`AssemblyMutation`] variant, in declaration order — the exact
-/// vocabulary the `assembly-1-any` mutation catalog (`../../🧪️oracle/🔣️.json`) declares and
+/// vocabulary the `assembly-1-any` mutation catalog (`../../🔣️oracle.json`) declares and
 /// the `mutate-assembly-1` exhaustive case measures itself against. The framework never parses Rust, so
 /// `kinds_match_the_enum_and_the_catalog` below is what keeps this list honest against both.
 pub const KINDS: &[&str] = &["create-slot", "delete-slot", "create-rule", "delete-rule", "change-weight", "remove-weight", "connect-slots", "disconnect-slots", "change-seed"];
@@ -207,7 +207,7 @@ mod tests {
         for (kind, descriptor) in KINDS.iter().zip(descriptors.iter()) {
             assert_eq!(*kind, descriptor.kind, "KINDS must match #[derive(dsl::Mutations)]'s own declaration order and spelling");
         }
-        let manifest = include_str!("../../🧪️oracle/🔣️.json");
+        let manifest = include_str!("../../🔣️oracle.json");
         for kind in KINDS {
             assert!(manifest.contains(&format!("\"{kind}\"")), "KINDS entry {kind:?} must also appear in the committed oracle manifest's catalog");
         }

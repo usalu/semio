@@ -2,10 +2,10 @@
 # `🦀️engine` directory in this same folder — never joins the repository's root workspace or its
 # Cargo.lock.
 #
-# This is the READER wrapper the `tobj-obj-3-0-mutate-reader` oracle (`../../🧪️oracle/🔣️.json`)
+# This is the READER wrapper the `tobj-obj-3-0-mutate-reader` oracle (`../../🔣️oracle.json`)
 # points at. It depends on nothing but the real `tobj` 4 — the exact crate registered there — and is
 # never invoked to compute what a mutation SHOULD produce (that stays this subset's own
-# `🧪️oracle/🦀️component.rs`, a DIFFERENT, `cross-semio-implementation`-registered mechanism). This
+# `🦀️oracle.rs`, a DIFFERENT, `cross-semio-implementation`-registered mechanism). This
 # crate only builds fixture bytes (hand-authored grammar, mirroring the sibling `🦀️engine`'s own
 # precedent — OBJ has no reference WRITER in the Rust ecosystem) and projects real bytes back out
 # through `tobj`'s own reading — the mechanism `../../🔬️probes/📜️script.ts` shells out to.

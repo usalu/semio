@@ -5,7 +5,7 @@
   "displayName": "Change Vortex Vortex Kind",
   "emoji": "🧷",
   "aggregateVariant": "ChangeVortexVortexKind",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": "change-vortex-vortex-kind",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

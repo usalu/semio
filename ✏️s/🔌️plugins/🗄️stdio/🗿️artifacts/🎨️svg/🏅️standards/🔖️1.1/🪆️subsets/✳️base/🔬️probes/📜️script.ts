@@ -17,7 +17,7 @@
 // and performs the GATING structural comparison itself. No SVG semantics computed here: `viewBox`
 // and `transform` are compared as OPAQUE ATTRIBUTE STRINGS, exactly like every other attribute —
 // `quick-xml` itself has no notion of SVG geometry grammar, so this reader never decomposes them
-// into numbers the way this subset's own `🧪️oracle/🦀️component.rs` (a computed, NOT a read,
+// into numbers the way this subset's own `🦀️oracle.rs` (a computed, NOT a read,
 // cross-semio-implementation oracle) does. A `viewBox`/`transform` value that changed is still a
 // string that differs, which IS a witnessed, honest reader comparison — just not a semantic one.
 //

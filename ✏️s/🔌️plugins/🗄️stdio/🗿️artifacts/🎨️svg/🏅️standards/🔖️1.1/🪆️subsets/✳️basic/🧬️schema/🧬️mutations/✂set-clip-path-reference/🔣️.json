@@ -5,7 +5,7 @@
   "displayName": "Set Clip Path Reference",
   "emoji": "✂",
   "aggregateVariant": "SetClipPathReference",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

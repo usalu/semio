@@ -5,7 +5,7 @@
   "displayName": "Set Style Based On",
   "emoji": "🔗",
   "aggregateVariant": "SetStyleBasedOn",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

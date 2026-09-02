@@ -1,7 +1,0 @@
-{
-  "$id": "https://semio.tech/schema/stdio.semio.drawing.snapshot/text.json",
-  "title": "SemioDrawingSnapshotText",
-  "description": "Text-wire scalar (preamble line + hex-encoded JSON body). Real shape: 🅰️component.g4.",
-  "type": "string",
-  "pattern": "^semio stdio\\.semio\\.drawing\\.dsl v1\\n[0-9a-f]*$"
-}

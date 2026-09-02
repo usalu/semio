@@ -5,7 +5,7 @@
   "displayName": "Set Image Geometry",
   "emoji": "📍",
   "aggregateVariant": "SetImageGeometry",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

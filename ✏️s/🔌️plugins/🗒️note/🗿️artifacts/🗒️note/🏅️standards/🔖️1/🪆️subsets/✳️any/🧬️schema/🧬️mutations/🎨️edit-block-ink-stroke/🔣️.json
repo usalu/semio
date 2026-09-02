@@ -5,7 +5,7 @@
   "displayName": "Edit Block Ink Stroke",
   "emoji": "🎨️",
   "aggregateVariant": "EditBlockInkStroke",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": "edit-block-ink-stroke",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

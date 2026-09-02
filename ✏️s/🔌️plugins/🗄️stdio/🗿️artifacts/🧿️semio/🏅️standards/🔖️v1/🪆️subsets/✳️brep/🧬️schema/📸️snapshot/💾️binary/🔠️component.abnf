@@ -1,9 +1,0 @@
-; ABNF-style descriptive mirror of `stdio.semio.brep`'s real `pack` binary frame (past the
-; `semio_format` envelope) -- see the authoritative `📡️component.protocol.semio` for the
-; conformance-tested version.
-document       = format schema-len schema-bytes payload
-format         = %x01                  ; PACK_BINARY_FORMAT
-schema-len     = 1*OCTET               ; LEB128 varint byte count
-schema-bytes   = *OCTET                ; UTF-8, schema-len bytes
-payload        = *OCTET                ; opaque tail: vertices/edges/loops/faces/shells/solids,
-                                        ; see component.rs's encode_brep_snapshot_binary

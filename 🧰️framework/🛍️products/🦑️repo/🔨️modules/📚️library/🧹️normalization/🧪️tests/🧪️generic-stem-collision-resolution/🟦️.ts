@@ -74,7 +74,7 @@ const validateVectors = validator.compile(schema);
 //#region 🧪️Collision
 /** 🐙️ 26/08/17/END-TO-END-TAXONOMY-NORMALIZATION §goal-collide: `canonicalFile`'s generic-stem
  * short-circuit (`🧹️normalization/🟦️.ts:3122-3124`) discards the leading role/target emoji on a
- * file whose trailing stem is generic (`component`, `index`, …) — so a `🦀️component.rs` and its
+ * file whose trailing stem is generic (`component`, `index`, …) — so a `🦀️.rs` and its
  * `🧪️component.rs` test sibling, or an `⌨️component.rs`/`🧊️component.rs` per-target pair, both
  * project to the same bare kind-only leaf and collide. The taxonomy fix is a DIRECTORY
  * disambiguator that already exists (`tests`, `wgpu-target`, `tui-target`) — every one of the 44
@@ -106,7 +106,7 @@ describe("generic-stem collision resolution (26/08/17/END-TO-END-TAXONOMY-NORMAL
     expect(role, `${row.path} classifies as "${role}" — a struct/enum/trait/union/impl crept back into package glue, which packageImplementationDestination will hoist onto the owner's canonical slot`).toBe("declaration");
   });
 
-  /** 🐙️ A stricter variant of the same defect: `📦️packages/🟦️typescript/📦️index.ts` (the package's
+  /** 🐙️ A stricter variant of the same defect: `📦️packages/🟦️typescript/🟦️.ts` (the package's
    * own implementation) and any OTHER generic/empty-stem TypeScript file inside that SAME package
    * boundary both classify `role: "implementation"` and both get unconditionally hoisted to
    * `${owner}/${kindOnly}` by `packageImplementationDestination` — with no check that the slot is

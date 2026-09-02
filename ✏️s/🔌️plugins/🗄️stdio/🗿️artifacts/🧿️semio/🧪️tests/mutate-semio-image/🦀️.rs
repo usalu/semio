@@ -3,7 +3,7 @@
 //!
 //! **This file no longer serves the oracle role.** The reference for `semio-v1-image-mutate` is the
 //! registered oracle `semio-image-python-pillow-independent` (`../../🏅️standards/🔖️v1/🪆️subsets/
-//! ✳️image/🧪️oracle/🔣️.json`) — Pillow for the raster payload it genuinely speaks, plus an
+//! ✳️image/🔣️oracle.json`) — Pillow for the raster payload it genuinely speaks, plus an
 //! independent Python implementation of the semio-native carrier and the thirteen verbs, living
 //! beside this file as `🐍️component.py`. The runner dispatches the oracle role there and the subject
 //! role here, and compares the two projections under `@comparison-ordered-json-v1`. Registering
@@ -26,7 +26,7 @@
 //!
 //! **How the fixture reaches typed values.** The generated test host links only
 //! `semio-repo-test-host` and, behind `sut`, this subset's own crate — no `serde`, no `serde_json`,
-//! and this crate's `protocol`/`store` extern-crate aliases are private (`📦️glue.rs`), so neither
+//! and this crate's `protocol`/`store` extern-crate aliases are private (`🦀️.rs`), so neither
 //! `protocol::Mutation` nor a `serde` derive is nameable from here. The small forward-only decoder
 //! below therefore reads JSON STRUCTURE field by field, mirroring each payload's own declared serde
 //! shape; it never invents or reimplements any mutation SEMANTICS, which still run through the real
@@ -37,7 +37,7 @@ use semio_repo_test_host::Adapter;
 
 //#region 🔖️Kinds
 /// 🏷️ Mirrors `SemioImageMutation::KINDS` (`../../🏅️standards/🔖️v1/🪆️subsets/✳️image/🧬️schema/
-/// 🧬️mutations/🦀️component.rs`) — duplicated, not imported, because the generated host builds this
+/// 🧬️mutations/🦀️.rs`) — duplicated, not imported, because the generated host builds this
 /// file with and without the subject crate. The contract's mutation-coverage gate keeps this list
 /// honest against the catalog; `kinds_match_the_enum_and_the_catalog` in that production file keeps
 /// it honest against the enum.
@@ -62,7 +62,7 @@ mod subject {
     //#region 🔖️Input
     /// 🎞️ The real derived animation — the first three native-resolution frames of the committed
     /// `🖼️color-animated-text.gif`, decoded by Pillow once and committed here with its provenance.
-    const ARTIFACT_DSL: &str = "local://🗣️artifact.dsl.semio";
+    const ARTIFACT_DSL: &str = "local://🗣️.dsl.semio";
     /// 🎒️ The same animation in its binary envelope, written by a separate codec from the DSL text.
     const ARTIFACT_PACK: &str = "local://🎒️artifact.pack.semio";
 

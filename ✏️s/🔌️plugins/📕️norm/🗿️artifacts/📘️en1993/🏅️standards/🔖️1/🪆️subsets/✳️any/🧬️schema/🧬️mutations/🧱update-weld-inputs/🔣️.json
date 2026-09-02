@@ -5,7 +5,7 @@
   "displayName": "Update Weld Inputs",
   "emoji": "🧱",
   "aggregateVariant": "UpdateWeldInputs",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

@@ -5,7 +5,7 @@
   "displayName": "Change Representation Lod",
   "emoji": "🏔",
   "aggregateVariant": "ChangeRepresentationLod",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": "change-representation-lod",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

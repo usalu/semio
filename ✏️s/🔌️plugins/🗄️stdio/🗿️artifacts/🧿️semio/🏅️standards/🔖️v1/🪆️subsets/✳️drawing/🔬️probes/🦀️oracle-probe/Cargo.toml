@@ -16,11 +16,11 @@ description = "🔬️ Third-party carrier readers for s.stdio.semio@v1/✳️dr
 
 [[bin]]
 name = "semio-drawing-oracle-probe"
-path = "🦀️component.rs"
+path = "🦀️.rs"
 
 # 🔮️ TEST-ONLY BY CONSTRUCTION, AND READERS ONLY. Each of the three is an already-approved
 # `test-oracle` entry in the repository's 🔒️dependencies.json, registered here for the carrier it
-# parses. None of them is asked what a mutation should produce — see this subset's 🧪️oracle/🔣️.json.
+# parses. None of them is asked what a mutation should produce — see this subset's 🔣️oracle.json.
 [dependencies]
 quick-xml = "0.42"
 dxf = "0.6"

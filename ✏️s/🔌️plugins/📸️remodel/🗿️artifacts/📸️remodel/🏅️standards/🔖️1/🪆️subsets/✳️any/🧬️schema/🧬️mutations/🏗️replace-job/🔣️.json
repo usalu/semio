@@ -5,7 +5,7 @@
   "displayName": "Replace Job",
   "emoji": "🏗️",
   "aggregateVariant": "ReplaceJob",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": "replace-job",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

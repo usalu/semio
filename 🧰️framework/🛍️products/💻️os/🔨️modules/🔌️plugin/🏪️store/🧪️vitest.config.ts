@@ -12,7 +12,7 @@ export default {
     name: "@semio-tech/plugin-extension-store",
     environment: "node",
     include: [],
-    includeSource: ["📜️store.ts", "🟦️zip.ts"],
+    includeSource: ["📜️store.ts", "🟦️.ts"],
     passWithNoTests: false,
   },
 };

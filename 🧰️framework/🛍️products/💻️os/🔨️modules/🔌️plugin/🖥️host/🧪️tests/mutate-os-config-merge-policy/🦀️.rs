@@ -1,6 +1,6 @@
 //! 🦀️ Merge-policy exhaustive mutation case — Rust adapter. Recorded no-oracle decision
 //! `os-config-merge-policy-mutation-semantics`
-//! (`../../../../../🎚️config/🧪️oracle/🔣️.json`): `os.config.merge-policy` is this operating
+//! (`../../../../../🎚️config/🔣️oracle.json`): `os.config.merge-policy` is this operating
 //! system's own authority configuration with no third-party implementation, so `oracle` here reads
 //! the committed, independently handcrafted specification fixture
 //! (`../../../../../🎚️config/🧬️schema/🧬️mutations/🛡️change-merge-policy/🧪️tests/<fixture>/`)
@@ -9,7 +9,7 @@
 //! `MergePolicyConfigMutation` vocabulary.
 //!
 //! **Why the case sits here rather than beside the vocabulary.** `🎚️config` has no crate of its
-//! own; `📦️glue.rs` in `🖥️host/📦️packages/🦀️rust` is the ONE place `MergePolicyConfigMutation` is
+//! own; `🦀️.rs` in `🖥️host/📦️packages/🦀️rust` is the ONE place `MergePolicyConfigMutation` is
 //! mounted, and the generated test host resolves its subject crate by walking UP from the case
 //! owner. The feature says the same thing in prose so a reader is not left guessing.
 //!
@@ -33,10 +33,10 @@ const KINDS: &[&str] = &["change-merge-policy"];
 fn fixture_text(kind: &str) -> (&'static str, &'static str, &'static str, &'static str) {
     match kind {
         "change-merge-policy" => (
-            include_str!("../../../../../🎚️config/🧬️schema/🧬️mutations/🛡️change-merge-policy/🧪️tests/tightens-the-authority-to-vigilant/📸️snapshot/⬅️before/🔣️component.json"),
-            include_str!("../../../../../🎚️config/🧬️schema/🧬️mutations/🛡️change-merge-policy/🧪️tests/tightens-the-authority-to-vigilant/🦠️mutation/🔣️component.json"),
-            include_str!("../../../../../🎚️config/🧬️schema/🧬️mutations/🛡️change-merge-policy/🧪️tests/tightens-the-authority-to-vigilant/📸️snapshot/➡️after/🔣️component.json"),
-            include_str!("../../../../../🎚️config/🧬️schema/🧬️mutations/🛡️change-merge-policy/🧪️tests/tightens-the-authority-to-vigilant/🎯️outcome/🔣️component.json"),
+            include_str!("../../../../../🎚️config/🧬️schema/🧬️mutations/🛡️change-merge-policy/🧪️tests/tightens-the-authority-to-vigilant/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../../../../🎚️config/🧬️schema/🧬️mutations/🛡️change-merge-policy/🧪️tests/tightens-the-authority-to-vigilant/🦠️mutation/🔣️.json"),
+            include_str!("../../../../../🎚️config/🧬️schema/🧬️mutations/🛡️change-merge-policy/🧪️tests/tightens-the-authority-to-vigilant/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../../../../🎚️config/🧬️schema/🧬️mutations/🛡️change-merge-policy/🧪️tests/tightens-the-authority-to-vigilant/🎯️outcome/🔣️.json"),
         ),
         other => panic!("mutate-os-config-merge-policy: no specification vector registered for kind {other:?}"),
     }

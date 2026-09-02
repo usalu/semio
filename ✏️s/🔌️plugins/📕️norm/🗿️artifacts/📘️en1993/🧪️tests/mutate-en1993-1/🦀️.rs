@@ -1,7 +1,7 @@
 //! 🦀️ EN 1993 exhaustive mutation case — Rust adapter. Ticket
 //! 26/08/23/END-TO-END-TESTING-REFACTOR, wave 14 (the no-oracle conversion). The recorded
 //! no-oracle decision `en1993-1-mutation-semantics` is gone from
-//! `../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️oracle/🔣️.json`, because a reference now
+//! `../../🏅️standards/🔖️1/🪆️subsets/✳️any/🔣️oracle.json`, because a reference now
 //! exists to compare against: `s.norm.en1993` is a
 //! semio-native artifact with no third-party reader or writer, so its reference is a second
 //! IMPLEMENTATION: the independent Python `🐍️component.py` beside this file, registered as the
@@ -21,7 +21,7 @@
 //! `✏️s/🔌️plugins/🗄️stdio/🧪️oracle/⚖️law` module (`law::mutation_is_observable`,
 //! `law::inverse_restores`, `law::round_trip_preserves`, `law::carrier_is_exact`) that the
 //! stdio mutation cases use, reached through the `oracleHostPackages` entry this plugin
-//! declares in `✏️s/🔌️plugins/📕️norm/🧪️oracle/🔣️.json`. What `parity` adds on top is the
+//! declares in `✏️s/🔌️plugins/📕️norm/🔣️oracle.json`. What `parity` adds on top is the
 //! one thing a single implementation can never provide: that a second implementation, written in
 //! another language from the same written specification, reaches the same document.
 //!
@@ -31,9 +31,9 @@
 //! unreachable from here. The subset's own production code therefore exports the bridges
 //! (`decode_en1993_snapshot_json`/`encode_en1993_snapshot_json`,
 //! `decode_en1993_dsl`/`encode_en1993_dsl`, `decode_en1993_pack`/`encode_en1993_pack` in
-//! `../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️component.rs`;
+//! `../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs`;
 //! `decode_en1993_mutation_json`, `apply_en1993_mutation`, `inverse_en1993_mutation` in
-//! `../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs`), whose
+//! `../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs`), whose
 //! signatures name only reachable types. This side reaches the committed vectors through
 //! `include_str!` and the Python side through the `asset://` URIs the feature declares, so both
 //! read the SAME committed bytes and neither holds a Rust or Python literal transcribed beside
@@ -52,7 +52,7 @@ use semio_repo_test_host::{digest, parse_json, Adapter, Context, Json, Outcome};
 use semio_s_plugin_stdio_test_oracle::law;
 
 //#region 🔖️Kinds
-/// 🏷️ Mirrors `En1993Mutation::KINDS` (`../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs`) —
+/// 🏷️ Mirrors `En1993Mutation::KINDS` (`../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs`) —
 /// duplicated, not imported, because the oracle-only build must not link the subject crate. The
 /// contract's mutation-coverage gate keeps this list honest against the catalog;
 /// `kinds_match_the_enum_and_the_catalog` in that production file keeps it honest against the enum.
@@ -94,106 +94,106 @@ const PACK_ASSET: &str = "asset://🏅️standards/🔖️1/🪆️subsets/✳�
 fn fixture_text(kind: &str) -> (&'static str, &'static str, &'static str, &'static str) {
     match kind {
         "change-annex" => (
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎢change-annex/🧪️tests/switches-the-national-annex-from-de-to-en/📸️snapshot/⬅️before/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎢change-annex/🧪️tests/switches-the-national-annex-from-de-to-en/🦠️mutation/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎢change-annex/🧪️tests/switches-the-national-annex-from-de-to-en/📸️snapshot/➡️after/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎢change-annex/🧪️tests/switches-the-national-annex-from-de-to-en/🎯️outcome/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎢change-annex/🧪️tests/switches-the-national-annex-from-de-to-en/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎢change-annex/🧪️tests/switches-the-national-annex-from-de-to-en/🦠️mutation/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎢change-annex/🧪️tests/switches-the-national-annex-from-de-to-en/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎢change-annex/🧪️tests/switches-the-national-annex-from-de-to-en/🎯️outcome/🔣️.json"),
         ),
         "update-member-properties" => (
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧊update-member-properties/🧪️tests/re-grades-the-base-member-to-s460-under-a-heavier-load/📸️snapshot/⬅️before/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧊update-member-properties/🧪️tests/re-grades-the-base-member-to-s460-under-a-heavier-load/🦠️mutation/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧊update-member-properties/🧪️tests/re-grades-the-base-member-to-s460-under-a-heavier-load/📸️snapshot/➡️after/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧊update-member-properties/🧪️tests/re-grades-the-base-member-to-s460-under-a-heavier-load/🎯️outcome/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧊update-member-properties/🧪️tests/re-grades-the-base-member-to-s460-under-a-heavier-load/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧊update-member-properties/🧪️tests/re-grades-the-base-member-to-s460-under-a-heavier-load/🦠️mutation/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧊update-member-properties/🧪️tests/re-grades-the-base-member-to-s460-under-a-heavier-load/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧊update-member-properties/🧪️tests/re-grades-the-base-member-to-s460-under-a-heavier-load/🎯️outcome/🔣️.json"),
         ),
         "update-fire-inputs" => (
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔆update-fire-inputs/🧪️tests/raises-the-fire-protection-to-r90/📸️snapshot/⬅️before/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔆update-fire-inputs/🧪️tests/raises-the-fire-protection-to-r90/🦠️mutation/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔆update-fire-inputs/🧪️tests/raises-the-fire-protection-to-r90/📸️snapshot/➡️after/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔆update-fire-inputs/🧪️tests/raises-the-fire-protection-to-r90/🎯️outcome/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔆update-fire-inputs/🧪️tests/raises-the-fire-protection-to-r90/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔆update-fire-inputs/🧪️tests/raises-the-fire-protection-to-r90/🦠️mutation/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔆update-fire-inputs/🧪️tests/raises-the-fire-protection-to-r90/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔆update-fire-inputs/🧪️tests/raises-the-fire-protection-to-r90/🎯️outcome/🔣️.json"),
         ),
         "update-cold-formed-inputs" => (
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔥update-cold-formed-inputs/🧪️tests/thickens-the-cold-formed-flange-and-reverses-its-stress-gradient/📸️snapshot/⬅️before/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔥update-cold-formed-inputs/🧪️tests/thickens-the-cold-formed-flange-and-reverses-its-stress-gradient/🦠️mutation/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔥update-cold-formed-inputs/🧪️tests/thickens-the-cold-formed-flange-and-reverses-its-stress-gradient/📸️snapshot/➡️after/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔥update-cold-formed-inputs/🧪️tests/thickens-the-cold-formed-flange-and-reverses-its-stress-gradient/🎯️outcome/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔥update-cold-formed-inputs/🧪️tests/thickens-the-cold-formed-flange-and-reverses-its-stress-gradient/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔥update-cold-formed-inputs/🧪️tests/thickens-the-cold-formed-flange-and-reverses-its-stress-gradient/🦠️mutation/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔥update-cold-formed-inputs/🧪️tests/thickens-the-cold-formed-flange-and-reverses-its-stress-gradient/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔥update-cold-formed-inputs/🧪️tests/thickens-the-cold-formed-flange-and-reverses-its-stress-gradient/🎯️outcome/🔣️.json"),
         ),
         "update-stainless-inputs" => (
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎚️update-stainless-inputs/🧪️tests/upsizes-the-stainless-section-to-a-duplex-grade/📸️snapshot/⬅️before/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎚️update-stainless-inputs/🧪️tests/upsizes-the-stainless-section-to-a-duplex-grade/🦠️mutation/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎚️update-stainless-inputs/🧪️tests/upsizes-the-stainless-section-to-a-duplex-grade/📸️snapshot/➡️after/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎚️update-stainless-inputs/🧪️tests/upsizes-the-stainless-section-to-a-duplex-grade/🎯️outcome/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎚️update-stainless-inputs/🧪️tests/upsizes-the-stainless-section-to-a-duplex-grade/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎚️update-stainless-inputs/🧪️tests/upsizes-the-stainless-section-to-a-duplex-grade/🦠️mutation/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎚️update-stainless-inputs/🧪️tests/upsizes-the-stainless-section-to-a-duplex-grade/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎚️update-stainless-inputs/🧪️tests/upsizes-the-stainless-section-to-a-duplex-grade/🎯️outcome/🔣️.json"),
         ),
         "update-plated-inputs" => (
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭update-plated-inputs/🧪️tests/makes-the-plate-panel-more-slender-and-more-stressed/📸️snapshot/⬅️before/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭update-plated-inputs/🧪️tests/makes-the-plate-panel-more-slender-and-more-stressed/🦠️mutation/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭update-plated-inputs/🧪️tests/makes-the-plate-panel-more-slender-and-more-stressed/📸️snapshot/➡️after/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭update-plated-inputs/🧪️tests/makes-the-plate-panel-more-slender-and-more-stressed/🎯️outcome/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭update-plated-inputs/🧪️tests/makes-the-plate-panel-more-slender-and-more-stressed/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭update-plated-inputs/🧪️tests/makes-the-plate-panel-more-slender-and-more-stressed/🦠️mutation/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭update-plated-inputs/🧪️tests/makes-the-plate-panel-more-slender-and-more-stressed/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭update-plated-inputs/🧪️tests/makes-the-plate-panel-more-slender-and-more-stressed/🎯️outcome/🔣️.json"),
         ),
         "update-silo-shell-inputs" => (
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪟update-silo-shell-inputs/🧪️tests/deepens-the-silo-and-thickens-its-shell/📸️snapshot/⬅️before/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪟update-silo-shell-inputs/🧪️tests/deepens-the-silo-and-thickens-its-shell/🦠️mutation/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪟update-silo-shell-inputs/🧪️tests/deepens-the-silo-and-thickens-its-shell/📸️snapshot/➡️after/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪟update-silo-shell-inputs/🧪️tests/deepens-the-silo-and-thickens-its-shell/🎯️outcome/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪟update-silo-shell-inputs/🧪️tests/deepens-the-silo-and-thickens-its-shell/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪟update-silo-shell-inputs/🧪️tests/deepens-the-silo-and-thickens-its-shell/🦠️mutation/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪟update-silo-shell-inputs/🧪️tests/deepens-the-silo-and-thickens-its-shell/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪟update-silo-shell-inputs/🧪️tests/deepens-the-silo-and-thickens-its-shell/🎯️outcome/🔣️.json"),
         ),
         "update-bolt-inputs" => (
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌞update-bolt-inputs/🧪️tests/moves-the-connection-to-four-m24-grade-10-9-bolts/📸️snapshot/⬅️before/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌞update-bolt-inputs/🧪️tests/moves-the-connection-to-four-m24-grade-10-9-bolts/🦠️mutation/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌞update-bolt-inputs/🧪️tests/moves-the-connection-to-four-m24-grade-10-9-bolts/📸️snapshot/➡️after/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌞update-bolt-inputs/🧪️tests/moves-the-connection-to-four-m24-grade-10-9-bolts/🎯️outcome/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌞update-bolt-inputs/🧪️tests/moves-the-connection-to-four-m24-grade-10-9-bolts/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌞update-bolt-inputs/🧪️tests/moves-the-connection-to-four-m24-grade-10-9-bolts/🦠️mutation/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌞update-bolt-inputs/🧪️tests/moves-the-connection-to-four-m24-grade-10-9-bolts/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌞update-bolt-inputs/🧪️tests/moves-the-connection-to-four-m24-grade-10-9-bolts/🎯️outcome/🔣️.json"),
         ),
         "update-weld-inputs" => (
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧱update-weld-inputs/🧪️tests/lengthens-the-fillet-weld-and-re-grades-it-to-s460/📸️snapshot/⬅️before/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧱update-weld-inputs/🧪️tests/lengthens-the-fillet-weld-and-re-grades-it-to-s460/🦠️mutation/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧱update-weld-inputs/🧪️tests/lengthens-the-fillet-weld-and-re-grades-it-to-s460/📸️snapshot/➡️after/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧱update-weld-inputs/🧪️tests/lengthens-the-fillet-weld-and-re-grades-it-to-s460/🎯️outcome/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧱update-weld-inputs/🧪️tests/lengthens-the-fillet-weld-and-re-grades-it-to-s460/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧱update-weld-inputs/🧪️tests/lengthens-the-fillet-weld-and-re-grades-it-to-s460/🦠️mutation/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧱update-weld-inputs/🧪️tests/lengthens-the-fillet-weld-and-re-grades-it-to-s460/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧱update-weld-inputs/🧪️tests/lengthens-the-fillet-weld-and-re-grades-it-to-s460/🎯️outcome/🔣️.json"),
         ),
         "update-fatigue-inputs" => (
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/❄️update-fatigue-inputs/🧪️tests/drops-to-detail-category-56-under-a-safe-life-assessment/📸️snapshot/⬅️before/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/❄️update-fatigue-inputs/🧪️tests/drops-to-detail-category-56-under-a-safe-life-assessment/🦠️mutation/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/❄️update-fatigue-inputs/🧪️tests/drops-to-detail-category-56-under-a-safe-life-assessment/📸️snapshot/➡️after/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/❄️update-fatigue-inputs/🧪️tests/drops-to-detail-category-56-under-a-safe-life-assessment/🎯️outcome/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/❄️update-fatigue-inputs/🧪️tests/drops-to-detail-category-56-under-a-safe-life-assessment/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/❄️update-fatigue-inputs/🧪️tests/drops-to-detail-category-56-under-a-safe-life-assessment/🦠️mutation/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/❄️update-fatigue-inputs/🧪️tests/drops-to-detail-category-56-under-a-safe-life-assessment/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/❄️update-fatigue-inputs/🧪️tests/drops-to-detail-category-56-under-a-safe-life-assessment/🎯️outcome/🔣️.json"),
         ),
         "update-through-thickness-inputs" => (
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌬️update-through-thickness-inputs/🧪️tests/upgrades-the-subgrade-to-k2-for-a-thicker-plate-at-minus-20c/📸️snapshot/⬅️before/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌬️update-through-thickness-inputs/🧪️tests/upgrades-the-subgrade-to-k2-for-a-thicker-plate-at-minus-20c/🦠️mutation/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌬️update-through-thickness-inputs/🧪️tests/upgrades-the-subgrade-to-k2-for-a-thicker-plate-at-minus-20c/📸️snapshot/➡️after/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌬️update-through-thickness-inputs/🧪️tests/upgrades-the-subgrade-to-k2-for-a-thicker-plate-at-minus-20c/🎯️outcome/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌬️update-through-thickness-inputs/🧪️tests/upgrades-the-subgrade-to-k2-for-a-thicker-plate-at-minus-20c/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌬️update-through-thickness-inputs/🧪️tests/upgrades-the-subgrade-to-k2-for-a-thicker-plate-at-minus-20c/🦠️mutation/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌬️update-through-thickness-inputs/🧪️tests/upgrades-the-subgrade-to-k2-for-a-thicker-plate-at-minus-20c/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌬️update-through-thickness-inputs/🧪️tests/upgrades-the-subgrade-to-k2-for-a-thicker-plate-at-minus-20c/🎯️outcome/🔣️.json"),
         ),
         "update-tension-component-inputs" => (
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⚡update-tension-component-inputs/🧪️tests/derates-the-tension-rod-to-a-400-kn-characteristic-strength/📸️snapshot/⬅️before/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⚡update-tension-component-inputs/🧪️tests/derates-the-tension-rod-to-a-400-kn-characteristic-strength/🦠️mutation/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⚡update-tension-component-inputs/🧪️tests/derates-the-tension-rod-to-a-400-kn-characteristic-strength/📸️snapshot/➡️after/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⚡update-tension-component-inputs/🧪️tests/derates-the-tension-rod-to-a-400-kn-characteristic-strength/🎯️outcome/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⚡update-tension-component-inputs/🧪️tests/derates-the-tension-rod-to-a-400-kn-characteristic-strength/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⚡update-tension-component-inputs/🧪️tests/derates-the-tension-rod-to-a-400-kn-characteristic-strength/🦠️mutation/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⚡update-tension-component-inputs/🧪️tests/derates-the-tension-rod-to-a-400-kn-characteristic-strength/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⚡update-tension-component-inputs/🧪️tests/derates-the-tension-rod-to-a-400-kn-characteristic-strength/🎯️outcome/🔣️.json"),
         ),
         "update-hss-inputs" => (
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💧update-hss-inputs/🧪️tests/reclassifies-the-hollow-section-to-class-3-in-s355/📸️snapshot/⬅️before/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💧update-hss-inputs/🧪️tests/reclassifies-the-hollow-section-to-class-3-in-s355/🦠️mutation/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💧update-hss-inputs/🧪️tests/reclassifies-the-hollow-section-to-class-3-in-s355/📸️snapshot/➡️after/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💧update-hss-inputs/🧪️tests/reclassifies-the-hollow-section-to-class-3-in-s355/🎯️outcome/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💧update-hss-inputs/🧪️tests/reclassifies-the-hollow-section-to-class-3-in-s355/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💧update-hss-inputs/🧪️tests/reclassifies-the-hollow-section-to-class-3-in-s355/🦠️mutation/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💧update-hss-inputs/🧪️tests/reclassifies-the-hollow-section-to-class-3-in-s355/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💧update-hss-inputs/🧪️tests/reclassifies-the-hollow-section-to-class-3-in-s355/🎯️outcome/🔣️.json"),
         ),
         "update-bridge-inputs" => (
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏗️update-bridge-inputs/🧪️tests/raises-the-bridge-damage-equivalence-and-dynamic-factors/📸️snapshot/⬅️before/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏗️update-bridge-inputs/🧪️tests/raises-the-bridge-damage-equivalence-and-dynamic-factors/🦠️mutation/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏗️update-bridge-inputs/🧪️tests/raises-the-bridge-damage-equivalence-and-dynamic-factors/📸️snapshot/➡️after/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏗️update-bridge-inputs/🧪️tests/raises-the-bridge-damage-equivalence-and-dynamic-factors/🎯️outcome/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏗️update-bridge-inputs/🧪️tests/raises-the-bridge-damage-equivalence-and-dynamic-factors/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏗️update-bridge-inputs/🧪️tests/raises-the-bridge-damage-equivalence-and-dynamic-factors/🦠️mutation/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏗️update-bridge-inputs/🧪️tests/raises-the-bridge-damage-equivalence-and-dynamic-factors/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏗️update-bridge-inputs/🧪️tests/raises-the-bridge-damage-equivalence-and-dynamic-factors/🎯️outcome/🔣️.json"),
         ),
         "update-tower-inputs" => (
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌗update-tower-inputs/🧪️tests/raises-the-tower-wind-factor-and-leg-force/📸️snapshot/⬅️before/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌗update-tower-inputs/🧪️tests/raises-the-tower-wind-factor-and-leg-force/🦠️mutation/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌗update-tower-inputs/🧪️tests/raises-the-tower-wind-factor-and-leg-force/📸️snapshot/➡️after/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌗update-tower-inputs/🧪️tests/raises-the-tower-wind-factor-and-leg-force/🎯️outcome/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌗update-tower-inputs/🧪️tests/raises-the-tower-wind-factor-and-leg-force/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌗update-tower-inputs/🧪️tests/raises-the-tower-wind-factor-and-leg-force/🦠️mutation/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌗update-tower-inputs/🧪️tests/raises-the-tower-wind-factor-and-leg-force/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌗update-tower-inputs/🧪️tests/raises-the-tower-wind-factor-and-leg-force/🎯️outcome/🔣️.json"),
         ),
         "update-pile-inputs" => (
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗺️update-pile-inputs/🧪️tests/derates-the-driven-pile-for-hard-driving/📸️snapshot/⬅️before/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗺️update-pile-inputs/🧪️tests/derates-the-driven-pile-for-hard-driving/🦠️mutation/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗺️update-pile-inputs/🧪️tests/derates-the-driven-pile-for-hard-driving/📸️snapshot/➡️after/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗺️update-pile-inputs/🧪️tests/derates-the-driven-pile-for-hard-driving/🎯️outcome/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗺️update-pile-inputs/🧪️tests/derates-the-driven-pile-for-hard-driving/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗺️update-pile-inputs/🧪️tests/derates-the-driven-pile-for-hard-driving/🦠️mutation/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗺️update-pile-inputs/🧪️tests/derates-the-driven-pile-for-hard-driving/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗺️update-pile-inputs/🧪️tests/derates-the-driven-pile-for-hard-driving/🎯️outcome/🔣️.json"),
         ),
         "update-crane-inputs" => (
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌡️update-crane-inputs/🧪️tests/widens-the-crane-wheel-contact-patch-under-a-heavier-wheel/📸️snapshot/⬅️before/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌡️update-crane-inputs/🧪️tests/widens-the-crane-wheel-contact-patch-under-a-heavier-wheel/🦠️mutation/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌡️update-crane-inputs/🧪️tests/widens-the-crane-wheel-contact-patch-under-a-heavier-wheel/📸️snapshot/➡️after/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌡️update-crane-inputs/🧪️tests/widens-the-crane-wheel-contact-patch-under-a-heavier-wheel/🎯️outcome/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌡️update-crane-inputs/🧪️tests/widens-the-crane-wheel-contact-patch-under-a-heavier-wheel/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌡️update-crane-inputs/🧪️tests/widens-the-crane-wheel-contact-patch-under-a-heavier-wheel/🦠️mutation/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌡️update-crane-inputs/🧪️tests/widens-the-crane-wheel-contact-patch-under-a-heavier-wheel/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌡️update-crane-inputs/🧪️tests/widens-the-crane-wheel-contact-patch-under-a-heavier-wheel/🎯️outcome/🔣️.json"),
         ),
         other => panic!("mutate-en1993-1: no committed fixture is registered for kind {other:?}"),
     }
@@ -205,7 +205,7 @@ fn canonical(text: &str) -> Json {
     parse_json(text).unwrap_or_else(|error| panic!("committed fixture JSON must parse: {error}"))
 }
 
-/// 🎯️ The status the committed `🎯️outcome/🔣️component.json` declares for one kind — `applied` or
+/// 🎯️ The status the committed `🎯️outcome/🔣️.json` declares for one kind — `applied` or
 /// `rejected` — read out of the committed file rather than transcribed beside it, so the contract a
 /// row is held to cannot drift away from the vector that states it.
 #[cfg(feature = "sut")]
@@ -218,7 +218,7 @@ fn committed_status(kind: &str) -> String {
 //#region 🔖️Carrier
 /// 🧵️ The canonical carrier bytes as a comparable projection: the envelope preamble, every body line
 /// as written, and the digest and length of what was emitted. `.dsl.semio` has no grammar document in
-/// this repository — the committed `📖️component.grammar.semio` is the repository-wide `payload = OCTET+`
+/// this repository — the committed `📖️.grammar.semio` is the repository-wide `payload = OCTET+`
 /// placeholder — so the identity scenario compares the two implementations at the carrier level rather
 /// than mapping carrier tokens onto the snapshot's enum spellings, a mapping nothing states. The
 /// independent Python implementation builds the identical shape from ITS re-emission, and `digest` is
@@ -246,7 +246,7 @@ mod subject {
     use semio_s_plugin_stdio_test_oracle::law;
 
     //#region 🔖️FixtureDecode
-    /// 🧫️ Decodes the SAME committed fixture text `../🦀️component.rs::fixture_text` embeds, through
+    /// 🧫️ Decodes the SAME committed fixture text `../🦀️.rs::fixture_text` embeds, through
     /// this subset's own production JSON bridge — real deserialization of the committed bytes, never
     /// a Rust literal transcribed beside them.
     fn snapshot_of(text: &str, label: &str, kind: &str) -> Result<En1993Snapshot, String> {

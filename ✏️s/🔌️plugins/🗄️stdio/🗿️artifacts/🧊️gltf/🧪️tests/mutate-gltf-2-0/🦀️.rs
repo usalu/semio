@@ -1,8 +1,8 @@
 //! 🦀️ glTF 2.0 mutation case — Rust adapter. Covers the 7 kinds `GLTF_MUTATION_LEAF_DESCRIPTORS`
-//! (`../../🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs`) registers today —
+//! (`../../🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs`) registers today —
 //! `mutate-<kind>`/`inverse-<kind>` each, plus one identity round trip. The oracle performs every
 //! kind by independent GLB-container and JSON-tree manipulation (`../../🏅️standards/🔖️2.0/
-//! 🪆️subsets/✳️any/🧪️oracle/🦀️component.rs`, using `json` 0.12 as the JSON layer only, never this
+//! 🪆️subsets/✳️any/🦀️oracle.rs`, using `json` 0.12 as the JSON layer only, never this
 //! subset's own codec or descriptors); the subject fully parses into `GltfSnapshot` via `decode_glb`
 //! and re-serializes with `encode_glb` alone (no byte pass-through), dispatching through each real
 //! leaf's own `DESCRIPTOR` function pointers directly rather than the full envelope/registry layer.
@@ -15,7 +15,7 @@ use semio_s_plugin_stdio_test_oracle::law::{inverse_restores_within, mutation_is
 
 //#region 🔖️Kinds
 /// 🏷️ Mirrors `GLTF_MUTATION_LEAF_DESCRIPTORS`'s 7 registered leaves (`../../🏅️standards/🔖️2.0/
-/// 🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs`). Kept as a plain literal here rather than
+/// 🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs`). Kept as a plain literal here rather than
 /// imported since this adapter's oracle-only build never links the subject crate — the contract
 /// gate (mutation coverage against the `gltf-2-0-any` catalog) is what keeps the two lists honest.
 const KINDS: &[&str] = &["bind-node-child", "bind-scene-root-node", "change-material-alpha-mode", "change-material-double-sided", "create-scene", "unbind-node-child", "unbind-scene-root-node"];
@@ -49,7 +49,7 @@ fn json_spec(kind: &str, params: Json) -> Json {
 
 //#region 🔖️Profile
 /// 📏️ `semantic-gltf-v1`'s own declared writer freedom (`../../🏅️standards/🔖️2.0/🪆️subsets/✳️any/
-/// 🧪️oracle/🔣️.json`), mirrored here so an in-handler law check is exactly as strict as
+/// 🔣️oracle.json`), mirrored here so an in-handler law check is exactly as strict as
 /// the profile the case is measured by — never stricter.
 const GLTF_WRITER_FREEDOM: &[&str] = &["byteLength", "fileSize", "generator", "copyright"];
 //#endregion 🔖️Profile
@@ -57,7 +57,7 @@ const GLTF_WRITER_FREEDOM: &[&str] = &["byteLength", "fileSize", "generator", "c
 //#region 🔖️Inverse
 /// ↩️ The semantically correct inverse spec for one forward `(kind, params)` pair against the
 /// derived fixture's own known real state (`../../🏅️standards/🔖️2.0/🪆️subsets/✳️any/📚️examples/
-/// 🌱️metabolism/🖼️assets/🧊️base.glb` with node 1 moved from the scene's 271-entry root list into
+/// 🌱️metabolism/🖼️assets/🧪️base/🧊️.glb` with node 1 moved from the scene's 271-entry root list into
 /// node 0's own `children` — see the feature file), computed independently here since the oracle
 /// role must not link the subject crate. `create-scene` has no catalog kind of its own to invert
 /// through — production dispatches its inverse via the SAME descriptor's `phase: Inverse`, not a
@@ -133,7 +133,7 @@ mod subject {
     /// 🧭️ The real descriptor for one catalog kind — the same 7 `DESCRIPTOR` consts
     /// `GLTF_MUTATION_LEAF_DESCRIPTORS` assembles, addressed directly rather than through the full
     /// command-id/phase/envelope registry (`../../🏅️standards/🔖️2.0/🪆️subsets/✳️any/🔨️modules/
-    /// 🧬️schema/🧬️mutations/🦀️component.rs`), which this thin per-kind dispatch does not need.
+    /// 🧬️schema/🧬️mutations/🦀️.rs`), which this thin per-kind dispatch does not need.
     fn descriptor_for_kind(kind: &str) -> Option<GltfMutationLeafDescriptor> {
         match kind {
             "bind-node-child" => Some(bind_node_child::DESCRIPTOR),

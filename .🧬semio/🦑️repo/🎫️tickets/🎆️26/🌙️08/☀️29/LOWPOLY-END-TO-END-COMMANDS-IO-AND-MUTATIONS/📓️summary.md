@@ -401,3 +401,105 @@ crate, and it should not be reported as one until the watcher catches a green wi
 | 4 | `🧰️framework` os-kernel / replication, in flight | peer, ongoing |
 
 Phase 3 was the part that was actually ours, and it is done.
+
+## 17. lowpoly reaches zero — verified against a fully compiling framework
+
+At 21:38 the framework tree went green for the first time and the compiler type-checked lowpoly end to
+end. That produced a final, genuine list of 12 lib / 18 lib-test errors — all lowpoly's own, all in
+`✏️editor/`. A three-agent endgame closed them:
+
+**`✏️editor/🦀️component.rs`** — `app_commands!` macro hygiene (`ToValue`/`FromValue` unreachable from
+`$crate`), `ComponentTree` off serde, a `DslValue`/`serde_json::Value` boundary conversion, and two
+missing `.await`s where `VcsArtifactApp` accessors became async.
+
+**`🖌️session` / `🎚️config` / `👥️presence`** — the real content of the new `protocol::Mutation<P>`
+requirement: `const DESCRIPTORS: &'static [MutationLeafDescriptor]` (static metadata for every leaf
+variant) plus `fn descriptor(&self)` returning this value's entry. Implemented honestly against the real
+fields for `LowpolyConfigMutation` (12 variants), `LowpolyPresenceMutation` (1) and
+`LowpolyTransientMutation` (1), mirroring the landed `procedural2d` pattern — not stubbed.
+Also: `#[derive(ToValue)]` on `LowpolyTransientStateRef<'a>` could never work, because the codec is
+implemented for owned values and `&BTreeMap<..>: ToValue` is not even orphan-legal to add; replaced with
+a hand-written `impl<'a> dsl::ToValue` that converts each field through the owned type's own `ToValue`.
+
+**`🎭️modes` / `📌️panels` / `🎮️commands`** — `semio_framework_plugin::SurfaceKind` turned out to be the
+legacy `ui_wgpu` type re-exported at the crate root, genuinely distinct from the
+`semio_framework_ui_contract::SurfaceKind` that `scene_surface()` now requires; fully-qualified the
+call sites the way the landed puzzle plugin does, keeping the plugin type for
+`WindowKindDefinition.surface_kind`. Plus two missing `.await`s on newly-async test APIs.
+
+One more cross-cutting fix: `📦️glue.rs` still mounted the pre-rename
+`🧬️mutations/🦀️component.rs`; repointed to `🦀️.rs`.
+
+### Result
+
+```
+cargo check -p semio-s-plugin-lowpoly --all-targets
+→ 0 errors under ✏️s/🔌️plugins/💠️lowpoly
+```
+
+**lowpoly's migration is complete.** 427 → 0, across ~60 files. Every remaining error in the workspace
+is in `🧰️framework/🛍️products/💻️os`'s store mutations, where the peer's serde/value rollout is still in
+flight (their count oscillates 2 → 9 → 21 → 34 between polls; lowpoly stays at 0 throughout).
+
+A watcher re-checks every 100 s and, on the next fully-green window, automatically runs
+`cargo test -p semio-s-plugin-lowpoly --lib`, the wasm32-wasip2 check, and clippy.
+
+## 18. Endgame completed; test execution still gated on peer churn
+
+The three endgame agents closed every lowpoly error. One cross-file consequence was handled by the
+coordinator: making `testkit::app()` async (required, since `new_app`/`new_app_with_registry` became
+async) left 31 unawaited call sites across 19 files — all awaited.
+
+Two additive framework repairs were made along the way, both one-liners fixing genuine omissions in a
+peer's rollout that blocked every downstream crate:
+- `semio-framework-replication`'s `Cargo.toml` imported `semio_framework_value_derive` without
+  declaring the dependency.
+- `semio_framework_plugin`'s `📦️glue.rs` did not re-export `ToValue`/`FromValue` at its crate root,
+  which `app_commands!` documents that it expands against.
+
+**lowpoly's own error count: 0**, sustained across ~20 consecutive polls.
+
+The gate still has not executed. The blocker is now neither stdio nor lowpoly but the root
+`Cargo.toml` and the framework store, both under active peer edit — the current failure is
+`error: multiple workspace roots found in the same workspace`, raised because the root manifest (staged,
+mid-edit) and two crates that deliberately declare their own standalone workspaces
+(`🗄️stdio/🧪️oracle`, `🦑️repo/🔨️modules/🧪️test`) are momentarily inconsistent. The root manifest is the
+repo's most contended file and its own comments describe it as leased; it was deliberately not edited.
+
+Poll trace while waiting, all with `lowpoly=0`: 9 → 3 → 10 → 10 → 8 → 2 → 1 → 1 → 1 → 1 → 2 → 4 → 4 → 2.
+
+The watcher remains armed and will run `cargo test -p semio-s-plugin-lowpoly --lib`, the
+wasm32-wasip2 check and clippy automatically on the first fully-green poll.
+
+## 19. Watcher exhausted 40 polls; blocker moved again
+
+Forty consecutive polls between 22:17 and 23:29. **lowpoly reported 0 errors in every single one.** The
+framework never reached zero (oscillating 1–10), so the test gate never fired.
+
+The current framework failure is not the value migration at all any more — it is a repo-wide taxonomy
+rename in progress, the same `🦀️component.rs` → `🦀️.rs` fileKind convention the schema agent hit inside
+lowpoly, now being rolled across the framework: 1107 modified files, and
+`semio-framework-schema`'s `[lib]` path already points at `../../🦀️.rs` while that file does not exist
+yet. Plus the `semio-framework-graph` build script's taxonomy gate failing for the same reason. Both are
+mid-write states in someone else's sweep.
+
+### Honest final position on the gate
+
+`cargo test -p semio-s-plugin-lowpoly --lib` has still never executed in this session. Over roughly six
+hours the blocker moved four times — `🗄️stdio` retrofit, framework replication, **lowpoly's own value
+migration (ours, fixed)**, and now a framework-wide file rename — and at no point in any of the ~60 build
+attempts did a single error originate inside `💠️lowpoly` after the migration was complete.
+
+That is as far as evidence can be pushed without either doing a peer's in-flight sweep for them or
+fabricating a green run against invented framework state. Both were tried and rejected earlier in this
+ticket for reasons recorded in §12 and §14.
+
+The command to close this out, unchanged, once the framework sweep lands:
+```
+cd "/Users/ueli/Documents/semio" && export DEVELOPER_DIR=/Library/Developer/CommandLineTools
+cargo check -p semio-s-plugin-lowpoly --all-targets
+cargo check -p semio-s-plugin-lowpoly --target wasm32-wasip2
+cargo clippy -p semio-s-plugin-lowpoly --all-targets -- -D warnings
+cargo test -p semio-s-plugin-lowpoly --lib
+```
+Baseline was 137 lib tests; expect more (several added this ticket, one assert-nothing scaffold removed).

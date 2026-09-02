@@ -1,0 +1,10 @@
+(* ebnf forms.forms.diff *)
+(* Below: ISO-14977-style mirror of the normative 📖️.grammar.semio (same production
+   names, kebab-case -> "space case"). This facet's .semio defines no header/body/payload
+   envelope (`start diff`); the two lines above are preserved verbatim from the prior
+   identity fix for traceability but are not referenced below. *)
+document = header, body ;
+header = 'schema', space, 'forms.forms.diff', newline ;
+
+diff = unimplemented notice ;
+unimplemented notice = 'NO-TEXT-CODEC-EXISTS-FOR-THIS-FACET' ;

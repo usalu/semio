@@ -5,7 +5,7 @@
   "displayName": "Remove Strip Offsets",
   "emoji": "📏",
   "aggregateVariant": "RemoveStripOffsets",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

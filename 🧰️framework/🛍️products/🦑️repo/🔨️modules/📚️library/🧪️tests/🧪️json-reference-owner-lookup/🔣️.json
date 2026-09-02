@@ -134,31 +134,31 @@
       "path": "plugins/🗿️artifacts/🧊️cube/🔣️.json",
       "owner": "plugins/🗿️artifacts/🧊️cube",
       "prefix": "asset://",
-      "source": "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/replace/🧪️tests/basic/🟦️component.ts",
-      "destination": "🧪️tests/🪆️1-any/replace/🧪️basic/🟦️.ts"
+      "source": "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/replace/🧪️tests/basic/🟦️.ts",
+      "destination": "🧪️tests/🪆️1-any/replace/🟦️basic.ts"
     },
     {
       "id": "no-artifact-owner",
       "path": "config/🔣️.json",
       "owner": null,
       "prefix": "",
-      "source": "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/replace/🧪️tests/basic/🟦️component.ts",
-      "destination": "🧪️tests/🪆️1-any/replace/🧪️basic/🟦️.ts"
+      "source": "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/replace/🧪️tests/basic/🟦️.ts",
+      "destination": "🧪️tests/🪆️1-any/replace/🟦️basic.ts"
     },
     {
       "id": "relative-standard-owner",
       "path": "plugins/🧊️cube/🏅️standards/🔖️1/🔣️.json",
       "owner": "plugins/🧊️cube",
       "prefix": "../",
-      "source": "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/replace/🧪️tests/basic/🟦️component.ts",
-      "destination": "🧪️tests/🪆️1-any/replace/🧪️basic/🟦️.ts"
+      "source": "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/replace/🧪️tests/basic/🟦️.ts",
+      "destination": "🧪️tests/🪆️1-any/replace/🟦️basic.ts"
     }
   ],
   "corpus": [
     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json",
     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📋️project.json",
     ".vscode/🧩️launch.seed.jsonc",
-    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🧫️fixtures/🧪️cad-draw-path-projection/🔣️.json"
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🧫️fixtures/🔣️cad-draw-path-projection.json"
   ],
   "execution": {
     "target": "test-json-reference-owner-lookup",

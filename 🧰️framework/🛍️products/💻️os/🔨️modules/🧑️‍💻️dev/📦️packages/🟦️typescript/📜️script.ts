@@ -35,7 +35,7 @@ import {
   cargoProfileDir,
   semioBuildMode,
   semioShipEnv,
-} from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts";
+} from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { BACKBONE_ENDPOINT_PATH, BLOB_ENDPOINT_PATH, backboneKindFromUri, decodeDocumentPackBytes, encodeDocumentPackBytes, decodePackValue, encodePackValue } from "@semio-tech/framework-os";
 import type { PluginSourceEvent } from "@semio-tech/framework";
 import { generatePluginRegistry, isHostPluginFilter, writePlaygroundSession, type PluginRegistryEntry } from "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📜️script.ts";
@@ -383,7 +383,7 @@ function scanBuiltPluginModules(root: string = pluginOutRoot): readonly PluginHo
 /** @emoji 🔌️ Mirrors `@semio-tech/framework`'s `PLUGIN_SOURCE_WATCH_PATH` — kept as a literal here
  * rather than a real (non-`type`) import: `⚙️vite.config.ts` loads this module's exports through Vite's
  * own config loader, which runs under Node's native strip-only TypeScript support rather than esbuild;
- * a genuine runtime import of framework-core's single-file `📦️index.ts` forces Node to parse the WHOLE
+ * a genuine runtime import of framework-core's single-file `🟦️.ts` forces Node to parse the WHOLE
  * file, including unrelated parameter-property constructors that strip-only mode rejects
  * (`SyntaxError [ERR_UNSUPPORTED_TYPESCRIPT_SYNTAX]`) — confirmed by reproducing it locally. `import
  * type` stays safe (fully erased, no runtime import), so `PluginSourceEvent` below is unaffected. */
@@ -789,7 +789,7 @@ async function readPackageName(cratePath: string): Promise<string> {
 /** @emoji 🧹 Drops renamed/orphaned bridge artifacts in a plugin out dir before rewriting current outputs. */
 function cleanStalePluginOutputs(outDir: string, jsBase: string, componentBase: string): void {
   if (!existsSync(outDir)) return;
-  const keepFiles = new Set(["🟨️host-shim.js"]);
+  const keepFiles = new Set(["🟨️.js"]);
   const currentBridgeFile = `${jsBase}.js`;
   for (const entry of readdirSync(outDir, { withFileTypes: true })) {
     if (entry.isDirectory()) continue;
@@ -806,16 +806,16 @@ function cleanStalePluginOutputs(outDir: string, jsBase: string, componentBase: 
  * at runtime. Unmigrated crates remain honest: no source descriptor means no staged descriptor. */
 function stagePluginDescriptor(target: PluginRegistryEntry, outDir: string, root: string = repoRoot): boolean {
   const ownerRoot = join(root, target.cratePath, "..", "..");
-  const descriptorJson = join(ownerRoot, "🔣️descriptor.json");
+  const descriptorJson = join(ownerRoot, "🔣️.json");
   if (!existsSync(descriptorJson)) {
-    rmSync(join(outDir, "🔣️descriptor.json"), { force: true });
-    rmSync(join(outDir, "🛂️descriptor.semio"), { force: true });
+    rmSync(join(outDir, "🔣️.json"), { force: true });
+    rmSync(join(outDir, "🛂️.descriptor.semio"), { force: true });
     return false;
   }
-  copyFileSync(descriptorJson, join(outDir, "🔣️descriptor.json"));
-  const descriptorPack = join(ownerRoot, "🛂️descriptor.semio");
-  if (existsSync(descriptorPack)) copyFileSync(descriptorPack, join(outDir, "🛂️descriptor.semio"));
-  else rmSync(join(outDir, "🛂️descriptor.semio"), { force: true });
+  copyFileSync(descriptorJson, join(outDir, "🔣️.json"));
+  const descriptorPack = join(ownerRoot, "🛂️.descriptor.semio");
+  if (existsSync(descriptorPack)) copyFileSync(descriptorPack, join(outDir, "🛂️.descriptor.semio"));
+  else rmSync(join(outDir, "🛂️.descriptor.semio"), { force: true });
   return true;
 }
 
@@ -839,7 +839,7 @@ function syncBuiltPluginDescriptors(entries: readonly PluginRegistryEntry[]): vo
  *   1. `🟨️plugin-worker.js` (the pre-H2 one-worker-per-plugin bootstrap) is never written by ANY
  *      current code path (H2 replaced it with the shared `_shard/` worker) — its mere presence on disk
  *      proves it is stale, unconditionally.
- *   2. `🟨️host-shim.js` IS still written on every successful materialize, so staleness there is
+ *   2. `🟨️.js` IS still written on every successful materialize, so staleness there is
  *      decided by content, not existence: byte-compare against the current `hostShimSource()` and
  *      delete on mismatch — a future successful build rewrites it, same as any other cache miss.
  * Deliberately narrow: does not delete the whole extension directory (its compiled `.wasm`/`.js` may
@@ -916,7 +916,7 @@ export function syncBuiltExtensionsToInstallRoot(entries: readonly PluginRegistr
 }
 
 //#region 🛂️DescriptorPublication
-const ACTOR_COMPONENT_EXPORTS = JSON.parse(readFileSync(join(dirname(fileURLToPath(import.meta.url)), "🧪️fixtures/🔣️actor-exports.json"), "utf8")) as Record<string, string[]>;
+const ACTOR_COMPONENT_EXPORTS = JSON.parse(readFileSync(join(dirname(fileURLToPath(import.meta.url)), "🧪️fixtures/🔣️.json"), "utf8")) as Record<string, string[]>;
 
 /** 🛂️ Both package roles must expose the complete actor world before publication. */
 function assertActorComponentExports(component: Record<string, unknown>, required: Record<string, string[]>): void {
@@ -967,8 +967,8 @@ async function describeBuiltPlugin(target: PluginRegistryEntry, artifact: string
   const descriptor = finalizePluginDescriptor(Buffer.from(base64, "base64"), target.pluginId, wasmHash, coreHash);
   const ownerRoot = join(repoRoot, target.cratePath, "..", "..");
   mkdirSync(ownerRoot, { recursive: true });
-  writeFileSync(join(ownerRoot, "🛂️descriptor.semio"), descriptor.pack);
-  writeFileSync(join(ownerRoot, "🔣️descriptor.json"), descriptor.json);
+  writeFileSync(join(ownerRoot, "🛂️.descriptor.semio"), descriptor.pack);
+  writeFileSync(join(ownerRoot, "🔣️.json"), descriptor.json);
   console.log(`described ${target.pluginId} -> ${ownerRoot}`);
 }
 //#endregion 🛂️DescriptorPublication
@@ -997,7 +997,7 @@ async function materializePlugin(target: PluginRegistryEntry, artifact: string):
   const jsBase = target.wasmOut.replace(/\.wasm$/, "");
   const componentBase = `${jsBase}_component`;
   cleanStalePluginOutputs(outDir, jsBase, componentBase);
-  writeFileSync(join(outDir, "🟨️host-shim.js"), hostShimSource());
+  writeFileSync(join(outDir, "🟨️.js"), hostShimSource());
   // 🪶️ Transpile straight from cargo's own build output — plugin-modules never receives a copy of the
   // full component `.wasm` (see `emitRustArtifacts`'s doc comment). The browser only ever fetches
   // jco's extracted `${componentBase}.core.wasm`, so shipping the untranspiled component alongside it
@@ -2295,7 +2295,7 @@ class CapabilityLayeringLintScript extends BundleScript {
 
 //#region 🔖️PluginIndexExportPathLint
 /** 🕳️ `26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE`'s detector for a finding surfaced by
- * `26/08/12/INTRODUCE-INFERENCE-SCHEMA-FAMILY`: every `📦️index.ts` barrel under
+ * `26/08/12/INTRODUCE-INFERENCE-SCHEMA-FAMILY`: every `🟦️.ts` barrel under
  * `✏️s/🔌️plugins/<plugin>/📦️packages/🟦️typescript/` re-exports its `_snapshot`/`_diff`/`_mutations`
  * families as `export * as ... from "<relative path>"`, and the vast majority of those paths were
  * written against the pre-migration `🗿️artifacts/<a>/🧬️schema/…` tree — since migrated to
@@ -2308,16 +2308,16 @@ class CapabilityLayeringLintScript extends BundleScript {
  * evidence-backed allowlist of pre-existing exceptions), 517 dead specifiers have no sane per-entry
  * grandfather list, and the actual fix — repointing every path at the migrated
  * `🏅️standards/🔖️<v>/🪆️subsets/✳️<s>/` shape — is explicitly out of this ticket's boundary (it would
- * mean editing `📦️index.ts`, forbidden here) and remains unowned. So `run()` below never throws: it
+ * mean editing `🟦️.ts`, forbidden here) and remains unowned. So `run()` below never throws: it
  * is only reachable via its own standalone `index-lint` router command / nx target, not folded into
  * any gate the way `layer-lint` was. */
 const PLUGIN_BARREL_RELATIVE_EXPORT_PATTERN = /from\s+"(\.[^"]+)"/g;
 
 /** 🧭️ Resolution order this lint checks a barrel's relative specifier against — literal path, then
- * `.ts`/`.tsx`, then a directory's `📦️index.ts`/`index.ts`. Matches how the rest of this toolchain
+ * `.ts`/`.tsx`, then a directory's `🟦️.ts`/`index.ts`. Matches how the rest of this toolchain
  * (bundler + `tsc`) would actually resolve the same specifier. */
 function resolvesPluginBarrelExport(baseDir: string, spec: string): boolean {
-  return [spec, `${spec}.ts`, `${spec}.tsx`, `${spec}/📦️index.ts`, `${spec}/index.ts`].some((candidate) => existsSync(join(baseDir, candidate)));
+  return [spec, `${spec}.ts`, `${spec}.tsx`, `${spec}/🟦️.ts`, `${spec}/index.ts`].some((candidate) => existsSync(join(baseDir, candidate)));
 }
 
 class PluginIndexExportPathLintScript extends BundleScript {
@@ -2327,7 +2327,7 @@ class PluginIndexExportPathLintScript extends BundleScript {
     let totalAll = 0;
     let pluginsWithDeadPaths = 0;
     for (const pluginId of readdirSync(pluginsRoot).sort()) {
-      const indexPath = join(pluginsRoot, pluginId, "📦️packages/🟦️typescript/📦️index.ts");
+      const indexPath = join(pluginsRoot, pluginId, "📦️packages/🟦️typescript/🟦️.ts");
       if (!existsSync(indexPath)) continue;
       const source = await Bun.file(indexPath).text();
       const baseDir = dirname(indexPath);
@@ -2363,9 +2363,9 @@ class PluginIndexExportPathLintScript extends BundleScript {
  * mutability rule (which would only manufacture false positives against the sanctioned registry
  * tables).
  *
- * Confirmed live: `✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/⚙️engine/🦀️component.rs:91-94`
+ * Confirmed live: `✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/⚙️engine/🦀️.rs:91-94`
  * (`static HOST: OnceLock<BrepEngineHost>`, constructed via `get_or_init`) and
- * `✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/⚙️engine/🦀️component.rs:403,415`
+ * `✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/⚙️engine/🦀️.rs:403,415`
  * (`host: BrepEngineHost` struct field, `BrepEngineHost::new(64 * 1024 * 1024)`).
  *
  * **Deliberately report-only, never wired into `verify`/`plugin lint`**, same posture as
@@ -2375,12 +2375,12 @@ class PluginIndexExportPathLintScript extends BundleScript {
  * deliberately not attempted here. */
 const HOST_ENGINE_HANDLE_TYPES: Readonly<Record<string, string>> = {
   // 🧠️ Host-owned brep engine wrapper — wraps `Mutex<EngineCache>` (byte-budgeted, host-managed compute cache) plus `Mutex<Brep>` kernel
-  // session (🧰️framework/🔨️modules/🧊️3d/📐️brep/⚙️engine/🖥️host/🦀️component.rs). It is the current handle-type surface — a plugin holding one
+  // session (🧰️framework/🔨️modules/🧊️3d/📐️brep/⚙️engine/🖥️host/🦀️.rs). It is the current handle-type surface — a plugin holding one
   // reaches directly for host-managed compute-cache/dispatch state instead of going through the WIT
   // `engine-derive`/`engine-read` guest<->host boundary.
   BrepEngineHost: "host-owned brep engine wrapper (byte-budgeted engine-result cache + kernel session) — a process-lifetime handle to host-managed compute state, not a plugin's own data",
   // 🧠️ The host-owned LRU byte-budgeted engine-result cache `BrepEngineHost` wraps
-  // (🧰️framework/🛍️products/💻️os/🔨️modules/⚙️engine/🦀️component.rs, doc comment: "Host-owned LRU engine
+  // (🧰️framework/🛍️products/💻️os/🔨️modules/⚙️engine/🦀️.rs, doc comment: "Host-owned LRU engine
   // result cache with a byte budget"). Holding one directly bypasses `BrepEngineHost`'s own wrapper but
   // reaches for the identical host-managed caching/dispatch authority.
   EngineCache: "host-owned LRU byte-budgeted engine-result cache underlying BrepEngineHost — same ambient reach as holding that wrapper directly, just unwrapped",
@@ -3008,7 +3008,7 @@ async function collabRunScenario(
       const editorOpened = (await user1.locator('textarea, [contenteditable="true"]').count()) > 0;
       spaceE2eAssert(
         editorOpened,
-        "no editable text surface appeared for user1 after createArtifact — Effect::ReplayShellCommand{os.open-artifact} is sent WITHOUT documentId (🧰️framework/…/🔌️plugin/🦀️component.rs relay_open_artifact), so ShellHost's applyHostEffects never calls openDocument for the real hub-bound document (lane 3-B, not landed this wave)",
+        "no editable text surface appeared for user1 after createArtifact — Effect::ReplayShellCommand{os.open-artifact} is sent WITHOUT documentId (🧰️framework/…/🔌️plugin/🦀️.rs relay_open_artifact), so ShellHost's applyHostEffects never calls openDocument for the real hub-bound document (lane 3-B, not landed this wave)",
       );
       record(3, true, `artifact ${artifactId} created, row replicated to user2, editor surface present for user1`);
     } catch (error) {
@@ -3060,7 +3060,7 @@ async function collabRunScenario(
     const peers2 = user2.locator('[id="s-presence-peers"]');
     spaceE2eAssert(
       (await peers1.count()) > 0,
-      "#s-presence-peers does not exist in the React shell (🧰️framework/…/renderer/…/ShellHost/🟦️component.tsx never imports or renders PresenceBar — confirmed by grep; lane 2-D wired presence only into the wgpu Shell, 🧊️component.rs, which per the ticket brief does not compile this wave)",
+      "#s-presence-peers does not exist in the React shell (🧰️framework/…/renderer/…/ShellHost/🟦️.tsx never imports or renders PresenceBar — confirmed by grep; lane 2-D wired presence only into the wgpu Shell, 🧊️component.rs, which per the ticket brief does not compile this wave)",
     );
     spaceE2eAssert((await peers2.count()) > 0, "#s-presence-peers does not exist in user2's shell either");
     const roster1 = await peers1.locator('[data-row-id^="peer:"]').count();
@@ -4644,7 +4644,7 @@ type ScaleFixtureProfile = (typeof SCALE_FIXTURE_PROFILES)[number];
 type ScaleFixtureActivationEvent = { type: "on-startup-finished" } | { type: "on-command"; id: string } | { type: "on-artifact-kind"; kind: string } | { type: "on-view-visible"; id: string };
 
 /** 📋️ Exact shape the `semio-framework-os-scale-fixture` crate's `FixtureConfig` (`🎭️profile/
- * 🦀️component.rs`) decodes from `instance-open`'s `config` pack — field names match its `serde`
+ * 🦀️.rs`) decodes from `instance-open`'s `config` pack — field names match its `serde`
  * `camelCase` rename 1:1 so a real host can hand this object, JSON-encoded, straight through. */
 type ScaleFixtureConfig = {
   profile: ScaleFixtureProfile;
@@ -4891,7 +4891,7 @@ class ScaleFixtureCheckScript extends BundleScript {
  * Budget 1 (registry parse) is measured HERE, directly, in JS — no wasm/kernel involved, so it never
  * needs the native/web split. Budgets 2-8 are measured by the renderer-specific harness: `native`
  * drives `semio-wgpu-native --scale/--scale-wasm/--shards/--report`
- * (`📺️renderer/…/🧊️wgpu/📦️glue.rs`'s `scale_bench` module — real `Kernel`/`ShardLoop`/
+ * (`📺️renderer/…/🧊️wgpu/🦀️.rs`'s `scale_bench` module — real `Kernel`/`ShardLoop`/
  * `WasmtimeRuntime`, real scale-fixture wasm component, see that module's own doc for its honest
  * single-physical-ShardLoop scope note); `react`/`wgpu` (web) drive `//#region 🧪️BenchWebRows` below —
  * NOT `🔬️ParityScript`'s `🔖️ServerPool` (that machinery boots the FULL app against one real plugin
@@ -5212,7 +5212,7 @@ if (import.meta.vitest) {
   describe("linkedSessionEngines", () => {
     it("matches strict schema validation and deduplicates only exact owner engine paths", async () => {
       const { default: Ajv } = await import("ajv");
-      const schema = JSON.parse(readFileSync(join(dirname(fileURLToPath(import.meta.url)), "../../🧪️fixtures/🔣️linked-session-engines.schema.json"), "utf8"));
+      const schema = JSON.parse(readFileSync(join(dirname(fileURLToPath(import.meta.url)), "../../🧪️fixture/🔣️s.schema.json"), "utf8"));
       const fixture = JSON.parse(readFileSync(join(dirname(fileURLToPath(import.meta.url)), "../../🧪️fixtures/🔣️linked-session-engines.json"), "utf8"));
       const validate = new Ajv({ strict: true, allErrors: true }).compile(schema);
       for (const vector of fixture.valid) {
@@ -5228,12 +5228,12 @@ if (import.meta.vitest) {
     it("uses actual linked factory module and owner crate declarations for every product composition", async () => {
       const { default: Ajv } = await import("ajv");
       const ts = await import("typescript");
-      const schema = JSON.parse(readFileSync(join(dirname(fileURLToPath(import.meta.url)), "../../🧪️fixtures/🔣️linked-session-engines.schema.json"), "utf8"));
+      const schema = JSON.parse(readFileSync(join(dirname(fileURLToPath(import.meta.url)), "../../🧪️fixture/🔣️s.schema.json"), "utf8"));
       const validate = new Ajv({ strict: true }).compile(schema);
       const devRoot = dirname(fileURLToPath(import.meta.url));
       const compositions = [
-        { manifest: join(devRoot, "package.json"), entries: [join(devRoot, "../../🟦️component.ts"), join(devRoot, "../../🧩️multi.tsx")] },
-        { manifest: join(repoRoot, "♻️mit-bestand/🧺️demonstrator/package.json"), entries: [join(repoRoot, "♻️mit-bestand/🧺️demonstrator/📦️index.tsx")] },
+        { manifest: join(devRoot, "package.json"), entries: [join(devRoot, "../../🟦️.ts"), join(devRoot, "../../🧩️multi.tsx")] },
+        { manifest: join(repoRoot, "♻️mit-bestand/🧺️demonstrator/package.json"), entries: [join(repoRoot, "♻️mit-bestand/🧺️demonstrator/🟦️.tsx")] },
       ];
       for (const composition of compositions) {
         const manifest = JSON.parse(readFileSync(composition.manifest, "utf8"));
@@ -5488,7 +5488,7 @@ if (import.meta.vitest) {
 
     it("skips a plugin dir with no core wasm output yet", () => {
       mkdirSync(join(root, "note"), { recursive: true });
-      writeFileSync(join(root, "note", "🟨️host-shim.js"), "");
+      writeFileSync(join(root, "note", "🟨️.js"), "");
       expect(scanBuiltPluginModules(root)).toEqual([]);
     });
 
@@ -5581,15 +5581,15 @@ if (import.meta.vitest) {
         const outDir = join(root, "out");
         mkdirSync(ownerRoot, { recursive: true });
         mkdirSync(outDir, { recursive: true });
-        writeFileSync(join(ownerRoot, "🔣️descriptor.json"), '{"manifest":{"pluginId":"demo"}}\n');
-        writeFileSync(join(ownerRoot, "🛂️descriptor.semio"), "descriptor-pack");
+        writeFileSync(join(ownerRoot, "🔣️.json"), '{"manifest":{"pluginId":"demo"}}\n');
+        writeFileSync(join(ownerRoot, "🛂️.descriptor.semio"), "descriptor-pack");
         expect(stagePluginDescriptor(target, outDir, root)).toBe(true);
-        expect(readFileSync(join(outDir, "🔣️descriptor.json"), "utf8")).toContain('"pluginId":"demo"');
-        expect(readFileSync(join(outDir, "🛂️descriptor.semio"), "utf8")).toBe("descriptor-pack");
-        rmSync(join(ownerRoot, "🔣️descriptor.json"));
+        expect(readFileSync(join(outDir, "🔣️.json"), "utf8")).toContain('"pluginId":"demo"');
+        expect(readFileSync(join(outDir, "🛂️.descriptor.semio"), "utf8")).toBe("descriptor-pack");
+        rmSync(join(ownerRoot, "🔣️.json"));
         expect(stagePluginDescriptor(target, outDir, root)).toBe(false);
-        expect(existsSync(join(outDir, "🔣️descriptor.json"))).toBe(false);
-        expect(existsSync(join(outDir, "🛂️descriptor.semio"))).toBe(false);
+        expect(existsSync(join(outDir, "🔣️.json"))).toBe(false);
+        expect(existsSync(join(outDir, "🛂️.descriptor.semio"))).toBe(false);
       } finally {
         rmSync(root, { recursive: true, force: true });
       }
@@ -5770,7 +5770,7 @@ if (import.meta.vitest) {
     it("finalizes genuine descriptor bytes identically to the native descriptor oracle", async () => {
       const { decodePackValue, encodePackValue } = await import("@semio-tech/framework-os");
       const { createHash } = await import("node:crypto");
-      const bytes = readFileSync(join(repoRoot, "✏️s/🔌️plugins/🎪️demonstrator/🛂️descriptor.semio"));
+      const bytes = readFileSync(join(repoRoot, "✏️s/🔌️plugins/🎪️demonstrator/🛂️.descriptor.semio"));
       const descriptor = decodePackValue(bytes) as { manifest: { pluginId: string }; hashes: { wasmSha256: string; coreWasmSha256: string; descriptorSha256: string } };
       const finalized = finalizePluginDescriptor(bytes, descriptor.manifest.pluginId, descriptor.hashes.wasmSha256, descriptor.hashes.coreWasmSha256);
       expect(Buffer.from(finalized.pack)).toEqual(bytes);
@@ -5818,7 +5818,7 @@ if (import.meta.vitest) {
       const fixture = JSON.parse(readFileSync(join(fixtureRoot, "🔣️host-activation.json"), "utf8")) as { activations: Array<{ actorId: string; generation: string; value: string }> };
       const oracle = new Ajv();
       expect(oracle.validate(JSON.parse(readFileSync(join(fixtureRoot, "🔣️host-activation.schema.json"), "utf8")), fixture)).toBe(true);
-      const component = rewriteJcoComponentAssetUrls(`import { storageRead, emit } from "./🟨️host-shim.js";
+      const component = rewriteJcoComponentAssetUrls(`import { storageRead, emit } from "./🟨️.js";
 export const reactor = { poll: async (events) => { emit(events[0].val); return { value: await storageRead(events[0].val), uiPatches: [], commandIngress: { kind: 0 } }; } };
 export const jobs = {};
 export const checkpoint = {};
@@ -5855,7 +5855,7 @@ export const describe = {};`);
         const values = (await Promise.all(pending)).map((value) => value.value);
         const emissions = sent.filter((message) => message.frame.envelope.payload.kind === "effect-emit").map((message) => ({ actorId: message.actorId, generation: String(message.activationGeneration) }));
         console.log(JSON.stringify({ actual, values, emissions, requestIds: effects.map((message) => message.frame.envelope.payload.payload.requestId) }));
-      `], { input: JSON.stringify({ activations: fixture.activations, sources: { "bridge.js": pluginComponentBridgeSource("component", "component.core.wasm"), "component.js": component, "🟨️host-shim.js": hostShimSource() } }), encoding: "utf8", timeout: 10_000 });
+      `], { input: JSON.stringify({ activations: fixture.activations, sources: { "bridge.js": pluginComponentBridgeSource("component", "component.core.wasm"), "component.js": component, "🟨️.js": hostShimSource() } }), encoding: "utf8", timeout: 10_000 });
       const result = JSON.parse(output) as { actual: typeof fixture.activations; values: string[]; emissions: Array<{ actorId: string; generation: string }>; requestIds: string[] };
       expect(result.actual).toEqual(fixture.activations);
       expect(oracle.validate({ const: fixture.activations }, result.actual)).toBe(true);
@@ -6205,7 +6205,7 @@ const module1 = fetchCompile(new URL('./plugin_component.core2.wasm', import.met
       expect(existsSync(staleWorker)).toBe(false);
     });
 
-    it("removes a planted stale 🟨️host-shim.js whose content predates the current pure-only ABI", () => {
+    it("removes a planted stale 🟨️.js whose content predates the current pure-only ABI", () => {
       const dir = join(root, "flow-extension-text");
       mkdirSync(dir, { recursive: true });
       const staleShim = join(dir, PLUGIN_HOST_SHIM_FILE);
@@ -6214,7 +6214,7 @@ const module1 = fetchCompile(new URL('./plugin_component.core2.wasm', import.met
       expect(existsSync(staleShim)).toBe(false);
     });
 
-    it("keeps a 🟨️host-shim.js whose content already matches the current hostShimSource()", () => {
+    it("keeps a 🟨️.js whose content already matches the current hostShimSource()", () => {
       const dir = join(root, "note");
       mkdirSync(dir, { recursive: true });
       const freshShim = join(dir, PLUGIN_HOST_SHIM_FILE);

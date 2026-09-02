@@ -27,7 +27,7 @@
     "loadOwners": ["inventoryTaxonomyWithSourceParentPruning", "planTaxonomy", "applyTaxonomyPlan"],
     "fixedContractCallCount": 6,
     "changedInput": { "pointer": "/fixedFilenameContracts/cargo-manifest/reason", "suffix": " - fresh invocation" },
-    "freshProbe": { "path": "🧪️fresh-session/🔣️.json", "pattern": "🧪️fresh-session/*.json" }
+    "freshProbe": { "path": "🔣️fresh-session.json", "pattern": "fresh-session*.json" }
   },
   "oracle": {
     "library": "picomatch",
@@ -44,38 +44,38 @@
   "cases": [
     {
       "id": "literal",
-      "path": "🧪️root/🔣️.json",
-      "pattern": "🧪️root/🔣️.json",
+      "path": "🔣️root.json",
+      "pattern": "🔣️root.json",
       "expected": true
     },
     {
       "id": "leading-dot",
-      "path": "./🧪️root/🔣️.json",
-      "pattern": "🧪️root/🔣️.json",
+      "path": "./🔣️root.json",
+      "pattern": "🔣️root.json",
       "expected": true
     },
     {
       "id": "windows-separators",
       "path": "🧪️root\\🔣️.json",
-      "pattern": "🧪️root/🔣️.json",
+      "pattern": "🔣️root.json",
       "expected": true
     },
     {
       "id": "single-star",
-      "path": "🧪️root/a.json",
-      "pattern": "🧪️root/*.json",
+      "path": "roota.json",
+      "pattern": "root*.json",
       "expected": true
     },
     {
       "id": "single-star-no-slash",
       "path": "🧪️root/a/b.json",
-      "pattern": "🧪️root/*.json",
+      "pattern": "root*.json",
       "expected": false
     },
     {
       "id": "single-star-dot",
-      "path": "🧪️root/.a.json",
-      "pattern": "🧪️root/*.json",
+      "path": "root.a.json",
+      "pattern": "root*.json",
       "expected": true
     },
     {
@@ -92,13 +92,13 @@
     },
     {
       "id": "globstar-extension",
-      "path": "🧪️root/🟦️.js",
+      "path": "🟦️root.js",
       "pattern": "**/🟦️.ts",
       "expected": false
     },
     {
       "id": "middle-globstar-zero",
-      "path": "🧪️root/🦀️.rs",
+      "path": "🦀️root.rs",
       "pattern": "🧪️root/**/🦀️.rs",
       "expected": true
     },
@@ -110,32 +110,32 @@
     },
     {
       "id": "unicode-question",
-      "path": "🧪️root/😀.ts",
-      "pattern": "🧪️root/?.ts",
+      "path": "😀.rootts",
+      "pattern": "root?.ts",
       "expected": true
     },
     {
       "id": "question-width",
-      "path": "🧪️root/ab.ts",
-      "pattern": "🧪️root/?.ts",
+      "path": "rootab.ts",
+      "pattern": "root?.ts",
       "expected": false
     },
     {
       "id": "class-range",
-      "path": "🧪️root/B7.json",
-      "pattern": "🧪️root/[A-C][0-9].json",
+      "path": "rootB7.json",
+      "pattern": "root[A-C][0-9].json",
       "expected": true
     },
     {
       "id": "class-range-miss",
-      "path": "🧪️root/D7.json",
-      "pattern": "🧪️root/[A-C][0-9].json",
+      "path": "rootD7.json",
+      "pattern": "root[A-C][0-9].json",
       "expected": false
     },
     {
       "id": "class-width",
-      "path": "🧪️root/B77.json",
-      "pattern": "🧪️root/[A-C][0-9].json",
+      "path": "rootB77.json",
+      "pattern": "root[A-C][0-9].json",
       "expected": false
     },
     {
@@ -176,56 +176,56 @@
     },
     {
       "id": "nfc-path",
-      "path": "🧪️é/a.json",
-      "pattern": "🧪️é/*.json",
+      "path": "éa.json",
+      "pattern": "é*.json",
       "expected": true
     },
     {
       "id": "nfc-pattern",
-      "path": "🧪️é/a.json",
-      "pattern": "🧪️é/*.json",
+      "path": "éa.json",
+      "pattern": "é*.json",
       "expected": true
     },
     {
       "id": "nfc-both",
-      "path": "🧪️é/a.json",
-      "pattern": "🧪️é/*.json",
+      "path": "éa.json",
+      "pattern": "é*.json",
       "expected": true
     },
     {
       "id": "literal-regex-punctuation",
-      "path": "🧪️root/file(1)+.ts",
-      "pattern": "🧪️root/file(1)+.ts",
+      "path": "rootfile(1)+.ts",
+      "pattern": "rootfile(1)+.ts",
       "expected": true
     },
     {
       "id": "vs-distinct",
-      "path": "🧪️root/🟦.ts",
-      "pattern": "🧪️root/🟦️.ts",
+      "path": "🟦.rootts",
+      "pattern": "🟦️root.ts",
       "expected": false
     },
     {
       "id": "vs-exact",
-      "path": "🧪️root/🟦️.ts",
-      "pattern": "🧪️root/🟦️.ts",
+      "path": "🟦️root.ts",
+      "pattern": "🟦️root.ts",
       "expected": true
     },
     {
       "id": "question-no-slash",
       "path": "🧪️root/a/b.json",
-      "pattern": "🧪️root/?.json",
+      "pattern": "root?.json",
       "expected": false
     },
     {
       "id": "character-class",
-      "path": "🧪️root/b.md",
-      "pattern": "🧪️root/[ab].md",
+      "path": "rootb.md",
+      "pattern": "root[ab].md",
       "expected": true
     },
     {
       "id": "character-class-miss",
-      "path": "🧪️root/c.md",
-      "pattern": "🧪️root/[ab].md",
+      "path": "rootc.md",
+      "pattern": "root[ab].md",
       "expected": false
     },
     {

@@ -102,7 +102,7 @@ const manifests = (): void => {
   const keep = (catalog.fixtureManifests ?? []).filter((entry: { family?: string }) => entry.family !== "json-base-carrier");
   catalog.fixtureManifests = [...keep, ...entries];
   writeFileSync(catalogPath, `${JSON.stringify(catalog, null, 2)}\n`);
-  console.log(`${entries.length} fixture manifest(s) written and registered in 🧪️oracle/🔣️.json`);
+  console.log(`${entries.length} fixture manifest(s) written and registered in 🔣️oracle.json`);
 };
 //#endregion 🧾️Manifests
 

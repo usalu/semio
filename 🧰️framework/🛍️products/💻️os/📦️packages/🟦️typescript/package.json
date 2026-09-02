@@ -7,7 +7,7 @@
   "private": true,
   "nx": { "includedScripts": [] },
   "exports": {
-    ".": "./🟦️glue.ts",
+    ".": "./🟦️.ts",
     "./backbone-worker": "./🟦️glue.backbone-worker.ts"
   },
   "dependencies": {

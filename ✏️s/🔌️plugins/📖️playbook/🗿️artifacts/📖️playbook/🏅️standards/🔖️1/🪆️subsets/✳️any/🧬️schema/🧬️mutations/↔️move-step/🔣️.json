@@ -5,7 +5,7 @@
   "displayName": "Move Step",
   "emoji": "↔️",
   "aggregateVariant": "MoveStep",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": "move-step",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

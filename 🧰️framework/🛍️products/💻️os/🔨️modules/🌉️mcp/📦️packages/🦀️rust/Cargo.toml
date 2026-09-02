@@ -13,7 +13,7 @@ id = "os-mcp"
 workspace = true
 
 [lib]
-path = "📦️glue.rs"
+path = "🦀️.rs"
 # 📚️ This crate carries no ``` doc examples (verified: zero fenced blocks in its sources), so the
 # rustdoc pass has nothing to run — it only re-links every dependency rlib. With several sessions
 # rebuilding `semio-framework`/`semio-framework-ui` concurrently in this shared tree, that link
@@ -40,8 +40,8 @@ semio-framework = { workspace = true }
 semio-framework-async = { workspace = true }
 semio-framework-schema = { path = "../../../../../../🔨️modules/🧬️schema/📦️packages/🦀️rust", package = "semio-framework-schema" }
 # 🎫️ P2-catalog: `LocalizedLabel`/`SurfaceKind` are NOT re-exported at the `semio-framework` crate
-# root (only `IconName`/`Locale`/`Terminology`/`ArtifactDialect` are — `📦️glue.rs` lines 15-16, 91-92);
-# they live in `ui_wgpu::wgpu`, the same crate `🛂️manifest/🦀️component.rs` itself imports them from
+# root (only `IconName`/`Locale`/`Terminology`/`ArtifactDialect` are — `🦀️.rs` lines 15-16, 91-92);
+# they live in `ui_wgpu::wgpu`, the same crate `🛂️manifest/🦀️.rs` itself imports them from
 # (its own `use ui_wgpu::wgpu::{…, LocalizedLabel, …, SurfaceKind, …};`). `🧫️fixtures` constructs real
 # `AppDefinition`/`WindowKindDefinition` values and needs both directly, so this crate depends on the
 # SAME workspace-aliased crate manifest does, under its real Rust name (`semio_framework_ui`) — not a
@@ -55,14 +55,14 @@ serde_json = { workspace = true }
 axum = { version = "0.8", features = ["ws"] }
 tokio = { workspace = true, features = ["full"] }
 # 🌊️ P1c: `SinkExt`/`StreamExt` (`WebSocket::split`) for the REAL `/bridge` connection loop
-# (`🧵️bridge/🦀️component.rs`'s `mod server::handle_socket`) — promoted from dev-only (P1b's websocket
+# (`🧵️bridge/🦀️.rs`'s `mod server::handle_socket`) — promoted from dev-only (P1b's websocket
 # TEST used it) to a real dependency now that production code uses it too. Same version hub already
 # depends on for its own websocket endpoints.
 futures = "0.3"
 # 🎫️ ticket 26/08/17/LLM-FIRST-OS-VIA-THE-SEMIO-OS-MCP-GATEWAY packet P7-headless-workspace: the
 # `🏠️workspace` facet's real `store::sync::ArtifactHost`/`PersistenceBinding` binding layer — the
-# `sync` feature is exactly what mounts `🏪️store/🔄️sync/🦀️component.rs` into this crate
-# (`💻️os/📦️packages/🦀️rust/📦️glue.rs`'s own `#[cfg(feature = "sync")] pub mod sync;`), same crate
+# `sync` feature is exactly what mounts `🏪️store/🔄️sync/🦀️.rs` into this crate
+# (`💻️os/📦️packages/🦀️rust/🦀️.rs`'s own `#[cfg(feature = "sync")] pub mod sync;`), same crate
 # `🏃️run`'s own Cargo.toml depends on. Relative path identical to `🏃️run`'s (same directory depth:
 # both are `🔨️modules/<X>/📦️packages/🦀️rust`).
 semio-framework-os-kernel = { path = "../../../../📦️packages/🦀️rust", package = "semio-framework-os-kernel", features = ["sync"] }

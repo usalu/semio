@@ -5,7 +5,7 @@
   "displayName": "Set Trailing Newline",
   "emoji": "🔚",
   "aggregateVariant": "SetTrailingNewline",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": "set-trailing-newline",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

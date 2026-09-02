@@ -30,9 +30,9 @@
   },
   "fixtureRetention": { "ownerPath": "📓️root-script-compiler/🧾️runs", "prefix": "🧪️glue-" },
   "glue": {
-    "entry": "📦️glue.rs",
+    "entry": "🦀️.rs",
     "inputs": {
-      "📦️glue.rs": "#[path = \"./first/🦀️.rs\"]\npub mod first;\n#[path = \"./second/🦀️.rs\"]\npub mod second;\nmod third;\n",
+      "🦀️.rs": "#[path = \"./first/🦀️.rs\"]\npub mod first;\n#[path = \"./second/🦀️.rs\"]\npub mod second;\nmod third;\n",
       "first/🦀️.rs": "pub const VALUE: u8 = 1;\n",
       "second/🦀️.rs": "pub const VALUE: u8 = 2;\n",
       "third/mod.rs": "pub const VALUE: u8 = 3;\n"

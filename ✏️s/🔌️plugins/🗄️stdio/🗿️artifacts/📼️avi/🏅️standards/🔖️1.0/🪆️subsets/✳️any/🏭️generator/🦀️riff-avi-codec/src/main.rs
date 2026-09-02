@@ -4,7 +4,7 @@
 //! the repository's root workspace and Cargo.lock).
 //!
 //! This binary is the code the repository's own AVI 1.0/any oracle registration
-//! (`🧪️oracle/🔣️.json`, oracle id `riff-avi-1-0-mutate`) has always claimed exists: `riff`
+//! (`🔣️oracle.json`, oracle id `riff-avi-1-0-mutate`) has always claimed exists: `riff`
 //! supplies chunk id/size framing, LIST nesting and even-byte padding; everything below is this
 //! module's own AVI-1.0-specific field layout against the format's public specification
 //! (avih/strh/strf DWORD layouts, the movi-fourcc stream-index convention, the idx1

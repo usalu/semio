@@ -5,7 +5,7 @@
   "displayName": "Scale Object",
   "emoji": "📏",
   "aggregateVariant": "ScaleObject",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": "scale-object",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

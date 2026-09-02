@@ -5,7 +5,7 @@
   "displayName": "Add App Extension",
   "emoji": "🧩",
   "aggregateVariant": "AddAppExtension",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

@@ -5,7 +5,7 @@
   "displayName": "Remove Array Element",
   "emoji": "📤",
   "aggregateVariant": "RemoveArrayElement",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

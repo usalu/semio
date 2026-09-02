@@ -1,7 +1,7 @@
 {
   "$schema": "../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json",
   "schemaVersion": 2,
-  "_comment": "🧩️ This plugin's contribution to the repository test platform. It registers NO reference implementation: every artifact `📸️remodel` owns is a semio-NATIVE document (photogrammetric reconstruction), carried in `.dsl.semio`/`.pack.semio`, and no third party reads or writes that envelope — the per-subset manifests under `🗿️artifacts/**/🪆️subsets/*/🧪️oracle/🔣️.json` record that as a `noOracleDecision` each. What DOES belong here is the native host package every case of this plugin links, because `oracleHostPackagesFor` walks up from the case owner and only an ancestor manifest is consulted.",
+  "_comment": "🧩️ This plugin's contribution to the repository test platform. It registers NO reference implementation: every artifact `📸️remodel` owns is a semio-NATIVE document (photogrammetric reconstruction), carried in `.dsl.semio`/`.pack.semio`, and no third party reads or writes that envelope — the per-subset manifests under `🗿️artifacts/**/🪆️subsets/*/🔣️oracle.json` record that as a `noOracleDecision` each. What DOES belong here is the native host package every case of this plugin links, because `oracleHostPackagesFor` walks up from the case owner and only an ancestor manifest is consulted.",
   "oracles": [],
   "noOracleDecisions": [],
   "comparisonProfiles": [],

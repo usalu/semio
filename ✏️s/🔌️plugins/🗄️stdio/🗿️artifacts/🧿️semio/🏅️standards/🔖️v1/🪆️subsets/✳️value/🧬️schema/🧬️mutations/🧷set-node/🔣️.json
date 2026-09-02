@@ -5,7 +5,7 @@
   "displayName": "Set Node",
   "emoji": "🧷",
   "aggregateVariant": "SetNode",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

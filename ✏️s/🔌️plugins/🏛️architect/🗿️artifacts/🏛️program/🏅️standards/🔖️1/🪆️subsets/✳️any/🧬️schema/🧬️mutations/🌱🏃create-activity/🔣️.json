@@ -5,7 +5,7 @@
   "displayName": "Create Activity",
   "emoji": "🌱🏃",
   "aggregateVariant": "CreateActivity",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

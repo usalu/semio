@@ -3,7 +3,7 @@
   "contractId": "artifact-empty-facet-authority-registration-v1",
   "command": "artifact-empty-facet-authority",
   "target": "test-artifact-empty-facet-authority",
-  "source": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧪️artifact-empty-facet-authority/🟦️.ts",
+  "source": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🟦️artifact-empty-facet-authority.ts",
   "runner": "runTestBudgeted",
   "budget": "default",
   "launchName": "🧹clean🧩️taxonomy🧪️artifact-empty-facet-authority",

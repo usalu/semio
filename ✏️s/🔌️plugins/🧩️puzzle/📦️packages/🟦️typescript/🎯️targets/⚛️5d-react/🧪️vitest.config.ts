@@ -8,7 +8,7 @@ export default {
   test: {
     name: "@semio-tech/puzzle-5d-react",
     environment: "node",
-    include: ["📦️index.tsx"],
-    coverage: { include: ["📦️index.tsx"] },
+    include: ["🟦️.tsx"],
+    coverage: { include: ["🟦️.tsx"] },
   },
 };

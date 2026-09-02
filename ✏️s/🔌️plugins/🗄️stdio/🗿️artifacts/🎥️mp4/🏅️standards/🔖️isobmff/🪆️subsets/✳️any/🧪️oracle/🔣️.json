@@ -1,7 +1,7 @@
 {
   "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json",
   "schemaVersion": 2,
-  "_comment": "🔮️ This subset's own contribution to the repository test platform: the `mp4` 0.14 reference reader/writer registered specifically for ISO-BMFF `any`-subset mutation coverage, the exhaustive Mp4Mutation vocabulary it is measured against (10 kinds), and the lossless structural comparison profile a real H.264 mux/demux round trip through two independently written muxers needs. No shared entry in ✏️s/🔌️plugins/🗄️stdio/🧪️oracle/🔣️.json references the `mp4` package at all, so this id/capability pair is wholly this subset's own.",
+  "_comment": "🔮️ This subset's own contribution to the repository test platform: the `mp4` 0.14 reference reader/writer registered specifically for ISO-BMFF `any`-subset mutation coverage, the exhaustive Mp4Mutation vocabulary it is measured against (10 kinds), and the lossless structural comparison profile a real H.264 mux/demux round trip through two independently written muxers needs. No shared entry in ✏️s/🔌️plugins/🗄️stdio/🔣️oracle.json references the `mp4` package at all, so this id/capability pair is wholly this subset's own.",
   "oracles": [
     {
       "id": "mp4-isobmff-mutate",

@@ -5,7 +5,7 @@
   "displayName": "Remove Paint Layer",
   "emoji": "➖️",
   "aggregateVariant": "RemovePaintLayer",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

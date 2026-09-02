@@ -17,7 +17,7 @@ contributes = ["playbook.blockKind"]
 
 [lib]
 crate-type = ["cdylib", "rlib"]
-path = "📦️glue.rs"
+path = "🦀️.rs"
 
 [dependencies]
 semio-framework-os-kernel = { path = "../../../../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-framework-os-kernel" }
@@ -27,12 +27,14 @@ semio-framework-dispatch-macros = { path = "../../../../../../../🧰️framewor
 semio-framework = { path = "../../../../../../../🧰️framework/📦️packages/🦀️rust", package = "semio-framework" }
 semio-framework-value-derive = { path = "../../../../../../../🧰️framework/🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust", package = "semio-framework-value-derive" }
 pack = { path = "../../../../../../../🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust", package = "semio-framework-pack" }
-# 🚧️ Genuine remainder, not an oversight — `flow::playbook::visible_blocks` and `FlowFixture`'s own
-# parse (both `🌊️flow`, `🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow`) are hard-typed to
-# `serde_json::{Map, Value}`/`serde::Deserialize`; that framework module is a peer's own in-progress
+# 🚧️ Genuine remainder, not an oversight — `flow::playbook::visible_blocks`
+# (`🧰️framework/🛍️products/💻️os/🔨️modules/📖️playbook/🦀️.rs`) is hard-typed to
+# `serde_json::Map<String, serde_json::Value>`; that framework module is a peer's own in-progress
 # serde-fanout wave (ticket 26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS),
-# not this extension's to convert. Every other JSON value in this crate goes through
-# `pack::json`/`ToValue`/`FromValue` — see `🦀️component.rs`'s own top-of-file docstring.
+# not this extension's to convert. `FlowFixture` itself now derives `ToValue`/`FromValue` too, so
+# its own parse goes through `pack::json::from_json_str` — no longer a reason to keep this line.
+# Every other JSON value in this crate goes through `pack::json`/`ToValue`/`FromValue` — see
+# `🦀️.rs`'s own top-of-file docstring.
 serde_json = "1.0.140"
 
 [dev-dependencies]

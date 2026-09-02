@@ -5,7 +5,7 @@
   "displayName": "Change Snap Grid Spacing",
   "emoji": "📐️",
   "aggregateVariant": "ChangeSnapGridSpacing",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": "change-snap-grid-spacing",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

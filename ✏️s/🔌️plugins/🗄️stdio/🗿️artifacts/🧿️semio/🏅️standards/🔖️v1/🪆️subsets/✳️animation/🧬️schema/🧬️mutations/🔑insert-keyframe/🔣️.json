@@ -5,7 +5,7 @@
   "displayName": "Insert Keyframe",
   "emoji": "🔑",
   "aggregateVariant": "InsertKeyframe",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

@@ -5,7 +5,7 @@
   "displayName": "Set Run Text",
   "emoji": "🧵",
   "aggregateVariant": "SetRunText",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

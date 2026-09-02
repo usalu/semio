@@ -1,8 +1,0 @@
-syntax = "proto3";
-// stdio.semio.cad snapshot text (DSL) representation -- whitespace-tolerant ASCII hex dump of
-// serde_json::to_vec(SemioCadSnapshot); see ../🔣️component.json for the decoded JSON's real schema.
-package semio.s_stdio_semio_cad.snapshot.text;
-message Document {
-  string schema = 1;
-  string payload = 2;
-}

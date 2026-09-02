@@ -5,7 +5,7 @@
   "displayName": "Change Settlement Limit Mm",
   "emoji": "🚿",
   "aggregateVariant": "ChangeSettlementLimitMm",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

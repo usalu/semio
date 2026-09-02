@@ -56,7 +56,7 @@ pub enum StepMutation {
 }
 
 /// 📇️ Kebab-case spelling of every `StepMutation` variant, in declaration order -- the exhaustive
-/// mutation catalog `../🧪️oracle/🔣️.json`'s `kinds` array is required to match verbatim
+/// mutation catalog `../🔣️oracle.json`'s `kinds` array is required to match verbatim
 /// (`kinds_const_matches_enum_variants_in_declaration_order` below is what keeps that honest; the
 /// framework never parses Rust to check it itself).
 pub const KINDS: &[&str] = &[
@@ -250,13 +250,13 @@ impl OpText for StepMutation {
 }
 
 /// 🧪️ P2-FG1: REAL binary op frame (`format u8 | tag u8 | variant payload`), matching
-/// `../💾️binary/📡️component.protocol.semio`'s `header fixed 2` + `chain payload bytes` shape —
+/// `../💾️binary/📡️.protocol.semio`'s `header fixed 2` + `chain payload bytes` shape —
 /// upgraded from F6's `print_op().into_bytes()` text-as-binary shortcut. `tag` is the
 /// `StepMutation` variant ordinal, same 0-9 order `print_step_mutation`'s own keyword match uses
 /// (shifted down by one from the pre-migration 1-10 numbering: `NoMutation`'s tag `0` had no
 /// leaf and is gone with the variant).
 /// Reuses `StepDiff`'s `pub(crate)` recursive `enc_value_bin`/`enc_entity_bin`/
-/// `enc_step_snapshot_bin`/`write_str_bin` primitives (`../../🔺️diff/🦀️component.rs`, imported
+/// `enc_step_snapshot_bin`/`write_str_bin` primitives (`../../🔺️diff/🦀️.rs`, imported
 /// above) — same intra-artifact-reuse split the TEXT codec above already uses.
 impl OpBinary for StepMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
@@ -562,7 +562,7 @@ mod tests {
 
     /// 🧪️ Wave-7 gate: `KINDS` must match the enum's own variants, in declaration order, and its
     /// spellings must match `print_op`'s own keyword for each — the two lists the mutation catalog
-    /// (`../🧪️oracle/🔣️.json`) and the feature file are checked against never drift apart.
+    /// (`../🔣️oracle.json`) and the feature file are checked against never drift apart.
     #[semio_framework_async_macros::async_test]
     async fn kinds_const_matches_enum_variants_in_declaration_order() {
         let base = base_snapshot();
@@ -590,14 +590,14 @@ mod tests {
 
 //#region 🧪️FixtureTests
 // 🧪️ Handcrafted mutation fixtures (contract D1, ticket 26/08/20/COMPOSE-TO-PUZZLE5D-MIGRATION),
-// one case per mutation leaf. Wired HERE and not in `📦️glue.rs`: that file is shared with the
+// one case per mutation leaf. Wired HERE and not in `🦀️.rs`: that file is shared with the
 // agents migrating the other stdio artifacts, so the production mounts there stay untouched while
 // this artifact owns its own test mount. `#[path = "."]` re-bases the children on this file's own
 // directory, which is what makes the leaf-relative path below resolve.
 #[cfg(test)]
 #[path = "."]
 mod fixture_tests {
-    #[path = "📄set-snapshot/🧪️tests/restamps-the-product-long-name/🦀️component.rs"]
+    #[path = "📄set-snapshot/🧪️tests/restamps-the-product-long-name/🦀️.rs"]
     mod tests_set_snapshot_restamps_the_product_long_name;
 }
 //#endregion 🧪️FixtureTests

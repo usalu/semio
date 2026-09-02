@@ -5,7 +5,7 @@
   "displayName": "Change Eraser Radius",
   "emoji": "🧽️",
   "aggregateVariant": "ChangeEraserRadius",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": "change-eraser-radius",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

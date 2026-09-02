@@ -13,7 +13,7 @@
     "test:exhaustive": "bun nx run @semio-tech/stdio-js:test-exhaustive"
   },
   "exports": {
-    ".": "./📦️index.ts"
+    ".": "./🟦️.ts"
   },
   "dependencies": {
     "@semio-tech/framework": "workspace:*"

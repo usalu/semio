@@ -22,7 +22,7 @@
 //! mutation can address. Closing that gap means giving `ZipEntry` a native-header facet, which is a
 //! schema change well outside this vocabulary.
 //!
-//! @see ../../🧪️oracle/🔣️.json — the catalog `KINDS` below must match exactly.
+//! @see ../../🔣️oracle.json — the catalog `KINDS` below must match exactly.
 //! @see ../../../../../../🧪️tests/mutate-zip-2-0-iso21320/🥒️.feature — the case that exercises it.
 
 use crate::artifacts::zip::schema::diff::{self, ZipDiff};
@@ -90,7 +90,7 @@ pub enum ZipIso21320Mutation {
 }
 
 /// 📇️ Kebab-case spelling of every `ZipIso21320Mutation` variant, in declaration order — the exact
-/// `kinds` list `../../🧪️oracle/🔣️.json`'s `mutationCatalogs` entry declares. The framework
+/// `kinds` list `../../🔣️oracle.json`'s `mutationCatalogs` entry declares. The framework
 /// never parses this enum; `kinds_matches_enum_variants_and_manifest` below is what keeps the two
 /// declarations honest against each other.
 pub const KINDS: &[&str] = &["set-snapshot", "set-archive-comment", "add-stored-entry", "add-deflated-entry", "remove-entry", "rename-entry", "set-entry-data"];
@@ -214,7 +214,7 @@ mod tests {
         let spelled: Vec<&'static str> = every_kind().iter().map(kind_of).collect();
         assert_eq!(spelled, KINDS.to_vec(), "KINDS must spell every variant, in declaration order");
 
-        let manifest = include_str!("../../🧪️oracle/🔣️.json");
+        let manifest = include_str!("../../🔣️oracle.json");
         for kind in KINDS {
             assert!(manifest.contains(&format!("\"{kind}\"")), "the oracle manifest's catalog does not declare {kind:?}");
         }

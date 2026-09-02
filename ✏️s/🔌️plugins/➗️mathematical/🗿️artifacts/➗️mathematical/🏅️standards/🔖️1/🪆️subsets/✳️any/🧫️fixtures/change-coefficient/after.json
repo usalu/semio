@@ -1,15 +1,4 @@
 {
-  "computed": {
-    "childId": "mathematical-scene-seed",
-    "target": {
-      "artifactId": "mathematical-value",
-      "dialect": {
-        "artifactKind": "s.stdio.semio",
-        "standard": "v1",
-        "subset": "value"
-      }
-    }
-  },
   "equation": {
     "expr": {
       "kind": "add",
@@ -41,26 +30,52 @@
     },
     "nextLabel": 5
   },
-  "notation": {
-    "childId": "mathematical-scene-seed",
-    "target": {
-      "artifactId": "mathematical-text",
-      "dialect": {
-        "artifactKind": "s.stdio.semio",
-        "standard": "v1",
-        "subset": "text"
+  "geometry": {
+    "points": [
+      {
+        "x": 1.0,
+        "y": 2.0
+      },
+      {
+        "x": 3.0,
+        "y": 4.0
+      },
+      {
+        "x": 5.0,
+        "y": 6.0
       }
-    }
+    ]
   },
-  "results": {
-    "childId": "mathematical-scene-seed",
-    "target": {
-      "artifactId": "mathematical-table",
-      "dialect": {
-        "artifactKind": "s.stdio.semio",
-        "standard": "v1",
-        "subset": "table"
+  "graph": {
+    "algorithm": "topo",
+    "algorithmSeed": null,
+    "directed": true,
+    "edges": [
+      {
+        "id": "e1",
+        "source": "a",
+        "target": "b"
       }
-    }
+    ],
+    "nodes": [
+      {
+        "id": "a",
+        "label": "A",
+        "x": 10.0,
+        "y": 20.0
+      },
+      {
+        "id": "b",
+        "label": "B",
+        "x": 30.0,
+        "y": 40.0
+      },
+      {
+        "id": "c",
+        "label": "C",
+        "x": 50.0,
+        "y": 60.0
+      }
+    ]
   }
 }

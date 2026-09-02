@@ -6,13 +6,13 @@
  * can actually hold a conversation with it.
  *
  * Skips with a clear console message (never silently green) when the binary hasn't been built yet
- * — see `resolveMcpBinaryPath` in `../../🟦️component.ts`. Build it first:
+ * — see `resolveMcpBinaryPath` in `../../🟦️.ts`. Build it first:
  * `CARGO_TARGET_DIR=<ticket>/🎯️target cargo build -p semio-framework-os-mcp --bin semio-os-mcp`.
  *
  * ⚠️ `tools/call` on an unregistered tool: the shipped `run_stdio` boots `McpServer::with_defaults()`
- * — EMPTY tool/resource/prompt registries (`🦀️component.rs` `run_stdio`, confirmed live below and in
+ * — EMPTY tool/resource/prompt registries (`🦀️.rs` `run_stdio`, confirmed live below and in
  * `🧪️p5-server-probe.txt`). `InMemoryToolRegistry::call` therefore ALWAYS takes the "unknown tool" =
- * protocol-error branch (`🧭️protocol/🦀️component.rs` `calling_an_unregistered_tool_is_a_protocol_error`)
+ * protocol-error branch (`🧭️protocol/🦀️.rs` `calling_an_unregistered_tool_is_a_protocol_error`)
  * — the OTHER half of the distinction brief §3.2 asks us to prove (`isError:true` for a REGISTERED
  * tool's own business failure) is only exercised by P1a's own Rust unit test
  * (`a_registered_tool_reporting_failure_is_a_successful_response_with_is_error_true`) today; it is
@@ -24,9 +24,9 @@ import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js"
 import { LATEST_PROTOCOL_VERSION, McpError } from "@modelcontextprotocol/sdk/types.js";
 import { existsSync } from "node:fs";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { resolveMcpBinaryPath, spawnRawMcp } from "../../🟦️component.ts";
+import { resolveMcpBinaryPath, spawnRawMcp } from "../../🟦️.ts";
 import { isValidJsonSchema2020_12 } from "./🧬️schema-validation.ts";
-import { getWorkspaceRoot } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts";
+import { getWorkspaceRoot } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 
 const repoRoot = getWorkspaceRoot();
 const bin = resolveMcpBinaryPath(repoRoot);

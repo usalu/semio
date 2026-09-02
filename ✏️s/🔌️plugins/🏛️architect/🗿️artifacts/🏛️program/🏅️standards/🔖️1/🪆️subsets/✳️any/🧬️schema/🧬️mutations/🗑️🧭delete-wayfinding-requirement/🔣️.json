@@ -5,7 +5,7 @@
   "displayName": "Delete Wayfinding Requirement",
   "emoji": "🗑️🧭",
   "aggregateVariant": "DeleteWayfindingRequirement",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

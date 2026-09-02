@@ -25,7 +25,7 @@ pub mod truncate_at;
 ///
 /// 🧪️ `#[derive(dsl::DslOps)]` is kept ALONGSIDE `#[derive(dsl::Mutations)]`: every variant below
 /// is a single-field newtype wrapping its own mutation leaf, and `dsl_variants_codegen`'s
-/// "single-field tuple variant" branch (`✨️derive/🦀️component.rs`) delegates `DslVariants`
+/// "single-field tuple variant" branch (`✨️derive/🦀️.rs`) delegates `DslVariants`
 /// straight through to that leaf's own `#[derive(dsl::DslRecord)]`-provided `DslField` impl — the
 /// SAME `record_codegen` output the fields produced when they lived inline in the enum, so the
 /// committed `mutations::text::COMPONENT_GRAMMAR_SEMIO`/`mutations::binary::COMPONENT_PROTOCOL_SEMIO`
@@ -50,7 +50,7 @@ pub enum BinaryMutation {
 
 //#region 🔖️Kinds
 /// 🏷️ Kebab-case spelling of every `BinaryMutation` variant, in declaration order — the vocabulary
-/// the `binary-raw-any` mutation catalog (`../../🧪️oracle/🔣️.json`) declares and the
+/// the `binary-raw-any` mutation catalog (`../../🔣️oracle.json`) declares and the
 /// exhaustive mutate/inverse test case measures itself against. `kinds_cover_every_variant` below
 /// is what keeps this list honest against the enum it names, since the framework never parses Rust.
 pub const KINDS: &[&str] = &["set-snapshot", "splice", "append-bytes", "truncate-at"];
@@ -159,7 +159,7 @@ impl OpBinary for BinaryMutation {
 /// 🧪️ P2-P3: representative `BinaryMutation` cases, one per variant, against [`tests::base`]'s
 /// canonical `[1,2,3,4,5]` snapshot -- single source of truth shared by the round-trip/law tests
 /// below AND the new `ops_grammar_conformance_law`/`protocol_walk_law` conformance tests in
-/// `⚙️engine/🦀️component.rs`, per CLAUDE.md (no duplicated literal case lists).
+/// `⚙️engine/🦀️.rs`, per CLAUDE.md (no duplicated literal case lists).
 #[cfg(test)]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn demo_mutation_cases() -> Vec<BinaryMutation> {
@@ -251,7 +251,7 @@ mod tests {
     /// 🏷️ `KINDS` must name exactly the enum's variants (kebab-case), one entry each — an
     /// exhaustive `match` so the compiler itself fails the moment a variant is added, renamed or
     /// removed without this list being updated alongside it. The manifest side of the same claim
-    /// (`../../🧪️oracle/🔣️.json`'s `binary-raw-any` catalog `kinds`) is checked by the
+    /// (`../../🔣️oracle.json`'s `binary-raw-any` catalog `kinds`) is checked by the
     /// mutate/inverse test case's own contract gate, which fails if the two lists ever diverge.
     #[semio_framework_async_macros::async_test]
     async fn kinds_cover_every_variant() {
@@ -277,14 +277,14 @@ mod tests {
 
 //#region 🧪️FixtureTests
 // 🧪️ Handcrafted mutation fixtures (contract D1, ticket 26/08/20/COMPOSE-TO-PUZZLE5D-MIGRATION),
-// one case per mutation leaf. Wired HERE and not in `📦️glue.rs`: that file is shared with the
+// one case per mutation leaf. Wired HERE and not in `🦀️.rs`: that file is shared with the
 // agents migrating the other stdio artifacts, so the production mounts there stay untouched while
 // this artifact owns its own test mount. `#[path = "."]` re-bases the children on this file's own
 // directory, which is what makes the leaf-relative path below resolve.
 #[cfg(test)]
 #[path = "."]
 mod fixture_tests {
-    #[path = "📄set-snapshot/🧪️tests/rewrites-the-two-middle-bytes/🦀️component.rs"]
+    #[path = "📄set-snapshot/🧪️tests/rewrites-the-two-middle-bytes/🦀️.rs"]
     mod tests_set_snapshot_rewrites_the_two_middle_bytes;
 }
 //#endregion 🧪️FixtureTests

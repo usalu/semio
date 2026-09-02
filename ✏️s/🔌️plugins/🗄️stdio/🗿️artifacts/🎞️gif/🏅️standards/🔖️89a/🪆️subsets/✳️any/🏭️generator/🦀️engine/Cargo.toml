@@ -11,7 +11,7 @@
 #                                     `gif-89a-any-mutate-reader` THIRD-PARTY-LIBRARY oracle. Its
 #                                     `project` subcommand deliberately uses ONLY `gif::Decoder`'s
 #                                     public getters — never the raw-block-scan technique
-#                                     `🧪️oracle/🦀️component.rs` uses to fill the crate's read gaps —
+#                                     `🦀️oracle.rs` uses to fill the crate's read gaps —
 #                                     so witnessability here is what a genuine reader can prove, not
 #                                     what a second implementation can compute.
 #

@@ -2,7 +2,7 @@
   "name": "@semio-tech/framework-os",
   "$schema": "../../../../../node_modules/nx/schemas/project-schema.json",
   "namedInputs": {
-    "default": ["{workspaceRoot}/🧰️framework/🛍️products/💻️os/🟦️component.ts", "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🟦️backbone-worker.ts", "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🎚️config/**/*", "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🧫️fixtures/**/*", "{projectRoot}/**/*"]
+    "default": ["{workspaceRoot}/🧰️framework/🛍️products/💻️os/🟦️.ts", "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🟦️backbone-worker.ts", "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🎚️config/**/*", "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🧫️fixtures/**/*", "{projectRoot}/**/*"]
   },
   "targets": {
     "generate-wgpu": {

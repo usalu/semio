@@ -5,19 +5,21 @@
   "displayName": "Rename Artifact",
   "emoji": "🏷️",
   "aggregateVariant": "RenameArtifact",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": "rename-artifact",
-  "binaryTag": null,
+  "binaryTag": 2,
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
   "outcomeClasses": [
+    "applied",
+    "warning",
     "error",
-    "info",
-    "applied"
+    "fatal"
   ],
   "composition": "atomic",
   "requiredLanguageSurfaces": [
     "rust",
+    "typescript",
     "json-schema",
     "text",
     "binary"

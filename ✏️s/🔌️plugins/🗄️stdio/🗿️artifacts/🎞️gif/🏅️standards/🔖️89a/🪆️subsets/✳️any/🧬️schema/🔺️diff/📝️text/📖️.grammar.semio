@@ -1,0 +1,83 @@
+dialect grammar
+grammar stdio.gif.89a.diff
+start diff
+
+# Real one-line `print_diff`/`parse_diff` form this artifact's hand-rolled `DiffCodec` emits
+# (../🦀️.rs `print_gif_diff`/`parse_gif_diff`) — a space-separated `name=value` token
+# per changed top-level scalar/tri-state field, `frames`/`comments`/`appext` printed as the
+# real removed/modified/added COLLECTION-TRIPLE (`name{[removed];[modified];[added]}`, csv's
+# own first-landed shape, P2-P1 csv report §2).
+comment none
+
+# Field order matches `GifDiff`'s own struct field order exactly (`print_gif_diff` always
+# emits in this order; `parse_gif_diff` itself accepts any subset/order via a token-keyed
+# loop, but the Recognizer only needs to accept what `print_diff` ACTUALLY emits). Kept on
+# ONE physical line — this dialect's sequence parsing stops at the first Newline token, no
+# line-continuation syntax exists.
+diff = width-clause? height-clause? gct-clause? bg-clause? par-clause? loop-clause? frames-clause? comments-clause? appext-clause?
+
+width-clause = "width" "=" INT
+height-clause = "height" "=" INT
+bg-clause = "bg" "=" INT
+par-clause = "par" "=" INT
+
+# `GifColorTable`'s outer tri-state (`Option<Option<GifColorTable>>`) and `loop_count`'s own
+# tri-state (`Option<Option<u16>>`) — `encode_option`'s uniform tag: `[0]` = None, `[1,<value>]`
+# = Some(value).
+gct-clause = "gct" "=" gct-opt
+gct-opt = "[" "0" "]" | "[" "1" "," color-table-value "]"
+color-table-value = "[" bit "," "[" rgb-list? "]" "]"
+rgb-list = rgb-value {"," rgb-value}*
+rgb-value = "[" INT "," INT "," INT "]"
+bit = "0" | "1"
+
+loop-clause = "loop" "=" int-opt
+int-opt = "[" "0" "]" | "[" "1" "," INT "]"
+
+# The three collection-triple productions for this artifact's diff (P2-P1 csv report §2's
+# copy-pasteable shape): `<name>-clause = "<name>" "{" "[" removed-list? "]" ";" "[" modified-
+# list? "]" ";" "[" added-list? "]" "}"`. `<key>` is `INT` — all three are index-keyed (GIF
+# frames/comments/app-extensions have no stable name/identity).
+removed-list = INT {"," INT}*
+
+frames-clause = "frames" "{" "[" removed-list? "]" ";" "[" frames-modified-list? "]" ";" "[" frames-added-list? "]" "}"
+frames-modified-list = frames-modified {"," frames-modified}*
+frames-modified = INT ":" frame-diff-value
+frames-added-list = frames-added {"," frames-added}*
+frames-added = INT ":" frame-value
+
+comments-clause = "comments" "{" "[" removed-list? "]" ";" "[" comments-modified-list? "]" ";" "[" comments-added-list? "]" "}"
+comments-modified-list = comments-modified {"," comments-modified}*
+comments-modified = INT ":" hex
+comments-added-list = comments-added {"," comments-added}*
+comments-added = INT ":" hex
+
+appext-clause = "appext" "{" "[" removed-list? "]" ";" "[" appext-modified-list? "]" ";" "[" appext-added-list? "]" "}"
+appext-modified-list = appext-modified {"," appext-modified}*
+appext-modified = INT ":" app-extension-value
+appext-added-list = appext-added {"," appext-added}*
+appext-added = INT ":" app-extension-value
+
+# `GifFrameDiff`'s own sparse fields print as single-letter `tag:value` pairs
+# (`L`/`T`/`W`/`H`/`I`/`C`/`X`/`D`/`S`/`P`/`U`/`Q`) inside its own `[...]` —
+# `enc_frame_diff`/`dec_frame_diff`. `S` (disposal) is one bare char `u`/`d`/`b`/`p`.
+frame-diff-value = "[" frame-diff-items? "]"
+frame-diff-items = frame-diff-item {"," frame-diff-item}*
+frame-diff-item = "L" ":" INT | "T" ":" INT | "W" ":" INT | "H" ":" INT | "I" ":" bit | "C" ":" gct-opt | "X" ":" hex | "D" ":" INT | "S" ":" disposal-char | "P" ":" int-opt | "U" ":" bit | "Q" ":" plain-text-opt
+
+disposal-char = "u" | "d" | "b" | "p"
+
+plain-text-opt = "[" "0" "]" | "[" "1" "," plain-text-value "]"
+plain-text-value = "[" INT "," INT "," INT "," INT "," INT "," INT "," INT "," INT "," hex "]"
+
+# `GifFrame` — positional `[left,top,width,height,interlace,lct,indices,delay_cs,disposal,
+# transparent_index,user_input,plain_text]` tuple — `enc_frame`/`dec_frame`.
+frame-value = "[" INT "," INT "," INT "," INT "," bit "," gct-opt "," hex "," INT "," disposal-char "," int-opt "," bit "," plain-text-opt "]"
+
+# `GifAppExtension` — positional `[identifier,auth_code,data]` hex-triple tuple —
+# `enc_app_extension`/`dec_app_extension`.
+app-extension-value = "[" hex "," hex "," hex "]"
+
+# `hex` (bare `hex`, deliberately NOT defined as a production) is the framework's built-in
+# `hex` MACRO — see ../../🧬️mutations/📝️text/📖️.grammar.semio's own `hex` doc comment
+# for why a macro, not a `{INT | IDENT}*`-shaped production, is required here.

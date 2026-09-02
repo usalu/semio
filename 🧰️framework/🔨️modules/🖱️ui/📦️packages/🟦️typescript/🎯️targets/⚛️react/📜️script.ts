@@ -10,11 +10,11 @@ declare global {
 }
 import { readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
-import type { BundleLinter } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts";
-import { dependencyBoundaryBreachesForBundleDir } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts";
-import { getWorkspaceRoot } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts";
-import { BundleScript, ScriptRouter, devToolingEnv, resolveTestLevel, runBundleScriptMain, runBunx, runCmd, runVitest } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts";
-import { defineLint } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts";
+import type { BundleLinter } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { dependencyBoundaryBreachesForBundleDir } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { getWorkspaceRoot } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { BundleScript, ScriptRouter, devToolingEnv, resolveTestLevel, runBundleScriptMain, runBunx, runCmd, runVitest } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { defineLint } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 
 export const policy = defineLint("@semio-tech/ui-react-bundle", (l: BundleLinter) => {
   const repoRoot = getWorkspaceRoot();
@@ -66,7 +66,7 @@ class TypecheckScript extends BundleScript {
  * is a stale entry (fails), a hit outside this list fails, a hit inside it is allowed. */
 export const UI_PRIMITIVES_ALLOWLIST: readonly string[] = [
   "♻️mit-bestand/🧺️demonstrator/⚛️footer.tsx",
-  "♻️mit-bestand/🧺️demonstrator/📦️index.tsx",
+  "♻️mit-bestand/🧺️demonstrator/🟦️.tsx",
 ] as const;
 
 const UI_PRIMITIVES_SKIP_DIRS = new Set(["node_modules", "dist", "target", ".🧬semio", ".🧬semio", "storybook-static", ".claude", ".git"]);

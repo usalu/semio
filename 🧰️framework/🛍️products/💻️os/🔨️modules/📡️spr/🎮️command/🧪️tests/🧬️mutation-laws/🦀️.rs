@@ -43,7 +43,7 @@ mod tests {
     use super::*;
     use crate::os_spr::{fold_plan_diff, fold_plan_inverse, Mutation, OpBinary, OpText};
 
-    fn cases() -> serde_json::Value { serde_json::from_str(include_str!("🔣️cases.json")).unwrap() }
+    fn cases() -> serde_json::Value { serde_json::from_str(include_str!("🔣️.json")).unwrap() }
 
     #[test]
     fn counter_fixture_codecs_and_descriptors() {

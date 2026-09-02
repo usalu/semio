@@ -14,7 +14,7 @@ workspace = true
 
 [lib]
 name = "pack"
-path = "📦️glue.rs"
+path = "🦀️.rs"
 
 [features]
 default = ["deflate"]

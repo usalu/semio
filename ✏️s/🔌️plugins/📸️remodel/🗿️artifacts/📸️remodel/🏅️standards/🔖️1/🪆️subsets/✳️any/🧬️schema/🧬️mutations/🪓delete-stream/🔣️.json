@@ -5,7 +5,7 @@
   "displayName": "Delete Stream",
   "emoji": "🪓",
   "aggregateVariant": "DeleteStream",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": "delete-stream",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

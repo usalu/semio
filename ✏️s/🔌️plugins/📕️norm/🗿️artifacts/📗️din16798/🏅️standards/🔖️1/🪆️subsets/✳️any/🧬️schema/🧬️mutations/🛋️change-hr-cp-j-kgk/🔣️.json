@@ -5,7 +5,7 @@
   "displayName": "Change Hr Cp J Kgk",
   "emoji": "🛋️",
   "aggregateVariant": "ChangeHrCpJKgk",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

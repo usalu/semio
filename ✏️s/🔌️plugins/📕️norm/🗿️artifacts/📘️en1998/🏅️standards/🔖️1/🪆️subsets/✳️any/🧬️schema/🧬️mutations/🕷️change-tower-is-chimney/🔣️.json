@@ -5,7 +5,7 @@
   "displayName": "Change Tower Is Chimney",
   "emoji": "🕷️",
   "aggregateVariant": "ChangeTowerIsChimney",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

@@ -120,7 +120,7 @@ pub struct SurfaceDoc {
 
 /// 🗺️ An embedded product surface. Replaces the old `UiComponentSceneNode`'s 15 sparse
 /// `Option<XxxScene>` fields with exactly ONE payload, identified by `doc_schema` — the 15 product
-/// scene structs themselves stay product payloads and move to `🖱️ui/🎬️scene/🦀️component.rs` in a
+/// scene structs themselves stay product payloads and move to `🖱️ui/🎬️scene/🦀️.rs` in a
 /// later packet, never into this dependency-free contract crate. See this file's own module doc for
 /// the exact reasoning behind each field (and each field the scaffold this replaces used to carry but
 /// no longer does).

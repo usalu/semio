@@ -5,7 +5,7 @@
   "displayName": "Replace Survey",
   "emoji": "🔁🗳️",
   "aggregateVariant": "ReplaceSurvey",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

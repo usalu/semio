@@ -11,12 +11,12 @@ the nineteen `🧿️semio` ones.
 
 **What it was written from.**
 
-* ``🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🔣️component.json`` — the five members.
+* ``🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🔣️.json`` — the five members.
 * rule 1 of `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/📓️derivation-rules.md`
   — `rename-<artifact>` for the identity field, `change-<field>` per remaining scalar.
 * the four committed `(before, mutation, after, outcome)` vectors.
 
-**No Rust was read to write this.** `🦀️component.rs` beside this file registers the SUBJECT half
+**No Rust was read to write this.** `🦀️.rs` beside this file registers the SUBJECT half
 only.
 
 **WHAT THIS CASE'S EVIDENCE ACTUALLY COVERS, stated rather than implied.** Three of the four kinds are
@@ -221,13 +221,13 @@ def inverse_handler(kind):
 def refuse_carrier(ctx):
     """🚧️ `identity-round-trip` reads this subset's own `.writer.dsl.semio` text carrier, and this
     implementation refuses it by clause rather than by absence. The committed grammar
-    `🚪️io/📸️snapshot/📝️text/📖️component.grammar.semio` is the repository-wide PLACEHOLDER — its whole
+    `🚪️io/📸️snapshot/📝️text/📖️.grammar.semio` is the repository-wide PLACEHOLDER — its whole
     body is `payload = OCTET+` and its `header` production declares `"schema" SP "stdio.json"` — while
     the committed artifact's first line is `semio writer.writer.dsl v1` and its body is four
     HEX-ENCODED scalars plus a two-element `[hex,hex]` child-handle pair. Nothing committed says the
     values are hex, nothing says the pair is `(childId, target)`, and nothing says how the second
     element's `<artifactId>!<kind>@<standard>/<subset>` spelling is split."""
-    committed = ctx.fixture_bytes(uri_in(ctx, "🗣️example.dsl.semio"))
+    committed = ctx.fixture_bytes(uri_in(ctx, "🗣️.dsl.semio"))
     raise AssertionError(
         "identity-round-trip: this subset's `.dsl.semio` carrier cannot be read by a second implementation. Its committed grammar is the "
         "repository-wide placeholder `payload = OCTET+` whose header production declares `\"schema\" SP \"stdio.json\"`, contradicted by the artifact's "

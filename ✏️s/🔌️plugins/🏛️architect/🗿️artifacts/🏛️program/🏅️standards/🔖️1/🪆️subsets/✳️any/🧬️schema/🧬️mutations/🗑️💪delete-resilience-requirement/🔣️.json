@@ -5,7 +5,7 @@
   "displayName": "Delete Resilience Requirement",
   "emoji": "🗑️💪",
   "aggregateVariant": "DeleteResilienceRequirement",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

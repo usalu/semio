@@ -1,8 +1,9 @@
-use super::tests::{Value, assert_fixture_descriptor};
-use serde::{Deserialize, Serialize};
+use super::tests::{assert_fixture_descriptor, Value};
 use semio_framework_value_derive::{FromValue, ToValue};
+use serde::{Deserialize, Serialize};
 
-#[path = "🔢️set-value/🦀️.rs"] mod set_value;
+#[path = "🔢️set-value/🦀️.rs"]
+mod set_value;
 pub use set_value::SetValue;
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, dsl::Mutations)]

@@ -5,7 +5,7 @@
   "displayName": "Update Feature Params",
   "emoji": "🌠",
   "aggregateVariant": "UpdateFeatureParams",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": "update-feature-params",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

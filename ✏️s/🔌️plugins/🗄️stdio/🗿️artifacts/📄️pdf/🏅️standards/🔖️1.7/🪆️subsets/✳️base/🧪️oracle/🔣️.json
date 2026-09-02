@@ -1,7 +1,7 @@
 {
   "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json",
   "schemaVersion": 2,
-  "_comment": "🧩️ This subset's own contribution to the repository test platform, distinct from the shared ✏️s/🔌️plugins/🗄️stdio/🧪️oracle/🔣️.json manifest: that file registers `lopdf` under the `pdf-edit`/`pdf-parse` capabilities its own cases exercise; this file registers the SAME package under a distinct id and the `pdf-1-7-mutate` capability this subset's exhaustive mutation case (`mutate-pdf-1-7`) actually tags, per the wave 7 fleet brief's oracle-registration gotcha (reusing the shared entry fails the contract with `oracle-capability-mismatch`).",
+  "_comment": "🧩️ This subset's own contribution to the repository test platform, distinct from the shared ✏️s/🔌️plugins/🗄️stdio/🔣️oracle.json manifest: that file registers `lopdf` under the `pdf-edit`/`pdf-parse` capabilities its own cases exercise; this file registers the SAME package under a distinct id and the `pdf-1-7-mutate` capability this subset's exhaustive mutation case (`mutate-pdf-1-7`) actually tags, per the wave 7 fleet brief's oracle-registration gotcha (reusing the shared entry fails the contract with `oracle-capability-mismatch`).",
   "oracles": [
     {
       "id": "lopdf-pdf-1-7-mutate",
@@ -17,7 +17,7 @@
       "license": "MIT",
       "testOnly": true,
       "homepage": "https://github.com/J-F-Liu/lopdf",
-      "rationale": "🫥️ RECLASSIFIED by the `reimplementation-registered-as-third-party` gate. The crate named here does real work — it parses and writes this format — but what a MUTATION SHOULD PRODUCE is computed by this owner's own `🧪️oracle/🦀️component.rs`. Both halves of the comparison then descend from ONE reading of the specification, so a misreading of it yields two agreeing wrong answers: the single failure a differential test exists to prevent.\n\nThe honest split is that the crate discharges \"the result is a well-formed file of this format\" and NOT \"the mutation computed the right answer\". Only the second is what a mutation oracle is for, so this is a `cross-semio-implementation` — a required SUPPLEMENT, never a substitute, and a qualifying third-party reference is still owed.\n\nAny fixtures registered alongside are untouched and remain valuable: real bytes of the real format, byte-reproducible, and exactly what a qualifying reader gets pointed at the day one is registered.",
+      "rationale": "🫥️ RECLASSIFIED by the `reimplementation-registered-as-third-party` gate. The crate named here does real work — it parses and writes this format — but what a MUTATION SHOULD PRODUCE is computed by this owner's own `🦀️oracle.rs`. Both halves of the comparison then descend from ONE reading of the specification, so a misreading of it yields two agreeing wrong answers: the single failure a differential test exists to prevent.\n\nThe honest split is that the crate discharges \"the result is a well-formed file of this format\" and NOT \"the mutation computed the right answer\". Only the second is what a mutation oracle is for, so this is a `cross-semio-implementation` — a required SUPPLEMENT, never a substitute, and a qualifying third-party reference is still owed.\n\nAny fixtures registered alongside are untouched and remain valuable: real bytes of the real format, byte-reproducible, and exactly what a qualifying reader gets pointed at the day one is registered.",
       "hostPath": "✏️s/🔌️plugins/🗄️stdio/🧪️oracle/📦️packages/🦀️rust",
       "kind": "cross-semio-implementation",
       "engine": {
@@ -139,7 +139,7 @@
         {
           "id": "append-page-content",
           "capability": "pdf-1-7-mutate",
-          "payloadSchema": "🔣️payload.schema.json",
+          "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "applied"
           ],
@@ -170,7 +170,7 @@
         {
           "id": "insert-object",
           "capability": "pdf-1-7-mutate",
-          "payloadSchema": "🔣️payload.schema.json",
+          "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "applied"
           ],
@@ -202,7 +202,7 @@
         {
           "id": "insert-page",
           "capability": "pdf-1-7-mutate",
-          "payloadSchema": "🔣️payload.schema.json",
+          "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "applied"
           ],
@@ -233,7 +233,7 @@
         {
           "id": "move-page",
           "capability": "pdf-1-7-mutate",
-          "payloadSchema": "🔣️payload.schema.json",
+          "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "applied"
           ],
@@ -264,7 +264,7 @@
         {
           "id": "remove-dict-entry",
           "capability": "pdf-1-7-mutate",
-          "payloadSchema": "🔣️payload.schema.json",
+          "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "applied"
           ],
@@ -295,7 +295,7 @@
         {
           "id": "remove-object",
           "capability": "pdf-1-7-mutate",
-          "payloadSchema": "🔣️payload.schema.json",
+          "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "applied"
           ],
@@ -326,7 +326,7 @@
         {
           "id": "remove-page",
           "capability": "pdf-1-7-mutate",
-          "payloadSchema": "🔣️payload.schema.json",
+          "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "applied"
           ],
@@ -357,7 +357,7 @@
         {
           "id": "remove-trailer-entry",
           "capability": "pdf-1-7-mutate",
-          "payloadSchema": "🔣️payload.schema.json",
+          "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "applied"
           ],
@@ -388,7 +388,7 @@
         {
           "id": "set-dict-entry",
           "capability": "pdf-1-7-mutate",
-          "payloadSchema": "🔣️payload.schema.json",
+          "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "applied"
           ],
@@ -419,7 +419,7 @@
         {
           "id": "set-info",
           "capability": "pdf-1-7-mutate",
-          "payloadSchema": "🔣️payload.schema.json",
+          "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "applied"
           ],
@@ -450,7 +450,7 @@
         {
           "id": "set-object-value",
           "capability": "pdf-1-7-mutate",
-          "payloadSchema": "🔣️payload.schema.json",
+          "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "applied"
           ],
@@ -481,7 +481,7 @@
         {
           "id": "set-page-content",
           "capability": "pdf-1-7-mutate",
-          "payloadSchema": "🔣️payload.schema.json",
+          "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "applied"
           ],
@@ -512,7 +512,7 @@
         {
           "id": "set-page-crop-box",
           "capability": "pdf-1-7-mutate",
-          "payloadSchema": "🔣️payload.schema.json",
+          "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "applied"
           ],
@@ -543,7 +543,7 @@
         {
           "id": "set-page-media-box",
           "capability": "pdf-1-7-mutate",
-          "payloadSchema": "🔣️payload.schema.json",
+          "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "applied"
           ],
@@ -574,7 +574,7 @@
         {
           "id": "set-page-rotation",
           "capability": "pdf-1-7-mutate",
-          "payloadSchema": "🔣️payload.schema.json",
+          "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "applied"
           ],
@@ -605,7 +605,7 @@
         {
           "id": "set-trailer-entry",
           "capability": "pdf-1-7-mutate",
-          "payloadSchema": "🔣️payload.schema.json",
+          "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "applied"
           ],

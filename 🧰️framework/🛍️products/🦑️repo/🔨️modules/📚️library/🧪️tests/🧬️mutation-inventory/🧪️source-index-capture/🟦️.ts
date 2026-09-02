@@ -4,9 +4,9 @@ import { createHash } from "node:crypto";
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, writeFileSync } from "node:fs";
 import { basename, dirname, join, resolve } from "node:path";
 import { pathToFileURL } from "node:url";
-import type { Taxonomy } from "../../../🔍️discovery/🟦️component.ts";
+import type { Taxonomy } from "../../../🔍️discovery/🟦️.ts";
 import type { TaxonomySourceInventory, TaxonomySourceObservation } from "../../../🧹️normalization/🟦️.ts";
-import { sourceFileFactByteCompare, sourceFileFactOracleKind } from "../🧪️source-file-facts/🧪️oracle/🟦️.ts";
+import { sourceFileFactByteCompare, sourceFileFactOracleKind } from "../🧪️source-file-facts/🟦️oracle.ts";
 
 //#region 🧭️Inputs
 const root = (() => {
@@ -20,7 +20,7 @@ const root = (() => {
 })();
 const library = join(root, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library");
 const ticket = join(root, ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/🧪️source-index-capture-66");
-const descriptorRelative = "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️mutation-descriptor.schema.json";
+const descriptorRelative = "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️.schema.json";
 const taxonomyRelative = "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json";
 const rootScriptPath = join(root, "📜️script.ts");
 const schema = JSON.parse(readFileSync(join(import.meta.dir, "🧬️schema/🔣️.json"), "utf8"));
@@ -79,7 +79,7 @@ async function subject(): Promise<{ readonly mutationTaxonomySourceIndex: (repoR
 test("mutation source index captures admitted registered role files without a second collector", async () => {
   const validate = new Ajv2020({ strict: true, allErrors: true }).compile(schema);
   expect(validate(vectors), JSON.stringify(validate.errors)).toBe(true);
-  const run = fixture(), taxonomyBytes = readFileSync(join(library, "🔣️taxonomy.json")), descriptorBytes = readFileSync(join(library, "🔣️mutation-descriptor.schema.json"));
+  const run = fixture(), taxonomyBytes = readFileSync(join(library, "🔣️taxonomy.json")), descriptorBytes = readFileSync(join(library, "🔣️.schema.json"));
   writeFixture(run, taxonomyRelative, taxonomyBytes);
   writeFixture(run, descriptorRelative, descriptorBytes);
   for (const row of vectors.cases) writeFixture(run, row.path, row.bytes);

@@ -5,7 +5,7 @@
   "displayName": "Connect Grips",
   "emoji": "🔗",
   "aggregateVariant": "ConnectGrips",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": "connect-grips",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

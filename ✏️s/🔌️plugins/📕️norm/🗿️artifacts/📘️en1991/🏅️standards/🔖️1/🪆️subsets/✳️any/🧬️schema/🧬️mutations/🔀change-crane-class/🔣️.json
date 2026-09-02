@@ -5,7 +5,7 @@
   "displayName": "Change Crane Class",
   "emoji": "🔀",
   "aggregateVariant": "ChangeCraneClass",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

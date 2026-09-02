@@ -1,0 +1,36 @@
+dialect protocol
+protocol stdio.stl.diff
+version 1
+schema stdio.stl
+start record
+
+# P2-FG1-FIX: REAL binary diff frame, replacing the prior `print_diff().into_bytes()` text-as-
+# binary shortcut (`../🦀️.rs`'s upgraded `DiffCodec::encode_diff`/`decode_diff`, `#region
+# 🔖️TopLevel`) — per this wave's own findings, `stl` was one of 4 stdio standards still on that
+# shortcut despite `md`/`xml`/`dxf` already completing the real-binary-frame upgrade this same
+# wave. Same structural pattern `md`'s own `stdio.md.diff` protocol file uses (`format u8` +
+# presence-mask header + opaque trailing payload chain), retyped for `StlDiff`'s TWO independently
+# optional top-level fields (`flags` is a 2-bit presence mask — bit0=`solid_name`, bit1=
+# `triangles` — where `md`'s single-field `MdDiff` only needed one `has_value` byte).
+#
+# `format u8` (`store::pack_rt::OP_BINARY_FORMAT` convention) + `flags u8` are the two REAL fixed
+# header fields; each PRESENT field's own payload follows as one opaque trailing `bytes` chain.
+# `StlDiff`'s field tree has ZERO self-recursion (`StlTriangleDiff`/`StlTrianglesDiff` never
+# reference `StlDiff` or themselves — genuinely flatter than `md`'s recursive `MdBlocksDiff`), so
+# unlike `md`, this artifact does NOT hit the `Prim::Ref`-recursion gap. It still can't be
+# re-modeled field-by-field in THIS dialect, though: `triangles.removed`/`.modified`/`.added` are
+# variable-length VECTORS OF RECORDS, which hits the sibling, independently-documented
+# `protocol-array-of-records` `walk_protocol` gap `dxf`'s own `stdio.dxf.diff` upgrade cites this
+# same wave (the dialect's `array-prim`/`record`-block constructs — see `dsl`'s own
+# `protocol.grammar.semio` — are unexercised by any artifact in this codebase; confirmed by
+# grepping every existing `.protocol.semio` file, none use them). Genuinely structured, varint-
+# framed binary at the RUST layer regardless (`enc_triangles_diff_bin`/`dec_triangles_diff_bin` in
+# `../🦀️.rs`, recursing down through `enc_triangle_diff_bin`/`enc_triangle_bin`/
+# `enc_vertices_bin`/`enc_vec3_bin`/`write_f64_bin` — every level real fixed/varint binary, never
+# text-as-binary) — honestly opaque only at THIS protocol-dialect layer, for the one documented,
+# non-blocking `mechanism_gaps` reason above.
+framing record
+header fixed 2
+field format u8
+field flags u8
+chain payload bytes

@@ -1,0 +1,10 @@
+module Stdio_semio_animation_mutations;
+
+# Real binary op frame: `format` (1 byte) + `tag` (1 byte, the `SemioAnimationMutation` variant
+# ordinal), then one opaque `payload` tail carrying the variant's own argument text — see the
+# sibling `📡️.protocol.semio`'s comment.
+type Document = unit {
+    format: uint8;
+    tag: uint8;
+    payload: bytes &eod;
+};

@@ -1,0 +1,71 @@
+dialect grammar
+grammar semio.cad.snapshot
+extension semio
+start document
+
+# ARTIFACT-SYSTEM-OVERHAUL-REAL-CODECS-RUNTIME-REUSE-EVOLUTION cad wave (following the
+# flow/brep pilots' proven template, `ws-codec-workflow-report.md`/`ws-codec-brep-report.md`).
+# Real grammar for `SemioCadSnapshot::print_dsl`/`parse_dsl` (📸️snapshot/🦀️.rs's
+# `print_cad_snapshot_body`/`parse_cad_snapshot_body`) — hand-rolled (`CadEntity` is a data-carrying
+# tagged enum; a derive-path `RecordSpec` cannot express the `L[...]`/`A[...]`/.../`D[...]`-tagged
+# text shape). Same hex/bracket-encoded value convention as this subset's own `🔺️diff`/`🧬️mutations`
+# facet grammars.
+#
+# `document` matches the fixture-honesty harness's own reconstructed body shape (mandatory `semio
+# stdio.semio.cad.dsl v1` preamble stripped and replaced with the bare `envelope_id()` token —
+# `artifact-mark` below — before recognition, same convention every prior pilot's grammar uses).
+artifact-mark = "stdio.semio.cad"
+document = artifact-mark schema-line layers-line blocks-line entities-line
+
+schema-line = "schema" "=" hex
+
+layers-line = "layers" "=" "[" layer-items? "]"
+layer-items = layer {"," layer}*
+blocks-line = "blocks" "=" "[" block-items? "]"
+block-items = block {"," block}*
+entities-line = "entities" "=" "[" entity-record-items? "]"
+entity-record-items = entity-record {"," entity-record}*
+
+# Entity value grammars — field order matches `enc_layer`/`enc_block`/`enc_entity_record` in
+# `📸️snapshot/🦀️.rs` exactly (the authoritative source).
+layer = "[" hex "," i32 "," hex "," bool "]"
+entity-record = "[" hex "," hex "," entity "]"
+entity-record-list = "[" entity-record-items? "]"
+block = "[" hex "," point2 "," entity-record-list "]"
+
+# `CadEntity`: `L[a,b]` (Line) / `A[center,radius,startAngle,endAngle]` (Arc) /
+# `C[center,radius]` (Circle) / `E[center,majorAxisEnd,ratio,startParam,endParam]` (Ellipse) /
+# `P[vertices,closed]` (Polyline) / `T[position,height,rotation,content]` (Text) /
+# `I[blockName,insertionPoint,scale,rotation]` (Insert) / `S[p1,p2,p3,p4]` (Solid) /
+# `D[defPoint,textPosition,measurement,text]` (Dimension) — single-letter tag prefix, same
+# convention `enc_entity` (🔺️diff/🦀️.rs, the established precedent this facet's own
+# encoder matches field-for-field) uses.
+entity = line | arc | circle | ellipse | polyline | text-entity | insert | solid | dimension
+line = "L" "[" point2 "," point2 "]"
+arc = "A" "[" point2 "," number "," number "," number "]"
+circle = "C" "[" point2 "," number "]"
+ellipse = "E" "[" point2 "," point2 "," number "," number "," number "]"
+polyline = "P" "[" point2-list "," bool "]"
+text-entity = "T" "[" point2 "," number "," number "," hex "]"
+insert = "I" "[" hex "," point2 "," point2 "," number "]"
+solid = "S" "[" point2 "," point2 "," point2 "," point2 "]"
+dimension = "D" "[" point2 "," point2 "," number "," hex "]"
+
+point2 = "[" number "," number "]"
+point2-list = "[" point2-items? "]"
+point2-items = point2 {"," point2}*
+
+i32 = INT
+bool = "0" | "1"
+
+# `SemioPoint2.x`/`.y` and every `f64` field print via plain Rust `{v}` Display — the shared
+# lexer's `INT`/`FLOAT` scanners already capture a leading `-` when digit-adjacent (P2-M1's
+# trailing-dot-float work), matching `enc_f64` lexeme-for-lexeme.
+number = INT | FLOAT
+
+# `hex` (bare `hex`, deliberately NOT defined as a production here) is the framework's built-in
+# `hex` MACRO (`📖️grammar/🦀️.rs`'s `default_macros`) — every `handle`/`name`/`content`/
+# `text`/`block_name`/`schema` leaf string is `enc_str` (lowercase-hex UTF-8 bytes). A hand-rolled
+# `{INT|IDENT}*` production would be wrong here (see the sibling `🔺️diff`/`🧬️mutations` grammars'
+# own `hex` doc comment for the two independent reasons why) — `Symbol::Ref`'s production→macro
+# fallback resolves bare `hex` automatically, with real backtracking.

@@ -4,9 +4,9 @@
 //! `[workspace]`, isolated from the repository's root workspace and Cargo.lock).
 //!
 //! This binary is the READER-oracle counterpart the repository's own SVG 1.1/base oracle
-//! registration (`../../🧪️oracle/🔣️.json`, oracle id `quick-xml-svg-1-1-mutate-reader`) needs.
+//! registration (`../../🔣️oracle.json`, oracle id `quick-xml-svg-1-1-mutate-reader`) needs.
 //! It is DELIBERATELY independent of, and shares no code with, this subset's own
-//! `🧪️oracle/🦀️component.rs` (the `cross-semio-implementation` oracle that COMPUTES what a
+//! `🦀️oracle.rs` (the `cross-semio-implementation` oracle that COMPUTES what a
 //! mutation should produce): every type, parser and writer below is a fresh implementation built
 //! directly against quick-xml's own event API, never imported from that module. It is also
 //! independent of the sibling 📰xml 1.0 `✳️base` subset's own `quick-xml`-backed oracle-probe
@@ -17,7 +17,7 @@
 //! projects `viewBox`/`transform` as opaque attribute STRING values, same as every other
 //! attribute. That is still an honest, witnessing comparison — a `viewBox` or `transform` value
 //! that changed is a string that differs — it is simply not a SEMANTIC one. See this crate's own
-//! sibling `🔬️probes/📜️script.ts` header and `../../🧪️oracle/🔣️.json`'s
+//! sibling `🔬️probes/📜️script.ts` header and `../../🔣️oracle.json`'s
 //! `svg-1-1-quick-xml-reader-v1` comparisonProfile for exactly this scoping.
 //!
 //! Three subcommands:
@@ -333,7 +333,7 @@ fn base_doc() -> QDoc {
 
 //#region 🔖️Recipes
 /// 🧪 One recipe: BEFORE always, AFTER always (every one of the 9 declared kinds is registered
-/// `outcomes: ["applied"]` only in `../../🧪️oracle/🔣️.json` — production's own `diff()` for every
+/// `outcomes: ["applied"]` only in `../../🔣️oracle.json` — production's own `diff()` for every
 /// `SvgMutation` leaf unconditionally returns `MutationOutcome::new(..)`, never `empty`/`error`/
 /// `fatal`, per each leaf's own `../../🧬️schema/🧬️mutations/✏️<kind>/🦀️.rs` — so there is no
 /// `-rejected-*` recipe to author here). Every AFTER state below touches EXACTLY the field the

@@ -5,7 +5,7 @@
   "displayName": "Change T1 S",
   "emoji": "🐚",
   "aggregateVariant": "ChangeT1S",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

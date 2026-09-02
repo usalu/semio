@@ -30,7 +30,7 @@ impl ErasedSnapshotRetirement for RootRetirement {
     fn terminal_is_empty(&self) -> bool { self.root.is_none() && self.retirement.is_empty() }
 }
 fn source() -> (Arc<Root>, Arc<AtomicUsize>) {
-    let fixture = crate::os_pack::json::parse(include_str!("../🧪️fixtures/🔣️retirement.json")).unwrap();
+    let fixture = crate::os_pack::json::parse(include_str!("../🧪️fixtures/🔣️.json")).unwrap();
     let fixture: FlowFixture = crate::os_dsl::FromValue::from_value(crate::os_pack::json::to_dsl_value(fixture.get("fixture").unwrap())).unwrap();
     let drops = Arc::new(AtomicUsize::new(0));
     (Arc::new(Root { fixture: Some(fixture), drops: drops.clone() }), drops)
@@ -51,7 +51,7 @@ fn close<R: Send + Sync + 'static, T: Copy>(cursor: &mut CopyCursor<R, T>, grant
 //#region 🧪️CanonicalCopy
 #[test]
 fn flow_selected_copy_matches_serde_and_shares_unchanged_ordered_roots() {
-    let vectors = crate::os_pack::json::parse(include_str!("🧪️fixtures/🔣️typed-copy.json")).unwrap();
+    let vectors = crate::os_pack::json::parse(include_str!("🧪️fixtures/🔣️.json")).unwrap();
     for grant in [1, 4096] {
         for case in vectors.get("cases").and_then(crate::os_pack::json::Value::as_array).unwrap() {
             let (root, drops) = source();

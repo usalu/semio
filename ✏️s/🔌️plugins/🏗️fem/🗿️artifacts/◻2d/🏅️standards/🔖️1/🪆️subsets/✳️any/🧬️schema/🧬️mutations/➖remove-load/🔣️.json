@@ -5,7 +5,7 @@
   "displayName": "Remove Load",
   "emoji": "➖",
   "aggregateVariant": "RemoveLoad",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": "remove-load",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

@@ -1,0 +1,31 @@
+dialect protocol
+protocol stdio.las.mutations
+version 1
+schema stdio.las
+start op
+framing record
+
+# Ticket 26/08/10/ARTIFACT-SYSTEM-OVERHAUL-REAL-CODECS-RUNTIME-REUSE-EVOLUTION: real binary op
+# frame -- replaces both the pre-existing placeholder (`dialect protocol stdio.las.mutations` /
+# `magic = %x00` / `payload = *OCTET`, pseudo-ABNF entirely outside this framework's real
+# `.protocol.semio` dialect) AND the F6 `print_las_mutation(self).into_bytes()` text-as-binary
+# shortcut this artifact's `OpBinary::encode_op` used to fall back to (see ../🦀️.rs's
+# upgraded `impl protocol::OpBinary for LasMutation`, `#region 🔖️BinaryOpCodec`). `LasMutation` is
+# a 15-variant enum, none of them a self-recursive/data-carrying value type (unlike json/csv's
+# `JsonValue`/`CsvRecord`) -- but each variant's payload shape is genuinely DIFFERENT (some empty,
+# some scalar tuples, some a whole nested `LasHeader`/`LasVlr`/`LasPoint` record), and this
+# dialect's `repeat`/`arm` tag-dispatch construct exists only for a REPEATED sequence of records,
+# not a single one-shot "read a tag byte, then branch into one of 15 differently-shaped payloads"
+# read -- the same `protocol-array-of-records`-adjacent gap zip/binary's own already-real mutations
+# protocols hit (`💾️binary/…/🧬️mutations/💾️binary/📡️.protocol.semio`'s own doc comment
+# names this exact limitation for its `dsl::variants_binary`-routed `ordinal`). The two REAL fixed
+# leading fields (`format`, the variant `tag`) ARE protocol-walkable and modeled here field-by-
+# field; the variant-specific payload tail stays one opaque trailing chain -- the Rust
+# `encode_op`/`decode_op` side (same file, `#region 🔖️BinaryOpCodec`) IS genuinely, fully
+# structured, real per-variant binary all the way down (round-trip tested by
+# `op_text_binary_roundtrip_law`), this protocol file honestly bounds only what it can
+# field-by-field walk.
+
+field format u8
+field tag u8
+chain body bytes

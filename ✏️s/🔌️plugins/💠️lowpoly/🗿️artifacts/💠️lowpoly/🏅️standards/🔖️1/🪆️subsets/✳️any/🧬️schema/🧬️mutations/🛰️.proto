@@ -1,0 +1,170 @@
+syntax = "proto3";
+package semio.s.lowpoly.lowpoly.mutation;
+
+// 🧬️ LowpolyMutation dispatch — real facet mirror of the Rust `🦀️.rs` sibling's
+// `LowpolyMutation` enum (`dsl::Mutations`-derived, seventeen variants: nine object-lane verbs, a
+// create/delete pair for the `mesh` CHILD slot, and six paint-layer verbs plus one pixel edit).
+
+message LowpolyTransform {
+  repeated float position = 1;
+  repeated float rotation = 2;
+  repeated float scale = 3;
+}
+
+message LowpolyPaintLayer {
+  string name = 1;
+  bool visible = 2;
+  float opacity = 3;
+  string blend_mode = 4;
+  bytes pixels = 5;
+}
+
+message ArtifactDialect {
+  string artifact_kind = 1;
+  string standard = 2;
+  string subset = 3;
+}
+
+message ArtifactRef {
+  string artifact_id = 1;
+  ArtifactDialect dialect = 2;
+}
+
+// 🕸️ Owned CHILD handle for an object's mesh slot (`store::ArtifactChild<SemioMeshSnapshot>`);
+// `target` is the full `ArtifactRef`, never a flattened URI string — confirmed against the
+// `create-mesh` mutation/diff fixtures.
+message LowpolyMeshHandle {
+  string child_id = 1;
+  ArtifactRef target = 2;
+}
+
+message LowpolyObject {
+  string id = 1;
+  string name = 2;
+  LowpolyTransform transform = 3;
+  bool smooth_shading = 4;
+  // absent when the object owns no mesh yet — confirmed against the `create-object` mutation fixture.
+  LowpolyMeshHandle mesh = 5;
+  repeated LowpolyPaintLayer paint_layers = 6;
+}
+
+// One contiguous run of RGBA bytes written into a paint-layer pixel buffer at `offset`.
+message PixelRun {
+  uint32 offset = 1;
+  bytes bytes = 2;
+}
+
+message CreateObject {
+  uint64 index = 1;
+  LowpolyObject object = 2;
+}
+
+message DeleteObject {
+  string id = 1;
+}
+
+message ReorderObjects {
+  string id = 1;
+  uint64 to_index = 2;
+}
+
+message RenameObject {
+  string id = 1;
+  string new_name = 2;
+}
+
+message ChangeObjectSmoothShading {
+  string id = 1;
+  bool new_smooth_shading = 2;
+}
+
+message MoveObject {
+  string id = 1;
+  repeated float new_position = 2;
+}
+
+message RotateObject {
+  string id = 1;
+  repeated float new_rotation = 2;
+}
+
+message ScaleObject {
+  string id = 1;
+  repeated float new_scale = 2;
+}
+
+message CreateMesh {
+  string id = 1;
+  string child_id = 2;
+  ArtifactRef target = 3;
+  string mesh_workspace = 4;
+}
+
+message DeleteMesh {
+  string id = 1;
+}
+
+message InsertPaintLayer {
+  string object_id = 1;
+  uint64 index = 2;
+  LowpolyPaintLayer layer = 3;
+}
+
+message RemovePaintLayer {
+  string object_id = 1;
+  uint64 index = 2;
+}
+
+message RenamePaintLayer {
+  string object_id = 1;
+  uint64 index = 2;
+  string new_name = 3;
+}
+
+message ChangePaintLayerVisible {
+  string object_id = 1;
+  uint64 index = 2;
+  bool new_visible = 3;
+}
+
+message ChangePaintLayerOpacity {
+  string object_id = 1;
+  uint64 index = 2;
+  float new_opacity = 3;
+}
+
+message ChangePaintLayerBlendMode {
+  string object_id = 1;
+  uint64 index = 2;
+  string new_blend_mode = 3;
+}
+
+message EditPaintLayer {
+  string object_id = 1;
+  uint64 layer_index = 2;
+  repeated PixelRun runs = 3;
+}
+
+// 🎛️ Dispatch envelope — exactly one payload set, matching the Rust `LowpolyMutation` enum's
+// declaration order and spelling (`🦀️.rs`'s `KINDS`).
+message LowpolyMutation {
+  oneof mutation {
+    CreateObject create_object = 1;
+    DeleteObject delete_object = 2;
+    ReorderObjects reorder_objects = 3;
+    RenameObject rename_object = 4;
+    ChangeObjectSmoothShading change_object_smooth_shading = 5;
+    MoveObject move_object = 6;
+    RotateObject rotate_object = 7;
+    ScaleObject scale_object = 8;
+    CreateMesh create_mesh = 9;
+    DeleteMesh delete_mesh = 10;
+    InsertPaintLayer insert_paint_layer = 11;
+    RemovePaintLayer remove_paint_layer = 12;
+    RenamePaintLayer rename_paint_layer = 13;
+    ChangePaintLayerVisible change_paint_layer_visible = 14;
+    ChangePaintLayerOpacity change_paint_layer_opacity = 15;
+    ChangePaintLayerBlendMode change_paint_layer_blend_mode = 16;
+    EditPaintLayer edit_paint_layer = 17;
+  }
+}

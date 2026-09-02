@@ -468,7 +468,7 @@ fn presence_peer_rows_for_surface(peers: &[PresencePeer], attached_surface: Opti
 
 /// 🪐️ ticket §C4/§6 — the space's own artifact-index document: kind `s.space`, dialect
 /// `s.space.space@1/*`, document id always the literal `"index"` (one per hub space) — mirrored from
-/// the Rust source of truth (`✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space/🦀️component.rs`), same as the
+/// the Rust source of truth (`✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space/🦀️.rs`), same as the
 /// React shell's own `S_SPACE_INDEX_DOCUMENT_SCHEMA`/`SPACE_INDEX_DIALECT` mirror
 /// (`📓️w2-c-report.md`).
 #[cfg(not(target_arch = "wasm32"))]
@@ -493,14 +493,14 @@ fn find_dialect_app<'a>(program: &'a ProgramBridgeEntry, dialect: &semio_framewo
 //#region 🔖️CheckInPure
 /// 📌️ ticket 26/08/17/FINISH-HUB-SPACES-COLLABORATION-END-TO-END §C5 — auto check-in policy
 /// constants, byte-identical to the React shell's `AUTO_CHECKIN_IDLE_MS`/`AUTO_CHECKIN_EDIT_THRESHOLD`
-/// (`ShellHelpers/🟦️component.tsx`).
+/// (`ShellHelpers/🟦️.tsx`).
 #[cfg(not(target_arch = "wasm32"))]
 const AUTO_CHECKIN_IDLE_MS: i64 = 20_000;
 #[cfg(not(target_arch = "wasm32"))]
 const AUTO_CHECKIN_EDIT_THRESHOLD: u32 = 200;
 
 /// 🧾️ ticket §C5 — folds one `HistoryPatch` into the running per-session entry map, the wgpu twin of
-/// the React shell's `applyHistoryPatch` reducer (`ShellHost/🟦️component.tsx`): `replace=true` (a
+/// the React shell's `applyHistoryPatch` reducer (`ShellHost/🟦️.tsx`): `replace=true` (a
 /// fresh `ReadHistory` snapshot on session/document mount) clears the map first; otherwise a patch no
 /// newer than the tracked cursor is a stale/duplicate reply and is ignored outright. Returns whether
 /// the fold actually changed anything, so callers only re-derive the uncommitted count when it could
@@ -521,7 +521,7 @@ fn fold_history_patch(entries: &mut BTreeMap<u64, semio_framework::kernel::Histo
 }
 
 /// 🧾️ ticket §C5 — uncommitted-since-last-checkpoint count: the SAME "since the last Change" fold the
-/// React shell's `uncommittedEditCount` (`ShellHost/🟦️component.tsx`) uses — every applied
+/// React shell's `uncommittedEditCount` (`ShellHost/🟦️.tsx`) uses — every applied
 /// mutation-kind entry counts, reset to 0 the moment a `commitCheckpoint` history-kind entry is seen,
 /// walked oldest-first (`BTreeMap` keyed by `seq` iterates in order already).
 #[cfg(not(target_arch = "wasm32"))]
@@ -540,7 +540,7 @@ fn uncommitted_edit_count(entries: &BTreeMap<u64, semio_framework::kernel::Histo
 }
 
 /// 👁️✏️ ticket §C5 item 5 — "viewers never checkpoint", the wgpu twin of the React shell's
-/// `canCheckIn` (`ShellHelpers/🟦️component.tsx`): the one predicate gating both the `#s-checkin`
+/// `canCheckIn` (`ShellHelpers/🟦️.tsx`): the one predicate gating both the `#s-checkin`
 /// affordance's presence and the auto check-in poll's arming.
 #[cfg(not(target_arch = "wasm32"))]
 fn can_check_in(role: semio_framework::manifest::AppRole) -> bool {
@@ -550,7 +550,7 @@ fn can_check_in(role: semio_framework::manifest::AppRole) -> bool {
 /// 📌️ ticket §C5 item 2 — pure decision for the per-frame auto check-in poll. This shell has no timer
 /// wheel (see `render_sync_status_and_checkin`'s doc note on `Effect::DispatchAction`'s `delay_ms`
 /// collapsing to "next tick"), so `AutoCheckinScheduler`'s `setTimeout`-based debounce
-/// (`ShellHelpers/🟦️component.tsx`) is reproduced as a poll instead: fires once uncommitted edits
+/// (`ShellHelpers/🟦️.tsx`) is reproduced as a poll instead: fires once uncommitted edits
 /// reach `threshold` (never waiting out the idle window once crossed), or once `idle_ms` have elapsed
 /// since the last uncommitted-count change — and never again while `pending` is already set (mirrors
 /// `AutoCheckinScheduler::notify`'s own storm guard: a fire that's already pending never re-fires
@@ -1956,7 +1956,7 @@ impl ShellState {
         // sizes or owns its own thread pool — `TokioHostRuntime::new()`'s own `thread_plan`/
         // `ThreadBudget` construction path was DELETED by P1a with no replacement. Instead this
         // injects `crate::renderer_worker_pool()`, the ONE process-wide `WorkerPool` this whole
-        // renderer crate shares (also used by `📦️glue.rs::kernel_runtime`'s `ParallelRuntime` for
+        // renderer crate shares (also used by `🦀️.rs::kernel_runtime`'s `ParallelRuntime` for
         // shard-turn scheduling — see that fn's own doc for why it cannot instead reuse
         // `semio-framework-os-services`'s own private `global_worker_pool()` singleton). `open_scope`/
         // `ComputePool::new`/`with_new_http_pool` are async constructors bridged once here. Runtime,
@@ -3257,7 +3257,7 @@ impl ShellState {
     }
 
     /// 📌️ ticket §C5 items 2/3/4 — fires `commitCheckpoint` through the same action funnel the
-    /// History panel's own "Checkpoint" button uses (`history_command` in `🔌️plugin/🦀️component.rs`),
+    /// History panel's own "Checkpoint" button uses (`history_command` in `🔌️plugin/🦀️.rs`),
     /// with `authors` riding along (`history_command` still hardcodes `authors: Vec::new()` today per
     /// `📓️w3-a-report.md`'s own `sharedFileRequest` — sent anyway so this is ready the moment that
     /// lands). Viewer-guarded (item 5) so a stray call from `checkpoint_before_detach`/`poll_auto_checkin`
@@ -3316,7 +3316,8 @@ impl ShellState {
     async fn touch_space_index_artifact(&mut self, space_id: &str, artifact_id: &str) {
         let now_ms = chrome_now_ms();
         let actor = self.identity.as_ref().map(|identity| identity.user_id.clone()).unwrap_or_else(|| self.shell_session_id.clone());
-        let arguments: BTreeMap<String, Value> = BTreeMap::from([("id".to_string(), serde_json::json!(artifact_id)), ("nowMs".to_string(), serde_json::json!(now_ms)), ("actor".to_string(), serde_json::json!(actor))]);
+        let arguments: BTreeMap<String, DslValue> =
+            BTreeMap::from([("id".to_string(), DslValue::String(artifact_id.to_string())), ("nowMs".to_string(), DslValue::float(now_ms)), ("actor".to_string(), DslValue::String(actor))]);
         // 🐚️ Reuse the live session outright when it's already this exact space's own index document.
         // Calls `program.handle_command` DIRECTLY rather than `self.dispatch_command` (which would
         // recurse back into `observe_invocation_history` → `touch_space_index_artifact` — `rustc`
@@ -3675,7 +3676,7 @@ impl ShellState {
             .or_else(|| session.app.window_kinds.iter().find(|kind| kind.id == window_instance_id).map(|kind| kind.id.clone()))
             .ok_or_else(|| format!("action window instance {window_instance_id} has no declared kind"))?;
         let mode_id = session.view_state.active_mode_id.clone().unwrap_or_else(|| session.app.default_mode_id.clone());
-        let arguments = action.args.as_ref().map(dsl_value_as_json).and_then(|value| value.as_object().cloned()).unwrap_or_default().into_iter().collect();
+        let arguments = action.args.as_ref().and_then(DslValue::as_object).map(|entries| entries.iter().cloned().collect()).unwrap_or_default();
         let invocation = semio_framework::manifest::ActionInvocation {
             address: semio_framework::manifest::ActionAddress { plugin_id: session.plugin_id.clone(), app_id: session.app.id.clone(), mode_id, window_kind_id, window_instance_id, action_id: action.action.clone() },
             arguments,
@@ -7668,7 +7669,7 @@ impl ShellState {
                 if let semio_framework::ActionArgControl::Select { options } = &arg.control() {
                     for option in options {
                         let is_os = matches!(address.owner, semio_framework::manifest::CommandOwnerAddress::Os);
-                        let invocation = semio_framework::manifest::CommandInvocation { address: address.clone(), arguments: BTreeMap::from([(arg.id.clone(), Value::String(option.value.clone()))]) };
+                        let invocation = semio_framework::manifest::CommandInvocation { address: address.clone(), arguments: BTreeMap::from([(arg.id.clone(), DslValue::String(option.value.clone()))]) };
                         items.push(SearchPaletteItem {
                             id: format!("command.{}.{}", command_address_stable_key(&address), option.value),
                             label: format!("{}: {}", definition.label.resolve(self.active_terminology(), self.active_locale()), option.label.resolve(self.active_terminology(), self.active_locale())),
@@ -13988,7 +13989,7 @@ fn apply_chrome_color_overrides(base: &Theme, overrides: &ChromeColorOverrides) 
     theme
 }
 
-/// 🎨️ The "mono" premade's real chrome palette (`ui/styling/theme/🔣️mono.theme.json`), resolved once
+/// 🎨️ The "mono" premade's real chrome palette (`ui/styling/theme/🔣️.json`), resolved once
 /// via `ui/styling/js/theme.ts`'s own `resolveThemeAppearancePalettes` (ticket scratchpad
 /// `resolve-mono-chrome.ts`) and hand-ported here as `Rgba::from_srgb8` calls: this crate has no
 /// dependency on the `ui_styling` Rust codegen crate (only `ui_wgpu` does, and its `ChromePalette`/

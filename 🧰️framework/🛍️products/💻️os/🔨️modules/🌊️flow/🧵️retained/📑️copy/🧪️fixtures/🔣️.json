@@ -1,0 +1,57 @@
+{
+  "schema": "semio.flow.typed-copy.v1",
+  "sourceFixture": "../🧪️fixture/🔣️s.json",
+  "allocationAdmission": {
+    "singleBytes": 16777216,
+    "totalBytes": 33554432,
+    "reservationCopiesBytes": 0
+  },
+  "grants": [
+    0,
+    1,
+    4096
+  ],
+  "cases": [
+    {
+      "kind": "widget",
+      "index": 0,
+      "pointer": "/widgets/0"
+    },
+    {
+      "kind": "widget",
+      "index": 1,
+      "pointer": "/widgets/1"
+    },
+    {
+      "kind": "widget",
+      "index": 2,
+      "pointer": "/widgets/2"
+    },
+    {
+      "kind": "synapse",
+      "index": 0,
+      "pointer": "/synapses/0"
+    },
+    {
+      "kind": "fixture",
+      "index": 0,
+      "pointer": ""
+    }
+  ],
+  "cancelAfter": [
+    0,
+    1,
+    4,
+    25,
+    4097
+  ],
+  "expected": {
+    "sameSourceAllocation": true,
+    "sourceMutation": false,
+    "invalidIndexPreservesOwner": true,
+    "framesBeforeRoot": true,
+    "unchangedMapAllocationShared": true,
+    "finalRootDrops": 1,
+    "unclosedDropPreservesRoot": true
+  }
+}

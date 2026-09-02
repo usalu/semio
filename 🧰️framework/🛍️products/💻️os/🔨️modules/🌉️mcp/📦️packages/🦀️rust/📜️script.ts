@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
 /** 🌉️ `@semio-tech/framework-os-mcp-rs` task router: `bun ./📜️script.ts <check|test|dev>`. */
-import { BundleScript, ScriptRouter, resolveTestLevel, runBundleScriptMain, runCargo, runCargoTestBudgeted, runCmd } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts";
+import { BundleScript, ScriptRouter, resolveTestLevel, runBundleScriptMain, runCargo, runCargoTestBudgeted, runCmd } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 
 class CheckScript extends BundleScript {
   run(): void {

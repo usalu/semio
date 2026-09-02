@@ -14,8 +14,8 @@ import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
-import { applyInboundShellCommand, bridgeUrlWithToken, buildShellStateFrame, createDefaultShellState, decodeJsonPayload, discoverAgentBridgeConfig, encodeJsonPayload } from "./🟦️component.tsx";
-import { bytesToHex, decodeShellToGateway, decodeGatewayToShell, encodeShellToGateway, encodeGatewayToShell, type GatewayToShell, type ShellToGateway } from "../../../../🌉️mcp/🧵️bridge/🟦️component.ts";
+import { applyInboundShellCommand, bridgeUrlWithToken, buildShellStateFrame, createDefaultShellState, decodeJsonPayload, discoverAgentBridgeConfig, encodeJsonPayload } from "./🟦️.tsx";
+import { bytesToHex, decodeShellToGateway, decodeGatewayToShell, encodeShellToGateway, encodeGatewayToShell, type GatewayToShell, type ShellToGateway } from "../../../../🌉️mcp/🧵️bridge/🟦️.ts";
 // #endregion 🔌️Adapters
 
 const here = dirname(fileURLToPath(import.meta.url));

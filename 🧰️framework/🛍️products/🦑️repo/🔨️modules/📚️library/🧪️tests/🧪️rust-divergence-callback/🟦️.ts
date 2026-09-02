@@ -17,14 +17,14 @@ const rows = vector.cases as Row[], hash = (bytes: Uint8Array) => createHash("sh
 const inputs = [vectorPath, join(import.meta.dir, "🧬️schema/🔣️.json"), join(import.meta.dir, "🟦️.ts")];
 const identities = inputs.map((path) => ({ path, sha256: hash(readFileSync(path)) }));
 const runParent = join(ticket, ...vector.retention.parentSegments);
-let helpers: Promise<typeof import("../../🔍️discovery/🟦️component.ts")> | undefined;
+let helpers: Promise<typeof import("../../🔍️discovery/🟦️.ts")> | undefined;
 
 /** 🔬️ Loads and pins discovery only for a phase that actually exercises its source helpers. */
 async function sourceHelpers() {
   if (!helpers) {
-    const path = resolve(import.meta.dir, "../../🔍️discovery/🟦️component.ts");
+    const path = resolve(import.meta.dir, "../../🔍️discovery/🟦️.ts");
     identities.push({ path, sha256: hash(readFileSync(path)) });
-    helpers = import("../../🔍️discovery/🟦️component.ts");
+    helpers = import("../../🔍️discovery/🟦️.ts");
   }
   return helpers;
 }
@@ -186,7 +186,7 @@ test("independent syn callback AST, spans, free variables and target tuples matc
   expect(existsSync(target)).toBe(false);
   writeFileSync(manifest, readFileSync(join(root, vector.oracle.manifestInput)), { flag: "wx" });
   writeFileSync(source, readFileSync(join(root, vector.oracle.sourceInput)), { flag: "wx" });
-  const retained = [join(owner, "🧬️inputs/🧪️vector/🔣️.json"), join(owner, "🧬️inputs/🧪️vector/🧬️schema/🔣️.json"), join(owner, "🧬️inputs/🧪️harness/🟦️.ts")];
+  const retained = [join(owner, "🧬️inputs/🔣️vector.json"), join(owner, "🧬️inputs/🧪️vector/🧬️schema/🔣️.json"), join(owner, "🧬️inputs/🟦️harness.ts")];
   for (let index = 0; index < inputs.length; index++) {
     mkdirSync(dirname(retained[index]!), { recursive: true });
     writeFileSync(retained[index]!, readFileSync(inputs[index]!), { flag: "wx" });

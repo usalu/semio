@@ -10,7 +10,7 @@
 //! `protocol::MutationKind<Procedural3dSnapshot, Procedural3dMutation>`; `#[derive(dsl::Mutations)]`
 //! below generates `impl protocol::Mutation`/`impl protocol::SemanticMutation` by delegating to each
 //! payload's own `diff`/`inverse` — see `🧪️MutationsDeriveLaws` in
-//! `🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🎮️command/🦀️component.rs` for the reference shape.
+//! `🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🎮️command/🦀️.rs` for the reference shape.
 //!
 //! `SetWidget`/`RemoveWidget`/`SetSynapse`/`RemoveSynapse`/`SetLayout`/`RemoveLayout`/`SetCamera`/
 //! `SetSchema`/`Generation(GenerationMutation)` — the pre-migration generic vocabulary — are gone.
@@ -21,8 +21,8 @@
 
 //#region 📖️SemioGrammar
 /// 📖️ Normative handcrafted text grammar for this facet (`dialect grammar`).
-pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️component.grammar.semio");
-pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️component.grammar.semio");
+pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️.grammar.semio");
+pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.grammar.semio");
 //#endregion 📖️SemioGrammar
 
 use crate::artifacts::procedural3d::diff::Procedural3dDiff;
@@ -52,85 +52,85 @@ pub(crate) fn synapse_index(fixture: &FlowFixture, id: &str) -> Option<usize> {
 // sibling `pub mod` blocks, unchanged — imported by those names just below.
 #[path = "."]
 pub mod create_widget {
-    #[path = "🌱create-widget/🔺️diff/🦀️component.rs"]
+    #[path = "🌱create-widget/🔺️diff/🦀️.rs"]
     pub mod diff;
-    #[path = "🌱create-widget/↩️inverse/🦀️component.rs"]
+    #[path = "🌱create-widget/↩️inverse/🦀️.rs"]
     pub mod inverse;
     #[path = "🌱create-widget/🦀️.rs"]
     mod component;
     pub use component::*;
     #[cfg(test)]
-    #[path = "🌱create-widget/🧪️tests/inserts-node-c-at-index-2/🦀️component.rs"]
+    #[path = "🌱create-widget/🧪️tests/inserts-node-c-at-index-2/🦀️.rs"]
     mod tests_inserts_node_c_at_index_2;
 }
 
 #[path = "."]
 pub mod connect_synapse {
-    #[path = "🔗connect-synapse/🔺️diff/🦀️component.rs"]
+    #[path = "🔗connect-synapse/🔺️diff/🦀️.rs"]
     pub mod diff;
-    #[path = "🔗connect-synapse/↩️inverse/🦀️component.rs"]
+    #[path = "🔗connect-synapse/↩️inverse/🦀️.rs"]
     pub mod inverse;
     #[path = "🔗connect-synapse/🦀️.rs"]
     mod component;
     pub use component::*;
     #[cfg(test)]
-    #[path = "🔗connect-synapse/🧪️tests/wires-node-b-to-node-c-at-index-1/🦀️component.rs"]
+    #[path = "🔗connect-synapse/🧪️tests/wires-node-b-to-node-c-at-index-1/🦀️.rs"]
     mod tests_wires_node_b_to_node_c_at_index_1;
 }
 
 #[path = "."]
 pub mod create_generation {
-    #[path = "➕create-generation/🔺️diff/🦀️component.rs"]
+    #[path = "➕create-generation/🔺️diff/🦀️.rs"]
     pub mod diff;
-    #[path = "➕create-generation/↩️inverse/🦀️component.rs"]
+    #[path = "➕create-generation/↩️inverse/🦀️.rs"]
     pub mod inverse;
     #[path = "➕create-generation/🦀️.rs"]
     mod component;
     pub use component::*;
     #[cfg(test)]
-    #[path = "➕create-generation/🧪️tests/appends-generation-2-and-moves-the-selection/🦀️component.rs"]
+    #[path = "➕create-generation/🧪️tests/appends-generation-2-and-moves-the-selection/🦀️.rs"]
     mod tests_appends_generation_2_and_moves_the_selection;
 }
 
 #[path = "."]
 pub mod delete_generation {
-    #[path = "🗑delete-generation/🔺️diff/🦀️component.rs"]
+    #[path = "🗑delete-generation/🔺️diff/🦀️.rs"]
     pub mod diff;
-    #[path = "🗑delete-generation/↩️inverse/🦀️component.rs"]
+    #[path = "🗑delete-generation/↩️inverse/🦀️.rs"]
     pub mod inverse;
     #[path = "🗑delete-generation/🦀️.rs"]
     mod component;
     pub use component::*;
     #[cfg(test)]
-    #[path = "🗑delete-generation/🧪️tests/removes-the-selected-generation-2-and-falls-back/🦀️component.rs"]
+    #[path = "🗑delete-generation/🧪️tests/removes-the-selected-generation-2-and-falls-back/🦀️.rs"]
     mod tests_removes_the_selected_generation_2_and_falls_back;
 }
 
 #[path = "."]
 pub mod rename_generation {
-    #[path = "🏷rename-generation/🔺️diff/🦀️component.rs"]
+    #[path = "🏷rename-generation/🔺️diff/🦀️.rs"]
     pub mod diff;
-    #[path = "🏷rename-generation/↩️inverse/🦀️component.rs"]
+    #[path = "🏷rename-generation/↩️inverse/🦀️.rs"]
     pub mod inverse;
     #[path = "🏷rename-generation/🦀️.rs"]
     mod component;
     pub use component::*;
     #[cfg(test)]
-    #[path = "🏷rename-generation/🧪️tests/retitles-generation-1-via-new-name/🦀️component.rs"]
+    #[path = "🏷rename-generation/🧪️tests/retitles-generation-1-via-new-name/🦀️.rs"]
     mod tests_retitles_generation_1_via_new_name;
 }
 
 #[path = "."]
 pub mod change_generation_value {
-    #[path = "🔧change-generation-value/🔺️diff/🦀️component.rs"]
+    #[path = "🔧change-generation-value/🔺️diff/🦀️.rs"]
     pub mod diff;
-    #[path = "🔧change-generation-value/↩️inverse/🦀️component.rs"]
+    #[path = "🔧change-generation-value/↩️inverse/🦀️.rs"]
     pub mod inverse;
     #[path = "🔧change-generation-value/🦀️.rs"]
     mod component;
     pub use component::*;
     #[cfg(test)]
-    #[path = "🔧change-generation-value/🧪️tests/raises-the-storeys-answer-in-generation-1/🦀️component.rs"]
+    #[path = "🔧change-generation-value/🧪️tests/raises-the-storeys-answer-in-generation-1/🦀️.rs"]
     mod tests_raises_the_storeys_answer_in_generation_1;
 }
 //#endregion 🔖️NewLeaves
@@ -138,7 +138,7 @@ pub mod change_generation_value {
 //#region 🔖️RepurposedLeaves
 // 🌱️ Triad leaves that repurpose a pre-migration `➖remove-*`/`🎛set-*` directory glue.rs already
 // path-includes as a sibling of `component` (this file) under `pub mod mutations { ... }` — brought
-// into this file's own scope the same way `cad`'s already-migrated `🧬️mutations/🦀️component.rs`
+// into this file's own scope the same way `cad`'s already-migrated `🧬️mutations/🦀️.rs`
 // reaches its own siblings (`use super::create_object;` etc.): `pub use component::*` only lifts
 // `component`'s items UP into `mutations`, it doesn't inject `mutations`'s OTHER children back down.
 use super::change_schema;
@@ -176,7 +176,7 @@ pub enum Procedural3dMutation {
 
 //#region 🏷️Kinds
 /// 🏷️ The kebab-case spelling of every [`Procedural3dMutation`] variant, in declaration order — the exact
-/// vocabulary the `procedural-3d-1-any` mutation catalog (`../../🧪️oracle/🔣️.json`) declares and
+/// vocabulary the `procedural-3d-1-any` mutation catalog (`../../🔣️oracle.json`) declares and
 /// the `mutate-procedural-3d-1` exhaustive case measures itself against. The framework never parses Rust, so
 /// `kinds_match_the_enum_and_the_catalog` below is what keeps this list honest against both.
 pub const KINDS: &[&str] = &[
@@ -492,7 +492,7 @@ mod tests {
     }
 
     //#region 🧪️MutationLaws
-    /// ⚖️ Shared law helpers from `🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🧪️testkit/🦀️component.rs`
+    /// ⚖️ Shared law helpers from `🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🧪️test/🦀️kit.rs`
     /// (reachable here as `protocol::testkit`), exercised against the three most structurally
     /// distinct new variants: an id-keyed create/delete pair (`create-widget`), a relationship
     /// connect/disconnect pair (`connect-synapse`), and a document-level facet setter
@@ -540,7 +540,7 @@ mod tests {
         for (kind, descriptor) in KINDS.iter().zip(descriptors.iter()) {
             assert_eq!(*kind, descriptor.kind, "KINDS must match #[derive(dsl::Mutations)]'s own declaration order and spelling");
         }
-        let manifest = include_str!("../../🧪️oracle/🔣️.json");
+        let manifest = include_str!("../../🔣️oracle.json");
         for kind in KINDS {
             assert!(manifest.contains(&format!("\"{kind}\"")), "KINDS entry {kind:?} must also appear in the committed oracle manifest's catalog");
         }

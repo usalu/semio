@@ -5,7 +5,7 @@
   "displayName": "Change Anchor C1 Mm",
   "emoji": "🐌",
   "aggregateVariant": "ChangeAnchorC1Mm",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

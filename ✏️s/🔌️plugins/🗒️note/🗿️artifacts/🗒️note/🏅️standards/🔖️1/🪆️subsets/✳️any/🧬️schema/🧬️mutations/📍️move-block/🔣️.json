@@ -5,7 +5,7 @@
   "displayName": "Move Block",
   "emoji": "📍️",
   "aggregateVariant": "MoveBlock",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": "move-block",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

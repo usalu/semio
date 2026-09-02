@@ -5,7 +5,7 @@
   "displayName": "Change Representation Pin",
   "emoji": "📌",
   "aggregateVariant": "ChangeRepresentationPin",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

@@ -2,7 +2,7 @@
 //!
 //! Every scenario copies the immutable real fixture into the case work directory first; the
 //! committed file is never written to. `oracle` handlers drive the registered `json` (json-rust)
-//! reference implementation (via this subset's own `🧪️oracle/🦀️component.rs`), `subject` handlers
+//! reference implementation (via this subset's own `🦀️oracle.rs`), `subject` handlers
 //! drive this repository's own decode/mutate/encode round trip, and BOTH results are read back by
 //! the SAME independent reader (`project_json_value`, json-rust underneath — never `serde_json`,
 //! which is production-reachable in this repository and would compare an implementation with
@@ -17,7 +17,7 @@ use semio_s_plugin_stdio_test_oracle::law::{inverse_restores, mutation_is_observ
 
 //#region 🔖️Kinds
 /// 🧾️ Test-case-local mirror of the `json-rfc8259-any` catalog. Duplicated, not imported, from
-/// `../../🏅️standards/🔖️rfc8259/🪆️subsets/✳️base/🧬️schema/🧬️mutations/🦀️component.rs::KINDS` — that
+/// `../../🏅️standards/🔖️rfc8259/🪆️subsets/✳️base/🧬️schema/🧬️mutations/🦀️.rs::KINDS` — that
 /// module lives in the SUBJECT crate, and the oracle role must not link the subject crate at all
 /// (fleet brief §5.3), while this loop registers handlers for both roles from one list. That other
 /// `KINDS` carries its own test proving it matches the enum AND the catalog manifest; a mismatch

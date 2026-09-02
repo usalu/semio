@@ -5,7 +5,7 @@
   "displayName": "Change Object Mesh",
   "emoji": "🧱",
   "aggregateVariant": "ChangeObjectMesh",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": "change-object-mesh",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

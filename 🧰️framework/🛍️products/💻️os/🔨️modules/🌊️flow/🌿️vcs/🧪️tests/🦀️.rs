@@ -4,7 +4,7 @@ use crate::os_spr::{MutationLeaf, OpBinary, OpText};
 use crate::{DslValue, FromValue, ToValue};
 
 //#region 🧪️FixtureOwnership
-fn cases() -> serde_json::Value { serde_json::from_str(include_str!("🔣️cases.json")).expect("neutral Flow cases") }
+fn cases() -> serde_json::Value { serde_json::from_str(include_str!("🔣️.json")).expect("neutral Flow cases") }
 fn base() -> FlowFixture { serde_json::from_value(cases()["fixture"].clone()).expect("Flow fixture") }
 fn operation(index: usize) -> FlowMutation {
     let cases = cases();
@@ -54,7 +54,7 @@ fn assert_codecs(mutation: &FlowMutation) {
     // 🛡️ First-party round-trip — proves `FlowMutation::from_value` (internally-tagged, no
     // `content`, single-unnamed-payload variants) actually decodes every real leaf correctly now
     // that the tag key is stripped before reaching the leaf's own `#[value(deny_unknown_fields)]`
-    // check (see `🦀️component.rs`'s tag-stripping fix). A silently-always-erroring `from_value`
+    // check (see `🦀️.rs`'s tag-stripping fix). A silently-always-erroring `from_value`
     // would make the unknown-field `is_err()` assertions in `assert_leaf_contract` pass for the
     // wrong reason — this is what rules that out.
     let decoded = FlowMutation::from_value(mutation.to_value()).expect("first-party Flow decode");
@@ -280,7 +280,7 @@ fn actual_nested_serde_shapes() {
 
 #[test]
 fn diff_json_contract_matches_native_serde() {
-    let vectors: serde_json::Value = serde_json::from_str(include_str!("../🧬️schema/🔺️diff/🧪️tests/🔣️vectors.json")).unwrap();
+    let vectors: serde_json::Value = serde_json::from_str(include_str!("../🧬️schema/🔺️diff/🧪️test/🔣️s.json")).unwrap();
     for row in vectors["valid"].as_array().unwrap() {
         let diff: FlowDiff = serde_json::from_value(row["value"].clone()).unwrap_or_else(|error| panic!("{}: {error}", row["name"]));
         let decoded: FlowDiff = serde_json::from_value(serde_json::to_value(&diff).unwrap()).unwrap();

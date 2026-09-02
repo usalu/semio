@@ -37,7 +37,7 @@ pub enum WavMutation {
 }
 
 /// 🦠️ Kebab-case spelling of every `WavMutation` variant — the exhaustive vocabulary the mutation
-/// oracle catalog (`../../🧪️oracle/🔣️.json`) is measured against. Order matches the enum.
+/// oracle catalog (`../../🔣️oracle.json`) is measured against. Order matches the enum.
 pub const KINDS: &[&str] = &["set-snapshot", "set-fmt", "set-data", "set-other-chunks"];
 
 /// ▶️ Applies a mutation to `snapshot` in place, returning the diff (the diff is the single
@@ -193,7 +193,7 @@ mod tests {
         from_const.sort_unstable();
         assert_eq!(from_const, from_enum, "KINDS must name exactly the enum's variants");
 
-        let manifest = include_str!("../../🧪️oracle/🔣️.json");
+        let manifest = include_str!("../../🔣️oracle.json");
         for kind in KINDS {
             assert!(manifest.contains(&format!("\"{kind}\"")), "the oracle catalog manifest must declare kind {kind:?}");
         }
@@ -221,9 +221,9 @@ mod tests {
 
 //#region 🧪️FixtureCases
 /// 🧪️ Handcrafted `📄set-snapshot` fixture cases, wired from this tree's own mutations root so
-/// `📦️glue.rs` stays untouched (`#[path]` on a non-inline module resolves against this file's own
+/// `🦀️.rs` stays untouched (`#[path]` on a non-inline module resolves against this file's own
 /// directory).
 #[cfg(test)]
-#[path = "📄set-snapshot/🧪️tests/resamples-to-16-khz-and-doubles-the-pcm16-amplitude/🦀️component.rs"]
+#[path = "📄set-snapshot/🧪️tests/resamples-to-16-khz-and-doubles-the-pcm16-amplitude/🦀️.rs"]
 mod set_snapshot_resamples_to_16_khz_and_doubles_the_pcm16_amplitude;
 //#endregion 🧪️FixtureCases

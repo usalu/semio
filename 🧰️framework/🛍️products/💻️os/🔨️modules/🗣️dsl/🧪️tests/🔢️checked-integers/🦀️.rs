@@ -29,7 +29,7 @@ struct Vectors {
 }
 
 fn vectors() -> Vectors {
-    let vectors: Vectors = serde_json::from_str(include_str!("🔣️vectors.json")).unwrap();
+    let vectors: Vectors = serde_json::from_str(include_str!("🔣️.json")).unwrap();
     assert_eq!(vectors.version, 1);
     vectors
 }

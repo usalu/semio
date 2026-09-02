@@ -5,7 +5,7 @@
   "displayName": "Change Use Fem",
   "emoji": "🐫",
   "aggregateVariant": "ChangeUseFem",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

@@ -1,7 +1,7 @@
 {
   "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json",
   "schemaVersion": 2,
-  "_comment": "🧩️ This subset's own contribution: the mutation vocabulary belongs to ONE subset of ONE standard of ONE artifact, so its oracle registration and catalog live here rather than in the shared ✏️s/🔌️plugins/🗄️stdio/🧪️oracle/🔣️.json manifest. `flate2` is already the plugin's registered zlib-compression oracle (capability zlib-compression), but that entry cannot cover mutation coverage without re-surveying it for this capability, so this is a distinct id.",
+  "_comment": "🧩️ This subset's own contribution: the mutation vocabulary belongs to ONE subset of ONE standard of ONE artifact, so its oracle registration and catalog live here rather than in the shared ✏️s/🔌️plugins/🗄️stdio/🔣️oracle.json manifest. `flate2` is already the plugin's registered zlib-compression oracle (capability zlib-compression), but that entry cannot cover mutation coverage without re-surveying it for this capability, so this is a distinct id.",
   "oracles": [
     {
       "id": "flate2-deflate-rfc1950-mutate",

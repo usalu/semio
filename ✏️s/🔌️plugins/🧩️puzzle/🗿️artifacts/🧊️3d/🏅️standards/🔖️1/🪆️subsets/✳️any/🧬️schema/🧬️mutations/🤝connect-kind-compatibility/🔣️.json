@@ -5,7 +5,7 @@
   "displayName": "Connect Kind Compatibility",
   "emoji": "🤝",
   "aggregateVariant": "ConnectKindCompatibility",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": "connect-kind-compatibility",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

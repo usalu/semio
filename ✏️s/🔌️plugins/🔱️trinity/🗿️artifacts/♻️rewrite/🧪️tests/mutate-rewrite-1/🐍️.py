@@ -14,11 +14,11 @@ specification, in another language.
 
 **What it was written from.**
 
-* ``🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🔣️component.json`` — `RewriteSnapshot` is
+* ``🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🔣️.json`` — `RewriteSnapshot` is
   exactly `beforeFixtureJson`, `lhsJson`, `rhsJson` (all three `contentMediaType:
   application/json`), `parameterBindings` (a map of open `PropertyValue`s) and `ruleLayout` (a map of
   `{x, y}` `LayoutPoint`s), `additionalProperties: false`.
-* ``…/🧬️schema/🧬️mutations/📝️text/📖️component.grammar.semio`` — the seven verbs and their positional
+* ``…/🧬️schema/🧬️mutations/📝️text/📖️.grammar.semio`` — the seven verbs and their positional
   argument lists: three `edit-<member> text`, `change-parameter-binding key value`,
   `remove-parameter-binding key`, `change-rule-layout-point key point-block`,
   `remove-rule-layout-point key`.
@@ -34,7 +34,7 @@ would be asserting a specification that does not exist. The real-document scenar
 snapshot fixture derived once from that committed file (provenance in the feature description), and
 the carrier's own laws stay asserted in role on the Rust side.
 
-**No Rust was read to write this.** `🦀️component.rs` beside this file registers the SUBJECT half
+**No Rust was read to write this.** `🦀️.rs` beside this file registers the SUBJECT half
 only.
 """
 

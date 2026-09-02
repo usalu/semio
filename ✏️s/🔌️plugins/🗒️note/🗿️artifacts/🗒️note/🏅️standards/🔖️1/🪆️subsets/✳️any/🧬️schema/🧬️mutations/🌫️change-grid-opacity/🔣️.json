@@ -5,7 +5,7 @@
   "displayName": "Change Grid Opacity",
   "emoji": "🌫️",
   "aggregateVariant": "ChangeGridOpacity",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": "change-grid-opacity",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

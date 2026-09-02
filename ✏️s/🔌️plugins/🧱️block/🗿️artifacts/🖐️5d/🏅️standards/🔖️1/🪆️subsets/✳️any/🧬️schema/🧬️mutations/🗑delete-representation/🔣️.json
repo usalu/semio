@@ -5,7 +5,7 @@
   "displayName": "Delete Representation",
   "emoji": "🗑",
   "aggregateVariant": "DeleteRepresentation",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": "delete-representation",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

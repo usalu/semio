@@ -5,7 +5,7 @@
   "displayName": "Replace Support",
   "emoji": "🔁🛡️",
   "aggregateVariant": "ReplaceSupport",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": "replace-support",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

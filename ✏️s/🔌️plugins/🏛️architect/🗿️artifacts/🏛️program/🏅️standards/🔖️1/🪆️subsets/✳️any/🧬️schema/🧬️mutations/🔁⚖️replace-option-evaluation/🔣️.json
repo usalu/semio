@@ -5,7 +5,7 @@
   "displayName": "Replace Option Evaluation",
   "emoji": "🔁⚖️",
   "aggregateVariant": "ReplaceOptionEvaluation",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

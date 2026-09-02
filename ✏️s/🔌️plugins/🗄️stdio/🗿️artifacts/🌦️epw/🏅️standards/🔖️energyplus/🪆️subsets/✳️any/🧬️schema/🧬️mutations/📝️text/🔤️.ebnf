@@ -1,0 +1,16 @@
+(* Hand-rolled `stdio.epw.mutations` wire text (see 🦀️.rs `print_epw_mutation`/
+   `parse_epw_mutation` for the real, authoritative implementation). *)
+mutation = "set-snapshot", sp, "snapshot=", hex
+         | "set-location", sp, "location=", hex
+         | "set-design-conditions", sp, "value=", hex
+         | "set-typical-extreme-periods", sp, "value=", hex
+         | "set-ground-temperatures", sp, "value=", hex
+         | "set-holidays-dst", sp, "value=", hex
+         | "set-comments-1", sp, "value=", hex
+         | "set-comments-2", sp, "value=", hex
+         | "set-data-periods", sp, "data-periods=", hex
+         | "insert-record", sp, "index=", int, sp, "record=", hex
+         | "remove-record", sp, "index=", int
+         | "set-record-field", sp, "record-index=", int, sp, "field-index=", int, sp, "value=", hex ;
+sp = " " ;
+hex = { hexdigit, hexdigit } ;

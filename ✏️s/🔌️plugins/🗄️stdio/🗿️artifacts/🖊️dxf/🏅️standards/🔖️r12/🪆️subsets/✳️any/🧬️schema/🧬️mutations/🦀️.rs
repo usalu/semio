@@ -21,7 +21,7 @@ use crate::artifacts::dxf::schema::diff::{
     block_diff_between,
     dec_block,
     // 🧪️ P2-FG1: real recursive binary twins backing the upgraded `OpBinary` impl below (see
-    // `🔺️diff/🦀️component.rs`'s `#region 🔖️ItemBinaryCodecs`/`#region 🔖️BinaryPrimitives`).
+    // `🔺️diff/🦀️.rs`'s `#region 🔖️ItemBinaryCodecs`/`#region 🔖️BinaryPrimitives`).
     dec_block_bin,
     dec_dxf_entity,
     dec_dxf_entity_bin,
@@ -176,7 +176,7 @@ pub enum DxfMutation {
 
 //#region 🔖️Kinds
 /// 📇️ Kebab-case spelling of every `DxfMutation` variant, declaration order — the single source of
-/// truth `../../🧪️oracle/🔣️.json`'s `mutationCatalogs[].kinds` and every test-case adapter
+/// truth `../../🔣️oracle.json`'s `mutationCatalogs[].kinds` and every test-case adapter
 /// duplicate against (per ticket 26/08/23/END-TO-END-TESTING-REFACTOR wave 7's registration rule:
 /// the framework never parses Rust, so this constant plus `kinds_const_matches_enum_variants` below
 /// is what keeps the manifest honest).
@@ -417,10 +417,10 @@ impl OpText for DxfMutation {
 }
 
 /// 🧪️ P2-FG1: REAL binary op frame (`format u8 | tag u8 | variant payload`), matching
-/// `../💾️binary/📡️component.protocol.semio`'s `header fixed 2` + `chain payload bytes` shape —
+/// `../💾️binary/📡️.protocol.semio`'s `header fixed 2` + `chain payload bytes` shape —
 /// upgraded from F6's `print_op().into_bytes()` text-as-binary shortcut. `tag` is the
 /// `DxfMutation` variant ordinal, in the SAME 0-17 order `parse_dxf_mutation`'s own keyword match
-/// uses. Every variant payload reuses `🔺️diff/🦀️component.rs`'s real recursive binary item
+/// uses. Every variant payload reuses `🔺️diff/🦀️.rs`'s real recursive binary item
 /// codecs (`enc_dxf_snapshot_bin`/`enc_dxf_entity_bin`/`enc_block_bin`/…) — genuinely structured,
 /// varint/length-prefixed binary, never text-as-bytes.
 impl OpBinary for DxfMutation {
@@ -582,7 +582,7 @@ impl OpBinary for DxfMutation {
 /// `variants()` fixture didn't reach), incl. a `SetSnapshot` payload nesting a raw-retained
 /// `other_tables` entry and a block with a nested entity — exercises the WHOLE grammar/protocol
 /// tree end-to-end. The single source of truth reused by `op_text_binary_roundtrip_law` below AND
-/// by `⚙️engine/🦀️component.rs`'s `ops_grammar_conformance_law`/`protocol_walk_law` conformance
+/// by `⚙️engine/🦀️.rs`'s `ops_grammar_conformance_law`/`protocol_walk_law` conformance
 /// tests, so a new variant only needs adding here once.
 #[cfg(test)]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -684,7 +684,7 @@ mod tests {
     }
 
     /// 🔁️ Every DxfMutation-generic property test below (`mutation_diff_law`/`inverse_law`/
-    /// `op_text_binary_roundtrip_law`) shares ONE fixture with `⚙️engine/🦀️component.rs`'s
+    /// `op_text_binary_roundtrip_law`) shares ONE fixture with `⚙️engine/🦀️.rs`'s
     /// conformance laws — `demo_mutation_cases()` (`#region 🔖️DemoCases` above).
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn variants() -> Vec<DxfMutation> {
@@ -995,7 +995,7 @@ mod tests {
     //#region 🔖️KindsCatalogLaw
     /// 🧾️ `KINDS` matches the enum's own variant set (via `demo_mutation_cases`' one-instance-per-
     /// variant coverage) and every entry parses/prints as its own keyword -- what keeps
-    /// `../../🧪️oracle/🔣️.json`'s `mutationCatalogs[].kinds` honest against Rust, per the
+    /// `../../🔣️oracle.json`'s `mutationCatalogs[].kinds` honest against Rust, per the
     /// wave 7 fleet brief's registration rule ("the framework never parses Rust").
     #[semio_framework_async_macros::async_test]
     async fn kinds_const_matches_enum_variants_in_declaration_order() {
@@ -1018,9 +1018,9 @@ mod tests {
 
 //#region 🧪️FixtureCases
 /// 🧪️ Handcrafted `📄set-snapshot` fixture cases, wired from this tree's own mutations root so
-/// `📦️glue.rs` stays untouched (`#[path]` on a non-inline module resolves against this file's own
+/// `🦀️.rs` stays untouched (`#[path]` on a non-inline module resolves against this file's own
 /// directory).
 #[cfg(test)]
-#[path = "📄set-snapshot/🧪️tests/widens-the-circle-entity-radius/🦀️component.rs"]
+#[path = "📄set-snapshot/🧪️tests/widens-the-circle-entity-radius/🦀️.rs"]
 mod set_snapshot_widens_the_circle_entity_radius;
 //#endregion 🧪️FixtureCases

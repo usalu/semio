@@ -54,7 +54,7 @@ use super::replace_surface;
 
 //#region 🔖️Mutations
 /// 🧬️ Every variant wraps exactly one `protocol::MutationKind<SemioBrepSnapshot, SemioBrepMutation>`
-/// payload struct declared in the corresponding triad leaf's `🦠️mutation/🦀️component.rs`. Thirteen
+/// payload struct declared in the corresponding triad leaf's `🦠️mutation/🦀️.rs`. Thirteen
 /// triads: vertex lifecycle (`create-vertex`/`delete-vertex`), edge lifecycle
 /// (`create-edge`/`delete-edge`), face lifecycle (`create-face`/`delete-face`), shell lifecycle
 /// (`create-shell`/`delete-shell`), solid lifecycle (`create-solid`/`delete-solid`), then the two
@@ -79,7 +79,7 @@ pub enum SemioBrepMutation {
 }
 
 /// 🏷️ Kebab-case spelling of every `SemioBrepMutation` variant, in declaration order — the
-/// vocabulary the `semio-v1-brep` mutation catalog (`../../🧪️oracle/🔣️.json`) declares and
+/// vocabulary the `semio-v1-brep` mutation catalog (`../../🔣️oracle.json`) declares and
 /// `mutate-semio-brep`'s exhaustive test case measures itself against. `kinds_match_the_enum_and_
 /// the_catalog` below is what keeps this list honest against the enum, since the framework never
 /// parses Rust.
@@ -88,7 +88,7 @@ pub const KINDS: &[&str] = &["create-vertex", "delete-vertex", "create-edge", "d
 
 //#region 🔖️Apply
 /// ▶️ Applies a mutation to `snapshot` in place, returning the diff — kept from the pre-wave facet
-/// (consumed by `../🦀️component.rs`'s `SemioBrepBuilderConstruction::mutate`).
+/// (consumed by `../🦀️.rs`'s `SemioBrepBuilderConstruction::mutate`).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn apply_semio_brep_mutation(snapshot: &mut SemioBrepSnapshot, mutation: &SemioBrepMutation) -> protocol::MutationOutcome<SemioBrepDiff> {
     use protocol::Mutation;
@@ -109,7 +109,7 @@ pub fn inverse_semio_brep_mutation(mutation: &SemioBrepMutation, base: &SemioBre
 
 /// 📥️ Decodes this facet's own externally-tagged (`{"<VariantName>": {<snake_case payload>}}`)
 /// JSON projection — no `#[value(rename_all)]` sits on this enum or its payload structs, which is
-/// exactly the shape the committed `<kind>/🧪️tests/<fixture>/🦠️mutation/🔣️component.json` vectors
+/// exactly the shape the committed `<kind>/🧪️tests/<fixture>/🦠️mutation/🔣️.json` vectors
 /// carry — into a real [`SemioBrepMutation`]. `create-*`/`delete-*` payloads address topology by the string ids (`v1`, `e2`, `so1`) the
 /// committed vectors use, so a decoded mutation is directly comparable with the vector it came from.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -245,7 +245,7 @@ impl OpBinary for SemioBrepMutation {
 //#region 🔖️Demo
 /// 🌱 Shared fixture + representative `SemioBrepMutation` cases (one per variant) — single source
 /// of truth for this facet's own tests AND `ops_grammar_conformance_law`/`protocol_walk_law` in
-/// `🎹️composer/🦀️component.rs` (`✳️brep/🚪️io/🦀️component.rs`, another session's file, read-only).
+/// `🎹️composer/🦀️.rs` (`✳️brep/🚪️io/🦀️.rs`, another session's file, read-only).
 #[cfg(test)]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn fixture() -> SemioBrepSnapshot {
@@ -478,7 +478,7 @@ mod tests {
         for (kind, descriptor) in KINDS.iter().zip(descriptors.iter()) {
             assert_eq!(*kind, descriptor.kind, "KINDS must match #[derive(dsl::Mutations)]'s own declaration order and spelling");
         }
-        let manifest = include_str!("../../🧪️oracle/🔣️.json");
+        let manifest = include_str!("../../🔣️oracle.json");
         for kind in KINDS {
             assert!(manifest.contains(&format!("\"{kind}\"")), "KINDS entry {kind:?} must also appear in the committed oracle manifest's catalog");
         }
@@ -489,37 +489,37 @@ mod tests {
 
 //#region 🧪️FixtureTests
 /// 🧪️ Handcrafted mutation fixtures (contract D1, ticket `26/08/20/COMPOSE-TO-PUZZLE5D-MIGRATION`)
-/// — one case per triad leaf, self-wired here rather than in `📦️glue.rs` so this subset owns its
+/// — one case per triad leaf, self-wired here rather than in `🦀️.rs` so this subset owns its
 /// own test surface. `#[path = "."]` re-roots the nested `#[path]`s at THIS file's directory (the
 /// `🧬️mutations` root) instead of the implicit `🦀️component/` child directory.
 #[cfg(test)]
 #[path = "."]
 mod fixture_tests {
-    #[path = "🔗create-edge/🧪️tests/adds-a-diagonal-edge-across-the-square/🦀️component.rs"]
+    #[path = "🔗create-edge/🧪️tests/adds-a-diagonal-edge-across-the-square/🦀️.rs"]
     mod tests_create_edge_adds_a_diagonal_edge_across_the_square;
-    #[path = "🔷create-face/🧪️tests/adds-an-opposing-face-over-the-same-loop/🦀️component.rs"]
+    #[path = "🔷create-face/🧪️tests/adds-an-opposing-face-over-the-same-loop/🦀️.rs"]
     mod tests_create_face_adds_an_opposing_face_over_the_same_loop;
-    #[path = "🐚create-shell/🧪️tests/adds-a-second-shell-that-reuses-the-face-with-flipped-sense/🦀️component.rs"]
+    #[path = "🐚create-shell/🧪️tests/adds-a-second-shell-that-reuses-the-face-with-flipped-sense/🦀️.rs"]
     mod tests_create_shell_adds_a_second_shell_that_reuses_the_face_with_flipped_sense;
-    #[path = "🧊create-solid/🧪️tests/adds-a-second-solid-that-treats-the-shell-as-a-void/🦀️component.rs"]
+    #[path = "🧊create-solid/🧪️tests/adds-a-second-solid-that-treats-the-shell-as-a-void/🦀️.rs"]
     mod tests_create_solid_adds_a_second_solid_that_treats_the_shell_as_a_void;
-    #[path = "🏗️create-vertex/🧪️tests/adds-an-apex-vertex-above-the-square/🦀️component.rs"]
+    #[path = "🏗️create-vertex/🧪️tests/adds-an-apex-vertex-above-the-square/🦀️.rs"]
     mod tests_create_vertex_adds_an_apex_vertex_above_the_square;
-    #[path = "✂️delete-edge/🧪️tests/removes-the-closing-edge-and-keeps-its-two-vertices/🦀️component.rs"]
+    #[path = "✂️delete-edge/🧪️tests/removes-the-closing-edge-and-keeps-its-two-vertices/🦀️.rs"]
     mod tests_delete_edge_removes_the_closing_edge_and_keeps_its_two_vertices;
-    #[path = "🚮delete-face/🧪️tests/removes-the-only-face-and-leaves-its-loop-behind/🦀️component.rs"]
+    #[path = "🚮delete-face/🧪️tests/removes-the-only-face-and-leaves-its-loop-behind/🦀️.rs"]
     mod tests_delete_face_removes_the_only_face_and_leaves_its_loop_behind;
-    #[path = "💥delete-shell/🧪️tests/removes-the-only-shell-and-leaves-its-faces-behind/🦀️component.rs"]
+    #[path = "💥delete-shell/🧪️tests/removes-the-only-shell-and-leaves-its-faces-behind/🦀️.rs"]
     mod tests_delete_shell_removes_the_only_shell_and_leaves_its_faces_behind;
-    #[path = "🕳️delete-solid/🧪️tests/removes-the-only-solid-and-leaves-its-shell-behind/🦀️component.rs"]
+    #[path = "🕳️delete-solid/🧪️tests/removes-the-only-solid-and-leaves-its-shell-behind/🦀️.rs"]
     mod tests_delete_solid_removes_the_only_solid_and_leaves_its_shell_behind;
-    #[path = "🗑️delete-vertex/🧪️tests/removes-a-corner-vertex-and-cascades-into-its-two-incident-edges/🦀️component.rs"]
+    #[path = "🗑️delete-vertex/🧪️tests/removes-a-corner-vertex-and-cascades-into-its-two-incident-edges/🦀️.rs"]
     mod tests_delete_vertex_removes_a_corner_vertex_and_cascades_into_its_two_incident_edges;
-    #[path = "📍move-vertex/🧪️tests/lifts-the-third-corner-off-the-base-plane/🦀️component.rs"]
+    #[path = "📍move-vertex/🧪️tests/lifts-the-third-corner-off-the-base-plane/🦀️.rs"]
     mod tests_move_vertex_lifts_the_third_corner_off_the_base_plane;
-    #[path = "➰replace-curve/🧪️tests/swaps-the-first-edges-line-for-a-circular-arc/🦀️component.rs"]
+    #[path = "➰replace-curve/🧪️tests/swaps-the-first-edges-line-for-a-circular-arc/🦀️.rs"]
     mod tests_replace_curve_swaps_the_first_edges_line_for_a_circular_arc;
-    #[path = "🗺️replace-surface/🧪️tests/swaps-the-faces-plane-for-a-cylinder/🦀️component.rs"]
+    #[path = "🗺️replace-surface/🧪️tests/swaps-the-faces-plane-for-a-cylinder/🦀️.rs"]
     mod tests_replace_surface_swaps_the_faces_plane_for_a_cylinder;
 }
 //#endregion 🧪️FixtureTests

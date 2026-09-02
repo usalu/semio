@@ -5,7 +5,7 @@
   "displayName": "Rename Schedule Requirement",
   "emoji": "✏️📅",
   "aggregateVariant": "RenameScheduleRequirement",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

@@ -1,0 +1,11 @@
+# 🧬️ SemioBrepArtifact schema — full artifact state, mirrors SemioBrepSnapshot field for field.
+# See ./📸️snapshot/🔗️.graphql for the entity type definitions.
+type SemioBrepArtifact {
+  schema: String! @state(class: ARTIFACT)
+  vertices: [BrepVertex!]! @state(class: ARTIFACT)
+  edges: [BrepEdge!]! @state(class: ARTIFACT)
+  loops: [BrepLoop!]! @state(class: ARTIFACT)
+  faces: [BrepFace!]! @state(class: ARTIFACT)
+  shells: [BrepShell!]! @state(class: ARTIFACT)
+  solids: [BrepSolid!]! @state(class: ARTIFACT)
+}

@@ -5,7 +5,7 @@
 //! beside it — an independent Python implementation of both committed carriers and all eighteen
 //! verbs, written from the committed grammars and the committed binary protocol, registered as the
 //! oracle `semio-document-python-independent` in
-//! `../../🏅️standards/🔖️v1/🪆️subsets/✳️document/🧪️oracle/🔣️.json`. Registering oracle
+//! `../../🏅️standards/🔖️v1/🪆️subsets/✳️document/🔣️oracle.json`. Registering oracle
 //! handlers here as well would put this repository's own answer on both sides of the comparison,
 //! which is the one failure the platform exists to prevent, so the registrations this file used to
 //! carry are gone rather than merely unused.
@@ -15,7 +15,7 @@
 //! `decode_semio_document_pack`/`encode_semio_document_pack` for the two carriers,
 //! `apply_semio_document_mutation`/`inverse_semio_document_mutation` for the vocabulary — over the
 //! real committed memo
-//! `../../🏅️standards/🔖️v1/🪆️subsets/✳️any/📚️examples/📄️memo/🖼️assets/🗣️example.dsl.semio` and its
+//! `../../🏅️standards/🔖️v1/🪆️subsets/✳️any/📚️examples/📄️memo/🖼️assets/🗣️.dsl.semio` and its
 //! committed binary twin, and projects through this subset's own JSON bridge for `ordered-json-v1`
 //! to compare against the Python side's.
 //!
@@ -32,7 +32,7 @@ use semio_repo_test_host::Adapter;
 
 //#region 🔖️Kinds
 /// 🏷️ Mirrors `SemioDocumentMutation::KINDS` (`../../🏅️standards/🔖️v1/🪆️subsets/✳️document/🧬️schema/
-/// 🧬️mutations/🦀️component.rs`) — duplicated, not imported, because the oracle-only build must not
+/// 🧬️mutations/🦀️.rs`) — duplicated, not imported, because the oracle-only build must not
 /// link the subject crate. The contract's mutation-coverage gate keeps this list honest against the
 /// catalog; `kinds_match_the_enum_and_the_catalog` in that production file keeps it honest against
 /// the enum.
@@ -70,11 +70,11 @@ mod subject {
         decode_semio_document_pack, decode_semio_document_snapshot_json, encode_semio_document_pack, encode_semio_document_snapshot_json, parse_semio_document_dsl, print_semio_document_dsl, SemioDocumentSnapshot,
     };
 
-    const DSL_ASSET: &str = "asset://🏅️standards/🔖️v1/🪆️subsets/✳️any/📚️examples/📄️memo/🖼️assets/🗣️example.dsl.semio";
+    const DSL_ASSET: &str = "asset://🏅️standards/🔖️v1/🪆️subsets/✳️any/📚️examples/📄️memo/🖼️assets/🗣️.dsl.semio";
     const PACK_ASSET: &str = "asset://🏅️standards/🔖️v1/🪆️subsets/✳️any/📚️examples/📄️memo/🖼️assets/🎒️example.pack.semio";
 
     //#region 🔖️Fixtures
-    /// 🧫️ The SAME committed vector `../🦀️component.rs::vector` reads, decoded into real values
+    /// 🧫️ The SAME committed vector `../🦀️.rs::vector` reads, decoded into real values
     /// through this subset's own `serde_json` bridges rather than transcribed into Rust literals.
     fn vector(ctx: &Context, kind: &str) -> Result<Json, String> {
         ctx.fixture_json(&format!("local://🦠️{kind}.json"))

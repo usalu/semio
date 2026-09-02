@@ -2,7 +2,6 @@
 //! explicit new value.
 
 use crate::artifacts::process3d::diff::Process3dDiff;
-use crate::artifacts::process3d::mutations::change_step_enabled::ChangeStepEnabled;
 use crate::artifacts::process3d::mutations::Process3dMutation;
 use crate::artifacts::process3d::Process3dSnapshot;
 use semio_framework_value_derive::{FromValue, ToValue};

@@ -1,10 +1,9 @@
 //! 📋 Process3d mutation — `CreateStep` (repurposes the pre-migration `📋steps/` triad dir; glue.rs
 //! path-includes this exact directory and this facet's writable boundary excludes glue.rs, so the
 //! directory name stays `📋steps` — see the migration report's `sharedFileRequests` for the rename
-//! once a later pass can touch `📦️glue.rs`).
+//! once a later pass can touch `🦀️.rs`).
 
 use crate::artifacts::process3d::diff::Process3dDiff;
-use crate::artifacts::process3d::mutations::create_step::CreateStep;
 use crate::artifacts::process3d::mutations::Process3dMutation;
 use crate::artifacts::process3d::{Process3dSnapshot, ProcessStep};
 use semio_framework_value_derive::{FromValue, ToValue};

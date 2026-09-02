@@ -6,7 +6,7 @@
   "type": "module",
   "private": true,
   "exports": {
-    ".": "./📦️index.ts"
+    ".": "./🟦️.ts"
   },
   "scripts": {
     "test": "bun nx run @semio-tech/s-3d-js:test"

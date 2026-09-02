@@ -1,0 +1,9 @@
+; Real binary frame for `SemioBrepMutation` (protocol::OpBinary) -- `format` byte + `tag` byte
+; (the variant ordinal, see 🧬️mutations/🦀️.rs's OP_KEYWORDS/variant_ordinal) + the
+; variant's own opaque "key=value ..." argument text tail (see ../📝️text/🔤️.ebnf for
+; that text's real per-keyword grammar, restated here for a self-contained ABNF reading of the
+; frame only).
+document = format tag payload
+format   = %x01                        ; OP_BINARY_FORMAT
+tag      = OCTET                       ; SemioBrepMutation variant ordinal, 0-22
+payload  = *OCTET                      ; UTF-8 "key=value ..." argument text, keyword-stripped

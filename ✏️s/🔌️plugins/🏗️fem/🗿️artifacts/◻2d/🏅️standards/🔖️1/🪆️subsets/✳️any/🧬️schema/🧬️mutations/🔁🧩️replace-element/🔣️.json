@@ -5,7 +5,7 @@
   "displayName": "Replace Element",
   "emoji": "🔁🧩️",
   "aggregateVariant": "ReplaceElement",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": "replace-element",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

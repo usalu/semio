@@ -5,7 +5,7 @@
   "displayName": "Edit Run",
   "emoji": "✏️",
   "aggregateVariant": "EditRun",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

@@ -26,11 +26,11 @@ use std::collections::HashMap;
 /// — independent confirmation beyond `XlsxDiff`'s `DiffCodec` blocker:
 /// ```text
 /// error[E0277]: the trait bound `XlsxCellValue: DslField` is not satisfied
-///   --> …/🧬️mutations/🦀️component.rs:45:16   (SetCell { .. value: XlsxCellValue })
+///   --> …/🧬️mutations/🦀️.rs:45:16   (SetCell { .. value: XlsxCellValue })
 /// error[E0277]: the trait bound `XlsxSnapshot: DslField` is not satisfied
-///   --> …/🧬️mutations/🦀️component.rs:23:19   (SetSnapshot { snapshot: XlsxSnapshot })
+///   --> …/🧬️mutations/🦀️.rs:23:19   (SetSnapshot { snapshot: XlsxSnapshot })
 /// error[E0277]: the trait bound `XlsxSheet: DslField` is not satisfied
-///   --> …/🧬️mutations/🦀️component.rs:27:16   (InsertSheet { sheet: XlsxSheet })
+///   --> …/🧬️mutations/🦀️.rs:27:16   (InsertSheet { sheet: XlsxSheet })
 /// ```
 /// `SetCell.value: XlsxCellValue` carries the enum-shaped payload DIRECTLY (same root cause as
 /// `XlsxDiff`'s blocker); `SetSnapshot`/`InsertSheet` reach it transitively through
@@ -85,7 +85,7 @@ pub enum XlsxMutation {
 }
 
 /// 🧾️ Kebab-case spelling of every `XlsxMutation` variant, in declaration order — the exhaustive
-/// mutation catalog `xlsx-ecma-376-any` (`../../🧪️oracle/🔣️.json`) is measured against
+/// mutation catalog `xlsx-ecma-376-any` (`../../🔣️oracle.json`) is measured against
 /// this exact list. `kinds_match_enum_and_catalog` proves it never drifts from either side.
 pub const KINDS: &[&str] = &["set-snapshot", "insert-sheet", "remove-sheet", "rename-sheet", "set-cell", "remove-cell", "insert-shared-string", "remove-shared-string", "set-shared-string"];
 //#endregion 🔖️Mutations
@@ -298,11 +298,11 @@ impl OpText for XlsxMutation {
 
 //#region 🔖️OpBinaryCodec
 /// 🧪️ FG-wave: real recursive binary primitives backing the upgraded `OpBinary` impl below --
-/// mirrors docx's own `../🧬️mutations/🦀️component.rs`'s `OpBinaryCodec` region shape (this
+/// mirrors docx's own `../🧬️mutations/🦀️.rs`'s `OpBinaryCodec` region shape (this
 /// wave's OPC pattern-setter), reusing `store::pack_rt::write_varint_u64`/`store::ByteReader`
 /// plus `XlsxDiff`'s own `write_str_lp`/`read_str_lp`/`enc_opc_part_bin`/`dec_opc_part_bin`/
 /// `enc_rel_bin`/`dec_rel_bin`/`enc_sheet_bin`/`dec_sheet_bin`/`enc_cell_value_bin`/
-/// `dec_cell_value_bin` (`../🔺️diff/🦀️component.rs`, `pub(crate)` to this artifact).
+/// `dec_cell_value_bin` (`../🔺️diff/🦀️.rs`, `pub(crate)` to this artifact).
 /// 🌱 Full (non-diff) `OpcContentTypes`/`OpcPackage`/`XlsxWorkbook`/`XlsxSnapshot` binary codecs --
 /// only `SetSnapshot`'s whole-payload encoding needs these, mirroring this file's own
 /// `enc_content_types`/`enc_opc_package`/`enc_workbook`/`enc_xlsx_snapshot` text forms above.
@@ -416,7 +416,7 @@ fn dec_xlsx_snapshot_bin(reader: &mut store::ByteReader<'_>) -> Result<XlsxSnaps
 //#endregion 🔖️OpBinaryCodec
 
 /// 🧪️ FG-wave: REAL binary op frame (`format u8 | tag u8 | variant payload`), matching
-/// `../💾️binary/📡️component.protocol.semio`'s `header fixed 2` + `chain payload bytes` shape --
+/// `../💾️binary/📡️.protocol.semio`'s `header fixed 2` + `chain payload bytes` shape --
 /// upgraded from F6's `print_op().into_bytes()` text-as-binary shortcut (confirmed still on that
 /// shortcut live by direct read of this file before this wave, not assumed). `tag` is the
 /// `XlsxMutation` variant ordinal, in the SAME 0-9 order `print_xlsx_mutation`'s own keyword
@@ -523,7 +523,7 @@ impl OpBinary for XlsxMutation {
 //#region 🔖️DemoCases
 /// 🧪️ FG-wave: representative `XlsxSnapshot`/`XlsxMutation` fixtures -- the single source of
 /// truth reused by this file's own `mutation_diff_law`/`inverse_law`/`op_text_binary_roundtrip_law`
-/// tests below AND by `⚙️engine/🦀️component.rs`'s `ops_grammar_conformance_law`/`protocol_walk_law`
+/// tests below AND by `⚙️engine/🦀️.rs`'s `ops_grammar_conformance_law`/`protocol_walk_law`
 /// conformance tests, same shape docx's own `demo_mutation_cases()` establishes (this wave's OPC
 /// pattern-setter). Promoted from the former test-only `fixture`/`sweep_a`/`sweep_b`/
 /// `sample_mutations` (the last renamed for the same convention).
@@ -1111,7 +1111,7 @@ mod tests {
         let from_enum: Vec<&'static str> = samples.iter().map(kind_of).collect();
         assert_eq!(from_enum, KINDS, "KINDS must list every XlsxMutation variant, in declaration order");
 
-        let manifest = include_str!("../../🧪️oracle/🔣️.json");
+        let manifest = include_str!("../../🔣️oracle.json");
         let needle = "\"kinds\": [";
         let start = manifest.find(needle).expect("manifest declares a kinds array") + needle.len();
         let end = start + manifest[start..].find(']').expect("kinds array is closed");
@@ -1124,14 +1124,14 @@ mod tests {
 
 //#region 🧪️FixtureTests
 // 🧪️ Handcrafted mutation fixtures (contract D1, ticket 26/08/20/COMPOSE-TO-PUZZLE5D-MIGRATION),
-// one case per mutation leaf. Wired HERE and not in `📦️glue.rs`: that file is shared with the
+// one case per mutation leaf. Wired HERE and not in `🦀️.rs`: that file is shared with the
 // agents migrating the other stdio artifacts, so the production mounts there stay untouched while
 // this artifact owns its own test mount. `#[path = "."]` re-bases the children on this file's own
 // directory, which is what makes the leaf-relative path below resolve.
 #[cfg(test)]
 #[path = "."]
 mod fixture_tests {
-    #[path = "📄set-snapshot/🧪️tests/widens-the-total-formula-to-a-third-row/🦀️component.rs"]
+    #[path = "📄set-snapshot/🧪️tests/widens-the-total-formula-to-a-third-row/🦀️.rs"]
     mod tests_set_snapshot_widens_the_total_formula_to_a_third_row;
 }
 //#endregion 🧪️FixtureTests

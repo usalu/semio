@@ -5,7 +5,7 @@
   "displayName": "Change Bedrooms",
   "emoji": "🔢",
   "aggregateVariant": "ChangeBedrooms",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

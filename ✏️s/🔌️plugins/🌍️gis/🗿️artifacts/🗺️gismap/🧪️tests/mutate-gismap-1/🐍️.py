@@ -14,10 +14,10 @@ language.
 
 **What it was written from, exhaustively.**
 
-* ``🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🔣️component.json`` — `GisMapSnapshot` is
+* ``🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🔣️.json`` — `GisMapSnapshot` is
   `positions`, `routes` and `regions`, each an array of `GisMapFeature`; a `GisMapFeature` is a
   string `id` and an open `data` object, `additionalProperties: false` on the record itself.
-* ``…/🧬️schema/🧬️mutations/📝️text/📖️component.grammar.semio`` — the twelve verbs and their
+* ``…/🧬️schema/🧬️mutations/📝️text/📖️.grammar.semio`` — the twelve verbs and their
   positional argument lists: `create-<noun> index`, `delete-<noun> id`,
   `replace-<noun>-data id block`, `reorder-<noun>s id index`.
 * the committed `(before, mutation, after, diff, outcome)` specification vectors under
@@ -32,7 +32,7 @@ feature collection is the hex of the UTF-8 bytes of its compact JSON and a compo
 ``[hex(childId),hex(target)]``. The derivation is pinned by `identity-round-trip`, which re-encodes
 the committed file byte for byte — which a misreading could not do.
 
-**No Rust was read to write this.** `🦀️component.rs` in this directory registers the SUBJECT half
+**No Rust was read to write this.** `🦀️.rs` in this directory registers the SUBJECT half
 only; the two answers are produced by two implementations in two languages from one written
 specification, which is the entire point of the comparison.
 

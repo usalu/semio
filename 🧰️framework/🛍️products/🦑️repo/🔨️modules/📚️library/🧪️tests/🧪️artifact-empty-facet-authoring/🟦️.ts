@@ -7,7 +7,7 @@ import fastGlob from "fast-glob";
 import { parse, type ParseError } from "jsonc-parser";
 import ts from "typescript";
 import { authorArtifactScaffold, ArtifactScaffoldError, type ArtifactScaffoldProgress } from "../../🏗️builder/🟦️.ts";
-import { canonicalFilenameForKind, loadCatalogTaxonomy, semanticArtifactEmptyFacetProjectionAuthority } from "../../🔍️discovery/🟦️component.ts";
+import { canonicalFilenameForKind, loadCatalogTaxonomy, semanticArtifactEmptyFacetProjectionAuthority } from "../../🔍️discovery/🟦️.ts";
 
 type Case = Readonly<{ id: string; producer: "surface" | "subset"; setup: string; role: string; expected: "created" | "preserved" | "preview" | "rejected" }>;
 type Result = { created: string[]; skipped: string[] };
@@ -22,7 +22,7 @@ const registryPath = join(repoRoot, contract.authoringCommand.scriptPath), rootP
 const ticket = join(repoRoot, ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/END-TO-END-TAXONOMY-NORMALIZATION"), report = join(ticket, "📓️empty-facet-authoring");
 const hash = (bytes: string | Uint8Array): string => createHash("sha256").update(bytes).digest("hex");
 const sort = (left: string, right: string): number => Buffer.compare(Buffer.from(left), Buffer.from(right));
-const identityPaths = [rootPath, registryPath, ...["🏗️builder/🟦️.ts", "📦️packages/🟦️typescript/📦️index.ts", "🔍️discovery/🟦️component.ts", "🧹️normalization/🟦️.ts", "🔣️taxonomy.json"].map((path) => join(library, path)), import.meta.filename, ...["🔣️.json", "🧬️schema/🔣️.json", "🧪️request/🔣️.json", "🧪️request/🧬️schema/🔣️.json", "🧪️registration/🔣️.json", "🧪️registration/🧬️schema/🔣️.json"].map((path) => join(import.meta.dir, path))];
+const identityPaths = [rootPath, registryPath, ...["🏗️builder/🟦️.ts", "📦️packages/🟦️typescript/🟦️.ts", "🔍️discovery/🟦️.ts", "🧹️normalization/🟦️.ts", "🔣️taxonomy.json"].map((path) => join(library, path)), import.meta.filename, ...["🔣️.json", "🧬️schema/🔣️.json", "🧪️request/🔣️.json", "🧪️request/🧬️schema/🔣️.json", "🧪️registration/🔣️.json", "🧪️registration/🧬️schema/🔣️.json"].map((path) => join(import.meta.dir, path))];
 const identities = (): Record<string, string> => Object.fromEntries(identityPaths.map((path) => [relative(repoRoot, path).replaceAll("\\", "/"), hash(readFileSync(path))]));
 
 test("shared artifact authoring passes the independent strict TypeScript compiler", () => {
@@ -180,10 +180,10 @@ for (const row of vector.cases) test(`actual empty-facet authoring ${row.id}`, a
         const repeated = snapshot(target.root);
         expect(repeated).toEqual(after);
         if (row.expected === "preserved") {
-          const key = `🧪️workspace/${target.marker}`;
+          const key = `workspace${target.marker}`;
           expect(after[key]).toEqual((late ? injectedSnapshot : before)[key]);
           expect(readFileSync(join(target.workspace, target.marker), "utf8")).toBe(vector.customContent);
-          expect(after[`🧪️workspace/${dirname(target.marker)}`]).toEqual((late ? injectedSnapshot : before)[`🧪️workspace/${dirname(target.marker)}`]);
+          expect(after[`workspace${dirname(target.marker)}`]).toEqual((late ? injectedSnapshot : before)[`workspace${dirname(target.marker)}`]);
         }
         for (const path of result!.created.filter((path) => basename(path) === vector.leaf)) {
           const text = readFileSync(join(target.workspace, path), "utf8");
@@ -257,7 +257,7 @@ test("registers empty-facet authoring through its closed canonical route", async
   const directory = join(import.meta.dir, "🧪️registration"), bytes = readFileSync(join(directory, "🔣️.json"), "utf8"), registration = JSON.parse(bytes);
   const validate = new Ajv({ strict: true, allErrors: true }).compile(JSON.parse(readFileSync(join(directory, "🧬️schema/🔣️.json"), "utf8")));
   expect(validate(registration), JSON.stringify(validate.errors)).toBe(true);
-  for (const changed of [{ ...registration, source: "🟦️component.ts" }, { ...registration, budget: 120000 }, { ...registration, budgetMs: 120000 }, { ...registration, runner: "other" }, { ...registration, launchOrder: 410.199 }]) expect(validate(changed)).toBe(false);
+  for (const changed of [{ ...registration, source: "🟦️.ts" }, { ...registration, budget: 120000 }, { ...registration, budgetMs: 120000 }, { ...registration, runner: "other" }, { ...registration, launchOrder: 410.199 }]) expect(validate(changed)).toBe(false);
   const errors: ParseError[] = [];
   expect(parse(bytes, errors, { disallowComments: true, allowTrailingComma: false })).toEqual(registration);
   expect(errors).toEqual([]);

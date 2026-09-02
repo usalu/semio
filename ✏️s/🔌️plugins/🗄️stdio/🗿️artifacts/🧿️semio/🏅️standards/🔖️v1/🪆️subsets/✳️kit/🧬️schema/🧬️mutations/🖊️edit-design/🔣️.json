@@ -5,7 +5,7 @@
   "displayName": "Edit Design",
   "emoji": "🖊️",
   "aggregateVariant": "EditDesign",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

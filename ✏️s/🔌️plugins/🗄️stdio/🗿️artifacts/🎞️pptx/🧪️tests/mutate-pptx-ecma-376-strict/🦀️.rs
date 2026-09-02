@@ -6,7 +6,7 @@
 //! slide parts, Transitional DrawingML inside their shape trees. That second family is what gives
 //! this subset an eleventh kind (`set-drawing-namespace`) neither the DOCX nor the XLSX conformance
 //! subsets have. `oracle` handlers drive the registered `quick-xml` 0.42 + `zip` 6 pair through
-//! this subset's own `../../🏅️standards/🔖️ecma-376/🪆️subsets/✳️strict/🧪️oracle/🦀️component.rs`;
+//! this subset's own `../../🏅️standards/🔖️ecma-376/🪆️subsets/✳️strict/🦀️oracle.rs`;
 //! `subject` handlers drive `decode_pptx`/`apply_pptx_strict_mutation`/`encode_pptx`; both results
 //! are read back by the SAME independent `project_package` before `semantic-ooxml-pptx-strict-v1`
 //! compares them. The subject half is `sut`-gated so the oracle-only run never compiles the local

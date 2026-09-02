@@ -1,0 +1,33 @@
+dialect protocol
+protocol tiff.diff
+version 1
+schema stdio.tiff
+start record
+
+# P2-FG2: REAL binary diff frame, replacing F6's `print_diff().into_bytes()` text-as-binary
+# shortcut (`../../🦀️.rs`'s old `DiffCodec::encode_diff` -- per the P2-W0 census, 100%
+# of stdio's `DiffCodec` impls were still on this shortcut). `format u8` + `flags u8` (bit0 =
+# `byte_order` present, bit1 = `ifds` present, bit2 = `pixels` present -- `TiffDiff` has THREE
+# independently-optional top-level fields, same shape `XmlDiff`'s own bitmask needed) as two REAL
+# fixed fields, individually protocol-walked.
+#
+# Past that header, `byte_order`/`ifds`/`pixels` (whichever `flags` marks present, in that FIXED
+# order) are bundled into ONE opaque trailing `bytes` chain rather than three separately-declared
+# conditional fields: this dialect's `Cond` (`if flags eq N`) can only test a field's WHOLE value
+# against a literal, not an individual BIT of it (no bitwise-AND primitive exists,
+# `📖️grammar-recipe.md` §2.2's own `Cond` section), so a per-bit-guarded field list isn't
+# expressible here even before `ifds`' own shape is considered. And `ifds`' own payload
+# (`TiffIfdsDiff` nesting `TiffTagsDiff` nesting the 12-variant `TiffValues` union) is a
+# repeated, per-entry-varying-shape RECORD collection -- the `protocol-array-of-records`
+# mechanism gap (§5), the same root cause ZIP's/CSV's own nested-record-array collections hit --
+# so once ANY field of this frame is structurally unwalkable at this dialect's field-by-field
+# depth, bundling the two simpler, merely-optional fields (`byte_order`/`pixels`) into the SAME
+# opaque tail, instead of partially structuring only those two, is the honest, minimal-surface
+# choice: the Rust `encode_diff`/`decode_diff` side stays genuinely, fully structured (bit-tested,
+# individually typed, real varint-framed binary recursion through `enc_ifds_diff_bin`/
+# `enc_tags_diff_bin`/`enc_values_bin`) and round-trip tested independently.
+framing record
+header fixed 2
+field format u8
+field flags u8
+chain payload bytes

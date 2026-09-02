@@ -11,9 +11,9 @@ description = "🏭️ Production mutation bridge for s.stdio.semio@v1/✳️bre
 
 [[bin]]
 name = "semio-semio-v1-brep-bridge"
-path = "🦀️component.rs"
+path = "🦀️.rs"
 
-# 🔒️ It compiles THE PRODUCTION SOURCE FILES, via #[path], exactly as the plugin's own `📦️glue.rs`
+# 🔒️ It compiles THE PRODUCTION SOURCE FILES, via #[path], exactly as the plugin's own `🦀️.rs`
 # does — same bytes, smaller compilation unit. It deliberately does NOT depend on
 # `semio-s-plugin-stdio`: that crate carries every artifact in the plugin, so one unrelated artifact
 # mid-refactor blocks this subset's inventory for no reason. The dependency edge points one way and

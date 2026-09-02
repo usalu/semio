@@ -1,0 +1,6 @@
+/** 🧪️ Focused change-primitive-topology-mode mutation-law probe. */
+import type { GltfSnapshot } from '../../../📸️snapshot/🟦️.ts';
+import { applyGltfChangePrimitiveTopologyMode, type GltfChangePrimitiveTopologyModePayload } from '../../change-primitive-topology-mode/🟦️.ts';
+import { deriveGltfChangePrimitiveTopologyModeDiff } from '../../change-primitive-topology-mode/🔺️diff/🟦️.ts';
+import { deriveGltfChangePrimitiveTopologyModeInverse } from '../../change-primitive-topology-mode/↩️inverse/🟦️.ts';
+export const assertGltfChangePrimitiveTopologyModeLaws = (base: GltfSnapshot, payload: GltfChangePrimitiveTopologyModePayload) => { const applied = applyGltfChangePrimitiveTopologyMode(base, payload); if (!applied.accepted) return applied; const replay = applyGltfChangePrimitiveTopologyMode(base, payload); const direct = deriveGltfChangePrimitiveTopologyModeDiff(base, payload); const undo = deriveGltfChangePrimitiveTopologyModeInverse(base, payload); if (!replay.accepted || !direct.accepted || !undo.accepted || JSON.stringify(applied.snapshot) !== JSON.stringify(replay.snapshot) || JSON.stringify(applied.diff) !== JSON.stringify(replay.diff) || JSON.stringify(applied.touchedPaths) !== JSON.stringify(undo.touchedPaths)) throw new Error('change-primitive-topology-mode violates replay, direct-diff, or undo determinism'); return { applied, direct, undo }; };

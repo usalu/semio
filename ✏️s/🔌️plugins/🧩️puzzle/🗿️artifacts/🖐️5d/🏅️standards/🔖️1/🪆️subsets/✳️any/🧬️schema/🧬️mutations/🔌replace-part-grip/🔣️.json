@@ -5,7 +5,7 @@
   "displayName": "Replace Part Grip",
   "emoji": "🔌",
   "aggregateVariant": "ReplacePartGrip",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": "replace-part-grip",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

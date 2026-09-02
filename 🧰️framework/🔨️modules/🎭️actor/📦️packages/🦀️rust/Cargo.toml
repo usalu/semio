@@ -20,7 +20,7 @@ wasm-opt = false
 
 [lib]
 crate-type = ["rlib", "cdylib"]
-path = "📦️glue.rs"
+path = "🦀️.rs"
 
 [features]
 # 🧬️ Generates the TypeScript mirror from the crate-owned versioned schema metadata.
@@ -30,7 +30,7 @@ typegen = []
 semio-framework-job = { workspace = true }
 serde = { version = "1.0.228", features = ["derive"] }
 
-# 🌉️ Browser-only `KernelHost` wasm-bindgen bridge (`📦️glue.rs`'s `kernel_host` mod, React-web /
+# 🌉️ Browser-only `KernelHost` wasm-bindgen bridge (`🦀️.rs`'s `kernel_host` mod, React-web /
 # wgpu-web hosts). Excluded from `wasm32-wasip2` because `target_arch = "wasm32"` is TRUE for the
 # WASI component target too — declaring these under the bare arch gate linked `wasm-bindgen` (and,
 # via the `wasm_bindgen_futures` alias, this crate's own first-party async runtime) into the shipped

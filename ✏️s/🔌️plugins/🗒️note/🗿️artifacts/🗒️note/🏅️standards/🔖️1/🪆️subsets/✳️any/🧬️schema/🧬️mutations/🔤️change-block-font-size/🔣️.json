@@ -5,7 +5,7 @@
   "displayName": "Change Block Font Size",
   "emoji": "🔤️",
   "aggregateVariant": "ChangeBlockFontSize",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": "change-block-font-size",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

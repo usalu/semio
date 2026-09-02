@@ -5,7 +5,7 @@
   "displayName": "Change Anchor V Ed Kn",
   "emoji": "🦎",
   "aggregateVariant": "ChangeAnchorVEdKn",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

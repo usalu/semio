@@ -8,7 +8,7 @@
  * invocation convention every migrated plugin crate follows).
  */
 import { join, resolve } from "node:path";
-import { BundleScript, ScriptRouter, devToolingEnv, runBundleScriptMain, runCargoTestBudgeted, runCmd, runCmdStatus, resolveTestLevel } from "../../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts";
+import { BundleScript, ScriptRouter, devToolingEnv, runBundleScriptMain, runCargoTestBudgeted, runCmd, runCmdStatus, resolveTestLevel } from "../../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 
 const CRATE_NAME = "semio-framework-plugin-describe";
 
@@ -59,8 +59,8 @@ export function pluginWasmArtifactPath(repoRoot: string, packageName: string): s
  * enables it unconditionally on its `semio-framework-plugin` dependency, confirmed empirically (no
  * plugin crate exposes a feature literally named `component-guest` of its own; passing that flag to
  * `cargo build -p <plugin>` fails with "does not contain this feature") — then runs the real emitter
- * (`describe_component`, `📇️describe/📦️packages/🦀️rust/📦️glue.rs`) against the built wasm, writing
- * `🛂️descriptor.semio` + `🔣️descriptor.json` straight into `ownerRoot` (the plugin/extension owner
+ * (`describe_component`, `📇️describe/📦️packages/🦀️rust/🦀️.rs`) against the built wasm, writing
+ * `🛂️.descriptor.semio` + `🔣️.json` straight into `ownerRoot` (the plugin/extension owner
  * root, sibling of the tracked `🛂️manifest.json` — NOT `🤖️generated/`, which is gitignored). One
  * shared function so every migrated plugin crate's own `describe` command stays a thin two-line
  * wrapper around it rather than duplicating the build+emit sequence 33 times. */

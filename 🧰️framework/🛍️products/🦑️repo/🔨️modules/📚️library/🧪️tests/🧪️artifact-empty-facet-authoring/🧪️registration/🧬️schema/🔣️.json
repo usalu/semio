@@ -28,7 +28,7 @@
       "const": "test-artifact-empty-facet-authoring"
     },
     "source": {
-      "const": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧪️artifact-empty-facet-authoring/🟦️.ts"
+      "const": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🟦️artifact-empty-facet-authoring.ts"
     },
     "runner": {
       "const": "runTestBudgeted"

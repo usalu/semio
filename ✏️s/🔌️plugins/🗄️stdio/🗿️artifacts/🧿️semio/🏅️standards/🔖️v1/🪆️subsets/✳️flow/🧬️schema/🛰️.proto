@@ -1,0 +1,34 @@
+syntax = "proto3";
+// 🧬️ SemioFlowArtifact schema — real facet mirror of 🦀️.rs.
+package semio.s_stdio_semio_flow.artifact;
+
+message SemioPoint2 {
+  double x = 1;
+  double y = 2;
+}
+message PortRef {
+  string node = 1;
+  string port = 2;
+}
+message FlowParam {
+  string key = 1;
+  string value = 2;
+}
+message FlowNode {
+  string id = 1;
+  string kind = 2;
+  string label = 3;
+  repeated FlowParam params = 4;
+  SemioPoint2 position = 5;
+}
+message FlowEdge {
+  string id = 1;
+  PortRef from = 2;
+  PortRef to = 3;
+  string kind = 4;
+}
+message SemioFlowArtifact {
+  string schema = 1;
+  repeated FlowNode nodes = 2;
+  repeated FlowEdge edges = 3;
+}

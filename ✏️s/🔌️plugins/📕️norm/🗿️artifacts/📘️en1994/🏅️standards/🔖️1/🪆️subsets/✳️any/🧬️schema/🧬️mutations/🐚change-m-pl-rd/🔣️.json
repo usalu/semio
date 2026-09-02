@@ -5,7 +5,7 @@
   "displayName": "Change M Pl Rd",
   "emoji": "🐚",
   "aggregateVariant": "ChangeMPlRd",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

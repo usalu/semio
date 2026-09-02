@@ -29,7 +29,7 @@
 //   bun 📜️script.ts gate-inputs --out <dir>
 //   bun 📜️script.ts fixtures    --out <dir>
 //
-// @see 🦀️oracle-probe/🦀️component.rs — the reader itself
+// @see 🦀️oracle-probe/🦀️.rs — the reader itself
 // @see 🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json — ProbeReport
 // @see ../../../../../../../../../../🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️drawing/🔬️probes/📜️script.ts
 //      — the spawn/offline/agent-scoped-target pattern this file mirrors
@@ -92,7 +92,7 @@ function main(argv: readonly string[]): number {
 
   // 📌️ `--out` resolves `SEMIO_FIXTURE_OUT` first (the harness's own `fixture reproduce` sets this to
   // a scratch root so reproduction never overwrites the committed fixture — see
-  // `🧰️framework/…/🧪️test/📜️script.ts`'s `reproduce` case), else an explicit `--out`, else a default
+  // `🧰️framework/…/🧪️tests/📜️cript.ts`'s `reproduce` case), else an explicit `--out`, else a default
   // relative to THIS SCRIPT'S OWN directory, never to the process's cwd — a recorded
   // `generator.command` is replayed by the harness from an unspecified cwd, and a relative
   // `--out ../🧫️fixtures` resolved against that cwd silently lands nowhere (mirrors

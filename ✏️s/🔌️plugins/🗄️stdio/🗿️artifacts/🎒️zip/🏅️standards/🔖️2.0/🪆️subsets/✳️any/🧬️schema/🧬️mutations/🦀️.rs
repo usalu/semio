@@ -35,7 +35,7 @@ pub enum ZipMutation {
 
 //#region 🔖️Kinds
 /// 🦠️ Kebab-case spelling of every `ZipMutation` variant, in declaration order — the exact `kinds`
-/// list `../../🧪️oracle/🔣️.json`'s `mutationCatalogs` entry must declare. The framework
+/// list `../../🔣️oracle.json`'s `mutationCatalogs` entry must declare. The framework
 /// never parses this enum; `kinds_matches_enum_variants_and_manifest` below is what keeps the two
 /// declarations honest against each other.
 pub const KINDS: &[&str] = &["set-snapshot", "set-archive-comment", "add-entry", "remove-entry", "rename-entry", "set-entry-data"];
@@ -180,7 +180,7 @@ mod tests {
         assert_eq!(observed, declared, "KINDS must list exactly the kebab-case spelling of every ZipMutation variant");
         assert_eq!(KINDS.len(), demo_mutation_cases().len(), "KINDS must cover every variant exactly once, with no duplicates");
 
-        let manifest: serde_json::Value = serde_json::from_str(include_str!("../../🧪️oracle/🔣️.json")).expect("valid oracle manifest JSON");
+        let manifest: serde_json::Value = serde_json::from_str(include_str!("../../🔣️oracle.json")).expect("valid oracle manifest JSON");
         let catalog_kinds: std::collections::BTreeSet<String> = manifest["mutationCatalogs"][0]["kinds"].as_array().expect("mutationCatalogs[0].kinds array").iter().map(|value| value.as_str().expect("kind is a string").to_string()).collect();
         let declared_owned: std::collections::BTreeSet<String> = KINDS.iter().map(|kind| kind.to_string()).collect();
         assert_eq!(catalog_kinds, declared_owned, "the oracle manifest's mutationCatalogs[0].kinds must match KINDS exactly");
@@ -189,14 +189,14 @@ mod tests {
 
 //#region 🧪️FixtureTests
 // 🧪️ Handcrafted mutation fixtures (contract D1, ticket 26/08/20/COMPOSE-TO-PUZZLE5D-MIGRATION),
-// one case per mutation leaf. Wired HERE and not in `📦️glue.rs`: that file is shared with the
+// one case per mutation leaf. Wired HERE and not in `🦀️.rs`: that file is shared with the
 // agents migrating the other stdio artifacts, so the production mounts there stay untouched while
 // this artifact owns its own test mount. `#[path = "."]` re-bases the children on this file's own
 // directory, which is what makes the leaf-relative path below resolve.
 #[cfg(test)]
 #[path = "."]
 mod fixture_tests {
-    #[path = "📄set-snapshot/🧪️tests/extends-the-readme-and-adds-a-version-member/🦀️component.rs"]
+    #[path = "📄set-snapshot/🧪️tests/extends-the-readme-and-adds-a-version-member/🦀️.rs"]
     mod tests_set_snapshot_extends_the_readme_and_adds_a_version_member;
 }
 //#endregion 🧪️FixtureTests

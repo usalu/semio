@@ -11,7 +11,7 @@ import {
   parseSegmentedDownloadMarker,
   parseSegmentedDownloadOperationId,
   type SegmentedDownloadSink,
-} from "../SegmentedDownload/🟦️component.ts";
+} from "../SegmentedDownload/🟦️.ts";
 // #endregion 🔌️Adapters
 
 //#region 🧱️Fixtures

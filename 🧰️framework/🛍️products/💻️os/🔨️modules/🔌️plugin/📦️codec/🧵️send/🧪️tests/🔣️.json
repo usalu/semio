@@ -57,9 +57,9 @@
   ],
   "native": {
     "sources": {
-      "plugin": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️component.rs",
-      "builder": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏗️builder/🦀️component.rs",
-      "store": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️component.rs",
+      "plugin": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️.rs",
+      "builder": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏗️builder/🦀️.rs",
+      "store": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️.rs",
       "mutation": "🧰️framework/🔨️modules/📡️replication/🎮️mutation/🦀️.rs"
     },
     "containers": {

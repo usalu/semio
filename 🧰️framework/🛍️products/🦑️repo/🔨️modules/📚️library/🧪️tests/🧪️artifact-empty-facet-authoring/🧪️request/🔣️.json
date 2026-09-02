@@ -60,7 +60,7 @@
       "id": "globally-recognized-wrong-child",
       "leaves": [
         "🦀️.rs",
-        "🖼️assets/🧬️schema/🦀️.rs"
+        "🖼️assets/🧬️schema/🦀️component.rs"
       ],
       "action": "none",
       "error": "Unpermitted authoring child",

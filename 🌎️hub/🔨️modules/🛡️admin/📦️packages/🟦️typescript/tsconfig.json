@@ -19,8 +19,8 @@
     "types": ["react", "react-dom", "vite/client"],
     "baseUrl": ".",
     "paths": {
-      "@semio-tech/ui-react": ["../../../../../🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx"],
-      "@semio-tech/framework-os": ["../../../../../🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/🟦️glue.ts"]
+      "@semio-tech/ui-react": ["../../../../../🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/🟦️.tsx"],
+      "@semio-tech/framework-os": ["../../../../../🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/🟦️.ts"]
     }
   },
   "include": ["**/*.ts", "**/*.tsx", "../../🧱️elements/**/*.tsx"],

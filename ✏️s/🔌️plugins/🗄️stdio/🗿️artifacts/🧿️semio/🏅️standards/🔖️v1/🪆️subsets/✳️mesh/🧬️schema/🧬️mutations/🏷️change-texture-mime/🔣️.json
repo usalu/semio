@@ -5,7 +5,7 @@
   "displayName": "Change Texture Mime",
   "emoji": "🏷️",
   "aggregateVariant": "ChangeTextureMime",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

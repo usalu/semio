@@ -1,0 +1,12 @@
+# stdio.mp4 mutations 📝️text facet — same shape as ../🔗️.graphql.
+enum Mp4MutationKind { SET_SNAPSHOT SET_FTYP INSERT_TRACK REMOVE_TRACK SET_TRACK_DIMENSIONS SET_TRACK_CODEC INSERT_SAMPLE REMOVE_SAMPLE SET_SAMPLE_SYNC }
+type Mp4Mutation {
+  mutation: Mp4MutationKind!
+  snapshot: Mp4Snapshot
+  ftyp: Mp4Ftyp
+  index: Int
+  trackIndex: Int
+  width: Int
+  height: Int
+  sync: Boolean
+}

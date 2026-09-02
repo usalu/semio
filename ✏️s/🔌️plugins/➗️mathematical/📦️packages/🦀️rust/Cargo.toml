@@ -22,7 +22,7 @@ ports = { react = 6084, wgpu = 6184 }
 
 [lib]
 crate-type = ["cdylib", "rlib"]
-path = "📦️glue.rs"
+path = "🦀️.rs"
 
 [dependencies]
 semio-s-plugin-stdio = { path = "../../../🗄️stdio/📦️packages/🦀️rust", package = "semio-s-plugin-stdio", default-features = false }
@@ -53,10 +53,6 @@ semio-framework-dispatch-macros = { path = "../../../../../🧰️framework/🔨
 semio-framework-schema = { path = "../../../../../🧰️framework/🔨️modules/🧬️schema/📦️packages/🦀️rust", package = "semio-framework-schema" }
 semio-framework-value-derive = { path = "../../../../../🧰️framework/🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust", package = "semio-framework-value-derive" }
 pack = { path = "../../../../../🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust", package = "semio-framework-pack" }
-# `serde_json` — `🚪️io/📥️import/…/json/…/🦀️component.rs`'s read direction decodes through
-#    `semio_s_plugin_stdio::artifacts::json::JsonSnapshot`, hard-typed to `serde_json::Value`
-#    (`🗄️stdio`'s own ~563-file deferred wave). The sibling export/json leaf needs neither.
-serde_json = { workspace = true }
 
 [dev-dependencies]
 semio-framework-async-macros = { path = "../../../../../🧰️framework/🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust" }

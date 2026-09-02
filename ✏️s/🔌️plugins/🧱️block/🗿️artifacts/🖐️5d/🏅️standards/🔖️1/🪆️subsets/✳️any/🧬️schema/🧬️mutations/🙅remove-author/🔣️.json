@@ -5,7 +5,7 @@
   "displayName": "Remove Author",
   "emoji": "🙅",
   "aggregateVariant": "RemoveAuthor",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": "remove-author",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

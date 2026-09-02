@@ -1,7 +1,0 @@
-/** 🦠️ delete-mesh executable structural glTF command. */
-import type { GltfOrthographic, GltfPerspective, GltfSnapshot } from '../../📸️snapshot/🟦️component.ts';
-import { clone, insert, order, position, reject, remove, relocate, reorder, repair, type GltfMutationRejection, type GltfStructuralResult } from '../../🔨️modules/🧬️mutation-support/🗂️top-level-collections/🟦️component.ts';
-export const GltfDeleteMeshDescriptor = { id: 's.stdio.gltf.mutation.delete-mesh.v1', version: 1, touchedPathPattern: 'document/meshes', referencePolicy: 'all typed mesh references are remapped, repaired, or rejected' } as const;
-export interface GltfDeleteMeshPayload { index: number }
-export const validateGltfDeleteMesh = (payload: GltfDeleteMeshPayload, base: GltfSnapshot): GltfMutationRejection | undefined => { const index = position(payload.index, base.document.meshes.length, 'document/meshes'); if (index) return index;  return undefined; };
-export const applyGltfDeleteMesh = (base: GltfSnapshot, payload: GltfDeleteMeshPayload): GltfStructuralResult => { const rejection = validateGltfDeleteMesh(payload, base); if (rejection) return { accepted: false, rejection }; try { const next = clone(base); remove(next, 'meshes', payload.index); return { accepted: true, snapshot: clone(next) }; } catch (error) { return { accepted: false, rejection: typeof error === 'object' && error && 'code' in error ? error as GltfMutationRejection : reject('gltf.mutation.apply-failed', 'document/meshes', String(error)) }; } };

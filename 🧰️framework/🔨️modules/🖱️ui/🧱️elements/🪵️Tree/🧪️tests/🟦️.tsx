@@ -1,7 +1,7 @@
 // #region 🔌️Adapters
 import { fireEvent, render } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
-import { TreeSection } from "../🟦️component.tsx";
+import { TreeSection } from "../🟦️.tsx";
 // #endregion 🔌️Adapters
 
 // #region 🌳️BranchDisclosure

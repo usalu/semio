@@ -52,7 +52,7 @@ mod tests {
     /// 🛡️ One of the two production-enum proofs required by ticket
     /// `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS`'s
     /// enum `deny_unknown_fields` fix (the other is `FlowMutation`, see
-    /// `🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🌿️vcs/🧪️tests/🦀️.rs`). `TxtMutation` is
+    /// `🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🌿️vcs/🧪️test/🦀️s.rs`). `TxtMutation` is
     /// adjacently tagged (`tag = "mutation", content = "payload"`) — an unknown key sitting
     /// alongside `mutation`/`payload` at the OUTER level must now be rejected by the derive's own
     /// `FromValue`, not just by a `serde_json` sibling.
@@ -60,12 +60,12 @@ mod tests {
     fn aggregate_denies_unknown_outer_key_via_first_party_from_value() {
         let good = dsl::DslValue::object([
             ("mutation".to_string(), dsl::DslValue::String("set-line".to_string())),
-            ("payload".to_string(), dsl::DslValue::object([("index".to_string(), dsl::DslValue::Number(1.0)), ("text".to_string(), dsl::DslValue::String("a".to_string()))])),
+            ("payload".to_string(), dsl::DslValue::object([("index".to_string(), dsl::DslValue::uint(1)), ("text".to_string(), dsl::DslValue::String("a".to_string()))])),
         ]);
         assert_eq!(TxtMutation::from_value(good), Ok(TxtMutation::SetLine(SetLineMutation { index: 1, text: "a".to_string() })));
         let bad = dsl::DslValue::object([
             ("mutation".to_string(), dsl::DslValue::String("set-line".to_string())),
-            ("payload".to_string(), dsl::DslValue::object([("index".to_string(), dsl::DslValue::Number(1.0)), ("text".to_string(), dsl::DslValue::String("a".to_string()))])),
+            ("payload".to_string(), dsl::DslValue::object([("index".to_string(), dsl::DslValue::uint(1)), ("text".to_string(), dsl::DslValue::String("a".to_string()))])),
             ("extra".to_string(), dsl::DslValue::Bool(true)),
         ]);
         assert!(TxtMutation::from_value(bad).is_err());

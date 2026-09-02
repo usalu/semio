@@ -1,0 +1,53 @@
+# 🧬️ SemioDrawingMutation — real facet mirror of the Rust 🧬️mutations/🦀️.rs sibling. Seventeen
+# SMO-approved verb-dispatch variants (📌️important.md's binding vocabulary ruling; no
+# `setSnapshot`/`set*` — banned/superseded vocabulary, and no `SetSnapshot` variant at all).
+# `NodePath` addresses a scene-graph node (`DrawNode` carries no stable id): `layer` selects
+# `layers[layer]`, `path` is a chain of child indices from that layer's root (`path == []` = the
+# root itself). `DrawLayer`/`DrawNode`/`PathSegment`/`SemioPoint2`/`Point3`/`Quaternion`/
+# `Transform`/`Rgba` are the sibling `../📸️snapshot/🔗️.graphql` types, reused directly.
+type NodePath { layer: Int! path: [Int!]! }
+
+enum SemioDrawingMutationTag {
+  CREATE_LAYER
+  DELETE_LAYER
+  CREATE_NODE
+  DELETE_NODE
+  MOVE_NODE
+  DRAG_NODES
+  ROTATE_NODE
+  SCALE_NODE
+  REORDER_NODES
+  GROUP_NODES
+  UNGROUP_NODE
+  FLATTEN_NODE
+  UNFLATTEN_NODE
+  REPLACE_PATH
+  REPLACE_FILL
+  CHANGE_STROKE_COLOR
+  CHANGE_STROKE_WIDTH
+}
+
+type SemioDrawingMutation {
+  mutation: SemioDrawingMutationTag!
+  index: Int
+  layer: DrawLayer
+  id: String
+  parent: NodePath
+  node: DrawNode
+  at: NodePath
+  newOrigin: SemioPoint2
+  ats: [NodePath!]
+  offset: SemioPoint2
+  newRotation: Quaternion
+  newScale: Point3
+  from: Int
+  to: Int
+  indices: [Int!]
+  transform: Transform
+  original: DrawNode
+  newSegments: [PathSegment!]
+  styleName: String
+  newFill: Rgba
+  newColor: Rgba
+  newWidth: Float
+}

@@ -1,0 +1,18 @@
+# 🧬️ SemioTextSnapshot schema — real facet mirror of the Rust `🦀️.rs` sibling.
+enum SemioTextMarkKind { BOLD ITALIC CODE LINK }
+
+type SemioTextMark {
+  kind: SemioTextMarkKind!
+  href: String!
+}
+
+type SemioTextRun {
+  language: String!
+  content: String!
+  marks: [SemioTextMark!]!
+}
+
+type SemioTextSnapshot {
+  schema: String! @state(class: ARTIFACT)
+  runs: [SemioTextRun!]! @state(class: ARTIFACT)
+}

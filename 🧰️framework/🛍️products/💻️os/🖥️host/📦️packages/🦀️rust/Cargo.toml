@@ -20,7 +20,7 @@ workspace = true
 
 [lib]
 crate-type = ["cdylib", "rlib"]
-path = "📦️glue.rs"
+path = "🦀️.rs"
 
 [dependencies]
 semio-framework-os-kernel = { path = "../../../📦️packages/🦀️rust", package = "semio-framework-os-kernel" }
@@ -31,7 +31,7 @@ semio-framework-plugin = { path = "../../../🔨️modules/🔌️plugin/📦️
 ui_wgpu = { path = "../../../../../🔨️modules/🖱️ui/📦️packages/🦀️rust", package = "semio-framework-ui", features = ["wgpu"] }
 # 🚪️ `semio-framework-3d` dependency REMOVED (ticket 26/08/12/DISSOLVE-KERNELS-AND-MODULES-INTO-EVENT-SOURCED-ARTIFACTS
 # wave IO1): the only references to it in this crate were `register_solid_exporter`/`register_solid_importer`
-# and their supporting registry (`//#region SolidMediaExport`, `🖥️host/🦀️component.rs`), deleted this same
+# and their supporting registry (`//#region SolidMediaExport`, `🖥️host/🦀️.rs`), deleted this same
 # wave as dead weight with zero production callers. Verified with `grep -rn "semio_framework_3d"` across this
 # crate's whole mounted input set (not just this directory) before removing the line.
 semio-s-plugin-stdio = { path = "../../../../../../✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust", package = "semio-s-plugin-stdio", default-features = false }

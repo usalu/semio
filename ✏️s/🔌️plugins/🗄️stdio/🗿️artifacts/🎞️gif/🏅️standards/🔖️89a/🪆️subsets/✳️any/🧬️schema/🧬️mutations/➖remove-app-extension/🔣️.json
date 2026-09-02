@@ -5,7 +5,7 @@
   "displayName": "Remove App Extension",
   "emoji": "➖",
   "aggregateVariant": "RemoveAppExtension",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

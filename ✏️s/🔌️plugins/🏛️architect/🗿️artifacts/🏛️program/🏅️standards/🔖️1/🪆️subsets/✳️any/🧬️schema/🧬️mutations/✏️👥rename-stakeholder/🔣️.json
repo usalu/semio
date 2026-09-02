@@ -5,7 +5,7 @@
   "displayName": "Rename Stakeholder",
   "emoji": "✏️👥",
   "aggregateVariant": "RenameStakeholder",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

@@ -4,7 +4,7 @@ import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { pathToFileURL } from "node:url";
-import { fileKindIdForSourcePath, type Taxonomy } from "../../../🔍️discovery/🟦️component.ts";
+import { fileKindIdForSourcePath, type Taxonomy } from "../../../🔍️discovery/🟦️.ts";
 import { projectTaxonomySourceAdmission, type TaxonomySourceCandidateObservation, type TaxonomySourceInventory, type TaxonomySourceObservation } from "../../../🧹️normalization/🟦️.ts";
 import { strictSourceDiagnostics } from "../../🧪️typescript-declaration-facts/🧪️oracle/🟦️.ts";
 import { sourceFileFactByteCompare, sourceFileFactCatalog, sourceFileFactReference, type SourceFileFactCase as Case, type SourceFileFactExpected as Expected } from "./🧪️oracle/🟦️.ts";

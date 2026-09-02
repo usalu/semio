@@ -1,7 +1,0 @@
-syntax = "proto3";
-// 📝️ SemioTableMutation text op — descriptive twin of 📖️component.grammar.semio.
-package semio.s_stdio_semio_table.mutations.text;
-
-message SemioTableMutationTextOp {
-  string line = 1; // "keyword:arg1,arg2,..."
-}

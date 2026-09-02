@@ -1,12 +1,12 @@
 //! ⏳️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (terra-async-imports → B1 world-collapse). Host side
-//! of `world actor`'s `interface host-async` (`🧬️schema/📜️component.wit`): 24 `async func` imports
+//! of `world actor`'s `interface host-async` (`🧬️schema/📜️.wit`): 24 `async func` imports
 //! the guest can actually `.await`, plus the 2 fire-and-forget doors (`emit`/`emit-patch`). Until
 //! the collapse these were unreachable — they belonged to the now-deleted `world actor-async`, which
 //! nothing instantiated; `world actor` importing `host-async` is what puts them on the live ABI.
 //!
 //! 🎯️ **The routing rule this whole file follows**: an async import AWAITS THE REAL HOST SERVICE
 //! DIRECTLY and resolves the guest's future — it never goes through the poll world's
-//! effect-envelope + `Event::Completed` round trip (`⚡️effects/🦀️component.rs`'s
+//! effect-envelope + `Event::Completed` round trip (`⚡️effects/🦀️.rs`'s
 //! `AsyncEffectExecutor::dispatch_*` fire-and-forget-into-a-sink shape stays that world's own
 //! mechanism, untouched here). `emit`/`emit-patch` are the one exception: they are the ONE-WAY
 //! doors, and per the mission they DO reuse `AsyncEffectExecutor` as the single effect classifier —
@@ -16,7 +16,7 @@
 //! completion round-trip` and `## streams` in the packet report.
 //!
 //! 🏗️ **Bindgen mount**: none of its own any more — `host_async_bindings` is an alias for
-//! `🦀️component.rs`'s `mod actor_bindings`, the crate's single `bindgen!` invocation.
+//! `🦀️.rs`'s `mod actor_bindings`, the crate's single `bindgen!` invocation.
 //!
 //! See `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME/
 //! 📓️terra-async-imports-report.md`.
@@ -38,7 +38,7 @@ use wasmtime_wasi::{WasiCtx, WasiCtxView, WasiView};
 //#region 🔌️Bindings
 /// 🧬️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (B1 world-collapse): this file no longer runs its own
 /// `bindgen!`. `world actor-async` is DELETED and `world actor` imports `host-async` itself, so the
-/// crate's single `bindgen!` invocation (`🦀️component.rs`'s `mod actor_bindings`) now generates
+/// crate's single `bindgen!` invocation (`🦀️.rs`'s `mod actor_bindings`) now generates
 /// exactly the types these 24 implementations need. The alias is kept so every `host_async_bindings::…`
 /// path in this file — and in `⏳️runtime.rs`, which a later packet rewrites — still resolves.
 ///
@@ -52,7 +52,7 @@ use host_async_bindings::semio::framework::{effects as wit_effects, host_async a
 //#region 🪪️AsyncActorHostState
 /// 🪪️ One `Store<AsyncActorHostState>` per actor (S1b's confirmed shape: `store.run_concurrent`,
 /// multiplexed host-side, never `Accessor::spawn` across actors) — every field below is therefore
-/// fixed for the whole lifetime of one actor generation, unlike `⚡️effects/🦀️component.rs`'s
+/// fixed for the whole lifetime of one actor generation, unlike `⚡️effects/🦀️.rs`'s
 /// `ActorScopeRegistry`/`EffectDispatchContext`, which look an actor up per batch because ONE
 /// `AsyncEffectExecutor` serves EVERY actor.
 ///
@@ -62,12 +62,12 @@ use host_async_bindings::semio::framework::{effects as wit_effects, host_async a
 /// exactly one calling convention in this crate.
 ///
 /// 🔑️ `capability`/`capability_registry`: a SEPARATE, small cancel-token registry from
-/// `⚡️effects/🦀️component.rs`'s own `CapabilityRevocationRegistry` — that type's `track` method is
+/// `⚡️effects/🦀️.rs`'s own `CapabilityRevocationRegistry` — that type's `track` method is
 /// private to its module (only `revoke` is `pub`), so it cannot be reached from this sibling module
-/// without editing `⚡️effects/🦀️component.rs` (out of this packet's owned paths). See the packet
+/// without editing `⚡️effects/🦀️.rs` (out of this packet's owned paths). See the packet
 /// report's `## lease-requests` — making `track` `pub` there would let the two unify.
 // 🚫️async: E0107 residue — `AsyncServices<R: HostAsyncRuntime>` is generic (see
-// `⚡️effects/🦀️component.rs`), but this async-world state has zero production callers today (see
+// `⚡️effects/🦀️.rs`), but this async-world state has zero production callers today (see
 // this file's own `not_wired`/`run_router_effect` doc comments), so there is no real caller to
 // thread `R` from. `TokioHostRuntime` is the one production `HostAsyncRuntime` impl
 // (`🛎️services/🦀️component.rs`) and matches what a real instantiation would need — pinned here
@@ -157,9 +157,9 @@ impl WasiView for AsyncActorHostState {
 //#endregion 🪪️AsyncActorHostState
 
 //#region 🆔️TraceIdAllocator
-/// 🆔️ Local copy of `⚡️effects/🦀️component.rs`'s own allocator — that one is `pub` but scoped to
+/// 🆔️ Local copy of `⚡️effects/🦀️.rs`'s own allocator — that one is `pub` but scoped to
 /// `AsyncEffectExecutor`'s own `trace_ids` field; duplicated here (three lines) rather than shared,
-/// same "self-contained module" call `⚡️effects/🦀️component.rs`'s own `fault_bytes` doc makes.
+/// same "self-contained module" call `⚡️effects/🦀️.rs`'s own `fault_bytes` doc makes.
 // 🚫️async: E1 pure accessor — an `AtomicU64` counter with no suspension point, whose one
 // consumer (`begin_call`, see its own tag below) cannot hold the exclusive `Accessor::with` access
 // this needs across an `.await` — see R9.
@@ -205,7 +205,7 @@ impl Drop for CancelOnDrop {
     // language-fixed sync) cannot `.await`; `CancelToken::cancel` lives in `⏳️async` (outside this
     // packet's `🔌️plugin/🖥️host` path_scope, so it cannot be reverted to sync here even though its
     // own body — a bare `AtomicU8::store` — has no suspension point of its own). Same bridge shape
-    // as `🚚️process-transport/🦀️component.rs`'s `impl Drop for ProcessTransport`. Sound: `cancel`
+    // as `🚚️process-transport/🦀️.rs`'s `impl Drop for ProcessTransport`. Sound: `cancel`
     // never actually parks, so this never blocks.
     fn drop(&mut self) {
         if self.armed {
@@ -215,7 +215,7 @@ impl Drop for CancelOnDrop {
 }
 
 /// 🔑️ See `AsyncActorHostState`'s own doc for why this is a second, small registry rather than a
-/// reuse of `⚡️effects/🦀️component.rs`'s `CapabilityRevocationRegistry`.
+/// reuse of `⚡️effects/🦀️.rs`'s `CapabilityRevocationRegistry`.
 #[derive(Default)]
 struct DirectAwaitCapabilityRegistry(Mutex<HashMap<CapabilityTokenId, Vec<CancelToken>>>);
 
@@ -245,7 +245,7 @@ impl DirectAwaitCapabilityRegistry {
 //#endregion 🛑️Cancellation
 
 //#region 🧯️Fault encoding
-/// 🧯️ Local copy of `🦀️component.rs`'s `host_fault_bytes` / `⚡️effects/🦀️component.rs`'s
+/// 🧯️ Local copy of `🦀️.rs`'s `host_fault_bytes` / `⚡️effects/🦀️.rs`'s
 /// `fault_bytes` — same three-line duplication precedent both of those already establish.
 async fn fault_bytes(code: impl Into<String>, message: impl Into<String>) -> Vec<u8> {
     let code = code.into();
@@ -254,7 +254,7 @@ async fn fault_bytes(code: impl Into<String>, message: impl Into<String>) -> Vec
 //#endregion 🧯️Fault encoding
 
 //#region ⏱️Deadlines
-/// ⏱️ Local copy of `⚡️effects/🦀️component.rs`'s own `LANE_DEADLINE_CEILING_MS`/`lane_ceiling_ms` —
+/// ⏱️ Local copy of `⚡️effects/🦀️.rs`'s own `LANE_DEADLINE_CEILING_MS`/`lane_ceiling_ms` —
 /// same values, same per-lane ceiling discipline, duplicated for the same self-contained-module
 /// reason as `fault_bytes` above.
 const LANE_DEADLINE_CEILING_MS: [u64; 4] = [2_000, 5_000, 30_000, 120_000];
@@ -266,7 +266,7 @@ fn lane_ceiling_ms(lane: u8) -> u64 {
 //#endregion ⏱️Deadlines
 
 //#region 🧭️addressed_actor_id
-/// 🧭️ Local copy of `⚡️effects/🦀️component.rs`'s own `addressed_actor_id` — reconstructs the full
+/// 🧭️ Local copy of `⚡️effects/🦀️.rs`'s own `addressed_actor_id` — reconstructs the full
 /// `ActorId` (stable bits from `actor`, generation bits from `generation`) `HttpPool`'s per-actor
 /// `outstanding_requests` cap keys on.
 async fn addressed_actor_id(actor_stable: u64, generation: u16) -> RuntimeActorId {
@@ -277,7 +277,7 @@ async fn addressed_actor_id(actor_stable: u64, generation: u16) -> RuntimeActorI
 
 //#region 📞️CallContext
 /// 📞️ Everything one import call needs, derived fresh per call from `AsyncActorHostState` — the
-/// direct-await counterpart to `⚡️effects/🦀️component.rs`'s `AsyncEffectExecutor::derive_ctx`, minus
+/// direct-await counterpart to `⚡️effects/🦀️.rs`'s `AsyncEffectExecutor::derive_ctx`, minus
 /// the cross-actor scope lookup (this state IS the one actor).
 struct CallContext {
     ctx: OperationContext,
@@ -378,7 +378,7 @@ async fn wake_chunk_shared(shared: &Mutex<ChunkShared>) {
 /// 🐌️ `blob-read`'s fallback per the mission's own instruction: the `BlobLoad` router
 /// job returns one buffered result — there is no chunked blob
 /// backend anywhere in this codebase today, and adding one would mean editing
-/// `⚡️effects/🦀️component.rs`/`semio-framework-os-services`, both out of this packet's owned paths.
+/// `⚡️effects/🦀️.rs`/`semio-framework-os-services`, both out of this packet's owned paths.
 /// One already-`done` chunk is therefore the honest, real behaviour, not a placeholder.
 async fn single_chunk_shared(bytes: Vec<u8>) -> Arc<Mutex<ChunkShared>> {
     let mut queue = VecDeque::new();
@@ -388,7 +388,7 @@ async fn single_chunk_shared(bytes: Vec<u8>) -> Arc<Mutex<ChunkShared>> {
 //#endregion 🌊️Streams
 
 //#region 🐛️Conversions
-/// 🐛️ Local copy of `🦀️component.rs`'s own `wit_message_endpoint_to_kernel`. Since B1
+/// 🐛️ Local copy of `🦀️.rs`'s own `wit_message_endpoint_to_kernel`. Since B1
 /// world-collapse both files share ONE `bindgen!` invocation, so the two now operate on the SAME
 /// `types::MessageEndpoint` — the duplication is no longer forced by nominal type distinctness and
 /// is a genuine merge candidate for whichever packet next opens both files.
@@ -418,7 +418,7 @@ async fn decode_json<T: serde::de::DeserializeOwned>(bytes: &[u8]) -> Option<T> 
     serde_json::from_slice(bytes).ok()
 }
 
-/// 🐛️ Local copy of `🦀️component.rs`'s own `wit_effect_to_kernel`, retargeted at this file's OWN
+/// 🐛️ Local copy of `🦀️.rs`'s own `wit_effect_to_kernel`, retargeted at this file's OWN
 /// `effects::Effect` (see this region's own doc above for why a second copy, not a shared generic).
 /// Only reached from `emit` (the one-way door) — `io-run` stays the one `Err` case, same
 /// `## blocked-on` this mirrors (`Effect::IoRun` has no kernel counterpart yet, packet A3).
@@ -586,7 +586,7 @@ impl wit_host_async::Host for AsyncActorHostState {
 //#endregion 🚪️host_async::Host
 
 //#region ⏳️host_async::HostWithStore (the 24 async imports)
-/// ⏳️ Shared tail for the 9 imports `⚡️effects/🦀️component.rs`'s `RouterEffectHandler` already
+/// ⏳️ Shared tail for the 9 imports `⚡️effects/🦀️.rs`'s `RouterEffectHandler` already
 /// answers (`blob-load`/`blob-write`/`document-read`/`document-write`/`io-compose`/`cache-derive`/
 /// `cache-read`/`invoke-extension`/`dispatch-action`) — one explicit resumable router job, driven
 /// one bounded step per worker closure and awaited inline to resolve the guest's future.

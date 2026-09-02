@@ -5,7 +5,7 @@
   "displayName": "Replace Tiles",
   "emoji": "🔁",
   "aggregateVariant": "ReplaceTiles",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": "replace-tiles",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

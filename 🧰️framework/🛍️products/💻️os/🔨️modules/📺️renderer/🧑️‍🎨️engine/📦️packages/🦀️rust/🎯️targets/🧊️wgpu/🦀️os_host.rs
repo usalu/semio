@@ -1,7 +1,7 @@
 //! 🏠️ The composition root — ticket `26/08/20/SEMANTIC-UI-CONTRACT-AND-RENDERER-FAMILY`, packet
 //! `os-host`, master plan §5. It composes; it does not implement half an operating system. Product
 //! behaviour (dock, tutorial playback, world3d/node-graph/board input, chrome painting) stays exactly
-//! where it already lives — `AppRuntime` (`📦️glue.rs`) and the `🧱️elements/` co-location dirs — this
+//! where it already lives — `AppRuntime` (`🦀️.rs`) and the `🧱️elements/` co-location dirs — this
 //! file only OWNS what wires them to the new scheduling/kernel seams.
 //!
 //! **Deviation from the master plan's literal `OsHost { engine, backend, scheduler, surfaces, … }`

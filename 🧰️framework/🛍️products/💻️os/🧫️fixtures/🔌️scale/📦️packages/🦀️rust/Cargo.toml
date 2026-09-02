@@ -18,7 +18,7 @@ role = "testkit"
 
 [lib]
 crate-type = ["cdylib", "rlib"]
-path = "📦️glue.rs"
+path = "🦀️.rs"
 
 [features]
 default = []

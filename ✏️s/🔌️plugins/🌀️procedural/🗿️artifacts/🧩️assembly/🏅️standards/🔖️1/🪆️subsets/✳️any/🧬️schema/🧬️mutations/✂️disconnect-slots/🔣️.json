@@ -5,7 +5,7 @@
   "displayName": "Disconnect Slots",
   "emoji": "✂️",
   "aggregateVariant": "DisconnectSlots",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

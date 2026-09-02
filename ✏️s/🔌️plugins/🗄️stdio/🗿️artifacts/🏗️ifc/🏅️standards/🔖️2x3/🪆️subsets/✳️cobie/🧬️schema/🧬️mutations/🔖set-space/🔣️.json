@@ -5,7 +5,7 @@
   "displayName": "Set Space",
   "emoji": "🔖",
   "aggregateVariant": "SetSpace",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

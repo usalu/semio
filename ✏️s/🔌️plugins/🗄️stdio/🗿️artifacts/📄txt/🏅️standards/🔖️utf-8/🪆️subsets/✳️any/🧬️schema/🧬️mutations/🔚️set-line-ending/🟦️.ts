@@ -1,5 +1,5 @@
 /** 🧬 set-line-ending canonical direct payload. */
-import { TxtProtobufReader, failTxtMutationDecode, txtExact, txtOwn, txtProtobufKey } from '../../🔨️modules/🧬️mutation-support/🟦️component.ts';
+import { TxtProtobufReader, failTxtMutationDecode, txtExact, txtOwn, txtProtobufKey } from '../../🔨️modules/🧬️mutation-support/🟦️.ts';
 export interface SetLineEndingPayload { readonly value: 'lf' | 'crLf' }
 
 const decode = (value: unknown, path: string): SetLineEndingPayload => {

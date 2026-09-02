@@ -5,7 +5,7 @@
   "displayName": "Truncate At",
   "emoji": "🔪",
   "aggregateVariant": "TruncateAt",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

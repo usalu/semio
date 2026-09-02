@@ -2,7 +2,7 @@
 import * as React from "react";
 import { fireEvent, render } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
-import { Checkbox, type CheckboxState } from "../🟦️component.tsx";
+import { Checkbox, type CheckboxState } from "../🟦️.tsx";
 // #endregion 🔌️Adapters
 
 // #region ☑️CheckboxMatrix

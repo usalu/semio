@@ -5,7 +5,7 @@
   "displayName": "Change Co2 Ppm",
   "emoji": "🛠️",
   "aggregateVariant": "ChangeCo2Ppm",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

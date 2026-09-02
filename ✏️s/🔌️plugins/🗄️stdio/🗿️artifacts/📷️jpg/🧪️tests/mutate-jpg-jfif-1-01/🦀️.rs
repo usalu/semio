@@ -38,7 +38,7 @@ fn mutable_input(ctx: &Context) -> Result<Vec<u8>, String> {
 
 //#region 🔖️Lossy
 /// 📏️ The absolute per-number slack `semantic-jpg-mutate-v1` itself declares
-/// (`../../🏅️standards/🔖️jfif-1.01/🪆️subsets/✳️document/🧪️oracle/🔣️.json`), mirrored here so an
+/// (`../../🏅️standards/🔖️jfif-1.01/🪆️subsets/✳️document/🔣️oracle.json`), mirrored here so an
 /// in-handler law is exactly as strict as the profile the case is measured by and never stricter.
 /// It exists because JPEG is lossy and every step of these round trips re-quantizes: measured on
 /// this fixture (2275x2560 = 5 824 000 pixels), one reference decode → re-encode at quality 90
@@ -52,7 +52,7 @@ fn mutable_input(ctx: &Context) -> Result<Vec<u8>, String> {
 const JPG_TOLERANCE: f64 = 400_000.0;
 
 /// 🚫️ The five kinds this codec pair provably cannot make byte-observable, each because
-/// `../../🏅️standards/🔖️jfif-1.01/🪆️subsets/✳️document/🚪️io/🦀️component.rs` regenerates fresh Annex K
+/// `../../🏅️standards/🔖️jfif-1.01/🪆️subsets/✳️document/🚪️io/🦀️.rs` regenerates fresh Annex K
 /// DQT/DHT tables scaled by `re_encode_quality` on every encode and never emits a DRI marker at
 /// all. They mutate the typed snapshot and nothing else, which the feature description states and
 /// the subset's own oracle module documents against the encoder's source. Everything NOT on this

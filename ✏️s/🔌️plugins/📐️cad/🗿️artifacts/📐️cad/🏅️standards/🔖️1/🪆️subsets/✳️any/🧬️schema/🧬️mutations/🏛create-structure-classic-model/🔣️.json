@@ -5,7 +5,7 @@
   "displayName": "Create Structure Classic Model",
   "emoji": "🏛",
   "aggregateVariant": "CreateStructureClassicModel",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": "create-structure-classic-model",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

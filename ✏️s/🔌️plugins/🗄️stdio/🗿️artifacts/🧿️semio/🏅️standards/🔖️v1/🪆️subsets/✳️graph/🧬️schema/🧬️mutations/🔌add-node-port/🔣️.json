@@ -5,7 +5,7 @@
   "displayName": "Add Node Port",
   "emoji": "🔌",
   "aggregateVariant": "AddNodePort",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

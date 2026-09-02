@@ -5,7 +5,7 @@
   "displayName": "Set Sample Rate",
   "emoji": "🎚",
   "aggregateVariant": "SetSampleRate",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

@@ -5,7 +5,7 @@
   "displayName": "Change Grid Subdivisions",
   "emoji": "🔢️",
   "aggregateVariant": "ChangeGridSubdivisions",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": "change-grid-subdivisions",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

@@ -47,7 +47,7 @@ isProject: false
 Ticket [26/08/03/HANDCRAFTED-GRAMMAR-FOR-EVERY-ARTIFACT](.🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️03/HANDCRAFTED-GRAMMAR-FOR-EVERY-ARTIFACT/🎫️ticket.json) is still open. It shipped 260 spec files, but nothing could tell a real spec from a generic one, so the corpus collapsed:
 
 - **All 52 `📡️spr` protocols are byte-identical** modulo the id/schema line. The 52 `🎒️pack` protocols collapse to exactly 2 shapes (37 generic, 15 identical `📕️norm` ones).
-- **The protocol dialect has no AST.** [🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/📖️grammar/🦀️component.rs](🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/📖️grammar/🦀️component.rs) L229-234 and L390-393 match `version|schema|framing|header|field|segment|record|footer|chain` and call `cursor.skip_line()`. `print_grammar` then drops the whole body, so `canonicalize` is lossy for every protocol file.
+- **The protocol dialect has no AST.** [🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/📖️grammar/🦀️.rs](🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/📖️grammar/🦀️.rs) L229-234 and L390-393 match `version|schema|framing|header|field|segment|record|footer|chain` and call `cursor.skip_line()`. `print_grammar` then drops the whole body, so `canonicalize` is lossy for every protocol file.
 - **`verify_protocol_bytes` (L712-738) checks 8 magic bytes and a 32-byte minimum.** It cannot detect that the spec declares one `field flags u32` while `Header::write_bytes` emits `required_flags` + `optional_flags` + 8 reserved bytes.
 - **The spec is factually wrong.** It declares `framing magic 0x8953504B0D0A1A0A` (`\x89SPK`); real bytes start `8953454d` (`\x89SEM`).
 - **All 178 binary examples are empty.** Every `*.pack.semio` and `*.spr.semio` file is ≤64 bytes: envelope plus the token `plugin.artifact.pack v1`, zero payload.
@@ -59,7 +59,7 @@ Ticket [26/08/03/HANDCRAFTED-GRAMMAR-FOR-EVERY-ARTIFACT](.🦑️repo/🎫️tic
 - **`Recognizer::recognize` has zero call sites outside its own unit tests.** Nothing has ever run a grammar against a real example.
 - **Only 5 of 54 artifacts wire their specs** (writer, note, dag, fem2d, fem3d): 25 `include_str!` sites, 27 `register_language` calls. The other 49 artifacts' spec files are dead text — `💠️lowpoly` and `📐️cad` have grammar files on disk with no constant and no registration.
 - **Both forcing functions are disarmed.** `POLICY_GRAMMAR_FILE_ALLOWLIST` and `POLICY_PROTOCOL_FILE_ALLOWLIST` in [📜️script.ts](📜️script.ts) L2096/L2099 are empty sets, and the rules only report entries in the allowlist — they never scan for missing or generic files.
-- **The codecs are generic too.** [💠️lowpoly/🎒️pack/🦀️component.rs](✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🎒️pack/🦀️component.rs) is a two-line delegation to derive-generated `store::DocumentPack::encode_pack`. A spec cannot be domain-specific while the bytes it describes are not.
+- **The codecs are generic too.** [💠️lowpoly/🎒️pack/🦀️.rs](✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🎒️pack/🦀️.rs) is a two-line delegation to derive-generated `store::DocumentPack::encode_pack`. A spec cannot be domain-specific while the bytes it describes are not.
 
 The lesson: handcrafting 260 files by hand fails without a mechanism that **rejects** genericness. Build the rejector first.
 
@@ -91,7 +91,7 @@ flowchart TB
 
 ## Mechanism work (P1, single writer, engine frozen after)
 
-All in [🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/📖️grammar/🦀️component.rs](🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/📖️grammar/🦀️component.rs) unless noted, using new `//#region` blocks in the existing file.
+All in [🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/📖️grammar/🦀️.rs](🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/📖️grammar/🦀️.rs) unless noted, using new `//#region` blocks in the existing file.
 
 ### M1. A real protocol AST
 
@@ -136,8 +136,8 @@ The recognizer has never been run against a real document, and three defects wou
 ### M3b. Remove every generic escape hatch
 
 - Delete `from_record_spec` and `terminal_for_shape` (L513-567). This function *generates* grammars from `RecordSpec` and is the mechanical source of genericness.
-- Delete `LanguageSpec::derived` in [🗣️dsl/🦀️component.rs](🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/🦀️component.rs) L479 — it exists purely to service unconverted facets and has 0 call sites.
-- Delete `DocumentDsl`/`OpText`/`DocumentPack`/`OpBinary` emission from [🗣️dsl/✨️derive/🦀️component.rs](🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/🦀️component.rs) and the `dsl::__rt`/`op_rt` text path, so no artifact can fall back to the generic codec. Staged: land the deletion at P6 flag day, but add the policy that forbids new uses at P1.
+- Delete `LanguageSpec::derived` in [🗣️dsl/🦀️.rs](🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/🦀️.rs) L479 — it exists purely to service unconverted facets and has 0 call sites.
+- Delete `DocumentDsl`/`OpText`/`DocumentPack`/`OpBinary` emission from [🗣️dsl/✨️derive/🦀️.rs](🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/🦀️.rs) and the `dsl::__rt`/`op_rt` text path, so no artifact can fall back to the generic codec. Staged: land the deletion at P6 flag day, but add the policy that forbids new uses at P1.
 - Delete the empty `🧰️framework/🛍️products/💻️os/🔨️modules/📡️protocol/` directory tree — 13 empty dirs left over from the rename to `📡️spr`, already aliased away by `POLICY_COMPONENT_ALIASES`.
 
 ### M4. Policies that make genericness a build failure
@@ -147,14 +147,14 @@ Four new breach rules in [📜️script.ts](📜️script.ts), replacing the two
 - **`policySpecDistinctnessBreaches`** — hash every `.grammar.semio`/`.protocol.semio` with the id/schema/extension/start lines normalized away; any two files sharing a hash are a high-priority breach. This single rule invalidates the 52-identical-spr corpus, the 37-identical-pack corpus, the block+puzzle 2d/3d/5d diff and op sextets, the procedural2d/3d pairs, and the forms/playbook pair.
 - **`policyGenericSpecBreaches`** — a grammar may not contain the catch-all tail (`prop = IDENT "=" (...)`, untyped `value`/`list`/`map` productions), may not contain a bare statement shell (`x = IDENT assign* block?`, the `📐️cad` op/diff shape), and may not declare a field whose name matches `/-(json|blob|base64|payload)$/`.
 - **`policyDeclaredUseBreaches`** — a grammar that declares `use family-X` must reference at least one production the fragment defines, and a production it references must resolve either locally or in a declared fragment. Catches the 16 grammars that `use family-scene` but never mention `layer`.
-- **`policySpecWiringBreaches`** — every facet `🦀️component.rs` must `include_str!` its sibling spec and `register_language` with the matching `LanguageRole` (the enum at L448 already has `Document|Config|Ops|Embedded|Diff|Pack|Spr`).
+- **`policySpecWiringBreaches`** — every facet `🦀️.rs` must `include_str!` its sibling spec and `register_language` with the matching `LanguageRole` (the enum at L448 already has `Document|Config|Ops|Embedded|Diff|Pack|Spr`).
 - **`policyEmptyExampleBreaches`** — every `*.pack.semio`/`*.spr.semio` example must exceed its `\x89SEM` envelope length. Catches all 178 empty files today.
 
 Register in `VerifyScript.runGate` beside the existing OS-authority policy block (L692-704).
 
 ### M5. Conformance laws in the fixture sweep
 
-[🗣️dsl/🧪️fixture-sweep/🦀️component.rs](🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/🧪️fixture-sweep/🦀️component.rs) already fans in every artifact document type and walks `📚️examples/**`, but only checks DSL text round-trip and skips op/pack/spr. Extend its registry with:
+[🗣️dsl/🧪️fixture-sweep/🦀️.rs](🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/🧪️fixture-sweep/🦀️.rs) already fans in every artifact document type and walks `📚️examples/**`, but only checks DSL text round-trip and skips op/pack/spr. Extend its registry with:
 
 1. **Grammar conformance** — the facet's `Recognizer` accepts every dsl/op/diff example, and accepts `print_dsl(parse_dsl(example))` (agreement with the real parser, not just the shipped text).
 2. **Production coverage** — every production in the spec is exercised by at least one example.

@@ -6,7 +6,7 @@ import Ajv from "ajv";
 import stableStringify from "fast-json-stable-stringify";
 import { parse as parseJson, type ParseError } from "jsonc-parser";
 import ts from "typescript";
-import * as discovery from "../../🔍️discovery/🟦️component.ts";
+import * as discovery from "../../🔍️discovery/🟦️.ts";
 
 const libraryRoot = resolve(import.meta.dir, "../.."), root = resolve(libraryRoot, "../../../../..");
 const vector = JSON.parse(readFileSync(join(import.meta.dir, "🔣️.json"), "utf8"));
@@ -229,7 +229,7 @@ test("reviewed README fixture bytes satisfy the selected pure authority without 
 });
 
 test("current revision parser and authority contain no filesystem process or catalog-loader calls", () => {
-  const path = join(libraryRoot, "🔍️discovery/🟦️component.ts"), source = readFileSync(path, "utf8"), tree = ts.createSourceFile(path, source, ts.ScriptTarget.Latest, true);
+  const path = join(libraryRoot, "🔍️discovery/🟦️.ts"), source = readFileSync(path, "utf8"), tree = ts.createSourceFile(path, source, ts.ScriptTarget.Latest, true);
   const names = new Set(["parseSemanticOwnedCurrentSourceRevisions", "semanticExactOwnedFileCurrentPreimageAuthority", "semanticOwnedCurrentRevisionCanonical", "exactOwnerPath"]);
   const declarations = tree.statements.filter((node) => ts.isFunctionDeclaration(node) && names.has(node.name?.text ?? ""));
   expect(declarations).toHaveLength(4);
@@ -245,7 +245,7 @@ test("current revision parser and authority contain no filesystem process or cat
 });
 
 test("current revision exact helper extraction has no strict compiler diagnostics", () => {
-  const path = join(libraryRoot, "🔍️discovery/🟦️component.ts"), source = readFileSync(path, "utf8"), tree = ts.createSourceFile(path, source, ts.ScriptTarget.Latest, true);
+  const path = join(libraryRoot, "🔍️discovery/🟦️.ts"), source = readFileSync(path, "utf8"), tree = ts.createSourceFile(path, source, ts.ScriptTarget.Latest, true);
   const names = new Set(["SemanticOwnedCurrentSourceRevision", "SemanticOwnedCurrentSourceExpectation", "SemanticOwnedCurrentSourcePreimageResult", "SemanticExactOwnedFileProjectionContract", "SemanticOwnedDocumentCorrection", "SemanticExactOwnedFileCase", "SemanticExactOwnedFileCatalog", "parseSemanticOwnedCurrentSourceRevisions", "semanticExactOwnedFileCurrentPreimageAuthority", "semanticOwnedCurrentRevisionCanonical", "exactOwnerPath"]);
   const declarations = tree.statements.filter((node) => (ts.isFunctionDeclaration(node) || ts.isInterfaceDeclaration(node)) && names.has(node.name?.text ?? ""));
   expect(declarations).toHaveLength(names.size);

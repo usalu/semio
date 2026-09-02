@@ -1,0 +1,34 @@
+syntax = "proto3";
+// 🧬️ SemioTableArtifact schema — real facet mirror of the Rust `🦀️.rs` sibling.
+package semio.s_stdio_semio_table.artifact;
+
+enum SemioTableCellKind {
+  NULL = 0;
+  BOOL = 1;
+  INT = 2;
+  FLOAT = 3;
+  STR = 4;
+  BYTES = 5;
+}
+message SemioTableColumn {
+  string name = 1;
+  SemioTableCellKind kind = 2;
+}
+message SemioValue {
+  oneof kind {
+    bool is_null = 1;
+    bool bool_value = 2;
+    string int_value = 3;
+    string float_lexeme = 4;
+    string str_value = 5;
+    bytes bytes_value = 6;
+  }
+}
+message SemioTableRow {
+  repeated SemioValue cells = 1;
+}
+message SemioTableArtifact {
+  string schema = 1;
+  repeated SemioTableColumn columns = 2;
+  repeated SemioTableRow rows = 3;
+}

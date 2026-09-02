@@ -1,0 +1,13 @@
+syntax = "proto3";
+package stdio.jpg.mutation;
+import "📐️change-jfif-header/🛰️.proto";
+import "📊️replace-quant-table/🛰️.proto";
+import "📤️remove-quant-table/🛰️.proto";
+import "🌳️replace-huffman-table/🛰️.proto";
+import "🪓️remove-huffman-table/🛰️.proto";
+import "🔁️change-restart-interval/🛰️.proto";
+import "📥️insert-other-segment/🛰️.proto";
+import "🗑️remove-other-segment/🛰️.proto";
+import "🟪️replace-pixels/🛰️.proto";
+import "🎚️change-re-encode-quality/🛰️.proto";
+message JpgMutation { oneof mutation { ChangeJfifHeaderMutation change_jfif_header = 2; ReplaceQuantTableMutation replace_quant_table = 3; RemoveQuantTableMutation remove_quant_table = 4; ReplaceHuffmanTableMutation replace_huffman_table = 5; RemoveHuffmanTableMutation remove_huffman_table = 6; ChangeRestartIntervalMutation change_restart_interval = 7; InsertOtherSegmentMutation insert_other_segment = 8; RemoveOtherSegmentMutation remove_other_segment = 9; ReplacePixelsMutation replace_pixels = 10; ChangeReEncodeQualityMutation change_re_encode_quality = 11; } }

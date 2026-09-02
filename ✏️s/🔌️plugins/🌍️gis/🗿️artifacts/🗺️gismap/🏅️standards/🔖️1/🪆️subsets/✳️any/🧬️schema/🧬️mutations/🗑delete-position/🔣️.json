@@ -5,7 +5,7 @@
   "displayName": "Delete Position",
   "emoji": "🗑",
   "aggregateVariant": "DeletePosition",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": "delete-position",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

@@ -1,6 +1,6 @@
 //! 🏭️ Generates `survey-strip.las`, a small, deliberately varied, fully deterministic LAS 1.0
 //! point cloud — built entirely through the real `las` 0.11 crate's byte-exact `las::raw::{Header,
-//! Vlr, Point}` types (the same crate registered as `las-1-0-any-mutate` in `../../🧪️oracle/🔣️.json`),
+//! Vlr, Point}` types (the same crate registered as `las-1-0-any-mutate` in `../../🔣️oracle.json`),
 //! never through this repository's own `encode_las`. No wall-clock, no randomness: byte-for-byte
 //! reproducible on every run, which is what `test fixture reproduce` checks.
 //!

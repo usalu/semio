@@ -5,7 +5,7 @@ import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, 
 import { dirname, join } from "node:path";
 import { tmpdir } from "node:os";
 import { decodePackValue, encodePackValue } from "@semio-tech/framework-os";
-import { decodeOwnedZip, encodeOwnedZip } from "./🟦️zip.ts";
+import { decodeOwnedZip, encodeOwnedZip } from "./🟦️.ts";
 import {
   PLUGIN_HOST_SHIM_FILE,
   SHARD_WORKER_FILE,

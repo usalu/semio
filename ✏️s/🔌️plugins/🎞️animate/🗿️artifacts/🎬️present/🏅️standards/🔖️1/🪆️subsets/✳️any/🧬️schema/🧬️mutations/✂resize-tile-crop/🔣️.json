@@ -5,7 +5,7 @@
   "displayName": "Resize Tile Crop",
   "emoji": "✂",
   "aggregateVariant": "ResizeTileCrop",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": "resize-tile-crop",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

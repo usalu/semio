@@ -5,7 +5,7 @@
   "displayName": "Remove Entity",
   "emoji": "🗑",
   "aggregateVariant": "RemoveEntity",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": "remove-entity",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

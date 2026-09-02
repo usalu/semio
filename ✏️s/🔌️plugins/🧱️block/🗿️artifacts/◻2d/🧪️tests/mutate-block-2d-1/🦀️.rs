@@ -11,11 +11,11 @@
 //! phase never ran this subset's own implementation on anything. The subset shipped no test bridge
 //! to run it through — every other converted subset (`🗺️gismap`, `🏗️fem`, `🏔️gisterrain`) ships one.
 //! `block2d_mutation_report_json` was added to
-//! `../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs` in the same shape, and
+//! `../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs` in the same shape, and
 //! this adapter now drives it.
 //!
 //! **What is NOT asserted here, and why.** The `.dsl.semio` carrier law. This subset's
-//! `store::ArtifactDsl` impl is handwritten `async` (`📸️snapshot/🦀️component.rs`), and the generated
+//! `store::ArtifactDsl` impl is handwritten `async` (`📸️snapshot/🦀️.rs`), and the generated
 //! test host is synchronous, so `parse_dsl`/`print_dsl` are unreachable from a case adapter without
 //! an async bridge this conversion did not add. `identity-round-trip` therefore exercises the JSON
 //! codec on the real derived document and says so; the carrier gap is reported, not papered over.
@@ -24,7 +24,7 @@ use semio_repo_test_host::{parse_json, Adapter, Json};
 
 //#region 🔖️Kinds
 /// 🏷️ Mirrors `Block2dMutation::KINDS`
-/// (`../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs`) — duplicated, not
+/// (`../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs`) — duplicated, not
 /// imported, because the oracle-only build must not link the subject crate.
 const KINDS: &[&str] = &[
     "rename-node-kind",

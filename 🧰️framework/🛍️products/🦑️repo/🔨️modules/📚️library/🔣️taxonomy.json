@@ -692,7 +692,7 @@
   },
   "frozenCoordinateEvidenceContracts": {
     "readme-current-source-revision-input": {
-      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧪️readme-current-source-revision/🔣️.json",
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🔣️readme-current-source-revision.json",
       "sha256": "1dbd35594578a7e2ed00707686263004872c4b925e895b066d8f04ff4693ac58",
       "schemaVersion": 1,
       "coordinates": [
@@ -731,7 +731,7 @@
       ]
     },
     "remaining-package-purity-history-v1": {
-      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🧫️fixtures/🧪️remaining-package-purity-authority/🔣️.json",
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🧫️fixtures/🔣️remaining-package-purity-authority.json",
       "sha256": "49087f2dee618c3c8392ce3bc25c348af87d5380fe16523ed61ee6c02448f577",
       "schemaVersion": 1,
       "coordinates": [
@@ -1385,7 +1385,7 @@
       ]
     },
     "cad-draw-projection-vectors-v1": {
-      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🧫️fixtures/🧪️cad-draw-path-projection/🔣️.json",
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🧫️fixtures/🔣️cad-draw-path-projection.json",
       "sha256": "1410a74ccc87561fd4a4b91db7d503614fe21ddce8bc78dee923d8237820f3e0",
       "schemaVersion": 1,
       "coordinates": [
@@ -1416,7 +1416,7 @@
       ]
     },
     "readme-authored-correction-vector-v1": {
-      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/END-TO-END-TAXONOMY-NORMALIZATION/🧪️readme-authored-correction/🔣️.json",
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/END-TO-END-TAXONOMY-NORMALIZATION/🔣️readme-authored-correction.json",
       "sha256": "35db5a0ae52f6e4779453782708ee65efbda63e40439bc1124e022f78cd183b0",
       "schemaVersion": 1,
       "coordinates": [
@@ -1458,23 +1458,237 @@
     }
   },
   "fileKinds": {
-    "rust-source": {
-      "emoji": "🦀️",
+    "abnf": {
+      "emoji": "🔠️",
       "extensionChains": [
-        ".rs"
+        ".abnf"
+      ],
+      "role": "specification"
+    },
+    "absence-marker": {
+      "emoji": "🚫️",
+      "extensionChains": [
+        ".absent"
+      ],
+      "role": "marker"
+    },
+    "antlr": {
+      "emoji": "🅰️",
+      "extensionChains": [
+        ".g4"
+      ],
+      "role": "specification"
+    },
+    "archive": {
+      "emoji": "🗜️",
+      "extensionChains": [
+        ".zip"
+      ],
+      "role": "asset"
+    },
+    "assembly-source": {
+      "emoji": "🔧️",
+      "extensionChains": [
+        ".s"
       ],
       "role": "source"
     },
-    "typescript-source": {
-      "emoji": "🟦️",
+    "audio": {
+      "emoji": "🔊️",
       "extensionChains": [
-        ".ts",
-        ".tsx",
-        ".mts",
-        ".cts",
-        ".d.ts"
+        ".mp3",
+        ".wav"
+      ],
+      "role": "asset"
+    },
+    "badge-definition": {
+      "emoji": "🛡️",
+      "extensionChains": [
+        ".shields"
+      ],
+      "role": "asset"
+    },
+    "bcf-data": {
+      "emoji": "💬️",
+      "extensionChains": [
+        ".bcf"
+      ],
+      "role": "asset"
+    },
+    "binary": {
+      "emoji": "💾️",
+      "extensionChains": [
+        ".bin"
+      ],
+      "role": "asset"
+    },
+    "bmp": {
+      "emoji": "🖼️",
+      "extensionChains": [
+        ".bmp"
+      ],
+      "role": "asset"
+    },
+    "building-model": {
+      "emoji": "🏗️",
+      "extensionChains": [
+        ".ifc"
+      ],
+      "role": "asset"
+    },
+    "c-source": {
+      "emoji": "🔧️",
+      "extensionChains": [
+        ".c"
       ],
       "role": "source"
+    },
+    "cad-source-model": {
+      "emoji": "📐️",
+      "extensionChains": [
+        ".3dm",
+        ".stp",
+        ".step"
+      ],
+      "role": "asset"
+    },
+    "cpp-source": {
+      "emoji": "➕️",
+      "extensionChains": [
+        ".cc",
+        ".cpp",
+        ".cxx"
+      ],
+      "role": "source"
+    },
+    "css": {
+      "emoji": "🎨️",
+      "extensionChains": [
+        ".css"
+      ],
+      "role": "asset"
+    },
+    "cypher": {
+      "emoji": "🕸️",
+      "extensionChains": [
+        ".cypher"
+      ],
+      "role": "source"
+    },
+    "deflate-data": {
+      "emoji": "🗜️",
+      "extensionChains": [
+        ".zz"
+      ],
+      "role": "asset"
+    },
+    "desktop-entry": {
+      "emoji": "🖥️",
+      "extensionChains": [
+        ".desktop"
+      ],
+      "role": "configuration"
+    },
+    "diagnostic": {
+      "emoji": "🚨️",
+      "extensionChains": [
+        ".err",
+        ".stderr",
+        ".stdout",
+        ".diff",
+        ".patch"
+      ],
+      "role": "test"
+    },
+    "dotnet-project": {
+      "emoji": "🔷️",
+      "extensionChains": [
+        ".csproj",
+        ".sln"
+      ],
+      "role": "configuration"
+    },
+    "dotnet-source": {
+      "emoji": "🔷️",
+      "extensionChains": [
+        ".cs"
+      ],
+      "role": "source"
+    },
+    "drawing-2d-model": {
+      "emoji": "🖊️",
+      "extensionChains": [
+        ".dxf",
+        ".dwg"
+      ],
+      "role": "asset"
+    },
+    "ebnf": {
+      "emoji": "🔤️",
+      "extensionChains": [
+        ".ebnf"
+      ],
+      "role": "specification"
+    },
+    "environment": {
+      "emoji": "🌱️",
+      "extensionChains": [
+        ".env"
+      ],
+      "role": "configuration"
+    },
+    "font": {
+      "emoji": "🔤️",
+      "extensionChains": [
+        ".ttf",
+        ".otf",
+        ".woff",
+        ".woff2"
+      ],
+      "role": "asset"
+    },
+    "gherkin-feature": {
+      "emoji": "🥒️",
+      "extensionChains": [
+        ".feature"
+      ],
+      "role": "test"
+    },
+    "go-source": {
+      "emoji": "🐹️",
+      "extensionChains": [
+        ".go"
+      ],
+      "role": "source"
+    },
+    "grammar-semio": {
+      "emoji": "📖️",
+      "extensionChains": [
+        ".grammar.semio"
+      ],
+      "role": "specification"
+    },
+    "graphql": {
+      "emoji": "🔗️",
+      "extensionChains": [
+        ".graphql"
+      ],
+      "role": "schema"
+    },
+    "grasshopper": {
+      "emoji": "🦗️",
+      "extensionChains": [
+        ".gh"
+      ],
+      "role": "asset"
+    },
+    "html": {
+      "emoji": "🌐️",
+      "extensionChains": [
+        ".html",
+        ".htm"
+      ],
+      "role": "configuration"
     },
     "javascript-source": {
       "emoji": "🟨️",
@@ -1485,42 +1699,101 @@
       ],
       "role": "source"
     },
-    "go-source": {
-      "emoji": "🐹️",
+    "json": {
+      "emoji": "🔣️",
       "extensionChains": [
-        ".go"
+        ".json"
       ],
-      "role": "source"
+      "role": "schema"
     },
-    "python-source": {
-      "emoji": "🐍️",
+    "json-expect": {
+      "emoji": "🔣️",
       "extensionChains": [
-        ".py"
+        ".expect.json"
       ],
-      "role": "source"
+      "role": "schema"
     },
-    "dotnet-source": {
-      "emoji": "🔷️",
+    "json-fixture": {
+      "emoji": "🔣️",
       "extensionChains": [
-        ".cs"
+        ".fixture.json"
       ],
-      "role": "source"
+      "role": "schema"
     },
-    "c-source": {
-      "emoji": "🔧️",
+    "json-lines": {
+      "emoji": "🧾️",
       "extensionChains": [
-        ".c"
+        ".jsonl"
       ],
-      "role": "source"
+      "role": "asset"
     },
-    "cpp-source": {
-      "emoji": "➕️",
+    "json-patch-fixture": {
+      "emoji": "🔣️",
       "extensionChains": [
-        ".cc",
-        ".cpp",
-        ".cxx"
+        ".patch.json"
       ],
-      "role": "source"
+      "role": "schema"
+    },
+    "json-schema": {
+      "emoji": "🔣️",
+      "extensionChains": [
+        ".schema.json"
+      ],
+      "role": "schema"
+    },
+    "json-snapshot": {
+      "emoji": "🔣️",
+      "extensionChains": [
+        ".snapshot.json"
+      ],
+      "role": "schema"
+    },
+    "json-with-comments": {
+      "emoji": "⚙️",
+      "extensionChains": [
+        ".jsonc"
+      ],
+      "role": "configuration"
+    },
+    "kaitai": {
+      "emoji": "🥋️",
+      "extensionChains": [
+        ".ksy"
+      ],
+      "role": "specification"
+    },
+    "lock": {
+      "emoji": "🔒️",
+      "extensionChains": [
+        ".lock"
+      ],
+      "role": "configuration"
+    },
+    "map-data": {
+      "emoji": "🗺️",
+      "extensionChains": [
+        ".pbf"
+      ],
+      "role": "asset"
+    },
+    "markdown": {
+      "emoji": "📝️",
+      "extensionChains": [
+        ".md"
+      ],
+      "role": "documentation"
+    },
+    "mesh-model": {
+      "emoji": "🧊️",
+      "extensionChains": [
+        ".glb",
+        ".gltf",
+        ".obj",
+        ".stl",
+        ".ply",
+        ".las"
+      ],
+      "role": "asset"
     },
     "native-header": {
       "emoji": "📐️",
@@ -1532,136 +1805,10 @@
       ],
       "role": "source"
     },
-    "assembly-source": {
-      "emoji": "🔧️",
+    "pdf": {
+      "emoji": "📕️",
       "extensionChains": [
-        ".s"
-      ],
-      "role": "source"
-    },
-    "json": {
-      "emoji": "🔣️",
-      "extensionChains": [
-        ".json"
-      ],
-      "role": "schema"
-    },
-    "json-with-comments": {
-      "emoji": "⚙️",
-      "extensionChains": [
-        ".jsonc"
-      ],
-      "role": "configuration"
-    },
-    "json-lines": {
-      "emoji": "🧾️",
-      "extensionChains": [
-        ".jsonl"
-      ],
-      "role": "asset"
-    },
-    "gherkin-feature": {
-      "emoji": "🥒️",
-      "extensionChains": [
-        ".feature"
-      ],
-      "role": "test"
-    },
-    "grammar-semio": {
-      "emoji": "📖️",
-      "extensionChains": [
-        ".grammar.semio"
-      ],
-      "role": "specification"
-    },
-    "protocol-semio": {
-      "emoji": "📡️",
-      "extensionChains": [
-        ".protocol.semio"
-      ],
-      "role": "specification"
-    },
-    "ebnf": {
-      "emoji": "🔤️",
-      "extensionChains": [
-        ".ebnf"
-      ],
-      "role": "specification"
-    },
-    "antlr": {
-      "emoji": "🅰️",
-      "extensionChains": [
-        ".g4"
-      ],
-      "role": "specification"
-    },
-    "graphql": {
-      "emoji": "🔗️",
-      "extensionChains": [
-        ".graphql"
-      ],
-      "role": "schema"
-    },
-    "protobuf": {
-      "emoji": "🛰️",
-      "extensionChains": [
-        ".proto"
-      ],
-      "role": "schema"
-    },
-    "wit": {
-      "emoji": "📜️",
-      "extensionChains": [
-        ".wit"
-      ],
-      "role": "schema"
-    },
-    "abnf": {
-      "emoji": "🔠️",
-      "extensionChains": [
-        ".abnf"
-      ],
-      "role": "specification"
-    },
-    "kaitai": {
-      "emoji": "🥋️",
-      "extensionChains": [
-        ".ksy"
-      ],
-      "role": "specification"
-    },
-    "spicy": {
-      "emoji": "🌶️",
-      "extensionChains": [
-        ".spicy"
-      ],
-      "role": "specification"
-    },
-    "semio-data": {
-      "emoji": "🧬️",
-      "extensionChains": [
-        ".semio"
-      ],
-      "role": "asset"
-    },
-    "semio-dsl": {
-      "emoji": "🗣️",
-      "extensionChains": [
-        ".dsl.semio"
-      ],
-      "role": "asset"
-    },
-    "semio-command": {
-      "emoji": "🎮️",
-      "extensionChains": [
-        ".cmd.semio"
-      ],
-      "role": "asset"
-    },
-    "markdown": {
-      "emoji": "📝️",
-      "extensionChains": [
-        ".md"
+        ".pdf"
       ],
       "role": "documentation"
     },
@@ -1672,48 +1819,12 @@
       ],
       "role": "documentation"
     },
-    "toml": {
-      "emoji": "⚙️",
+    "png": {
+      "emoji": "🖼️",
       "extensionChains": [
-        ".toml"
+        ".png"
       ],
-      "role": "configuration"
-    },
-    "yaml": {
-      "emoji": "⚙️",
-      "extensionChains": [
-        ".yml",
-        ".yaml"
-      ],
-      "role": "configuration"
-    },
-    "xml": {
-      "emoji": "🏷️",
-      "extensionChains": [
-        ".xml"
-      ],
-      "role": "configuration"
-    },
-    "environment": {
-      "emoji": "🌱️",
-      "extensionChains": [
-        ".env"
-      ],
-      "role": "configuration"
-    },
-    "lock": {
-      "emoji": "🔒️",
-      "extensionChains": [
-        ".lock"
-      ],
-      "role": "configuration"
-    },
-    "shell": {
-      "emoji": "🐚️",
-      "extensionChains": [
-        ".sh"
-      ],
-      "role": "source"
+      "role": "asset"
     },
     "powershell": {
       "emoji": "🔵️",
@@ -1722,56 +1833,40 @@
       ],
       "role": "source"
     },
-    "swift-source": {
-      "emoji": "🐦️",
+    "presentation": {
+      "emoji": "📽️",
       "extensionChains": [
-        ".swift"
+        ".pptx"
+      ],
+      "role": "documentation"
+    },
+    "property-list": {
+      "emoji": "⚙️",
+      "extensionChains": [
+        ".plist"
+      ],
+      "role": "configuration"
+    },
+    "protobuf": {
+      "emoji": "🛰️",
+      "extensionChains": [
+        ".proto"
+      ],
+      "role": "schema"
+    },
+    "protocol-semio": {
+      "emoji": "📡️",
+      "extensionChains": [
+        ".protocol.semio"
+      ],
+      "role": "specification"
+    },
+    "python-source": {
+      "emoji": "🐍️",
+      "extensionChains": [
+        ".py"
       ],
       "role": "source"
-    },
-    "dotnet-project": {
-      "emoji": "🔷️",
-      "extensionChains": [
-        ".csproj",
-        ".sln"
-      ],
-      "role": "configuration"
-    },
-    "html": {
-      "emoji": "🌐️",
-      "extensionChains": [
-        ".html",
-        ".htm"
-      ],
-      "role": "configuration"
-    },
-    "css": {
-      "emoji": "🎨️",
-      "extensionChains": [
-        ".css"
-      ],
-      "role": "asset"
-    },
-    "svg": {
-      "emoji": "🔣️",
-      "extensionChains": [
-        ".svg"
-      ],
-      "role": "asset"
-    },
-    "png": {
-      "emoji": "🖼️",
-      "extensionChains": [
-        ".png"
-      ],
-      "role": "asset"
-    },
-    "bmp": {
-      "emoji": "🖼️",
-      "extensionChains": [
-        ".bmp"
-      ],
-      "role": "asset"
     },
     "raster-image": {
       "emoji": "🖼️",
@@ -1788,52 +1883,76 @@
       ],
       "role": "asset"
     },
-    "font": {
-      "emoji": "🔤️",
+    "rhino-lock": {
+      "emoji": "🔒️",
       "extensionChains": [
-        ".ttf",
-        ".otf",
-        ".woff",
-        ".woff2"
+        ".rhl"
+      ],
+      "role": "configuration"
+    },
+    "rust-source": {
+      "emoji": "🦀️",
+      "extensionChains": [
+        ".rs"
+      ],
+      "role": "source"
+    },
+    "semio-command": {
+      "emoji": "🎮️",
+      "extensionChains": [
+        ".cmd.semio"
       ],
       "role": "asset"
     },
-    "video": {
-      "emoji": "🎬️",
+    "semio-data": {
+      "emoji": "🧬️",
       "extensionChains": [
-        ".mp4",
-        ".avi"
+        ".semio"
       ],
       "role": "asset"
     },
-    "audio": {
-      "emoji": "🔊️",
+    "semio-descriptor": {
+      "emoji": "🛂️",
       "extensionChains": [
-        ".mp3",
-        ".wav"
+        ".descriptor.semio"
       ],
       "role": "asset"
     },
-    "pdf": {
-      "emoji": "📕️",
+    "semio-dsl": {
+      "emoji": "🗣️",
       "extensionChains": [
-        ".pdf"
+        ".dsl.semio"
       ],
-      "role": "documentation"
+      "role": "asset"
     },
-    "word-document": {
-      "emoji": "📄️",
+    "semio-pack": {
+      "emoji": "📦️",
       "extensionChains": [
-        ".docx"
+        ".spk"
       ],
-      "role": "documentation"
+      "role": "asset"
     },
-    "presentation": {
-      "emoji": "📽️",
+    "shell": {
+      "emoji": "🐚️",
       "extensionChains": [
-        ".pptx"
+        ".sh"
       ],
-      "role": "documentation"
+      "role": "source"
+    },
+    "space-collection": {
+      "emoji": "🪐️",
+      "extensionChains": [
+        ".space",
+        ".collection"
+      ],
+      "role": "asset"
+    },
+    "spicy": {
+      "emoji": "🌶️",
+      "extensionChains": [
+        ".spicy"
+      ],
+      "role": "specification"
     },
     "spreadsheet": {
       "emoji": "📊️",
@@ -1841,6 +1960,34 @@
         ".xlsx"
       ],
       "role": "documentation"
+    },
+    "sql": {
+      "emoji": "🗄️",
+      "extensionChains": [
+        ".sql"
+      ],
+      "role": "source"
+    },
+    "sqlite-database": {
+      "emoji": "🗄️",
+      "extensionChains": [
+        ".db"
+      ],
+      "role": "asset"
+    },
+    "svg": {
+      "emoji": "🔣️",
+      "extensionChains": [
+        ".svg"
+      ],
+      "role": "asset"
+    },
+    "swift-source": {
+      "emoji": "🐦️",
+      "extensionChains": [
+        ".swift"
+      ],
+      "role": "source"
     },
     "table-data": {
       "emoji": "📊️",
@@ -1860,24 +2007,36 @@
       ],
       "role": "documentation"
     },
-    "sql": {
-      "emoji": "🗄️",
+    "textual-dsl": {
+      "emoji": "🗣️",
       "extensionChains": [
-        ".sql"
+        ".dsl"
+      ],
+      "role": "specification"
+    },
+    "toml": {
+      "emoji": "⚙️",
+      "extensionChains": [
+        ".toml"
+      ],
+      "role": "configuration"
+    },
+    "typescript-source": {
+      "emoji": "🟦️",
+      "extensionChains": [
+        ".ts",
+        ".tsx",
+        ".mts",
+        ".cts",
+        ".d.ts"
       ],
       "role": "source"
     },
-    "cypher": {
-      "emoji": "🕸️",
+    "video": {
+      "emoji": "🎬️",
       "extensionChains": [
-        ".cypher"
-      ],
-      "role": "source"
-    },
-    "map-data": {
-      "emoji": "🗺️",
-      "extensionChains": [
-        ".pbf"
+        ".mp4",
+        ".avi"
       ],
       "role": "asset"
     },
@@ -1895,247 +2054,90 @@
       ],
       "role": "asset"
     },
-    "archive": {
-      "emoji": "🗜️",
+    "wit": {
+      "emoji": "📜️",
       "extensionChains": [
-        ".zip"
+        ".wit"
       ],
-      "role": "asset"
+      "role": "schema"
     },
-    "binary": {
-      "emoji": "💾️",
+    "word-document": {
+      "emoji": "📄️",
       "extensionChains": [
-        ".bin"
+        ".docx"
       ],
-      "role": "asset"
+      "role": "documentation"
     },
-    "badge-definition": {
-      "emoji": "🛡️",
+    "xml": {
+      "emoji": "🏷️",
       "extensionChains": [
-        ".shields"
-      ],
-      "role": "asset"
-    },
-    "textual-dsl": {
-      "emoji": "🗣️",
-      "extensionChains": [
-        ".dsl"
-      ],
-      "role": "specification"
-    },
-    "semio-pack": {
-      "emoji": "📦️",
-      "extensionChains": [
-        ".spk"
-      ],
-      "role": "asset"
-    },
-    "grasshopper": {
-      "emoji": "🦗️",
-      "extensionChains": [
-        ".gh"
-      ],
-      "role": "asset"
-    },
-    "deflate-data": {
-      "emoji": "🗜️",
-      "extensionChains": [
-        ".zz"
-      ],
-      "role": "asset"
-    },
-    "bcf-data": {
-      "emoji": "💬️",
-      "extensionChains": [
-        ".bcf"
-      ],
-      "role": "asset"
-    },
-    "space-collection": {
-      "emoji": "🪐️",
-      "extensionChains": [
-        ".space",
-        ".collection"
-      ],
-      "role": "asset"
-    },
-    "sqlite-database": {
-      "emoji": "🗄️",
-      "extensionChains": [
-        ".db"
-      ],
-      "role": "asset"
-    },
-    "desktop-entry": {
-      "emoji": "🖥️",
-      "extensionChains": [
-        ".desktop"
+        ".xml"
       ],
       "role": "configuration"
     },
-    "property-list": {
+    "yaml": {
       "emoji": "⚙️",
       "extensionChains": [
-        ".plist"
+        ".yml",
+        ".yaml"
       ],
       "role": "configuration"
-    },
-    "rhino-lock": {
-      "emoji": "🔒️",
-      "extensionChains": [
-        ".rhl"
-      ],
-      "role": "configuration"
-    },
-    "diagnostic": {
-      "emoji": "🚨️",
-      "extensionChains": [
-        ".err",
-        ".stderr",
-        ".stdout",
-        ".diff",
-        ".patch"
-      ],
-      "role": "test"
-    },
-    "absence-marker": {
-      "emoji": "🚫️",
-      "extensionChains": [
-        ".absent"
-      ],
-      "role": "marker"
-    },
-    "cad-source-model": {
-      "emoji": "📐️",
-      "extensionChains": [
-        ".3dm",
-        ".stp",
-        ".step"
-      ],
-      "role": "asset"
-    },
-    "mesh-model": {
-      "emoji": "🧊️",
-      "extensionChains": [
-        ".glb",
-        ".gltf",
-        ".obj",
-        ".stl",
-        ".ply",
-        ".las"
-      ],
-      "role": "asset"
-    },
-    "drawing-2d-model": {
-      "emoji": "🖊️",
-      "extensionChains": [
-        ".dxf",
-        ".dwg"
-      ],
-      "role": "asset"
-    },
-    "building-model": {
-      "emoji": "🏗️",
-      "extensionChains": [
-        ".ifc"
-      ],
-      "role": "asset"
-    },
-    "json-schema": {
-      "emoji": "🔣️",
-      "extensionChains": [
-        ".schema.json"
-      ],
-      "role": "schema"
-    },
-    "json-expect": {
-      "emoji": "🔣️",
-      "extensionChains": [
-        ".expect.json"
-      ],
-      "role": "schema"
-    },
-    "json-snapshot": {
-      "emoji": "🔣️",
-      "extensionChains": [
-        ".snapshot.json"
-      ],
-      "role": "schema"
-    },
-    "json-patch-fixture": {
-      "emoji": "🔣️",
-      "extensionChains": [
-        ".patch.json"
-      ],
-      "role": "schema"
-    },
-    "json-fixture": {
-      "emoji": "🔣️",
-      "extensionChains": [
-        ".fixture.json"
-      ],
-      "role": "schema"
     }
   },
   "fileKindResolutionRules": {
-    "physical-rust-source-rs": {
-      "extensionChain": ".rs",
-      "fileKindId": "rust-source",
+    "physical-abnf-abnf": {
+      "extensionChain": ".abnf",
+      "fileKindId": "abnf",
       "priority": 0
     },
-    "physical-typescript-source-ts": {
-      "extensionChain": ".ts",
-      "fileKindId": "typescript-source",
+    "physical-absence-marker-absent": {
+      "extensionChain": ".absent",
+      "fileKindId": "absence-marker",
       "priority": 0
     },
-    "physical-typescript-source-tsx": {
-      "extensionChain": ".tsx",
-      "fileKindId": "typescript-source",
+    "physical-antlr-g4": {
+      "extensionChain": ".g4",
+      "fileKindId": "antlr",
       "priority": 0
     },
-    "physical-typescript-source-mts": {
-      "extensionChain": ".mts",
-      "fileKindId": "typescript-source",
+    "physical-archive-zip": {
+      "extensionChain": ".zip",
+      "fileKindId": "archive",
       "priority": 0
     },
-    "physical-typescript-source-cts": {
-      "extensionChain": ".cts",
-      "fileKindId": "typescript-source",
+    "physical-assembly-source-s": {
+      "extensionChain": ".s",
+      "fileKindId": "assembly-source",
       "priority": 0
     },
-    "physical-typescript-source-d-ts": {
-      "extensionChain": ".d.ts",
-      "fileKindId": "typescript-source",
+    "physical-audio-mp3": {
+      "extensionChain": ".mp3",
+      "fileKindId": "audio",
       "priority": 0
     },
-    "physical-javascript-source-js": {
-      "extensionChain": ".js",
-      "fileKindId": "javascript-source",
+    "physical-audio-wav": {
+      "extensionChain": ".wav",
+      "fileKindId": "audio",
       "priority": 0
     },
-    "physical-javascript-source-mjs": {
-      "extensionChain": ".mjs",
-      "fileKindId": "javascript-source",
+    "physical-badge-definition-shields": {
+      "extensionChain": ".shields",
+      "fileKindId": "badge-definition",
       "priority": 0
     },
-    "physical-javascript-source-cjs": {
-      "extensionChain": ".cjs",
-      "fileKindId": "javascript-source",
+    "physical-bcf-data-bcf": {
+      "extensionChain": ".bcf",
+      "fileKindId": "bcf-data",
       "priority": 0
     },
-    "physical-go-source-go": {
-      "extensionChain": ".go",
-      "fileKindId": "go-source",
+    "physical-binary-bin": {
+      "extensionChain": ".bin",
+      "fileKindId": "binary",
       "priority": 0
     },
-    "physical-python-source-py": {
-      "extensionChain": ".py",
-      "fileKindId": "python-source",
-      "priority": 0
-    },
-    "physical-dotnet-source-cs": {
-      "extensionChain": ".cs",
-      "fileKindId": "dotnet-source",
+    "physical-bmp-bmp": {
+      "extensionChain": ".bmp",
+      "fileKindId": "bmp",
       "priority": 0
     },
     "physical-c-source-c": {
@@ -2158,6 +2160,266 @@
       "fileKindId": "cpp-source",
       "priority": 0
     },
+    "physical-css-css": {
+      "extensionChain": ".css",
+      "fileKindId": "css",
+      "priority": 0
+    },
+    "physical-cypher-cypher": {
+      "extensionChain": ".cypher",
+      "fileKindId": "cypher",
+      "priority": 0
+    },
+    "physical-deflate-data-zz": {
+      "extensionChain": ".zz",
+      "fileKindId": "deflate-data",
+      "priority": 0
+    },
+    "physical-desktop-entry-desktop": {
+      "extensionChain": ".desktop",
+      "fileKindId": "desktop-entry",
+      "priority": 0
+    },
+    "physical-diagnostic-diff": {
+      "extensionChain": ".diff",
+      "fileKindId": "diagnostic",
+      "priority": 0
+    },
+    "physical-diagnostic-err": {
+      "extensionChain": ".err",
+      "fileKindId": "diagnostic",
+      "priority": 0
+    },
+    "physical-diagnostic-patch": {
+      "extensionChain": ".patch",
+      "fileKindId": "diagnostic",
+      "priority": 0
+    },
+    "physical-diagnostic-stderr": {
+      "extensionChain": ".stderr",
+      "fileKindId": "diagnostic",
+      "priority": 0
+    },
+    "physical-diagnostic-stdout": {
+      "extensionChain": ".stdout",
+      "fileKindId": "diagnostic",
+      "priority": 0
+    },
+    "physical-dotnet-project-csproj": {
+      "extensionChain": ".csproj",
+      "fileKindId": "dotnet-project",
+      "priority": 0
+    },
+    "physical-dotnet-project-sln": {
+      "extensionChain": ".sln",
+      "fileKindId": "dotnet-project",
+      "priority": 0
+    },
+    "physical-dotnet-source-cs": {
+      "extensionChain": ".cs",
+      "fileKindId": "dotnet-source",
+      "priority": 0
+    },
+    "physical-ebnf-ebnf": {
+      "extensionChain": ".ebnf",
+      "fileKindId": "ebnf",
+      "priority": 0
+    },
+    "physical-environment-env": {
+      "extensionChain": ".env",
+      "fileKindId": "environment",
+      "priority": 0
+    },
+    "physical-font-otf": {
+      "extensionChain": ".otf",
+      "fileKindId": "font",
+      "priority": 0
+    },
+    "physical-font-ttf": {
+      "extensionChain": ".ttf",
+      "fileKindId": "font",
+      "priority": 0
+    },
+    "physical-font-woff": {
+      "extensionChain": ".woff",
+      "fileKindId": "font",
+      "priority": 0
+    },
+    "physical-font-woff2": {
+      "extensionChain": ".woff2",
+      "fileKindId": "font",
+      "priority": 0
+    },
+    "physical-gherkin-feature-feature": {
+      "extensionChain": ".feature",
+      "fileKindId": "gherkin-feature",
+      "priority": 0
+    },
+    "physical-go-source-go": {
+      "extensionChain": ".go",
+      "fileKindId": "go-source",
+      "priority": 0
+    },
+    "physical-grammar-semio-grammar-semio": {
+      "extensionChain": ".grammar.semio",
+      "fileKindId": "grammar-semio",
+      "priority": 0
+    },
+    "physical-graphql-graphql": {
+      "extensionChain": ".graphql",
+      "fileKindId": "graphql",
+      "priority": 0
+    },
+    "physical-grasshopper-gh": {
+      "extensionChain": ".gh",
+      "fileKindId": "grasshopper",
+      "priority": 0
+    },
+    "physical-html-htm": {
+      "extensionChain": ".htm",
+      "fileKindId": "html",
+      "priority": 0
+    },
+    "physical-html-html": {
+      "extensionChain": ".html",
+      "fileKindId": "html",
+      "priority": 0
+    },
+    "physical-javascript-source-cjs": {
+      "extensionChain": ".cjs",
+      "fileKindId": "javascript-source",
+      "priority": 0
+    },
+    "physical-javascript-source-js": {
+      "extensionChain": ".js",
+      "fileKindId": "javascript-source",
+      "priority": 0
+    },
+    "physical-javascript-source-mjs": {
+      "extensionChain": ".mjs",
+      "fileKindId": "javascript-source",
+      "priority": 0
+    },
+    "physical-json-expect-json": {
+      "extensionChain": ".expect.json",
+      "fileKindId": "json-expect",
+      "priority": 0
+    },
+    "physical-json-fixture-json": {
+      "extensionChain": ".fixture.json",
+      "fileKindId": "json-fixture",
+      "priority": 0
+    },
+    "physical-json-json": {
+      "extensionChain": ".json",
+      "fileKindId": "json",
+      "priority": 0
+    },
+    "physical-json-lines-jsonl": {
+      "extensionChain": ".jsonl",
+      "fileKindId": "json-lines",
+      "priority": 0
+    },
+    "physical-json-patch-fixture-json": {
+      "extensionChain": ".patch.json",
+      "fileKindId": "json-patch-fixture",
+      "priority": 0
+    },
+    "physical-json-schema-json": {
+      "extensionChain": ".schema.json",
+      "fileKindId": "json-schema",
+      "priority": 0
+    },
+    "physical-json-snapshot-json": {
+      "extensionChain": ".snapshot.json",
+      "fileKindId": "json-snapshot",
+      "priority": 0
+    },
+    "physical-json-with-comments-jsonc": {
+      "extensionChain": ".jsonc",
+      "fileKindId": "json-with-comments",
+      "priority": 0
+    },
+    "physical-kaitai-ksy": {
+      "extensionChain": ".ksy",
+      "fileKindId": "kaitai",
+      "priority": 0
+    },
+    "physical-lock-lock": {
+      "extensionChain": ".lock",
+      "fileKindId": "lock",
+      "priority": 0
+    },
+    "physical-map-data-pbf": {
+      "extensionChain": ".pbf",
+      "fileKindId": "map-data",
+      "priority": 0
+    },
+    "physical-markdown-md": {
+      "extensionChain": ".md",
+      "fileKindId": "markdown",
+      "priority": 0
+    },
+    "physical-model-3d-3dm": {
+      "extensionChain": ".3dm",
+      "fileKindId": "cad-source-model",
+      "priority": 0
+    },
+    "physical-model-3d-dwg": {
+      "extensionChain": ".dwg",
+      "fileKindId": "drawing-2d-model",
+      "priority": 0
+    },
+    "physical-model-3d-dxf": {
+      "extensionChain": ".dxf",
+      "fileKindId": "drawing-2d-model",
+      "priority": 0
+    },
+    "physical-model-3d-glb": {
+      "extensionChain": ".glb",
+      "fileKindId": "mesh-model",
+      "priority": 0
+    },
+    "physical-model-3d-gltf": {
+      "extensionChain": ".gltf",
+      "fileKindId": "mesh-model",
+      "priority": 0
+    },
+    "physical-model-3d-ifc": {
+      "extensionChain": ".ifc",
+      "fileKindId": "building-model",
+      "priority": 0
+    },
+    "physical-model-3d-las": {
+      "extensionChain": ".las",
+      "fileKindId": "mesh-model",
+      "priority": 0
+    },
+    "physical-model-3d-obj": {
+      "extensionChain": ".obj",
+      "fileKindId": "mesh-model",
+      "priority": 0
+    },
+    "physical-model-3d-ply": {
+      "extensionChain": ".ply",
+      "fileKindId": "mesh-model",
+      "priority": 0
+    },
+    "physical-model-3d-step": {
+      "extensionChain": ".step",
+      "fileKindId": "cad-source-model",
+      "priority": 0
+    },
+    "physical-model-3d-stl": {
+      "extensionChain": ".stl",
+      "fileKindId": "mesh-model",
+      "priority": 0
+    },
+    "physical-model-3d-stp": {
+      "extensionChain": ".stp",
+      "fileKindId": "cad-source-model",
+      "priority": 0
+    },
     "physical-native-header-h": {
       "extensionChain": ".h",
       "fileKindId": "native-header",
@@ -2178,89 +2440,9 @@
       "fileKindId": "native-header",
       "priority": 0
     },
-    "physical-assembly-source-s": {
-      "extensionChain": ".s",
-      "fileKindId": "assembly-source",
-      "priority": 0
-    },
-    "physical-json-json": {
-      "extensionChain": ".json",
-      "fileKindId": "json",
-      "priority": 0
-    },
-    "physical-json-with-comments-jsonc": {
-      "extensionChain": ".jsonc",
-      "fileKindId": "json-with-comments",
-      "priority": 0
-    },
-    "physical-json-lines-jsonl": {
-      "extensionChain": ".jsonl",
-      "fileKindId": "json-lines",
-      "priority": 0
-    },
-    "physical-gherkin-feature-feature": {
-      "extensionChain": ".feature",
-      "fileKindId": "gherkin-feature",
-      "priority": 0
-    },
-    "physical-grammar-semio-grammar-semio": {
-      "extensionChain": ".grammar.semio",
-      "fileKindId": "grammar-semio",
-      "priority": 0
-    },
-    "physical-protocol-semio-protocol-semio": {
-      "extensionChain": ".protocol.semio",
-      "fileKindId": "protocol-semio",
-      "priority": 0
-    },
-    "physical-ebnf-ebnf": {
-      "extensionChain": ".ebnf",
-      "fileKindId": "ebnf",
-      "priority": 0
-    },
-    "physical-antlr-g4": {
-      "extensionChain": ".g4",
-      "fileKindId": "antlr",
-      "priority": 0
-    },
-    "physical-graphql-graphql": {
-      "extensionChain": ".graphql",
-      "fileKindId": "graphql",
-      "priority": 0
-    },
-    "physical-protobuf-proto": {
-      "extensionChain": ".proto",
-      "fileKindId": "protobuf",
-      "priority": 0
-    },
-    "physical-wit-wit": {
-      "extensionChain": ".wit",
-      "fileKindId": "wit",
-      "priority": 0
-    },
-    "physical-abnf-abnf": {
-      "extensionChain": ".abnf",
-      "fileKindId": "abnf",
-      "priority": 0
-    },
-    "physical-kaitai-ksy": {
-      "extensionChain": ".ksy",
-      "fileKindId": "kaitai",
-      "priority": 0
-    },
-    "physical-spicy-spicy": {
-      "extensionChain": ".spicy",
-      "fileKindId": "spicy",
-      "priority": 0
-    },
-    "physical-semio-data-semio": {
-      "extensionChain": ".semio",
-      "fileKindId": "semio-data",
-      "priority": 0
-    },
-    "physical-markdown-md": {
-      "extensionChain": ".md",
-      "fileKindId": "markdown",
+    "physical-pdf-pdf": {
+      "extensionChain": ".pdf",
+      "fileKindId": "pdf",
       "priority": 0
     },
     "physical-plain-text-txt": {
@@ -2268,39 +2450,9 @@
       "fileKindId": "plain-text",
       "priority": 0
     },
-    "physical-toml-toml": {
-      "extensionChain": ".toml",
-      "fileKindId": "toml",
-      "priority": 0
-    },
-    "physical-yaml-yml": {
-      "extensionChain": ".yml",
-      "fileKindId": "yaml",
-      "priority": 0
-    },
-    "physical-yaml-yaml": {
-      "extensionChain": ".yaml",
-      "fileKindId": "yaml",
-      "priority": 0
-    },
-    "physical-xml-xml": {
-      "extensionChain": ".xml",
-      "fileKindId": "xml",
-      "priority": 0
-    },
-    "physical-environment-env": {
-      "extensionChain": ".env",
-      "fileKindId": "environment",
-      "priority": 0
-    },
-    "physical-lock-lock": {
-      "extensionChain": ".lock",
-      "fileKindId": "lock",
-      "priority": 0
-    },
-    "physical-shell-sh": {
-      "extensionChain": ".sh",
-      "fileKindId": "shell",
+    "physical-png-png": {
+      "extensionChain": ".png",
+      "fileKindId": "png",
       "priority": 0
     },
     "physical-powershell-ps1": {
@@ -2308,63 +2460,38 @@
       "fileKindId": "powershell",
       "priority": 0
     },
-    "physical-swift-source-swift": {
-      "extensionChain": ".swift",
-      "fileKindId": "swift-source",
+    "physical-presentation-pptx": {
+      "extensionChain": ".pptx",
+      "fileKindId": "presentation",
       "priority": 0
     },
-    "physical-dotnet-project-csproj": {
-      "extensionChain": ".csproj",
-      "fileKindId": "dotnet-project",
+    "physical-property-list-plist": {
+      "extensionChain": ".plist",
+      "fileKindId": "property-list",
       "priority": 0
     },
-    "physical-dotnet-project-sln": {
-      "extensionChain": ".sln",
-      "fileKindId": "dotnet-project",
+    "physical-protobuf-proto": {
+      "extensionChain": ".proto",
+      "fileKindId": "protobuf",
       "priority": 0
     },
-    "physical-html-html": {
-      "extensionChain": ".html",
-      "fileKindId": "html",
+    "physical-protocol-semio-protocol-semio": {
+      "extensionChain": ".protocol.semio",
+      "fileKindId": "protocol-semio",
       "priority": 0
     },
-    "physical-html-htm": {
-      "extensionChain": ".htm",
-      "fileKindId": "html",
-      "priority": 0
-    },
-    "physical-css-css": {
-      "extensionChain": ".css",
-      "fileKindId": "css",
-      "priority": 0
-    },
-    "physical-svg-svg": {
-      "extensionChain": ".svg",
-      "fileKindId": "svg",
-      "priority": 0
-    },
-    "physical-png-png": {
-      "extensionChain": ".png",
-      "fileKindId": "png",
-      "priority": 0
-    },
-    "physical-bmp-bmp": {
-      "extensionChain": ".bmp",
-      "fileKindId": "bmp",
-      "priority": 0
-    },
-    "physical-raster-image-jpg": {
-      "extensionChain": ".jpg",
-      "fileKindId": "raster-image",
-      "priority": 0
-    },
-    "physical-raster-image-jpeg": {
-      "extensionChain": ".jpeg",
-      "fileKindId": "raster-image",
+    "physical-python-source-py": {
+      "extensionChain": ".py",
+      "fileKindId": "python-source",
       "priority": 0
     },
     "physical-raster-image-gif": {
       "extensionChain": ".gif",
+      "fileKindId": "raster-image",
+      "priority": 0
+    },
+    "physical-raster-image-hdr": {
+      "extensionChain": ".hdr",
       "fileKindId": "raster-image",
       "priority": 0
     },
@@ -2373,18 +2500,13 @@
       "fileKindId": "raster-image",
       "priority": 0
     },
-    "physical-raster-image-tiff": {
-      "extensionChain": ".tiff",
+    "physical-raster-image-jpeg": {
+      "extensionChain": ".jpeg",
       "fileKindId": "raster-image",
       "priority": 0
     },
-    "physical-raster-image-webp": {
-      "extensionChain": ".webp",
-      "fileKindId": "raster-image",
-      "priority": 0
-    },
-    "physical-raster-image-hdr": {
-      "extensionChain": ".hdr",
+    "physical-raster-image-jpg": {
+      "extensionChain": ".jpg",
       "fileKindId": "raster-image",
       "priority": 0
     },
@@ -2398,124 +2520,94 @@
       "fileKindId": "raster-image",
       "priority": 0
     },
-    "physical-font-ttf": {
-      "extensionChain": ".ttf",
-      "fileKindId": "font",
+    "physical-raster-image-tiff": {
+      "extensionChain": ".tiff",
+      "fileKindId": "raster-image",
       "priority": 0
     },
-    "physical-font-otf": {
-      "extensionChain": ".otf",
-      "fileKindId": "font",
+    "physical-raster-image-webp": {
+      "extensionChain": ".webp",
+      "fileKindId": "raster-image",
       "priority": 0
     },
-    "physical-font-woff": {
-      "extensionChain": ".woff",
-      "fileKindId": "font",
+    "physical-rhino-lock-rhl": {
+      "extensionChain": ".rhl",
+      "fileKindId": "rhino-lock",
       "priority": 0
     },
-    "physical-font-woff2": {
-      "extensionChain": ".woff2",
-      "fileKindId": "font",
+    "physical-rust-source-rs": {
+      "extensionChain": ".rs",
+      "fileKindId": "rust-source",
       "priority": 0
     },
-    "physical-model-3d-3dm": {
-      "extensionChain": ".3dm",
-      "fileKindId": "cad-source-model",
+    "physical-semio-command-cmd-semio": {
+      "extensionChain": ".cmd.semio",
+      "fileKindId": "semio-command",
       "priority": 0
     },
-    "physical-model-3d-glb": {
-      "extensionChain": ".glb",
-      "fileKindId": "mesh-model",
+    "physical-semio-data-semio": {
+      "extensionChain": ".semio",
+      "fileKindId": "semio-data",
       "priority": 0
     },
-    "physical-model-3d-gltf": {
-      "extensionChain": ".gltf",
-      "fileKindId": "mesh-model",
+    "physical-semio-descriptor-descriptor-semio": {
+      "extensionChain": ".descriptor.semio",
+      "fileKindId": "semio-descriptor",
       "priority": 0
     },
-    "physical-model-3d-obj": {
-      "extensionChain": ".obj",
-      "fileKindId": "mesh-model",
+    "physical-semio-dsl-dsl-semio": {
+      "extensionChain": ".dsl.semio",
+      "fileKindId": "semio-dsl",
       "priority": 0
     },
-    "physical-model-3d-ply": {
-      "extensionChain": ".ply",
-      "fileKindId": "mesh-model",
+    "physical-semio-pack-spk": {
+      "extensionChain": ".spk",
+      "fileKindId": "semio-pack",
       "priority": 0
     },
-    "physical-model-3d-stl": {
-      "extensionChain": ".stl",
-      "fileKindId": "mesh-model",
+    "physical-shell-sh": {
+      "extensionChain": ".sh",
+      "fileKindId": "shell",
       "priority": 0
     },
-    "physical-model-3d-dxf": {
-      "extensionChain": ".dxf",
-      "fileKindId": "drawing-2d-model",
+    "physical-space-collection-collection": {
+      "extensionChain": ".collection",
+      "fileKindId": "space-collection",
       "priority": 0
     },
-    "physical-model-3d-dwg": {
-      "extensionChain": ".dwg",
-      "fileKindId": "drawing-2d-model",
+    "physical-space-collection-space": {
+      "extensionChain": ".space",
+      "fileKindId": "space-collection",
       "priority": 0
     },
-    "physical-model-3d-ifc": {
-      "extensionChain": ".ifc",
-      "fileKindId": "building-model",
-      "priority": 0
-    },
-    "physical-model-3d-las": {
-      "extensionChain": ".las",
-      "fileKindId": "mesh-model",
-      "priority": 0
-    },
-    "physical-model-3d-stp": {
-      "extensionChain": ".stp",
-      "fileKindId": "cad-source-model",
-      "priority": 0
-    },
-    "physical-model-3d-step": {
-      "extensionChain": ".step",
-      "fileKindId": "cad-source-model",
-      "priority": 0
-    },
-    "physical-video-mp4": {
-      "extensionChain": ".mp4",
-      "fileKindId": "video",
-      "priority": 0
-    },
-    "physical-video-avi": {
-      "extensionChain": ".avi",
-      "fileKindId": "video",
-      "priority": 0
-    },
-    "physical-audio-mp3": {
-      "extensionChain": ".mp3",
-      "fileKindId": "audio",
-      "priority": 0
-    },
-    "physical-audio-wav": {
-      "extensionChain": ".wav",
-      "fileKindId": "audio",
-      "priority": 0
-    },
-    "physical-pdf-pdf": {
-      "extensionChain": ".pdf",
-      "fileKindId": "pdf",
-      "priority": 0
-    },
-    "physical-word-document-docx": {
-      "extensionChain": ".docx",
-      "fileKindId": "word-document",
-      "priority": 0
-    },
-    "physical-presentation-pptx": {
-      "extensionChain": ".pptx",
-      "fileKindId": "presentation",
+    "physical-spicy-spicy": {
+      "extensionChain": ".spicy",
+      "fileKindId": "spicy",
       "priority": 0
     },
     "physical-spreadsheet-xlsx": {
       "extensionChain": ".xlsx",
       "fileKindId": "spreadsheet",
+      "priority": 0
+    },
+    "physical-sql-sql": {
+      "extensionChain": ".sql",
+      "fileKindId": "sql",
+      "priority": 0
+    },
+    "physical-sqlite-database-db": {
+      "extensionChain": ".db",
+      "fileKindId": "sqlite-database",
+      "priority": 0
+    },
+    "physical-svg-svg": {
+      "extensionChain": ".svg",
+      "fileKindId": "svg",
+      "priority": 0
+    },
+    "physical-swift-source-swift": {
+      "extensionChain": ".swift",
+      "fileKindId": "swift-source",
       "priority": 0
     },
     "physical-table-data-csv": {
@@ -2526,11 +2618,6 @@
     "physical-table-data-tsv": {
       "extensionChain": ".tsv",
       "fileKindId": "table-data",
-      "priority": 0
-    },
-    "physical-tex-tex": {
-      "extensionChain": ".tex",
-      "fileKindId": "tex",
       "priority": 0
     },
     "physical-tex-bib": {
@@ -2548,19 +2635,54 @@
       "fileKindId": "tex",
       "priority": 0
     },
-    "physical-sql-sql": {
-      "extensionChain": ".sql",
-      "fileKindId": "sql",
+    "physical-tex-tex": {
+      "extensionChain": ".tex",
+      "fileKindId": "tex",
       "priority": 0
     },
-    "physical-cypher-cypher": {
-      "extensionChain": ".cypher",
-      "fileKindId": "cypher",
+    "physical-textual-dsl-dsl": {
+      "extensionChain": ".dsl",
+      "fileKindId": "textual-dsl",
       "priority": 0
     },
-    "physical-map-data-pbf": {
-      "extensionChain": ".pbf",
-      "fileKindId": "map-data",
+    "physical-toml-toml": {
+      "extensionChain": ".toml",
+      "fileKindId": "toml",
+      "priority": 0
+    },
+    "physical-typescript-source-cts": {
+      "extensionChain": ".cts",
+      "fileKindId": "typescript-source",
+      "priority": 0
+    },
+    "physical-typescript-source-d-ts": {
+      "extensionChain": ".d.ts",
+      "fileKindId": "typescript-source",
+      "priority": 0
+    },
+    "physical-typescript-source-mts": {
+      "extensionChain": ".mts",
+      "fileKindId": "typescript-source",
+      "priority": 0
+    },
+    "physical-typescript-source-ts": {
+      "extensionChain": ".ts",
+      "fileKindId": "typescript-source",
+      "priority": 0
+    },
+    "physical-typescript-source-tsx": {
+      "extensionChain": ".tsx",
+      "fileKindId": "typescript-source",
+      "priority": 0
+    },
+    "physical-video-avi": {
+      "extensionChain": ".avi",
+      "fileKindId": "video",
+      "priority": 0
+    },
+    "physical-video-mp4": {
+      "extensionChain": ".mp4",
+      "fileKindId": "video",
       "priority": 0
     },
     "physical-weather-data-epw": {
@@ -2573,139 +2695,29 @@
       "fileKindId": "webassembly",
       "priority": 0
     },
-    "physical-archive-zip": {
-      "extensionChain": ".zip",
-      "fileKindId": "archive",
+    "physical-wit-wit": {
+      "extensionChain": ".wit",
+      "fileKindId": "wit",
       "priority": 0
     },
-    "physical-binary-bin": {
-      "extensionChain": ".bin",
-      "fileKindId": "binary",
+    "physical-word-document-docx": {
+      "extensionChain": ".docx",
+      "fileKindId": "word-document",
       "priority": 0
     },
-    "physical-badge-definition-shields": {
-      "extensionChain": ".shields",
-      "fileKindId": "badge-definition",
+    "physical-xml-xml": {
+      "extensionChain": ".xml",
+      "fileKindId": "xml",
       "priority": 0
     },
-    "physical-textual-dsl-dsl": {
-      "extensionChain": ".dsl",
-      "fileKindId": "textual-dsl",
+    "physical-yaml-yaml": {
+      "extensionChain": ".yaml",
+      "fileKindId": "yaml",
       "priority": 0
     },
-    "physical-semio-dsl-dsl-semio": {
-      "extensionChain": ".dsl.semio",
-      "fileKindId": "semio-dsl",
-      "priority": 0
-    },
-    "physical-semio-command-cmd-semio": {
-      "extensionChain": ".cmd.semio",
-      "fileKindId": "semio-command",
-      "priority": 0
-    },
-    "physical-semio-pack-spk": {
-      "extensionChain": ".spk",
-      "fileKindId": "semio-pack",
-      "priority": 0
-    },
-    "physical-grasshopper-gh": {
-      "extensionChain": ".gh",
-      "fileKindId": "grasshopper",
-      "priority": 0
-    },
-    "physical-deflate-data-zz": {
-      "extensionChain": ".zz",
-      "fileKindId": "deflate-data",
-      "priority": 0
-    },
-    "physical-bcf-data-bcf": {
-      "extensionChain": ".bcf",
-      "fileKindId": "bcf-data",
-      "priority": 0
-    },
-    "physical-space-collection-space": {
-      "extensionChain": ".space",
-      "fileKindId": "space-collection",
-      "priority": 0
-    },
-    "physical-space-collection-collection": {
-      "extensionChain": ".collection",
-      "fileKindId": "space-collection",
-      "priority": 0
-    },
-    "physical-sqlite-database-db": {
-      "extensionChain": ".db",
-      "fileKindId": "sqlite-database",
-      "priority": 0
-    },
-    "physical-desktop-entry-desktop": {
-      "extensionChain": ".desktop",
-      "fileKindId": "desktop-entry",
-      "priority": 0
-    },
-    "physical-property-list-plist": {
-      "extensionChain": ".plist",
-      "fileKindId": "property-list",
-      "priority": 0
-    },
-    "physical-rhino-lock-rhl": {
-      "extensionChain": ".rhl",
-      "fileKindId": "rhino-lock",
-      "priority": 0
-    },
-    "physical-diagnostic-err": {
-      "extensionChain": ".err",
-      "fileKindId": "diagnostic",
-      "priority": 0
-    },
-    "physical-diagnostic-stderr": {
-      "extensionChain": ".stderr",
-      "fileKindId": "diagnostic",
-      "priority": 0
-    },
-    "physical-diagnostic-stdout": {
-      "extensionChain": ".stdout",
-      "fileKindId": "diagnostic",
-      "priority": 0
-    },
-    "physical-diagnostic-diff": {
-      "extensionChain": ".diff",
-      "fileKindId": "diagnostic",
-      "priority": 0
-    },
-    "physical-diagnostic-patch": {
-      "extensionChain": ".patch",
-      "fileKindId": "diagnostic",
-      "priority": 0
-    },
-    "physical-absence-marker-absent": {
-      "extensionChain": ".absent",
-      "fileKindId": "absence-marker",
-      "priority": 0
-    },
-    "physical-json-schema-json": {
-      "extensionChain": ".schema.json",
-      "fileKindId": "json-schema",
-      "priority": 0
-    },
-    "physical-json-expect-json": {
-      "extensionChain": ".expect.json",
-      "fileKindId": "json-expect",
-      "priority": 0
-    },
-    "physical-json-snapshot-json": {
-      "extensionChain": ".snapshot.json",
-      "fileKindId": "json-snapshot",
-      "priority": 0
-    },
-    "physical-json-patch-fixture-json": {
-      "extensionChain": ".patch.json",
-      "fileKindId": "json-patch-fixture",
-      "priority": 0
-    },
-    "physical-json-fixture-json": {
-      "extensionChain": ".fixture.json",
-      "fileKindId": "json-fixture",
+    "physical-yaml-yml": {
+      "extensionChain": ".yml",
+      "fileKindId": "yaml",
       "priority": 0
     }
   },
@@ -3038,7 +3050,88 @@
       "emoji": "🧪️",
       "slugPattern": "^(fixtures|examples)$",
       "allowEmojiOnly": false,
-      "parentKindIds": ["tests", "mutation-test-subject", "activation", "assembly", "authority", "base64", "binding", "bindings", "bootstrap", "budget", "bytes", "cancellation", "causal-add", "clock", "commit", "compare", "composition", "content", "cooperative", "copied", "copy", "credit", "enqueue", "entries", "evidence", "fault", "fixed", "framing", "graph", "inbound", "inbox", "index", "json", "lifetime", "list", "local-interaction", "message", "mutation-leaf-contract", "mutation-leaf-source-contract", "nodes", "numeric", "operations", "ordered", "ownership", "pack", "page", "pages", "payload", "pending", "poll", "read-lease", "reader", "release", "resident", "response", "retirement", "return", "set", "slot", "source", "string", "tail", "transaction", "tutorial", "update", "validation", "value", "whole", "wire-retirement", "writer", "builder", "metadata", "patch", "admission", "instance", "output", "root", "transport", "input", "members-of-elements"]
+      "parentKindIds": [
+        "tests",
+        "mutation-test-subject",
+        "activation",
+        "assembly",
+        "authority",
+        "base64",
+        "binding",
+        "bindings",
+        "bootstrap",
+        "budget",
+        "bytes",
+        "cancellation",
+        "causal-add",
+        "clock",
+        "commit",
+        "compare",
+        "composition",
+        "content",
+        "cooperative",
+        "copied",
+        "copy",
+        "credit",
+        "enqueue",
+        "entries",
+        "evidence",
+        "fault",
+        "fixed",
+        "framing",
+        "graph",
+        "inbound",
+        "inbox",
+        "index",
+        "json",
+        "lifetime",
+        "list",
+        "local-interaction",
+        "message",
+        "mutation-leaf-contract",
+        "mutation-leaf-source-contract",
+        "nodes",
+        "numeric",
+        "operations",
+        "ordered",
+        "ownership",
+        "pack",
+        "page",
+        "pages",
+        "payload",
+        "pending",
+        "poll",
+        "read-lease",
+        "reader",
+        "release",
+        "resident",
+        "response",
+        "retirement",
+        "return",
+        "set",
+        "slot",
+        "source",
+        "string",
+        "tail",
+        "transaction",
+        "tutorial",
+        "update",
+        "validation",
+        "value",
+        "whole",
+        "wire-retirement",
+        "writer",
+        "builder",
+        "metadata",
+        "patch",
+        "admission",
+        "instance",
+        "output",
+        "root",
+        "transport",
+        "input",
+        "members-of-elements"
+      ]
     },
     "resident-fixture-member": {
       "emoji": "🧪️",
@@ -4516,7 +4609,9 @@
       "emoji": "🧬️",
       "slugPattern": "^contention$",
       "allowEmojiOnly": false,
-      "parentKindIds": ["clock"]
+      "parentKindIds": [
+        "clock"
+      ]
     },
     "memory": {
       "emoji": "💾️",
@@ -8756,8 +8851,8 @@
   "semanticPackageProjectionContracts": {
     "nested-cargo-packages-v1": {
       "contractKind": "exact-nested-cargo-package-catalog",
-      "authorityCatalogPath": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🧫️fixtures/🧪️nested-cargo-package-projection/🔣️.json",
-      "authorityCatalogSha256": "a640e9b8e5154f0cb6276931d55564c8284b6ff45f10b366d089831d431673cf",
+      "authorityCatalogPath": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🧫️fixtures/🔣️nested-cargo-package-projection.json",
+      "authorityCatalogSha256": "d9f97bfbff483c69c1706331b25301be1988693360c602625a37c90db6537f48",
       "packageIds": [
         "wgpu-renderer",
         "jcoprobe-guest"
@@ -9036,7 +9131,7 @@
           "pathSegments": [],
           "nodeType": "file",
           "kindId": "rust-source",
-          "sourceFilename": "🦀️component.rs"
+          "sourceFilename": "🦀️.rs"
         },
         {
           "pathSegments": [
@@ -9057,7 +9152,7 @@
           ],
           "nodeType": "file",
           "kindId": "rust-source",
-          "sourceFilename": "🦀️component.rs"
+          "sourceFilename": "🦀️.rs"
         },
         {
           "pathSegments": [
@@ -9181,7 +9276,7 @@
           "nodeType": "file",
           "configurableEntry": {
             "contractId": "rust-library-entry",
-            "sourceFilename": "📦️glue.rs",
+            "sourceFilename": "🦀️.rs",
             "configurationReferences": [
               {
                 "fixedFilenameContractId": "cargo-manifest",
@@ -9218,7 +9313,7 @@
           ],
           "nodeType": "file",
           "kindId": "rust-source",
-          "sourceFilename": "🦀️component.rs"
+          "sourceFilename": "🦀️.rs"
         },
         {
           "pathSegments": [
@@ -9370,7 +9465,7 @@
           "nodeType": "file",
           "configurableEntry": {
             "contractId": "rust-library-entry",
-            "sourceFilename": "📦️glue.rs",
+            "sourceFilename": "🦀️.rs",
             "configurationReferences": [
               {
                 "fixedFilenameContractId": "cargo-manifest",
@@ -9817,7 +9912,7 @@
         "writeDisposition": "create-if-absent"
       },
       "referenceConsumer": {
-        "path": "✏️s/🔌️plugins/🔋️energy/📦️packages/🦀️rust/📦️glue.rs",
+        "path": "✏️s/🔌️plugins/🔋️energy/📦️packages/🦀️rust/🦀️.rs",
         "ownerRoot": "✏️s/🔌️plugins/🔋️energy",
         "adapter": "rust",
         "region": "✏️👁️Surfaces",
@@ -9827,7 +9922,7 @@
     },
     "readme-license-owner-leaves-v1": {
       "contractKind": "exact-owner-path-catalog",
-      "authorityCatalogPath": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🧫️fixtures/🧪️readme-license-owner-authority/🔣️.json",
+      "authorityCatalogPath": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🧫️fixtures/🔣️readme-license-owner-authority.json",
       "authorityCatalogSha256": "051394741822e92d51f3bda15ce64d84c236582c6927335c9c5e0ac3c18a1da4",
       "currentSourceRevisions": {
         "testing-readme-protocol-v2-reviewed": {
@@ -9845,7 +9940,7 @@
             "size": 12527,
             "mode": "0644"
           },
-          "expectationsPath": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧪️testing-readme-coordinates/🔣️.json",
+          "expectationsPath": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧪️test/🔣️ing-readme-coordinates.json",
           "expectationsSha256": "83a1c6b098f7fc5ad26d1f7d5b47e08447ec50a8016796f0eaa0b1db3ed575a6"
         }
       },
@@ -10061,7 +10156,6 @@
       "ownership": "external",
       "sourcePathPattern": "^(?:✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🕹️interaction/🦀️component\\.rs|✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🕹️interaction/🦀️\\.rs)$",
       "sourcePathIdentities": [
-        "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🕹️interaction/🦀️component.rs",
         "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🕹️interaction/🦀️.rs"
       ],
       "adapters": [
@@ -10080,7 +10174,6 @@
       "ownership": "external",
       "sourcePathPattern": "^(?:✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🏃️runtime/🟦️component\\.ts|✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🏃️runtime/🟦️\\.ts)$",
       "sourcePathIdentities": [
-        "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🏃️runtime/🟦️component.ts",
         "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🏃️runtime/🟦️.ts"
       ],
       "adapters": [
@@ -10100,7 +10193,6 @@
       "ownership": "external",
       "sourcePathPattern": "^(?:✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🎬️interaction-spec/🦀️component\\.rs|✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🎬️interaction-spec/🦀️\\.rs)$",
       "sourcePathIdentities": [
-        "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🎬️interaction-spec/🦀️component.rs",
         "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🎬️interaction-spec/🦀️.rs"
       ],
       "adapters": [
@@ -10137,9 +10229,9 @@
       "projectionContractId": "artifact-editor-command-bundle-v1",
       "consumerIdentity": "draw-package-library",
       "ownership": "external",
-      "sourcePathPattern": "^(?:✏️s/🔌️plugins/🖍️draw/📦️packages/🦀️rust/📦️glue\\.rs|✏️s/🔌️plugins/🖍️draw/📦️packages/🦀️rust/📚️library/🦀️\\.rs)$",
+      "sourcePathPattern": "^(?:✏️s/🔌️plugins/🖍️draw/📦️packages/🦀️rust/🦀️\\.rs|✏️s/🔌️plugins/🖍️draw/📦️packages/🦀️rust/📚️library/🦀️\\.rs)$",
       "sourcePathIdentities": [
-        "✏️s/🔌️plugins/🖍️draw/📦️packages/🦀️rust/📦️glue.rs",
+        "✏️s/🔌️plugins/🖍️draw/📦️packages/🦀️rust/🦀️.rs",
         "✏️s/🔌️plugins/🖍️draw/📦️packages/🦀️rust/📚️library/🦀️.rs"
       ],
       "adapters": [
@@ -10212,7 +10304,6 @@
       "ownership": "external",
       "sourcePathPattern": "^✏️s/🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🟦️(?:component)?\\.ts$",
       "sourcePathIdentities": [
-        "✏️s/🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🟦️component.ts",
         "✏️s/🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🟦️.ts"
       ],
       "adapters": [
@@ -11953,7 +12044,7 @@
         "✏️s/🔌️plugins/**/🛂️manifest.json*",
         "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/📋️project.json",
         "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/📜️script.ts",
-        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🟦️component.ts",
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🟦️.ts",
         "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json"
       ],
       "outputRoots": [
@@ -11986,11 +12077,11 @@
         "🧰️framework/🛍️products/💻️os/🧫️fixtures/🔌️jcoprobe/👽️guest/📦️packages/🦀️rust/Cargo.lock",
         "🧰️framework/🛍️products/💻️os/🧫️fixtures/🔌️jcoprobe/👽️guest/📦️packages/🦀️rust/Cargo.toml",
         "🧰️framework/🛍️products/💻️os/🧫️fixtures/🔌️jcoprobe/👽️guest/📦️packages/🦀️rust/🧬️schema/📜️world.wit",
-        "🧰️framework/🛍️products/💻️os/🧫️fixtures/🔌️jcoprobe/👽️guest/🦀️component.rs",
+        "🧰️framework/🛍️products/💻️os/🧫️fixtures/🔌️jcoprobe/👽️guest/🦀️.rs",
         "🧰️framework/🛍️products/💻️os/🧫️fixtures/🔌️jcoprobe/👽️guest/🧩️component/🦀️.rs",
         "🧰️framework/🛍️products/💻️os/🧫️fixtures/🔌️jcoprobe/👽️guest/🧬️schema/📜️world.wit",
-        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🧫️fixtures/🧪️nested-cargo-package-projection/🔣️.json",
-        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🟦️component.ts"
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🧫️fixtures/🔣️nested-cargo-package-projection.json",
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🟦️.ts"
       ],
       "outputRoots": [
         {
@@ -12020,7 +12111,7 @@
           "maxBytes": 67108864,
           "maxOperations": 200000
         },
-        "descriptorRelativePath": "../../🔣️descriptor.json",
+        "descriptorRelativePath": "../../🔣️.json",
         "exampleDirectoryName": "📚️examples",
         "exampleFileKindId": "rust-source",
         "implementationEntryPaths": [
@@ -12029,7 +12120,7 @@
         "workspaceImports": {
           "@semio-tech/framework": {
             "manifestPath": "🧰️framework/📦️packages/🟦️typescript/package.json",
-            "entryPath": "🧰️framework/📦️packages/🟦️typescript/🟦️glue.ts"
+            "entryPath": "🧰️framework/📦️packages/🟦️typescript/🟦️.ts"
           }
         }
       },
@@ -12052,11 +12143,11 @@
       "previewTarget": "@semio-tech/print:preview-generated",
       "inputPatterns": [
         "🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🦀️rust/📜️script.ts",
-        "🧰️framework/🔨️modules/🖱️ui/🎨️styling/🔣️tokens.json",
-        "🧰️framework/🛍️products/📓️print/🎮️commands/🎨latex-token-stylesheet-generation/🟦️component.ts",
+        "🧰️framework/🔨️modules/🖱️ui/🎨️styling/🔣️.json",
+        "🧰️framework/🛍️products/📓️print/🎮️commands/🎨latex-token-stylesheet-generation/🟦️.ts",
         "🧰️framework/🛍️products/📓️print/📦️packages/🟦️typescript/📋️project.json",
         "🧰️framework/🛍️products/📓️print/📦️packages/🟦️typescript/📜️script.ts",
-        "🧰️framework/🛍️products/📓️print/🔨️modules/🎨print-design-token-paints/🟦️component.ts"
+        "🧰️framework/🛍️products/📓️print/🔨️modules/🎨print-design-token-paints/🟦️.ts"
       ],
       "outputRoots": [
         {
@@ -12093,7 +12184,7 @@
       "inputPatterns": [
         "🧰️framework/🔨️modules/🧬️schema/📦️packages/🦀️rust/📋️project.json",
         "🧰️framework/🔨️modules/🧬️schema/📦️packages/🦀️rust/📜️script.ts",
-        "🧰️framework/🔨️modules/🧬️schema/🔣️entity-kinds.json"
+        "🧰️framework/🔨️modules/🧬️schema/🔣️.json"
       ],
       "outputRoots": [
         {
@@ -12175,10 +12266,10 @@
       "checkTarget": "@semio-tech/ui-styling-tokens:check-generated",
       "inputPatterns": [
         "🧰️framework/🔨️modules/🖱️ui/🎨️styling/🎨️theme/*.theme.json",
-        "🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🟦️typescript/📦️index.ts",
+        "🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🟦️typescript/🟦️.ts",
         "🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🦀️rust/📋️project.json",
         "🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🦀️rust/📜️script.ts",
-        "🧰️framework/🔨️modules/🖱️ui/🎨️styling/🔣️tokens.json",
+        "🧰️framework/🔨️modules/🖱️ui/🎨️styling/🔣️.json",
         "🧰️framework/🔨️modules/🖱️ui/🎨️styling/🛂️adapters.manifest.json"
       ],
       "outputRoots": [
@@ -12307,11 +12398,11 @@
           "workspaceImports": {
             "@semio-tech/framework": {
               "manifestPath": "🧰️framework/📦️packages/🟦️typescript/package.json",
-              "entryPath": "🧰️framework/📦️packages/🟦️typescript/🟦️glue.ts"
+              "entryPath": "🧰️framework/📦️packages/🟦️typescript/🟦️.ts"
             },
             "@semio-tech/framework-os": {
               "manifestPath": "🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/package.json",
-              "entryPath": "🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/🟦️glue.ts"
+              "entryPath": "🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/🟦️.ts"
             },
             "@semio-tech/framework-replication": {
               "manifestPath": "🧰️framework/🔨️modules/📡️replication/📦️packages/🟦️typescript/package.json",
@@ -12319,15 +12410,15 @@
             }
           },
           "sourceModulePaths": [
-            "🧰️framework/📦️packages/🟦️typescript/🟦️glue.ts",
-            "🧰️framework/🔨️modules/🌱️value/🗂️ordered/🔢️numeric/🟦️component.ts",
+            "🧰️framework/📦️packages/🟦️typescript/🟦️.ts",
+            "🧰️framework/🔨️modules/🌱️value/🗂️ordered/🔢️numeric/🟦️.ts",
             "🧰️framework/🔨️modules/🎠️kernel/🟦️.ts",
             "🧰️framework/🔨️modules/🎭️actor/📦️packages/🟦️typescript/📬️mailbox.ts",
             "🧰️framework/🔨️modules/🎭️actor/📦️packages/🟦️typescript/🖼️wire-turn.ts",
             "🧰️framework/🔨️modules/🎭️actor/📦️packages/🟦️typescript/🧵️shard-client.ts",
             "🧰️framework/🔨️modules/🎭️actor/📦️packages/🟦️typescript/🧵️shard-runtime.ts",
             "🧰️framework/🔨️modules/🎭️actor/📦️packages/🟦️typescript/🧵️turn-scheduler.ts",
-            "🧰️framework/🔨️modules/🎭️actor/🚪️lifetime/🟦️component.ts",
+            "🧰️framework/🔨️modules/🎭️actor/🚪️lifetime/🟦️.ts",
             "🧰️framework/🔨️modules/🎯️action-bus/🟦️.ts",
             "🧰️framework/🔨️modules/📡️replication/📡️wire/🏠️local-interaction/📡️transport/🟦️.ts",
             "🧰️framework/🔨️modules/📡️replication/📡️wire/🏠️local-interaction/🟦️.ts",
@@ -12335,27 +12426,27 @@
             "🧰️framework/🔨️modules/📡️replication/🟦️.ts",
             "🧰️framework/🔨️modules/🔄️machine/🟦️.ts",
             "🧰️framework/🔨️modules/🔺️mesh/🟦️.ts",
-            "🧰️framework/🔨️modules/🖥️platform/🟦️component.ts",
-            "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/🛡️validation/🔬️graph/🟦️component.ts",
-            "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/🟦️component.ts",
-            "🧰️framework/🔨️modules/🖱️ui/🧱️elements/📊️Diagram/🟦️layout.ts",
-            "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🔌️Ports/🟦️interactive-job.ts",
-            "🧰️framework/🔨️modules/🛂️manifest/🟦️component.ts",
+            "🧰️framework/🔨️modules/🖥️platform/🟦️.ts",
+            "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/🛡️validation/🔬️graph/🟦️.ts",
+            "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/🟦️.ts",
+            "🧰️framework/🔨️modules/🖱️ui/🧱️elements/📊️Diagram/🟦️.ts",
+            "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🔌️Ports/🟦️.ts",
+            "🧰️framework/🔨️modules/🛂️manifest/🟦️.ts",
             "🧰️framework/🔨️modules/🛂️manifest/🤖️generated/🟦️ui-axes.ts",
-            "🧰️framework/🔨️modules/🧬️schema/🟦️component.ts",
+            "🧰️framework/🔨️modules/🧬️schema/🟦️.ts",
             "🧰️framework/🔨️modules/🧮️action-argument-resolution/🟦️.ts",
-            "🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/🟦️glue.ts",
-            "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🟦️component.ts",
+            "🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/🟦️.ts",
+            "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🟦️.ts",
             "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🟦️typescript/🐚️plugin-bridge.ts",
             "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🟦️typescript/🟦️boot.ts",
             "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🟦️typescript/🧵️browser-frame-transport.ts",
             "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🟦️typescript/🧵️browser-interactive-job-port.ts",
             "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🟦️typescript/🧵️frame-worker.ts",
             "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🟦️typescript/🧵️interactive-job-registry.ts",
-            "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🟦️catalog.ts",
+            "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🟦️.ts",
             "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🤖️generated/🟦️playgrounds.ts",
             "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🤖️generated/🟦️plugins.ts",
-            "🧰️framework/🛍️products/💻️os/🟦️component.ts"
+            "🧰️framework/🛍️products/💻️os/🟦️.ts"
           ]
         }
       },
@@ -12366,15 +12457,15 @@
         "📋️project.json",
         "📜️script.ts",
         "🧰️framework/📦️packages/🟦️typescript/package.json",
-        "🧰️framework/📦️packages/🟦️typescript/🟦️glue.ts",
-        "🧰️framework/🔨️modules/🌱️value/🗂️ordered/🔢️numeric/🟦️component.ts",
+        "🧰️framework/📦️packages/🟦️typescript/🟦️.ts",
+        "🧰️framework/🔨️modules/🌱️value/🗂️ordered/🔢️numeric/🟦️.ts",
         "🧰️framework/🔨️modules/🎠️kernel/🟦️.ts",
         "🧰️framework/🔨️modules/🎭️actor/📦️packages/🟦️typescript/📬️mailbox.ts",
         "🧰️framework/🔨️modules/🎭️actor/📦️packages/🟦️typescript/🖼️wire-turn.ts",
         "🧰️framework/🔨️modules/🎭️actor/📦️packages/🟦️typescript/🧵️shard-client.ts",
         "🧰️framework/🔨️modules/🎭️actor/📦️packages/🟦️typescript/🧵️shard-runtime.ts",
         "🧰️framework/🔨️modules/🎭️actor/📦️packages/🟦️typescript/🧵️turn-scheduler.ts",
-        "🧰️framework/🔨️modules/🎭️actor/🚪️lifetime/🟦️component.ts",
+        "🧰️framework/🔨️modules/🎭️actor/🚪️lifetime/🟦️.ts",
         "🧰️framework/🔨️modules/🎯️action-bus/🟦️.ts",
         "🧰️framework/🔨️modules/📡️replication/📡️wire/🏠️local-interaction/📡️transport/🟦️.ts",
         "🧰️framework/🔨️modules/📡️replication/📡️wire/🏠️local-interaction/🟦️.ts",
@@ -12383,20 +12474,20 @@
         "🧰️framework/🔨️modules/📡️replication/🟦️.ts",
         "🧰️framework/🔨️modules/🔄️machine/🟦️.ts",
         "🧰️framework/🔨️modules/🔺️mesh/🟦️.ts",
-        "🧰️framework/🔨️modules/🖥️platform/🟦️component.ts",
-        "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/🛡️validation/🔬️graph/🟦️component.ts",
-        "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/🟦️component.ts",
-        "🧰️framework/🔨️modules/🖱️ui/🧱️elements/📊️Diagram/🟦️layout.ts",
-        "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🔌️Ports/🟦️interactive-job.ts",
-        "🧰️framework/🔨️modules/🛂️manifest/🟦️component.ts",
+        "🧰️framework/🔨️modules/🖥️platform/🟦️.ts",
+        "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/🛡️validation/🔬️graph/🟦️.ts",
+        "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/🟦️.ts",
+        "🧰️framework/🔨️modules/🖱️ui/🧱️elements/📊️Diagram/🟦️.ts",
+        "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🔌️Ports/🟦️.ts",
+        "🧰️framework/🔨️modules/🛂️manifest/🟦️.ts",
         "🧰️framework/🔨️modules/🛂️manifest/🤖️generated/🟦️ui-axes.ts",
-        "🧰️framework/🔨️modules/🧬️schema/🟦️component.ts",
+        "🧰️framework/🔨️modules/🧬️schema/🟦️.ts",
         "🧰️framework/🔨️modules/🧮️action-argument-resolution/🟦️.ts",
         "🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/package.json",
         "🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/📋️project.json",
         "🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/📜️script.ts",
-        "🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/🟦️glue.ts",
-        "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🟦️component.ts",
+        "🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/🟦️.ts",
+        "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🟦️.ts",
         "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/⌨️native-entrypoint/🦀️.rs",
         "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/⏰️deadlines/🦀️.rs",
         "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/🎠️runtime/🦀️.rs",
@@ -12407,18 +12498,18 @@
         "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/Cargo.toml",
         "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/Trunk.toml",
         "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/package.json",
-        "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/🌐️index.html",
+        "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/🌐️.html",
         "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/📋️project.json",
         "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/📚️library/🦀️.rs",
         "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/📜️script.ts",
-        "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/🟦️typescript/🧪️tests/🟦️.ts",
+        "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/🟦️typescript/🧪️test/🟦️s.ts",
         "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/📮️runtime-mailbox-core/🦀️.rs",
         "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/📸️render-snapshot/🦀️.rs",
         "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/🧊️renderer-boot/🟦️.ts",
         "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/🧊️renderer/🦀️.rs",
-        "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/🧪️tests/🧪️browser-frame-transport/🟦️.ts",
-        "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/🧪️tests/🧪️browser-interactive-job-port/🟦️.ts",
-        "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/🧪️tests/🧪️package-integration/🟦️.ts",
+        "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/🧪️tests/🟦️browser-frame-transport.ts",
+        "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/🧪️tests/🟦️browser-interactive-job-port.ts",
+        "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/🧪️tests/🟦️package-integration.ts",
         "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/🧵️browser-boot/🟦️.ts",
         "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/🧵️browser-frame-transport/🟦️.ts",
         "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/🧵️browser-interactive-job-port/🟦️.ts",
@@ -12432,13 +12523,12 @@
         "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/Trunk.toml",
         "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/build.rs",
         "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/package.json",
-        "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🌐️index.html",
+        "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🌐️.html",
         "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🎠️runtime.rs",
         "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/📋️project.json",
         "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/📜️script.ts",
         "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/📦️bin.rs",
-        "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/📦️glue.rs",
-        "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/📦️index.ts",
+        "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🟦️.ts",
         "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🟦️typescript/🐚️plugin-bridge.ts",
         "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🟦️typescript/🟦️boot.ts",
         "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🟦️typescript/🟨️frame-worker.js",
@@ -12446,6 +12536,7 @@
         "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🟦️typescript/🧵️browser-interactive-job-port.ts",
         "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🟦️typescript/🧵️frame-worker.ts",
         "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🟦️typescript/🧵️interactive-job-registry.ts",
+        "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️.rs",
         "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️browser_worker.rs",
         "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️deadlines.rs",
         "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️frame_job.rs",
@@ -12460,12 +12551,12 @@
         "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🧪️browser-interactive-job-port.test.ts",
         "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🧪️index.test.ts",
         "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🧪️vitest.config.ts",
-        "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🟦️catalog.ts",
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🟦️.ts",
         "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🤖️generated/🟦️playgrounds.ts",
         "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🤖️generated/🟦️plugins.ts",
-        "🧰️framework/🛍️products/💻️os/🟦️component.ts",
-        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🧫️fixtures/🧪️nested-cargo-package-projection/🔣️.json",
-        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🟦️component.ts",
+        "🧰️framework/🛍️products/💻️os/🟦️.ts",
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🧫️fixtures/🔣️nested-cargo-package-projection.json",
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🟦️.ts",
         "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json"
       ],
       "outputRoots": [
@@ -13053,7 +13144,7 @@
     "diagnostic-v1",
     "event-stream-v1"
   ],
-  "_testContributionComment": "🧩️ Open/closed extension point. An owner that needs a reference implementation, an oracle crate or a format-specific comparison profile declares them in `<owner>/🧪️oracle/🔣️.json`. The framework test domain DISCOVERS those manifests; it never names an owner, a plugin or a format. Adding PDF, PNG or any future artifact therefore requires zero framework edits.",
+  "_testContributionComment": "🧩️ Open/closed extension point. An owner that needs a reference implementation, an oracle crate or a format-specific comparison profile declares them in `<owner>/🔣️oracle.json`. The framework test domain DISCOVERS those manifests; it never names an owner, a plugin or a format. Adding PDF, PNG or any future artifact therefore requires zero framework edits.",
   "testContributionDirName": "🧪️oracle",
   "_testMutationVocabularyComment": "🦠️ The directory an implementation puts a mutation vocabulary in. Named here as VOCABULARY so the contract can ask 'is this declared vocabulary claimed by a catalog?' without the framework learning any format, language or plugin. A subset that declares a vocabulary and no catalog is invisible to the completeness gate — that gap let two subsets ship handcrafted mutations with no test at all.",
   "testMutationVocabularyDirName": "🧬️mutations",
@@ -13318,8 +13409,8 @@
   "mutationPayloadSchemaProjection": {
     "contractKind": "descriptor-linked-mutation-payload-schema",
     "ownerPathPattern": "✏️s/🔌️plugins/*/🗿️artifacts/*/🏅️standards/*/🪆️subsets/*/🧬️schema/🧬️mutations/*",
-    "sourceFilename": "🔣️payload.schema.json",
-    "descriptorSourceFilename": "🔣️component.json",
+    "sourceFilename": "🔣️.schema.json",
+    "descriptorSourceFilename": "🔣️.json",
     "descriptorField": "payloadSchema",
     "descriptorSchemaVersion": 1,
     "descriptorOwnerField": "owner",

@@ -5,7 +5,7 @@
   "displayName": "Change Delta Sigma C",
   "emoji": "🐴",
   "aggregateVariant": "ChangeDeltaSigmaC",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

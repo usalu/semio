@@ -5,7 +5,7 @@
   "displayName": "Change Sheet W El Mm3",
   "emoji": "🦏",
   "aggregateVariant": "ChangeSheetWElMm3",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

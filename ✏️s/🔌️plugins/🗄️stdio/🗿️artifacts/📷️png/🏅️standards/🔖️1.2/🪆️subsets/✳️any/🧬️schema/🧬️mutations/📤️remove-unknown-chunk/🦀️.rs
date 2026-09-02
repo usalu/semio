@@ -13,9 +13,9 @@ pub struct RemoveUnknownChunkMutation {
 //#endregion Payload
 
 //#region Facets
-#[path = "💾️binary/🦀️component.rs"]
+#[path = "💾️binary/🦀️.rs"]
 pub mod binary;
-#[path = "📝️text/🦀️component.rs"]
+#[path = "📝️text/🦀️.rs"]
 pub mod text;
 //#endregion Facets
 
@@ -66,8 +66,8 @@ pub fn chunk_order_remove_unknown_diff(order: &[PngChunkMarker], at: usize) -> P
 
 #[cfg(test)]
 pub(crate) fn test_case() -> PngMutation {
-    serde_json::from_str(include_str!("🧪️tests/direct-behavior/🦠️mutation/🔣️component.json")).expect("committed remove-unknown-chunk payload")
+    serde_json::from_str(include_str!("🧪️tests/direct-behavior/🦠️mutation/🔣️.json")).expect("committed remove-unknown-chunk payload")
 }
 #[cfg(test)]
-#[path = "🧪️tests/direct-behavior/🦀️component.rs"]
+#[path = "🧪️tests/direct-behavior/🦀️.rs"]
 mod tests_direct_behavior;

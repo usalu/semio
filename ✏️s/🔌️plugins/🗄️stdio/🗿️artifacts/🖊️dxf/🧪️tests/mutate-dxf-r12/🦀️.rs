@@ -3,7 +3,7 @@
 //!
 //! Every scenario copies the derived, committed `🚏️bus-shelter` fixture into the case work
 //! directory first; the committed asset is never written to. `oracle` drives the registered `dxf`
-//! 0.6 reference implementation (`../../🏅️standards/🔖️r12/🪆️subsets/✳️any/🧪️oracle/🦀️component.rs`'s
+//! 0.6 reference implementation (`../../🏅️standards/🔖️r12/🪆️subsets/✳️any/🦀️oracle.rs`'s
 //! own `oracle_apply_mutation`/`oracle_apply_mutation_inverse`); `subject` drives this repository's
 //! own `parse_dxf_document`/`print_dxf_document`/`apply_dxf_mutation` over the full 19-kind
 //! `DxfMutation` vocabulary. Both results are read back by the SAME independent `project_dxf_r12`
@@ -232,7 +232,7 @@ mod subject {
     /// ✏️ Inserts or replaces the header var named `name` in `snapshot.header_vars`, in place --
     /// `$INSBASE` (the one generic `$VAR` this case's `set-header-var`/`remove-header-var`/
     /// `set-snapshot` rows target) uses group code 10 per the point-component convention this
-    /// subset's own header codec reads (`📸️snapshot/🦀️component.rs`'s `parse_header_var`).
+    /// subset's own header codec reads (`📸️snapshot/🦀️.rs`'s `parse_header_var`).
     fn upsert_header_var(snapshot: &mut DxfSnapshot, name: &str, group_code: i32, value: DxfValue) {
         match snapshot.header_vars.iter_mut().find(|v| v.name == name) {
             Some(existing) => existing.value = value,
@@ -410,7 +410,7 @@ mod subject {
     /// 🔒️ The no-byte-pass-through rule: the subject must fully parse the real artifact into its
     /// typed snapshot and re-serialize from the model alone -- `parse_dxf_document`/
     /// `print_dxf_document` are this subset's ONLY channel from input to output. `print_dxf_document`
-    /// regenerates a canonical NORMAL FORM (documented in `📸️snapshot/🦀️component.rs`'s own module
+    /// regenerates a canonical NORMAL FORM (documented in `📸️snapshot/🦀️.rs`'s own module
     /// doc), never raw byte preservation, so the tripwire is real rather than incidental.
     pub fn identity_round_trip(ctx: &Context) -> Result<Outcome, String> {
         let input = mutable_input(ctx)?;

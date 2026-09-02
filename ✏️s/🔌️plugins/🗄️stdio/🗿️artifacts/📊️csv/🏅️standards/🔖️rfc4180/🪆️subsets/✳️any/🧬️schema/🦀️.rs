@@ -1,0 +1,269 @@
+//! 🧬️ CsvArtifact schema — full artifact state.
+
+use crate::artifacts::csv::schema::snapshot::CsvRecord;
+use crate::artifacts::csv::CsvSnapshot;
+use schema::ArtifactSchema;
+
+//#region 🔖️Artifact
+/// 🧬️ Full `stdio.csv` artifact state.
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
+#[value(rename_all = "camelCase")]
+#[artifact_schema(id = "s.stdio.csv")]
+pub struct CsvArtifact {
+    #[state(artifact)]
+    pub schema: String,
+    #[state(artifact)]
+    #[value(default)]
+    pub has_header: bool,
+    #[state(artifact)]
+    #[value(default)]
+    pub records: Vec<CsvRecord>,
+}
+//#endregion 🔖️Artifact
+
+//#region 🔖️Conversions
+impl Default for CsvArtifact {
+    fn default() -> Self {
+        Self::from_snapshot(CsvSnapshot::default())
+    }
+}
+
+impl CsvArtifact {
+    /// 📸️ Persisted subset.
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn to_snapshot(&self) -> CsvSnapshot {
+        CsvSnapshot { schema: self.schema.clone(), has_header: self.has_header, records: self.records.clone() }
+    }
+
+    /// 🧬️ Builds a full artifact from a snapshot.
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn from_snapshot(snapshot: CsvSnapshot) -> Self {
+        Self { schema: snapshot.schema, has_header: snapshot.has_header, records: snapshot.records }
+    }
+
+    /// 🔄 Writes persistent fields from a snapshot into this artifact.
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn set_snapshot(&mut self, snapshot: CsvSnapshot) {
+        self.schema = snapshot.schema;
+        self.has_header = snapshot.has_header;
+        self.records = snapshot.records;
+    }
+}
+//#endregion 🔖️Conversions
+
+//#region 🔖️Descriptor
+/// 🧬️ Descriptor for `s.stdio.csv`.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn csv_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
+    schema::ArtifactSchemaDescriptor {
+        id: "s.stdio.csv",
+        artifact: schema::FacetLeaves {
+            rust: include_str!("🦀️.rs"),
+            typescript: include_str!("🟦️.ts"),
+            graphql: include_str!("🔗️.graphql"),
+            json_schema: include_str!("🔣️.json"),
+            proto: include_str!("🛰️.proto"),
+        },
+        snapshot: schema::FacetLeaves {
+            rust: include_str!("📸️snapshot/🦀️.rs"),
+            typescript: include_str!("📸️snapshot/🟦️.ts"),
+            graphql: include_str!("📸️snapshot/🔗️.graphql"),
+            json_schema: include_str!("📸️snapshot/🔣️.json"),
+            proto: include_str!("📸️snapshot/🛰️.proto"),
+        },
+        diff: schema::FacetLeaves {
+            rust: include_str!("🔺️diff/🦀️.rs"),
+            typescript: include_str!("🔺️diff/🟦️.ts"),
+            graphql: include_str!("🔺️diff/🔗️.graphql"),
+            json_schema: include_str!("🔺️diff/🔣️.json"),
+            proto: include_str!("🔺️diff/🛰️.proto"),
+        },
+        mutations: schema::FacetLeaves {
+            rust: include_str!("🧬️mutations/🦀️.rs"),
+            typescript: include_str!("🧬️mutations/🟦️.ts"),
+            graphql: include_str!("🧬️mutations/🔗️.graphql"),
+            json_schema: include_str!("🧬️mutations/🔣️.json"),
+            proto: include_str!("🧬️mutations/🛰️.proto"),
+        },
+    }
+}
+//#endregion 🔖️Descriptor
+//#region 🏗️DerivedConstruction
+pub mod derived_construction {
+    use crate::artifacts::csv::{CsvDiff, CsvMutation, CsvSnapshot};
+    use semio_framework_plugin::ArtifactBuilder;
+
+    //#region 🔖️Builder
+    /// 🏗️ Builds a `stdio.csv` snapshot.
+    #[derive(Clone, Debug, Default)]
+    pub struct CsvBuilderConstruction {
+        snapshot: CsvSnapshot,
+        diagnostics: Vec<dsl::Diagnostic>,
+    }
+
+    impl ArtifactBuilder for CsvBuilderConstruction {
+        type Snapshot = CsvSnapshot;
+        type Mutation = CsvMutation;
+        type Diff = CsvDiff;
+        fn empty() -> Self {
+            Self { snapshot: CsvSnapshot::default(), diagnostics: Vec::new() }
+        }
+        fn from_snapshot(snapshot: Self::Snapshot) -> Self {
+            Self { snapshot, diagnostics: Vec::new() }
+        }
+        fn from_text(text: &str) -> Result<Self, store::TextError> {
+            Ok(Self::from_snapshot(<CsvSnapshot as store::ArtifactDsl>::parse_dsl(text)?))
+        }
+        fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
+            Ok(Self::from_snapshot(<CsvSnapshot as store::ArtifactPack>::decode_pack(bytes)?))
+        }
+        fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
+            let diff = crate::artifacts::csv::schema::mutations::apply_csv_mutation(&mut self.snapshot, &mutation);
+            (self, diff)
+        }
+        fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
+            self.snapshot = <CsvDiff as protocol::MutationDiff<CsvSnapshot>>::apply(&diff, &self.snapshot)?;
+            Ok(self)
+        }
+        fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
+            if self.diagnostics.is_empty() {
+                Ok(self.snapshot)
+            } else {
+                Err(self.diagnostics)
+            }
+        }
+    }
+    //#endregion 🔖️Builder
+}
+pub use derived_construction::*;
+//#endregion 🏗️DerivedConstruction
+
+//#region 🧐️DerivedAnalysis
+pub mod derived_analysis {
+    use crate::artifacts::csv::CsvSnapshot;
+    use semio_framework_plugin::{Analysis, AnalyzeSource, ArtifactAnalysis, Dialect, IoConfidence, StandardId, SubsetId};
+
+    //#region 🔖️Parts
+    /// 🧩 Analyzed `stdio.csv` parts.
+    #[derive(Clone, Debug, Default)]
+    pub struct CsvParts {
+        pub snapshot: Option<CsvSnapshot>,
+    }
+    //#endregion 🔖️Parts
+
+    //#region 🔖️Analyzer
+    /// 🧐️ Analyzes `stdio.csv` (rfc4180/✳️any) sources.
+    pub struct CsvAnalyzerAnalysis;
+
+    /// 🔍 CSV has no magic bytes — sniff by checking that a real RFC4180 parse of the
+    /// first few lines yields a consistent field count across records (a strong tabular
+    /// signal) and that at least one delimiter/quote is actually present.
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn looks_like_csv(text: &str) -> IoConfidence {
+        let sample: String = text.lines().take(20).collect::<Vec<_>>().join("\n");
+        if sample.trim().is_empty() {
+            return IoConfidence::Low;
+        }
+        let snapshot = crate::artifacts::csv::schema::snapshot::decode_csv_with(&sample, false);
+        if snapshot.records.is_empty() {
+            return IoConfidence::Low;
+        }
+        let width = snapshot.records[0].fields.len();
+        if width == 0 {
+            return IoConfidence::Low;
+        }
+        let consistent = snapshot.records.iter().all(|r| r.fields.len() == width);
+        let has_delimiter = sample.contains(',');
+        match (consistent, width > 1, has_delimiter) {
+            (true, true, true) => IoConfidence::High,
+            (true, _, true) => IoConfidence::Medium,
+            _ => IoConfidence::Low,
+        }
+    }
+
+    impl ArtifactAnalysis for CsvAnalyzerAnalysis {
+        type Parts = CsvParts;
+        const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.csv", standard: StandardId("rfc4180"), subset: SubsetId("*") };
+
+        fn sniff(source: &AnalyzeSource<'_>) -> IoConfidence {
+            match source {
+                AnalyzeSource::Text(text) => {
+                    let body = match store::semio_format::split_text_preamble(text) {
+                        Ok((_, rest)) => rest,
+                        Err(_) => text,
+                    };
+                    looks_like_csv(body)
+                }
+                AnalyzeSource::Binary(bytes) => match store::semio_format::unwrap_binary(bytes) {
+                    Ok((_, inner)) => match String::from_utf8(inner) {
+                        Ok(text) => looks_like_csv(&text),
+                        Err(_) => IoConfidence::Low,
+                    },
+                    Err(_) => match std::str::from_utf8(bytes) {
+                        Ok(text) => looks_like_csv(text),
+                        Err(_) => IoConfidence::Low,
+                    },
+                },
+            }
+        }
+
+        fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
+            let mut parts = CsvParts::default();
+            let mut diagnostics = Vec::new();
+            let mut confidence = IoConfidence::High;
+            for source in sources {
+                match source {
+                    AnalyzeSource::Text(text) => match <CsvSnapshot as store::ArtifactDsl>::parse_dsl(text) {
+                        Ok(snapshot) => parts.snapshot = Some(snapshot),
+                        Err(err) => {
+                            confidence = IoConfidence::Low;
+                            diagnostics.push(dsl::Diagnostic::error("stdio.analyze.text", dsl::TextSpan::at(1, 1), err.to_string()));
+                        }
+                    },
+                    AnalyzeSource::Binary(bytes) => match <CsvSnapshot as store::ArtifactPack>::decode_pack(bytes) {
+                        Ok(snapshot) => parts.snapshot = Some(snapshot),
+                        Err(err) => {
+                            confidence = IoConfidence::Low;
+                            diagnostics.push(dsl::Diagnostic::error("stdio.analyze.binary", dsl::TextSpan::at(1, 1), err.to_string()));
+                        }
+                    },
+                }
+            }
+            Analysis { parts, dialect: Self::DIALECT, confidence, diagnostics }
+        }
+    }
+    //#endregion 🔖️Analyzer
+
+    //#region 🧪️Tests
+    #[cfg(test)]
+    mod tests {
+        use super::*;
+
+        #[semio_framework_async_macros::async_test]
+        async fn sniff_real_csv_table_is_high() {
+            let text = "a,b,c\n1,2,3\n4,5,6\n";
+            assert_eq!(CsvAnalyzerAnalysis::sniff(&AnalyzeSource::Text(text)), IoConfidence::High);
+        }
+
+        #[semio_framework_async_macros::async_test]
+        async fn sniff_unrelated_text_is_low() {
+            assert_eq!(CsvAnalyzerAnalysis::sniff(&AnalyzeSource::Text("just a plain sentence.")), IoConfidence::Low);
+        }
+    }
+    //#endregion 🧪️Tests
+}
+pub use derived_analysis::*;
+//#endregion 🧐️DerivedAnalysis
+
+//#region 🧬️DerivedArtifactFacets
+semio_framework_plugin::derive_artifact_facets!(
+    pub spec CsvBuilderFacets {
+        construction: CsvBuilderConstruction,
+        analysis: CsvAnalyzerAnalysis,
+        composition: super::super::io::derived_composition::CsvComposerComposition,
+    }
+    builder: CsvBuilder,
+    analyzer: CsvAnalyzer,
+    composer: CsvComposer,
+);
+//#endregion 🧬️DerivedArtifactFacets

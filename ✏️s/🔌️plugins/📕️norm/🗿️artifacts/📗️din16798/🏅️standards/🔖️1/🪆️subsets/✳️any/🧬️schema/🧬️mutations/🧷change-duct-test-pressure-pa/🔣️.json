@@ -5,7 +5,7 @@
   "displayName": "Change Duct Test Pressure Pa",
   "emoji": "🧷",
   "aggregateVariant": "ChangeDuctTestPressurePa",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

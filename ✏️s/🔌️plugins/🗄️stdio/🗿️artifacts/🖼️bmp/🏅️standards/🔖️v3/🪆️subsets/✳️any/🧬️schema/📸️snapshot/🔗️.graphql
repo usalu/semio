@@ -1,0 +1,34 @@
+# 🧬️ BmpSnapshot schema facet — mirrors 🦀️.rs field-for-field.
+
+"BITMAPINFOHEADER's signed height field: BOTTOM_UP (positive) or TOP_DOWN (negative)."
+enum BmpRowOrder {
+  BOTTOM_UP
+  TOP_DOWN
+}
+
+"One BITMAPINFOHEADER color-table entry, on-disk field order (present when bitsPerPixel <= 8)."
+type BmpPaletteEntry {
+  b: Int!
+  g: Int!
+  r: Int!
+  reserved: Int!
+}
+
+"Persisted stdio.bmp snapshot: full BITMAPINFOHEADER + palette + decoded canonical RGBA pixels."
+type BmpSnapshot {
+  schema: String!
+  headerSize: Int!
+  width: Int!
+  height: Int!
+  rowOrder: BmpRowOrder!
+  planes: Int!
+  bitsPerPixel: Int!
+  compression: Int!
+  imageSize: Int!
+  xPixelsPerMeter: Int!
+  yPixelsPerMeter: Int!
+  colorsUsed: Int!
+  colorsImportant: Int!
+  palette: [BmpPaletteEntry!]!
+  pixels: [Int!]!
+}

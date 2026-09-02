@@ -5,7 +5,7 @@
   "displayName": "Create Access Rule",
   "emoji": "🌱🔑",
   "aggregateVariant": "CreateAccessRule",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

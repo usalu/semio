@@ -5,7 +5,7 @@
   "displayName": "Create Growth Plan",
   "emoji": "🌱📈",
   "aggregateVariant": "CreateGrowthPlan",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

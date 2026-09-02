@@ -5,7 +5,7 @@
   "displayName": "Create Privacy Requirement",
   "emoji": "🌱🔒",
   "aggregateVariant": "CreatePrivacyRequirement",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

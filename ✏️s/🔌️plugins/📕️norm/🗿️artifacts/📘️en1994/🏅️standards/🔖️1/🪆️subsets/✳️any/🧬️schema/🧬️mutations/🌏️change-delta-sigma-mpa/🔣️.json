@@ -5,7 +5,7 @@
   "displayName": "Change Delta Sigma Mpa",
   "emoji": "🌏️",
   "aggregateVariant": "ChangeDeltaSigmaMpa",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

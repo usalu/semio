@@ -13,7 +13,7 @@
 //! that the handle moves with the field and converges back on undo.
 //!
 //! **What is compared across the two languages, and what is asserted in role.** The cross-language
-//! projection is the two fields `🧬️schema/📸️snapshot/🔣️component.json` declares. The `mesh` handle's
+//! projection is the two fields `🧬️schema/📸️snapshot/🔣️.json` declares. The `mesh` handle's
 //! `childId` is a `std::hash::DefaultHasher` digest whose value the standard library leaves
 //! UNSPECIFIED, so no implementation in another language can reproduce it; it is held exactly HERE,
 //! in role, by [`subject::spec_vector`] against the committed after-snapshot, alongside the
@@ -25,7 +25,7 @@
 use semio_repo_test_host::{parse_json, Adapter, Json};
 
 //#region 🔖️Kinds
-/// 🏷️ Mirrors `KINDS` in `../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs` — duplicated, not
+/// 🏷️ Mirrors `KINDS` in `../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs` — duplicated, not
 /// imported, because the oracle-only build must not link the subject crate. The contract's
 /// mutation-coverage gate keeps this list honest against the catalog, and that file's own
 /// `kinds_match_the_enum_and_the_catalog` keeps it honest against both the enum and the manifest.
@@ -43,7 +43,7 @@ const UNOBSERVABLE: &[&str] = &[
 
 /// 🗣️ The real committed document this artifact ships as its own example.
 #[cfg(feature = "sut")]
-const DSL_ASSET: &str = "asset://🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio";
+const DSL_ASSET: &str = "asset://🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/🗣️.dsl.semio";
 
 /// 🧫️ The real derived terrain document: the committed example's exaggeration and `mesh` handle,
 /// carrying the two REAL Liège positions the sibling `gismap` example commits. Derived once,
@@ -71,18 +71,18 @@ struct Vector {
 fn vector(kind: &str) -> Vector {
     match kind {
         "change-exaggeration" => Vector {
-            before: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎚change-exaggeration/🧪️tests/raises-exaggeration-from-1-to-2-5/📸️snapshot/⬅️before/🔣️component.json"),
-            mutation: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎚change-exaggeration/🧪️tests/raises-exaggeration-from-1-to-2-5/🦠️mutation/🔣️component.json"),
-            after: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎚change-exaggeration/🧪️tests/raises-exaggeration-from-1-to-2-5/📸️snapshot/➡️after/🔣️component.json"),
-            diff: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎚change-exaggeration/🧪️tests/raises-exaggeration-from-1-to-2-5/🔺️diff/🔣️component.json"),
-            outcome: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎚change-exaggeration/🧪️tests/raises-exaggeration-from-1-to-2-5/🎯️outcome/🔣️component.json"),
+            before: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎚change-exaggeration/🧪️tests/raises-exaggeration-from-1-to-2-5/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎚change-exaggeration/🧪️tests/raises-exaggeration-from-1-to-2-5/🦠️mutation/🔣️.json"),
+            after: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎚change-exaggeration/🧪️tests/raises-exaggeration-from-1-to-2-5/📸️snapshot/➡️after/🔣️.json"),
+            diff: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎚change-exaggeration/🧪️tests/raises-exaggeration-from-1-to-2-5/🔺️diff/🔣️.json"),
+            outcome: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎚change-exaggeration/🧪️tests/raises-exaggeration-from-1-to-2-5/🎯️outcome/🔣️.json"),
         },
         "change-imported-features" => Vector {
-            before: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📥change-imported-features/🧪️tests/imports-harbor-position-descriptor/📸️snapshot/⬅️before/🔣️component.json"),
-            mutation: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📥change-imported-features/🧪️tests/imports-harbor-position-descriptor/🦠️mutation/🔣️component.json"),
-            after: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📥change-imported-features/🧪️tests/imports-harbor-position-descriptor/📸️snapshot/➡️after/🔣️component.json"),
-            diff: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📥change-imported-features/🧪️tests/imports-harbor-position-descriptor/🔺️diff/🔣️component.json"),
-            outcome: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📥change-imported-features/🧪️tests/imports-harbor-position-descriptor/🎯️outcome/🔣️component.json"),
+            before: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📥change-imported-features/🧪️tests/imports-harbor-position-descriptor/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📥change-imported-features/🧪️tests/imports-harbor-position-descriptor/🦠️mutation/🔣️.json"),
+            after: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📥change-imported-features/🧪️tests/imports-harbor-position-descriptor/📸️snapshot/➡️after/🔣️.json"),
+            diff: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📥change-imported-features/🧪️tests/imports-harbor-position-descriptor/🔺️diff/🔣️.json"),
+            outcome: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📥change-imported-features/🧪️tests/imports-harbor-position-descriptor/🎯️outcome/🔣️.json"),
         },
         other => panic!("mutate-gisterrain-1: no committed specification vector is registered for kind {other:?}"),
     }

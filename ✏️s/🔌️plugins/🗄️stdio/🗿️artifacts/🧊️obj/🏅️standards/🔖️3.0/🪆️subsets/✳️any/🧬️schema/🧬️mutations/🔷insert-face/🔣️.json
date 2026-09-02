@@ -5,7 +5,7 @@
   "displayName": "Insert Face",
   "emoji": "🔷",
   "aggregateVariant": "InsertFace",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

@@ -1,5 +1,5 @@
 /** 📡️ `EffectBackbone` — the TypeScript counterpart of the Rust host's per-instance
- * `BackboneRegistry` (`🔨️modules/🔌️plugin/🖥️host/⚡️effects/🦀️component.rs`, `#region 📡️EffectBackbone`),
+ * `BackboneRegistry` (`🔨️modules/🔌️plugin/🖥️host/⚡️effects/🦀️.rs`, `#region 📡️EffectBackbone`),
  * which replaced the deleted PROCESS-GLOBAL `set_host_backbone_channel` that left guest↔store sync
  * with NO path at all. This module is that same fix for the web host: every `EffectBackbone` is
  * constructed ONE PER PLUGIN INSTANCE (never a module-level singleton) — a process-global here would
@@ -9,7 +9,7 @@
  * 🧬️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (terra-web-effect-backbone). Rust is the SSOT for the
  * wire shapes below — this file conforms to it, not the reverse (see `## Rust↔TS wire parity table`
  * in this ticket's `📓️terra-web-effect-backbone-report.md`). The in-source parity test at the bottom
- * of this file reads `🎠️kernel/🦀️component.rs` fresh on every run and fails loudly the moment
+ * of this file reads `🎠️kernel/🦀️.rs` fresh on every run and fails loudly the moment
  * `MessageEndpoint`/`Effect::SendMessage`/`Event::Message` drift from this file's mirror.
  *
  * 🗃️ State classification (CLAUDE.md: persisted-local-only / persisted-shared / ephemeral-local-only
@@ -23,7 +23,7 @@
  */
 
 //#region 🧬️WireTypes
-/** ⚖️ TypeScript mirror of Rust `MessageEndpoint` (`🎠️kernel/🦀️component.rs`, `#region 🔖️Event`) —
+/** ⚖️ TypeScript mirror of Rust `MessageEndpoint` (`🎠️kernel/🦀️.rs`, `#region 🔖️Event`) —
  * who a {@link EventMessage} came from / an {@link EffectSendMessage} targets. Externally tagged,
  * camelCase (`#[serde(rename_all = "camelCase", rename_all_fields = "camelCase")]`, no `tag=`), so
  * `MessageEndpoint::Backbone { uri }` is `{ "backbone": { "uri": "..." } }` on the wire — see the
@@ -51,14 +51,14 @@ export const MESSAGE_ENDPOINT_VARIANT_FIELDS: ReadonlyArray<{ readonly kind: str
 ];
 
 /** 📤️ TypeScript mirror of Rust `Effect::SendMessage { target: MessageEndpoint, payload: Vec<u8> }`
- * (`🎠️kernel/🦀️component.rs`) — field-for-field, camelCase-tagged like every other `Effect` variant.
- * Declared fresh here (not imported from `🎠️kernel/🟦️component.ts`, which stubs `target: unknown` and
+ * (`🎠️kernel/🦀️.rs`) — field-for-field, camelCase-tagged like every other `Effect` variant.
+ * Declared fresh here (not imported from `🎠️kernel/🟦️.ts`, which stubs `target: unknown` and
  * is outside this packet's owned/leased paths) so this module can type `target` precisely without
  * editing a file it does not own. */
 export type EffectSendMessage = { readonly sendMessage: { readonly target: MessageEndpoint; readonly payload: readonly number[] } };
 
 /** 📥️ TypeScript mirror of Rust `Event::Message { source: MessageEndpoint, payload: Vec<u8> }`
- * (`🎠️kernel/🦀️component.rs`) — the inbound counterpart of {@link EffectSendMessage}, same reasoning
+ * (`🎠️kernel/🦀️.rs`) — the inbound counterpart of {@link EffectSendMessage}, same reasoning
  * for being declared fresh here rather than imported. */
 export type EventMessage = { readonly message: { readonly source: MessageEndpoint; readonly payload: readonly number[] } };
 
@@ -75,7 +75,7 @@ function isBackboneEndpoint(endpoint: MessageEndpoint): endpoint is { readonly b
 //#endregion 🧬️WireTypes
 
 //#region 🔑️Capability
-/** 🔑️ TypeScript twin of Rust `CapabilityChecker` (`⚡️effects/🦀️component.rs`) — whether `actor`
+/** 🔑️ TypeScript twin of Rust `CapabilityChecker` (`⚡️effects/🦀️.rs`) — whether `actor`
  * currently holds a grant covering `scope` (e.g. `"messaging.backbone:<uri>"`). A seam, not a real
  * grant table, exactly like its Rust counterpart. `actor` is a plain `string` (this codebase's
  * established id stand-in), mirroring Rust's `actor: u64` in spirit, not in wire type. */
@@ -99,7 +99,7 @@ export function backboneCapabilityScope(uri: string): string {
 //#endregion 🔑️Capability
 
 //#region 🧯️Outcomes
-/** 🧯️ TypeScript twin of Rust `BackboneError` (`⚡️effects/🦀️component.rs`) — NOT a wire/serde type on
+/** 🧯️ TypeScript twin of Rust `BackboneError` (`⚡️effects/🦀️.rs`) — NOT a wire/serde type on
  * the Rust side either (it derives `PartialEq`/`Eq`/`Debug` only, no `Serialize`), so this mirror is
  * for cross-language debugging/log-message parity, not machine-diffed against the Rust source the
  * way {@link MessageEndpoint} is. */
@@ -177,11 +177,11 @@ export class RecordingBackboneOverflowReporter implements BackboneOverflowReport
  * "use as many existing libraries as possible"). That package's `package.json` only exports its `.`
  * entry (`🧵️shard-client.ts`), not a `📬️mailbox` subpath, so this file imports it by relative path —
  * the SAME "sidestep a missing subpath export rather than edit a foreign-leased config file" pattern
- * `ShellHost/🟦️component.tsx` already documents for its own `🟦️backbone-worker.ts` import. */
+ * `ShellHost/🟦️.tsx` already documents for its own `🟦️backbone-worker.ts` import. */
 import { createBoundedMailbox, type Backpressure, type BoundedMailbox, type CoalesceKey, type Lane } from "../../🔨️modules/🎭️actor/📦️packages/🟦️typescript/📬️mailbox.ts";
 export type { Backpressure, Lane };
 
-/** 🌉️ TypeScript twin of Rust `BackboneTransport` (`⚡️effects/🦀️component.rs`) — a seam, not a real
+/** 🌉️ TypeScript twin of Rust `BackboneTransport` (`⚡️effects/🦀️.rs`) — a seam, not a real
  * implementation. `#region 🌉️WorkerTransport` below provides the reference implementation that routes
  * through `🟦️backbone-worker.ts`'s existing document transport. */
 export interface BackboneTransport {
@@ -404,7 +404,7 @@ export class EffectBackbone {
 
 //#region 🌉️GuestWire
 /** 🌉️ Host↔guest wire shape for one backbone message, EXACTLY as specified by the Rust
- * `BackboneRegistry` module doc (`⚡️effects/🦀️component.rs`, `#region 📡️EffectBackbone`, "Wire shape
+ * `BackboneRegistry` module doc (`⚡️effects/🦀️.rs`, `#region 📡️EffectBackbone`, "Wire shape
  * for the TypeScript counterpart"): `{ "kind": "send" | "delta", "uri": string, "payload": <base64>,
  * "revision"?: number }` — `send` mirrors `Effect::SendMessage`'s `payload: Vec<u8>` (base64 here,
  * raw bytes host-side); `delta` carries {@link EffectBackbone.nextRevision} so the guest can detect a
@@ -456,9 +456,9 @@ export function decodeBackboneGuestMessage(message: BackboneGuestMessage): Event
 /** 🌉️ terra-web-effect-backbone: "route through `🟦️backbone-worker.ts`'s existing document/blob
  * transport rather than opening a second path to the hub" — this region never opens a WebSocket or
  * `EventSource` itself; it only posts the ALREADY-EXISTING `BackboneWorkerRequest` kinds
- * (`open`/`send`) that file's own `🔖️BackboneWorkerProtocol` region (`🟦️component.ts`) already
+ * (`open`/`send`) that file's own `🔖️BackboneWorkerProtocol` region (`🟦️.ts`) already
  * exports, and decodes the ALREADY-EXISTING `BackboneWorkerResponse` events it emits. Neither
- * `🟦️backbone-worker.ts` nor `🟦️component.ts` is edited by this packet.
+ * `🟦️backbone-worker.ts` nor `🟦️.ts` is edited by this packet.
  *
  * Encoding choice: an `EffectBackbone` uri is modeled as one opened `documentId` with
  * `ArtifactActorMsg.publishPreview`/`ArtifactEvent.preview` as the send/receive primitive — the ONLY
@@ -469,8 +469,8 @@ export function decodeBackboneGuestMessage(message: BackboneGuestMessage): Event
  * does NOT give you (no lossless queueing across a hub drop — matches Rust's own `send` having no
  * queueing either; no dedicated inbound "send" vs "delta" distinction — `bridgeBackboneWorkerInbound`
  * below can only feed {@link EffectBackbone.fanoutDelta}, not {@link EffectBackbone.deliverMessage}). */
-import type { ArtifactActorConfig, ArtifactActorMsg, BackboneWorkerResponse, BackboneWorkerWireMessage, PersistenceBinding } from "./🟦️component.ts";
-import { decodeBackboneWorkerResponse, encodeBackboneWorkerRequest } from "./🟦️component.ts";
+import type { ArtifactActorConfig, ArtifactActorMsg, BackboneWorkerResponse, BackboneWorkerWireMessage, PersistenceBinding } from "./🟦️.ts";
+import { decodeBackboneWorkerResponse, encodeBackboneWorkerRequest } from "./🟦️.ts";
 
 /** 🌉️ The slice of `Worker` this bridge depends on — lets tests (and any non-browser host) inject a
  * fake without a real `Worker`/`MessagePort`. A real browser `Worker` satisfies this structurally
@@ -714,7 +714,7 @@ if (import.meta.vitest) {
     }
 
     it("send lazily opens the document once, then posts publishPreview through the existing send request kind", async () => {
-      const { decodeBackboneWorkerRequest } = await import("./🟦️component.ts");
+      const { decodeBackboneWorkerRequest } = await import("./🟦️.ts");
       const { worker, posted } = fakeWorker();
       const transport = createBackboneWorkerTransport(worker, "studio-42", { actor: "actor-1", hub: { kind: "hub", baseUrl: "https://hub.example", spaceId: "space-1" } });
       transport.send("studio-42", [1, 2]);
@@ -733,7 +733,7 @@ if (import.meta.vitest) {
     });
 
     it("bridgeBackboneWorkerInbound turns an inbound preview event into a fanoutDelta reaching a subscribed actor, chaining any prior onmessage", async () => {
-      const { encodeBackboneWorkerResponse } = await import("./🟦️component.ts");
+      const { encodeBackboneWorkerResponse } = await import("./🟦️.ts");
       const { worker } = fakeWorker();
       const priorCalls: unknown[] = [];
       const priorHandler = (event: { readonly data: unknown }): void => {
@@ -752,7 +752,7 @@ if (import.meta.vitest) {
     });
 
     it("bridgeBackboneWorkerInbound ignores non-event and non-preview responses without throwing", async () => {
-      const { encodeBackboneWorkerResponse } = await import("./🟦️component.ts");
+      const { encodeBackboneWorkerResponse } = await import("./🟦️.ts");
       const { worker } = fakeWorker();
       const backbone = new EffectBackbone();
       backbone.subscribe("actor-1", "studio-42");
@@ -795,7 +795,7 @@ if (import.meta.vitest) {
         .map((part) => part.split(":")[0]!.trim());
     }
 
-    it("MessageEndpoint variant/field names match the live Rust enum in 🎠️kernel/🦀️component.rs", async () => {
+    it("MessageEndpoint variant/field names match the live Rust enum in 🎠️kernel/🦀️.rs", async () => {
       const { readFileSync } = await import("node:fs");
       const kernelUrl = new URL("../../🔨️modules/🎠️kernel/🦀️.rs", import.meta.url);
       const source = readFileSync(kernelUrl, "utf8");
@@ -810,7 +810,7 @@ if (import.meta.vitest) {
       }
     });
 
-    it("Effect::SendMessage fields match the live Rust variant in 🎠️kernel/🦀️component.rs", async () => {
+    it("Effect::SendMessage fields match the live Rust variant in 🎠️kernel/🦀️.rs", async () => {
       const { readFileSync } = await import("node:fs");
       const kernelUrl = new URL("../../🔨️modules/🎠️kernel/🦀️.rs", import.meta.url);
       const source = readFileSync(kernelUrl, "utf8");
@@ -819,7 +819,7 @@ if (import.meta.vitest) {
       expect(parseFieldList(variantMatch![1]!)).toEqual(["target", "payload"]);
     });
 
-    it("Event::Message fields match the live Rust variant in 🎠️kernel/🦀️component.rs", async () => {
+    it("Event::Message fields match the live Rust variant in 🎠️kernel/🦀️.rs", async () => {
       const { readFileSync } = await import("node:fs");
       const kernelUrl = new URL("../../🔨️modules/🎠️kernel/🦀️.rs", import.meta.url);
       const source = readFileSync(kernelUrl, "utf8");

@@ -5,7 +5,7 @@
   "displayName": "Change Mortar",
   "emoji": "🌬️",
   "aggregateVariant": "ChangeMortar",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

@@ -5,7 +5,7 @@
   "displayName": "Change Material Id",
   "emoji": "🪥",
   "aggregateVariant": "ChangeMaterialId",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

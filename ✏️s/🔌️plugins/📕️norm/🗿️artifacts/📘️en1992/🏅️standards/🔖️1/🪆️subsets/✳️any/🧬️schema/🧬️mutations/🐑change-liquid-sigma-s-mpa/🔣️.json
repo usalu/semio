@@ -5,7 +5,7 @@
   "displayName": "Change Liquid Sigma S Mpa",
   "emoji": "🐑",
   "aggregateVariant": "ChangeLiquidSigmaSMpa",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

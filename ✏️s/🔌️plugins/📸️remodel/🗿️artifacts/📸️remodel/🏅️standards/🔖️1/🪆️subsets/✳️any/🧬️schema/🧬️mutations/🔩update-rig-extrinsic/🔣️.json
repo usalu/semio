@@ -5,7 +5,7 @@
   "displayName": "Update Rig Extrinsic",
   "emoji": "🔩",
   "aggregateVariant": "UpdateRigExtrinsic",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": "update-rig-extrinsic",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

@@ -5,7 +5,7 @@
   "displayName": "Rename Process",
   "emoji": "✏️🔄",
   "aggregateVariant": "RenameProcess",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

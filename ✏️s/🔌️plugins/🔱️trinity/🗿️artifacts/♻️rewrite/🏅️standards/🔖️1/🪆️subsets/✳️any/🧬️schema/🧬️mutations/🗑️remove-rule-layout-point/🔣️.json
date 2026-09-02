@@ -5,18 +5,21 @@
   "displayName": "Remove Rule Layout Point",
   "emoji": "🗑️",
   "aggregateVariant": "RemoveRuleLayoutPoint",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": "remove-rule-layout-point",
-  "binaryTag": null,
+  "binaryTag": 6,
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
   "outcomeClasses": [
-    "info",
-    "applied"
+    "applied",
+    "warning"
   ],
   "composition": "atomic",
   "requiredLanguageSurfaces": [
     "rust",
+    "typescript",
+    "graphql",
+    "protobuf",
     "json-schema",
     "text",
     "binary"

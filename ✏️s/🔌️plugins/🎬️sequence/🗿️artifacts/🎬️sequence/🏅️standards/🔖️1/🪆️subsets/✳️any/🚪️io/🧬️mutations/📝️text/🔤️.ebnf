@@ -1,0 +1,37 @@
+(* ebnf sequence.sequence.mutations *)
+(* Below: ISO-14977-style mirror of the normative 📖️.grammar.semio (same production
+   names, kebab-case -> "space case"). This facet's .semio defines no header/body/payload
+   envelope (`start line`); the two lines above are preserved verbatim from the prior
+   identity fix for traceability but are not referenced below. *)
+document = header, body ;
+header = 'schema', space, 'sequence.sequence.mutations', newline ;
+
+line = create step
+     | delete step
+     | move step
+     | edit step params
+     | change step collapsed
+     | connect steps
+     | disconnect steps
+     | duplicate step ;
+create step = 'create-step', space, step block ;
+delete step = 'delete-step', space, id ;
+move step = 'move-step', space, id, space, number, space, number ;
+edit step params = 'edit-step-params', space, id, space, text ;
+change step collapsed = 'change-step-collapsed', space, id, space, boolean ;
+connect steps = 'connect-steps', space, id, space, id, space, id ;
+disconnect steps = 'disconnect-steps', space, id ;
+duplicate step = 'duplicate-step', space, id, space, id, space, number, space, number ;
+step block = '{', newline, step fields, '}' ;
+step fields = octet, { octet } ;
+id = octet, { octet } ;
+number = octet, { octet } ;
+text = octet, { octet } ;
+boolean = 'true'
+     | 'false' ;
+
+(* Framework dialect-primitive terminals, given one concrete definition each for a
+   self-contained mirror (not defined in the .semio itself — ticket-reported deviation). *)
+newline = [ '\r' ], '\n' ;
+octet = ? any single raw byte ? ;
+space = ' ' ;

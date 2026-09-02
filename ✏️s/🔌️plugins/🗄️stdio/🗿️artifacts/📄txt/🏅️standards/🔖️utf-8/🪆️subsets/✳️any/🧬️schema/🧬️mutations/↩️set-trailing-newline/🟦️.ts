@@ -1,5 +1,5 @@
 /** 🧬 set-trailing-newline canonical direct payload. */
-import { TxtProtobufReader, failTxtMutationDecode, txtExact, txtOwn, txtProtobufKey } from '../../🔨️modules/🧬️mutation-support/🟦️component.ts';
+import { TxtProtobufReader, failTxtMutationDecode, txtExact, txtOwn, txtProtobufKey } from '../../🔨️modules/🧬️mutation-support/🟦️.ts';
 export interface SetTrailingNewlinePayload { readonly value: boolean }
 
 const decode = (value: unknown, path: string): SetTrailingNewlinePayload => {

@@ -5,7 +5,7 @@
   "displayName": "Create Gcp",
   "emoji": "🧿",
   "aggregateVariant": "CreateGcp",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": "create-gcp",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

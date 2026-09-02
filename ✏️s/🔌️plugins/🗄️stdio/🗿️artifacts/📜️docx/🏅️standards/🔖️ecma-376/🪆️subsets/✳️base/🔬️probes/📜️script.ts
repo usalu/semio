@@ -12,7 +12,7 @@
 // (`[Content_Types].xml`, `word/document.xml`, `word/styles.xml`) — both are already vendored in this
 // repo's own `node_modules` (`jszip` 3.10.1, MIT/GPL-3.0-or-later; `fast-xml-parser` 5.11.1, MIT —
 // versions read directly off their own `package.json`, not guessed). The projection below implements
-// the SAME typed view `../🧪️oracle/🔣️.json`'s `semantic-docx-ecma-376-mutate-v1` comparisonProfile
+// the SAME typed view `../🔣️oracle.json`'s `semantic-docx-ecma-376-mutate-v1` comparisonProfile
 // documents: `body` (the ordered `w:body` block tree — paragraphs with style ref + ordered runs,
 // tables with ordered rows/cells, recursively) and `styles` (the ordered `w:styles` list, id/name/
 // basedOn), both order-sensitive; every OTHER real OPC part compared by content-type + digest as an

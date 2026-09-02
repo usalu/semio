@@ -38,7 +38,7 @@ import { dirname, join } from "node:path";
 /** 👪️ The fixture families the corpus is sharded and reported by. */
 export type Family = "topology-build" | "topology-remove" | "geometry-replace" | "move-vertex" | "booleans";
 
-/** 🧬️ The 13-verb vocabulary this subset's `🧬️schema/🧬️mutations/🦀️component.rs` dispatches — one kind per recipe. */
+/** 🧬️ The 13-verb vocabulary this subset's `🧬️schema/🧬️mutations/🦀️.rs` dispatches — one kind per recipe. */
 export type MutationKind =
   | "create-vertex"
   | "delete-vertex"

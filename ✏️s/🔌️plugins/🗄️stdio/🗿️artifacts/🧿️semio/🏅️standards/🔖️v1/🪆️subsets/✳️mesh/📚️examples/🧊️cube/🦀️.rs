@@ -1,0 +1,30 @@
+//! 📚️ Example "cube" for `stdio.semio.mesh` — the first real, non-hex-scaffold fixture for this
+//! subset (ARTIFACT-SYSTEM-OVERHAUL-REAL-CODECS-RUNTIME-REUSE-EVOLUTION's mesh wave).
+//! `PRIMARY_TEXT` is the genuine `SemioMeshSnapshot::print_dsl` output for
+//! `engine::demo_mesh_snapshot()` (`🏅️standards/🔖️v1/🪆️subsets/✳️mesh/⚙️engine/
+//! 🦀️.rs`) — asserted byte-identical to it by this subset's own `fixture_honesty_law`
+//! (`🚪️io/🦀️.rs`), so this fixture can never silently drift back to a fake.
+
+use semio_framework_plugin::{ExampleSource, LocalizedLabel};
+
+pub const ID: &str = "cube";
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn label() -> LocalizedLabel {
+    LocalizedLabel::native("Cube", "Cube")
+}
+pub const ICON: &str = "file";
+pub const PRIMARY_TEXT: &str = include_str!("🖼️assets/🗣️.dsl.semio");
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn source() -> ExampleSource {
+    ExampleSource::new(ID, label(), PRIMARY_TEXT, ICON)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    #[semio_framework_async_macros::async_test]
+    async fn cube_source_nonempty() {
+        assert!(!PRIMARY_TEXT.is_empty());
+        let _ = source();
+    }
+}

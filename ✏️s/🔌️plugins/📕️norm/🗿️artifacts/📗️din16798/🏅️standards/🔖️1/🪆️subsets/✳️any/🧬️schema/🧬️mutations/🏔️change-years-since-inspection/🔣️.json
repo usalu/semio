@@ -5,7 +5,7 @@
   "displayName": "Change Years Since Inspection",
   "emoji": "🏔️",
   "aggregateVariant": "ChangeYearsSinceInspection",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

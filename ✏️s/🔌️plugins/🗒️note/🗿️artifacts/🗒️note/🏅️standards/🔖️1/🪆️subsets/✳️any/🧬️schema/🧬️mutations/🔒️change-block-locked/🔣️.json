@@ -5,7 +5,7 @@
   "displayName": "Change Block Locked",
   "emoji": "🔒️",
   "aggregateVariant": "ChangeBlockLocked",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": "change-block-locked",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

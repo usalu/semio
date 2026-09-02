@@ -61,7 +61,7 @@ function crossPackageRelativeOverrides() {
       "♻️mit-bestand/**",
       "🌎️hub/**",
       // Sole transitional browser StoragePort adapter until OS chrome document projection owns persistence.
-      "🧰️framework/🔨️modules/🧩core/🟦️component.ts",
+      "🧰️framework/🔨️modules/🧩core/🟦️.ts",
     ],
     rules: {
       "no-restricted-globals": [

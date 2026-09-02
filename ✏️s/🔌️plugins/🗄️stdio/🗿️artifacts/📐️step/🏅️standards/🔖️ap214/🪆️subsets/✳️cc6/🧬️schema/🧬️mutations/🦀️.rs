@@ -5,7 +5,7 @@
 //! insert an entity, set an argument, remove an argument — eleven verbs that know nothing about
 //! AP214 and would be identical for any Part-21 file on earth. A conformance class is not a grammar,
 //! it is a FILTER, and the only edits that belong to it are the ones that move a document across the
-//! filter. Every variant below is one rule of `check_cc6_conformance` (`../🦀️component.rs`'s
+//! filter. Every variant below is one rule of `check_cc6_conformance` (`../🦀️.rs`'s
 //! `derived_analysis`), and there are no others because that function reads no other axis:
 //!
 //! | kind | rule | code |
@@ -39,9 +39,9 @@
 //! written anyway, because the shared inversion it routes through is class-neutral and a class must
 //! not assume its own reachability argument; it is documented as unreachable rather than deleted.
 //!
-//! @see ../../../✳️any/🚪️io/🪜️ladder/🦀️component.rs — the class-neutral edit implementations all six
+//! @see ../../../✳️any/🚪️io/🪜️ladder/🦀️.rs — the class-neutral edit implementations all six
 //!      `✳️ccN` vocabularies route through, so each axis has ONE implementation and six callers.
-//! @see ../🧪️oracle/🔣️.json — the `step-ap214-cc6` catalog `KINDS` is checked against.
+//! @see ../🔣️oracle.json — the `step-ap214-cc6` catalog `KINDS` is checked against.
 
 use crate::artifacts::step::schema::diff::StepDiff;
 use crate::artifacts::step::standards::v_ap214::engine::ladder::{self, ClassEdit, ProductIdentity, ShapeRepresentationRow};
@@ -83,7 +83,7 @@ pub enum StepCc6Mutation {
 }
 
 /// 📇️ Kebab-case spelling of every `StepCc6Mutation` variant, in declaration order — the
-/// `step-ap214-cc6` catalog in `../../🧪️oracle/🔣️.json` must match verbatim. Five kinds,
+/// `step-ap214-cc6` catalog in `../../🔣️oracle.json` must match verbatim. Five kinds,
 /// not six: see the module header for why a demotion verb would be unobservable at this ceiling.
 pub const KINDS: &[&str] = &["set-snapshot", "set-file-schema", "set-product-identity", "set-shape-representation"];
 

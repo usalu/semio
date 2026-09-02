@@ -7,19 +7,19 @@ IMPLEMENTATION, written in another language from the format's own committed spec
 
 * the envelope — `semio <plugin>.<artifact>.<component> v<version>` preamble for text, and the
   `0x89 'S' 'E' 'M' 0D 0A 1A 0A` magic + little-endian u32 token length + token for binary — is
-  specified in `🧰️framework/🛍️products/💻️os/🔨️modules/🧬️semio/🦀️component.rs`'s envelope section,
+  specified in `🧰️framework/🛍️products/💻️os/🔨️modules/🧬️semio/🦀️.rs`'s envelope section,
   which is the carrier's normative description;
 * the DSL body is the committed grammar
-  `../../🏅️standards/🔖️v1/🪆️subsets/✳️text/🧬️schema/📸️snapshot/📝️text/📖️component.grammar.semio`
+  `../../🏅️standards/🔖️v1/🪆️subsets/✳️text/🧬️schema/📸️snapshot/📝️text/📖️.grammar.semio`
   (`document = artifact-mark schema-line runs-line`, hex-encoded scalars, `mark-kind = b|i|c|l`);
 * the pack body is the committed protocol
-  `…/📸️snapshot/💾️binary/📡️component.protocol.semio` (`format u8`, then varint-length-prefixed
+  `…/📸️snapshot/💾️binary/📡️.protocol.semio` (`format u8`, then varint-length-prefixed
   UTF-8 `schema`), whose description stops at the `runs` array by its own admission — the repeated
   record layout below was DERIVED from the committed `🎒️example.pack.semio` bytes, field order taken
   from the grammar, and `pack_bytes` re-encodes that committed file byte for byte, which is what
   proves the derivation right;
 * the seven verbs and their argument lists are the committed grammar
-  `…/🧬️schema/🧬️mutations/📝️text/📖️component.grammar.semio`, and their JSON wire form is the
+  `…/🧬️schema/🧬️mutations/📝️text/📖️.grammar.semio`, and their JSON wire form is the
   committed per-kind specification vectors under `…/🧬️mutations/<kind>/🧪️tests/<fixture>/`.
 
 Nothing here imports, links, wraps or transliterates the Rust subject. Every function was written
@@ -58,7 +58,7 @@ ARTICLE_PACK = "local://🎒️zukunft-bau-entwerfen-mit-bestand.pack.semio"
 #: 🗣️ The tiny committed note, kept for the BYTE half of the identity law: its two files were
 #: written by the RUST codec, so this implementation reproducing them is a cross-language byte
 #: agreement the article pair — written by this implementation — cannot restate.
-NOTE_DSL = "asset://🏅️standards/🔖️v1/🪆️subsets/✳️text/📚️examples/📃️note/🖼️assets/🗣️example.dsl.semio"
+NOTE_DSL = "asset://🏅️standards/🔖️v1/🪆️subsets/✳️text/📚️examples/📃️note/🖼️assets/🗣️.dsl.semio"
 NOTE_PACK = "asset://🏅️standards/🔖️v1/🪆️subsets/✳️text/📚️examples/📃️note/🖼️assets/🎒️example.pack.semio"
 
 

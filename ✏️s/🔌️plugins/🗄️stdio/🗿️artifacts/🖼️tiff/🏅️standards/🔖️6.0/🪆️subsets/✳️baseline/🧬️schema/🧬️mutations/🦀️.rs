@@ -10,7 +10,7 @@
 //! the 65 536 tag numbers with any field type, which is the right vocabulary for editing a TIFF and
 //! the wrong one for moving a document between conformance classes. A Baseline class is not a
 //! property of an arbitrary tag; it is a property of five specific fields of IFD 0, and
-//! `check_tiff_baseline_conformance` (`../🦀️component.rs`) reads exactly those:
+//! `check_tiff_baseline_conformance` (`../🦀️.rs`) reads exactly those:
 //!
 //! | Axis | Diagnostic | Restriction |
 //! |---|---|---|
@@ -37,7 +37,7 @@
 //!
 //! # Where this vocabulary is observable, and where it is not
 //!
-//! `encode_tiff` (`../../✳️any/🚪️io/🦀️component.rs`) REGENERATES every one of `CORE_STRIP_TAGS` on
+//! `encode_tiff` (`../../✳️any/🚪️io/🦀️.rs`) REGENERATES every one of `CORE_STRIP_TAGS` on
 //! IFD 0 from the raster it is about to write — `BitsPerSample` 8, `Compression` 1 (or 32773 for the
 //! PackBits entry point), `PhotometricInterpretation` 2, `SamplesPerPixel` 3, `RowsPerStrip`,
 //! `StripByteCounts`, `StripOffsets` — because those fields DESCRIBE the strip it emits and any
@@ -53,7 +53,7 @@
 //! byte-observable, because `TileWidth`/`TileLength` are outside `CORE_STRIP_TAGS` and are carried
 //! verbatim.
 //!
-//! The catalog `tiff-6-0-baseline` (`../../🧪️oracle/🔣️.json`) is therefore declared and
+//! The catalog `tiff-6-0-baseline` (`../../🔣️oracle.json`) is therefore declared and
 //! claimed by `mutate-tiff-6-0-baseline`, and that case measures this vocabulary where its axes
 //! actually live: on the DECODED SNAPSHOT, against [`check_tiff_baseline_conformance`]'s verdict.
 //! Each kind must move its own axis and raise its own diagnostic; each inverse must restore the
@@ -62,8 +62,8 @@
 //! re-encode, and read both through the INDEPENDENT `image`-backed IFD reader the sibling `✳️any`
 //! subset registers.
 //!
-//! @see ../🦀️component.rs — this subset's conformance check, one axis per variant below.
-//! @see ../../✳️any/🧬️schema/🧬️mutations/🦀️component.rs — the DOCUMENT vocabulary this one is disjoint from.
+//! @see ../🦀️.rs — this subset's conformance check, one axis per variant below.
+//! @see ../../✳️any/🧬️schema/🧬️mutations/🦀️.rs — the DOCUMENT vocabulary this one is disjoint from.
 
 use crate::artifacts::tiff::standards::v6_0::subsets::document::schema::diff::{TiffDiff, TiffIfdDiff, TiffIfdModified, TiffIfdsDiff, TiffTagAdded, TiffTagModified, TiffTagsDiff};
 use crate::artifacts::tiff::standards::v6_0::subsets::document::schema::snapshot::{TiffFieldType, TiffSnapshot, TiffTag, TiffValues, TAG_BITS_PER_SAMPLE, TAG_COMPRESSION, TAG_PHOTOMETRIC, TAG_STRIP_OFFSETS, TAG_TILE_LENGTH, TAG_TILE_WIDTH};
@@ -107,7 +107,7 @@ pub enum TiffBaselineMutation {
 }
 
 /// 🏷️ Kebab-case spelling of every `TiffBaselineMutation` variant, in declaration order — the
-/// vocabulary the `tiff-6-0-baseline` mutation catalog (`../../🧪️oracle/🔣️.json`) declares
+/// vocabulary the `tiff-6-0-baseline` mutation catalog (`../../🔣️oracle.json`) declares
 /// and `mutate-tiff-6-0-baseline` measures itself against.
 /// `kinds_match_enum_variants_in_declaration_order` below keeps the two honest against the enum,
 /// and `kinds_match_the_committed_catalog` against the manifest.
@@ -374,7 +374,7 @@ mod tests {
     /// until the completeness gate learned to see an unregistered one.
     #[test]
     fn kinds_match_the_committed_catalog() {
-        let manifest = include_str!("../../🧪️oracle/🔣️.json");
+        let manifest = include_str!("../../🔣️oracle.json");
         for kind in KINDS {
             assert!(manifest.contains(&format!("\"{kind}\"")), "KINDS entry {kind:?} must also appear in the committed oracle manifest's catalog");
         }

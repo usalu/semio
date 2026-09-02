@@ -509,17 +509,17 @@ mod direct_leaf_tests {
     fn facade_decoders_construct_canonical_mutations_and_reject_malformed_boundaries() {
         let apply = ChangeNodeNameMutation::Apply(GltfChangeNodeNamePayload { node: 0, value: Some("Pivot".into()) });
         let present = value([("present", DslValue::String("Pivot".into()))]);
-        let graphql = value([("apply", value([("node", DslValue::Number(0.0)), ("value", present.clone())]))]);
+        let graphql = value([("apply", value([("node", DslValue::uint(0)), ("value", present.clone())]))]);
         assert_eq!(decode_gltf_change_node_name_graphql(&graphql).expect("graphql apply decodes"), apply);
         assert_eq!(decode_gltf_change_node_name_proto(&graphql).expect("proto apply decodes"), apply);
         assert_eq!(decode_gltf_change_node_name_protobuf(&[0x0a, 0x0b, 0x08, 0x00, 0x12, 0x07, 0x0a, 0x05, b'P', b'i', b'v', b'o', b't']).expect("protobuf apply decodes"), apply);
         let bom = ChangeNodeNameMutation::Apply(GltfChangeNodeNamePayload { node: 0, value: Some("\u{feff}Pivot".into()) });
         assert_eq!(decode_gltf_change_node_name_protobuf(&[0x0a, 0x0e, 0x08, 0x00, 0x12, 0x0a, 0x0a, 0x08, 0xef, 0xbb, 0xbf, b'P', b'i', b'v', b'o', b't']).expect("protobuf preserves bom"), bom);
-        let false_absent = value([("apply", value([("node", DslValue::Number(0.0)), ("value", value([("absent", DslValue::Bool(false))]))]))]);
+        let false_absent = value([("apply", value([("node", DslValue::uint(0)), ("value", value([("absent", DslValue::Bool(false))]))]))]);
         assert_eq!(decode_gltf_change_node_name_graphql(&false_absent).expect_err("graphql false absent rejects").code, "nullable");
-        let nonempty_absent = value([("apply", value([("node", DslValue::Number(0.0)), ("value", value([("absent", value([("extra", DslValue::Bool(true))]))]))]))]);
+        let nonempty_absent = value([("apply", value([("node", DslValue::uint(0)), ("value", value([("absent", value([("extra", DslValue::Bool(true))]))]))]))]);
         assert_eq!(decode_gltf_change_node_name_proto(&nonempty_absent).expect_err("proto nonempty absent rejects").code, "unknown");
-        let duplicate = DslValue::Object(vec![("apply".into(), value([("node", DslValue::Number(0.0)), ("value", present.clone())])), ("apply".into(), value([("node", DslValue::Number(0.0)), ("value", present)]))]);
+        let duplicate = DslValue::Object(vec![("apply".into(), value([("node", DslValue::uint(0)), ("value", present.clone())])), ("apply".into(), value([("node", DslValue::uint(0)), ("value", present)]))]);
         assert_eq!(decode_gltf_change_node_name_graphql(&duplicate).expect_err("duplicate graphql key rejects").code, "duplicate");
         assert_eq!(decode_gltf_change_node_name_protobuf(&[]).expect_err("protobuf missing phase rejects").code, "truncated");
         assert_eq!(decode_gltf_change_node_name_protobuf(&[0x18, 0x00]).expect_err("protobuf unknown phase rejects").code, "phase");

@@ -13,7 +13,7 @@ id = "ui-contract"
 workspace = true
 
 [lib]
-path = "📦️glue.rs"
+path = "🦀️.rs"
 
 [features]
 default = []

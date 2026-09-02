@@ -5,7 +5,7 @@
   "displayName": "Set Snapshot",
   "emoji": "📄",
   "aggregateVariant": "SetSnapshot",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": "set-snapshot",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

@@ -34,7 +34,7 @@ wasm-opt = ["-Oz", "--strip-debug", "--strip-producers", "--enable-bulk-memory",
 
 [lib]
 crate-type = ["rlib", "cdylib"]
-path = "📦️glue.rs"
+path = "🦀️.rs"
 
 [dependencies]
 semio-framework-async = { workspace = true }
@@ -45,6 +45,10 @@ semio-framework-job = { workspace = true }
 serde = { version = "1.0.219", features = ["derive"] }
 serde_json = "1.0.140"
 image = { version = "0.25", default-features = false, features = ["png"] }
+# 🏔️ Required by the path-mounted `🏔️terrain/🦀️.rs` above, which decodes Terrarium RGB-encoded
+# elevation PNGs via the first-party codec (no third-party runtime dependency) instead of `image`.
+# RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS (26/09/01).
+semio-framework-pixels = { path = "../../../🖼️pixels/📦️packages/🦀️rust", package = "semio-framework-pixels" }
 
 # 🌉️ Browser-only `wasm_bridge` session wrappers (Terrain/NodeGraph/TiledMap/Paint — each wraps a
 # pure `*Core` type that stays target-neutral). Excluded from `wasm32-wasip2` because

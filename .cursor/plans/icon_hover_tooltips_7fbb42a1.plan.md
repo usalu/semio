@@ -9,7 +9,7 @@ isProject: false
 
 ## Context
 
-Hover hints today are **native `title` attributes**, not a Tooltip component (Radix Tooltip was dissolved with zero consumers). `[ChromeControlHint](🧰️framework/🔨️modules/🖱️ui/🧱️elements/💡️ChromeControlHint/🟦️component.tsx)` clones `title`/`aria-label` from `[useControlAccessibleLabel](🧰️framework/🔨️modules/🖱️ui/🎱️elements/🏷️Label/🟦️component.tsx)`. Most icon controls set `title` themselves; `[UiDriver.tooltips](🧰️framework/🔨️modules/🖱️ui/🎱️elements/🚗️UiDriver/🟦️component.tsx)` / `hotkeys` axes exist (`full|minimal|none`, `inline|tooltip|none`) but tip text is unwired. Drag grips always resolve generic `ui.tree.drag.sort` → “Reorder”, even on window tabs whose name is `tab.title` (e.g. “Perspective”).
+Hover hints today are **native `title` attributes**, not a Tooltip component (Radix Tooltip was dissolved with zero consumers). `[ChromeControlHint](🧰️framework/🔨️modules/🖱️ui/🧱️elements/💡️ChromeControlHint/🟦️.tsx)` clones `title`/`aria-label` from `[useControlAccessibleLabel](🧰️framework/🔨️modules/🖱️ui/🎱️elements/🏷️Label/🟦️.tsx)`. Most icon controls set `title` themselves; `[UiDriver.tooltips](🧰️framework/🔨️modules/🖱️ui/🎱️elements/🚗️UiDriver/🟦️.tsx)` / `hotkeys` axes exist (`full|minimal|none`, `inline|tooltip|none`) but tip text is unwired. Drag grips always resolve generic `ui.tree.drag.sort` → “Reorder”, even on window tabs whose name is `tab.title` (e.g. “Perspective”).
 
 **Chosen approach:** keep native `title` (avoids reintroducing Radix trigger-ref loops). Centralize tip composition, gate on `driver.tooltips`, append hotkeys when present, and give drag handles parameterized subject copy.
 
@@ -37,7 +37,7 @@ Repo MCP is not connected in this session (same as prior tickets). Associate wit
 
 ### 1. Central tooltip text hook
 
-In `[🏷️Label/🟦️component.tsx](🧰️framework/🔨️modules/🖱️ui/🎱️elements/🏷️Label/🟦️component.tsx)` (next to `useControlAccessibleLabel`):
+In `[🏷️Label/🟦️.tsx](🧰️framework/🔨️modules/🖱️ui/🎱️elements/🏷️Label/🟦️.tsx)` (next to `useControlAccessibleLabel`):
 
 - Add `useControlTooltipText(id?, text?, options?)` that:
   - Returns `undefined` when `driver.tooltips === "none"`.
@@ -48,15 +48,15 @@ In `[🏷️Label/🟦️component.tsx](🧰️framework/🔨️modules/🖱️u
 
 ### 2. Upgrade `ChromeControlHint`
 
-Update `[ChromeControlHint](🧰️framework/🔨️modules/🖱️ui/🎱️elements/💡️ChromeControlHint/🟦️component.tsx)` to use `useControlTooltipText` for `title`, and keep `aria-label` from `useControlAccessibleLabel` only. Respect existing child `title`/`aria-label` overrides.
+Update `[ChromeControlHint](🧰️framework/🔨️modules/🖱️ui/🎱️elements/💡️ChromeControlHint/🟦️.tsx)` to use `useControlTooltipText` for `title`, and keep `aria-label` from `useControlAccessibleLabel` only. Respect existing child `title`/`aria-label` overrides.
 
 ### 3. Wire icon-only controls to the same tip text
 
 Replace raw `title={accessibleLabel}` with `title={useControlTooltipText(...)}` (or wrap with `ChromeControlHint`) in:
 
-- `[⚡️ActionGroup](�¸framework/🔨️modules/🖱️ui/🎱️elements/⚡️ActionGroup/🟦️component.tsx)` — `Action`, `ActionGroupItem` (also add missing `aria-label` on icon-only `ActionGroupItem`)
-- `[🎛️ButtonGroup](�¸framework/🔨️modules/🖱️ui/🎱️elements/🎛️ButtonGroup/🟦️component.tsx)` — `ButtonGroupItem`
-- `[🎛️ToggleGroup](�¸framework/🔨️modules/🖱️ui/🎱️elements/🎛️ToggleGroup/🟦️component.tsx)` / Toggle path
+- `[⚡️ActionGroup](�¸framework/🔨️modules/🖱️ui/🎱️elements/⚡️ActionGroup/🟦️.tsx)` — `Action`, `ActionGroupItem` (also add missing `aria-label` on icon-only `ActionGroupItem`)
+- `[🎛️ButtonGroup](�¸framework/🔨️modules/🖱️ui/🎱️elements/🎛️ButtonGroup/🟦️.tsx)` — `ButtonGroupItem`
+- `[🎛️ToggleGroup](�¸framework/🔨️modules/🖱️ui/🎱️elements/🎛️ToggleGroup/🟦️.tsx)` / Toggle path
 - Pane chrome toggle in Tree / Canvas call sites that already set `title`
 
 Only set hover tips when there is **no visible inline label** (`useControlInlineText` empty / `driver.labels === "icons"`), except drag handles which are always unlabeled affordances.
@@ -65,13 +65,13 @@ Only set hover tips when there is **no visible inline label** (`useControlInline
 
 ### 4. Contextual drag-handle tooltips
 
-Extend `[DragHandle](�¸framework/🔨️modules/🖱️ui/🎱️elements/🧱️DragHandle/🟦️component.tsx)`:
+Extend `[DragHandle](�¸framework/🔨️modules/🖱️ui/🎱️elements/🧱️DragHandle/🟦️.tsx)`:
 
 ```tsx
 subject?: string  // e.g. tab.title / pane label
 ```
 
-Add i18n keys (EN + DE) in schema (`[📚️I18n](�¸framework/🔨️modules/🖱️ui/🎱️elements/📚️I18n/🟦️component.tsx)`) and bundles in react index:
+Add i18n keys (EN + DE) in schema (`[📚️I18n](�¸framework/🔨️modules/🖱️ui/🎱️elements/📚️I18n/🟦️.tsx)`) and bundles in react index:
 
 - `ui.tree.drag.sortTarget`: EN `"Click and hold left click to drag {{target}}"` / DE equivalent
 - `ui.tree.drag.transferTarget`: EN `"Click and hold left click to drag {{target}}"` (transfer wording if distinct) / DE equivalent
@@ -80,7 +80,7 @@ When `subject` is set, resolve via `t(labelId + "Target" or dedicated key, { tar
 
 Pass `subject` at call sites that know the name:
 
-- `[🎨️Canvas` ModeDockTabBar](�¸framework/🔨️modules/🖱️ui/🎱️elements/🎨️Canvas/🟦️component.tsx) — `subject={tab.title}`
-- `[📑️PanelTabBar](�¸framework/🔨️modules/🖱️ui/🎱️elements/📑️PanelTabBar/🟦️component.tsx)` — `subject={tab.name}`
+- `[🎨️Canvas` ModeDockTabBar](�¸framework/🔨️modules/🖱️ui/🎱️elements/🎨️Canvas/🟦️.tsx) — `subject={tab.title}`
+- `[📑️PanelTabBar](�¸framework/🔨️modules/🖱️ui/🎱️elements/📑️PanelTabBar/🟦️.tsx)` — `subject={tab.name}`
 - [`WindowPaneChromeToggle`](�¸framework/🔨️modules/🖱️ui/🎱️elements/📵️Tree/
 

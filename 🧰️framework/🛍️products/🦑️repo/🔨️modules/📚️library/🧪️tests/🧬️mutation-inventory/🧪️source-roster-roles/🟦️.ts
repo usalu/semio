@@ -7,7 +7,7 @@ import ts from "typescript";
 
 //#region 🧭️Inputs
 const root = resolve(import.meta.dir, "../../../../../../../../");
-const inventorySchemaPath = resolve(import.meta.dir, "../🛂️schema/🔣️inventory.json");
+const inventorySchemaPath = resolve(import.meta.dir, "../🛂️schema/🔣️.json");
 const vectorsPath = resolve(import.meta.dir, "🔣️.json");
 const vectorsSchemaPath = resolve(import.meta.dir, "🧬️schema/🔣️.json");
 const rootScriptPath = resolve(root, "📜️script.ts");

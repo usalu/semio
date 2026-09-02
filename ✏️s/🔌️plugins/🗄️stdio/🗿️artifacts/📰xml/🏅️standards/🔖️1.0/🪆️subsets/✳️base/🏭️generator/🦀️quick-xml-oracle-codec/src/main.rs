@@ -4,7 +4,7 @@
 //! Cargo.toml — its own `[workspace]`, isolated from the repository's root workspace and Cargo.lock).
 //!
 //! This binary is independent of, and never shares code with, this subset's own
-//! `🧪️oracle/🦀️component.rs` (which is registered `cross-semio-implementation` and computes what a
+//! `🦀️oracle.rs` (which is registered `cross-semio-implementation` and computes what a
 //! mutation SHOULD produce) or with the sibling SVG 1.1 base subset's own quick-xml-based oracle —
 //! both compose the same crate but own their own implementations, per this subset's own doc comment.
 //!
@@ -26,7 +26,7 @@
 //! `quick-xml` 0.42 splits every `&entity;`/`&#NNN;` reference out of `Event::Text` into its own
 //! `Event::GeneralRef`, so [`resolve_general_ref`] narrows resolution to numeric character
 //! references plus the five predefined XML entities — the exact same scope this subset's own
-//! `🧪️oracle/🦀️component.rs::resolve_general_ref` documents — and the shared base document's own
+//! `🦀️oracle.rs::resolve_general_ref` documents — and the shared base document's own
 //! `item#i1` text run is deliberately pre-escaped with BOTH a named entity (`&amp;`) and a numeric
 //! character reference (`&#169;`) so every fixture in this corpus exercises the reassembly-across-
 //! events discipline, not just the `set-text` recipe.

@@ -1,0 +1,39 @@
+dialect protocol
+protocol stdio.bcf.mutations
+version 1
+schema stdio.bcf
+start record
+
+# FG-wave: REAL binary op frame (`format u8 | tag u8 | variant payload`), replacing F6's
+# `print_op().into_bytes()` text-as-binary shortcut (`../../🦀️.rs`'s old
+# `OpBinary::encode_op`/`decode_op`). `tag` is the `BcfMutation` variant ordinal, in the SAME
+# declaration order this artifact's own `enum BcfMutation` uses (`SetSnapshot`=1,
+# `SetVersion`=2, `InsertTopic`=3, `RemoveTopic`=4, `SetTopicMarkup`=5, `InsertComment`=6,
+# `RemoveComment`=7, `SetComment`=8, `InsertViewpoint`=9, `RemoveViewpoint`=10,
+# `SetViewpointCamera`=11, `SetViewpointComponents`=12, `SetViewpointSnapshot`=13 -- `NoMutation`
+# was dropped, ordinal 0 retired, not reassigned) -- both REAL
+# fixed fields, individually protocol-walked, matching
+# `📜️docx/…/🧬️mutations/💾️binary/📡️.protocol.semio`'s own `format`/`tag` header shape.
+#
+# Past that header, the variant's own payload is one opaque trailing `bytes` chain:
+# `SetSnapshot`'s whole `BcfSnapshot`, and every variant reaching `BcfCamera`/`BcfComponents`
+# (a genuine data-carrying `xs:choice` enum, `SetViewpointCamera`'s own `camera: Option<BcfCamera>`
+# field DIRECTLY, not just via a nested snapshot) hit the SAME `protocol-prim-ref-recursion`
+# mechanism gap every other stdio artifact's op payload hits (`Prim::Ref` unconditionally errors in
+# `walk_protocol`, confirmed unchanged through every pilot, `📖️grammar-recipe.md` §5) -- once ANY
+# variant's payload is structurally unwalkable, bundling every variant's payload into the SAME
+# opaque tail (rather than partially structuring only the simpler, flat-field variants) is the
+# honest, minimal-surface choice, same reasoning docx's own mutations protocol file gives.
+#
+# The Rust `encode_op`/`decode_op` side stays genuinely, fully structured past this header -- real
+# LEB128-varint-framed length-prefixed strings/bytes, 1-byte tri-state presence tags, and 1-byte
+# enum-variant tags (reusing this artifact's `../🔺️diff/🦀️.rs` `pub(crate)` binary
+# primitives -- `write_str_lp`/`write_bytes_lp`/`enc_topic_bin`/`enc_comment_bin`/
+# `enc_viewpoint_bin`/`enc_camera_bin`/`enc_components_bin`/`enc_bcf_snapshot_bin`/... -- rather
+# than re-deriving them a second time) -- round-trip tested independently of this protocol
+# description, same honest-boundary treatment `📖️grammar-recipe.md` §2.5 documents.
+framing record
+header fixed 2
+field format u8
+field tag u8
+chain payload bytes

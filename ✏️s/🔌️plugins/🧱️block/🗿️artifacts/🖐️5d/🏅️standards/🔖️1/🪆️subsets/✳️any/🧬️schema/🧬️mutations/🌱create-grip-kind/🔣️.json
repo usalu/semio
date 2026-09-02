@@ -5,7 +5,7 @@
   "displayName": "Create Grip Kind",
   "emoji": "🌱",
   "aggregateVariant": "CreateGripKind",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": "create-grip-kind",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

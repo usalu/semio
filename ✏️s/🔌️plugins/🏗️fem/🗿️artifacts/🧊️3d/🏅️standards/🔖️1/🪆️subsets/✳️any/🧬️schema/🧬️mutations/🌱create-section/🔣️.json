@@ -5,7 +5,7 @@
   "displayName": "Create Section",
   "emoji": "🌱",
   "aggregateVariant": "CreateSection",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": "create-section",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

@@ -5,7 +5,7 @@
   "displayName": "Change Storage Allowance Kwh",
   "emoji": "🌼",
   "aggregateVariant": "ChangeStorageAllowanceKwh",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

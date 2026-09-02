@@ -1,0 +1,39 @@
+dialect grammar
+grammar semio.value.snapshot
+extension semio
+start document
+
+# `store::ArtifactDsl::print_dsl`/`parse_dsl` (`🦀️.rs`'s `enc_semio_value_snapshot`/
+# `dec_semio_value_snapshot`) — the semio envelope preamble wraps a REAL recursive text encoding
+# of the WHOLE `SemioValueSnapshot`: `[hex(schema),<value>,[<node>,...]]`, every field its own
+# token, genuinely walked/parsed — NOT a hex dump of a `serde_json` blob (no `serde_json` anywhere
+# on this wire). This subset has no natural "on-disk file format" of its own (unlike `json`'s real
+# RFC8259 text), so `value` below reuses the SAME tag-prefixed grammar the sibling `🔺️diff`/
+# `🧬️mutations` facets already define for `SemioValue` — restated here so this leaf grammar stays
+# self-contained, mirroring `json`'s own `value`/`value`/`array` mutual recursion (`Ref`
+# self-recursion proven per the recipe's own §1.3(g)). `document` matches the fixture-honesty
+# harness's own reconstructed body shape (mandatory `semio stdio.semio.value.dsl v1` preamble
+# stripped and replaced with the bare `envelope_id()` token — `artifact-mark` below — before
+# recognition, same convention `json.snapshot`'s/`flow.snapshot`'s own grammars use).
+artifact-mark = "stdio.semio.value"
+document = artifact-mark "[" hex "," value "," "[" value-node* "]" "]"
+value-node = hex ":" value ","?
+
+# `enc_semio_value`/`dec_semio_value` — `Z` (null, no payload) / `B[0|1]` / `I[hex(lexeme)]` /
+# `F[hex(lexeme)]` / `S[hex(value)]` / `Y[hex(bytes)]` / `L[v1,v2,...]` / `M[hexkey1:v1,...]` /
+# `R[hex(id)]`. `List`/`Map` are genuinely recursive — `value` references `list-item`/`map-item`
+# which reference `value` back — exercised end-to-end by `grammar_conformance_law`'s own
+# genuinely-nested `sample_snapshot()`/`demo_*` fixtures (`🎹️composer/🦀️.rs`).
+value = "Z" | "B" "[" bit "]" | "I" "[" hex "]" | "F" "[" hex "]" | "S" "[" hex "]" | "Y" "[" hex "]" | "L" "[" list-item* "]" | "M" "[" map-item* "]" | "R" "[" hex "]"
+list-item = value ","?
+map-item = hex ":" value ","?
+bit = "0" | "1"
+
+# `hex` (bare `hex`, deliberately NOT defined as a production here) is the framework's built-in
+# `hex` MACRO (`📖️grammar/🦀️.rs`'s `default_macros`/`macro_hex_ok`) — a run of lowercase
+# hex digits (`hex_encode`/`enc_str`'s own alphabet), incl. the empty string. `Symbol::Ref` already
+# falls back from "no production of this name" to "macro of this name". This MUST stay a macro, not
+# a hand-rolled `{INT|IDENT}*`-shaped production: a production's `Star` is a single greedy pass with
+# NO backtracking, so a `hex` run directly followed by a bareword literal it shares a token KIND
+# with would get silently swallowed into the greedy Star — the macro's own backtracking
+# (`Recognizer::match_macro_span`, largest-span-first) is the only correct mechanism.

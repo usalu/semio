@@ -5,7 +5,7 @@
   "displayName": "Unbind Representation",
   "emoji": "✂️",
   "aggregateVariant": "UnbindRepresentation",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

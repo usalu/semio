@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
 /** 🖥️ Runs owned plugin-host checks and exact native test filters. */
-import { BundleScript, ScriptRouter, runBundleScriptMain, runCargo } from "../../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts";
+import { BundleScript, ScriptRouter, runBundleScriptMain, runCargo } from "../../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 
 //#region 🎯️Tasks
 class CheckScript extends BundleScript {

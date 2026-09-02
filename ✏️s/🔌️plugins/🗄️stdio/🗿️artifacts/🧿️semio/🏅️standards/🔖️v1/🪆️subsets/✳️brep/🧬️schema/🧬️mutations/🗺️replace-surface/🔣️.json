@@ -5,7 +5,7 @@
   "displayName": "Replace Surface",
   "emoji": "🗺️",
   "aggregateVariant": "ReplaceSurface",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

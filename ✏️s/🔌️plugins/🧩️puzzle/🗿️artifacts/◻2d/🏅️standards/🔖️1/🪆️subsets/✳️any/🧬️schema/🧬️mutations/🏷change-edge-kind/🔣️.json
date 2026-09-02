@@ -5,7 +5,7 @@
   "displayName": "Change Edge Kind",
   "emoji": "🏷",
   "aggregateVariant": "ChangeEdgeKind",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": "change-edge-kind",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

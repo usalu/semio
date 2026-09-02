@@ -9,7 +9,7 @@
 //! * [`project`] reads the conformance axes back through `lopdf`, so the expected state is the
 //!   committed `after` half of a fixture rather than something we computed.
 //!
-//! @see ../../../🧪️oracle/🦀️component.rs — the subset's own vocabulary and conformance axes.
+//! @see ../../../🦀️oracle.rs — the subset's own vocabulary and conformance axes.
 
 use lopdf::{dictionary, Dictionary, Document, Object, ObjectId, Stream};
 

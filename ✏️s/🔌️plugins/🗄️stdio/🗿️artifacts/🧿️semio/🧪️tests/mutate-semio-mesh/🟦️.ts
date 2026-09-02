@@ -25,11 +25,11 @@
  * documents alone:
  * - the envelope — `semio <schema>.dsl v<version>` for text, `0x89 'S' 'E' 'M' 0D 0A 1A 0A` plus a
  *   little-endian u32 token length and the token for binary — from
- *   `🧰️framework/🛍️products/💻️os/🔨️modules/🧬️semio/🦀️component.rs`'s envelope section;
- * - the DSL body from `../../🏅️standards/🔖️v1/🪆️subsets/✳️mesh/🧬️schema/📸️snapshot/📝️text/📖️component.grammar.semio`
+ *   `🧰️framework/🛍️products/💻️os/🔨️modules/🧬️semio/🦀️.rs`'s envelope section;
+ * - the DSL body from `../../🏅️standards/🔖️v1/🪆️subsets/✳️mesh/🧬️schema/📸️snapshot/📝️text/📖️.grammar.semio`
  *   (`document = artifact-mark schema-line meshes-line materials-line textures-line`, the six
  *   `topology` letters, `option-hex`, and plain bracketed number lists for the geometry buffers);
- * - the pack frame from `…/📸️snapshot/💾️binary/📡️component.protocol.semio` and its Kaitai mirror,
+ * - the pack frame from `…/📸️snapshot/💾️binary/📡️.protocol.semio` and its Kaitai mirror,
  *   which names what the opaque tail holds: *"per-mesh id + varint primitive count, per-primitive
  *   id/topology-tag/positions/normals/uvs/colors(real f64/f32 LE buffers)/indices(u32 LE)/
  *   material_id-option, per-material id/baseColor/metallic/roughness, per-texture id/mime/raw-bytes"*.
@@ -37,7 +37,7 @@
  *   `📚️examples/🧊️cube` bytes, whose DSL twin pins every field against a readable spelling, and the
  *   derivation is pinned by re-encoding that committed file byte for byte;
  * - the seventeen verbs, their argument lists and their JSON wire form from
- *   `…/🧬️schema/🧬️mutations/📝️text/📖️component.grammar.semio`, the committed proto and JSON schema
+ *   `…/🧬️schema/🧬️mutations/📝️text/📖️.grammar.semio`, the committed proto and JSON schema
  *   mirrors, and the committed per-kind `(before, mutation, after)` specification vectors.
  *
  * Nothing here imports, links, wraps or transliterates the Rust subject. Where the two disagree the
@@ -46,7 +46,7 @@
 
 // #region 🔌️Adapters
 import * as THREE from "three";
-import { defineTestAdapter, digest, type AdapterContext, type AdapterOutcome } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🟦️typescript/📦️index.ts";
+import { defineTestAdapter, digest, type AdapterContext, type AdapterOutcome } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🟦️typescript/🟦️.ts";
 // #endregion 🔌️Adapters
 
 // #region 🧬️Model
@@ -91,7 +91,7 @@ const KINDS = [
   "move-vertex",
 ] as const;
 
-const ARTIFACT_DSL = "local://🗣️artifact.dsl.semio";
+const ARTIFACT_DSL = "local://🗣️.dsl.semio";
 const ARTIFACT_PACK = "local://🎒️artifact.pack.semio";
 // #endregion 🧬️Model
 

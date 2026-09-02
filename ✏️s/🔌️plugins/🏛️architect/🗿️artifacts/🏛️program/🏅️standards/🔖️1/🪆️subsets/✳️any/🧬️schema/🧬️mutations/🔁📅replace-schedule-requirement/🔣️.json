@@ -5,7 +5,7 @@
   "displayName": "Replace Schedule Requirement",
   "emoji": "🔁📅",
   "aggregateVariant": "ReplaceScheduleRequirement",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

@@ -13,7 +13,7 @@ id = "metal-backend"
 workspace = true
 
 [lib]
-path = "📦️glue.rs"
+path = "🦀️.rs"
 
 [features]
 default = []

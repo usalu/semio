@@ -1,0 +1,23 @@
+# 🧬️ SemioImageSnapshot schema — real facet mirror of the Rust `🦀️.rs` sibling.
+enum SemioColorspace { RGB RGBA GRAYSCALE GRAYSCALE_ALPHA INDEXED }
+
+type SemioImageFrame {
+  delayMs: Int!
+  rgba8: String!
+}
+
+type SemioImageMetadataEntry {
+  key: String!
+  value: String!
+}
+
+type SemioImageSnapshot {
+  schema: String! @state(class: ARTIFACT)
+  width: Int! @state(class: ARTIFACT)
+  height: Int! @state(class: ARTIFACT)
+  colorspace: SemioColorspace! @state(class: ARTIFACT)
+  bitDepth: Int! @state(class: ARTIFACT)
+  frames: [SemioImageFrame!]! @state(class: ARTIFACT)
+  icc: String @state(class: ARTIFACT)
+  metadata: [SemioImageMetadataEntry!]! @state(class: ARTIFACT)
+}

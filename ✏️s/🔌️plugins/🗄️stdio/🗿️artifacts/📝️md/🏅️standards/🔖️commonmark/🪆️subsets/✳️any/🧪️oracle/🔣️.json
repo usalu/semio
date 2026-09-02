@@ -1,7 +1,7 @@
 {
   "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json",
   "schemaVersion": 2,
-  "_comment": "🧩️ This subset's own contribution: the mutation vocabulary belongs to ONE subset of ONE standard of ONE artifact, so its oracle registration and catalog live here rather than in the shared ✏️s/🔌️plugins/🗄️stdio/🧪️oracle/🔣️.json manifest. `comrak` parses AND renders CommonMark, so it can be BOTH the independent parser and the independent mutation performer — no shared entry in the manifest declares a `-mutate` capability, so this is a distinct id.",
+  "_comment": "🧩️ This subset's own contribution: the mutation vocabulary belongs to ONE subset of ONE standard of ONE artifact, so its oracle registration and catalog live here rather than in the shared ✏️s/🔌️plugins/🗄️stdio/🔣️oracle.json manifest. `comrak` parses AND renders CommonMark, so it can be BOTH the independent parser and the independent mutation performer — no shared entry in the manifest declares a `-mutate` capability, so this is a distinct id.",
   "oracles": [
     {
       "id": "comrak-md-commonmark-mutate",

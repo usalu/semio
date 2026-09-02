@@ -1,0 +1,11 @@
+(* stdio.tiff DSL text representation (store::ArtifactDsl::parse_dsl / print_dsl). The
+   `semio stdio.tiff.dsl v1` preamble line + its trailing newline are stripped by
+   store::semio_format::split_text_preamble BEFORE this grammar's `document` production runs.
+   TIFF has no textual syntax of its own — the DSL text is a whitespace-tolerant ASCII hex
+   dump of the REAL binary TIFF bytes (see ../💾️binary/🥋️.ksy for that binary's own
+   honest byte-order/IFD-chain/tag grammar). *)
+document = hex byte, { whitespace, hex byte } ;
+hex byte = hex digit, hex digit ;
+hex digit = "0" | "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9"
+          | "a" | "b" | "c" | "d" | "e" | "f" | "A" | "B" | "C" | "D" | "E" | "F" ;
+whitespace = { " " | "\t" | "\r" | "\n" } ;

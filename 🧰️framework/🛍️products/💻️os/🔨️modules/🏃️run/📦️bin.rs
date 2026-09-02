@@ -8,7 +8,7 @@
 
 // 🔁️ ticket 26/08/11/SEMIO-ARTIFACT-UNIFIED-IMPORT-EXPORT-AND-MEDIA-FORMAT-RETIREMENT W1: a `[[bin]]`
 // target is its own separate crate root — it does NOT inherit the `extern crate ... as store;`/
-// `as workflow;` aliases the lib's own `📦️glue.rs` declares, so this binary needs its own copies
+// `as workflow;` aliases the lib's own `🦀️.rs` declares, so this binary needs its own copies
 // (this was always true; it was only ever masked because the lib itself failed to compile first,
 // so cargo never got far enough to check this file — see the lib's own W1 fix history).
 extern crate semio_framework as store;
@@ -121,9 +121,9 @@ struct RegistryPluginEntry {
 }
 
 /// ✅️ R1-native-manifest: maps every registered plugin/extension id to its committed
-/// `🛂️descriptor.semio` path — `<cratePath>/../../🛂️descriptor.semio` (`cratePath` ends in
+/// `🛂️.descriptor.semio` path — `<cratePath>/../../🛂️.descriptor.semio` (`cratePath` ends in
 /// `📦️packages/🦀️rust`; the descriptor sits two levels up, at the plugin crate's own root — see
-/// `describe_component`'s doc, `🔌️plugin/📇️describe/📦️packages/🦀️rust/📦️glue.rs`). Reads the SAME
+/// `describe_component`'s doc, `🔌️plugin/📇️describe/📦️packages/🦀️rust/🦀️.rs`). Reads the SAME
 /// generated `🔣️plugins.json` `resolve_plugin_paths` above reads `🦀️artifacts.rs` from (both
 /// produced by the one `plugin-registry:generate` nx target); a plugin id absent here, or whose
 /// file does not exist on disk, simply has no committed descriptor yet — `WasmtimeNodeHost` treats
@@ -137,7 +137,7 @@ fn resolve_descriptor_paths(repo_root: &Path) -> Result<HashMap<String, PathBuf>
         .filter_map(|entry| {
             let crate_root = repo_root.join(&entry.crate_path);
             let crate_root = crate_root.parent()?.parent()?;
-            Some((entry.plugin_id, crate_root.join("🛂️descriptor.semio")))
+            Some((entry.plugin_id, crate_root.join("🛂️.descriptor.semio")))
         })
         .collect())
 }

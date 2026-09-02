@@ -75,7 +75,7 @@ pub enum EpwMutation {
 }
 
 /// 🧾️ Kebab-case spelling of every `EpwMutation` variant, in declaration order — the exhaustive
-/// mutation catalog `epw-energyplus-any` (`../../🧪️oracle/🔣️.json`) is measured against
+/// mutation catalog `epw-energyplus-any` (`../../🔣️oracle.json`) is measured against
 /// this exact list. `kinds_match_enum_and_catalog` proves it never drifts from either side.
 pub const KINDS: &[&str] = &[
     "set-snapshot",
@@ -596,7 +596,7 @@ mod tests {
         let from_enum: Vec<&'static str> = samples.iter().map(kind_of).collect();
         assert_eq!(from_enum, KINDS, "KINDS must list every EpwMutation variant, in declaration order");
 
-        let manifest = include_str!("../../🧪️oracle/🔣️.json");
+        let manifest = include_str!("../../🔣️oracle.json");
         let needle = "\"kinds\": [";
         let start = manifest.find(needle).expect("manifest declares a kinds array") + needle.len();
         let end = start + manifest[start..].find(']').expect("kinds array is closed");
@@ -609,14 +609,14 @@ mod tests {
 
 //#region 🧪️FixtureTests
 // 🧪️ Handcrafted mutation fixtures (contract D1, ticket 26/08/20/COMPOSE-TO-PUZZLE5D-MIGRATION),
-// one case per mutation leaf. Wired HERE and not in `📦️glue.rs`: that file is shared with the
+// one case per mutation leaf. Wired HERE and not in `🦀️.rs`: that file is shared with the
 // agents migrating the other stdio artifacts, so the production mounts there stay untouched while
 // this artifact owns its own test mount. `#[path = "."]` re-bases the children on this file's own
 // directory, which is what makes the leaf-relative path below resolve.
 #[cfg(test)]
 #[path = "."]
 mod fixture_tests {
-    #[path = "📄set-snapshot/🧪️tests/warms-the-second-hour-and-restamps-the-station-city/🦀️component.rs"]
+    #[path = "📄set-snapshot/🧪️tests/warms-the-second-hour-and-restamps-the-station-city/🦀️.rs"]
     mod tests_set_snapshot_warms_the_second_hour_and_restamps_the_station_city;
 }
 //#endregion 🧪️FixtureTests

@@ -599,12 +599,12 @@ fn resident_admission_all_three_page_backings_use_exact_layout_and_short_grants(
 //#endregion 🧪️AdmissionOwnership
 
 //#region 🧪️ReleaseBaseline
-#[path = "../../../../../.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️20/INTERACTIVE-JOB-RUNTIME-REFACTOR/🧪️resident-release/🧪️baseline/🦀️.rs"]
+#[path = "../../../../../.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️20/INTERACTIVE-JOB-RUNTIME-REFACTOR/🧪️resident-release/🦀️baseline.rs"]
 mod release_baseline;
 //#endregion 🧪️ReleaseBaseline
 
 //#region 🧪️ReleasePhases
-#[path = "../../../../../.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️20/INTERACTIVE-JOB-RUNTIME-REFACTOR/🧪️resident-release/🦀️.rs"]
+#[path = "../../../../../.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️20/INTERACTIVE-JOB-RUNTIME-REFACTOR/🦀️resident-release.rs"]
 mod release_phases;
 
 pub(super) fn observe_release_destroy_returned() {
@@ -614,7 +614,7 @@ pub(super) fn observe_release_destroy_returned() {
 //#endregion 🧪️ReleasePhases
 
 //#region 🧪️PrimaryRecovery
-#[path = "../../../../../.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️20/INTERACTIVE-JOB-RUNTIME-REFACTOR/🧪️resident-primary/🦀️.rs"]
+#[path = "../../../../../.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️20/INTERACTIVE-JOB-RUNTIME-REFACTOR/🦀️resident-primary.rs"]
 mod primary_recovery;
 
 pub(super) fn observe_primary_recovery_pointer_load(registration: u64) {

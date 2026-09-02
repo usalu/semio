@@ -5,7 +5,7 @@
   "displayName": "Change H Mm",
   "emoji": "🪤",
   "aggregateVariant": "ChangeHMm",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

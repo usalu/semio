@@ -5,7 +5,7 @@
   "displayName": "Change Machine Icon",
   "emoji": "🎨",
   "aggregateVariant": "ChangeMachineIcon",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

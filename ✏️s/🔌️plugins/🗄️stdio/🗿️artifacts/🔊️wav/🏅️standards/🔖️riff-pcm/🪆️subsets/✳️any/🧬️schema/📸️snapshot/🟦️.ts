@@ -1,0 +1,10 @@
+/** 🧬️ WavSnapshot schema. 🚧 scaffolded by W1b — generic facet mirror; the WavSnapshot
+ * `🦀️.rs` sibling is the real source of truth (matches existing repo convention). */
+export interface WavSnapshotEntry {
+  key: string;
+  value: string;
+}
+export interface WavSnapshot {
+  /** @state artifact */ schema: string;
+  /** @state artifact */ entries: WavSnapshotEntry[];
+}

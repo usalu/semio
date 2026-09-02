@@ -3,7 +3,7 @@
 //!
 //! **This file no longer serves the oracle role.** The reference for `semio-v1-text-mutate` is the
 //! registered oracle `semio-text-python-independent` (`../../🏅️standards/🔖️v1/🪆️subsets/✳️text/
-//! 🧪️oracle/🔣️.json`) — an independent Python implementation of the semio text carrier and
+//! 🔣️oracle.json`) — an independent Python implementation of the semio text carrier and
 //! its seven verbs, written from the committed grammar and protocol documents, living beside this
 //! file as `🐍️component.py`. The runner dispatches the oracle role to that adapter and the subject
 //! role here, and compares the two projections under `@comparison-ordered-json-v1`. Registering
@@ -19,12 +19,12 @@
 //!
 //! **How the fixture reaches typed values.** The generated test host links only `semio-repo-test-host`
 //! and, behind `sut`, this subset's own crate — no `serde`, no `serde_json`, and this crate's
-//! `protocol`/`store` extern-crate aliases are private (`📦️glue.rs`), so neither `protocol::Mutation` nor
+//! `protocol`/`store` extern-crate aliases are private (`🦀️.rs`), so neither `protocol::Mutation` nor
 //! a `serde` derive is nameable from here. The subset's own production code therefore exports the bridges
 //! this adapter needs, whose signatures name only reachable types:
 //! `decode_semio_text_snapshot_json`/`encode_semio_text_snapshot_json` (`../../🏅️standards/🔖️v1/
-//! 🪆️subsets/✳️text/🧬️schema/📸️snapshot/🦀️component.rs`), `decode_semio_text_mutation_json`/
-//! `inverse_semio_text_mutation` (`…/🧬️mutations/🦀️component.rs`) and the DSL/pack pass-throughs
+//! 🪆️subsets/✳️text/🧬️schema/📸️snapshot/🦀️.rs`), `decode_semio_text_mutation_json`/
+//! `inverse_semio_text_mutation` (`…/🧬️mutations/🦀️.rs`) and the DSL/pack pass-throughs
 //! `parse_semio_text_dsl`/`print_semio_text_dsl`/`encode_semio_text_pack`/`decode_semio_text_pack`.
 //! Every input is read from a fixture the FEATURE declares — the mutation parameters from the
 //! scenario's doc string, the specification vectors from the `asset://` URIs its steps name — so
@@ -34,7 +34,7 @@ use semio_repo_test_host::Adapter;
 
 //#region 🔖️Kinds
 /// 🏷️ Mirrors `SemioTextMutation::KINDS` (`../../🏅️standards/🔖️v1/🪆️subsets/✳️text/🧬️schema/
-/// 🧬️mutations/🦀️component.rs`) — duplicated, not imported, because the generated host builds this
+/// 🧬️mutations/🦀️.rs`) — duplicated, not imported, because the generated host builds this
 /// file with and without the subject crate. The contract's mutation-coverage gate keeps this list
 /// honest against the catalog; `kinds_match_the_enum_and_the_catalog` in that production file keeps
 /// it honest against the enum.
@@ -63,7 +63,7 @@ mod subject {
     /// and a German run carrying a `link` mark with a non-empty `href`. It is kept for the BYTE half
     /// of the identity law: its two files were written by THIS codec, so the Python side reproducing
     /// them is the other direction of the same cross-language agreement.
-    const DSL_ASSET: &str = "asset://🏅️standards/🔖️v1/🪆️subsets/✳️text/📚️examples/📃️note/🖼️assets/🗣️example.dsl.semio";
+    const DSL_ASSET: &str = "asset://🏅️standards/🔖️v1/🪆️subsets/✳️text/📚️examples/📃️note/🖼️assets/🗣️.dsl.semio";
     /// 🎒️ The same note in its binary envelope, written by a separate codec from the DSL text.
     const PACK_ASSET: &str = "asset://🏅️standards/🔖️v1/🪆️subsets/✳️text/📚️examples/📃️note/🖼️assets/🎒️example.pack.semio";
 

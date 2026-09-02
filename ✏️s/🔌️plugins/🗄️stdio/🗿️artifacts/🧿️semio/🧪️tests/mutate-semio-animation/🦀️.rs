@@ -5,14 +5,14 @@
 //! beside it — an independent Python implementation of the same carrier and the same
 //! thirteen verbs, written from the committed grammars, registered as the oracle
 //! `semio-animation-python-independent` in
-//! `../../🏅️standards/🔖️v1/🪆️subsets/✳️animation/🧪️oracle/🔣️.json`. Registering oracle
+//! `../../🏅️standards/🔖️v1/🪆️subsets/✳️animation/🔣️oracle.json`. Registering oracle
 //! handlers here as well would put this repository's own answer on both sides of the comparison,
 //! which is the one failure the platform exists to prevent, so the registrations this file used to
 //! carry are gone rather than merely unused.
 //!
 //! Every scenario drives this repository's own production entry points — `parse_semio_animation_dsl`/`print_semio_animation_dsl` for
 //! the carrier and `apply_semio_animation_mutation`/`inverse_semio_animation_mutation` for the vocabulary — over the real committed walk
-//! artifact `../../🏅️standards/🔖️v1/🪆️subsets/✳️any/📚️examples/🚶️walk/🖼️assets/🗣️example.dsl.semio`, and projects the resulting snapshot as structural JSON for
+//! artifact `../../🏅️standards/🔖️v1/🪆️subsets/✳️any/📚️examples/🚶️walk/🖼️assets/🗣️.dsl.semio`, and projects the resulting snapshot as structural JSON for
 //! `ordered-json-v1` to compare against the Python side's.
 //!
 //! The mutation parameters and the specification-vector paths live in `component.feature`, so both
@@ -28,7 +28,7 @@ use semio_repo_test_host::Adapter;
 
 //#region 🔖️Kinds
 /// 🏷️ Mirrors `SemioAnimationMutation::KINDS` (`../../🏅️standards/🔖️v1/🪆️subsets/✳️animation/🧬️schema/
-/// 🧬️mutations/🦀️component.rs`) — duplicated, not imported, because the registration loop runs in
+/// 🧬️mutations/🦀️.rs`) — duplicated, not imported, because the registration loop runs in
 /// builds where the subject crate is not linked. The contract's mutation-coverage gate keeps this
 /// list honest against the catalog; `kinds_match_the_enum_and_the_catalog` in that production file
 /// keeps it honest against the enum.
@@ -271,7 +271,7 @@ mod subject {
     //#endregion 🔖️Projection
 
     //#region 🔖️Inputs
-    const WALK_DSL: &str = "asset://🏅️standards/🔖️v1/🪆️subsets/✳️any/📚️examples/🚶️walk/🖼️assets/🗣️example.dsl.semio";
+    const WALK_DSL: &str = "asset://🏅️standards/🔖️v1/🪆️subsets/✳️any/📚️examples/🚶️walk/🖼️assets/🗣️.dsl.semio";
 
     /// 🚶️ The real committed walk artifact, parsed by this repository's own DSL codec.
     fn artifact(ctx: &Context) -> Result<SemioAnimationSnapshot, String> {

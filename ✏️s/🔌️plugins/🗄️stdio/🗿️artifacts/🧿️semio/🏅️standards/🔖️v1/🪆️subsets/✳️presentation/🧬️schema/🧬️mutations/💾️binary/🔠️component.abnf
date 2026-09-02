@@ -1,7 +1,0 @@
-; ABNF-style descriptive mirror of `stdio.semio.presentation`'s real binary op frame -- see the
-; authoritative `📡️component.protocol.semio` for the conformance-tested version.
-document       = format tag payload
-format         = %x01                  ; OP_BINARY_FORMAT
-tag            = OCTET                 ; SemioPresentationMutation variant ordinal (see OP_KEYWORDS)
-payload        = *OCTET                ; the variant's own "key=value ..." argument text,
-                                        ; see component.rs's OpBinary::encode_op

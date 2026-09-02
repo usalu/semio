@@ -1,0 +1,33 @@
+{
+  "name": "@semio-tech/fixture-generator-stdio-bmp-v3-any",
+  "targets": {
+    "🏭️generator": {
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts generate",
+        "forwardAllArgs": true
+      }
+    },
+    "🏭️generator-manifests": {
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts manifests",
+        "forwardAllArgs": true
+      }
+    },
+    "🏭️generator-header": {
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts header",
+        "forwardAllArgs": true
+      }
+    },
+    "🏭️generator-header-manifests": {
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts header-manifests",
+        "forwardAllArgs": true
+      }
+    }
+  }
+}

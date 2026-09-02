@@ -323,7 +323,7 @@ fn gesture_pick_point(_ctx: &mut GestureContext, event: Option<&draw_gesture::Ev
 // `DrawDragState` match arms, compiled by `fsm`'s `statechart!` DSL into dense static tables.
 // (plain comment, not a doc comment: rustdoc cannot document a macro invocation, and the resulting
 // `unused_doc_comments` warning is a hard error under this crate's `-D warnings` gate. The
-// `unexpected_cfgs` warning `fsm::statechart!` triggers here is silenced crate-wide in `📦️glue.rs` —
+// `unexpected_cfgs` warning `fsm::statechart!` triggers here is silenced crate-wide in `🦀️.rs` —
 // an `#[allow]` on the macro invocation itself is ignored by rustc, see its own `unused_attributes`
 // warning if you try.)
 fsm::statechart! {

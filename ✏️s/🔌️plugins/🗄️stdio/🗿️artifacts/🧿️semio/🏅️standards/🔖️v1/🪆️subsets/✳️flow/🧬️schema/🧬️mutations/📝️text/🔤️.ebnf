@@ -1,0 +1,35 @@
+(* ISO-14977-style EBNF for `stdio.semio.flow`'s real op text line — descriptive mirror of the
+   authoritative `📖️.grammar.semio` (same production names). *)
+op = set snapshot | insert node | remove node | set node kind | set node label
+   | set node position | set node param | remove node param | insert edge | remove edge
+   | set edge endpoints | set edge kind ;
+
+set snapshot = 'set-snapshot', 'snapshot', '=', snapshot lit ;
+insert node = 'insert-node', 'node', '=', node ;
+remove node = 'remove-node', 'id', '=', hex ;
+set node kind = 'set-node-kind', 'id', '=', hex, 'kind', '=', hex ;
+set node label = 'set-node-label', 'id', '=', hex, 'label', '=', hex ;
+set node position = 'set-node-position', 'id', '=', hex, 'position', '=', point2 ;
+set node param = 'set-node-param', 'id', '=', hex, 'key', '=', hex, 'value', '=', hex ;
+remove node param = 'remove-node-param', 'id', '=', hex, 'key', '=', hex ;
+insert edge = 'insert-edge', 'edge', '=', edge ;
+remove edge = 'remove-edge', 'id', '=', hex ;
+set edge endpoints = 'set-edge-endpoints', 'id', '=', hex, 'from', '=', port, 'to', '=', port ;
+set edge kind = 'set-edge-kind', 'id', '=', hex, 'kind', '=', hex ;
+
+snapshot lit = '[', hex, ',', '[', [ node list ], ']', ',', '[', [ edge list ], ']', ']' ;
+node list = node, { ',', node } ;
+edge list = edge, { ',', edge } ;
+
+node = '[', hex, ',', hex, ',', hex, ',', '[', [ param list ], ']', ',', point2, ']' ;
+param list = param, { ',', param } ;
+param = '[', hex, ',', hex, ']' ;
+point2 = '[', number, ',', number, ']' ;
+edge = '[', hex, ',', port, ',', port, ',', hex, ']' ;
+port = '[', hex, ',', hex, ']' ;
+
+number = int | float ;
+int = [ '-' ], digit, { digit } ;
+float = [ '-' ], digit, { digit }, '.', digit, { digit } ;
+digit = '0' | '1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9' ;
+hex = { digit | 'a' | 'b' | 'c' | 'd' | 'e' | 'f' } ;

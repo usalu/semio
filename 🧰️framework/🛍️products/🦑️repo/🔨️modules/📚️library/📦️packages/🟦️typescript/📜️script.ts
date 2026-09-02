@@ -4,7 +4,7 @@ import { appendFileSync, copyFileSync, existsSync, lstatSync, mkdirSync, mkdtemp
 import { spawn, spawnSync } from "node:child_process";
 import { dirname, isAbsolute, join, parse, relative, resolve, sep } from "node:path";
 import { tmpdir } from "node:os";
-import { BundleScript, ScriptRouter, computeWorkspaces, runBundleScriptMain, runBunx, resolveTestLevel, runTestBudgeted } from "./📦️index.ts";
+import { BundleScript, ScriptRouter, computeWorkspaces, runBundleScriptMain, runBunx, resolveTestLevel, runTestBudgeted } from "./🟦️.ts";
 
 /** 🧫️ Allocates one exclusive no-follow semantic run owner and its bundle directory. */
 export function transactionV2BundleRoot(repoRoot: string, runId: string): string {
@@ -41,49 +41,49 @@ class TestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     if (segments[0] === "mutation-ticket-role-routing") {
       if (segments.length !== 1) throw new Error("Expected test mutation-ticket-role-routing");
-      const source = join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧬️mutation-inventory/🧪️ticket-role-routing/🟦️.ts");
+      const source = join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧬️mutation-inventory/🟦️ticket-role-routing.ts");
       await runTestBudgeted(process.execPath, ["test", source], { cwd: this.repoRoot });
       return;
     }
     if (segments[0] === "mutation-source-index-capture") {
       if (segments.length !== 1) throw new Error("Expected test mutation-source-index-capture");
-      const source = join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧬️mutation-inventory/🧪️source-index-capture/🟦️.ts");
+      const source = join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧬️mutation-inventory/🟦️source-index-capture.ts");
       await runTestBudgeted(process.execPath, ["test", source], { cwd: this.repoRoot });
       return;
     }
     if (segments[0] === "mutation-source-roster-roles") {
       if (segments.length !== 1) throw new Error("Expected test mutation-source-roster-roles");
-      const source = join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧬️mutation-inventory/🧪️source-roster-roles/🟦️.ts");
+      const source = join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧬️mutation-inventory/🟦️source-roster-roles.ts");
       await runTestBudgeted(process.execPath, ["test", source], { cwd: this.repoRoot });
       return;
     }
     if (segments[0] === "mutation-source-file-facts") {
       if (segments.length > 2 || segments[1] !== undefined && segments[1] !== "reference") throw new Error("Expected test mutation-source-file-facts [reference]");
-      const source = join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧬️mutation-inventory/🧪️source-file-facts/🟦️.ts");
+      const source = join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧬️mutation-inventory/🟦️source-file-facts.ts");
       const selection = segments[1] === "reference" ? ["-t", "^mutation source-file facts (vectors|independent suffix reference|reference oracle)"] : [];
       await runTestBudgeted(process.execPath, ["test", source, ...selection], { cwd: this.repoRoot });
       return;
     }
     if (segments[0] === "typescript-declaration-facts") {
       if (segments.length > 2 || segments[1] !== undefined && segments[1] !== "reference") throw new Error("Expected test typescript-declaration-facts [reference]");
-      const source = join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧪️typescript-declaration-facts/🟦️.ts");
+      const source = join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🟦️typescript-declaration-facts.ts");
       const selection = segments[1] === "reference" ? ["-t", "^TypeScript (?:(?:malformed|unsupported) )?declaration (?:reference:|(?:facts|cases) use the closed neutral schema)"] : [];
       await runTestBudgeted(process.execPath, ["test", source, ...selection], { cwd: this.repoRoot });
       return;
     }
     if (segments[0] === "artifact-support") {
-      const source = join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧪️artifact-support-leaf-authority/🟦️.test.ts");
+      const source = join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🟦️artifact-support-leaf-authority.ts");
       const { rest } = resolveTestLevel(segments.slice(1));
       await runTestBudgeted(process.execPath, ["test", source, ...rest], { cwd: this.repoRoot });
       return;
     }
     if (segments[0] === "historical-package-owner-identity") {
-      const source = join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧪️historical-package-owner-identity/🟦️.test.ts");
+      const source = join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🟦️historical-package-owner-identity.ts");
       await runTestBudgeted(process.execPath, ["test", source, ...segments.slice(1)], { cwd: this.repoRoot });
       return;
     }
     if (segments[0] === "cargo-provider-binding-trace") {
-      const source = join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧬️cargo-provider-binding/🟦️.test.ts");
+      const source = join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧬️cargo-provider-binding/🟦️.ts");
       await runTestBudgeted(process.execPath, ["test", source, ...segments.slice(1)], { cwd: this.repoRoot });
       return;
     }
@@ -93,196 +93,196 @@ class TestScript extends BundleScript {
       return;
     }
     if (segments[0] === "rust-physical-reference-context") {
-      const source = join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧪️rust-physical-reference-context/🟦️.test.ts");
+      const source = join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🟦️rust-physical-reference-context.ts");
       const { rest } = resolveTestLevel(segments.slice(1));
       await runTestBudgeted(process.execPath, ["test", source, ...rest], { cwd: this.repoRoot });
       return;
     }
     if (segments[0] === "taxonomy-cli-cancellation") {
-      const source = join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧪️taxonomy-cli-cancellation/🟦️.test.ts");
+      const source = join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🟦️taxonomy-cli-cancellation.ts");
       await runTestBudgeted(process.execPath, ["test", source, ...segments.slice(1)], { cwd: this.repoRoot });
       return;
     }
     if (segments[0] === "inventory-artifact-shards") {
-      const source = join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧪️inventory-artifact-shards/🟦️.test.ts");
+      const source = join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🟦️inventory-artifact-shards.ts");
       await runTestBudgeted(process.execPath, ["test", source, ...segments.slice(1)], { cwd: this.repoRoot });
       return;
     }
     if (segments[0] === "root-script-compiler") {
-      const source = join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧪️root-script-compiler/🟦️.test.ts");
+      const source = join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🟦️root-script-compiler.ts");
       await runTestBudgeted(process.execPath, ["test", source, ...segments.slice(1)], { cwd: this.repoRoot });
       return;
     }
     if (segments[0] === "json-reference-owner-lookup") {
-      const source = join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧪️json-reference-owner-lookup/🟦️.test.ts");
+      const source = join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🟦️json-reference-owner-lookup.ts");
       await runTestBudgeted(process.execPath, ["test", source, ...segments.slice(1)], { cwd: this.repoRoot });
       return;
     }
     if (segments[0] === "nx-workspace-root-file-reference") {
-      const source = join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧪️nx-workspace-root-file-reference/🟦️.test.ts");
+      const source = join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🟦️nx-workspace-root-file-reference.ts");
       await runTestBudgeted(process.execPath, ["test", source, ...segments.slice(1)], { cwd: this.repoRoot });
       return;
     }
     if (segments[0] === "bare-reference-sibling-precedence") {
-      const source = join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧪️bare-reference-sibling-precedence/🟦️.test.ts");
+      const source = join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🟦️bare-reference-sibling-precedence.ts");
       await runTestBudgeted(process.execPath, ["test", source, ...segments.slice(1)], { cwd: this.repoRoot });
       return;
     }
     if (segments[0] === "run-vitest-config-argument-tokens") {
-      const source = join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧪️run-vitest-config-argument-tokens/🟦️.test.ts");
+      const source = join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🟦️run-vitest-config-argument-tokens.ts");
       await runTestBudgeted(process.execPath, ["test", source, ...segments.slice(1)], { cwd: this.repoRoot });
       return;
     }
     if (segments[0] === "cargo-discovery-exclusions") {
-      const source = join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧪️cargo-discovery-exclusions/🟦️.test.ts");
+      const source = join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🟦️cargo-discovery-exclusions.ts");
       await runTestBudgeted(process.execPath, ["test", source, ...segments.slice(1)], { cwd: this.repoRoot });
       return;
     }
     if (segments[0] === "nested-cargo-collision-authority") {
-      const source = join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧪️nested-cargo-collision-authority/🟦️.test.ts");
+      const source = join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🟦️nested-cargo-collision-authority.ts");
       await runTestBudgeted(process.execPath, ["test", source, ...segments.slice(1)], { cwd: this.repoRoot });
       return;
     }
     if (segments[0] === "registry-import-language") {
-      const source = join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧪️registry-import-language/🟦️.test.ts");
+      const source = join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🟦️registry-import-language.ts");
       await runTestBudgeted(process.execPath, ["test", source, ...segments.slice(1)], { cwd: this.repoRoot });
       return;
     }
     if (segments[0] === "preflight-reference-basis") {
-      const source = join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧪️preflight-reference-basis/🟦️.test.ts");
+      const source = join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🟦️preflight-reference-basis.ts");
       await runTestBudgeted(process.execPath, ["test", source, ...segments.slice(1)], { cwd: this.repoRoot });
       return;
     }
     if (segments[0] === "typescript-path-collection") {
-      const source = join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧪️typescript-path-collection/🟦️.ts");
+      const source = join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🟦️typescript-path-collection.ts");
       await runTestBudgeted(process.execPath, ["test", source, ...segments.slice(1)], { cwd: this.repoRoot });
       return;
     }
     if (segments[0] === "frozen-markdown-coordinates") {
-      const source = join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧪️frozen-markdown-coordinates/🟦️.ts");
+      const source = join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🟦️frozen-markdown-coordinates.ts");
       await runTestBudgeted(process.execPath, ["test", source, ...segments.slice(1)], { cwd: this.repoRoot });
       return;
     }
     if (segments[0] === "historical-document-evidence") {
-      const source = join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧪️historical-document-evidence/🟦️.ts");
+      const source = join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🟦️historical-document-evidence.ts");
       await runTestBudgeted(process.execPath, ["test", source, ...segments.slice(1)], { cwd: this.repoRoot });
       return;
     }
     if (segments[0] === "registry-catalog-gitlink-boundary") {
-      const source = join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧪️registry-catalog-gitlink-boundary/🟦️.test.ts");
+      const source = join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🟦️registry-catalog-gitlink-boundary.ts");
       await runTestBudgeted(process.execPath, ["test", source, ...segments.slice(1)], { cwd: this.repoRoot });
       return;
     }
     if (segments[0] === "historical-json-source-encoding") {
-      const source = join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧪️historical-json-source-encoding/🟦️.ts");
+      const source = join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🟦️historical-json-source-encoding.ts");
       await runTestBudgeted(process.execPath, ["test", source, ...segments.slice(1)], { cwd: this.repoRoot });
       return;
     }
     if (segments[0] === "transaction-recovery-authority") {
-      const source = join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧪️transaction-recovery-authority/🟦️.ts");
+      const source = join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🟦️transaction-recovery-authority.ts");
       await runTestBudgeted(process.execPath, ["test", source, ...segments.slice(1)], { cwd: this.repoRoot });
       return;
     }
     if (segments[0] === "transaction-fixture-key-exactness") {
-      const source = join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧪️transaction-fixture-key-exactness/🟦️.ts");
+      const source = join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🟦️transaction-fixture-key-exactness.ts");
       await runTestBudgeted(process.execPath, ["test", source, ...segments.slice(1)], { cwd: this.repoRoot });
       return;
     }
     if (segments[0] === "testing-readme-coordinates") {
-      const source = join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧪️testing-readme-coordinates/🟦️.ts");
+      const source = join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧪️test/🟦️ing-readme-coordinates.ts");
       await runTestBudgeted(process.execPath, ["test", source, ...segments.slice(1)], { cwd: this.repoRoot });
       return;
     }
     if (segments[0] === "rust-finite-target-consumption") {
-      const source = join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧪️rust-finite-target-consumption/🟦️.ts");
+      const source = join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🟦️rust-finite-target-consumption.ts");
       await runTestBudgeted(process.execPath, ["test", source, ...segments.slice(1)], { cwd: this.repoRoot });
       return;
     }
     if (segments[0] === "readme-current-source-revision") {
-      const source = join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧪️readme-current-source-revision/🟦️.ts");
+      const source = join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🟦️readme-current-source-revision.ts");
       await runTestBudgeted(process.execPath, ["test", source, ...segments.slice(1)], { cwd: this.repoRoot });
       return;
     }
     if (segments[0] === "rust-writable-path-authority") {
-      const source = join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧪️rust-writable-path-authority/🟦️.ts");
+      const source = join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🟦️rust-writable-path-authority.ts");
       await runTestBudgeted(process.execPath, ["test", source, ...segments.slice(1)], { cwd: this.repoRoot });
       return;
     }
     if (segments[0] === "readme-move-source-authority") {
-      const source = join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧪️readme-move-source-authority/🟦️.ts");
+      const source = join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🟦️readme-move-source-authority.ts");
       await runTestBudgeted(process.execPath, ["test", source, ...segments.slice(1)], { cwd: this.repoRoot });
       return;
     }
     if (segments[0] === "artifact-empty-facet-authority") {
-      const source = join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧪️artifact-empty-facet-authority/🟦️.ts");
+      const source = join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🟦️artifact-empty-facet-authority.ts");
       await runTestBudgeted(process.execPath, ["test", source, ...segments.slice(1)], { cwd: this.repoRoot });
       return;
     }
     if (segments[0] === "rust-divergence-callback-source") {
-      const source = join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧪️rust-divergence-callback/🟦️.ts");
+      const source = join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🟦️rust-divergence-callback.ts");
       await runTestBudgeted(process.execPath, ["test", source, "--test-name-pattern", "^(closed divergence|shared callback|candidate-only callback)", ...segments.slice(1)], { cwd: this.repoRoot });
       return;
     }
     if (segments[0] === "rust-divergence-callback-native") {
-      const source = join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧪️rust-divergence-callback/🟦️.ts");
+      const source = join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🟦️rust-divergence-callback.ts");
       await runTestBudgeted(process.execPath, ["test", source, "--test-name-pattern", "^actual rustc", ...segments.slice(1)], { cwd: this.repoRoot });
       return;
     }
     if (segments[0] === "rust-divergence-callback-syn") {
-      const source = join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧪️rust-divergence-callback/🟦️.ts");
+      const source = join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🟦️rust-divergence-callback.ts");
       await runTestBudgeted(process.execPath, ["test", source, "--test-name-pattern", "^independent syn callback", ...segments.slice(1)], { cwd: this.repoRoot, budgetMs: 120_000 });
       return;
     }
     if (segments[0] === "readme-current-source-activation") {
-      const source = join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧪️readme-current-source-activation/🟦️.ts");
+      const source = join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🟦️readme-current-source-activation.ts");
       await runTestBudgeted(process.execPath, ["test", source, ...segments.slice(1)], { cwd: this.repoRoot });
       return;
     }
     if (segments[0] === "artifact-empty-facet-authoring") {
-      const source = join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧪️artifact-empty-facet-authoring/🟦️.ts");
+      const source = join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🟦️artifact-empty-facet-authoring.ts");
       await runTestBudgeted(process.execPath, ["test", source, ...segments.slice(1)], { cwd: this.repoRoot });
       return;
     }
     if (segments[0] === "readme-reviewed-fixture-inputs") {
-      const source = join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧪️readme-reviewed-fixture-inputs/🟦️.ts");
+      const source = join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🟦️readme-reviewed-fixture-inputs.ts");
       await runTestBudgeted(process.execPath, ["test", source, ...segments.slice(1)], { cwd: this.repoRoot });
       return;
     }
     if (segments[0] === "taxonomy-pattern-compiler-reuse") {
-      const source = join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧪️taxonomy-pattern-compiler-reuse/🟦️.ts");
+      const source = join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🟦️taxonomy-pattern-compiler-reuse.ts");
       await runTestBudgeted(process.execPath, ["test", source, ...segments.slice(1)], { cwd: this.repoRoot });
       return;
     }
     if (segments[0] === "reference-coverage-selection") {
-      const source = join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧪️reference-coverage-selection/🟦️.ts");
+      const source = join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🟦️reference-coverage-selection.ts");
       await runTestBudgeted(process.execPath, ["test", source, ...segments.slice(1)], { cwd: this.repoRoot });
       return;
     }
     if (segments[0] === "taxonomy-leading-grapheme") {
-      const source = join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧪️taxonomy-leading-grapheme/🟦️.ts");
+      const source = join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🟦️taxonomy-leading-grapheme.ts");
       await runTestBudgeted(process.execPath, ["test", source, ...segments.slice(1)], { cwd: this.repoRoot });
       return;
     }
     if (segments[0] === "reference-coordinate-progress") {
-      const source = join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧪️reference-coordinate-progress/🟦️.ts");
+      const source = join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🟦️reference-coordinate-progress.ts");
       await runTestBudgeted(process.execPath, ["test", source, ...segments.slice(1)], { cwd: this.repoRoot });
       return;
     }
     if (segments[0] === "draw-destination-observation") {
       if (segments.length !== 1) throw new Error("Draw destination observation accepts no extra arguments");
-      const source = join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧪️draw-destination-observation/🟦️.ts");
+      const source = join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🟦️draw-destination-observation.ts");
       await runTestBudgeted(process.execPath, ["test", source], { cwd: this.repoRoot });
       return;
     }
     if (segments[0] === "markdown-inline-references") {
       if (segments.length !== 1) throw new Error("Markdown inline references accepts no extra arguments");
-      const source = join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧪️markdown-inline-references/🟦️.ts");
+      const source = join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🟦️markdown-inline-references.ts");
       await runTestBudgeted(process.execPath, ["test", source], { cwd: this.repoRoot });
       return;
     }
     if (segments[0] === "gherkin-description-inline-code") {
       if (segments.length !== 1) throw new Error("Gherkin description inline code accepts no extra arguments");
-      const source = join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧪️gherkin-description-inline-code/🟦️.ts");
+      const source = join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🟦️gherkin-description-inline-code.ts");
       await runTestBudgeted(process.execPath, ["test", source], { cwd: this.repoRoot });
       return;
     }
@@ -300,19 +300,19 @@ class TestScript extends BundleScript {
     }
     if (segments[0] === "transaction-process-observer") {
       if (segments.length !== 1) throw new Error("Transaction process observer accepts no extra arguments");
-      const source = join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🧪️tests/🧪️transaction-process-ownership/🧪️test/🟦️.ts");
+      const source = join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🧪️tests/🧪️transaction-process-ownership/🟦️test.ts");
       await runTestBudgeted(process.execPath, ["test", source], { cwd: this.repoRoot });
       return;
     }
     if (segments[0] === "transaction-v2") {
       const invocationStartedAt = performance.now(), startedAt = new Date().toISOString();
       const runId = `${process.pid}-${crypto.randomUUID()}`;
-      const source = join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧪️transaction-v2/🟦️.test.ts");
+      const source = join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🟦️transaction-v2.ts");
       const bundleRoot = transactionV2BundleRoot(this.repoRoot, runId), runRoot = dirname(bundleRoot);
       console.error(`[DEBUG] Transaction v2 run owner ${runRoot}`);
       const bundle = join(bundleRoot, "🟦️.test.js");
       const normalizationSource = join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧹️normalization/🟦️.ts");
-      const identityPaths = { router: join(this.root, "📜️script.ts"), test: source, normalization: normalizationSource, discovery: join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🟦️component.ts"), schema: join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json"), ledgerBoundaries: join(this.root, "🧫️fixtures/🧪️transaction-ledger-boundaries/🔣️.json"), harness: join(this.root, "🧫️fixtures/🧪️transaction-harness-retention/🔣️.json") };
+      const identityPaths = { router: join(this.root, "📜️script.ts"), test: source, normalization: normalizationSource, discovery: join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🟦️.ts"), schema: join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json"), ledgerBoundaries: join(this.root, "🧫️fixtures/🔣️transaction-ledger-boundaries.json"), harness: join(this.root, "🧫️fixtures/🔣️transaction-harness-retention.json") };
       const identities = () => Object.fromEntries(Object.entries(identityPaths).map(([key, path]) => { const bytes = readFileSync(path); return [key, { path, bytes: bytes.length, sha256: new Bun.CryptoHasher("sha256").update(bytes).digest("hex") }]; }));
       const retainRecord = (kind: string, value: unknown): void => { const root = join(runRoot, kind); mkdirSync(root); writeFileSync(join(root, "🔣️.json"), `${JSON.stringify(value, null, 2)}\n`, { flag: "wx" }); };
       const beforeIdentities = identities();

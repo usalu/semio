@@ -1,0 +1,20 @@
+syntax = "proto3";
+package semio.s.vcs.vcs.mutation;
+
+import "✏️rename-vcs/🛰️.proto";
+import "🔢change-counter/🛰️.proto";
+import "📝change-notes/🛰️.proto";
+import "🚦change-status/🛰️.proto";
+import "🏷️add-tag/🛰️.proto";
+import "🗑️remove-tag/🛰️.proto";
+
+message VcsMutation {
+  oneof mutation {
+    RenameVcs rename_vcs = 1;
+    ChangeCounter change_counter = 2;
+    ChangeNotes change_notes = 3;
+    ChangeStatus change_status = 4;
+    AddTag add_tag = 5;
+    RemoveTag remove_tag = 6;
+  }
+}

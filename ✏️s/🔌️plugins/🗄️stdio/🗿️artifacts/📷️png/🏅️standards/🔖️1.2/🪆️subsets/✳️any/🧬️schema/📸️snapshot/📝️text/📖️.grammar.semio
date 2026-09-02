@@ -1,0 +1,32 @@
+dialect grammar
+grammar stdio.png.snapshot
+extension png
+start document
+
+# PNG has no textual syntax of its own — `store::ArtifactDsl::print_dsl`/`parse_dsl`
+# (../../🦀️.rs, the `HandcraftedArtifactCodecs` region) hex-encode/decode the REAL
+# binary PNG 1.2 file bytes (§5 signature + chunk stream) verbatim, byte-for-byte — this is
+# png's own honest precedent from Phase 1's survey (P2-W0 §1b: "hex-dump grammar per png's own
+# precedent"), not an aspiration. See ../💾️binary/📡️.protocol.semio for that same
+# binary's real structural grammar (tag-dispatched chunk stream).
+comment none
+
+# `dsl::fixture_sweep`'s `dsl_body_from_fixture` feeds the Recognizer
+# "<envelope-id>\n<body>" (`SemioEnvelope::envelope_id` = "stdio.png", the real preamble
+# line's own trailing "v<n>" already stripped by the harness) — the shared lexer treats the
+# preamble's newline as trivia, so `envelope-mark` and the hex body sit directly adjacent in
+# the significant token stream, matching json/csv's own grammars' identical convention.
+envelope-mark = "stdio.png"
+document = envelope-mark hex-body
+
+# The rest of the DSL text is one lowercase-hex digit run — the real PNG file's bytes
+# (8-byte signature + chunk stream), hex-encoded losslessly (`encode_png`/`decode_png`,
+# 📷️png/…/⚙️engine/🦀️.rs). `hex` (bare `hex`, deliberately NOT defined as a
+# production here) is the framework's built-in `hex` MACRO (`📖️grammar/🦀️.rs`'s
+# `default_macros`/`macro_hex_ok`) — the dialect-recipe's own documented rule (P2-P1 fix
+# report, "Note for grammar-recipe.md" item 2): a hand-rolled `{INT | IDENT}*`-shaped
+# production would silently mis-lex a `<digits>e<digits>` byte run as one FLOAT token instead
+# of alternating INT/IDENT; the macro's own largest-span-first backtracking (`Recognizer::
+# match_macro_span`) handles it correctly with no grammar-file workaround needed — same
+# mechanism json's/csv's own `hex` doc comments already document for their op/diff payloads.
+hex-body = hex

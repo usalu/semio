@@ -5,7 +5,7 @@
   "displayName": "Rename Information Requirement",
   "emoji": "✏️ℹ️",
   "aggregateVariant": "RenameInformationRequirement",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

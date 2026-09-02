@@ -5,7 +5,7 @@
   "displayName": "Move Camera3d",
   "emoji": "🎥",
   "aggregateVariant": "MoveCamera3d",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": "move-camera3d",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

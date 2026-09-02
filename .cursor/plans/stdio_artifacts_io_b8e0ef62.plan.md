@@ -37,7 +37,7 @@ isProject: false
 
 ## Scale reality check
 
-Confirmed on disk: 54 artifacts across 32 plugins, 383 mutation nodes, 1,152 existing `🚪️io` leaves, 210 `📖️component.grammar.semio` + 108 `📡️component.protocol.semio` files. None of `ebnf`/`g4`/`ksy`/`spicy`/`abnf` exist yet (0 files).
+Confirmed on disk: 54 artifacts across 32 plugins, 383 mutation nodes, 1,152 existing `🚪️io` leaves, 210 `📖️.grammar.semio` + 108 `📡️.protocol.semio` files. None of `ebnf`/`g4`/`ksy`/`spicy`/`abnf` exist yet (0 files).
 
 With the decisions taken (all spec languages handcrafted now, full schema absorb, all 26+ codecs spec-compliant, curated io matrix), this lands roughly **4,100 new files and 2,700 relocated files, plus 29 hand-rolled real codecs**. It must be sequenced so dependencies exist before consumers.
 
@@ -54,9 +54,9 @@ Added to [taxonomy.json](🧰️framework/🛍️products/🦑️repo/🔨️mod
 - `ioDirectionDirs`: `📥️import`, `📤️export`; `ioDirectionChildDirs`: `📥️import` to `🧩️deserializers`, `📤️export` to `🧵️serializers`; both then nest `🗿️artifacts/<artifact>`
 - Deleted: `mediaFormatDirs`, `ioFormatChildDirs`, `snapshotChildDirs`, `diffChildDirs`
 
-`textSpecFilenames` (8 per text node): `📖️component.grammar.semio`, `🔤️component.ebnf`, `🅰️component.g4`, `🔗️component.graphql`, `🔣️component.json`, `🛰️component.proto`, `🦀️component.rs`, `🟦️component.ts`
+`textSpecFilenames` (8 per text node): `📖️.grammar.semio`, `🔤️.ebnf`, `🅰️.g4`, `🔗️.graphql`, `🔣️component.json`, `🛰️.proto`, `🦀️.rs`, `🟦️.ts`
 
-`binarySpecFilenames` (6 per binary node): `📡️component.protocol.semio`, `🔠️component.abnf`, `🥋️component.ksy`, `🌶️component.spicy`, `🦀️component.rs`, `🟦️component.ts`
+`binarySpecFilenames` (6 per binary node): `📡️.protocol.semio`, `🔠️.abnf`, `🥋️.ksy`, `🌶️.spicy`, `🦀️.rs`, `🟦️.ts`
 
 ## Decision 2: Old-to-new path map (applies to all 54 artifacts)
 
@@ -128,7 +128,7 @@ A new rule `policyIoTerminalityBreaches` proves this graph is acyclic and every 
 
 ## Decision 4: Contracts
 
-Added to the plugin SDK at [🔌️plugin/🦀️component.rs](🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️component.rs), delegating to the existing `DocumentDsl` / `DocumentPack` / `Mutation` / `MutationDiff` / `ArtifactEngine` traits rather than reimplementing them.
+Added to the plugin SDK at [🔌️plugin/🦀️.rs](🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️.rs), delegating to the existing `DocumentDsl` / `DocumentPack` / `Mutation` / `MutationDiff` / `ArtifactEngine` traits rather than reimplementing them.
 
 ```rust
 pub trait ArtifactBuilder: Sized {
@@ -154,9 +154,9 @@ pub struct Decomposition<T> { pub parts: T, pub confidence: Confidence, pub diag
 
 ## Decision 5: Deletions in the framework
 
-`MediaFormat` (26 variants, `🧰️framework/🔨️modules/🔺️mesh/🦀️component.rs:816-1001`) and every codec below it are deleted; format identity becomes the stdio artifact kind id. Also deleted: `IoFormatSpec`, `ArtifactIo`, `ArtifactImport`, `ArtifactExport`, `required_media_formats`, `assert_os_media_export_coverage`, `assert_os_media_import_coverage`, `register_2d_export_handlers`, `register_mesh_exporter/importer`, `register_solid_exporter/importer`, `register_dwg_import_handler`, and the `SRAS` / `IFCCARTOONMESH` / "minimal" stub codecs.
+`MediaFormat` (26 variants, `🧰️framework/🔨️modules/🔺️mesh/🦀️.rs:816-1001`) and every codec below it are deleted; format identity becomes the stdio artifact kind id. Also deleted: `IoFormatSpec`, `ArtifactIo`, `ArtifactImport`, `ArtifactExport`, `required_media_formats`, `assert_os_media_export_coverage`, `assert_os_media_import_coverage`, `register_2d_export_handlers`, `register_mesh_exporter/importer`, `register_solid_exporter/importer`, `register_dwg_import_handler`, and the `SRAS` / `IFCCARTOONMESH` / "minimal" stub codecs.
 
-The media registry is currently a **duplicated twin** in `💻️os/🦀️component.rs` and `💻️os/🖥️host/🦀️component.rs` (both carry a full `MediaExport` copy plus feature-gated stubs). It collapses to one module keyed `(artifact_kind, format_artifact_kind)` that the host re-exports.
+The media registry is currently a **duplicated twin** in `💻️os/🦀️.rs` and `💻️os/🖥️host/🦀️.rs` (both carry a full `MediaExport` copy plus feature-gated stubs). It collapses to one module keyed `(artifact_kind, format_artifact_kind)` that the host re-exports.
 
 `ArtifactKindSpec.export_formats` / `import_formats` become stdio kind ids derived from the io facet, fixing the current drift (for example `🎥️shooting` declares Svg and Png while its facet declares nine formats). `artifact_kinds` moves from `AppDefinition` to `PluginManifest` with a new `PluginBuilder::artifact_kind`, since a zero-app plugin cannot otherwise declare kinds.
 
@@ -168,9 +168,9 @@ Every wave ends on a machine-checked gate; nothing proceeds while a gate is red.
 
 **W0 — Ticket and normative spec.** 1 Grok. Read `repo://goals`, open the ticket, write the normative spec (vocabulary, per-facet file manifest, old-to-new path map, curated io matrix owner table for all 54 artifacts, stdio roster and DAG, trait signatures, gate list) plus the fan-out brief every later agent reads.
 
-**W1 — Vocabulary, four twins, policies.** 1 Grok + 1 Composer. Rewrite `artifactFacetPathIsDeclared` in [discovery/🟦️component.ts](🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🟦️component.ts) to support **wildcard levels** — today it only chains fixed facet-to-child allowlists and cannot express `<artifact>` or `<mutation>` segments. Then update `validateTaxonomy()`, registry `validateTaxonomyTree`, Rust `assert_taxonomy_components`, and root `policyTaxonomyDirsBreaches`. New rules: `policyStdioCatalogBreaches`, `policyArtifactBuilderBreaches`, `policyArtifactDecomposerBreaches`, `policySchemaRepresentationBreaches`, `policyIoSerializerMatrixBreaches`, `policyIoTerminalityBreaches`, `policyCodecFidelityBreaches`. Deleted rules: `policyMediaFormatCatalogBreaches`, `policyArtifactIoFacetCompletenessBreaches`, `policyArtifactIoLeafParityBreaches`, `policyArtifactIoNoEngineIoBreaches`, `policyArtifactSchemaPackRelocationBreaches`. New gates registered in [launch.seed.jsonc](.vscode/🧩️launch.seed.jsonc).
+**W1 — Vocabulary, four twins, policies.** 1 Grok + 1 Composer. Rewrite `artifactFacetPathIsDeclared` in [discovery/🟦️.ts](🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🟦️.ts) to support **wildcard levels** — today it only chains fixed facet-to-child allowlists and cannot express `<artifact>` or `<mutation>` segments. Then update `validateTaxonomy()`, registry `validateTaxonomyTree`, Rust `assert_taxonomy_components`, and root `policyTaxonomyDirsBreaches`. New rules: `policyStdioCatalogBreaches`, `policyArtifactBuilderBreaches`, `policyArtifactDecomposerBreaches`, `policySchemaRepresentationBreaches`, `policyIoSerializerMatrixBreaches`, `policyIoTerminalityBreaches`, `policyCodecFidelityBreaches`. Deleted rules: `policyMediaFormatCatalogBreaches`, `policyArtifactIoFacetCompletenessBreaches`, `policyArtifactIoLeafParityBreaches`, `policyArtifactIoNoEngineIoBreaches`, `policyArtifactSchemaPackRelocationBreaches`. New gates registered in [launch.seed.jsonc](.vscode/🧩️launch.seed.jsonc).
 
-**W2 — stdio skeleton and three reference artifacts.** 1 Grok + 2 Composer. Plugin crate, `📦️glue.rs`, `📋️project.json`, `📜️script.ts`, TS package, the four `🔌️plugin/` stubs including the required empty `🎛️apps/🦀️component.rs`, and the root `Cargo.toml` workspace member. Then `binary`, `txt`, `json` complete end to end as the verbatim template.
+**W2 — stdio skeleton and three reference artifacts.** 1 Grok + 2 Composer. Plugin crate, `📦️glue.rs`, `📋️project.json`, `📜️script.ts`, TS package, the four `🔌️plugin/` stubs including the required empty `🎛️apps/🦀️.rs`, and the root `Cargo.toml` workspace member. Then `binary`, `txt`, `json` complete end to end as the verbatim template.
 
 **W3 — SDK and registry.** 1 Grok + 1 Composer. Builder/decomposer traits, `PluginBuilder::artifact_kind`, the de-duplicated handler registry, and every framework deletion from Decision 5.
 

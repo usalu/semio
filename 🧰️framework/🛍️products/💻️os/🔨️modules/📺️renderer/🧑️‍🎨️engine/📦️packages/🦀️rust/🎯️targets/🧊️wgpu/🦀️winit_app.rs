@@ -408,7 +408,7 @@ pub(crate) enum HostUserEvent {
     Wake,
 }
 
-/// 🚀️ `ApplicationHandler` replacing `SemioApp` (deleted by this packet's surgical `📦️glue.rs` edit —
+/// 🚀️ `ApplicationHandler` replacing `SemioApp` (deleted by this packet's surgical `🦀️.rs` edit —
 /// see the report's redraw audit). Boot mirrors the old `SemioApp::resumed`/`user_event` handshake
 /// verbatim (window created synchronously, `AppRuntime` booted async, delivered via
 /// `HostUserEvent::RuntimeReady`); everything AFTER boot is new: no `ControlFlow::Poll`, no

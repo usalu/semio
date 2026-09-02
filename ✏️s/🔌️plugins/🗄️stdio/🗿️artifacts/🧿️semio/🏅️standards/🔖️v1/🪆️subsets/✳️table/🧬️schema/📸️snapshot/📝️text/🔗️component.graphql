@@ -1,4 +1,0 @@
-# 📝️ SemioTableSnapshot text body — descriptive twin of 📖️component.grammar.semio.
-type SemioTableSnapshotTextBody {
-  body: String! # "schema=<hex>\ncolumns=[<col>,...]\nrows=[<row>,...]"
-}

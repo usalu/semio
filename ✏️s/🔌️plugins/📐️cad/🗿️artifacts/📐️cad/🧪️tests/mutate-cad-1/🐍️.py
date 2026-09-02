@@ -14,7 +14,7 @@ implementation over this same carrier.
 
 **What it was written from.**
 
-* ``🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🔣️component.json`` — the members of
+* ``🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🔣️.json`` — the members of
   `CadSnapshot` and which of them are optional.
 * rules 1, 2 and 7 of
   `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/📓️derivation-rules.md`.
@@ -25,7 +25,7 @@ implementation over this same carrier.
   the document rather than nulling it; and that `replace-reference-media` rewrites five members of one
   reference and leaves its `origin`, `widthWorld`, `hidden` and `locked` alone.
 
-**No Rust was read to write this.** `🦀️component.rs` beside this file registers the SUBJECT half
+**No Rust was read to write this.** `🦀️.rs` beside this file registers the SUBJECT half
 only. All twenty kinds are adjudicated and none is refused: unlike `s.block.3d` or `s.architect.program`,
 every child id in this vocabulary is supplied by the caller, so nothing here depends on a
 content-addressing function no specification states.

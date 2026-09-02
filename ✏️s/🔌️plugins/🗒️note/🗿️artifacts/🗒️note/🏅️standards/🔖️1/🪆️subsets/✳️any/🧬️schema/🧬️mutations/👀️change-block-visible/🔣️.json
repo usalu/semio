@@ -5,7 +5,7 @@
   "displayName": "Change Block Visible",
   "emoji": "👀️",
   "aggregateVariant": "ChangeBlockVisible",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": "change-block-visible",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

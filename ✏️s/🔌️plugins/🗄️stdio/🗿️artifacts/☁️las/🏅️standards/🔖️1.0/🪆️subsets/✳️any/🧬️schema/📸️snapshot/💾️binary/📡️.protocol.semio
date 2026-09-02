@@ -1,0 +1,73 @@
+dialect protocol
+protocol stdio.las.snapshot
+version 1
+schema stdio.las
+start document
+framing record
+
+# Ticket 26/08/10/ARTIFACT-SYSTEM-OVERHAUL-REAL-CODECS-RUNTIME-REUSE-EVOLUTION: real byte layout
+# matching engine::{encode_las, decode_las} (../../../../⚙️engine/🦀️.rs's `off`/
+# `vlr_off` modules) EXACTLY -- replacing the placeholder ABNF-flavored text the previous (F2)
+# wave left here (that file used `%x`/single-quoted literals/`SP`/`NL`/bare `2OCTET` productions
+# entirely outside this framework's REAL `.protocol.semio` dialect -- `dialect protocol\nprotocol
+# <id>\nversion <n>\nschema <id>\nstart <block>\nframing ...`, `field <name> <prim>` inside a
+# `header fixed N` block, per the ticket's own grammar-recipe doc §2). LAS 1.0's public header
+# block is FIXED 227 bytes at named byte offsets -- genuinely, field-by-field protocol-walkable.
+# `framing record` (not `framing magic`) is used deliberately: `Framing::Magic` ALWAYS consumes
+# exactly 8 bytes at position 0 (confirmed by direct read of `walk_protocol`'s `Framing::Magic`
+# arm, `🗣️dsl/📖️grammar/🦀️.rs`), but LAS's real signature is only 4 bytes ("LASF") --
+# too short for that framing mode. The signature is instead modeled as the header's own first
+# field (`magic fixed 4`, an honest real 4-byte span; content-equality against literal "LASF" is a
+# Rust-side concern, same as every other unvalidated `fixed`/`bytes` span in this dialect, not
+# something the protocol walker checks).
+#
+# What follows the header (Variable Length Records, whose repeat COUNT comes from an
+# earlier-decoded header field rather than a per-iteration tag/sentinel byte, then point records,
+# whose FIXED-WIDTH shape is chosen ONCE by an earlier header field rather than re-declared per
+# iteration) hits the `protocol-array-of-records` gap this program's other binary-native pilots
+# (zip's `entries`, this artifact's own diff/mutations facets) already hit and filed --
+# `Block::Repeat`'s `arms` are tag-dispatched per iteration, and `Prim::Array` only repeats one
+# FIXED-WIDTH scalar; neither can express "repeat N times, N from an earlier field, each iteration
+# a multi-field record" (VLRs), nor "an earlier field selects which of several fixed record shapes
+# every following iteration uses" (point records, format 0-3). The real Rust `decode_las`/
+# `encode_las` (this file's whole point) walk this genuinely, field-by-field, VLR-by-VLR,
+# point-by-point, independently round-trip tested (`⚙️engine/🦀️.rs`'s 11 tests) -- this
+# protocol description honestly bounds only what it can field-by-field walk: the real fixed
+# header, then one opaque trailing chain for the VLR list + point list combined.
+
+header fixed 227
+field magic fixed 4
+field file_source_id fixed 2
+field global_encoding fixed 2
+field project_id_guid fixed 16
+field version_major u8
+field version_minor u8
+field system_identifier fixed 32
+field generating_software fixed 32
+field creation_day_of_year u16
+field creation_year u16
+field header_size u16
+field offset_to_point_data u32
+field number_of_vlrs u32
+field point_data_format_id u8
+field point_data_record_length u16
+field number_of_point_records u32
+field points_by_return_1 u32
+field points_by_return_2 u32
+field points_by_return_3 u32
+field points_by_return_4 u32
+field points_by_return_5 u32
+field x_scale f64
+field y_scale f64
+field z_scale f64
+field x_offset f64
+field y_offset f64
+field z_offset f64
+field max_x f64
+field min_x f64
+field max_y f64
+field min_y f64
+field max_z f64
+field min_z f64
+
+chain payload bytes

@@ -11,6 +11,6 @@
     "rootDir": "../..",
     "resolveJsonModule": true
   },
-  "include": ["📦️index.ts", "../../🔍️discovery/**/*.ts", "../../🗂️workspaces/**/*.ts"],
+  "include": ["🟦️.ts", "../../🔍️discovery/**/*.ts", "../../🗂️workspaces/**/*.ts"],
   "exclude": ["🧪️index.test.ts", "📜️script.ts"]
 }

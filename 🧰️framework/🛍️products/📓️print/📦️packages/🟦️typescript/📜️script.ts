@@ -1,17 +1,17 @@
 #!/usr/bin/env bun
 /** 🖨️ `@semio-tech/print` router: `bun ./📜️script.ts generate|fonts|build|watch|test`. */
-import { BundleScript, ScriptRouter, runBundleScriptMain } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts";
-import { PrintFontProvisioningCommand } from "../../🎮️commands/🔤print-font-provisioning/🟦️component.ts";
-import { TemplatePdfBuildCommand } from "../../🎮️commands/🖨️template-pdf-build/🟦️component.ts";
-import { TemplatePdfWatchCommand } from "../../🎮️commands/👁️template-pdf-watch/🟦️component.ts";
-import { PrintPipelineVerificationCommand } from "../../🎮️commands/🧪️print-pipeline-verification/🟦️component.ts";
-import { renderPrintLatexTokenStylesheet } from "../../🔨️modules/🎨print-design-token-paints/🟦️component.ts";
+import { BundleScript, ScriptRouter, runBundleScriptMain } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { PrintFontProvisioningCommand } from "../../🎮️commands/🔤print-font-provisioning/🟦️.ts";
+import { TemplatePdfBuildCommand } from "../../🎮️commands/🖨️template-pdf-build/🟦️.ts";
+import { TemplatePdfWatchCommand } from "../../🎮️commands/👁️template-pdf-watch/🟦️.ts";
+import { PrintPipelineVerificationCommand } from "../../🎮️commands/🟦️print-pipeline-verification.ts";
+import { renderPrintLatexTokenStylesheet } from "../../🔨️modules/🎨print-design-token-paints/🟦️.ts";
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join, relative } from "node:path";
 
 //#region 🖨️RouterAdapters
 function latexTokenTarget(repoRoot: string): { readonly path: string; readonly content: string } {
-  const tokenPath = join(repoRoot, "🧰️framework/🔨️modules/🖱️ui/🎨️styling/🔣️tokens.json");
+  const tokenPath = join(repoRoot, "🧰️framework/🔨️modules/🖱️ui/🎨️styling/🔣️.json");
   const tokens = JSON.parse(readFileSync(tokenPath, "utf8")) as Parameters<typeof renderPrintLatexTokenStylesheet>[0];
   return { path: join(repoRoot, "🧰️framework/🛍️products/📓️print/🖋️latex/semio-tokens.sty"), content: renderPrintLatexTokenStylesheet(tokens) };
 }

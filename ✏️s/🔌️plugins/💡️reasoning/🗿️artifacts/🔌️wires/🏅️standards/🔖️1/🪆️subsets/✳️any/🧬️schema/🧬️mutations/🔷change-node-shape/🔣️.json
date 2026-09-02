@@ -5,7 +5,7 @@
   "displayName": "Change Node Shape",
   "emoji": "🔷",
   "aggregateVariant": "ChangeNodeShape",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": "change-node-shape",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

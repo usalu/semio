@@ -4,7 +4,7 @@
 //! This file registers the SUBJECT role only. The reference answer comes from `🐍️component.py`
 //! beside it — an independent Python implementation of the same carrier and the same ten verbs,
 //! written from the committed grammars, registered as the oracle `semio-audio-python-independent`
-//! in `../../🏅️standards/🔖️v1/🪆️subsets/✳️audio/🧪️oracle/🔣️.json`. Registering oracle
+//! in `../../🏅️standards/🔖️v1/🪆️subsets/✳️audio/🔣️oracle.json`. Registering oracle
 //! handlers here as well would put this repository's own answer on both sides of the comparison,
 //! which is the one failure the platform exists to prevent, so the registrations this file used to
 //! carry are gone rather than merely unused.
@@ -13,7 +13,7 @@
 //! `parse_semio_audio_dsl`/`print_semio_audio_dsl` for the carrier and
 //! `apply_semio_audio_mutation`/`inverse_semio_audio_mutation` for the vocabulary — over the real
 //! committed tone artifact `../../🏅️standards/🔖️v1/🪆️subsets/✳️any/📚️examples/🎵️tone/🖼️assets/
-//! 🗣️example.dsl.semio`, and projects the resulting snapshot as structural JSON for
+//! 🗣️.dsl.semio`, and projects the resulting snapshot as structural JSON for
 //! `ordered-json-v1` to compare against the Python side's.
 //!
 //! The mutation parameters and the specification-vector paths live in `component.feature`, so both
@@ -29,7 +29,7 @@ use semio_repo_test_host::Adapter;
 
 //#region 🔖️Kinds
 /// 🏷️ Mirrors `SemioAudioMutation::KINDS` (`../../🏅️standards/🔖️v1/🪆️subsets/✳️audio/🧬️schema/
-/// 🧬️mutations/🦀️component.rs`) — duplicated, not imported, because the registration loop runs in
+/// 🧬️mutations/🦀️.rs`) — duplicated, not imported, because the registration loop runs in
 /// builds where the subject crate is not linked. The contract's mutation-coverage gate keeps this
 /// list honest against the catalog; `kinds_match_the_enum_and_the_catalog` in that production file
 /// keeps it honest against the enum.
@@ -53,7 +53,7 @@ mod subject {
     /// carrying the real ID3v2.3 tags of the same recording's committed mp3, derived ONCE by
     /// `🐍️derive-audio-fixture.py` in the ticket folder.
     const RECORDING_DSL: &str = "local://🗣️bauen-mit-bestand-ausschnitt.dsl.semio";
-    const TONE_DSL: &str = "asset://🏅️standards/🔖️v1/🪆️subsets/✳️any/📚️examples/🎵️tone/🖼️assets/🗣️example.dsl.semio";
+    const TONE_DSL: &str = "asset://🏅️standards/🔖️v1/🪆️subsets/✳️any/📚️examples/🎵️tone/🖼️assets/🗣️.dsl.semio";
 
     //#region 🔖️JsonReaders
     fn text(value: &Json, key: &str) -> Result<String, String> {

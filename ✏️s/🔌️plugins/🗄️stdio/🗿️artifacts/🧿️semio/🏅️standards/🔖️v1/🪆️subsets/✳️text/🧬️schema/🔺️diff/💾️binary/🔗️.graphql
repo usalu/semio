@@ -1,0 +1,7 @@
+# 💾️ Binary-facet grammar mirror (descriptive) — see ../🔗️.graphql for the canonical
+# facet schema; this file describes the DIFF PACK-BINARY ENCODING header of the same shape.
+type SemioTextDiffFrameHeader {
+  format: Int!
+  presence: Int!
+  payload: String!
+}

@@ -5,7 +5,7 @@
   "displayName": "Delete Load Case",
   "emoji": "🗑📋️",
   "aggregateVariant": "DeleteLoadCase",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": "delete-load-case",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

@@ -5,7 +5,7 @@
   "displayName": "Change Seismic Action",
   "emoji": "🦄",
   "aggregateVariant": "ChangeSeismicAction",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

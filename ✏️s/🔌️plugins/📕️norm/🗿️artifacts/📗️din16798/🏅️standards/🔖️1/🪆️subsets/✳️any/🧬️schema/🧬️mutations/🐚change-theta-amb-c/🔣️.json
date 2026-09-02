@@ -5,7 +5,7 @@
   "displayName": "Change Theta Amb C",
   "emoji": "🐚",
   "aggregateVariant": "ChangeThetaAmbC",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

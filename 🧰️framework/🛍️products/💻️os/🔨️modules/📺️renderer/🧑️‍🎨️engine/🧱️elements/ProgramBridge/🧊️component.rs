@@ -714,7 +714,7 @@ pub fn filter_plugins(entries: Vec<ProgramBridgeEntry>, _plugin_filter: &str) ->
 /// 🎠️ H3-wgpu-native, item 3 ("no eager loading") — used to `WasmPluginRuntime::load(&path)` every
 /// plugin here, which instantiated the FULL component (engine + linker + `Store`) just to read its
 /// manifest, at boot, for every plugin `is_space_mode` finds. Now: a registry scan that reads a
-/// build-time `🔣️descriptor.json` (`📓️design-abi.md` §3's `PackageDescriptor`, packet E1-describe's
+/// build-time `🔣️.json` (`📓️design-abi.md` §3's `PackageDescriptor`, packet E1-describe's
 /// emitter — not yet wired, no plugin crate emits one yet) when present, and otherwise records the
 /// plugin as a lazy `ProgramBridgeEntry` with an honest empty manifest and a `[DEBUG]` seam note —
 /// never instantiating. `create_app` (`crate::kernel_runtime::KernelClient::create_app`) is the
@@ -768,7 +768,7 @@ pub async fn load_wasm_plugins(plugin_filter: &str, modules_root: &std::path::Pa
     Ok(entries)
 }
 
-/// 🎠️ H3-wgpu-native — reads `🔣️descriptor.json` (`design-abi.md` §3) next to the plugin's wasm
+/// 🎠️ H3-wgpu-native — reads `🔣️.json` (`design-abi.md` §3) next to the plugin's wasm
 /// artifact when packet E1-describe has emitted one; otherwise returns an honest EMPTY manifest
 /// (zero apps) rather than instantiating the wasm to ask it, and logs the seam once per plugin.
 /// This is the real, structural consequence of "no eager loading" — no app can be found/opened for
@@ -776,7 +776,7 @@ pub async fn load_wasm_plugins(plugin_filter: &str, modules_root: &std::path::Pa
 /// this repo does yet (`WasmtimeRuntime`'s own tests confirm no `.wasm` here exports `world actor`).
 #[cfg(not(target_arch = "wasm32"))]
 async fn read_descriptor_manifest(plugin_dir: &std::path::Path, plugin_id: &str) -> PluginManifest {
-    let descriptor_path = plugin_dir.join("🔣️descriptor.json");
+    let descriptor_path = plugin_dir.join("🔣️.json");
     if let Ok(semio_framework_os_services::NativeIoValue::Bytes(mut bytes)) = crate::run_renderer_io(semio_framework_os_services::NativeIoRequest::ReadBytes(descriptor_path.clone())).await {
         if let Some(page) = bytes.single_page() {
             let descriptor = serde_json::from_slice::<semio_framework::manifest::PackageDescriptor>(page);

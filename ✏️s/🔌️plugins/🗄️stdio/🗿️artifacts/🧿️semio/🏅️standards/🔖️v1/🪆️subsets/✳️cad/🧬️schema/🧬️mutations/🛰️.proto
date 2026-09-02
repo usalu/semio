@@ -1,0 +1,35 @@
+syntax = "proto3";
+// 🧬️ SemioCadMutation schema — real facet mirror of 🦀️.rs (source of truth).
+package semio.s_stdio_semio_cad.mutations;
+
+import "../📸️snapshot/🛰️.proto";
+
+message SetLayer { string name = 1; optional int32 color_index = 2; optional string line_type = 3; optional bool visible = 4; }
+message SetBlockBasePoint { string name = 1; semio.s_stdio_semio_cad.snapshot.SemioPoint2 base_point = 2; }
+message SetEntityLayer { string handle = 1; string layer = 2; }
+message SetEntityGeometry { string handle = 1; semio.s_stdio_semio_cad.snapshot.CadEntity entity = 2; }
+message AddBlockEntity { string block_name = 1; semio.s_stdio_semio_cad.snapshot.CadEntityRecord entity = 2; }
+message RemoveBlockEntity { string block_name = 1; string handle = 2; }
+message SetBlockEntityLayer { string block_name = 1; string handle = 2; string layer = 3; }
+message SetBlockEntityGeometry { string block_name = 1; string handle = 2; semio.s_stdio_semio_cad.snapshot.CadEntity entity = 3; }
+
+message SemioCadMutation {
+  oneof value {
+    bool no_mutation = 1;
+    semio.s_stdio_semio_cad.snapshot.SemioCadSnapshot set_snapshot = 2;
+    semio.s_stdio_semio_cad.snapshot.CadLayer add_layer = 3;
+    string remove_layer = 4;
+    SetLayer set_layer = 5;
+    semio.s_stdio_semio_cad.snapshot.CadBlock add_block = 6;
+    string remove_block = 7;
+    SetBlockBasePoint set_block_base_point = 8;
+    semio.s_stdio_semio_cad.snapshot.CadEntityRecord add_entity = 9;
+    string remove_entity = 10;
+    SetEntityLayer set_entity_layer = 11;
+    SetEntityGeometry set_entity_geometry = 12;
+    AddBlockEntity add_block_entity = 13;
+    RemoveBlockEntity remove_block_entity = 14;
+    SetBlockEntityLayer set_block_entity_layer = 15;
+    SetBlockEntityGeometry set_block_entity_geometry = 16;
+  }
+}

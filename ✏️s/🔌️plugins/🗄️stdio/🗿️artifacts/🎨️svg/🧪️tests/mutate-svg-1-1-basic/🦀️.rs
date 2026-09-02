@@ -4,7 +4,7 @@
 //! Every scenario copies the real, committed `mouse.svg` fixture into the case work directory
 //! first; the committed asset is never written to. `oracle` drives the registered `quick-xml`
 //! reference implementation through this subset's own oracle module
-//! (`../../🏅️standards/🔖️1.1/🪆️subsets/✳️basic/🧪️oracle/🦀️component.rs`); `subject` drives this
+//! (`../../🏅️standards/🔖️1.1/🪆️subsets/✳️basic/🦀️oracle.rs`); `subject` drives this
 //! repository's own `SvgSnapshot::import_utf8`/`export_utf8` and `apply_svg_basic_mutation` over the
 //! full 10-kind `SvgBasicMutation` vocabulary. Both results are read back by the SAME independent
 //! `project_svg_basic` before the `semantic-svg-basic-1-1-v1` profile compares them. The subject half
@@ -16,7 +16,7 @@ use semio_s_plugin_stdio_test_oracle::artifacts::svg::standards::v1_1::subsets::
 
 //#region 🔖️Kinds
 /// 📇️ Kebab-case spelling of every `SvgBasicMutation` variant, mirrored from
-/// `../../🏅️standards/🔖️1.1/🪆️subsets/✳️basic/🧬️schema/🧬️mutations/🦀️component.rs`'s own `KINDS` --
+/// `../../🏅️standards/🔖️1.1/🪆️subsets/✳️basic/🧬️schema/🧬️mutations/🦀️.rs`'s own `KINDS` --
 /// duplicated rather than imported because the ORACLE-only build of this adapter must never link
 /// `semio-s-plugin-stdio`.
 const KINDS: &[&str] = &["set-snapshot", "stamp-base-profile", "insert-basic-element", "remove-element", "set-basic-attribute", "set-clip-path-reference", "insert-clip-path-shape", "set-text", "set-view-box", "set-transform"];

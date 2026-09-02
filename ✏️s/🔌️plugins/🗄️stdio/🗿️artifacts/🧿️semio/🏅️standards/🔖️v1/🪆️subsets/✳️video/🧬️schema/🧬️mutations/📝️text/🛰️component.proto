@@ -1,7 +1,0 @@
-syntax = "proto3";
-// 📝️ Text representation mirror for `stdio.semio.video` (mutations) — one line. Structural shape
-// is ../🛰️component.proto's SemioVideoMutation.
-package semio.s_stdio_semio_video.mutations.text;
-message SemioVideoMutationTextLine {
-  string line = 1;
-}

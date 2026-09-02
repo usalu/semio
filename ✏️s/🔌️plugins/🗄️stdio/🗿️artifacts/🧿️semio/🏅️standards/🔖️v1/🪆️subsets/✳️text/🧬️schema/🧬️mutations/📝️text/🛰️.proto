@@ -1,0 +1,8 @@
+syntax = "proto3";
+// 📝️ Text-facet grammar mirror (descriptive) — see ../🛰️.proto for the canonical facet
+// schema; this file describes the OP-TEXT ENCODING of the mutation dispatch shape.
+package semio.s_stdio_semio_text_mutations.text;
+message SemioTextMutationOpDsl {
+  string keyword = 1;
+  string args_wire = 2;
+}

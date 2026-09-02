@@ -1,6 +1,0 @@
-/** 🧪️ Focused reorder-morph-targets mutation-law probe. */
-import type { GltfSnapshot } from '../../../📸️snapshot/🟦️component.ts';
-import { applyGltfReorderMorphTargets, type GltfReorderMorphTargetsPayload } from '../../reorder-morph-targets/🟦️component.ts';
-import { deriveGltfReorderMorphTargetsDiff } from '../../reorder-morph-targets/🔺️diff/🟦️component.ts';
-import { deriveGltfReorderMorphTargetsInverse } from '../../reorder-morph-targets/↩️inverse/🟦️component.ts';
-export const assertGltfReorderMorphTargetsLaws = (base: GltfSnapshot, payload: GltfReorderMorphTargetsPayload) => { const applied = applyGltfReorderMorphTargets(base, payload); if (!applied.accepted) return applied; const replay = applyGltfReorderMorphTargets(base, payload); const direct = deriveGltfReorderMorphTargetsDiff(base, payload); const undo = deriveGltfReorderMorphTargetsInverse(base, payload); if (!replay.accepted || !direct.accepted || !undo.accepted || JSON.stringify(applied.snapshot) !== JSON.stringify(replay.snapshot) || JSON.stringify(applied.diff) !== JSON.stringify(replay.diff) || JSON.stringify(applied.touchedPaths) !== JSON.stringify(undo.touchedPaths)) throw new Error('reorder-morph-targets violates replay, direct-diff, or undo determinism'); return { applied, direct, undo }; };

@@ -5,7 +5,7 @@
   "displayName": "Set Dimensions",
   "emoji": "📐️",
   "aggregateVariant": "SetDimensions",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

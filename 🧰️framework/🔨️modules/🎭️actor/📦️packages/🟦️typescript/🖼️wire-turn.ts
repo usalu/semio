@@ -2,7 +2,7 @@
 /** @emoji 🖼️ Renderer-agnostic interpretation of one `ShardClient.turn()` result — coercing its
  * opaque `unknown` shape, decoding retained-mode `UiPatch` ops onto a kept tree, and translating a
  * raw wire `effect` variant into the shared `kernel::Effect` TS union. Lifted out of
- * `PluginRuntime/🟦️component.tsx`'s `🔖️ActorAdapter`/`🔖️RetainedUiPatch` regions (MICROKERNEL-POOLED-
+ * `PluginRuntime/🟦️.tsx`'s `🔖️ActorAdapter`/`🔖️RetainedUiPatch` regions (MICROKERNEL-POOLED-
  * ACTOR-PLUGIN-RUNTIME, `wgpu-web-shard`) so a second renderer target does not reimplement this wire
  * parsing independently — the exact "third divergent copy" that packet's own brief warns against.
  * `decodePackValue` is injected rather than imported (`@semio-tech/framework-os`'s own codec) so this
@@ -73,7 +73,7 @@ export function coerceTurnResult(raw: unknown): WireTurnResult {
 }
 
 /** 🔀️ `Effect::SendMessage{target: Shell{instance}}` → the raw `AppFrame` bytes it wraps —
- * `⚛️reactor/🦀️component.rs`'s `route_app_frame` puts EVERY non-`UiPatch` `AppFrame` reply here. */
+ * `⚛️reactor/🦀️.rs`'s `route_app_frame` puts EVERY non-`UiPatch` `AppFrame` reply here. */
 export function shellFrameBytes(effect: WireVariant, instanceId: number): Uint8Array | null {
   if (effect.tag !== "send-message") return null;
   const val = (effect.val ?? {}) as { readonly target?: WireVariant<number>; readonly payload?: unknown };
@@ -85,7 +85,7 @@ export function shellFrameBytes(effect: WireVariant, instanceId: number): Uint8A
 //#endregion 🔖️TurnResult
 
 //#region 🔖️RetainedUiPatch
-/** 🩹️ `kernel::PatchOp`, TS twin restricted to what `⚛️reactor/🩹️patches/🦀️component.rs`'s
+/** 🩹️ `kernel::PatchOp`, TS twin restricted to what `⚛️reactor/🩹️patches/🦀️.rs`'s
  * `PatchTracker` actually emits this wave — full-body only, every dirty surface emits one
  * `PatchOp::Replace` at the root path. `path` is `list<u32>` at the WIT boundary (empty for root). */
 export type PatchOp =
@@ -157,7 +157,7 @@ export function wireExtensionInvocation(effect: WireVariant): Extract<Effect, { 
 }
 
 /** 🚧️ Best-effort conversion of a raw WIT `effect` variant into the friendly `Effect` union
- * `🎠️kernel/🟦️component.ts` already declares — Rust `kernel::Effect`'s externally-tagged serde shape,
+ * `🎠️kernel/🟦️.ts` already declares — Rust `kernel::Effect`'s externally-tagged serde shape,
  * which every downstream consumer already expects. Covers the effect kinds a renderer commonly
  * branches on; an effect kind with no case here degrades to an honest `[DEBUG]`-logged drop rather
  * than guessing an unverified shape. */

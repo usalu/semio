@@ -1,0 +1,176 @@
+{
+  "schemaVersion": 1,
+  "accepted": [
+    {
+      "id": "explicit-package-library-and-dependency-identities",
+      "locator": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/Cargo.toml",
+      "source": "[package]\nname = 'semio-framework-replication'\nversion = '0.1.0'\n\n[lib]\nname = 'protocol'\npath = 'src/lib.rs'\ncrate-type = ['rlib', 'cdylib']\n\n[workspace.dependencies]\nderive = { package = 'semio-framework-os-kernel-dsl-derive', path = '../derive' }\n\n[dependencies]\n'kernel.alias' = { package = 'semio-framework-os-kernel', path = '../kernel', version = '0.1.0' }\nregistry_only = '1.0.0'\n\n[dev-dependencies]\ntest_support = { package = 'test-support', path = '../test-support' }\n\n[build-dependencies]\nbuild_support = { path = '../build-support' }\n\n[target.'cfg(unix)'.dependencies]\nunix_support = { package = 'unix-support', path = '../unix-support' }\n\n[target.'cfg(unix)'.dev-dependencies]\nunix_test = { path = '../unix-test' }\n\n[target.'cfg(unix)'.build-dependencies]\nunix_build = { path = '../unix-build' }\n",
+      "tomlOracle": {
+        "package": { "name": "semio-framework-replication", "version": "0.1.0" },
+        "lib": { "name": "protocol", "path": "src/lib.rs", "crate-type": ["rlib", "cdylib"] },
+        "workspace": { "dependencies": { "derive": { "package": "semio-framework-os-kernel-dsl-derive", "path": "../derive" } } },
+        "dependencies": {
+          "kernel.alias": { "package": "semio-framework-os-kernel", "path": "../kernel", "version": "0.1.0" },
+          "registry_only": "1.0.0"
+        },
+        "dev-dependencies": { "test_support": { "package": "test-support", "path": "../test-support" } },
+        "build-dependencies": { "build_support": { "path": "../build-support" } },
+        "target": { "cfg(unix)": { "dependencies": { "unix_support": { "package": "unix-support", "path": "../unix-support" } }, "dev-dependencies": { "unix_test": { "path": "../unix-test" } }, "build-dependencies": { "unix_build": { "path": "../unix-build" } } } }
+      },
+      "expected": {
+        "locator": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/Cargo.toml",
+        "package": { "name": "semio-framework-replication", "version": "0.1.0" },
+        "library": { "name": "protocol", "path": "src/lib.rs", "crateTypes": ["rlib", "cdylib"], "procMacro": false },
+        "workspaceDeclared": true,
+        "workspaceDependencies": [{ "key": "derive", "packageOverride": "semio-framework-os-kernel-dsl-derive", "localPath": "../derive", "workspaceInherited": false, "source": "table", "unsupported": {}, "unapprovedReasons": [] }],
+        "dependencies": [
+          { "key": "kernel.alias", "packageOverride": "semio-framework-os-kernel", "localPath": "../kernel", "workspaceInherited": false, "source": "table", "version": "0.1.0", "unsupported": {}, "unapprovedReasons": ["version-constraint"] },
+          { "key": "registry_only", "workspaceInherited": false, "source": "version", "version": "1.0.0", "unsupported": {}, "unapprovedReasons": ["version-only"] },
+          { "key": "unix_support", "packageOverride": "unix-support", "localPath": "../unix-support", "workspaceInherited": false, "targetCondition": "cfg(unix)", "source": "table", "unsupported": {}, "unapprovedReasons": [] }
+        ],
+        "developmentDependencies": [{ "key": "test_support", "packageOverride": "test-support", "localPath": "../test-support", "workspaceInherited": false, "source": "table", "unsupported": {}, "unapprovedReasons": [] }, { "key": "unix_test", "localPath": "../unix-test", "workspaceInherited": false, "targetCondition": "cfg(unix)", "source": "table", "unsupported": {}, "unapprovedReasons": [] }],
+        "buildDependencies": [{ "key": "build_support", "localPath": "../build-support", "workspaceInherited": false, "source": "table", "unsupported": {}, "unapprovedReasons": [] }, { "key": "unix_build", "localPath": "../unix-build", "workspaceInherited": false, "targetCondition": "cfg(unix)", "source": "table", "unsupported": {}, "unapprovedReasons": [] }]
+      }
+    },
+    {
+      "id": "workspace-inheritance-and-proc-macro",
+      "locator": "✏️s/🔌️plugins/providerCargo.toml",
+      "source": "[package]\nname = \"provider\"\n\n[lib]\nname = \"dsl_derive\"\nproc-macro = true\n\n[dependencies]\nprotocol = { workspace = true }\n",
+      "tomlOracle": {
+        "package": { "name": "provider" },
+        "lib": { "name": "dsl_derive", "proc-macro": true },
+        "dependencies": { "protocol": { "workspace": true } }
+      },
+      "expected": {
+        "locator": "✏️s/🔌️plugins/providerCargo.toml",
+        "package": { "name": "provider" },
+        "library": { "name": "dsl_derive", "crateTypes": [], "procMacro": true },
+        "workspaceDependencies": [],
+        "dependencies": [{ "key": "protocol", "workspaceInherited": true, "source": "table", "unsupported": {}, "unapprovedReasons": ["workspace-inheritance", "no-local-path"] }],
+        "developmentDependencies": [],
+        "buildDependencies": []
+      }
+    },
+    {
+      "id": "comment-and-string-multiline-decoys",
+      "locator": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/decoy/Cargo.toml",
+      "source": "# \"\"\" header decoy\n[package]\nname = \"decoy\"\ndescription = '# \"\"\" string decoy'\n",
+      "tomlOracle": { "package": { "name": "decoy", "description": "# \"\"\" string decoy" } },
+      "expected": {
+        "locator": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/decoy/Cargo.toml",
+        "package": { "name": "decoy" },
+        "workspaceDependencies": [],
+        "dependencies": [],
+        "developmentDependencies": [],
+        "buildDependencies": []
+      }
+    },
+    {
+      "id": "virtual-workspace-dependency-authority",
+      "locator": "🧰️framework/🛍️products/🦑️repo/Cargo.toml",
+      "source": "[workspace]\nmembers = ['member']\n\n[workspace.dependencies]\nprotocol = { package = 'semio-framework-os-kernel', path = '🔨️modules/💻️os/🔍️kernel' }\n",
+      "tomlOracle": { "workspace": { "members": ["member"], "dependencies": { "protocol": { "package": "semio-framework-os-kernel", "path": "🔨️modules/💻️os/🔍️kernel" } } } },
+      "expected": {
+        "locator": "🧰️framework/🛍️products/🦑️repo/Cargo.toml",
+        "workspaceDeclared": true,
+        "workspaceDependencies": [{ "key": "protocol", "packageOverride": "semio-framework-os-kernel", "localPath": "🔨️modules/💻️os/🔍️kernel", "workspaceInherited": false, "source": "table", "unsupported": {}, "unapprovedReasons": [] }],
+        "dependencies": [],
+        "developmentDependencies": [],
+        "buildDependencies": []
+      }
+    },
+    {
+      "id": "workspace-inherited-package-version",
+      "locator": "🧰️framework/🛍️products/🦑️repo/member/Cargo.toml",
+      "source": "[package]\nname = 'member'\nversion = { workspace = true }\n",
+      "tomlOracle": { "package": { "name": "member", "version": { "workspace": true } } },
+      "expected": {
+        "locator": "🧰️framework/🛍️products/🦑️repo/member/Cargo.toml",
+        "package": { "name": "member", "versionInherited": true },
+        "workspaceDependencies": [],
+        "dependencies": [],
+        "developmentDependencies": [],
+        "buildDependencies": []
+      }
+    },
+    {
+      "id": "explicit-package-workspace-locator",
+      "locator": "🧰️framework/🛍️products/🦑️repo/member/Cargo.toml",
+      "source": "[package]\nname = 'member'\nworkspace = '../Cargo.toml'\n",
+      "tomlOracle": { "package": { "name": "member", "workspace": "../Cargo.toml" } },
+      "expected": {
+        "locator": "🧰️framework/🛍️products/🦑️repo/member/Cargo.toml",
+        "package": { "name": "member", "workspaceLocator": "../Cargo.toml" },
+        "workspaceDependencies": [],
+        "dependencies": [],
+        "developmentDependencies": [],
+        "buildDependencies": []
+      }
+    }
+  ],
+  "rejected": [
+    {
+      "id": "multiline-basic-string-retains-initial-newline-in-oracle",
+      "locator": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/Cargo.toml",
+      "source": "[package]\nname = \"provider\"\ndescription = \"\"\"\nfirst line\n\"\"\"\n",
+      "reason": "multiline",
+      "tomlOracle": { "package": { "name": "provider", "description": "first line\n" } }
+    },
+    {
+      "id": "duplicate-key",
+      "locator": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/Cargo.toml",
+      "source": "[package]\nname = \"one\"\nname = \"two\"\n",
+      "reason": "invalid",
+      "tomlOracle": null
+    },
+    {
+      "id": "wrong-package-name-type",
+      "locator": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/Cargo.toml",
+      "source": "[package]\nname = 7\n",
+      "reason": "wrong-type",
+      "tomlOracle": { "package": { "name": 7 } }
+    },
+    {
+      "id": "ambiguous-workspace-and-path",
+      "locator": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/Cargo.toml",
+      "source": "[package]\nname = \"provider\"\n[dependencies]\nprotocol = { workspace = true, path = \"../protocol\" }\n",
+      "reason": "ambiguous",
+      "tomlOracle": { "package": { "name": "provider" }, "dependencies": { "protocol": { "workspace": true, "path": "../protocol" } } }
+    },
+    {
+      "id": "unsafe-parent-locator",
+      "locator": "../Cargo.toml",
+      "source": "[package]\nname = \"provider\"\n",
+      "reason": "unsafe-locator",
+      "tomlOracle": { "package": { "name": "provider" } }
+    },
+    {
+      "id": "excluded-locator",
+      "locator": "Compose/provider/Cargo.toml",
+      "source": "[package]\nname = \"provider\"\n",
+      "reason": "excluded-locator",
+      "tomlOracle": { "package": { "name": "provider" } }
+    },
+    {
+      "id": "cross-platform-unsafe-locator",
+      "locator": "domain/x:y/Cargo.toml",
+      "source": "[package]\nname = \"provider\"\n",
+      "reason": "unsafe-locator",
+      "tomlOracle": { "package": { "name": "provider" } }
+    },
+    {
+      "id": "line-separator-locator",
+      "locator": "domain/x y/Cargo.toml",
+      "source": "[package]\nname = \"provider\"\n",
+      "reason": "unsafe-locator",
+      "tomlOracle": { "package": { "name": "provider" } }
+    },
+    {
+      "id": "mixed-local-and-git-source",
+      "locator": "domain/Cargo.toml",
+      "source": "[package]\nname = \"provider\"\n[dependencies]\nprotocol = { path = \"../protocol\", git = \"https://example.invalid/protocol\" }\n",
+      "reason": "ambiguous",
+      "tomlOracle": { "package": { "name": "provider" }, "dependencies": { "protocol": { "path": "../protocol", "git": "https://example.invalid/protocol" } } }
+    }
+  ]
+}

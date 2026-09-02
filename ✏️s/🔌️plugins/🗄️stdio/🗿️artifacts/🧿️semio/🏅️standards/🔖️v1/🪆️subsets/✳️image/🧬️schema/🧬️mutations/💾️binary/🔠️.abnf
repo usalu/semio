@@ -1,0 +1,7 @@
+; ABNF mirror (descriptive, not test-parsed — the real byte-level walker is
+; ../📡️.protocol.semio, walked by dsl::walk_protocol) for `SemioImageMutation`'s real
+; binary op frame (NOT print_op().into_bytes()).
+document = format tag payload
+format   = OCTET                ; OP_BINARY_FORMAT, currently 1
+tag      = OCTET                ; SemioImageMutation variant ordinal, 0-12
+payload  = *OCTET                ; variant's own comma-separated positional argument text

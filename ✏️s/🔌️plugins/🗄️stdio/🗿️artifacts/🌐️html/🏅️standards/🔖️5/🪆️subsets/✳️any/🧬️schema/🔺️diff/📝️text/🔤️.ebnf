@@ -1,0 +1,4 @@
+(* ebnf stdio.html diff -- hand-rolled bracket-token grammar, see the sibling
+   ../📖️.grammar.semio for the full production rules. *)
+document = { token, " " } ;
+token = "doctype=", tristateString | "root=", nodeDiff ;

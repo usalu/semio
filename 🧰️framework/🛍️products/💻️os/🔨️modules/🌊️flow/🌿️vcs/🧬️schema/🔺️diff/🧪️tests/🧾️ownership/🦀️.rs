@@ -20,7 +20,7 @@ fn retire_diff(diff: FlowDiff) {
 
 #[test]
 fn retained_payload_projection_matches_neutral_vectors() {
-    let vectors = crate::os_pack::json::parse(include_str!("🔣️vectors.json")).unwrap();
+    let vectors = crate::os_pack::json::parse(include_str!("🔣️.json")).unwrap();
     let base: FlowFixture = crate::os_dsl::FromValue::from_value(crate::os_pack::json::to_dsl_value(vectors.get("base").unwrap())).unwrap();
     let base_json = crate::os_pack::json::from_dsl_value(&crate::os_dsl::ToValue::to_value(&base));
     for row in vectors.get("cases").and_then(crate::os_pack::json::Value::as_array).unwrap() {

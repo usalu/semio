@@ -5,7 +5,7 @@
   "displayName": "Change Generation Value",
   "emoji": "🔢",
   "aggregateVariant": "ChangeGenerationValue",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

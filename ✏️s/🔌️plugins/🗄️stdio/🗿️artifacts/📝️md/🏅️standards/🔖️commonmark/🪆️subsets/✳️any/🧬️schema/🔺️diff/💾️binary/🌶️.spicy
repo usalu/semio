@@ -1,0 +1,8 @@
+module Stdio_md_diff;
+# 🔺️ Real op-log frame for MdDiff: length-prefixed UTF-8 JSON (see the sibling
+# ../📝️text/📖️.grammar.semio for the payload's own grammar).
+
+type OpFrame = unit {
+    length: uint32;
+    json_payload: bytes &size=self.length;
+};

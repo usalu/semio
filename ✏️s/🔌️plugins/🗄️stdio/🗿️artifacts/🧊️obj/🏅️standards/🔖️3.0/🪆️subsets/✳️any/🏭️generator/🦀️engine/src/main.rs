@@ -1,11 +1,11 @@
 //! 🏭️ Generates `pattern-shell.obj`, one small, deliberately varied, fully deterministic Wavefront
 //! OBJ document that carries every statement this subset's 22-kind `ObjMutation` vocabulary can
 //! move — and ADMITS it through the real `tobj` 4 reader, the same crate registered as
-//! `tobj-obj-3-0-mutate` in `../../🧪️oracle/🔣️.json`, before writing a single byte.
+//! `tobj-obj-3-0-mutate` in `../../🔣️oracle.json`, before writing a single byte.
 //!
 //! 📐️ Why the grammar is written here rather than by a library: OBJ has no reference WRITER in the
 //! Rust ecosystem — `tobj` parses and never emits — which is the already-recorded reason this
-//! subset's own oracle (`../../🧪️oracle/🦀️component.rs`) and the shared `mesh::oracle_create_obj`
+//! subset's own oracle (`../../🦀️oracle.rs`) and the shared `mesh::oracle_create_obj`
 //! both write the grammar directly and use `tobj` as the independent reader. This generator mirrors
 //! that same precedent exactly: it never touches this repository's `encode_obj`/`ObjSnapshot`, and
 //! the third-party crate is what decides whether the produced document is a real OBJ at all

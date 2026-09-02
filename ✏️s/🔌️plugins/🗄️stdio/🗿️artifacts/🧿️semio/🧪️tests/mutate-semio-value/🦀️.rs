@@ -3,7 +3,7 @@
 //!
 //! **This file no longer serves the oracle role.** The reference for `semio-v1-value-mutate` is the
 //! registered oracle `semio-value-python-independent` (`../../🏅️standards/🔖️v1/🪆️subsets/✳️value/
-//! 🧪️oracle/🔣️.json`) — an independent Python implementation of the semio value carrier and
+//! 🔣️oracle.json`) — an independent Python implementation of the semio value carrier and
 //! its nine verbs, written from the committed grammar, protocol and specification vectors, living
 //! beside this file as `🐍️component.py`. The runner dispatches the oracle role to that adapter and
 //! the subject role here, and compares the two projections under `@comparison-ordered-json-v1`.
@@ -27,14 +27,14 @@
 //! through the real `apply_semio_value_mutation`/`inverse_semio_value_mutation`. The DSL and pack
 //! bridges this case's byte law needs — `parse_semio_value_dsl`, `print_semio_value_dsl`,
 //! `encode_semio_value_pack`, `decode_semio_value_pack` — were added to the subset's own
-//! `📸️snapshot/🦀️component.rs` for this wave, mirroring the ones `✳️table`, `✳️flow` and `✳️text`
+//! `📸️snapshot/🦀️.rs` for this wave, mirroring the ones `✳️table`, `✳️flow` and `✳️text`
 //! already exported; before them this case could make no byte claim at all.
 
 use semio_repo_test_host::Adapter;
 
 //#region 🔖️Kinds
 /// 🏷️ Mirrors `SemioValueMutation::KINDS` (`../../🏅️standards/🔖️v1/🪆️subsets/✳️value/🧬️schema/
-/// 🧬️mutations/🦀️component.rs`) — duplicated, not imported, because the generated host builds this
+/// 🧬️mutations/🦀️.rs`) — duplicated, not imported, because the generated host builds this
 /// file with and without the subject crate. The contract's mutation-coverage gate keeps this list
 /// honest against the catalog; `kinds_match_the_enum_and_the_catalog` in that production file keeps
 /// it honest against the enum.
@@ -277,7 +277,7 @@ mod subject {
     //#region 🔖️Input
     /// 🕸️ The six-member demo graph, in both encodings the domain commits for it — small, but the
     /// only `stdio.semio.value` bytes in this artifact a codec other than the Python one wrote.
-    const GRAPH_DSL: &str = "asset://🏅️standards/🔖️v1/🪆️subsets/✳️any/📚️examples/🕸️graph/🖼️assets/🗣️example.dsl.semio";
+    const GRAPH_DSL: &str = "asset://🏅️standards/🔖️v1/🪆️subsets/✳️any/📚️examples/🕸️graph/🖼️assets/🗣️.dsl.semio";
     const GRAPH_PACK: &str = "asset://🏅️standards/🔖️v1/🪆️subsets/✳️any/📚️examples/🕸️graph/🖼️assets/🎒️example.pack.semio";
     /// 🌲️ The real 424 KB building model, its source and its binary twin.
     const FOREST_JSON: &str = "local://🌲️hexagonal-cut-concrete-forest-left.model.json";

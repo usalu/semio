@@ -2,7 +2,7 @@
 //!
 //! Every scenario copies the real, derived-once fixture into the case work directory first; the
 //! committed fixture is never written to. `oracle` drives the registered `stl_io` reference
-//! implementation (`../../🏅️standards/🔖️ascii/🪆️subsets/✳️any/🧪️oracle/🦀️component.rs`), `subject`
+//! implementation (`../../🏅️standards/🔖️ascii/🪆️subsets/✳️any/🦀️oracle.rs`), `subject`
 //! drives this repository's own decode/apply/encode round trip, and both results are read back by
 //! the independent `stl_io` reader before the `semantic-mesh-v1` profile compares them. The subject
 //! half is gated behind the generated host's `sut` feature so the oracle-only run never compiles the
@@ -14,7 +14,7 @@ use semio_s_plugin_stdio_test_oracle::mesh::project_stl;
 use semio_s_plugin_stdio_test_oracle::law::{inverse_restores_within, mutation_is_observable_within, round_trip_preserves_within};
 
 //#region 🔖️Kinds
-/// 🧾️ Mirrors `StlMutation::KINDS` (`../../🏅️standards/🔖️ascii/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs`)
+/// 🧾️ Mirrors `StlMutation::KINDS` (`../../🏅️standards/🔖️ascii/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs`)
 /// — kept in sync by the contract phase's `mutation-kind-uncovered`/`mutation-kind-undeclared`
 /// gates, which fail loudly if this list and the catalog ever drift apart.
 const KINDS: [&str; 7] = ["no-mutation", "set-snapshot", "set-solid-name", "insert-triangle", "remove-triangle", "set-triangle-normal", "set-triangle-vertices"];
@@ -22,7 +22,7 @@ const KINDS: [&str; 7] = ["no-mutation", "set-snapshot", "set-solid-name", "inse
 
 //#region 🔖️Profile
 /// 📏️ `semantic-stl-ascii-v1`'s own declared tolerances (`../../🏅️standards/🔖️ascii/🪆️subsets/✳️any/
-/// 🧪️oracle/🔣️.json`), mirrored here so an in-handler law check is exactly as strict as the
+/// 🔣️oracle.json`), mirrored here so an in-handler law check is exactly as strict as the
 /// profile the case is measured by — never stricter, which would invent a failure the comparison
 /// itself would forgive.
 const STL_WRITER_FREEDOM: &[&str] = &["byteLength", "fileSize", "precision"];
@@ -188,7 +188,7 @@ mod subject {
         })
     }
 
-    /// ↩️ Mirrors `StlMutation::inverse()` (`../../../🏅️standards/🔖️ascii/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs`)
+    /// ↩️ Mirrors `StlMutation::inverse()` (`../../../🏅️standards/🔖️ascii/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs`)
     /// independently: the generated oracle-role host never links `protocol`, so the trait method
     /// itself is unreachable here, and this reconstructs the same index-aware inverse by hand
     /// against the pre-mutation `base`. `StlMutation::NoMutation` is gone, so an out-of-range index

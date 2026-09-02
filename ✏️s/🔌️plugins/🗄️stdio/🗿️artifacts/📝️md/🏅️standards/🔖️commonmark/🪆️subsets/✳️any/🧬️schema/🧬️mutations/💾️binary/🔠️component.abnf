@@ -1,4 +1,0 @@
-; abnf stdio.md mutations -- real op-log frame, mirrors 📡️component.protocol.semio
-op-frame = length json-bytes
-length = 4OCTET ; u32-le byte count of json-bytes
-json-bytes = *OCTET ; UTF-8 JSON conforming to ../📝️text/🔤️component.ebnf

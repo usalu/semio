@@ -1,0 +1,40 @@
+{
+  "name": "@semio-tech/fixture-generator-stdio-obj-3-0-any",
+  "targets": {
+    "🏭️generator": {
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts generate",
+        "forwardAllArgs": true
+      }
+    },
+    "🏭️generator-manifests": {
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts manifests",
+        "forwardAllArgs": true
+      }
+    },
+    "🏭️generator-list-recipes": {
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts list-recipes",
+        "forwardAllArgs": true
+      }
+    },
+    "🏭️generator-document": {
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts document",
+        "forwardAllArgs": true
+      }
+    },
+    "🏭️generator-document-manifests": {
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts document-manifests",
+        "forwardAllArgs": true
+      }
+    }
+  }
+}

@@ -11,9 +11,9 @@
     "noEmit": true,
     "paths": {
       "@semio-tech/assets/*": ["../../../../../../../../🧰️framework/🔨️modules/🖼️assets/*"],
-      "@semio-tech/assets": ["../../../../../../../../🧰️framework/🔨️modules/🖼️assets/📦️packages/🟦️typescript/📦️index.ts"]
+      "@semio-tech/assets": ["../../../../../../../../🧰️framework/🔨️modules/🖼️assets/📦️packages/🟦️typescript/🟦️.ts"]
     }
   },
-  "include": ["🧪️extension.test.ts", "🟦️extension.ts"],
+  "include": ["🧪️extension.test.ts", "🟦️.ts"],
   "exclude": ["node_modules", "out", "test"]
 }

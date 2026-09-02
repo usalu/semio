@@ -521,7 +521,7 @@ mod tests {
     use super::*;
 
     // 🔤️ Base64 codec tests moved with the implementation to `semio-framework-io-base64`'s own
-    // `🦀️component.rs` — this crate now only re-exports the functions.
+    // `🦀️.rs` — this crate now only re-exports the functions.
 
     //#region 🔖️Limits
     #[test]

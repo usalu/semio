@@ -1,0 +1,9 @@
+syntax = "proto3";
+package stdio.xml.mutation;
+import "✏️set-declaration/🛰️.proto";
+import "✏️set-doctype/🛰️.proto";
+import "📥️insert-element/🛰️.proto";
+import "🗑️remove-element/🛰️.proto";
+import "✏️set-attribute/🛰️.proto";
+import "✏️set-text/🛰️.proto";
+message XmlMutation { oneof mutation { SetDeclarationPayload set_declaration = 1; SetDoctypePayload set_doctype = 2; InsertElementPayload insert_element = 3; RemoveElementPayload remove_element = 4; SetAttributePayload set_attribute = 5; SetTextPayload set_text = 6; } }

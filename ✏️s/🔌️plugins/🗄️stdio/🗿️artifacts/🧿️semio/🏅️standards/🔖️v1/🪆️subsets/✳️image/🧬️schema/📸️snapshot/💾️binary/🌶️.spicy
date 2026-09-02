@@ -1,0 +1,21 @@
+module Stdio_semio_image_snapshot;
+
+# Spicy mirror (descriptive, not test-parsed — the real byte-level walker is
+# ../📡️.protocol.semio, walked by dsl::walk_protocol) for the shared `.semio` binary
+# envelope wrapping the REAL varint-length-prefixed SemioImageSnapshot binary pack (this subset's
+# `ArtifactPack` impl, `encode_image_snapshot_binary`/`decode_image_snapshot_binary`). Past
+# `format`/`schema_len`/`schema_bytes`/`width`/`height`/`colorspace`/`bit_depth`, `icc`/`frames`/
+# `metadata` are one opaque trailing `payload` — the `protocol-array-of-records` gap, same
+# boundary the real protocol file uses.
+
+public type Envelope = unit {
+    magic: bytes &size=8;                                   # 0x89 "SEM" CR LF SUB LF
+    token_len: uint32 &byte-order=spicy::ByteOrder::Little;
+    token: bytes &size=self.token_len;                      # UTF-8 "s.stdio.semio.image.pack v1"
+    format: uint8;                                          # PACK_BINARY_FORMAT, currently 1
+    # schema_len: LEB128 varint (real dsl walker's `varint` Prim) — Spicy has no built-in LEB128
+    # unit type; described here only, not test-parsed (see module doc comment). schema_bytes
+    # (UTF-8 schema id), width/height (u32 LE), colorspace/bit_depth (u8) immediately follow, then
+    # payload (icc/frames/metadata) to EOD.
+    rest: bytes &eod;
+};

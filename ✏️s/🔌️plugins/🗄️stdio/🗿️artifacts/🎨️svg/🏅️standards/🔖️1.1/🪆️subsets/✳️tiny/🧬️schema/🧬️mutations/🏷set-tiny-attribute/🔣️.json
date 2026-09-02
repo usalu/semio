@@ -5,7 +5,7 @@
   "displayName": "Set Tiny Attribute",
   "emoji": "🏷",
   "aggregateVariant": "SetTinyAttribute",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

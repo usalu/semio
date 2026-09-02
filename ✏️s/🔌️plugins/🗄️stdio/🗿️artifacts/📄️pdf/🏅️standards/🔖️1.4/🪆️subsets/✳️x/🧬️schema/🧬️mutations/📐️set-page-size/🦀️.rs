@@ -62,7 +62,7 @@ mod tests {
 
     #[test]
     fn language_neutral_forward_and_concrete_inverse() {
-        let fixture: serde_json::Value = serde_json::from_str(include_str!("🧪️tests/round-trips-the-concrete-inverse/🔣️component.json")).unwrap();
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("🧪️tests/round-trips-the-concrete-inverse/🔣️.json")).unwrap();
         fn assert_json_shape(actual: &serde_json::Value, expected: &serde_json::Value) {
             match (actual, expected) {
                 (serde_json::Value::Object(actual), serde_json::Value::Object(expected)) => {
@@ -105,7 +105,7 @@ mod tests {
 
     #[test]
     fn missing_page_refuses_without_inverse_or_state_change() {
-        let fixture: serde_json::Value = serde_json::from_str(include_str!("🧪️tests/round-trips-the-concrete-inverse/🔣️component.json")).unwrap();
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("🧪️tests/round-trips-the-concrete-inverse/🔣️.json")).unwrap();
         let mutation: PdfX1Mutation = serde_json::from_value(fixture["mutation"].clone()).unwrap();
         let base = PdfSnapshot { pages: Vec::new(), ..Default::default() };
         let mut state = base.clone();

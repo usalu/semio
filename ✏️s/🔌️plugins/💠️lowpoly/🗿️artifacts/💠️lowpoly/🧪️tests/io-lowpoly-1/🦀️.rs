@@ -2,7 +2,7 @@
 //! `26/08/29/LOWPOLY-END-TO-END-COMMANDS-IO-AND-MUTATIONS`.
 //!
 //! Recorded no-oracle decision `lowpoly-io-native-round-trip`
-//! (`../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️oracle/🔣️.json`): exports the committed fixture
+//! (`../../🏅️standards/🔖️1/🪆️subsets/✳️any/🔣️oracle.json`): exports the committed fixture
 //! through this subset's own `🚪️io/📤️export/🧵️serializers/…/serialize_bytes` for each non-PNG
 //! `stdio.*` format `import_stdio_kinds()`/`export_stdio_kinds()` declare, imports the produced
 //! bytes back through the matching `deserialize_bytes`, and requires the round trip to return the

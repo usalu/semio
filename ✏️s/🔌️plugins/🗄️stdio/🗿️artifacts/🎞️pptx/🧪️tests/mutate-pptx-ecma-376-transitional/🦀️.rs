@@ -7,7 +7,7 @@
 //! move the deck OUT of the ISO/IEC 29500-4 class and back in, two of them along namespace families
 //! that are addressable independently and that no DOCX or XLSX conformance subset has. `oracle`
 //! handlers drive the registered `quick-xml` 0.42 + `zip` 6 pair through this subset's own
-//! `../../🏅️standards/🔖️ecma-376/🪆️subsets/✳️transitional/🧪️oracle/🦀️component.rs`; `subject`
+//! `../../🏅️standards/🔖️ecma-376/🪆️subsets/✳️transitional/🦀️oracle.rs`; `subject`
 //! handlers drive `decode_pptx`/`apply_pptx_transitional_mutation`/`encode_pptx`; both results are
 //! read back by the SAME independent `project_package` before
 //! `semantic-ooxml-pptx-transitional-v1` compares them. The subject half is `sut`-gated so the

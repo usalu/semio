@@ -18,7 +18,7 @@
   },
   "bundleKind": "library",
   "exports": {
-    ".": "./📦️index.ts"
+    ".": "./🟦️.ts"
   },
   "nx": {
     "includedScripts": []

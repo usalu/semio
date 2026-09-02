@@ -5,7 +5,7 @@
   "displayName": "Change Pencil Width",
   "emoji": "✏️",
   "aggregateVariant": "ChangePencilWidth",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": "change-pencil-width",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

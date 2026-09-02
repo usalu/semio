@@ -1319,7 +1319,7 @@ pub trait TokenTextAdapter {
 /// 📖️ Owning [`TokenTextAdapter`] over a copied `Vec<Vec<u8>>` token table — owned rather than
 /// borrowed (unlike the `&[&[u8]]` this was built from) so it can sit in [`TokenTextAdapters`]
 /// without a struct-level lifetime: `dyn_enum_close!`'s enum-name grammar has no generic/lifetime
-/// parameter slot (verified against `🔀️dispatch/🦀️component.rs`'s `DynEnumInput::parse`, which
+/// parameter slot (verified against `🔀️dispatch/🦀️.rs`'s `DynEnumInput::parse`, which
 /// reads a bare `Ident` for the enum name). This type is test-only in this crate today (never
 /// constructed outside `#[cfg(test)]`), so the one-time copy in [`SliceTextAdapter::new`] costs
 /// nothing on any real path.

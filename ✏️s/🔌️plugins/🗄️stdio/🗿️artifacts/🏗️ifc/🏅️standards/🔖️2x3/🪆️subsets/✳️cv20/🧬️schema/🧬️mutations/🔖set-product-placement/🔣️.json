@@ -5,7 +5,7 @@
   "displayName": "Set Product Placement",
   "emoji": "🔖",
   "aggregateVariant": "SetProductPlacement",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

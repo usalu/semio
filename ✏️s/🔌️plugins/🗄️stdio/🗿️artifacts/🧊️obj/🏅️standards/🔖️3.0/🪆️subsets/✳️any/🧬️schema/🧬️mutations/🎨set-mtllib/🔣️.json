@@ -5,7 +5,7 @@
   "displayName": "Set Mtllib",
   "emoji": "🎨",
   "aggregateVariant": "SetMtllib",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

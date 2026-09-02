@@ -92,7 +92,7 @@ pub enum BcfMutation {
 }
 
 /// 📇️ Kebab-case spelling of every `BcfMutation` variant, in declaration order -- the exhaustive
-/// mutation catalog `../../🧪️oracle/🔣️.json`'s `kinds` array is required to match verbatim
+/// mutation catalog `../../🔣️oracle.json`'s `kinds` array is required to match verbatim
 /// (`kinds_const_matches_enum_variants_in_declaration_order` below is what keeps that honest; the
 /// framework never parses Rust to check it itself). Mirrors `print_bcf_mutation`'s own keyword match
 /// entry-for-entry, so `KINDS[i]` is exactly what `print_op()` emits for the enum's `i`-th variant.
@@ -354,7 +354,7 @@ impl protocol::OpText for BcfMutation {
 /// 🧪️ FG-wave: real recursive BINARY primitives for `BcfMutation`'s own variant-specific fields
 /// (`Option<String>`/`Option<Option<String>>` tri-states, `Option<BcfCamera>`/
 /// `Option<BcfComponents>`/`Option<Vec<u8>>`) -- everything ELSE (whole `BcfSnapshot`/`BcfTopic`/
-/// `BcfComment`/`BcfViewpoint`/`BcfCamera`/`BcfComponents`) reuses `../🔺️diff/🦀️component.rs`'s
+/// `BcfComment`/`BcfViewpoint`/`BcfCamera`/`BcfComponents`) reuses `../🔺️diff/🦀️.rs`'s
 /// own `pub(crate)` binary primitives directly (imported above), same intra-artifact reuse pattern
 /// this file's text-form `OpText` impl already established for the string-grammar codecs.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -387,7 +387,7 @@ fn read_str_list_bin(reader: &mut store::ByteReader<'_>) -> Result<Vec<String>, 
 //#endregion 🔖️OpBinaryCodec
 
 /// 🧪️ FG-wave: REAL binary op frame (`format u8 | tag u8 | variant payload`), matching
-/// `../💾️binary/📡️component.protocol.semio`'s `header fixed 2` + `chain payload bytes` shape --
+/// `../💾️binary/📡️.protocol.semio`'s `header fixed 2` + `chain payload bytes` shape --
 /// upgraded from F6's `print_op().into_bytes()` text-as-binary shortcut. `tag` is the
 /// `BcfMutation` variant ordinal; tag 0 (formerly `NoMutation`) is retired rather than reused, so a
 /// stray zero tag on the wire fails `decode_op` instead of silently resurrecting a dropped variant.
@@ -563,8 +563,8 @@ impl protocol::OpBinary for BcfMutation {
 
 //#region 🔖️DemoCases
 /// 🧪️ FG-wave: representative `BcfMutation` values -- one per variant -- the single source of
-/// truth reused by `⚙️engine/🦀️component.rs`'s `ops_grammar_conformance_law`/`protocol_walk_law`
-/// conformance tests, same shape `📜️docx/…/🧬️mutations/🦀️component.rs`'s own
+/// truth reused by `⚙️engine/🦀️.rs`'s `ops_grammar_conformance_law`/`protocol_walk_law`
+/// conformance tests, same shape `📜️docx/…/🧬️mutations/🦀️.rs`'s own
 /// `demo_mutation_cases()` establishes.
 #[cfg(test)]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -615,7 +615,7 @@ pub(crate) fn demo_mutation_cases() -> Vec<BcfMutation> {
 /// `print_bcf_mutation` keyword, in the SAME declaration order `OpBinary`'s own tag match uses,
 /// must equal `KINDS` entry-for-entry -- the framework never parses Rust to check this itself (see
 /// `KINDS`'s own doc comment), so this test is the one thing that does. `KINDS` is also kept
-/// textually identical, by hand, to `../../🧪️oracle/🔣️.json`'s own `kinds` array.
+/// textually identical, by hand, to `../../🔣️oracle.json`'s own `kinds` array.
 #[cfg(test)]
 mod kinds_tests {
     use super::*;
@@ -649,14 +649,14 @@ mod kinds_tests {
 
 //#region 🧪️FixtureTests
 // 🧪️ Handcrafted mutation fixtures (contract D1, ticket 26/08/20/COMPOSE-TO-PUZZLE5D-MIGRATION),
-// one case per mutation leaf. Wired HERE and not in `📦️glue.rs`: that file is shared with the
+// one case per mutation leaf. Wired HERE and not in `🦀️.rs`: that file is shared with the
 // agents migrating the other stdio artifacts, so the production mounts there stay untouched while
 // this artifact owns its own test mount. `#[path = "."]` re-bases the children on this file's own
 // directory, which is what makes the leaf-relative path below resolve.
 #[cfg(test)]
 #[path = "."]
 mod fixture_tests {
-    #[path = "📄set-snapshot/🧪️tests/closes-the-clash-topic-and-answers-its-comment/🦀️component.rs"]
+    #[path = "📄set-snapshot/🧪️tests/closes-the-clash-topic-and-answers-its-comment/🦀️.rs"]
     mod tests_set_snapshot_closes_the_clash_topic_and_answers_its_comment;
 }
 //#endregion 🧪️FixtureTests

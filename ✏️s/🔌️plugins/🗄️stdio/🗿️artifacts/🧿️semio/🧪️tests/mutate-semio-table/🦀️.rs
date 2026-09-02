@@ -3,7 +3,7 @@
 //!
 //! **This file no longer serves the oracle role.** The reference for `semio-v1-table-mutate` is the
 //! registered oracle `semio-table-python-independent` (`../../🏅️standards/🔖️v1/🪆️subsets/✳️table/
-//! 🧪️oracle/🔣️.json`) — an independent Python implementation of the semio table carrier,
+//! 🔣️oracle.json`) — an independent Python implementation of the semio table carrier,
 //! its `SemioValue` cell grammar and its eight verbs, written from the committed grammar, protocol
 //! and JSON-schema documents, living beside this file as `🐍️component.py`. The runner dispatches the
 //! oracle role to that adapter and the subject role here, and compares the two projections under
@@ -21,7 +21,7 @@
 //!
 //! **How the fixtures reach typed values.** The generated test host links only `semio-repo-test-host`
 //! and, behind `sut`, this subset's own crate — no `serde`, no `serde_json`, and this crate's
-//! `protocol`/`store` extern-crate aliases are private (`📦️glue.rs`) — so the subset's own production
+//! `protocol`/`store` extern-crate aliases are private (`🦀️.rs`) — so the subset's own production
 //! code exports the bridges this adapter needs, whose signatures name only reachable types:
 //! `decode_semio_table_snapshot_json`/`encode_semio_table_snapshot_json`,
 //! `decode_semio_table_mutation_json`/`inverse_semio_table_mutation`, and the DSL/pack
@@ -33,7 +33,7 @@ use semio_repo_test_host::Adapter;
 
 //#region 🔖️Kinds
 /// 🏷️ Mirrors `SemioTableMutation::KINDS` (`../../🏅️standards/🔖️v1/🪆️subsets/✳️table/🧬️schema/
-/// 🧬️mutations/🦀️component.rs`) — duplicated, not imported, because the generated host builds this
+/// 🧬️mutations/🦀️.rs`) — duplicated, not imported, because the generated host builds this
 /// file with and without the subject crate. The contract's mutation-coverage gate keeps this list
 /// honest against the catalog; `kinds_match_the_enum_and_the_catalog` in that production file keeps
 /// it honest against the enum.
@@ -57,7 +57,7 @@ mod subject {
     //#region 🔖️Input
     /// 📃️ The three-row demo sheet, in both encodings the domain commits for it — small, but the
     /// only `s.stdio.semio.table` bytes in this artifact a codec other than the Python one wrote.
-    const SHEET_DSL: &str = "asset://🏅️standards/🔖️v1/🪆️subsets/✳️table/📚️examples/📃️sheet/🖼️assets/🗣️example.dsl.semio";
+    const SHEET_DSL: &str = "asset://🏅️standards/🔖️v1/🪆️subsets/✳️table/📚️examples/📃️sheet/🖼️assets/🗣️.dsl.semio";
     const SHEET_PACK: &str = "asset://🏅️standards/🔖️v1/🪆️subsets/✳️table/📚️examples/📃️sheet/🖼️assets/🎒️example.pack.semio";
     /// 📊️ The real 50×12 survey table and its binary twin, derived once from the committed CSV
     /// beside them and re-derived on every run by `payload-fidelity`.

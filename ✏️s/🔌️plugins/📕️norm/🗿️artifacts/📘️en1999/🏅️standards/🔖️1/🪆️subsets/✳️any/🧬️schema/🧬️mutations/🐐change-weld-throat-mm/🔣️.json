@@ -5,7 +5,7 @@
   "displayName": "Change Weld Throat Mm",
   "emoji": "🐐",
   "aggregateVariant": "ChangeWeldThroatMm",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

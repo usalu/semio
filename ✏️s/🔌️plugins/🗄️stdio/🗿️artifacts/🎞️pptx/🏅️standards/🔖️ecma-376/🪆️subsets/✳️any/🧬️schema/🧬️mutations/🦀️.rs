@@ -228,11 +228,11 @@ impl OpText for PptxMutation {
 
 //#region 🔖️OpBinaryCodec
 /// 🧪️ FG-wave: real recursive binary primitives backing the upgraded `OpBinary` impl below --
-/// mirrors `📜️docx/…/🧬️mutations/🦀️component.rs`'s own `enc_docx_snapshot_bin`/`enc_opc_package_bin`
+/// mirrors `📜️docx/…/🧬️mutations/🦀️.rs`'s own `enc_docx_snapshot_bin`/`enc_opc_package_bin`
 /// shape, reusing `store::pack_rt::write_varint_u64`/`store::ByteReader` plus `PptxDiff`'s own
 /// `write_str_lp`/`read_str_lp`/`enc_shape_bin`/`dec_shape_bin`/`enc_slide_bin`/`dec_slide_bin`/
 /// `enc_transform_bin`/`dec_transform_bin`/`enc_part_bin`/`dec_part_bin`/`enc_rel_bin`/`dec_rel_bin`
-/// (`../🔺️diff/🦀️component.rs`, `pub(crate)` to this artifact).
+/// (`../🔺️diff/🦀️.rs`, `pub(crate)` to this artifact).
 ///
 /// 🌱 Full (non-diff) `OpcPackage`/`PptxSnapshot` binary codecs -- only `SetSnapshot`'s
 /// whole-payload encoding needs these, mirroring this file's own `enc_opc_package`/`enc_snapshot`
@@ -242,7 +242,7 @@ impl OpText for PptxMutation {
 //#endregion 🔖️OpBinaryCodec
 
 /// 🧪️ FG-wave: REAL binary op frame (`format u8 | tag u8 | variant payload`), matching
-/// `../💾️binary/📡️component.protocol.semio`'s `header fixed 2` + `chain payload bytes` shape --
+/// `../💾️binary/📡️.protocol.semio`'s `header fixed 2` + `chain payload bytes` shape --
 /// upgraded from F1's `print_op().into_bytes()` text-as-binary shortcut. `tag` is the
 /// `PptxMutation` variant ordinal, in the same 0-8 order `print_pptx_mutation`'s own keyword
 /// match uses.
@@ -262,8 +262,8 @@ impl OpBinary for PptxMutation {
 //#region 🔖️DemoCases
 /// 🧪️ FG-wave: representative `PptxMutation` values -- one per variant -- the single source of
 /// truth reused by this file's own `mutation_diff_law`/`inverse_law`/`op_text_binary_roundtrip_law`
-/// tests AND by `⚙️engine/🦀️component.rs`'s `ops_grammar_conformance_law`/`protocol_walk_law`
-/// conformance tests, same shape `📜️docx/…/🧬️mutations/🦀️component.rs`'s own
+/// tests AND by `⚙️engine/🦀️.rs`'s `ops_grammar_conformance_law`/`protocol_walk_law`
+/// conformance tests, same shape `📜️docx/…/🧬️mutations/🦀️.rs`'s own
 /// `demo_mutation_cases()` establishes.
 #[cfg(test)]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -870,7 +870,7 @@ mod tests {
         assert_eq!(observed, declared, "KINDS must list exactly the kebab-case spelling of every PptxMutation variant");
         assert_eq!(KINDS.len(), demo_mutation_cases().len(), "KINDS must cover every variant exactly once, with no duplicates");
 
-        let manifest: pack::JsonValue = pack::parse_json(include_str!("../../🧪️oracle/🔣️.json")).expect("valid oracle manifest JSON");
+        let manifest: pack::JsonValue = pack::parse_json(include_str!("../../🔣️oracle.json")).expect("valid oracle manifest JSON");
         let catalog_kinds: std::collections::BTreeSet<String> = manifest["mutationCatalogs"][0]["kinds"].as_array().expect("mutationCatalogs[0].kinds array").iter().map(|value| value.as_str().expect("kind is a string").to_string()).collect();
         let declared_owned: std::collections::BTreeSet<String> = KINDS.iter().map(|kind| kind.to_string()).collect();
         assert_eq!(catalog_kinds, declared_owned, "the oracle manifest's mutationCatalogs[0].kinds must match KINDS exactly");
@@ -881,14 +881,14 @@ mod tests {
 
 //#region 🧪️FixtureTests
 // 🧪️ Handcrafted mutation fixtures (contract D1, ticket 26/08/20/COMPOSE-TO-PUZZLE5D-MIGRATION),
-// one case per mutation leaf. Wired HERE and not in `📦️glue.rs`: that file is shared with the
+// one case per mutation leaf. Wired HERE and not in `🦀️.rs`: that file is shared with the
 // agents migrating the other stdio artifacts, so the production mounts there stay untouched while
 // this artifact owns its own test mount. `#[path = "."]` re-bases the children on this file's own
 // directory, which is what makes the leaf-relative path below resolve.
 #[cfg(test)]
 #[path = "."]
 mod fixture_tests {
-    #[path = "📄set-snapshot/🧪️tests/retitles-and-lowers-the-title-placeholder/🦀️component.rs"]
+    #[path = "📄set-snapshot/🧪️tests/retitles-and-lowers-the-title-placeholder/🦀️.rs"]
     mod tests_set_snapshot_retitles_and_lowers_the_title_placeholder;
 }
 //#endregion 🧪️FixtureTests

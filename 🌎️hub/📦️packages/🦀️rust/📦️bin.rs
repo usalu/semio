@@ -580,7 +580,7 @@ fn messages_for_error(error: &db::DbError) -> Vec<u8> {
 /// admits a batch whose worst graded level is still `Warning`-or-above (a "degraded merge", contract
 /// §C5), `receipt.messages` is non-empty but neither `ApplyOutcome::Accepted` nor
 /// `ServerFrame::Commands` (both fieldless/message-less in the CURRENTLY LANDED `📡️wire` shape —
-/// verified against `📡️spr/📡️wire/🦀️component.rs`) has anywhere to carry them to the submitter's
+/// verified against `📡️spr/📡️wire/🦀️.rs`) has anywhere to carry them to the submitter's
 /// peers. `📡️wire` is lane 1-C's lease, already landed `ApplyOutcome::Rejected{reason, messages}`
 /// for this exact contract clause's rejected half; widening `Accepted`/`Commands` further is a wire
 /// change this lane is not authorized to make unilaterally (per the worker brief's "if you must
@@ -1772,7 +1772,7 @@ async fn main() -> Result<(), HubError> {
 // through `SqliteDirectory` — the zero-external-dependency backend — so the full bin test suite
 // naturally lives behind the same feature a plain `cargo test` already enables by default (see
 // `Cargo.toml`'s `default = ["sqlite"]`). `postgres`/`neo4j` each carry their own backend-only
-// tests in `📇️directory/{🐘️postgres,🌐️neo4j}/🦀️component.rs` instead of duplicating this suite.
+// tests in `📇️directory/{🐘️postgres,🌐️neo4j}/🦀️.rs` instead of duplicating this suite.
 #[cfg(all(test, feature = "sqlite"))]
 mod tests {
     use super::*;

@@ -5,7 +5,7 @@
   "displayName": "Change Use Class",
   "emoji": "🦏",
   "aggregateVariant": "ChangeUseClass",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

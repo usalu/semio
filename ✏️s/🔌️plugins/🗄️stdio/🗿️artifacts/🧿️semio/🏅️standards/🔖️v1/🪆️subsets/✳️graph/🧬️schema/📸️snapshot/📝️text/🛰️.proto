@@ -1,0 +1,10 @@
+syntax = "proto3";
+// 📝️ Text-facet grammar mirror (descriptive) — see ../🛰️.proto for the canonical facet
+// schema; this file describes the DSL-text ENCODING of the same shape.
+package semio.s_stdio_semio_graph_snapshot.text;
+
+message SemioGraphSnapshotDsl {
+  string schema = 1;
+  string nodes_wire = 2;
+  string edges_wire = 3;
+}

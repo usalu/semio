@@ -5,7 +5,7 @@
   "displayName": "Disconnect Kind Compatibility",
   "emoji": "💔",
   "aggregateVariant": "DisconnectKindCompatibility",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": "disconnect-kind-compatibility",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

@@ -1,5 +1,5 @@
 {
-  "tokens": "🔣️tokens.json",
+  "tokens": "🔣️.json",
   "adapters": [
     {
       "id": "js-tailwind",
@@ -9,7 +9,7 @@
     },
     {
       "id": "dotnet-elements-styling",
-      "description": "C# Palette, Strokes, Radii from 🔣️tokens.json",
+      "description": "C# Palette, Strokes, Radii from 🔣️.json",
       "generator": "script.ts generate",
       "outputs": ["net/Elements.Styling/Generated/Palette.g.cs"]
     },

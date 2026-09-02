@@ -24,7 +24,7 @@ wasm-opt = false
 [features]
 # 🔌️ 26/08/17/MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME D3 — mirrors `🌀️procedural`'s `plugin-entry`
 # pattern. Default-on so this extension exports its own `extension_exports!` bundle when built as its
-# own component; OFF when this file's `🦀️component.rs` is `#[path]`-mounted inline into the
+# own component; OFF when this file's `🦀️.rs` is `#[path]`-mounted inline into the
 # `imperative` plugin's own crate (`imperative`'s `Cargo.toml` declares no such feature, so the cfg
 # check below is simply false there) — five extensions mounted into one crate each defining the same
 # `#[no_mangle]` `semio_extension_bundle_installer_link_shim` is a duplicate-symbol link error.
@@ -33,14 +33,14 @@ extension-entry = []
 
 [lib]
 crate-type = ["cdylib", "rlib"]
-path = "📦️glue.rs"
+path = "🦀️.rs"
 
 [dependencies]
 neural_engine = { path = "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/📦️packages/🦀️rust", package = "semio-framework-os-kernel-neural-engine" }
 imperative_extension_sdk = { path = "../../../../../../../✏️s/🔨️modules/📜️imperative/🧩️extension_sdk/📦️packages/🦀️rust", package = "semio-s-imperative-extension-sdk" }
 semio-framework-plugin = { path = "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust", features = ["component-guest"], package = "semio-framework-plugin" }
 semio-framework = { path = "../../../../../../../🧰️framework/📦️packages/🦀️rust", package = "semio-framework" }
-semio-framework-pack = { path = "../../../../../../../🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust", package = "semio-framework-pack" }
+pack = { path = "../../../../../../../🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust", package = "semio-framework-pack" }
 
 [dev-dependencies]
 semio-framework-async-macros = { path = "../../../../../../../🧰️framework/🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust" }

@@ -1,0 +1,5 @@
+module Stdio_jpg_diff;
+# UTF-8 JSON encoding of JpgDiff -- see the sibling ../🔣️.json shape.
+type Document = unit {
+    json_payload: bytes &eod;
+};

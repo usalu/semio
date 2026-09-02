@@ -17,7 +17,7 @@
       "license": "MIT",
       "testOnly": true,
       "homepage": "https://github.com/J-F-Liu/lopdf",
-      "rationale": "🫥️ RECLASSIFIED by the `reimplementation-registered-as-third-party` gate. The crate named here does real work — it parses and writes this format — but what a MUTATION SHOULD PRODUCE is computed by this owner's own `🧪️oracle/🦀️component.rs`. Both halves of the comparison then descend from ONE reading of the specification, so a misreading of it yields two agreeing wrong answers: the single failure a differential test exists to prevent.\n\nThe honest split is that the crate discharges \"the result is a well-formed file of this format\" and NOT \"the mutation computed the right answer\". Only the second is what a mutation oracle is for, so this is a `cross-semio-implementation` — a required SUPPLEMENT, never a substitute, and a qualifying third-party reference is still owed.\n\nAny fixtures registered alongside are untouched and remain valuable: real bytes of the real format, byte-reproducible, and exactly what a qualifying reader gets pointed at the day one is registered.",
+      "rationale": "🫥️ RECLASSIFIED by the `reimplementation-registered-as-third-party` gate. The crate named here does real work — it parses and writes this format — but what a MUTATION SHOULD PRODUCE is computed by this owner's own `🦀️oracle.rs`. Both halves of the comparison then descend from ONE reading of the specification, so a misreading of it yields two agreeing wrong answers: the single failure a differential test exists to prevent.\n\nThe honest split is that the crate discharges \"the result is a well-formed file of this format\" and NOT \"the mutation computed the right answer\". Only the second is what a mutation oracle is for, so this is a `cross-semio-implementation` — a required SUPPLEMENT, never a substitute, and a qualifying third-party reference is still owed.\n\nAny fixtures registered alongside are untouched and remain valuable: real bytes of the real format, byte-reproducible, and exactly what a qualifying reader gets pointed at the day one is registered.",
       "hostPath": "✏️s/🔌️plugins/🗄️stdio/🧪️oracle/📦️packages/🦀️rust",
       "kind": "cross-semio-implementation",
       "engine": {
@@ -107,7 +107,7 @@
         {
           "id": "embed-font-file",
           "capability": "pdf-1-7-ua-mutate",
-          "payloadSchema": "🔣️payload.schema.json",
+          "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "applied"
           ],
@@ -127,7 +127,7 @@
         {
           "id": "remove-display-doc-title",
           "capability": "pdf-1-7-ua-mutate",
-          "payloadSchema": "🔣️payload.schema.json",
+          "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "applied"
           ],
@@ -147,7 +147,7 @@
         {
           "id": "remove-font-file",
           "capability": "pdf-1-7-ua-mutate",
-          "payloadSchema": "🔣️payload.schema.json",
+          "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "applied"
           ],
@@ -167,7 +167,7 @@
         {
           "id": "remove-lang",
           "capability": "pdf-1-7-ua-mutate",
-          "payloadSchema": "🔣️payload.schema.json",
+          "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "applied"
           ],
@@ -187,7 +187,7 @@
         {
           "id": "remove-mark-info",
           "capability": "pdf-1-7-ua-mutate",
-          "payloadSchema": "🔣️payload.schema.json",
+          "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "applied"
           ],
@@ -207,7 +207,7 @@
         {
           "id": "remove-struct-tree-root",
           "capability": "pdf-1-7-ua-mutate",
-          "payloadSchema": "🔣️payload.schema.json",
+          "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "applied"
           ],
@@ -227,7 +227,7 @@
         {
           "id": "set-display-doc-title",
           "capability": "pdf-1-7-ua-mutate",
-          "payloadSchema": "🔣️payload.schema.json",
+          "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "applied"
           ],
@@ -247,7 +247,7 @@
         {
           "id": "set-info-title",
           "capability": "pdf-1-7-ua-mutate",
-          "payloadSchema": "🔣️payload.schema.json",
+          "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "applied"
           ],
@@ -267,7 +267,7 @@
         {
           "id": "set-lang",
           "capability": "pdf-1-7-ua-mutate",
-          "payloadSchema": "🔣️payload.schema.json",
+          "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "applied"
           ],
@@ -287,7 +287,7 @@
         {
           "id": "set-mark-info",
           "capability": "pdf-1-7-ua-mutate",
-          "payloadSchema": "🔣️payload.schema.json",
+          "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "applied"
           ],
@@ -307,7 +307,7 @@
         {
           "id": "set-struct-tree-root",
           "capability": "pdf-1-7-ua-mutate",
-          "payloadSchema": "🔣️payload.schema.json",
+          "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "applied"
           ],

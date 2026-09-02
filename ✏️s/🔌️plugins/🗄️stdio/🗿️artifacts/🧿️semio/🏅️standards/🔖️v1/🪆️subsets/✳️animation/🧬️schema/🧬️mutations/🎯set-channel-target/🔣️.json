@@ -5,7 +5,7 @@
   "displayName": "Set Channel Target",
   "emoji": "🎯",
   "aggregateVariant": "SetChannelTarget",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

@@ -11,10 +11,10 @@ import type {
   ProgramContributionEntry,
   WindowLayout,
   NamedLayout,
-} from "../🛂️manifest/🟦️component.ts";
-import type { StoragePort } from "../🖥️platform/🟦️component.ts";
+} from "../🛂️manifest/🟦️.ts";
+import type { StoragePort } from "../🖥️platform/🟦️.ts";
 import { ShardClient, type ShardAsset, type ShardBudget, type ShardCapabilityGrant, type ShardEventEnvelope } from "../🎭️actor/📦️packages/🟦️typescript/🧵️shard-client.ts";
-import { OwnedResidentLedger } from "../🌱️value/💾️resident/🟦️component.ts";
+import { OwnedResidentLedger } from "../🌱️value/💾️resident/🟦️.ts";
 import { TurnScheduler, type Backpressure, type CoalesceKey, type Lane } from "../🎭️actor/📦️packages/🟦️typescript/🧵️turn-scheduler.ts";
 export { KernelReturnContentFraming, type KernelReturnContentMetadata, type KernelReturnContentByte } from "./📤️return/📦️content/🟦️.ts";
 export { KernelReturnUiOperationHeader, type KernelReturnUiOperationFields, type KernelReturnUiFieldName } from "./📤️return/📦️content/🟦️.ts";
@@ -108,7 +108,7 @@ export function ephemeralWeakMap<K extends object, V>(key: string): WeakMap<K, V
 export async function fetchDescriptorManifest(pluginId: string, moduleUrl: string, signal?: AbortSignal): Promise<PluginManifest> {
   signal?.throwIfAborted();
   const path = moduleUrl.split(/[?#]/u)[0]!;
-  const descriptorUrl = path.slice(0, path.lastIndexOf("/") + 1) + "🔣️descriptor.json";
+  const descriptorUrl = path.slice(0, path.lastIndexOf("/") + 1) + "🔣️.json";
   const fault = (code: string, detail: string) => new SemioFaultError({
     origin: "os", code, severity: "error", message: `${code}: ${detail}`,
     scope: { pluginId }, retryable: true,
@@ -139,7 +139,7 @@ export async function fetchDescriptorManifest(pluginId: string, moduleUrl: strin
  * method's name is deliberately not repeated here, see that list). That old shape assumed a command's
  * reply always lands on the SAME call that sent it; under
  * the turn model a reply may arrive N turns later, so `enqueue` returns nothing and a caller
- * correlates against this stream instead — `AppChannelClient` (`💻️os/🟦️component.ts`) is the
+ * correlates against this stream instead — `AppChannelClient` (`💻️os/🟦️.ts`) is the
  * host-side correlator (FIFO per `instanceId`, matching every real call site's own sequential-await
  * usage today). `frames` mirrors what the old method used to resolve with directly; `error` covers
  * what used to REJECT that promise (a turn submission failure, e.g. a trapped actor — an
@@ -197,10 +197,10 @@ export function createTurnOutcomeBroadcast<T>(): { readonly push: (value: T) => 
 
 //#region 🧪️TurnOutcomeBroadcastTests
 /** 🧪️ Kept right against `createTurnOutcomeBroadcast` — this is the ONE new primitive
- * `PluginWasmHandle.outcomes` and `AppChannelClient` (`💻️os/🟦️component.ts`) both depend on, so its
+ * `PluginWasmHandle.outcomes` and `AppChannelClient` (`💻️os/🟦️.ts`) both depend on, so its
  * multicast/unsubscribe/force-close contract is worth pinning here rather than only indirectly via a
  * `loadPluginModule` integration test (which needs a real `Worker` this suite doesn't have — see
- * `PluginRuntime/🟦️component.tsx`'s own header doc on that pre-existing limitation). */
+ * `PluginRuntime/🟦️.tsx`'s own header doc on that pre-existing limitation). */
 if (import.meta.vitest) {
   const { describe, expect, it } = import.meta.vitest;
 
@@ -369,7 +369,7 @@ export type PluginRegistryEntry = {
   readonly contributes?: readonly string[];
   readonly consumes?: readonly string[];
   /** 🔗️ Direct plugin dependencies this entry's manifest declares — mirrors Rust
-   * `PluginManifest.dependencies` (`🛂️manifest/🦀️component.rs`), ticket
+   * `PluginManifest.dependencies` (`🛂️manifest/🦀️.rs`), ticket
    * 26/08/16/PLUGIN-DEPENDENCIES-ARTIFACT-CONTRIBUTIONS-AND-COMPOSITE-MUTATIONS §3. */
   readonly dependencies?: readonly PluginDependency[];
 };
@@ -391,7 +391,7 @@ function dependsOnToPluginDependencies(dependsOn: readonly string[] | undefined)
 export type VersionReq = string;
 
 /** 🔗️ One direct plugin dependency — mirrors Rust `PluginDependency`
- * (`🛂️manifest/🦀️component.rs`). */
+ * (`🛂️manifest/🦀️.rs`). */
 export type PluginDependency = {
   readonly pluginId: string;
   readonly version: VersionReq;
@@ -449,8 +449,8 @@ export type ArtifactContributionDescriptor = {
 
 //#region 🔖️AppRouter
 /** 🎯️ Fully-qualified dialect coordinate — mirrors Rust `ArtifactDialect`
- * (`🔨️modules/🚪️io/🦀️component.rs:50`, re-exported off `🛂️manifest/🦀️component.rs`). Duplicated
- * locally rather than imported from `🛂️manifest/🟦️component.ts`'s generated `AppDefinition` twin:
+ * (`🔨️modules/🚪️io/🦀️.rs:50`, re-exported off `🛂️manifest/🦀️.rs`). Duplicated
+ * locally rather than imported from `🛂️manifest/🟦️.ts`'s generated `AppDefinition` twin:
  * that twin's `apps` field is still `Record<string, unknown>[]` pending the owned schema regeneration for
  * contract freeze §1 C1, so this file reads the wire shape structurally instead of depending on a
  * codegen timing this lease doesn't control — same idiom as the 🔖️PluginDependency/
@@ -466,13 +466,13 @@ function dialectEquals(a: ArtifactDialect, b: ArtifactDialect): boolean {
 }
 
 /** 🪪️ `<artifact_kind>@<standard>/<subset>` — mirrors Rust `ArtifactDialect::to_coordinate`
- * (`🔨️modules/🚪️io/🦀️component.rs:67`). */
+ * (`🔨️modules/🚪️io/🦀️.rs:67`). */
 export function dialectCoordinate(dialect: ArtifactDialect): string {
   return `${dialect.artifactKind}@${dialect.standard}/${dialect.subset}`;
 }
 
 /** 🪪️ Inverse of {@link dialectCoordinate} — mirrors Rust `ArtifactDialect::parse_coordinate`
- * (`🔨️modules/🚪️io/🦀️component.rs:74`): `@` splits at its FIRST occurrence, the LAST `/🧰️framework/🔨️modules/🎠️kernel` splits
+ * (`🔨️modules/🚪️io/🦀️.rs:74`): `@` splits at its FIRST occurrence, the LAST `/🧰️framework/🔨️modules/🎠️kernel` splits
  * standard from subset. */
 export function parseDialectCoordinate(coordinate: string): ArtifactDialect {
   const atIndex = coordinate.indexOf("@");
@@ -487,11 +487,11 @@ export function parseDialectCoordinate(coordinate: string): ArtifactDialect {
   return { artifactKind: kind, standard, subset };
 }
 
-/** 👁️✏️ Mirrors Rust `AppRole` (`🛂️manifest/🦀️component.rs:2641`) — exactly `"viewer"`/`"editor"`,
+/** 👁️✏️ Mirrors Rust `AppRole` (`🛂️manifest/🦀️.rs:2641`) — exactly `"viewer"`/`"editor"`,
  * contract freeze §1 C1. Wire-identical to the `SEMIO_APP_ROLE`/`VITE_SEMIO_APP_ROLE` env values. */
 export type AppRole = "viewer" | "editor";
 
-/** 🎯️ Mirrors Rust `AppRef` (`🛂️manifest/🦀️component.rs:2672`). */
+/** 🎯️ Mirrors Rust `AppRef` (`🛂️manifest/🦀️.rs:2672`). */
 export type AppRef = {
   readonly pluginId: string;
   readonly appId: string;
@@ -502,13 +502,13 @@ function appRefEquals(a: AppRef, b: AppRef): boolean {
 }
 
 /** 🪪️ `<artifact_kind>@<standard>/<subset>#<role>` — mirrors Rust `surface_app_id`
- * (`🛂️manifest/🦀️component.rs:2678`). */
+ * (`🛂️manifest/🦀️.rs:2678`). */
 export function surfaceAppId(dialect: ArtifactDialect, role: AppRole): string {
   return `${dialectCoordinate(dialect)}#${role}`;
 }
 
 /** 🪪️ Inverse of {@link surfaceAppId} — mirrors Rust `parse_surface_app_id`
- * (`🛂️manifest/🦀️component.rs:2683`): the LAST `#` splits off the role suffix. */
+ * (`🛂️manifest/🦀️.rs:2683`): the LAST `#` splits off the role suffix. */
 export function parseSurfaceAppId(id: string): { readonly dialect: ArtifactDialect; readonly role: AppRole } {
   const hashIndex = id.lastIndexOf("#");
   if (hashIndex < 0) throw new Error(`surface id ${JSON.stringify(id)} missing '#'`);
@@ -523,7 +523,7 @@ export function parseSurfaceAppId(id: string): { readonly dialect: ArtifactDiale
 
 /** 🧯️ The five frozen fault codes contract freeze §2.3 pins for the surface/viewer vocabulary —
  * `origin` is `FaultOrigin::Framework` on every one of them (Rust `dsl::diagnostic::FaultOrigin`,
- * `💻️os/🔨️modules/🗣️dsl/⚠️diagnostic/🦀️component.rs:149` — landed by lane 1-A). {@link FaultOrigin}
+ * `💻️os/🔨️modules/🗣️dsl/⚠️diagnostic/🦀️.rs:149` — landed by lane 1-A). {@link FaultOrigin}
  * below now carries the `"framework"` member too (parity reconciliation, `📓️w1-d-report.md`), so
  * {@link surfaceFault} writes the literal directly instead of the type-assertion this file
  * previously needed while the two sides were out of sync. */
@@ -540,9 +540,9 @@ function surfaceFault(code: string, message: string, scope: FaultScope = {}): Fa
 }
 
 /** 🗂️ The minimal per-plugin shape {@link AppRouter} needs — deliberately narrower than (and
- * structurally compatible with) `🛂️manifest/🟦️component.ts`'s `PluginManifest`: `apps` stays
+ * structurally compatible with) `🛂️manifest/🟦️.ts`'s `PluginManifest`: `apps` stays
  * `Record<string, unknown>[]` there pending the C1 owned schema regeneration, and `artifactKinds` (this
- * plugin's OWNED kinds, Rust `PluginManifest.artifact_kinds`, `🛂️manifest/🦀️component.rs:3218`)
+ * plugin's OWNED kinds, Rust `PluginManifest.artifact_kinds`, `🛂️manifest/🦀️.rs:3218`)
  * isn't mirrored on that type at all yet. A caller passes the real `PluginManifest` array straight
  * through once it starts carrying `artifactKinds` — nothing here needs to change. */
 export type AppRouterManifest = {
@@ -572,7 +572,7 @@ function coordinateRoleKey(dialect: ArtifactDialect, role: AppRole): string {
 
 /**
  * 🧭️ TS twin of Rust `AppRouter` (contract freeze §3, C3; reconciled against the real Rust
- * `AppRouter`/`AppRouterState` — `💻️os/🔌️plugin/🖥️host/🦀️component.rs:1723-1857` — in
+ * `AppRouter`/`AppRouterState` — `💻️os/🔌️plugin/🖥️host/🦀️.rs:1723-1857` — in
  * `📓️w1-d-report.md`). `(dialect, role) -> AppRef[]`, built from every loaded manifest: the owner
  * plugin's entry first, then the rest sorted `pluginId` then `appId` ascending. A duplicate
  * `AppRef` or an unauthorized cross-plugin contribution fails {@link AppRouter.build} outright —
@@ -596,7 +596,7 @@ export class AppRouter {
    * `artifactKinds` claim any still-unclaimed kind, then each app claims its dialect's
    * `artifactKind` if still unclaimed. Throws {@link SemioFaultError} with
    * `"surface.contribution-not-permitted"` (checked first) or `"surface.conflict"` (checked
-   * second) per app — same order as Rust `register_manifest` (`🦀️component.rs:1755-1785`). */
+   * second) per app — same order as Rust `register_manifest` (`🦀️.rs:1755-1785`). */
   static build(manifests: readonly AppRouterManifest[]): AppRouter {
     const ownerByArtifactKind = new Map<string, string>();
     const seenRefs = new Set<string>();
@@ -678,7 +678,7 @@ export class AppRouter {
   }
 
   /** 🩺️ "At plugin load, every owned subset must resolve for both roles" (contract freeze §3) —
-   * mirrors Rust `AppRouter::owned_surface_gaps` (`🦀️component.rs:1836`) exactly: pure, total,
+   * mirrors Rust `AppRouter::owned_surface_gaps` (`🦀️.rs:1836`) exactly: pure, total,
    * never throws. Every dialect with at least one registered surface whose kind is owned but
    * missing a viewer or editor surface contributes one `Fault` (code
    * `"surface.missing-owner-surface"`) to the result — the caller decides whether to log (W1) or
@@ -813,7 +813,7 @@ function ioEntryKey(from: ArtifactDialect, into: ArtifactDialect): string {
 }
 
 /**
- * 🧭️ TS twin of the host `IoRouter`'s NEW io-mechanism graph (`💻️os/🔌️plugin/🖥️host/🦀️component.rs`,
+ * 🧭️ TS twin of the host `IoRouter`'s NEW io-mechanism graph (`💻️os/🔌️plugin/🖥️host/🦀️.rs`,
  * region `🔖️IoRouter` — the `io_entries`/`resolve_io_route`/`run_io`/`identify` additions,
  * `📓️w1-d-report.md`). `(from, into) -> owning pluginId` merged from every loaded plugin's
  * `list-io-entries` roster, plus deterministic route resolution: highest minimum fidelity, then
@@ -974,7 +974,7 @@ export async function ioIdentify(graph: IoEntryGraph, callingPluginId: string, c
 //#region 🔖️OpeningResolver
 /** 🎚️ One user-pinned default — mirrors Rust `DefaultApp`
  * (`💻️os/🎚️config/🧬️schema/🦀️component.rs:17`) and its product-scoped TS twin
- * `💻️os/🎚️config/🧬️schema/🟦️component.ts`. Duplicated (not imported) — a domain-neutral framework
+ * `💻️os/🎚️config/🧬️schema/🟦️.ts`. Duplicated (not imported) — a domain-neutral framework
  * module must not depend on a product's config facet, same boundary this file already draws
  * around `PluginCatalog` below. */
 export type DefaultApp = {
@@ -1085,7 +1085,7 @@ export function resolveOpeningApp(router: AppRouter, dialect: ArtifactDialect, r
 
 //#region 🗂️PluginCatalog
 /** 🗂️ Framework-owned mirror of the OS product's generated `PluginBuildTarget` row — kept
- * shape-compatible so `🛍️products/💻️os/…/🟦️catalog.ts` can build one straight off the generated array
+ * shape-compatible so `🛍️products/💻️os/…/🟦️.ts` can build one straight off the generated array
  * without a mapping layer drifting out of sync. */
 export type PluginCatalogTarget = {
   readonly pluginId: string;
@@ -1116,7 +1116,7 @@ export type PlaygroundCatalogTarget = {
  * 🗂️ Everything the kernel's plugin/playground resolvers need, injected by the caller instead of
  * imported from a specific product's generated build output — inverts the upward dependency a generic
  * framework module must never have on a product's build artifacts. The OS product's
- * `🔌️plugin/📦️packages/🟦️typescript/🟦️catalog.ts` is the one place allowed to import the generated
+ * `🔌️plugin/📦️packages/🟦️typescript/🟦️.ts` is the one place allowed to import the generated
  * registry and build this shape; every other product wanting kernel resolvers builds its own.
  */
 export interface PluginCatalog {
@@ -1180,7 +1180,7 @@ export type UndoGroup = {
 export type AppEvent = { readonly kind: string; readonly payload: unknown };
 
 /** @emoji 🩺️ Canonical severity for faults and diagnostics — TS twin of Rust `os_dsl::Severity`
- * (`🗣️dsl/⚠️diagnostic/🦀️component.rs`, `#[serde(rename_all = "camelCase")]`). Declaration order
+ * (`🗣️dsl/⚠️diagnostic/🦀️.rs`, `#[serde(rename_all = "camelCase")]`). Declaration order
  * `Info < Warning < Error < Fatal` (0..3, `as_u8`/`from_u8`) mirrors Rust's `derive(Ord)`; `Hint` was
  * removed repo-wide by ticket `26/08/16/MUTATION-OUTCOMES-MERGE-POLICIES-AND-FIRST-CLASS-CONFLICTS`
  * §C1 and replaced by `Info` everywhere, including `Fault.severity`/`Diagnostic.severity` here. */
@@ -1199,7 +1199,7 @@ export function severityFromU8(value: number): Severity | undefined {
 }
 
 /** @emoji 🧭️ Layer that produced a fault. `"framework"` mirrors Rust `FaultOrigin::Framework`
- * (`💻️os/🔨️modules/🗣️dsl/⚠️diagnostic/🦀️component.rs:149`) — the origin for the five ticket
+ * (`💻️os/🔨️modules/🗣️dsl/⚠️diagnostic/🦀️.rs:149`) — the origin for the five ticket
  * 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET `surface.*`/`viewer.*` fault codes. */
 export type FaultOrigin = "edge" | "renderer" | "os" | "module" | "plugin" | "app" | "extension" | "framework";
 
@@ -1248,7 +1248,7 @@ export class SemioFaultError extends Error {
 
 /**
  * @emoji 🐚️ A typed side effect the guest emits toward the host. Mirrors the Rust `Effect` enum
- * (`🎠️kernel/🦀️component.rs` `🔖️Effect` region — replaces `HostEffect` now that plugins and
+ * (`🎠️kernel/🦀️.rs` `🔖️Effect` region — replaces `HostEffect` now that plugins and
  * extensions share one `actor` world; externally tagged: unit variants are the plain tag string,
  * struct variants are a single-key object keyed by the camelCase variant name). `openWindow`/
  * `requestFileOpen`/`requestMediaFrames`/`spawnPluginInstance`/`openDialog`/`dispatchAction` gained
@@ -1429,7 +1429,7 @@ export function parseInvocationResponse(raw: string): InvocationResponse {
 
 //#region 🔖️MergeOutcome
 /** @emoji ⚖️ How strict an authority is about accepting a `MutationOutcome` whose messages reach a
- * given {@link Severity} — TS twin of Rust `MergePolicy` (`📡️spr/🧾️wire/🦀️component.rs` region
+ * given {@link Severity} — TS twin of Rust `MergePolicy` (`📡️spr/🧾️wire/🦀️.rs` region
  * `🔖️Policies`). Declaration order IS `as_u8`/`from_u8`'s 0..2 (`LaissezFaire, Normal, Vigilant`).
  * Unlike {@link Severity}, Rust's `MergePolicy` carries no `#[serde(rename_all)]`, so its
  * pack-decoded JSON form (`MergeReport.policy`/`DispatchReport.policy`) is the bare Rust variant
@@ -1455,7 +1455,7 @@ export function mergePolicyFromU8(value: number): MergePolicy | undefined {
 }
 
 /** @emoji ✅️❌️ What a human/authority decided to do with an `Open` {@link Conflict} — TS twin of
- * Rust `ConflictResolution` (`📡️spr/⚔️conflict/🦀️component.rs`, `#[serde(rename_all =
+ * Rust `ConflictResolution` (`📡️spr/⚔️conflict/🦀️.rs`, `#[serde(rename_all =
  * "camelCase")]` unit enum — single-word variants so its JSON form is just lowercase). */
 export type ConflictResolution = "accept" | "discard";
 
@@ -1471,7 +1471,7 @@ export function conflictResolutionFromU8(value: number): ConflictResolution | un
 }
 
 /** @emoji 📨️ One outcome-carried diagnostic from a `Mutation`/`MutationKind::diff` — TS twin of
- * Rust `MutationMessage` (`📡️spr/🎮️command/🦀️component.rs` region `🔖️Message`,
+ * Rust `MutationMessage` (`📡️spr/🎮️command/🦀️.rs` region `🔖️Message`,
  * `#[serde(rename_all = "camelCase")]`). `level` reuses {@link Severity}; `code` is one of the
  * frozen seven `mutation.*` codes (contract-freeze §C2 — no per-plugin codes, ever); `message` is
  * English prose (UI localizes by `code`, never by parsing `message`); `target`/`opIndex` are
@@ -1485,7 +1485,7 @@ export type MutationMessage = {
   readonly opIndex?: number;
 };
 
-/** @emoji 🚫️ Schema mirror of Rust `MutationApplyError` (`📡️spr/🎮️command/🦀️component.rs`,
+/** @emoji 🚫️ Schema mirror of Rust `MutationApplyError` (`📡️spr/🎮️command/🦀️.rs`,
  * `#[serde(rename_all = "camelCase")]`). This is the complete cross-implementation contract for
  * a diff rejected against its supplied base: stable machine `code`, diagnostic `message`, and
  * outermost-first `target`. Rust omits an empty target during serialization, so it is optional
@@ -1536,8 +1536,8 @@ export type ConflictKind = { readonly kind: "quarantined"; readonly envelopes: r
 export type ConflictStatus = "open" | "accepted" | "discarded";
 
 /** @emoji ⚔️ One first-class conflict — TS twin of Rust `Conflict` (`📡️spr/⚔️conflict/
- * 🦀️component.rs`, `#[serde(rename_all = "camelCase")]`). `timestamp` mirrors
- * `HybridLogicalTimestamp` from `📡️spr/🆔️ids/🦀️component.rs` (a DIFFERENT shape than this file's
+ * 🦀️.rs`, `#[serde(rename_all = "camelCase")]`). `timestamp` mirrors
+ * `HybridLogicalTimestamp` from `📡️spr/🆔️ids/🦀️.rs` (a DIFFERENT shape than this file's
  * own wall/counter {@link HybridLogicalTimestamp} above — that one is the kernel operation clock,
  * this one the SPR authority clock — so it's inlined rather than reusing the name). */
 export type Conflict = {
@@ -1589,13 +1589,13 @@ export function relayPluginBackboneOutbound(uri: string, message: Uint8Array): v
   pluginBackboneRoutes.get(pluginBackboneDocumentIdFromUri(uri))?.(uri, message);
 }
 
-/** @emoji 🌉️ A direct-import (main-thread, no-worker) plugin's generated `🟨️host-shim.js` runs in this
+/** @emoji 🌉️ A direct-import (main-thread, no-worker) plugin's generated `🟨️.js` runs in this
  * same realm but can't import from this module, so it reaches the outbound relay through this
  * well-known global instead — the same relay a worker-backed program reaches via `postMessage`. */
 (globalThis as unknown as { __semioMainThreadPluginBackboneOutbound?: (uri: string, message: Uint8Array) => void }).__semioMainThreadPluginBackboneOutbound = relayPluginBackboneOutbound;
 
 /** @emoji 🌉️ Inbound counterpart: pushes straight into the same global queue a direct-import plugin's
- * `🟨️host-shim.js` `backbonePoll` drains, keyed by `uri` (globally unique per document, so no pluginId
+ * `🟨️.js` `backbonePoll` drains, keyed by `uri` (globally unique per document, so no pluginId
  * scoping is needed even though several plugins may share this realm). */
 function pushMainThreadPluginBackboneInbound(uri: string, messages: readonly Uint8Array[]): void {
   const bridge = globalThis as unknown as { __semioBackboneInbound?: Map<string, Uint8Array[]> };
@@ -1609,13 +1609,13 @@ function pushMainThreadPluginBackboneInbound(uri: string, messages: readonly Uin
  * per-worker fast path this function used to take (`activeWorkerByPluginId.get(pluginId)` →
  * `PluginWorkerClient.postBackboneInbound`, a raw `"backboneInbound"` postMessage type) is gone along
  * with `PluginWorkerClient` itself, and its counterpart on the guest side is ALSO gone:
- * `🟨️host-shim.js` now implements only the `pure` WIT interface (`log`/`now-ms`/`trace-span`) —
+ * `🟨️.js` now implements only the `pure` WIT interface (`log`/`now-ms`/`trace-span`) —
  * `backboneSend`/`backbonePoll`/`backboneStatus` were deleted (design-runtime.md §3), because
  * `world actor` has no synchronous host import for them anymore. Every read/write/network/backbone
  * -shaped call now flows through the effect/event turn loop instead (`events::message-event`
  * replaces "the `backbone-poll` push", per `component.wit`'s own doc comment on that variant).
  *
- * This function is kept — `pluginId` stays a real parameter, `ShellHost/🟦️component.tsx` (registrar-
+ * This function is kept — `pluginId` stays a real parameter, `ShellHost/🟦️.tsx` (registrar-
  * only, not this packet's to edit) still imports it — but its ONLY remaining path is the main-thread
  * global queue below, which nothing on the guest side drains anymore either post-flip. Wiring
  * `message-event`-addressed delivery through `ActivationRegistry`/`ShardClient` is real, non-mechanical
@@ -1656,7 +1656,7 @@ export function registerPluginBackboneRoute(documentId: string, relay: (uri: str
 //#endregion 🐚️PluginBackboneRouting
 
 // 🧬️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (H2): `LeasePool`/`createLeasePool` RELOCATE unchanged
-// to `🧰️framework/📦️packages/🟦️typescript/🟦️glue.ts` under `//#region 🪶️LeasePool` — its non-plugin
+// to `🧰️framework/📦️packages/🟦️typescript/🟦️.ts` under `//#region 🪶️LeasePool` — its non-plugin
 // consumers (the renderer's engine-session cache and others; see `📓️luna-consumers-audit.md`) keep
 // working from there. `PluginModuleLease`/`acquirePluginModule`/`evictPluginModule` and the trailing
 // `loadPluginModuleUncached`/`pluginHandleForBridge` are DELETED outright (no relocation — they were
@@ -1684,7 +1684,7 @@ export interface ActivationManifestEntry {
 }
 
 /** 🔐️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (terra-extension-activation): the web mirror of
- * `semio_framework_actor::intersect_capabilities` (`🎭️actor/🦀️component.rs`) — an extension must
+ * `semio_framework_actor::intersect_capabilities` (`🎭️actor/🦀️.rs`) — an extension must
  * never hold a capability its host plugin lacks. Matched by `ShardCapabilityGrant.id` (this file's
  * capability-name field, the web counterpart of the Rust `CapabilityGrant.capability` string); a
  * requested grant survives only when `granted` already carries one with the same `id`. An actual
@@ -1860,7 +1860,7 @@ export class ActivationRegistry {
   private readonly stopMetricsPublisher: () => void;
   /** 📡️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (web-activation): the platform's own pub-sub
    * primitive, not a bespoke one — no topic-subscriber bus exists anywhere in this codebase yet
-   * (native or web; see `TaskManager/🟦️component.tsx`'s own header doc on why a real window mount is
+   * (native or web; see `TaskManager/🟦️.tsx`'s own header doc on why a real window mount is
    * still registrar-only work), so `startRuntimeMetricsPublisher`'s sink dispatches a
    * `CustomEvent(topic, { detail: snapshot })` here rather than inventing a second bus. Populated
    * (via `startRuntimeMetricsPublisher`) only when `autoStartMetricsPublisher: true` is passed; a real
@@ -2145,7 +2145,7 @@ export class ActivationRegistry {
 
   /** 🛑️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (T1, wiring the task manager's "cancel" action to a
    * REAL dispatch path): the web mirror of `Payload::Cancel`'s now-landed native semantics
-   * (`🧵️shard/🦀️component.rs`'s `ShardLoop::pump`, K1 — "cancels the actor's running jobs +
+   * (`🧵️shard/🦀️.rs`'s `ShardLoop::pump`, K1 — "cancels the actor's running jobs +
    * unregisters the instance"). Unlike `suspend()`, this is NOT resumable: no checkpoint is taken,
    * and every bookkeeping entry (including `actorPlugin`) is dropped, so a later `resume(actorId)`
    * correctly throws "unknown actor" rather than silently reviving it. A no-op for an actorId this
@@ -2224,7 +2224,7 @@ export class ActivationRegistry {
    * different sink) is still supported for a caller that wants its own delivery instead of the bus.
    *
    * 🚧️ Honest remaining gap: no real CONSUMER subscribes to `metricsBus` yet anywhere in this codebase
-   * (native or web) — mounting the task-manager window that would (`TaskManager/🟦️component.tsx`'s own
+   * (native or web) — mounting the task-manager window that would (`TaskManager/🟦️.tsx`'s own
    * header doc) is registrar-only, lease-requested work outside this packet's `path_scope`. */
   startRuntimeMetricsPublisher(sink: (topic: string, snapshot: RuntimeMetricsSnapshot) => void): () => void {
     const interval = setInterval(() => {
@@ -2968,7 +2968,7 @@ export function resolvePluginHostConfig(catalog: PluginCatalog, playgroundPlugin
 //#region 🔖️PluginGraph
 /** 🔗️ One node of the plugin dependency graph — a plugin's own id/version plus the dependencies its
  * manifest declares. Mirrors Rust `PluginManifest`'s `pluginId`/`version`/`dependencies` triple
- * (`🛂️manifest/🦀️component.rs`), narrowed to exactly what {@link resolvePluginLoadOrder}/
+ * (`🛂️manifest/🦀️.rs`), narrowed to exactly what {@link resolvePluginLoadOrder}/
  * {@link validatePluginDependencyGraph} need — a caller with only a `PluginRegistryEntry` (no
  * `version` yet, contract freeze §3-era catalogs) still validates presence/cycles correctly. */
 export type PluginGraphNode = {
@@ -3467,7 +3467,7 @@ if (import.meta.vitest) {
 if (import.meta.vitest) {
   const { describe, expect, it } = import.meta.vitest;
   describe("IoEntryGraph", () => {
-    // 🧭️ SAME fixture as the Rust twin (`💻️os/🔌️plugin/🖥️host/🦀️component.rs`,
+    // 🧭️ SAME fixture as the Rust twin (`💻️os/🔌️plugin/🖥️host/🦀️.rs`,
     // `io_router_w1d_fixture_entries`) and `🧪️w1d-io-router-parity.ts` — `stdio` owns one Exact
     // hop, `gif` owns a Canonical migration hop AND a competing Lossy direct shortcut.
     const binaryRaw: ArtifactDialect = { artifactKind: "s.stdio.binary", standard: "raw", subset: "*" };

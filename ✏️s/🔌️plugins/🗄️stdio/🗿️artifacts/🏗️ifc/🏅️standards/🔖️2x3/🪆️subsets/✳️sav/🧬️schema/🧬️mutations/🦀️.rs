@@ -4,7 +4,7 @@
 //! generic ISO 10303-21 graph editing (`upsert-instance`, `remove-instance`, `set-header`) and knows
 //! nothing about model view definitions; an MVD is a conformance FILTER over that one schema, so its
 //! vocabulary is the set of edits that address the filter's own rules. Every kind below is one rule
-//! of `check_sav_conformance` (`../🦀️component.rs`'s `derived_analysis`):
+//! of `check_sav_conformance` (`../🦀️.rs`'s `derived_analysis`):
 //!
 //! | kind | rule |
 //! |---|---|
@@ -24,8 +24,8 @@
 //! subset's editor and viewer already import — keeps resolving now that this module shadows the glob
 //! re-export it used to arrive through.
 //!
-//! @see ../../../../🧬️mvd/🦀️component.rs — the Part-21 editing primitives the three MVD subsets share.
-//! @see ../../🧪️oracle/🔣️.json — the `ifc-2x3-sav` catalog `KINDS` is checked against.
+//! @see ../../../../🧬️mvd/🦀️.rs — the Part-21 editing primitives the three MVD subsets share.
+//! @see ../../🔣️oracle.json — the `ifc-2x3-sav` catalog `KINDS` is checked against.
 
 use crate::artifacts::ifc::standards::v2x3::mvd;
 use crate::artifacts::ifc::standards::v2x3::subsets::any::schema::diff::Ifc2x3Diff;
@@ -121,7 +121,7 @@ pub enum Ifc2x3SavMutation {
 }
 
 /// 📇️ Kebab-case spelling of every `Ifc2x3SavMutation` variant, in declaration order — the
-/// `ifc-2x3-sav` catalog in `../../🧪️oracle/🔣️.json` is required to match verbatim.
+/// `ifc-2x3-sav` catalog in `../../🔣️oracle.json` is required to match verbatim.
 pub const KINDS: &[&str] = &["no-mutation", "set-snapshot", "set-view-definition", "set-analysis-model", "set-load-group", "set-group-assignment"];
 
 impl Ifc2x3SavMutation {

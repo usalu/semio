@@ -6,7 +6,7 @@
 //! ⚠️ Decision (flagged for the coordinator, detailed in `📓️terra-contract-builder-report.md`):
 //! [`BuiltNode`] duplicates the shape the sibling `semio-framework-ui-runtime` crate's own
 //! `ComponentTree` needs, because this crate must not depend on that crate (the dependency runs the
-//! other way — see `📦️glue.rs`). The runtime converts a `BuiltNode` tree into its own reconciler
+//! other way — see `🦀️.rs`). The runtime converts a `BuiltNode` tree into its own reconciler
 //! input; if the two shapes drift, that conversion is the one place to fix, never a second builder.
 
 use std::fmt;

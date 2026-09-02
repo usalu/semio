@@ -1,0 +1,6 @@
+/** 🧪️ Focused unbind-primitive-attribute mutation-law probe. */
+import type { GltfSnapshot } from '../../../📸️snapshot/🟦️.ts';
+import { applyGltfUnbindPrimitiveAttribute, type GltfUnbindPrimitiveAttributePayload } from '../../unbind-primitive-attribute/🟦️.ts';
+import { deriveGltfUnbindPrimitiveAttributeDiff } from '../../unbind-primitive-attribute/🔺️diff/🟦️.ts';
+import { deriveGltfUnbindPrimitiveAttributeInverse } from '../../unbind-primitive-attribute/↩️inverse/🟦️.ts';
+export const assertGltfUnbindPrimitiveAttributeLaws = (base: GltfSnapshot, payload: GltfUnbindPrimitiveAttributePayload) => { const applied = applyGltfUnbindPrimitiveAttribute(base, payload); if (!applied.accepted) return applied; const replay = applyGltfUnbindPrimitiveAttribute(base, payload); const direct = deriveGltfUnbindPrimitiveAttributeDiff(base, payload); const undo = deriveGltfUnbindPrimitiveAttributeInverse(base, payload); if (!replay.accepted || !direct.accepted || !undo.accepted || JSON.stringify(applied.snapshot) !== JSON.stringify(replay.snapshot) || JSON.stringify(applied.diff) !== JSON.stringify(replay.diff) || JSON.stringify(applied.touchedPaths) !== JSON.stringify(undo.touchedPaths)) throw new Error('unbind-primitive-attribute violates replay, direct-diff, or undo determinism'); return { applied, direct, undo }; };

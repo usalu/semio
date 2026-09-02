@@ -13,10 +13,10 @@ this same carrier.
 
 **What it was written from.**
 
-* ``🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🔣️component.json`` — the five members of
+* ``🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🔣️.json`` — the five members of
   `Puzzle2dSnapshot`.
 * the twenty-six committed payloads themselves, for the verbs and their argument lists — NOT
-  ``…/🧬️schema/🧬️mutations/🔣️component.json``, which despite its title `Puzzle2dMutation` is a copy of
+  ``…/🧬️schema/🧬️mutations/🔣️.json``, which despite its title `Puzzle2dMutation` is a copy of
   the SNAPSHOT schema (`{schema, camera, nodes, edges, meta}`) and declares no mutation at all. That
   file is the pre-migration whole-snapshot-shaped generic schema `s.architect.program`'s own mutation
   schema records itself as superseding; here it was never replaced.
@@ -31,7 +31,7 @@ this same carrier.
   rebuilds shape and extent from its four arguments and drops every member whose argument is `null`;
   and that a member equal to its default is OMITTED from the carrier rather than written.
 
-**No Rust was read to write this.** `🦀️component.rs` beside this file registers the SUBJECT half
+**No Rust was read to write this.** `🦀️.rs` beside this file registers the SUBJECT half
 only.
 
 **One kind this implementation REFUSES, by clause rather than by absence.** See `UNDERDETERMINED`.

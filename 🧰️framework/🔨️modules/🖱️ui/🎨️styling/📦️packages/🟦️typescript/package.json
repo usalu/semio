@@ -15,7 +15,7 @@
     }
   },
   "exports": {
-    ".": "./📦️index.ts",
+    ".": "./🟦️.ts",
     "./🎨️ui.css": "../../🎨️ui.css",
     "./🎨️palette.css": "../../🎨️palette.css",
     "./tailwind.config": "./🎨️tailwind.config.ts",

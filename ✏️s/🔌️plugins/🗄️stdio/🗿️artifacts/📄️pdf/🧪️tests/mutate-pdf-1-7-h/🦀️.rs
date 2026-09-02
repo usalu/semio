@@ -3,7 +3,7 @@
 //! Every scenario copies the real, committed `🎓️bachelor-thesis` asset into the case work directory
 //! first; the committed asset is never written to. `oracle` handlers drive the registered `lopdf`
 //! 0.44 reference implementation through this subset's own
-//! `../../🏅️standards/🔖️1.7/🪆️subsets/✳️h/🧪️oracle/🦀️component.rs`, `subject` handlers drive this
+//! `../../🏅️standards/🔖️1.7/🪆️subsets/✳️h/🦀️oracle.rs`, `subject` handlers drive this
 //! repository's own decode/mutate/encode round trip, and both results are read back by the SAME
 //! independent `project_conformance` before the `semantic-pdf-conformance-h-v1` profile compares
 //! them. The subject half is gated behind the generated host's `sut` feature so the oracle-only run
@@ -17,7 +17,7 @@ use semio_s_plugin_stdio_test_oracle::artifacts::pdf::standards::v1_7::subsets::
 
 //#region 🔖️Kinds
 /// 🧾️ Test-case-local mirror of the `pdf-1-7-h` catalog. Duplicated, not imported, from
-/// `../../🏅️standards/🔖️1.7/🪆️subsets/✳️h/🧬️schema/🧬️mutations/🦀️component.rs::KINDS` — that module
+/// `../../🏅️standards/🔖️1.7/🪆️subsets/✳️h/🧬️schema/🧬️mutations/🦀️.rs::KINDS` — that module
 /// lives in the SUBJECT crate, and the oracle role must not link the subject crate at all, while
 /// this loop registers handlers for both roles from one list. A mismatch is caught structurally: the
 /// contract phase fails with `mutation-kind-uncovered`/`mutation-kind-undeclared` if this list omits

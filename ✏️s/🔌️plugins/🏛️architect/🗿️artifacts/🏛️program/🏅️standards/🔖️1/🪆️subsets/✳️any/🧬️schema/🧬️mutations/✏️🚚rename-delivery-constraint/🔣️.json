@@ -5,7 +5,7 @@
   "displayName": "Rename Delivery Constraint",
   "emoji": "✏️🚚",
   "aggregateVariant": "RenameDeliveryConstraint",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

@@ -1,24 +1,41 @@
 //! 🌿️ Direct space-alternative creation mutation.
-use super::super::{RestoreActiveSpaceAlternative, RemoveSpaceAlternative, SpaceHistoryMutation};
+use super::super::{RemoveSpaceAlternative, RestoreActiveSpaceAlternative, SpaceHistoryMutation};
 use super::super::{SpaceAlternative, SpaceHistoryDiff, SpaceHistorySnapshot};
-use serde::{Deserialize, Serialize};
 use semio_framework_value_derive::{FromValue, ToValue};
+#[cfg(test)]
+use serde::{Deserialize, Serialize};
 
 //#region 🔖️Payload
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, dsl::MutationLeaf)]
+/// @emoji 🌿️ serde stays TEST-ONLY: feeds `SpaceHistoryMutation`'s own `cfg_attr(test)` oracle
+/// derive (its sibling `serde_json` differential test). Production never serializes through serde.
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::MutationLeaf)]
+#[cfg_attr(test, derive(Serialize, Deserialize))]
 #[mutation_leaf(contract = ::protocol)]
-#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(test, serde(rename_all = "camelCase", deny_unknown_fields))]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
-pub struct CreateSpaceAlternative { pub alternative: SpaceAlternative }
+pub struct CreateSpaceAlternative {
+    pub alternative: SpaceAlternative,
+}
 //#endregion 🔖️Payload
 
 //#region ⚙️Semantics
 impl crate::os_spr::MutationKind<SpaceHistorySnapshot, SpaceHistoryMutation> for CreateSpaceAlternative {
     const SEMANTICS: crate::os_spr::SemanticDescriptor = crate::os_spr::SemanticDescriptor { verb: "create", entity: "space-alternative", kind: "create-space-alternative", record: "CreatedSpaceAlternative" };
-    fn diff(&self, _base: &SpaceHistorySnapshot) -> crate::os_spr::MutationOutcome<SpaceHistoryDiff> { crate::os_spr::MutationOutcome::new(SpaceHistoryDiff { add_alternative: Some(self.alternative.clone()), set_active_alternative_id: Some(Some(self.alternative.id.clone())), ..Default::default() }) }
-    fn inverse(&self, base: &SpaceHistorySnapshot) -> Vec<SpaceHistoryMutation> { vec![SpaceHistoryMutation::RestoreActiveSpaceAlternative(RestoreActiveSpaceAlternative { alternative_id: base.active_alternative_id.clone() }), SpaceHistoryMutation::RemoveSpaceAlternative(RemoveSpaceAlternative { alternative_id: self.alternative.id.clone() })] }
-    fn label(&self) -> String { format!("Create space alternative {}", self.alternative.name) }
-    fn target(&self) -> Vec<String> { vec!["alternatives".into(), self.alternative.id.clone()] }
+    fn diff(&self, _base: &SpaceHistorySnapshot) -> crate::os_spr::MutationOutcome<SpaceHistoryDiff> {
+        crate::os_spr::MutationOutcome::new(SpaceHistoryDiff { add_alternative: Some(self.alternative.clone()), set_active_alternative_id: Some(Some(self.alternative.id.clone())), ..Default::default() })
+    }
+    fn inverse(&self, base: &SpaceHistorySnapshot) -> Vec<SpaceHistoryMutation> {
+        vec![
+            SpaceHistoryMutation::RestoreActiveSpaceAlternative(RestoreActiveSpaceAlternative { alternative_id: base.active_alternative_id.clone() }),
+            SpaceHistoryMutation::RemoveSpaceAlternative(RemoveSpaceAlternative { alternative_id: self.alternative.id.clone() }),
+        ]
+    }
+    fn label(&self) -> String {
+        format!("Create space alternative {}", self.alternative.name)
+    }
+    fn target(&self) -> Vec<String> {
+        vec!["alternatives".into(), self.alternative.id.clone()]
+    }
 }
 //#endregion ⚙️Semantics
 
@@ -36,4 +53,3 @@ mod tests {
     }
 }
 //#endregion 🧪️Tests
-

@@ -5,7 +5,7 @@ use protocol::{Mutation, MutationDiff, MutationLeaf, OpBinary, OpText};
 
 //#region 🧪️DirectContracts
 fn fixture() -> serde_json::Value {
-    serde_json::from_str(include_str!("../../🧬️schema/🧬️mutations/🧪️tests/🎚️gis2d-config-direct/🔣️vectors.json")).expect("configuration law fixture")
+    serde_json::from_str(include_str!("../../🧬️schema/🧬️mutations/🧪️tests/🎚️gis2d-config-direct/🔣️.json")).expect("configuration law fixture")
 }
 
 pub(crate) fn assert_leaf<T>(sample: usize, wrap: fn(T) -> Gis2dConfigMutation, descriptor: &str)

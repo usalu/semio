@@ -6,7 +6,7 @@ todos:
     content: Create the ticket folder by hand under .🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️07/DISSOLVE-CORE-FOLDERS-AND-PLUGIN-ROOT-BUILDER-CONTRACT/ with 🎫️ticket.json (goal AI-OPTIMIZED-REPO) and mcp-unavailable.txt, since the repo MCP namespace is not available
     status: completed
   - id: wave0-taxonomy
-    content: "Wave 0: extend 🔣️taxonomy.json with pluginDirName, pluginChildDirs, bannedNameStems and the emoji+VS16 requirement; extend validateTaxonomy in 🔍️discovery/🟦️component.ts"
+    content: "Wave 0: extend 🔣️taxonomy.json with pluginDirName, pluginChildDirs, bannedNameStems and the emoji+VS16 requirement; extend validateTaxonomy in 🔍️discovery/🟦️.ts"
     status: completed
   - id: wave0-sdk
     content: "Wave 0: add the typestate PluginBuilder in 🔌️plugin/🏗️builder/, rename PluginBundle to Plugin and the Plugin trait to PluginProgram, delete semio_plugin!, keep plugin_exports!, extend assert_constitutional_crates and assert_taxonomy_components"
@@ -15,7 +15,7 @@ todos:
     content: "Wave 0: add policyBannedNameStemBreaches, policyEmojiPrefixBreaches, policyPluginRootShapeBreaches, policyPluginBuilderBreaches to the Policy region of 📜️script.ts at medium priority; rewrite policyTaxonomyLibShapeBreaches; add the dependency-cruiser no-core-path rule and extend registry validateTaxonomyTree"
     status: completed
   - id: wave1-framework-cores
-    content: "Wave 1 (Grok): dissolve 🧩core into 🎯️action-bus / 🖥️platform / 🔺️mesh / 🛂️manifest / 🧠️kernel siblings and split its 4090-line 🟦️component.ts; rename the crate to semio-framework and the package to @semio-tech/framework"
+    content: "Wave 1 (Grok): dissolve 🧩core into 🎯️action-bus / 🖥️platform / 🔺️mesh / 🛂️manifest / 🧠️kernel siblings and split its 4090-line 🟦️.ts; rename the crate to semio-framework and the package to @semio-tech/framework"
     status: completed
   - id: wave1-os-cores
     content: "Wave 1 (parallel): split flow (7915), dsl, spr, db and pack cores into concept siblings and retire the flow_core / dsl_core / db_core aliases"
@@ -27,7 +27,7 @@ todos:
     content: "Wave 2 (serial): apply all deferred shared-file edits from the Wave 1 manifests (root Cargo.toml, package.json workspaces, ~261 paths in 📜️script.ts, .storybook/scopes.ts, eslint.config.mjs, sketchpad tsconfig, nx project names) and get cargo check --workspace plus bunx tsc clean"
     status: completed
   - id: wave3-plugin-roots
-    content: "Wave 3 (32 parallel agents): create 🔌️plugin/ with 🦀️component.rs, 🛂️manifest/, 🎟️capabilities/, 🔧️setup/ and 🎛️apps/ for every plugin, convert registration to Plugin::builder, and reduce each 📦️glue.rs to wiring plus plugin_exports!"
+    content: "Wave 3 (32 parallel agents): create 🔌️plugin/ with 🦀️.rs, 🛂️manifest/, 🎟️capabilities/, 🔧️setup/ and 🎛️apps/ for every plugin, convert registration to Plugin::builder, and reduce each 📦️glue.rs to wiring plus plugin_exports!"
     status: completed
   - id: wave4-enforcement
     content: "Wave 4 (serial): flip the new policies to high priority, wire them into VerifyScript.runGate, set areas[\"✏️s/🔌️plugins\"] to clean, regenerate registry artifacts and launch.json, and drive verify gate, policy and test-quick to green"
@@ -50,18 +50,18 @@ Verified by byte-level `find` + `xxd`, not by search:
 
 # 2. Target vocabulary: per-core dissolution
 
-Three shapes: **lift** (core already has concept subfolders, promote them to siblings), **split** (one grab-bag file becomes several concept folders), **fold** (tiny core merges into the owner's own `🦀️component.rs`).
+Three shapes: **lift** (core already has concept subfolders, promote them to siblings), **split** (one grab-bag file becomes several concept folders), **fold** (tiny core merges into the owner's own `🦀️.rs`).
 
 ## Framework
 
-- `**🧰️framework/🔨️modules/🧩core**` (8 files) — LIFT to `🔨️modules/` siblings: `🎯️action-bus` (94), `🖥️platform` (245), `🔺️mesh` (3075), `🛂️manifest` (from `🧩️ui`, 4239 — it is the AppDefinition/PluginManifest/Contribution/CommandDefinition contract, not UI elements), `🧠️kernel` (from `🧩️ui/🧠️kernel`, 626). `🤖️generated` moves under `🛂️manifest/`. The 4090-line `🟦️component.ts` splits into one `🟦️component.ts` per new module. Crate `semio-framework-core` → `semio-framework`; package `@semio-tech/framework-core` → `@semio-tech/framework`. 74 Rust + 151 TS consumers.
-- `**🧰️framework/🔨️modules/🖱️ui/🧱️elements/🫀️core**` (13 files, ~2558 lines) — LIFT all 12 subfolders to `🧱️elements/` siblings (`🆔ElementId`, `🌈️Surface`, `🎛️Chrome`, `🏷️ClassNames`, `🏷️Label`, `🏷️UiLabel`, `🐚️ShellScope`, `🐹️ElementProps`, `📚️I18n`, `🔌️Ports` (fix VS16), `🚗️UiDriver`, `🧭️Flow`). No collisions with the 60+ existing element folders. ~59 relative importers, the React barrel, and `🖱️ui/⌨️tui/🦀️component.rs:1343` update.
+- `**🧰️framework/🔨️modules/🧩core**` (8 files) — LIFT to `🔨️modules/` siblings: `🎯️action-bus` (94), `🖥️platform` (245), `🔺️mesh` (3075), `🛂️manifest` (from `🧩️ui`, 4239 — it is the AppDefinition/PluginManifest/Contribution/CommandDefinition contract, not UI elements), `🧠️kernel` (from `🧩️ui/🧠️kernel`, 626). `🤖️generated` moves under `🛂️manifest/`. The 4090-line `🟦️.ts` splits into one `🟦️.ts` per new module. Crate `semio-framework-core` → `semio-framework`; package `@semio-tech/framework-core` → `@semio-tech/framework`. 74 Rust + 151 TS consumers.
+- `**🧰️framework/🔨️modules/🖱️ui/🧱️elements/🫀️core**` (13 files, ~2558 lines) — LIFT all 12 subfolders to `🧱️elements/` siblings (`🆔ElementId`, `🌈️Surface`, `🎛️Chrome`, `🏷️ClassNames`, `🏷️Label`, `🏷️UiLabel`, `🐚️ShellScope`, `🐹️ElementProps`, `📚️I18n`, `🔌️Ports` (fix VS16), `🚗️UiDriver`, `🧭️Flow`). No collisions with the 60+ existing element folders. ~59 relative importers, the React barrel, and `🖱️ui/⌨️tui/🦀️.rs:1343` update.
 
 ## OS kernel modules
 
 - `**🌊️flow/🫀️core**` (7915 + `📐️brep-geometry` 563) — SPLIT into siblings under `🌊️flow/`: `📄️document` ~1017, `📚️catalogue` ~298, `📇️registry` ~237, `🌉️bridge` ~400, `🖥️host` ~1967, `🖍️drawing` ~203, `🌉️wasm` ~670, `🌿️vcs` ~1122; lift `📐️brep-geometry` as-is. Retire the `flow_core` alias (`extern crate self as flow_core` → `flow`). 72 consumers. A corrupted duplicate glue file next to `📦️glue.rs` was flagged — verify and delete.
 - `**🎒️pack/🫀️core**` (770) — SPLIT: `🆔ids`, `🧾️codec` (varint/bytes/crc), `🚰️source`. 13 consumers via `os_pack::core`.
-- `**🛢️db/🫀️core**` (937) — SPLIT: `🆔ids`, `💾️durability` (frontier/fencing), `🎚️policy` (priority/capabilities/config), `🕸️version-graph`. 23 consumers; remove the `db_core` alias and the `pub mod core` facade at `🛢️db/🦀️component.rs:54`.
+- `**🛢️db/🫀️core**` (937) — SPLIT: `🆔ids`, `💾️durability` (frontier/fencing), `🎚️policy` (priority/capabilities/config), `🕸️version-graph`. 23 consumers; remove the `db_core` alias and the `pub mod core` facade at `🛢️db/🦀️.rs:54`.
 - `**📡️spr/🫀️core**` (1327) — SPLIT: `🆔ids`, `🔢️scalar` (~348), `📖️dictionary`, `🔐️crypto`, `🧾️wire`. 14 consumers.
 - `**🗣️dsl/🫀️core**` (1587) — SPLIT: `📍️span`, `⚠️diagnostic` (~325), `🔤️token` (escape/number/unit), `🔍️lexer` (~457), `🎖️trust`. 19 + 7 consumers; retire `dsl_core`.
 
@@ -70,8 +70,8 @@ Three shapes: **lift** (core already has concept subfolders, promote them to sib
 - `**🏗️fem/🫀️core**` (8 files, ~7220) — LIFT to `🏗️fem/` siblings: `🏗️model` (root 589), `➗️formulation`, `🕸️mesh`, `🔢️sparse`, `📏️elements2d`, `🧊️elements3d`, `🧮️analyses`, and `🤝️shared` → `🖥️app-surface` (it is app UI helpers; `shared` is itself a banned vague name). 21 consumers.
 - `**📕️norm/🫀️core**` (843/253/325) — SPLIT/LIFT: `📄️document`, `🎚️config`, `🖥️app-surface`. **218 consumers — highest mechanical risk in the whole plan.**
 - `**🔱️trinity/🫀️core**` (1895) — SPLIT: `🔤️lexer`, `🌳️ast`, `🧮️executor`, `🗣️language-service`. Only 4 consumers.
-- `**🧱️block/🫀️core**` (134) — FOLD into `🧱️block/🦀️component.rs`. 24 consumers.
-- `**🪐️space/🫀️core**` (53) — FOLD into `🪐️space/🦀️component.rs`. 16 consumers.
+- `**🧱️block/🫀️core**` (134) — FOLD into `🧱️block/🦀️.rs`. 24 consumers.
+- `**🪐️space/🫀️core**` (53) — FOLD into `🪐️space/🦀️.rs`. 16 consumers.
 - `**📐️cad/🔨️modules/🫀️core**` (9771 TS) — SPLIT into `📐️cad/🔨️modules/` siblings: `📐️geometry` ~3374, `🎬️actions` ~1820, `📄️document` ~900, `🧬️typology` ~149, `🗺️spatial` ~240, `📇️registry` ~172; ~3030 lines of tests distribute to their subject. Only 8 consumers.
 - `**🎞️animate/.../⚙️engine/🎬️core**` (6949) — SPLIT into `⚙️engine/` siblings: `🎞️animation`, `🎬️scene`, `📐️geometry`, `🎥️camera`, `🔤️text`, `⏱️rate`, `🎛️config`. Retire `animate_core`. 3 consumers.
 - `**🌊️flow/🧩️extensions/🫀️core**` (252, own crate) — RENAME folder to `🔤️primitive`, crate to `semio-s-plugin-flow-extension-primitive`.
@@ -87,18 +87,18 @@ Every one of the 32 plugins gets, at its root:
 
 ```
 ✏️s/🔌️plugins/<plugin>/🔌️plugin/
-  🦀️component.rs                 # pub fn plugin() -> Plugin  — the only public entry
-  🛂️manifest/🦀️component.rs      # id, label, version, contributions, commands
-  🎟️capabilities/🦀️component.rs  # CapabilityRequirement declarations
-  🔧️setup/🦀️component.rs         # former register_*_exports: codecs, languages, importers/exporters
-  🎛️apps/🦀️component.rs          # app factory wiring (create_*_app => *PlayApp)
+  🦀️.rs                 # pub fn plugin() -> Plugin  — the only public entry
+  🛂️manifest/🦀️.rs      # id, label, version, contributions, commands
+  🎟️capabilities/🦀️.rs  # CapabilityRequirement declarations
+  🔧️setup/🦀️.rs         # former register_*_exports: codecs, languages, importers/exporters
+  🎛️apps/🦀️.rs          # app factory wiring (create_*_app => *PlayApp)
 ```
 
 `📦️glue.rs` shrinks to pure `#[path]` wiring plus `plugin_exports!(plugin::plugin)`. Nothing else.
 
 ## SDK changes in `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/`
 
-- New `🏗️builder/🦀️component.rs`: typestate `PluginBuilder`, so a missing label or version is a **compile error**, not a runtime default:
+- New `🏗️builder/🦀️.rs`: typestate `PluginBuilder`, so a missing label or version is a **compile error**, not a runtime default:
 
 ```rust
 Plugin::builder(ID)
@@ -111,14 +111,14 @@ Plugin::builder(ID)
 ```
 
 - Rename struct `PluginBundle` → `Plugin`; rename trait `Plugin` → `PluginProgram` (the host-facing `manifest()` / `create_app()` seam).
-- **Delete `semio_plugin!`** (SDK `🦀️component.rs` lines 6166-6204) and its two `#[cfg(test)]` sanity tests.
+- **Delete `semio_plugin!`** (SDK `🦀️.rs` lines 6166-6204) and its two `#[cfg(test)]` sanity tests.
 - **Keep `plugin_exports!`** (lines 5933-5955). It is the WASM component linkage anchor and the weak/strong installer-shim mechanism, not configuration — only its argument changes.
 - Extend `testkit::assert_constitutional_crates` (1524-1580) and `assert_taxonomy_components` (1588-1631) to require the `🔌️plugin/` slots.
 
 ## Outliers
 
 - `🪐️space` — 2 apps + `local_backbone_storage`; expresses cleanly as builder calls, bundle fn moves from `📦️glue.rs:214-221` into `🔌️plugin/`.
-- `🎪️demonstrator` — owns no artifacts; its `bundle()` currently lives in `🎪️panes/🦀️component.rs` and moves into `🔌️plugin/`.
+- `🎪️demonstrator` — owns no artifacts; its `bundle()` currently lives in `🎪️panes/🦀️.rs` and moves into `🔌️plugin/`.
 - `🔋️energy` — computation library with no apps. Gets a `🔌️plugin/` with a `.library()` terminal on the builder so the rule stays universal with zero exemptions.
 
 # 4. Clean mechanisms
@@ -131,7 +131,7 @@ Extend, do not add parallel systems.
 - `bannedNameStems: ["core","common","util","utils","helper","helpers","misc","shared","base","lib","impl"]` — emoji-stripped stem match
 - explicit emoji-prefix + U+FE0F requirement for taxonomy directories
 - final step: flip `areas["✏️s/🔌️plugins"]` from `"mixed"` to `"clean"`
-- extend `validateTaxonomy` in [🔍️discovery/🟦️component.ts](🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🟦️component.ts) (lines 144-188)
+- extend `validateTaxonomy` in [🔍️discovery/🟦️.ts](🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🟦️.ts) (lines 144-188)
 
 **Root [📜️script.ts](📜️script.ts) Policy region** — new rules modelled on the existing `policySprNamingBreaches` (4210-4256), each registered in `export const policy` (4624-4673):
 
@@ -168,7 +168,7 @@ flowchart TD
 
 
 
-**Wave 0 — Foundation (1 Grok 4.5, serial).** Owns taxonomy.json, plugin SDK `🦀️component.rs`, new `🏗️builder/`, root `📜️script.ts` Policy region, `.dependency-cruiser.cjs`, registry `📜️script.ts`, repo-lib `📦️index.ts` and `🧪️index.test.ts`. Lands the new policies at `priority: "medium"` so waves 1-3 are not blocked by their own in-progress work.
+**Wave 0 — Foundation (1 Grok 4.5, serial).** Owns taxonomy.json, plugin SDK `🦀️.rs`, new `🏗️builder/`, root `📜️script.ts` Policy region, `.dependency-cruiser.cjs`, registry `📜️script.ts`, repo-lib `📦️index.ts` and `🧪️index.test.ts`. Lands the new policies at `priority: "medium"` so waves 1-3 are not blocked by their own in-progress work.
 
 **Wave 1 — Core dissolution (16 agents, parallel).** One agent per core; each owns a disjoint subtree plus the import lines of its own consumers.
 

@@ -1,0 +1,33 @@
+# 🧬️ SemioCadMutation schema — real facet mirror of `🦀️.rs` (source of truth).
+union SemioCadMutation =
+  | SetSnapshot
+  | AddLayer
+  | RemoveLayer
+  | SetLayer
+  | AddBlock
+  | RemoveBlock
+  | SetBlockBasePoint
+  | AddEntity
+  | RemoveEntity
+  | SetEntityLayer
+  | SetEntityGeometry
+  | AddBlockEntity
+  | RemoveBlockEntity
+  | SetBlockEntityLayer
+  | SetBlockEntityGeometry
+
+type SetSnapshot { snapshot: SemioCadSnapshot! }
+type AddLayer { layer: CadLayer! }
+type RemoveLayer { name: String! }
+type SetLayer { name: String! colorIndex: Int lineType: String visible: Boolean }
+type AddBlock { block: CadBlock! }
+type RemoveBlock { name: String! }
+type SetBlockBasePoint { name: String! basePoint: SemioPoint2! }
+type AddEntity { entity: CadEntityRecord! }
+type RemoveEntity { handle: String! }
+type SetEntityLayer { handle: String! layer: String! }
+type SetEntityGeometry { handle: String! entity: CadEntity! }
+type AddBlockEntity { blockName: String! entity: CadEntityRecord! }
+type RemoveBlockEntity { blockName: String! handle: String! }
+type SetBlockEntityLayer { blockName: String! handle: String! layer: String! }
+type SetBlockEntityGeometry { blockName: String! handle: String! entity: CadEntity! }

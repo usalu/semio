@@ -5,7 +5,7 @@
   "displayName": "Change Sheet M Ed Knm",
   "emoji": "🦛",
   "aggregateVariant": "ChangeSheetMEdKnm",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

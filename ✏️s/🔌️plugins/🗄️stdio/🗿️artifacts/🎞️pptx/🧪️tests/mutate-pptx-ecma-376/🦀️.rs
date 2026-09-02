@@ -5,7 +5,7 @@
 //! derived once from a real 62-slide, 16 MB 2020 conference deck — see the feature file's own
 //! header for the full provenance) into the case work directory first; the committed fixture is
 //! never written to. `oracle` drives the registered `zip`+`quick-xml` composition
-//! (`../../🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/🧪️oracle/🦀️component.rs`'s own
+//! (`../../🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/🦀️oracle.rs`'s own
 //! `oracle_apply_mutation`/`oracle_apply_mutation_inverse`); `subject` drives this repository's own
 //! `decode_pptx`/`encode_pptx`/`apply_pptx_mutation` over the full 9-kind `PptxMutation`
 //! vocabulary. Both results are read back by the SAME independent `project_pptx_mutation` (the

@@ -12,7 +12,7 @@ carrier.
 
 **What it was written from.**
 
-* ``🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🔣️component.json`` — the six members of the
+* ``🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🔣️.json`` — the six members of the
   snapshot.
 * rules 2, 4 and 8 of
   `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/📓️derivation-rules.md` — the
@@ -26,7 +26,7 @@ carrier.
   raises the same code for leaving a dangling synapse standing; and that `change-weight` UPSERTS,
   writing an existing module's weight in place and appending an entry when the table holds none.
 
-**No Rust was read to write this.** `🦀️component.rs` beside this file registers the SUBJECT half
+**No Rust was read to write this.** `🦀️.rs` beside this file registers the SUBJECT half
 only. All nine kinds are adjudicated and none is refused: the module child handles are only ever read
 here, never re-addressed, so nothing depends on a content-addressing function no specification states.
 """

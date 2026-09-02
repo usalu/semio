@@ -5,7 +5,7 @@
   "displayName": "Replace Byte Range",
   "emoji": "✂",
   "aggregateVariant": "ReplaceByteRange",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

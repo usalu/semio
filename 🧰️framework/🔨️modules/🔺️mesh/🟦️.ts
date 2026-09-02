@@ -3,7 +3,7 @@
 /** @emoji 🔺️ `@semio-tech/framework` — component scene protocol payloads shared by render hosts. */
 import type { IconName } from "@semio-tech/assets";
 import type { LocalizedLabel } from "../🛂️manifest/🤖️generated/🟦️ui-axes.ts";
-import type { ActionDescriptor, PluginContextMenuRequest } from "../🛂️manifest/🟦️component.ts";
+import type { ActionDescriptor, PluginContextMenuRequest } from "../🛂️manifest/🟦️.ts";
 
 //#region ComponentSceneProtocol
 /** 🖼️ A 2D canvas surface scene payload — mirrors the wasm `componentScene` node's `canvas2d` field. */
@@ -48,7 +48,7 @@ export type ContextMenuItemSpec = {
 //#region 🗂️ContextMenuOrganizer
 /** 🗂️ Canonical ribbon-parent taxonomy — TS twin of the Rust `RIBBON_PARENT_CATEGORIES` const
  * (`🧰️framework/🔨️modules/🖱️ui/🧊️wgpu/📦️packages/🦀️rust/📦️lib.rs`) and of ui-react's closed
- * `UiRibbonParentCategory` union (`🧰️framework/🔨️modules/🖱️ui/⚛️react/📦️packages/🟦️typescript/📦️index.tsx`
+ * `UiRibbonParentCategory` union (`🧰️framework/🔨️modules/🖱️ui/⚛️react/📦️packages/🟦️typescript/🟦️.tsx`
  * ~3419). Id spelling and order are load-bearing: `organizeContextMenu` sorts `menu.group.<category>`
  * rows by this order (unknown categories sort after, in emit order). */
 const RIBBON_PARENT_CATEGORIES = [

@@ -20,7 +20,7 @@
 //! next door.
 //!
 //! @see component.feature — the differential claim and the measurement that bounds it.
-//! @see ../mutate-ifc-2x3/🦀️component.rs — the exhaustive five-kind case this one does not replace.
+//! @see ../mutate-ifc-2x3/🦀️.rs — the exhaustive five-kind case this one does not replace.
 
 use semio_repo_test_host::{Adapter, Context, Json, Outcome};
 

@@ -1,0 +1,26 @@
+{
+  "$id": "https://semio.tech/schema/s.stdio.semio.video/mutations.json",
+  "title": "SemioVideoMutation",
+  "description": "Named-variant enum discriminated on the mutation tag.",
+  "oneOf": [
+    { "type": "object", "properties": { "mutation": { "const": "setSnapshot" }, "snapshot": { "$ref": "../📸️snapshot/🔣️.json" } } },
+    { "type": "object", "properties": { "mutation": { "const": "insertStream" }, "index": { "type": "integer" }, "stream": { "type": "object" } } },
+    { "type": "object", "properties": { "mutation": { "const": "removeStream" }, "index": { "type": "integer" } } },
+    {
+      "type": "object",
+      "properties": {
+        "mutation": { "const": "setStreamMeta" },
+        "index": { "type": "integer" },
+        "kind": { "enum": ["video", "audio", "subtitle"] },
+        "codec": { "type": "string" },
+        "width": { "type": "integer" },
+        "height": { "type": "integer" },
+        "rate": { "type": "object", "properties": { "num": { "type": "integer" }, "den": { "type": "integer" } } }
+      }
+    },
+    { "type": "object", "properties": { "mutation": { "const": "insertSample" }, "streamIndex": { "type": "integer" }, "index": { "type": "integer" }, "sample": { "type": "object" } } },
+    { "type": "object", "properties": { "mutation": { "const": "removeSample" }, "streamIndex": { "type": "integer" }, "index": { "type": "integer" } } },
+    { "type": "object", "properties": { "mutation": { "const": "setSampleData" }, "streamIndex": { "type": "integer" }, "index": { "type": "integer" }, "data": { "type": "string", "contentEncoding": "hex" } } },
+    { "type": "object", "properties": { "mutation": { "const": "setSampleFlags" }, "streamIndex": { "type": "integer" }, "index": { "type": "integer" }, "pts": { "type": "integer" }, "key": { "type": "boolean" } } }
+  ]
+}

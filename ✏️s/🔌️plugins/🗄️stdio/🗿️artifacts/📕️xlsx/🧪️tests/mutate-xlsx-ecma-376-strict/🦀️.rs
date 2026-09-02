@@ -6,7 +6,7 @@
 //! the only OOXML package with a PER-WORKSHEET axis, and `set-worksheet-content-type` moves exactly
 //! the `[Content_Types].xml` Override that carries it, which is a kind neither the DOCX nor the PPTX
 //! conformance subsets have. `oracle` handlers drive the registered `quick-xml` 0.42 + `zip` 6 pair
-//! through this subset's own `../../🏅️standards/🔖️ecma-376/🪆️subsets/✳️strict/🧪️oracle/🦀️component.rs`;
+//! through this subset's own `../../🏅️standards/🔖️ecma-376/🪆️subsets/✳️strict/🦀️oracle.rs`;
 //! `subject` handlers drive `decode_xlsx`/`apply_xlsx_strict_mutation`/`encode_xlsx`; both results
 //! are read back by the SAME independent `project_package` before `semantic-ooxml-xlsx-strict-v1`
 //! compares them. The subject half is `sut`-gated so the oracle-only run never compiles the local

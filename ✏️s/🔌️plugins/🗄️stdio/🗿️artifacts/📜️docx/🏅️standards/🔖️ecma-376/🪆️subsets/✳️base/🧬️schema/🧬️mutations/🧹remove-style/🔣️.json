@@ -5,7 +5,7 @@
   "displayName": "Remove Style",
   "emoji": "🧹",
   "aggregateVariant": "RemoveStyle",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

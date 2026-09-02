@@ -148,8 +148,8 @@ flowchart TD
 
 Replace `.🦑️repo` with `.🧬semio` (and descendants) in discovery/policy skip sets:
 
-- `[🔍️discovery/🟦️component.ts](🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🟦️component.ts)` — `DISCOVERY_SKIP_DIRS`
-- `[🗂️workspaces/🟦️component.ts](🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️component.ts)` — `WORKSPACE_SCAN_SKIP_DIR_NAMES`
+- `[🔍️discovery/🟦️.ts](🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🟦️.ts)` — `DISCOVERY_SKIP_DIRS`
+- `[🗂️workspaces/🟦️.ts](🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️.ts)` — `WORKSPACE_SCAN_SKIP_DIR_NAMES`
 - `[📦️index.ts](🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts)` — `ULOC_EXCLUDE_DIRS`, loc skip predicates
 - `[🔌️nx-plugin.mjs](🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔌️nx-plugin.mjs)`
 - `[📜️script.ts](📜️script.ts)` — `POLICY_SKIP_DIRS`
@@ -211,7 +211,7 @@ Run targeted searches (excluding `node_modules` and ticket scratch dirs) for:
 
 Update every hit in: bootstrap scripts, native bootstrap (`[⌨️script.sh](🧰️framework/🛍️products/🦑️repo/🔨️modules/🔩️native/🥾️bootstrap/⌨️script.sh)`), coordinator, VS Code extension, tests, READMEs.
 
-**Do not change** `FolderSqliteStorage` paths in `[🏪️store/🔄️sync/🦀️component.rs](🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔄️sync/🦀️component.rs)` — per-folder `.semio/documents.db` stays co-located per your decision.
+**Do not change** `FolderSqliteStorage` paths in `[🏪️store/🔄️sync/🦀️.rs](🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔄️sync/🦀️.rs)` — per-folder `.semio/documents.db` stays co-located per your decision.
 
 ### 8. Verification
 

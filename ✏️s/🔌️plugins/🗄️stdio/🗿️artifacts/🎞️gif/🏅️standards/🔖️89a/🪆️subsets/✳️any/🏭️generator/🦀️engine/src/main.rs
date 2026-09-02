@@ -1,6 +1,6 @@
 //! 🏭️ Generates `pattern-strip.gif`, a small, deliberately varied, fully deterministic GIF89a —
 //! built entirely through the real `gif` 0.13 encoder (the same crate registered as
-//! `gif-89a-any-mutate` in `../../🧪️oracle/🔣️.json`), never through this repository's own
+//! `gif-89a-any-mutate` in `../../🔣️oracle.json`), never through this repository's own
 //! `encode_gif`. No wall-clock, no randomness: byte-for-byte reproducible on every run, which is
 //! what `test fixture reproduce` checks.
 //!

@@ -1,0 +1,5 @@
+; abnf stdio.html mutations (binary representation)
+document = op-text
+; op-text = UTF-8 bytes of print_op's output verbatim (protocol::OpBinary::encode_op is a pure
+; passthrough of the text form) -- see the sibling ../📝️text/📖️.grammar.semio.
+op-text = *OCTET

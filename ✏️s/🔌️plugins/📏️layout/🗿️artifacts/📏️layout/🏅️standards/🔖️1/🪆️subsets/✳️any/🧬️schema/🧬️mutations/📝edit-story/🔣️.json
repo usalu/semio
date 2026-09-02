@@ -5,7 +5,7 @@
   "displayName": "Edit Story",
   "emoji": "📝",
   "aggregateVariant": "EditStory",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

@@ -1,0 +1,66 @@
+/** 🧩️ AssemblySnapshot schema — real facet mirror of the Rust `🦀️.rs` sibling. `modules`
+ * compose `kit` content (owned `ArtifactChild` handles — no snapshot content ever embedded here);
+ * `rules.params` is `value`-shaped structured data, never a bespoke per-constraint-kind type. */
+export interface ArtifactDialect {
+  artifactKind: string;
+  standard: string;
+  subset: string;
+}
+
+export interface ArtifactRef {
+  artifactId: string;
+  dialect: ArtifactDialect;
+}
+/** 🌉️ Mirrors `store::ArtifactChild<S>` — `childId`/`target` only; `local_owner` and
+ *  `PhantomData<S>` are `#[serde(skip)]`. */
+export interface ArtifactChildHandle {
+  childId: string;
+  target: ArtifactRef;
+}
+export type SemioValue =
+  | { kind: "null" }
+  | { kind: "bool"; value: boolean }
+  | { kind: "int"; lexeme: string }
+  | { kind: "float"; lexeme: string }
+  | { kind: "str"; value: string }
+  | { kind: "bytes"; value: number[] }
+  | { kind: "list"; items: SemioValue[] }
+  | { kind: "map"; entries: { key: string; value: SemioValue }[] }
+  | { kind: "ref"; id: { value: string } };
+
+export interface AssemblySlot {
+  id: string;
+  x: number;
+  y: number;
+  z: number;
+  pinnedModuleId?: string;
+}
+
+export interface AssemblySlotEdge {
+  id: string;
+  fromSlotId: string;
+  toSlotId: string;
+}
+
+export interface AssemblyModuleWeight {
+  moduleId: string;
+  weight: number;
+}
+
+export interface AssemblyRule {
+  id: string;
+  moduleAId: string;
+  moduleBId: string;
+  allowed: boolean;
+  params: SemioValue;
+}
+
+export interface AssemblySnapshot {
+  /** @state artifact */ schema: string;
+  /** @state artifact */ seed: number;
+  /** @state artifact */ slots: AssemblySlot[];
+  /** @state artifact */ edges: AssemblySlotEdge[];
+  /** @state artifact @child kind=s.stdio.semio.kit many */ modules: ArtifactChildHandle[];
+  /** @state artifact */ weights: AssemblyModuleWeight[];
+  /** @state artifact */ rules: AssemblyRule[];
+}

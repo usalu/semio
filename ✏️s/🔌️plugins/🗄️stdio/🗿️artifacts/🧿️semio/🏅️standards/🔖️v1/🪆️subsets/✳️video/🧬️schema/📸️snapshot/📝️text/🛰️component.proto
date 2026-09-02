@@ -1,8 +1,0 @@
-syntax = "proto3";
-// 📝️ Text representation mirror for `stdio.semio.video` (snapshot) — envelope header + hex(JSON)
-// body; the JSON body's own structure is ../🛰️component.proto's SemioVideoSnapshot.
-package semio.s_stdio_semio_video.snapshot.text;
-message SemioVideoSnapshotTextEnvelope {
-  string header = 1;
-  string body_hex = 2;
-}

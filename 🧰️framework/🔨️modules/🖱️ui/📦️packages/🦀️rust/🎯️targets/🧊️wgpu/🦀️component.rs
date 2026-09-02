@@ -1,4 +1,4 @@
-//! 🧩 `component` engine module — extracted from wgpu `📦️glue.rs` (ticket 26/08/05/UI-ELEMENT-CO-LOCATION-RESTRUCTURE).
+//! 🧩 `component` engine module — extracted from wgpu `🦀️.rs` (ticket 26/08/05/UI-ELEMENT-CO-LOCATION-RESTRUCTURE).
 
 pub mod layout {
     // #region layout
@@ -6,6 +6,7 @@ pub mod layout {
 
     use crate::wgpu::IconName;
     use dsl::DslValue;
+    use semio_framework_value_derive::{FromValue, ToValue};
     use serde::{Deserialize, Serialize};
     use std::collections::HashMap;
     use ui_contract::UiFixedList;
@@ -186,56 +187,72 @@ pub mod layout {
     /// bytes only, never items. At right-click time the host resolves the nearest `menu` up the tree and
     /// asks the owning plugin's `context-menu` WIT export to compute rows fresh (see
     /// `ContextMenuRequest`/`ContextMenuResponse`); nothing here is cached across clicks.
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
     #[serde(rename_all = "camelCase")]
+    #[value(rename_all = "camelCase")]
     pub struct UiMenuRef {
         pub id: String,
         #[serde(skip_serializing_if = "Option::is_none")]
+        #[value(skip_serializing_if = "Option::is_none")]
         pub args: Option<DslValue>,
     }
 
     /// 🖱️ One row of a resolved context menu — serde camelCase twin of TS `ContextMenuItemSpec`
     /// (`framework/core/js/index.ts`). Plugins build these with `MenuBuilder`; the host maps them
     /// through `ContextMenuController` (React) / `render_context_menu` (wgpu) unchanged.
-    #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+    #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
     #[serde(rename_all = "camelCase")]
+    #[value(rename_all = "camelCase")]
     pub struct ContextMenuItemSpec {
         pub id: String,
         #[serde(skip_serializing_if = "Option::is_none")]
+        #[value(skip_serializing_if = "Option::is_none")]
         pub label: Option<String>,
         #[serde(skip_serializing_if = "Option::is_none")]
+        #[value(skip_serializing_if = "Option::is_none")]
         pub icon: Option<String>,
         #[serde(skip_serializing_if = "Option::is_none")]
+        #[value(skip_serializing_if = "Option::is_none")]
         pub color: Option<String>,
         #[serde(skip_serializing_if = "Option::is_none")]
+        #[value(skip_serializing_if = "Option::is_none")]
         pub shortcut: Option<String>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[value(default, skip_serializing_if = "Option::is_none")]
         pub disabled: Option<bool>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[value(default, skip_serializing_if = "Option::is_none")]
         pub separator: Option<bool>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[value(default, skip_serializing_if = "Option::is_none")]
         pub checked: Option<bool>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[value(default, skip_serializing_if = "Option::is_none")]
         pub destructive: Option<bool>,
         /// 🎯️ An action id, dispatched via the surface's already-scoped `dispatch(action, args)` — NOT
         /// an `ActionDescriptor` (no separate `controllerId`); matches the pre-existing TS
         /// `ContextMenuItemSpec.action` shape (`framework/core/js/index.ts`), which every emitting
         /// plugin already produces this way.
         #[serde(skip_serializing_if = "Option::is_none")]
+        #[value(skip_serializing_if = "Option::is_none")]
         pub action: Option<String>,
         #[serde(skip_serializing_if = "Option::is_none")]
+        #[value(skip_serializing_if = "Option::is_none")]
         pub args: Option<DslValue>,
         #[serde(skip_serializing_if = "Option::is_none")]
+        #[value(skip_serializing_if = "Option::is_none")]
         pub hover_action: Option<String>,
         #[serde(skip_serializing_if = "Option::is_none")]
+        #[value(skip_serializing_if = "Option::is_none")]
         pub hover_args: Option<DslValue>,
         #[serde(skip_serializing_if = "Option::is_none")]
+        #[value(skip_serializing_if = "Option::is_none")]
         pub children: Option<Vec<ContextMenuItemSpec>>,
     }
 
     //#region 🗂️ContextMenuOrganizer
     /// 🗂️ Canonical ribbon-parent taxonomy — Rust twin of ui-react's closed `UiRibbonParentCategory`
-    /// union (`🧰️framework/🔨️modules/🖱️ui/⚛️react/⚡️implementations/🟦️typescript/📦️index.tsx` ~3317). Id
+    /// union (`🧰️framework/🔨️modules/🖱️ui/⚛️react/⚡️implementations/🟦️typescript/🟦️.tsx` ~3317). Id
     /// spelling and order are load-bearing: `organize_context_menu` sorts `menu.group.<category>` rows by
     /// this order (unknown categories sort after, in emit order) and `ribbon_parent_label` covers exactly
     /// these 20 ids.
@@ -543,48 +560,58 @@ pub mod layout {
     /// `json` string. `surface` carries scene-target info (`World3D`/`nodeGraph`/`tiledMap`/... hit-test
     /// results); `menu` is the `UiMenuRef` the host resolved from `data-menu-id`/a scene surface
     /// convention id (`"world3d"`, `"nodeGraph"`, `"window"`, `"panel:<tabId>"`, ...).
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
     #[serde(rename_all = "camelCase")]
+    #[value(rename_all = "camelCase")]
     pub struct ContextMenuHit {
         pub domain: String,
         pub id: String,
         #[serde(skip_serializing_if = "Option::is_none")]
+        #[value(skip_serializing_if = "Option::is_none")]
         pub label: Option<String>,
     }
 
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
     #[serde(rename_all = "camelCase")]
+    #[value(rename_all = "camelCase")]
     pub struct ContextMenuSelectionGroup {
         pub domain: String,
         pub ids: Vec<String>,
     }
 
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
     #[serde(rename_all = "camelCase")]
+    #[value(rename_all = "camelCase")]
     pub struct ContextMenuTextContext {
         pub caret: usize,
         pub has_selection: bool,
         #[serde(skip_serializing_if = "Option::is_none")]
+        #[value(skip_serializing_if = "Option::is_none")]
         pub word: Option<String>,
         pub can_rename: bool,
         pub has_completions: bool,
     }
 
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
     #[serde(rename_all = "camelCase")]
+    #[value(rename_all = "camelCase")]
     pub struct ContextMenuSurfaceTarget {
         pub surface_id: String,
         pub kind: String,
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
+        #[value(default, skip_serializing_if = "Vec::is_empty")]
         pub hits: Vec<ContextMenuHit>,
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
+        #[value(default, skip_serializing_if = "Vec::is_empty")]
         pub selection: Vec<ContextMenuSelectionGroup>,
         #[serde(skip_serializing_if = "Option::is_none")]
+        #[value(skip_serializing_if = "Option::is_none")]
         pub text: Option<ContextMenuTextContext>,
     }
 
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
     #[serde(rename_all = "camelCase")]
+    #[value(rename_all = "camelCase")]
     pub struct ContextMenuPoint {
         pub x: f64,
         pub y: f64,
@@ -597,20 +624,25 @@ pub mod layout {
     /// plugin SDK's `plugin_context_menu` free function parses the WIT-level combined JSON (which DOES
     /// carry `viewState`, matching the TS `PluginContextMenuRequest` wire shape) and splits it into this
     /// smaller struct plus a typed `ViewModel` before calling `ArtifactApp::context_menu`.
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
     #[serde(rename_all = "camelCase")]
+    #[value(rename_all = "camelCase")]
     pub struct ContextMenuRequest {
         pub menu: UiMenuRef,
         #[serde(skip_serializing_if = "Option::is_none")]
+        #[value(skip_serializing_if = "Option::is_none")]
         pub surface: Option<ContextMenuSurfaceTarget>,
         #[serde(skip_serializing_if = "Option::is_none")]
+        #[value(skip_serializing_if = "Option::is_none")]
         pub window_instance_id: Option<String>,
         #[serde(skip_serializing_if = "Option::is_none")]
+        #[value(skip_serializing_if = "Option::is_none")]
         pub point: Option<ContextMenuPoint>,
     }
 
-    #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+    #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
     #[serde(rename_all = "camelCase")]
+    #[value(rename_all = "camelCase")]
     pub struct ContextMenuResponse {
         pub items: Vec<ContextMenuItemSpec>,
     }
@@ -1139,7 +1171,7 @@ pub mod layout {
         #[semio_framework_async_macros::async_test]
         async fn action_descriptor_and_style_spec_serialize_to_golden_json() {
             let values = (
-                ActionDescriptor { controller_id: "ctrl".into(), action: "doThing".into(), args: Some(DslValue::Number(42.0)) },
+                ActionDescriptor { controller_id: "ctrl".into(), action: "doThing".into(), args: Some(DslValue::float(42.0)) },
                 ActionDescriptor { controller_id: "ctrl".into(), action: "doOther".into(), args: None },
                 StyleSpec { variant: Some("primary".into()), size: Some("md".into()), density: None },
             );
@@ -1606,7 +1638,7 @@ pub mod role_chrome {
     //! strings/command ids as `📋️contract-freeze.md` §3/§5. Domain-neutral: this crate never depends
     //! on `semio_framework` (see the `wgpu` feature's `Cargo.toml` deps), so `ChromeRole` is a local
     //! wire-compatible mirror of `semio_framework::AppRole`/the TS host's own `AppRole` mirror in
-    //! `🎠️kernel/🟦️component.ts` — same boundary this file already draws around `PluginCatalog`-style
+    //! `🎠️kernel/🟦️.ts` — same boundary this file already draws around `PluginCatalog`-style
     //! product data. A concrete `AppRouter`/`ConfigStore` never appears here: callers (the renderer
     //! product) resolve real entries and hand this module only already-resolved data to render.
 
@@ -3990,7 +4022,7 @@ pub mod ui {
                 action: Some("deleteSelection".into()),
                 args: None,
                 hover_action: Some("previewDelete".into()),
-                hover_args: Some(DslValue::Object(vec![("x".into(), DslValue::Number(1.0)), ("y".into(), DslValue::Number(2.0))])),
+                hover_args: Some(DslValue::Object(vec![("x".into(), DslValue::float(1.0)), ("y".into(), DslValue::float(2.0))])),
                 children: None,
             };
             let json = serde_json::to_string(&item).unwrap();

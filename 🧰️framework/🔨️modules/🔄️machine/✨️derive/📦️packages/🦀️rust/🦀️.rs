@@ -1,4 +1,4 @@
-//! 📦️ Package glue — proc-macro crate root; implementation in owner `🦀️component.rs`.
+//! 📦️ Package glue — proc-macro crate root; implementation in owner `🦀️.rs`.
 
 #[path = "../../🦀️.rs"]
 mod component;

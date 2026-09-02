@@ -6,7 +6,7 @@
 //! `after` scene is authored directly, which is what keeps this a reader oracle rather than a
 //! predicting one.
 //!
-//! @see ../../🧪️oracle/🔣️.json — the manifest whose 17 kinds this corpus binds to, one fixture each.
+//! @see ../../🔣️oracle.json — the manifest whose 17 kinds this corpus binds to, one fixture each.
 
 use quick_xml::events::{BytesEnd, BytesStart, BytesText, Event};
 use quick_xml::Writer;

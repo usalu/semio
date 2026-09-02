@@ -6,7 +6,7 @@
 //!
 //! `NoMutation` was dropped: `#[derive(dsl::Mutations)]` requires every variant to wrap exactly one
 //! leaf payload, and its sentinel verb `no` is not in `APPROVED_VERBS` — see
-//! `🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🎮️command/🦀️component.rs`. Every variant is now a
+//! `🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🎮️command/🦀️.rs`. Every variant is now a
 //! tuple variant wrapping its own mutation leaf (`./*/🦀️.rs`), and this file's `agg_diff`/
 //! `agg_inverse` carry the handcrafted semantics every leaf's `MutationKind` impl delegates back to.
 
@@ -59,7 +59,7 @@ pub enum SemioAudioMutation {
 
 /// 🏷️ The declared kebab-case mutation vocabulary of `s.stdio.semio.audio`, in enum declaration
 /// order — what the `mutate-semio-audio` case's completeness gate counts against and what
-/// `../../🧪️oracle/🔣️.json`'s catalog repeats. The framework never parses Rust, so
+/// `../../🔣️oracle.json`'s catalog repeats. The framework never parses Rust, so
 /// `kinds_match_the_enum_and_the_catalog` below is what keeps this declaration honest.
 pub const KINDS: &[&str] = &["set-snapshot", "set-sample-rate", "set-format", "insert-channel", "remove-channel", "set-channel-samples", "insert-tag", "remove-tag", "set-tag-value"];
 //#endregion 🔖️Mutations
@@ -75,7 +75,7 @@ pub fn apply_semio_audio_mutation(snapshot: &mut SemioAudioSnapshot, mutation: &
 
 /// ↩️ Free-function face of [`SemioAudioMutation`]'s own `protocol::Mutation::inverse`. `Mutation` is
 /// declared by the os-kernel, which is an INTERNAL dependency of this plugin (aliased `protocol` in
-/// `📦️glue.rs`) and is therefore not nameable by a consumer that links only this crate — a
+/// `🦀️.rs`) and is therefore not nameable by a consumer that links only this crate — a
 /// generated test host being the concrete case. Paired with [`apply_semio_audio_mutation`] it makes the
 /// undo law reachable without importing a trait the caller cannot name.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -203,7 +203,7 @@ impl OpText for SemioAudioMutation {
 /// 🧾️ Keyword table + variant ordinal, 0-indexed in enum declaration order — the binary frame's
 /// `tag` byte, `📖️grammar/component.grammar.semio`'s `op` alternatives, and this array must all
 /// agree (see `committed_facet_files_parse`/`ops_grammar_conformance_law` in
-/// `🎹️composer/🦀️component.rs`).
+/// `🎹️composer/🦀️.rs`).
 const OP_KEYWORDS: [&str; 9] = ["set-snapshot", "set-sample-rate", "set-format", "insert-channel", "remove-channel", "set-channel-samples", "insert-tag", "remove-tag", "set-tag-value"];
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn variant_ordinal(m: &SemioAudioMutation) -> u8 {
@@ -261,7 +261,7 @@ impl OpBinary for SemioAudioMutation {
 
 //#region 🔖️Demo
 /// 🌱 Representative `SemioAudioMutation` cases, one per variant — single source of truth for
-/// `ops_grammar_conformance_law`/`protocol_walk_law` in `🎹️composer/🦀️component.rs` and this
+/// `ops_grammar_conformance_law`/`protocol_walk_law` in `🎹️composer/🦀️.rs` and this
 /// file's own `op_text_binary_roundtrip_law`.
 #[cfg(test)]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -389,7 +389,7 @@ mod tests {
             assert_eq!(KINDS[ordinal], print_audio_mutation(&mutation).split(' ').next().unwrap_or_default(), "KINDS[{ordinal}] must be the keyword {mutation:?} prints");
         }
         assert!(seen.iter().all(|hit| *hit), "every declared variant must be represented in all_variants");
-        let manifest = include_str!("../../🧪️oracle/🔣️.json");
+        let manifest = include_str!("../../🔣️oracle.json");
         for kind in KINDS {
             assert!(manifest.contains(&format!("\"{kind}\"")), "KINDS entry {kind:?} must also appear in the committed oracle manifest's catalog");
         }
@@ -416,9 +416,9 @@ mod tests {
 
 //#region 🧪️FixtureCases
 /// 🧪️ Handcrafted `📄set-snapshot` fixture cases, wired from this tree's own mutations root so
-/// `📦️glue.rs` stays untouched (`#[path]` on a non-inline module resolves against this file's own
+/// `🦀️.rs` stays untouched (`#[path]` on a non-inline module resolves against this file's own
 /// directory).
 #[cfg(test)]
-#[path = "📄set-snapshot/🧪️tests/rerates-to-48-khz-and-rewrites-the-right-channel/🦀️component.rs"]
+#[path = "📄set-snapshot/🧪️tests/rerates-to-48-khz-and-rewrites-the-right-channel/🦀️.rs"]
 mod set_snapshot_rerates_to_48_khz_and_rewrites_the_right_channel;
 //#endregion 🧪️FixtureCases

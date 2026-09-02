@@ -5,7 +5,7 @@
   "displayName": "Set Id3v1",
   "emoji": "🔖",
   "aggregateVariant": "SetId3v1",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

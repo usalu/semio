@@ -40,7 +40,7 @@ impl MutationKind<IdentitySetting, IdentityConfigMutation> for SignOut {
 
 //#region 🧪️Tests
 #[cfg(test)]
-#[path = "🧪️tests/clears-the-active-session/🦀️component.rs"]
+#[path = "🧪️tests/clears-the-active-session/🦀️.rs"]
 mod tests_clears_the_active_session;
 
 #[cfg(test)]

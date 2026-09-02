@@ -5,7 +5,7 @@
   "displayName": "Delete Rule",
   "emoji": "🗑️",
   "aggregateVariant": "DeleteRule",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

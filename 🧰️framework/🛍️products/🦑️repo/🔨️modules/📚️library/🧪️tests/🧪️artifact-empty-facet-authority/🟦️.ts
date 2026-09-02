@@ -5,10 +5,10 @@ import { basename, dirname, join, resolve } from "node:path";
 import Ajv from "ajv";
 import { parse, type ParseError } from "jsonc-parser";
 import * as ts from "typescript";
-import { loadCatalogTaxonomy, semanticArtifactEmptyFacetProjectionAuthority, type Taxonomy } from "../../🔍️discovery/🟦️component.ts";
+import { loadCatalogTaxonomy, semanticArtifactEmptyFacetProjectionAuthority, type Taxonomy } from "../../🔍️discovery/🟦️.ts";
 
 const libraryRoot = resolve(import.meta.dir, "../..");
-const goldenPath = join(libraryRoot, "📦️packages/🟦️typescript/🧫️fixtures/🧪️artifact-empty-facet-authority/🔣️.json");
+const goldenPath = join(libraryRoot, "📦️packages/🟦️typescript/🧫️fixtures/🔣️artifact-empty-facet-authority.json");
 const goldenBytes = readFileSync(goldenPath);
 const golden = JSON.parse(goldenBytes.toString()) as Readonly<{
   schemaVersion: number; contractId: string; sourceRoot: string; sourceFilename: string; destinationFilename: string;
@@ -23,7 +23,7 @@ const functionNames = ["canonicalFilenamesForKind", "canonicalFilenameForKind", 
 
 /** 🔬️ Compiles the exact pure authority closure without granting it filesystem access. */
 function independentlyCompiledAuthorities(): readonly (typeof semanticArtifactEmptyFacetProjectionAuthority)[] {
-  const path = join(libraryRoot, "🔍️discovery/🟦️component.ts"), source = readFileSync(path, "utf8");
+  const path = join(libraryRoot, "🔍️discovery/🟦️.ts"), source = readFileSync(path, "utf8");
   const syntax = ts.createSourceFile(path, source, ts.ScriptTarget.Latest, true, ts.ScriptKind.TS);
   const code = functionNames.map((name) => {
     const matches = syntax.statements.filter((node) => ts.isFunctionDeclaration(node) && node.name?.text === name);
@@ -77,7 +77,7 @@ test("registers the empty-facet authority through its closed canonical route", a
   const directory = join(import.meta.dir, "🧪️registration"), bytes = readFileSync(join(directory, "🔣️.json"), "utf8"), vector = JSON.parse(bytes);
   const validate = new Ajv({ strict: true, allErrors: true }).compile(JSON.parse(readFileSync(join(directory, "🧬️schema/🔣️.json"), "utf8")));
   expect(validate(vector), JSON.stringify(validate.errors)).toBe(true);
-  for (const changed of [{ ...vector, source: "🟦️component.ts" }, { ...vector, budget: 120000 }, { ...vector, budgetMs: 120000 }, { ...vector, runner: "other" }, { ...vector, launchOrder: 410.198 }]) expect(validate(changed)).toBe(false);
+  for (const changed of [{ ...vector, source: "🟦️.ts" }, { ...vector, budget: 120000 }, { ...vector, budgetMs: 120000 }, { ...vector, runner: "other" }, { ...vector, launchOrder: 410.198 }]) expect(validate(changed)).toBe(false);
   const errors: ParseError[] = [];
   expect(parse(bytes, errors, { disallowComments: true, allowTrailingComma: false })).toEqual(vector);
   expect(errors).toEqual([]);

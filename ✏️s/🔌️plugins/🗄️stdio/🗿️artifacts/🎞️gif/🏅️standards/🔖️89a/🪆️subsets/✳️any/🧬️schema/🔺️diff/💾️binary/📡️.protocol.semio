@@ -1,0 +1,61 @@
+dialect protocol
+protocol stdio.gif.89a.diff
+version 1
+schema stdio.gif.89a.diff
+start diff
+
+# Real binary diff-frame `protocol::DiffCodec::encode_diff`/`decode_diff` NOW emit for
+# `GifDiff` (89a) — upgraded, this program (P2-FG2), from the F6-era
+# `print_diff().into_bytes()` text-as-binary shortcut (see this artifact's report; the FG1
+# wave's own closer report flagged leaving this un-upgraded as a real defect to not repeat).
+# `GifDiff` is a STRUCT with a mix of PLAIN `Option<T>` fields (`width`/`height`/
+# `background_color_index`/`pixel_aspect_ratio`/`frames`/`comments`/`app_extensions`) and TWO
+# TRI-STATE `Option<Option<T>>` fields (`gct`, `loop_count`) — same 2-way/3-way flag-per-field
+# design as 87a's own sibling protocol file and PNG's own precedent (avoids
+# `protocol-cond-cannot-chain`, see that file's own doc comment for the full rationale).
+#
+# `loop_count` is FIXED-width (`u16`, matching `GifSnapshot::loop_count`'s own on-disk NETSCAPE
+# loop-count width) so its tri-state value is a plain conditional field, no length prefix
+# needed — same treatment PNG's own `gama`/`chrm` (fixed-width tri-state) fields get. `gct`
+# (variable-length: a Vec of RGB triples), `frames`/`comments`/`app_extensions` (the
+# `removed`/`modified`/`added` collection triples, recursively nesting `GifFrame`/
+# `GifFrameDiff`/`GifPlainText`/`GifAppExtension`/`String` values) are all length-prefixed
+# opaque byte blobs (`<name>_len varint` + `Array(u8, Field(<name>_len))`) — `Prim::Ref` to a
+# struct/enum still unconditionally errors at walk time (confirmed unchanged since P2-M2,
+# `protocol-prim-ref-recursion`), so their own internal shape isn't further protocol-walkable;
+# the Rust `encode_diff`/`decode_diff` side (`../🦀️.rs`'s `RealBinaryDiffFrame`/
+# `RealBinaryPrimitives` regions) IS genuinely, fully structured real binary (real varint
+# counts, real per-item recursive encoding, incl. `GifFrameDiff`'s own THREE nested tri-state
+# fields — `lct`/`transparent_index`/`plain_text`) — this is purely a limit on how deep the
+# PROTOCOL DESCRIPTION itself can validate structurally, same documented limitation as every
+# other stdio pilot's own nested-payload field.
+framing record
+
+field width_flag u8
+field width_value u32 if width_flag eq 1
+field height_flag u8
+field height_value u32 if height_flag eq 1
+
+field gct_flag u8
+field gct_len varint if gct_flag eq 2
+field gct_value Array(u8, Field(gct_len)) if gct_flag eq 2
+
+field background_color_index_flag u8
+field background_color_index_value u8 if background_color_index_flag eq 1
+field pixel_aspect_ratio_flag u8
+field pixel_aspect_ratio_value u8 if pixel_aspect_ratio_flag eq 1
+
+field loop_count_flag u8
+field loop_count_value u16 if loop_count_flag eq 2
+
+field frames_flag u8
+field frames_len varint if frames_flag eq 1
+field frames_value Array(u8, Field(frames_len)) if frames_flag eq 1
+
+field comments_flag u8
+field comments_len varint if comments_flag eq 1
+field comments_value Array(u8, Field(comments_len)) if comments_flag eq 1
+
+field app_extensions_flag u8
+field app_extensions_len varint if app_extensions_flag eq 1
+field app_extensions_value Array(u8, Field(app_extensions_len)) if app_extensions_flag eq 1

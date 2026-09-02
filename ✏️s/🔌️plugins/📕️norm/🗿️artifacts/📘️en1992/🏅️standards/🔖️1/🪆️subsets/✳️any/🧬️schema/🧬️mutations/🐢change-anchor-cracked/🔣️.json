@@ -5,7 +5,7 @@
   "displayName": "Change Anchor Cracked",
   "emoji": "🐢",
   "aggregateVariant": "ChangeAnchorCracked",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

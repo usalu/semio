@@ -5,7 +5,7 @@
   "displayName": "Change Bridge V Rd Kn",
   "emoji": "🏜️",
   "aggregateVariant": "ChangeBridgeVRdKn",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

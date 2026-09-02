@@ -17,8 +17,8 @@ import {
   elementStateHidden,
   resolveElementFillKind,
   resolveElementState,
-} from "../📦️packages/🟦️typescript/📦️index.ts";
-import { meshCollectionVitePlugin, resolveSemioAssetRoot, SEMIO_ASSET_ROOT, type PlaygroundAssetSpec } from "../🟦️vite-elements-assets.ts";
+} from "../📦️packages/🟦️typescript/🟦️.ts";
+import { meshCollectionVitePlugin, resolveSemioAssetRoot, SEMIO_ASSET_ROOT, type PlaygroundAssetSpec } from "../🟦️.ts";
 
 const repoRoot = resolve(import.meta.dir, "../../../../..");
 const uiCss = readFileSync(resolve(import.meta.dir, "../🎨️ui.css"), "utf8");

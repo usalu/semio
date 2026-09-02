@@ -76,7 +76,7 @@ pub enum GifMutation {
 }
 
 /// 🏷️ Wave 7 mutation-oracle catalog: the kebab-case spelling of every `GifMutation` variant, in
-/// declaration order — what `../../🧪️oracle/🔣️.json`'s `mutationCatalogs[].kinds` and
+/// declaration order — what `../../🔣️oracle.json`'s `mutationCatalogs[].kinds` and
 /// `../../../../../../🧪️tests/mutate-gif-87a/🥒️.feature`'s `@id-mutate`/`@id-inverse` row
 /// ids are measured against. `kinds_match_enum_variants_and_manifest_catalog` below is what keeps
 /// this list honest against the enum — the framework never parses Rust, so nothing else notices if
@@ -85,7 +85,7 @@ pub const KINDS: &[&str] = &["set-snapshot", "set-screen-size", "set-global-colo
 //#endregion 🔖️Mutations
 
 /// 🧪️ P2-FG2: representative `GifMutation` cases for `ops_grammar_conformance_law`/
-/// `protocol_walk_law` (`../../../../⚙️engine/🦀️component.rs`'s `conformance_laws` module) —
+/// `protocol_walk_law` (`../../../../⚙️engine/🦀️.rs`'s `conformance_laws` module) —
 /// every one of the 11 real variants, incl. both `Some`/`None` shapes of the one
 /// `Option<T>`-of-struct-block field (`SetGlobalColorTable::gct`) — mirrors png's own
 /// `demo_mutation_cases()`.
@@ -324,7 +324,7 @@ mod tests {
     async fn kinds_match_enum_variants_and_manifest_catalog() {
         assert_eq!(KINDS, ["set-snapshot", "set-screen-size", "set-global-color-table", "set-background-color-index", "set-pixel-aspect-ratio", "insert-image", "remove-image", "move-image", "set-image-geometry", "set-image-pixels", "set-image-interlace"]);
         assert_eq!(KINDS.len(), 11, "one kebab-case entry per GifMutation variant");
-        let manifest = include_str!("../../🧪️oracle/🔣️.json");
+        let manifest = include_str!("../../🔣️oracle.json");
         for kind in KINDS {
             assert!(manifest.contains(&format!("\"{kind}\"")), "manifest mutationCatalogs[].kinds must list {kind:?}");
         }
@@ -372,14 +372,14 @@ mod tests {
 
 //#region 🧪️FixtureTests
 // 🧪️ Handcrafted mutation fixtures (contract D1, ticket 26/08/20/COMPOSE-TO-PUZZLE5D-MIGRATION),
-// one case per mutation leaf. Wired HERE and not in `📦️glue.rs`: that file is shared with the
+// one case per mutation leaf. Wired HERE and not in `🦀️.rs`: that file is shared with the
 // agents migrating the other stdio artifacts, so the production mounts there stay untouched while
 // this artifact owns its own test mount. `#[path = "."]` re-bases the children on this file's own
 // directory, which is what makes the leaf-relative path below resolve.
 #[cfg(test)]
 #[path = "."]
 mod fixture_tests {
-    #[path = "📄set-snapshot/🧪️tests/repaints-the-right-pixel-of-the-single-image/🦀️component.rs"]
+    #[path = "📄set-snapshot/🧪️tests/repaints-the-right-pixel-of-the-single-image/🦀️.rs"]
     mod tests_set_snapshot_repaints_the_right_pixel_of_the_single_image;
 }
 //#endregion 🧪️FixtureTests

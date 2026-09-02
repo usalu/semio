@@ -1,8 +1,9 @@
-use super::{DemoSnapshot, LossyDiff, assert_fixture_descriptor};
-use serde::{Deserialize, Serialize};
+use super::{assert_fixture_descriptor, DemoSnapshot, LossyDiff};
 use semio_framework_value_derive::{FromValue, ToValue};
+use serde::{Deserialize, Serialize};
 
-#[path = "🔢️set-n/🦀️.rs"] mod set_n;
+#[path = "🔢️set-n/🦀️.rs"]
+mod set_n;
 pub use set_n::SetN;
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, dsl::Mutations)]
@@ -14,6 +15,11 @@ pub(crate) enum LossyMutation {
 }
 
 impl crate::os_spr::OpBinary for LossyMutation {
-    fn encode_op(&self) -> Result<Vec<u8>, crate::os_spr::ProtocolError> { let Self::SetN(value) = self; crate::os_spr::OpBinary::encode_op(value) }
-    fn decode_op(bytes: &[u8]) -> Result<Self, crate::os_spr::ProtocolError> { <SetN as crate::os_spr::OpBinary>::decode_op(bytes).map(Self::SetN) }
+    fn encode_op(&self) -> Result<Vec<u8>, crate::os_spr::ProtocolError> {
+        let Self::SetN(value) = self;
+        crate::os_spr::OpBinary::encode_op(value)
+    }
+    fn decode_op(bytes: &[u8]) -> Result<Self, crate::os_spr::ProtocolError> {
+        <SetN as crate::os_spr::OpBinary>::decode_op(bytes).map(Self::SetN)
+    }
 }

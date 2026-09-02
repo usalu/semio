@@ -1,4 +1,0 @@
-dialect protocol stdio.tsv.diff
-; protocol::OpBinary raw text encoding of TsvDiff — NOT wrapped in the shared `.semio`
-; binary envelope (contrast with ../../📸️snapshot/💾️binary/component.protocol.semio)
-payload = *OCTET   ; UTF-8 hand-rolled diff text (see ../📝️text/📖️component.grammar.semio)

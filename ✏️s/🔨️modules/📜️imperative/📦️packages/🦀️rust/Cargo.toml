@@ -15,7 +15,7 @@ default = []
 
 [lib]
 crate-type = ["rlib"]
-path = "📦️glue.rs"
+path = "🦀️.rs"
 
 [dependencies]
 neural_engine = { path = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/📦️packages/🦀️rust", package = "semio-framework-os-kernel-neural-engine" }

@@ -196,7 +196,7 @@
     },
     "repo-cli-dev-docs-go": {
       "kind": "configurable-consumer",
-      "ownerPath": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/⌨️cli/🐹️component.go"
+      "ownerPath": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/⌨️cli/🐹️.go"
     },
     "commonmark-scratch-rust-reader": {
       "kind": "configurable-consumer",
@@ -1235,7 +1235,7 @@
       }
     },
     {
-      "sourcePath": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/README.md",
+      "sourcePath": "🧰️framework/🛍️products/🦑️repo/🔨️modules/testREADME.md",
       "ownerEvidenceId": "nx-project-owner-documentation",
       "disposition": "owner-documentation-relocate",
       "destinationPath": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📃️readme/📝️.md",

@@ -10,7 +10,7 @@
 // Every recipe's BEFORE and AFTER `.jpg` bytes are built DIRECTLY by the sibling standalone
 // `🦀️jpeg-jfif-codec` binary, which depends on nothing but `image` 0.25 — never by "applying" this
 // repository's own `JpgMutation` dispatch, and never by calling this subset's own reclassified
-// `🧪️oracle/🦀️component.rs` (which COMPUTES mutation results and shares a spec reading with
+// `🦀️oracle.rs` (which COMPUTES mutation results and shares a spec reading with
 // production). This file only shells out per recipe and turns the bytes the codec wrote into a
 // fixture bundle + manifest entry; it computes no JPEG semantics of its own.
 //
@@ -46,7 +46,7 @@ const ENGINE_VERSION = "0.25.10";
 type Recipe = Readonly<{ id: string; mutation: string; witnessable: boolean; notes: string }>;
 
 /** 🍳️ Mirrors `RECIPE_IDS`/`recipe()` in `🦀️jpeg-jfif-codec/src/main.rs` verbatim — one `-applied`
- *  entry per declared `JpgMutation` kind in `../🧪️oracle/🔣️.json`'s `jpg-jfif-1-01-document`
+ *  entry per declared `JpgMutation` kind in `../🔣️oracle.json`'s `jpg-jfif-1-01-document`
  *  catalog. `witnessable` records whether THIS reader (checked against the real `image` 0.25.10 /
  *  zune-jpeg 0.5.15 source, not assumed) can see the recipe's own effect — it drives which
  *  `oracleRequirements` entry each kind gets in the oracle JSON, never the recipe bytes themselves. */
@@ -257,7 +257,7 @@ async function main(argv: readonly string[]): Promise<number> {
     // the reader's projection. `change-restart-interval` does not (Pillow does not read the DRI segment
     // back), and the Huffman accessors return empty and are deprecated for removal in Pillow 12. Those
     // four stay `-uncarried` rather than being claimed.
-    if (command === "markers" || command === "marker-manifests") {
+    if (command === "markers" || command === "markers-manifests") {
       const WRITER = String.raw`
 import sys
 from PIL import Image
@@ -332,7 +332,7 @@ print(kind + ': written')
       process.stdout.write(`${JSON.stringify(entries, null, 2)}\n`);
       return 0;
     }
-    console.error(`[jpg generator] unknown command ${JSON.stringify(command)} — expected generate | manifests | markers | marker-manifests | libjpeg | libjpeg-manifests`);
+    console.error(`[jpg generator] unknown command ${JSON.stringify(command)} — expected generate | manifests | markers | markers-manifests | libjpeg | libjpeg-manifests`);
     return 1;
   }
 

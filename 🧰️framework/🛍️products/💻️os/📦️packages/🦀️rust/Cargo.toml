@@ -15,7 +15,7 @@ workspace = true
 [lib]
 name = "semio_framework_os_kernel"
 crate-type = ["rlib", "cdylib"]
-path = "📦️glue.rs"
+path = "🦀️.rs"
 
 [features]
 default = ["deflate"]
@@ -32,7 +32,7 @@ ureq = ["dep:ureq", "dep:semio-framework-actor"]
 # wasm32, and tokio's own build script hard-errors on `net` for wasm32 (unlike `rt`/`time`, which it
 # explicitly supports there). `net` is instead added unconditionally for non-wasm32 targets only, via
 # the `[target.cfg(not(wasm32))]` `tokio` entry below — see its docstring. WASI-P2 guest plugins
-# never link the sync actor's native (tokio-tungstenite) transport — see `🔄️sync/🦀️component.rs`'s
+# never link the sync actor's native (tokio-tungstenite) transport — see `🔄️sync/🦀️.rs`'s
 # `native_actor` vs `wasm_actor` split — so `net` has no business reaching wasm32 at all.
 sync = ["dep:tokio-tungstenite", "dep:semio-framework-os-services", "tokio/rt", "tokio/time"]
 worker = ["sync"]
@@ -50,7 +50,7 @@ semio-framework-replication = { workspace = true }
 # unconditional (not target-gated) dependency: `📇️directory/🔌️client`'s `DirectoryTransport` trait
 # carries an `OperationContext` on every implementation, native AND browser alike.
 semio-framework-async = { workspace = true, features = ["entrypoint"] }
-# 🔤️ `pack_value_to_base64`/`pack_value_from_base64` (`🏪️store/🦀️component.rs`) are the only base64
+# 🔤️ `pack_value_to_base64`/`pack_value_from_base64` (`🏪️store/🦀️.rs`) are the only base64
 # call sites this crate owns, and they are genuinely guest-reachable (scene `*Json` field encoding),
 # not host-only — so this re-points at the first-party RFC 4648 codec instead of target-gating a
 # third-party dependency away. Replaces the former `base64 = "0.22.1"` entry.
@@ -79,12 +79,12 @@ web-sys = { version = "0.3.98", features = ["Window", "Storage", "console", "Web
 # above for why a bare arch gate is wrong). `tokio` backs the `sync` cargo feature's native
 # `tokio-tungstenite` transport and (base `sync`/`macros` tokio features only) the browser
 # `📇️directory/🔌️client::browser` WebSocket bridge's `tokio::sync::mpsc` channel — both entirely
-# outside a WASI guest's reach (`🔄️sync/🦀️component.rs`'s own docstring: "WASI-P2 plugins never link
+# outside a WASI guest's reach (`🔄️sync/🦀️.rs`'s own docstring: "WASI-P2 plugins never link
 # this crate ... This actor is a host-side concern only"; the browser bridge is
 # `cfg(all(target_arch = "wasm32", not(target_env = "p2")))`-gated already). `zip` backs
 # `🧩️extension`'s `.sxt` package pack/unpack/verify — installing a runtime extension is host tooling
 # (only caller repo-wide: `semio-framework-os`'s native host crate), never something a guest
-# component does to itself; its module mount is gated the same way in `📦️glue.rs`.
+# component does to itself; its module mount is gated the same way in `🦀️.rs`.
 [target.'cfg(not(all(target_arch = "wasm32", target_env = "p2")))'.dependencies]
 tokio = { version = "1", features = ["sync", "macros"], default-features = false }
 zip = { version = "2.4", default-features = false, features = ["deflate"] }

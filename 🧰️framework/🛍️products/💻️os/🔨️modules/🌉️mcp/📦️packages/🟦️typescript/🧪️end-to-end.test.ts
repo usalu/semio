@@ -20,14 +20,14 @@ import { existsSync, mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { resolveMcpBinaryPath, spawnRawMcp, type RawMcpProcess } from "../../🟦️component.ts";
-import { getWorkspaceRoot } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts";
+import { resolveMcpBinaryPath, spawnRawMcp, type RawMcpProcess } from "../../🟦️.ts";
+import { getWorkspaceRoot } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 
 const repoRoot = getWorkspaceRoot();
 const bin = resolveMcpBinaryPath(repoRoot);
 const BIN_PRESENT = existsSync(bin);
 
-/** 🎯️ The full tool census `🦀️component.rs`'s `GATEWAY_TOOL_NAMES` declares. Duplicated here on
+/** 🎯️ The full tool census `🦀️.rs`'s `GATEWAY_TOOL_NAMES` declares. Duplicated here on
  * purpose: this suite is an INDEPENDENT observer of the running binary, so it must not import the
  * value it is checking. */
 const GATEWAY_TOOL_NAMES = [

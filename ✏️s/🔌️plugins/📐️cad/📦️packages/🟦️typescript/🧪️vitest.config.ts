@@ -3,7 +3,7 @@ import react from "@vitejs/plugin-react";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { defineConfig } from "vitest/config";
-import { createWorkspaceViteResolveConfig } from "../../../../../🧰️framework/🔨️modules/🖱️ui/🎨️styling/🟦️vite-elements-assets.ts";
+import { createWorkspaceViteResolveConfig } from "../../../../../🧰️framework/🔨️modules/🖱️ui/🎨️styling/🟦️.ts";
 // #endregion 🔌️Adapters
 
 const configDir = dirname(fileURLToPath(import.meta.url));
@@ -18,15 +18,15 @@ const workspaceResolve = createWorkspaceViteResolveConfig(repoRoot);
 
 const ARTIFACT_EDITOR_ENGINE = "🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine";
 const DOMAIN_FILES = [
-  `${ARTIFACT_EDITOR_ENGINE}/📺️renderer/🟦️component.tsx`,
-  `${ARTIFACT_EDITOR_ENGINE}/🎰️stately/🟦️component.ts`,
-  `${ARTIFACT_EDITOR_ENGINE}/🏃️runtime/🟦️component.ts`,
-  `${ARTIFACT_EDITOR_ENGINE}/🎬️actions/🟦️component.ts`,
-  `${ARTIFACT_EDITOR_ENGINE}/📄️artifact/🟦️component.ts`,
-  "../../🔨️modules/🌐️spatial-kernel/⚙️engine/🧱️brepjs/🟦️component.ts",
-  "../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🟦️component.ts",
-  "../../🔨️modules/🌐️spatial-kernel/⚙️engine/🗺️spatial/🟦️component.ts",
-  "🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🟦️component.ts",
+  `${ARTIFACT_EDITOR_ENGINE}/📺️renderer/🟦️.tsx`,
+  `${ARTIFACT_EDITOR_ENGINE}/🎰️stately/🟦️.ts`,
+  `${ARTIFACT_EDITOR_ENGINE}/🏃️runtime/🟦️.ts`,
+  `${ARTIFACT_EDITOR_ENGINE}/🎬️actions/🟦️.ts`,
+  `${ARTIFACT_EDITOR_ENGINE}/📄️artifact/🟦️.ts`,
+  "../../🔨️modules/🌐️spatial-kernel/⚙️engine/🧱️brepjs/🟦️.ts",
+  "../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🟦️.ts",
+  "../../🔨️modules/🌐️spatial-kernel/⚙️engine/🗺️spatial/🟦️.ts",
+  "🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🟦️.ts",
 ];
 
 /** @emoji 🧪️ Vitest for `@semio-tech/cad-js` — one project covering all 9 domain files: artifact `✏️editor/⚙️engine` (renderer/stately/runtime/actions/artifact), `🌐️spatial-kernel` module `⚙️engine` (brepjs/geometry/spatial), and `💡️inferences` schema leaf; base `environment` is `node`, renderer opts into jsdom via its own `@vitest-environment jsdom` file pragma (vitest 4 dropped `environmentMatchGlobs`). In-source suites use `includeSource` only (`include: []`) so vitest does not double-collect. */

@@ -1,9 +1,0 @@
-# 🧬️ Transparent TiffMutation descriptor assembly.
-# change-byte-order/ChangeByteOrder: 🧭️change-byte-order/🔗️component.graphql
-# insert-ifd/InsertIfd: 📥️insert-ifd/🔗️component.graphql
-# remove-ifd/RemoveIfd: 📤️remove-ifd/🔗️component.graphql
-# replace-tag/ReplaceTag: 🏷️replace-tag/🔗️component.graphql
-# remove-tag/RemoveTag: 🗑️remove-tag/🔗️component.graphql
-# replace-pixels/ReplacePixels: 🟪️replace-pixels/🔗️component.graphql
-enum TiffMutationKind { CHANGE_BYTE_ORDER INSERT_IFD REMOVE_IFD REPLACE_TAG REMOVE_TAG REPLACE_PIXELS }
-input TiffMutation { change_byte_order: ChangeByteOrderMutation insert_ifd: InsertIfdMutation remove_ifd: RemoveIfdMutation replace_tag: ReplaceTagMutation remove_tag: RemoveTagMutation replace_pixels: ReplacePixelsMutation }

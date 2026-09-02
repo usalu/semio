@@ -1,0 +1,6 @@
+{
+  "$id": "https://semio.tech/schema/stdio.semio.drawing.diff/text.json",
+  "title": "SemioDrawingDiffText",
+  "description": "Text-wire scalar: space-separated field=value tokens. Real shape: 🅰️.g4.",
+  "type": "string"
+}

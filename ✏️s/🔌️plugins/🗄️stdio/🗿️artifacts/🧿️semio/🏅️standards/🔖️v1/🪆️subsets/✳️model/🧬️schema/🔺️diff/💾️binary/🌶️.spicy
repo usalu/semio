@@ -1,0 +1,9 @@
+module Stdio_semio_model_diff;
+
+# `format` (1 byte) + `presence` bitmask, then an opaque `payload` tail (0-3 varint-length-prefixed
+# blobs) — see the sibling `📡️.protocol.semio`'s comment.
+type Document = unit {
+    format: uint8;
+    presence: uint8;
+    payload: bytes &eod;
+};

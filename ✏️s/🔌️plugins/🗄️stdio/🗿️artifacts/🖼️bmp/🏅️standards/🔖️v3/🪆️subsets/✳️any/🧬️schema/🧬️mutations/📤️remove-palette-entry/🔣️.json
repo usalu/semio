@@ -5,17 +5,20 @@
   "displayName": "Remove Palette Entry",
   "emoji": "📤️",
   "aggregateVariant": "RemovePaletteEntry",
-  "payloadSchema": "🔣️payload.schema.json",
-  "textOpcode": null,
-  "binaryTag": null,
-  "invertibility": "non-invertible",
-  "diffParticipation": "none",
+  "payloadSchema": "🔣️.schema.json",
+  "textOpcode": "remove-palette-entry",
+  "binaryTag": 4,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "apply-only",
   "outcomeClasses": [
     "applied"
   ],
   "composition": "atomic",
   "requiredLanguageSurfaces": [
     "rust",
+    "typescript",
+    "graphql",
+    "protobuf",
     "json-schema",
     "text",
     "binary"

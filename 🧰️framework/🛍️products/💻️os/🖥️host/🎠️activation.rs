@@ -194,7 +194,7 @@ impl NativeKernelRuntime {
 //#region 🔖️BudgetBridge
 /// ⚖️ `semio_framework::kernel::Budget` (what `WasmtimeNodeHost`'s own per-node turn budget speaks) →
 /// `semio_framework_actor::Budget` (what a `ShardFrame::Grant` carries). Identical helper to the
-/// wgpu target's own private `actor_budget_from_turn_budget` (`🎯️targets/🧊️wgpu/📦️glue.rs`) — kept
+/// wgpu target's own private `actor_budget_from_turn_budget` (`🎯️targets/🧊️wgpu/🦀️.rs`) — kept
 /// here, `pub`, so this facade is genuinely usable end to end without a caller reaching into another
 /// crate for one five-line function. `memory_bytes`/`ui_nodes`/`mailbox_len` have no source field on
 /// the kernel-`Budget` side; defaulted from `lane` via `lane_defaults::budget_for`, same documented

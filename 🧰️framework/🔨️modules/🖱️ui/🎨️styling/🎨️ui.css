@@ -846,7 +846,7 @@
   --z-tutorial: 10000;
   --glass-saturate: 1.45;
   /* #region 🎚️LevelKnobs — formula knobs for the unified 6-level surface system (base=0 window=1
-     pane=2 panel=3 dialog=4 menu=5); 🎨️ui.css and ui/styling/🔣️tokens.json's "levels" block must stay
+     pane=2 panel=3 dialog=4 menu=5); 🎨️ui.css and ui/styling/🔣️.json's "levels" block must stay
      in lockstep (see contract at .🦑️repo/🎫️tickets/26/07/27/UNIFIED-6-LEVEL-UI-SURFACE-SYSTEM/contract.txt).
      --glass-saturate above (1.45) is reused as-is by the new glass utilities, no duplicate knob. */
   --level-shade-step: 5%;

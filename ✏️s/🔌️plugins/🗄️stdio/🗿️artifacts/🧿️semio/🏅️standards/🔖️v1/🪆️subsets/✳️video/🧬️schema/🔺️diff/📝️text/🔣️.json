@@ -1,0 +1,6 @@
+{
+  "$id": "https://semio.tech/schema/s.stdio.semio.video/diff.text.json",
+  "title": "SemioVideoDiffTextLine",
+  "description": "One line, empty if unchanged, else 'streams=' followed by the index-keyed triple. Structural shape is ../🔣️.json's SemioVideoDiff.",
+  "type": "string"
+}

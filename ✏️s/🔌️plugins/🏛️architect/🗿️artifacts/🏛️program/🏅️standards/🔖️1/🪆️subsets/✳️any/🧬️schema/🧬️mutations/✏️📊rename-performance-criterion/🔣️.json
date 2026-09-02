@@ -5,7 +5,7 @@
   "displayName": "Rename Performance Criterion",
   "emoji": "✏️📊",
   "aggregateVariant": "RenamePerformanceCriterion",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

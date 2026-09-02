@@ -1,0 +1,8 @@
+# 🧬️ SemioDrawingArtifact — mirrors the real Rust `SemioDrawingArtifact`. See
+# 📸️snapshot/🔗️.graphql for DrawCanvas/DrawStyle/DrawLayer/DrawNode.
+type SemioDrawingArtifact {
+  schema: String! @state(class: ARTIFACT)
+  canvas: DrawCanvas! @state(class: ARTIFACT)
+  styles: [DrawStyle!]! @state(class: ARTIFACT)
+  layers: [DrawLayer!]! @state(class: ARTIFACT)
+}

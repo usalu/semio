@@ -1,0 +1,12 @@
+module Stdio_semio_drawing_snapshot;
+
+# `pack` payload, past the `semio_format` envelope: real `format` (1 byte) + varint-length-prefixed
+# `schema` UTF-8 string, then one opaque `payload` tail (canvas/styles/layers — see the sibling
+# `📡️.protocol.semio`'s comment on the `protocol-array-of-records` boundary; `layers`
+# embeds a further RECURSIVE `DrawNode` tree).
+type Document = unit {
+    format: uint8;
+    schema_len: bytes &until=$$ ; # varint (LEB128) — Spicy has no native varint primitive; see
+                                   # 📸️snapshot/🦀️.rs's real `store::pack_rt` varint reader.
+    payload: bytes &eod;
+};

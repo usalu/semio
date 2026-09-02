@@ -5,7 +5,7 @@
   "displayName": "Delete Building Model",
   "emoji": "💥",
   "aggregateVariant": "DeleteBuildingModel",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": "delete-building-model",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

@@ -14,13 +14,13 @@ import { join, relative, sep } from "node:path";
 
 /** 🧭️ Repo-relative, forward-slashed path — the shape every discovered record carries. */
 const relativeToRepo = (root: string, target: string): string => relative(root, target).split(sep).join("/");
-import { CORE_COMPARISON_PROFILES, dependencyEcosystemOf, externalOracleHostPackages, importProbe, oracleHostModule, oracleHostPackagesFor, oracleLinkedPackages, mutationCatalogProblems, mutationCoverageBreaches, mutationVectorRegistryBreaches, resolveFixtures, discoverTestContributions, profileTable, coreProfileTable, canonicalize, oracleImportsInProduction, computeCoverageMetrics, enforceMetricGates, validateCaseContract, cleanTestOutputs, compareProjections, digest, discoverTestCases, fixtureUrisIn, isExcludedTestPath, loadMigrationBaseline, migrationStatusByOwner, loadOracleRegistry, markOutputDir, parseFeature, MIGRATION_STATUSES, projectionHash, ratchetDependencies, readOutputMarker, repoRootFromHere, setDigest, surveyUnmanagedTests, testCacheDir, testFilenameForKind, testLocationPath, testProjectName, testTaxonomy, validateAllContracts, validateResult } from "./📦️index.ts";
+import { CORE_COMPARISON_PROFILES, dependencyEcosystemOf, externalOracleHostPackages, importProbe, oracleHostModule, oracleHostPackagesFor, oracleLinkedPackages, mutationCatalogProblems, mutationCoverageBreaches, mutationVectorRegistryBreaches, resolveFixtures, discoverTestContributions, profileTable, coreProfileTable, canonicalize, oracleImportsInProduction, computeCoverageMetrics, enforceMetricGates, validateCaseContract, cleanTestOutputs, compareProjections, digest, discoverTestCases, fixtureUrisIn, isExcludedTestPath, loadMigrationBaseline, migrationStatusByOwner, loadOracleRegistry, markOutputDir, parseFeature, MIGRATION_STATUSES, projectionHash, ratchetDependencies, readOutputMarker, repoRootFromHere, setDigest, stubSerializerBreaches, surveyUnmanagedTests, testCacheDir, testFilenameForKind, testLocationPath, testProjectName, testTaxonomy, validateAllContracts, validateResult } from "./🟦️.ts";
 //#endregion 🔌️Adapters
 
 const repoRoot = repoRootFromHere();
 
 /** ⚖️ The effective profile table: framework profiles plus every one an owner contributes. */
-const contributed = (): ReadonlyMap<string, import("./📦️index.ts").ComparisonProfileSpec> => profileTable(loadOracleRegistry(repoRoot));
+const contributed = (): ReadonlyMap<string, import("./🟦️.ts").ComparisonProfileSpec> => profileTable(loadOracleRegistry(repoRoot));
 
 /** 🔣️ The taxonomy's own area vocabulary — these tests name no area of their own. */
 const taxonomyAreas = (): Record<string, string> => JSON.parse(readFileSync(join(repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json"), "utf8")).areas as Record<string, string>;
@@ -518,7 +518,7 @@ describe("🧩️ cross-language oracle hosts", () => {
   });
 
   test("an external host package is ratcheted exactly like an oracle package — declaring one is not a way around the gate", () => {
-    const registry = { schemaVersion: 1, oracles: [], noOracleDecisions: [], comparisonProfiles: [], oracleHostPackages: [], mutationCatalogs: [], contributions: [] } as unknown as import("./📦️index.ts").OracleRegistry;
+    const registry = { schemaVersion: 1, oracles: [], noOracleDecisions: [], comparisonProfiles: [], oracleHostPackages: [], mutationCatalogs: [], contributions: [] } as unknown as import("./🟦️.ts").OracleRegistry;
     const base = [{ ecosystem: "rust" as const, name: "existing", version: "1", kinds: ["production-runtime" as const], users: [], productionReachable: true }];
     const verdict = ratchetDependencies(base, [...base, { ecosystem: "python" as const, name: "an-unregistered-reference-library", version: "1", kinds: ["test-oracle" as const], users: [], productionReachable: false }], registry);
     expect(verdict.ok).toBe(false);
@@ -562,6 +562,25 @@ describe("🔒️ recorded production debt", () => {
       expect((oracle.rationale ?? "").length).toBeGreaterThan(80);
     }
   }, 30_000);
+});
+
+describe("🫥️ hidden serializer stubs", () => {
+  test("serde Value coercion into an unrelated target is rejected while explicit field mapping is accepted", () => {
+    const root = mkdtempSync(join(tmpdir(), "stub-serializer-contract-"));
+    const taxonomyPath = join(root, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json");
+    const serializer = join(root, "artifact/🚪️io/📤️export/🧵️serializers/🗿️artifacts/📕️xlsx/🔖️ecma-376/✳️any/🦀️.rs");
+    try {
+      mkdirSync(join(taxonomyPath, ".."), { recursive: true });
+      writeFileSync(taxonomyPath, readFileSync(join(repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json")));
+      mkdirSync(join(serializer, ".."), { recursive: true });
+      writeFileSync(serializer, "pub fn serialize(snapshot: &Source) -> Target { let value = serde_json::to_value(snapshot).unwrap(); serde_json::from_value(value).unwrap() }\n");
+      expect(stubSerializerBreaches(root).map((entry) => entry.id)).toEqual(["stub-serializer"]);
+      writeFileSync(serializer, "pub fn serialize(snapshot: &Source) -> Target { Target { rows: snapshot.rows.iter().map(|row| Row { id: row.id.clone() }).collect() } }\n");
+      expect(stubSerializerBreaches(root)).toEqual([]);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
 });
 
 describe("⚖️ artifact comparison profiles", () => {
@@ -622,7 +641,7 @@ describe("🧩️ open/closed", () => {
 
   test("the framework test domain's sources name no implementation area", () => {
     const domain = join(repoRoot, testTaxonomy(repoRoot).testDomainPath);
-    for (const file of ["📜️script.ts", "📦️packages/🟦️typescript/📦️index.ts", "🧬️protocol/🦀️component.rs", "🏃️runner/🦀️component.rs"]) {
+    for (const file of ["📜️script.ts", "📦️packages/🟦️typescript/🟦️.ts", "🧬️protocol/🦀️.rs", "🏃️runner/🦀️.rs"]) {
       const content = readFileSync(join(domain, file), "utf8");
       // 🧭️Which areas are implementations is taxonomy vocabulary; this test names none of them.
       for (const area of implementationAreas()) expect(content.includes(`${area}/`), `${file} names the implementation area ${area}`).toBe(false);
@@ -643,10 +662,10 @@ describe("🦠️ mutation completeness gate", () => {
   // committed today — the framework is not allowed to know that PDF or PNG exist.
   const owner = "🧪️synthetic/📦️artifact";
   const featureFilename = testFilenameForKind(testTaxonomy(repoRoot), testTaxonomy(repoRoot).testFeatureFileKindId);
-  const discovered = { owner, ownerName: "📦️artifact", case: "mutate-thing", caseDir: `${owner}/🧪️tests/mutate-thing`, featurePath: `${owner}/🧪️tests/mutate-thing/${featureFilename}`, adapters: {}, sharedFixtureDir: null, localFixtureDir: null, projectName: "test-synthetic-000000-mutate-thing" } as unknown as import("./📦️index.ts").DiscoveredCase;
+  const discovered = { owner, ownerName: "📦️artifact", case: "mutate-thing", caseDir: `${owner}/🧪️tests/mutate-thing`, featurePath: `${owner}/🧪️tests/mutate-thing/${featureFilename}`, adapters: {}, sharedFixtureDir: null, localFixtureDir: null, projectName: "test-synthetic-000000-mutate-thing" } as unknown as import("./🟦️.ts").DiscoveredCase;
   const catalog = { id: "thing-v1", capability: "thing-mutate", standardDirectoryName: "🔖️1", subsetDirectoryName: "✳️any", kinds: ["set-name", "remove-item"], vectors: [] };
-  const registry = { schemaVersion: 1, oracles: [], noOracleDecisions: [], comparisonProfiles: [], oracleHostPackages: [], mutationCatalogs: [catalog], contributions: [] } as unknown as import("./📦️index.ts").OracleRegistry;
-  const feature = (scenarioIds: readonly string[], tag = "@mutations-thing-v1"): import("./📦️index.ts").ParsedFeature =>
+  const registry = { schemaVersion: 1, oracles: [], noOracleDecisions: [], comparisonProfiles: [], oracleHostPackages: [], mutationCatalogs: [catalog], contributions: [] } as unknown as import("./🟦️.ts").OracleRegistry;
+  const feature = (scenarioIds: readonly string[], tag = "@mutations-thing-v1"): import("./🟦️.ts").ParsedFeature =>
     parseFeature([`@capability-thing-mutate`, `@no-oracle-none`, tag, "Feature: Mutate a thing", ...scenarioIds.flatMap((id) => [`  @id-${id}`, "  @level-exhaustive", "  @mode-differential", `  Scenario: ${id}`, "    Given a thing", "    Then it changed"])].join("\n"));
 
   test("a feature covering every declared kind twice reports nothing", () => {
@@ -680,7 +699,7 @@ describe("🦠️ mutation completeness gate", () => {
   });
 
   test("deferring kinds is recorded rather than silently accepted", () => {
-    const deferring = { ...registry, mutationCatalogs: [{ ...catalog, deferredKinds: ["rotate-item"] }] } as unknown as import("./📦️index.ts").OracleRegistry;
+    const deferring = { ...registry, mutationCatalogs: [{ ...catalog, deferredKinds: ["rotate-item"] }] } as unknown as import("./🟦️.ts").OracleRegistry;
     expect(mutationCoverageBreaches(discovered, feature(["mutate-set-name", "inverse-set-name", "mutate-remove-item", "inverse-remove-item"]), deferring).map((entry) => entry.id)).toContain("mutation-kinds-deferred");
   });
 });
@@ -717,11 +736,11 @@ describe("🧬️ physical mutation vector registry", () => {
     const source = join(root, owner, "🧬️schema", "🧬️mutations", vector.sourceMutationDirectoryName, "🧪️tests", scenario.id);
     try {
       for (const dir of ["🦠️mutation", "📸️snapshot/⬅️before", "📸️snapshot/➡️after", "🔺️diff", "🎯️outcome"]) mkdirSync(join(source, dir), { recursive: true });
-      for (const file of ["🦀️component.rs", "🦠️mutation/🔣️component.json", "📸️snapshot/⬅️before/🔣️component.json", "📸️snapshot/➡️after/🔣️component.json", "🔺️diff/🔣️component.json", "🎯️outcome/🔣️component.json"]) writeFileSync(join(source, file), "{}\n");
-      const contribution = { owner, manifestPath: `${owner}/🧪️oracle/🔣️.json`, oracles: [], noOracleDecisions: [], comparisonProfiles: [], oracleHostPackages: [], mutationCatalogs: [catalog], migrationStatus: {} };
-      const registry = { schemaVersion: 1, oracles: [], noOracleDecisions: [], comparisonProfiles: [], oracleHostPackages: [], mutationCatalogs: [catalog], contributions: [contribution] } as unknown as import("./📦️index.ts").OracleRegistry;
+      for (const file of ["🦀️.rs", "🦠️mutation/🔣️.json", "📸️snapshot/⬅️before/🔣️.json", "📸️snapshot/➡️after/🔣️.json", "🔺️diff/🔣️.json", "🎯️outcome/🔣️.json"]) writeFileSync(join(source, file), "{}\n");
+      const contribution = { owner, manifestPath: `${owner}/🔣️oracle.json`, oracles: [], noOracleDecisions: [], comparisonProfiles: [], oracleHostPackages: [], mutationCatalogs: [catalog], migrationStatus: {} };
+      const registry = { schemaVersion: 1, oracles: [], noOracleDecisions: [], comparisonProfiles: [], oracleHostPackages: [], mutationCatalogs: [catalog], contributions: [contribution] } as unknown as import("./🟦️.ts").OracleRegistry;
       expect(mutationVectorRegistryBreaches(root, registry)).toEqual([]);
-      rmSync(join(source, "🎯️outcome", "🔣️component.json"));
+      rmSync(join(source, "🎯️outcome", "🔣️.json"));
       expect(mutationVectorRegistryBreaches(root, registry).map((entry) => entry.id)).toContain("mutation-vector-bundle-invalid");
     } finally {
       rmSync(root, { recursive: true, force: true });
@@ -763,7 +782,7 @@ describe("🧫️ real-world artifact fixtures", () => {
   const thesis = "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.4/🪆️subsets/✳️base/📚️examples/🎓️bachelor-thesis/🖼️assets/📄️bachelor-thesis.pdf";
   const owner = "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf";
   const featureFilename = testFilenameForKind(testTaxonomy(repoRoot), testTaxonomy(repoRoot).testFeatureFileKindId);
-  const discovered = { owner, ownerName: "📄️pdf", case: "c", caseDir: `${owner}/🧪️tests/c`, featurePath: `${owner}/🧪️tests/c/${featureFilename}`, adapters: {}, sharedFixtureDir: null, localFixtureDir: null, projectName: "p" } as unknown as import("./📦️index.ts").DiscoveredCase;
+  const discovered = { owner, ownerName: "📄️pdf", case: "c", caseDir: `${owner}/🧪️tests/c`, featurePath: `${owner}/🧪️tests/c/${featureFilename}`, adapters: {}, sharedFixtureDir: null, localFixtureDir: null, projectName: "p" } as unknown as import("./🟦️.ts").DiscoveredCase;
 
   test("asset:// resolves against the owner root and pins the real artifact's digest", () => {
     if (!existsSync(join(repoRoot, thesis))) return;

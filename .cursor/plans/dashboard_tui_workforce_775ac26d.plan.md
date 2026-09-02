@@ -6,7 +6,7 @@ todos:
     content: "W0: fix the four stale ⚡️implementations paths in .vscode/🧩️launch.seed.jsonc, regenerate launch.json, fix settings.json:30, and fix the NFC/NFD duplicate project breaking bunx nx show projects"
     status: completed
   - id: w1-vt
-    content: "W1a: add the Vt region to 🖱️ui/⌨️tui/🦀️component.rs (VtScreen + VtParser: CSI/SGR/OSC/DCS, alt screen, scroll region, scrollback, resize) with a conformance test suite"
+    content: "W1a: add the Vt region to 🖱️ui/⌨️tui/🦀️.rs (VtScreen + VtParser: CSI/SGR/OSC/DCS, alt screen, scroll region, scrollback, resize) with a conformance test suite"
     status: completed
   - id: w1-pty
     content: "W1b: add the Pty region (libc openpty + pre_exec on unix, ConPTY on windows), extend windows-sys features with Win32_System_Pipes and Win32_Security, add spawn/resize/wait tests"
@@ -54,7 +54,7 @@ bun ./🧰️framework/🛍️products/🦑️repo/🔨️modules/⌨️cli/📦
 ## What exists today
 
 - `semio` (crate `semio-framework-repo-cli`) already opens a TUI when argv is empty: navbar + two windows (`dev`, `build`), a plugin catalog `Table`, a 500-line `Log`, and one `Session` per window that spawns `bun nx run …:dev|build` with **piped** stdout/stderr. Source: [📦️glue.rs](🧰️framework/🛍️products/🦑️repo/🔨️modules/⌨️cli/📦️packages/🦀️rust/📦️glue.rs) module `tui_dashboard`.
-- The TUI stack is fully handcrafted (no ratatui/crossterm) in [🦀️component.rs](🧰️framework/🔨️modules/🖱️ui/⌨️tui/🦀️component.rs), organised in `#region` blocks: `Geometry, Theme, Text, Cell, Ansi, Event, Scene, Layout, Widget, Chrome, Engine, Backend, WasmHost, Tests`. It already has `CellBuffer` + damage `diff` + truecolor `emit_runs`, a `WindowLayout` with axis/stack/**tabs**, `WindowState` with close/maximize chips, and `NativeTerminal` raw-mode/alt-screen over `libc` + `windows-sys`.
+- The TUI stack is fully handcrafted (no ratatui/crossterm) in [🦀️.rs](🧰️framework/🔨️modules/🖱️ui/⌨️tui/🦀️.rs), organised in `#region` blocks: `Geometry, Theme, Text, Cell, Ansi, Event, Scene, Layout, Widget, Chrome, Engine, Backend, WasmHost, Tests`. It already has `CellBuffer` + damage `diff` + truecolor `emit_runs`, a `WindowLayout` with axis/stack/**tabs**, `WindowState` with close/maximize chips, and `NativeTerminal` raw-mode/alt-screen over `libc` + `windows-sys`.
 - Gaps that block the goal: **no PTY**, **no VT/terminal emulator** (`ansi::AnsiParser` decodes *input* keys/mouse only), **no daemon/detach**, **no clipboard**, **no IPC** anywhere (only the unrelated `🌎️hub` axum WebSocket), **no task registry** beyond the playground catalog, **no agent spawning**.
 - `bunx nx show projects` currently **fails**: `@semio-tech/infinite-world-r3f` is reported twice from an NFC vs NFD normalisation of the `🔨️modules` path segment on macOS. Any nx-graph-derived registry must fix this first.
 
@@ -95,7 +95,7 @@ flowchart TB
 
 Everything extends existing files as new `#region` blocks; no new source files.
 
-**[🦀️component.rs](🧰️framework/🔨️modules/🖱️ui/⌨️tui/🦀️component.rs)** — domain-neutral terminal capability:
+**[🦀️.rs](🧰️framework/🔨️modules/🖱️ui/⌨️tui/🦀️.rs)** — domain-neutral terminal capability:
 - new region `Vt`: `VtScreen` (primary + alt `CellBuffer`, scrollback `VecDeque`, cursor, SGR, `DECSTBM` scroll region, modes, OSC title) and `VtParser` (ground/ESC/CSI/OSC/DCS machine covering printable+UTF-8+wide, CR/LF/BS/TAB, CUU/CUD/CUF/CUB/CUP, ED/EL, IL/DL/ICH/DCH/ECH, SU/SD, DECSTBM, full SGR incl. `38;2`/`48;2`, DECSET/DECRST 1049/25/7/1000/1002/1006/2004, DECSC/DECRC, RIS). Composites into the existing `CellBuffer`, so panes cost one blit.
 - new region `Pty`, gated on `tui-terminal`: `Pty::spawn(cmd, args, env, cwd, size)` returning reader/writer/`resize`/`signal`/`wait`. Unix uses `libc::openpty` + `Command::pre_exec` (`setsid`, `TIOCSCTTY`, `dup2`); Windows uses ConPTY (`CreatePseudoConsole` + `PROC_THREAD_ATTRIBUTE_PSEUDOCONSOLE`), which needs `Win32_System_Pipes` and `Win32_Security` added to the existing `windows-sys` features in [Cargo.toml](🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/Cargo.toml).
 - extend `Widget`: `WidgetState::Terminal(TerminalState)` wrapping a `VtScreen` — scroll, search, selection, follow/pin, `on_key` passthrough.

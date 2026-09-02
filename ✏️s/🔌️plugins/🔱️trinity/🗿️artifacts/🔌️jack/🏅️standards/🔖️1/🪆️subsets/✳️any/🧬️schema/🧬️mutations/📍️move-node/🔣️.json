@@ -5,19 +5,23 @@
   "displayName": "Move Node",
   "emoji": "📍️",
   "aggregateVariant": "MoveNode",
-  "payloadSchema": "🔣️payload.schema.json",
-  "textOpcode": null,
-  "binaryTag": null,
+  "payloadSchema": "🔣️.schema.json",
+  "textOpcode": "move-node",
+  "binaryTag": 5,
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
   "outcomeClasses": [
+    "applied",
+    "warning",
     "error",
-    "info",
-    "applied"
+    "fatal"
   ],
   "composition": "atomic",
   "requiredLanguageSurfaces": [
     "rust",
+    "typescript",
+    "graphql",
+    "protobuf",
     "json-schema",
     "text",
     "binary"

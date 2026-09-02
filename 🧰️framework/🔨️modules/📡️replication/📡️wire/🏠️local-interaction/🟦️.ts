@@ -1,5 +1,5 @@
 /** 🏠️ Exact local-only interaction capture and restore contracts; schema lives in `🧬️schema`. */
-import type { DomainSelection, SelectionMode } from "../../../🕹️interaction/🟦️component.ts";
+import type { DomainSelection, SelectionMode } from "../../../🕹️interaction/🟦️.ts";
 
 //#region 🧬️Contract
 export type LocalInteractionState = {

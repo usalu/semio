@@ -33,7 +33,7 @@
           "const": "readme-current-source-revision"
         },
         "source": {
-          "const": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧪️readme-current-source-revision/🟦️.ts"
+          "const": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🟦️readme-current-source-revision.ts"
         },
         "launchName": {
           "const": "🧹clean🧩️taxonomy🧪️readme-current-source-revision"

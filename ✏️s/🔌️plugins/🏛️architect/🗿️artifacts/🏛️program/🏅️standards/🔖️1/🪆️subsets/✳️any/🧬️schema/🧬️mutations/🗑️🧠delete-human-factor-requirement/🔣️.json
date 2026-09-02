@@ -5,7 +5,7 @@
   "displayName": "Delete Human Factor Requirement",
   "emoji": "🗑️🧠",
   "aggregateVariant": "DeleteHumanFactorRequirement",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

@@ -3,7 +3,7 @@
 //! mutations keep unchanged public payload shapes"); internally it now splits into the composed
 //! `kind_catalogs` handle + `kind_catalogs_extra` overflow the snapshot actually carries, minting a
 //! fresh content-addressed handle and seeding the working-scene cache so the diff is resolvable
-//! immediately (see `🗿️artifacts/🖐️5d/🦀️component.rs`'s `🔖️KindCatalogComposition` region).
+//! immediately (see `🗿️artifacts/🖐️5d/🦀️.rs`'s `🔖️KindCatalogComposition` region).
 use crate::artifacts::puzzle5d::diff::Puzzle5dDiff;
 use crate::artifacts::puzzle5d::split_and_seed_kind_catalogs;
 use crate::artifacts::puzzle5d::Puzzle5dSnapshot;

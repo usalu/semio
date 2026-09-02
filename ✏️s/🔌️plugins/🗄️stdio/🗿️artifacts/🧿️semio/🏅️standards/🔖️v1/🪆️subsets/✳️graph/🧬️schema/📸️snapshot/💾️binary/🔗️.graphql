@@ -1,0 +1,8 @@
+# 💾️ Binary-facet grammar mirror, GraphQL SDL shape (descriptive) — see ../🔗️.graphql for
+# the canonical facet schema; this file describes the PACK-BINARY ENCODING header of the same shape.
+type SemioGraphSnapshotPackHeader {
+  format: Int!
+  schemaLen: Int!
+  schemaBytes: String!
+  payload: String!
+}

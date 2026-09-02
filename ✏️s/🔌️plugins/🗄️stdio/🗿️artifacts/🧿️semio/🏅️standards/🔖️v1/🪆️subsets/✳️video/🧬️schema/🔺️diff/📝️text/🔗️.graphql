@@ -1,0 +1,5 @@
+# 📝️ Text representation mirror for `stdio.semio.video` (diff) — one line, empty if unchanged.
+# Structural shape is ../🔗️.graphql's SemioVideoDiff.
+type SemioVideoDiffTextLine {
+  line: String!
+}

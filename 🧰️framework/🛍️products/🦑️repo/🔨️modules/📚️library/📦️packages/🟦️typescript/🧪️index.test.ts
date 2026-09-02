@@ -1,23 +1,23 @@
 import { describe, expect, test } from "bun:test";
-import "../../🧹️normalization/🧪️tests/🧪️source-admission/🟦️.ts";
-import "../../🧹️normalization/🧪️tests/🧪️source-admission/🧪️io/🟦️.ts";
-import "../../🧹️normalization/🧪️tests/🧪️package-boundary-classification/🟦️.ts";
-import "../../🧪️tests/🧪️typescript-declaration-facts/🟦️.ts";
-import "../../🧪️tests/🧬️mutation-inventory/🧪️source-file-facts/🟦️.ts";
-import "../../🧪️tests/🧬️mutation-inventory/🧪️source-roster-roles/🟦️.ts";
-import "../../🧪️tests/🧬️mutation-inventory/🧪️source-index-capture/🟦️.ts";
-import "../../🧪️tests/🧬️mutation-inventory/🧪️ticket-role-routing/🟦️.ts";
+import "../../🧹️normalization/🧪️tests/🟦️source-admission.ts";
+import "../../🧹️normalization/🧪️tests/🧪️source-admission/🟦️io.ts";
+import "../../🧹️normalization/🧪️tests/🟦️package-boundary-classification.ts";
+import "../../🧪️tests/🟦️typescript-declaration-facts.ts";
+import "../../🧪️tests/🧬️mutation-inventory/🟦️source-file-facts.ts";
+import "../../🧪️tests/🧬️mutation-inventory/🟦️source-roster-roles.ts";
+import "../../🧪️tests/🧬️mutation-inventory/🟦️source-index-capture.ts";
+import "../../🧪️tests/🧬️mutation-inventory/🟦️ticket-role-routing.ts";
 import { spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { existsSync, readFileSync } from "node:fs";
 import { basename, dirname, join, posix, relative, resolve, sep } from "node:path";
 import { parseArgs } from "node:util";
-import { nextestArtifactLocation, partitionNextestExecutionFilters } from "./📦️index.ts";
+import { nextestArtifactLocation, partitionNextestExecutionFilters } from "./🟦️.ts";
 import { NEO4J_GRAPH_DATABASE_NAMES, getAllNeo4jGraphExportSpecs, joinNeo4jGraphDatabaseName, parseExtraNeo4jGraphDatabaseNamesFromEnv, partitionNeo4jGraphCliArgv, policyCanonicalArtifactKindBreaches, policyChildSlotKindDagBreaches, policyDissolvedKindRedefinitionBreaches, policyEmojiPrefixBreaches, policyModeCompletenessBreaches, policyPluginDependencyParityBreaches, policyWindowCompletenessBreaches } from "../../../../../../../📜️script.ts";
-import { BundleScript, ScriptRouter, DAEMON_BUDGET_MS, ORCHESTRATOR_BUDGET_MS, budgetTimeoutHint, canReuseDevPort, capturedTestFailureDiagnostics, daemonBudgetMs, daemonBudgetOpts, describeDevPortOccupant, devServerUrl, devToolingEnv, dispatchSubcommand, findRepoRoot, gitSpawnEnv, goLevelTestArgs, isDevPortInUse, orchestratorBudgetMs, orchestratorBudgetOpts, resolveCargoPackageName, resolveCargoPackageNames, resolveDevPort, runCmd, runCmdStatus, runProbe, testLevelBudgetMs, vitestLevelArgs, wgpuDevPlayUrl } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts";
-import { defineLint, type FileLinter } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts";
-import { layeringBreaches, layeringCounts, layeringReferences, loadLayeringBaseline, policyDiscoveredAllowlist } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts";
-import { dependencyBoundaryBreachesForBundleDir, dependencyBoundaryBreachesForFile, isAdapterBoundaryFile, parseTsImportSpecs } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts";
+import { BundleScript, ScriptRouter, DAEMON_BUDGET_MS, ORCHESTRATOR_BUDGET_MS, budgetTimeoutHint, canReuseDevPort, capturedTestFailureDiagnostics, daemonBudgetMs, daemonBudgetOpts, describeDevPortOccupant, devServerUrl, devToolingEnv, dispatchSubcommand, findRepoRoot, gitSpawnEnv, goLevelTestArgs, isDevPortInUse, orchestratorBudgetMs, orchestratorBudgetOpts, resolveCargoPackageName, resolveCargoPackageNames, resolveDevPort, runCmd, runCmdStatus, runProbe, testLevelBudgetMs, vitestLevelArgs, wgpuDevPlayUrl } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { defineLint, type FileLinter } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { layeringBreaches, layeringCounts, layeringReferences, loadLayeringBaseline, policyDiscoveredAllowlist } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { dependencyBoundaryBreachesForBundleDir, dependencyBoundaryBreachesForFile, isAdapterBoundaryFile, parseTsImportSpecs } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import {
   PLAYGROUND_PORTS,
   PLAYGROUND_LOCKED_EXAMPLE_ENV,
@@ -27,19 +27,19 @@ import {
   resolveFrameworkOsPlaygroundPlugin,
   loadFrameworkOsPlaygroundCatalog,
   playgroundPlayViteDefine,
-} from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts";
-import { playgroundStaticSiteBuildOptions } from "../../../../../../🔨️modules/🖱️ui/🎨️styling/🟦️vite-elements-assets.ts";
-import { areaOf, clearDiscoveryCache, discoverBurndown, discoverOwners, discoverPackageProblems, discoverPackages, getWorkspaceRoot, loadTaxonomy, readSemioMarker, resolveWorkspaceTaxonomyAuthority, resolveWorkspaceTaxonomyAuthorityFromDirectory, validateTaxonomy } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts";
-import { artifactFacetPathIsDeclared, buildSemanticCensus, canonicalPrimaryFilenameForKind, createRustMutationCodecOwnershipInspector, fixedDirectoryContractIdsForPath, fixedFilenameContractIdsForPath, generatorNxPreviewCommand, inspectMutationMetadataSource, inspectRustModuleGraph, inspectRustModuleGraphFacts, inspectRustMutationAggregateSpan, inspectRustMutationMetadataFacts, inspectRustStructure, inspectRustVirtualSources, mutationDirectLeafInlinedBehaviorFacets, projectCargoProviderManifest, renderRustStructuralFactsJson, renderSemanticCensusJson, resolveCargoProviderBinding, resolveRustPathAttributes, scopedFileKindIdForSourcePath, semanticPathProjectionAuthority, semanticProjectionCatalogProblems, taxonomyCliAttemptPreparationsProblems, taxonomyCliBackupPreparationProblems, taxonomyCliBackupWritePreparationProblems, taxonomyCliEditPreparationProblems, taxonomyCliEditWritePreparationProblems, taxonomyCliJsonWritePreparationProblems, taxonomyCliLeaseDirectoryProblems, taxonomyCliRestorePreparationProblems, validateGeneratorContractsAgainstWorkspace, type SemanticProjectionAuthorityNode, type SemanticProjectionCatalogRegistration, type Taxonomy } from "../../🔍️discovery/🟦️component.ts";
-import { computeWorkspaces, diffWorkspaces } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts";
+} from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { playgroundStaticSiteBuildOptions } from "../../../../../../🔨️modules/🖱️ui/🎨️styling/🟦️.ts";
+import { areaOf, clearDiscoveryCache, discoverBurndown, discoverOwners, discoverPackageProblems, discoverPackages, getWorkspaceRoot, loadTaxonomy, readSemioMarker, resolveWorkspaceTaxonomyAuthority, resolveWorkspaceTaxonomyAuthorityFromDirectory, validateTaxonomy } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { artifactFacetPathIsDeclared, buildSemanticCensus, canonicalPrimaryFilenameForKind, createRustMutationCodecOwnershipInspector, fixedDirectoryContractIdsForPath, fixedFilenameContractIdsForPath, generatorNxPreviewCommand, inspectMutationMetadataSource, inspectRustModuleGraph, inspectRustModuleGraphFacts, inspectRustMutationAggregateSpan, inspectRustMutationMetadataFacts, inspectRustStructure, inspectRustVirtualSources, mutationDirectLeafInlinedBehaviorFacets, projectCargoProviderManifest, renderRustStructuralFactsJson, renderSemanticCensusJson, resolveCargoProviderBinding, resolveRustPathAttributes, scopedFileKindIdForSourcePath, semanticPathProjectionAuthority, semanticProjectionCatalogProblems, taxonomyCliAttemptPreparationsProblems, taxonomyCliBackupPreparationProblems, taxonomyCliBackupWritePreparationProblems, taxonomyCliEditPreparationProblems, taxonomyCliEditWritePreparationProblems, taxonomyCliJsonWritePreparationProblems, taxonomyCliLeaseDirectoryProblems, taxonomyCliRestorePreparationProblems, validateGeneratorContractsAgainstWorkspace, type SemanticProjectionAuthorityNode, type SemanticProjectionCatalogRegistration, type Taxonomy } from "../../🔍️discovery/🟦️.ts";
+import { computeWorkspaces, diffWorkspaces } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { chmodSync, closeSync, constants, fstatSync, fsyncSync, lstatSync, mkdirSync, mkdtempSync, openSync, readdirSync, readlinkSync, realpathSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { applyTaxonomyPlan, artifactProjectionTail, canonicalJson, inventoryTaxonomy, noFollowTreeDigest, opaqueTreeDigest, parseGeneratorPreviewManifest, parseTaxonomyPlan, planTaxonomy, repositoryLocalSymlinkTargetPath, taxonomyPlanDigest, taxonomyPlatformPathViolationCodes, taxonomyScopedGitPathspec, verifyTaxonomy, type OpaqueTreeDigest, type TaxonomyApplyOptions, type TaxonomyApplyResult, type TaxonomyInventory, type TaxonomyInventoryOptions, type TaxonomyPlan, type TaxonomyProgress } from "../../🧹️normalization/🟦️.ts";
-import { ownedFilePaths, ownedFilesystemEntries, ownedPathByteSort, type OwnedFilesystemEntry } from "../../🧪️tests/🔍️filesystem/🟦️component.ts";
+import { ownedFilePaths, ownedFilesystemEntries, ownedPathByteSort, type OwnedFilesystemEntry } from "../../🧪️tests/🔍️filesystem/🟦️.ts";
 import Ajv from "ajv";
 import toml from "@iarna/toml";
 import fastGlob from "fast-glob";
-import { registryCompilerInputDependencies, registryStaticImports, type RegistryCompilerInputRole } from "../../🔍️discovery/🟦️component.ts";
+import { registryCompilerInputDependencies, registryStaticImports, type RegistryCompilerInputRole } from "../../🔍️discovery/🟦️.ts";
 import { MUTATION_STRUCTURAL_POLICY_KINDS, inspectMutationRootReachability, inventoryMutationTaxonomy, newScaffoldMutationTree, planMutationTaxonomy, policyMutationStructuralBreaches, runMutationTaxonomyCli, validateJsonSchemaSubset } from "../../../../../../../📜️script.ts";
 
 describe("package language semantic handoff", () => {
@@ -65,7 +65,7 @@ describe("package language semantic handoff", () => {
   test("the actual directory classifier agrees with independent compilers and JSON Schema semantic matching", async () => {
     const ts = await import("typescript");
     const { parse: parseJsonc } = await import("jsonc-parser");
-    const { createTaxonomyPathMatcher } = await import("../../🔍️discovery/🟦️component.ts");
+    const { createTaxonomyPathMatcher } = await import("../../🔍️discovery/🟦️.ts");
     expect(parseJsonc(readFileSync(join(inputRoot, "🔣️.json"), "utf8"))).toEqual(vector);
     const source = readFileSync(join(import.meta.dir, "../../🧹️normalization/🟦️.ts"), "utf8");
     const syntax = ts.createSourceFile("🟦️.ts", source, ts.ScriptTarget.Latest, true, ts.ScriptKind.TS);
@@ -136,7 +136,7 @@ describe("package language semantic handoff", () => {
   test("resident native metadata binds the exact semantic owner and one Cargo identity", async () => {
     const { parse: parseJsonc } = await import("jsonc-parser");
     const { win32 } = await import("node:path");
-    const { semanticDirectoryKindId, semanticOwnedInputFileSnapshot } = await import("../../🔍️discovery/🟦️component.ts");
+    const { semanticDirectoryKindId, semanticOwnedInputFileSnapshot } = await import("../../🔍️discovery/🟦️.ts");
     const root = resolve(import.meta.dir, "../../../../../../.."), fixtureRoot = join(inputRoot, "🧪️resident-package");
     const text = readFileSync(join(fixtureRoot, "🔣️.json"), "utf8"), expected = JSON.parse(text);
     const validate = new Ajv({ strict: true, allErrors: true }).compile(JSON.parse(readFileSync(join(fixtureRoot, "🧬️schema/🔣️.json"), "utf8")));
@@ -157,9 +157,9 @@ describe("package language semantic handoff", () => {
     const source = semanticOwnedInputFileSnapshot(root, expected.sourcePath), nativeTests = semanticOwnedInputFileSnapshot(root, expected.testPath);
     expect(source?.nodeKind).toBe("file");
     expect(nativeTests?.nodeKind).toBe("file");
-    expect(source!.bytes.toString()).toContain('#[path = "🧪️tests/🦀️.rs"]');
+    expect(source!.bytes.toString()).toContain('#[path = "🧪️test/🦀️s.rs"]');
     expect(nativeTests!.bytes.toString()).toContain('include_str!("../🧪️fixture.json")');
-    expect(semanticOwnedInputFileSnapshot(root, expected.ownerPath + "/🧪️missing/🦀️.rs")).toBeNull();
+    expect(semanticOwnedInputFileSnapshot(root, expected.ownerPath + "/🦀️missing.rs")).toBeNull();
     for (const path of [expected.sourcePath, expected.testPath]) expect(basename(path)).toBe(canonicalPrimaryFilenameForKind("rust-source", schema));
     const packageRoot = join(root, expected.packagePath);
     expect(readdirSync(packageRoot).sort()).toEqual([...expected.packageFiles].sort());
@@ -210,8 +210,8 @@ describe("package language semantic handoff", () => {
   });
 
   test("resident native metadata router preserves exact sequential bounded commands without executing Cargo", async () => {
-    const ts = await import("typescript"), { spyOn } = await import("bun:test"), library = await import("./📦️index.ts");
-    const root = resolve(import.meta.dir, "../../../../../../.."), expected = JSON.parse(readFileSync(join(inputRoot, "🧪️resident-package/🔣️.json"), "utf8"));
+    const ts = await import("typescript"), { spyOn } = await import("bun:test"), library = await import("./🟦️.ts");
+    const root = resolve(import.meta.dir, "../../../../../../.."), expected = JSON.parse(readFileSync(join(inputRoot, "🔣️resident-package.json"), "utf8"));
     const packageRoot = join(root, expected.packagePath), sourcePath = join(packageRoot, "📜️script.ts");
     expect(existsSync(sourcePath)).toBe(true);
     const source = readFileSync(sourcePath, "utf8"), syntax = ts.createSourceFile(sourcePath, source, ts.ScriptTarget.Latest, true, ts.ScriptKind.TS);
@@ -280,7 +280,7 @@ describe("package language semantic handoff", () => {
 
   test("UI-host metadata binds canonical source inputs and exact existing Cargo ownership", async () => {
     const { parse: parseJsonc } = await import("jsonc-parser"), { win32 } = await import("node:path");
-    const { semanticDirectoryKindId, semanticOwnedInputFileSnapshot } = await import("../../🔍️discovery/🟦️component.ts");
+    const { semanticDirectoryKindId, semanticOwnedInputFileSnapshot } = await import("../../🔍️discovery/🟦️.ts");
     const root = resolve(import.meta.dir, "../../../../../../.."), fixtureRoot = join(inputRoot, "🧪️ui-host-package"), captured = new Map<string, Buffer>();
     const read = (path: string): Buffer => {
       const row = semanticOwnedInputFileSnapshot(root, path);
@@ -356,9 +356,9 @@ describe("package language semantic handoff", () => {
   });
 
   test("UI-host metadata router calls its real source oracle and preserves bounded native delegation", async () => {
-    const ts = await import("typescript"), { spyOn } = await import("bun:test"), { pathToFileURL } = await import("node:url"), library = await import("./📦️index.ts");
-    const { semanticOwnedInputFileSnapshot } = await import("../../🔍️discovery/🟦️component.ts");
-    const root = resolve(import.meta.dir, "../../../../../../.."), expected = JSON.parse(readFileSync(join(inputRoot, "🧪️ui-host-package/🔣️.json"), "utf8")), packageRoot = join(root, expected.packagePath);
+    const ts = await import("typescript"), { spyOn } = await import("bun:test"), { pathToFileURL } = await import("node:url"), library = await import("./🟦️.ts");
+    const { semanticOwnedInputFileSnapshot } = await import("../../🔍️discovery/🟦️.ts");
+    const root = resolve(import.meta.dir, "../../../../../../.."), expected = JSON.parse(readFileSync(join(inputRoot, "🔣️ui-host-package.json"), "utf8")), packageRoot = join(root, expected.packagePath);
     const sourcePath = expected.packagePath + "/📜️script.ts", snapshot = semanticOwnedInputFileSnapshot(root, sourcePath);
     expect(snapshot?.nodeKind, sourcePath).toBe("file");
     const source = snapshot!.bytes.toString("utf8"), syntax = ts.createSourceFile(sourcePath, source, ts.ScriptTarget.Latest, true, ts.ScriptKind.TS);
@@ -529,7 +529,7 @@ describe("active ticket clean protection", () => {
 //#region 🔗️RegistryCompilerImports
 describe("registryCompilerImports", () => {
   test("validates the language-neutral vectors against Bun and TypeScript", async () => {
-    const { registryStaticImports } = await import("../../🔍️discovery/🟦️component.ts");
+    const { registryStaticImports } = await import("../../🔍️discovery/🟦️.ts");
     const ts = await import("typescript");
     const fixture = JSON.parse(readFileSync(join(import.meta.dir, "../../🔍️discovery/🧪️compiler-imports.json"), "utf8")) as { cases: { name: string; source: string; expected: string[] }[] };
     const schema = JSON.parse(readFileSync(join(import.meta.dir, "../../🔍️discovery/🧪️compiler-imports.schema.json"), "utf8"));
@@ -549,7 +549,7 @@ describe("registryCompilerImports", () => {
   });
 
   test("rejects malformed runtime compiler capabilities without trusting declarations", async () => {
-    const { scanRegistryCompilerImports } = await import("../../🔍️discovery/🟦️component.ts");
+    const { scanRegistryCompilerImports } = await import("../../🔍️discovery/🟦️.ts");
     for (const platform of [null, {}, { Transpiler: 7 }, { Transpiler: () => ({}) }, { Transpiler: class {} }, { Transpiler: class { scanImports() { return {}; } } }, { Transpiler: class { scanImports() { return [{ path: 1, kind: "import-statement" }]; } } }, { Transpiler: class { scanImports() { return [{ path: "./a", kind: null }]; } } }]) {
       expect(() => scanRegistryCompilerImports("import './a'", "tsx", platform)).toThrow();
     }
@@ -562,7 +562,7 @@ describe("registryCompilerImports", () => {
 //#endregion 🔗️RegistryCompilerImports
 
 //#region 📦️CargoProviderManifestProjection
-const CARGO_PROVIDER_PROJECTION_FIXTURE = join(import.meta.dir, "../../🧪️tests/🧬️cargo-provider-projection/🔣️vectors.json");
+const CARGO_PROVIDER_PROJECTION_FIXTURE = join(import.meta.dir, "../../🧪️tests/🧬️cargo-provider-projection/🔣️.json");
 const CARGO_PROVIDER_PROJECTION_SCHEMA = join(import.meta.dir, "../../🧪️tests/🧬️cargo-provider-projection/🛂️schema.json");
 
 describe("cargo provider manifest projection", () => {
@@ -589,7 +589,7 @@ describe("cargo provider manifest projection", () => {
 //#endregion 📦️CargoProviderManifestProjection
 
 //#region 🔗️CargoProviderBinding
-const CARGO_PROVIDER_BINDING_FIXTURE = join(import.meta.dir, "../../🧪️tests/🧬️cargo-provider-binding/🔣️vectors.json");
+const CARGO_PROVIDER_BINDING_FIXTURE = join(import.meta.dir, "../../🧪️tests/🧬️cargo-provider-binding/🔣️.json");
 const CARGO_PROVIDER_BINDING_SCHEMA = join(import.meta.dir, "../../🧪️tests/🧬️cargo-provider-binding/🛂️schema.json");
 
 describe("cargo provider binding", () => {
@@ -637,7 +637,7 @@ describe("cargo provider binding", () => {
 //#endregion 🔗️CargoProviderBinding
 
 //#region 🧬️MutationMetadataSourceProvider
-const MUTATION_METADATA_SOURCE_FIXTURE = join(import.meta.dir, "../../🧪️tests/🧬️metadata-source-provider/🔣️vectors.json");
+const MUTATION_METADATA_SOURCE_FIXTURE = join(import.meta.dir, "../../🧪️tests/🧬️metadata-source-provider/🔣️.json");
 const MUTATION_METADATA_SOURCE_SCHEMA = join(import.meta.dir, "../../🧪️tests/🧬️metadata-source-provider/🛂️schema.json");
 
 describe("mutation metadata source provider", () => {
@@ -651,18 +651,18 @@ describe("mutation metadata source provider", () => {
     const root = mkdtempSync(join(artifactRoot, "semio-metadata-source-provider-"));
     try {
       const lower = "🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust", facade = "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust", derive = "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/📦️packages/🦀️rust", consumer = "consumer";
-      const manifest = (path: string): string => `${path}/Cargo.toml`, source = (path: string): string => `${path}/📦️glue.rs`, relativePath = (from: string, to: string): string => relative(dirname(join(root, from)), join(root, to)).split(sep).join("/");
+      const manifest = (path: string): string => `${path}/Cargo.toml`, source = (path: string): string => `${path}/🦀️.rs`, relativePath = (from: string, to: string): string => relative(dirname(join(root, from)), join(root, to)).split(sep).join("/");
       for (const vector of fixture.cases) {
         const files = new Map<string, string>(), add = (path: string, text: string): void => { files.set(path, text); const absolute = join(root, path); mkdirSync(dirname(absolute), { recursive: true }); writeFileSync(absolute, text); };
         const dependencyRows = (from: string): string => `derive = { package = 'semio-framework-os-kernel-dsl-derive', path = '${relativePath(from, derive)}' }\nfacade = { package = 'semio-framework-os-kernel', path = '${relativePath(from, facade)}' }\nlower = { package = 'semio-framework-replication', path = '${relativePath(from, lower)}' }`;
         add("Cargo.toml", `[workspace]\n${vector.binding === "inherited" ? `\n[workspace.dependencies]\n${dependencyRows("Cargo.toml")}\n` : ""}`);
-        add(manifest(lower), "[package]\nname = 'semio-framework-replication'\n\n[lib]\nname = 'protocol'\npath = '📦️glue.rs'\n");
+        add(manifest(lower), "[package]\nname = 'semio-framework-replication'\n\n[lib]\nname = 'protocol'\npath = '🦀️.rs'\n");
         add(source(lower), "pub trait MutationLeaf {}\n");
-        add(manifest(derive), "[package]\nname = 'semio-framework-os-kernel-dsl-derive'\n\n[lib]\nname = 'dsl_derive'\npath = '📦️glue.rs'\nproc-macro = true\n");
+        add(manifest(derive), "[package]\nname = 'semio-framework-os-kernel-dsl-derive'\n\n[lib]\nname = 'dsl_derive'\npath = '🦀️.rs'\nproc-macro = true\n");
         add(source(derive), "pub fn marker() {}\n");
-        add(manifest(facade), `[package]\nname = 'semio-framework-os-kernel'\n\n[lib]\nname = 'semio_framework_os_kernel'\npath = '📦️glue.rs'\n\n[dependencies]\nlower = { package = 'semio-framework-replication', path = '${relativePath(manifest(facade), lower)}' }\nderive = { package = 'semio-framework-os-kernel-dsl-derive', path = '${relativePath(manifest(facade), derive)}' }\n`);
+        add(manifest(facade), `[package]\nname = 'semio-framework-os-kernel'\n\n[lib]\nname = 'semio_framework_os_kernel'\npath = '🦀️.rs'\n\n[dependencies]\nlower = { package = 'semio-framework-replication', path = '${relativePath(manifest(facade), lower)}' }\nderive = { package = 'semio-framework-os-kernel-dsl-derive', path = '${relativePath(manifest(facade), derive)}' }\n`);
         add(source(facade), vector.facadeSource);
-        add(manifest(consumer), `[package]\nname = 'consumer'\n\n[lib]\nname = 'consumer'\npath = '📦️glue.rs'\n\n[dependencies]\n${vector.binding === "inherited" ? "derive = { workspace = true }\nfacade = { workspace = true }\nlower = { workspace = true }" : dependencyRows(manifest(consumer))}\n`);
+        add(manifest(consumer), `[package]\nname = 'consumer'\n\n[lib]\nname = 'consumer'\npath = '🦀️.rs'\n\n[dependencies]\n${vector.binding === "inherited" ? "derive = { workspace = true }\nfacade = { workspace = true }\nlower = { workspace = true }" : dependencyRows(manifest(consumer))}\n`);
         add(source(consumer), `extern crate derive;\n${vector.consumerPrefix ?? ""}${vector.manualImpl}#[derive(${vector.derive})]\n#[mutation_leaf(contract = ${vector.contract})]\npub struct Payload;\n${vector.consumerSuffix ?? ""}`);
         const proof = inspectMutationMetadataSource({ repositoryRoot: root, consumerManifestLocator: manifest(consumer), origin: { sourcePath: source(consumer), declarationName: "Payload", modulePath: vector.originModulePath ?? [] }, files: [...files.keys()], readSource: (path) => files.get(path) });
         expect(proof.accepted, `${vector.id}: ${proof.diagnostics.join("; ")}`).toBe(vector.accepted);
@@ -681,10 +681,10 @@ describe("mutation metadata source provider", () => {
 
   test("proves current STDIO TXT and GLTF wrapped origins through kernel aliases", () => {
     const repositoryRoot = getWorkspaceRoot();
-    const consumerManifest = "✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/Cargo.toml", consumerLibrary = "✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/📦️glue.rs", facadeManifest = "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/Cargo.toml", facadeLibrary = "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs", dslSource = "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/🦀️component.rs", sprSource = "🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🦀️component.rs", commandSource = "🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🎮️command/🦀️component.rs";
+    const consumerManifest = "✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/Cargo.toml", consumerLibrary = "✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/🦀️.rs", facadeManifest = "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/Cargo.toml", facadeLibrary = "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/🦀️.rs", dslSource = "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/🦀️.rs", sprSource = "🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🦀️.rs", commandSource = "🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🎮️command/🦀️.rs";
     const leaves = [
       { root: "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄txt/🏅️standards/🔖️utf-8/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs", sourcePath: "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄txt/🏅️standards/🔖️utf-8/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✏️set-line/🦀️.rs" },
-      { root: "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs", sourcePath: "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✏️🔘️change-node-name/🦀️.rs" },
+      { root: "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs", sourcePath: "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✏️🔘️change-node-name/🦀️.rs" },
     ] as const;
     const origins = leaves.map(({ sourcePath }) => {
       const declarations = inspectRustMutationMetadataFacts(readFileSync(join(repositoryRoot, sourcePath), "utf8")).declarations.filter((item) => item.visibility === "pub" && !item.conditional && item.mutationLeaf.state === "valid");
@@ -897,8 +897,8 @@ describe("emoji-prefix policy", () => {
       writeFileSync(join(rustPackage, "Cargo.toml"), "");
       const scopes = policyEmojiPrefixBreaches(root).map((breach) => breach.scope);
       expect(scopes).toContain("✏️s/🔌️plugins/🧪️probe/plain-dir");
-      expect(scopes).toContain("✏️s/🔌️plugins/🧪️probe/plain.ts");
-      expect(scopes).toContain("✏️s/🔌️plugins/🧪️probe/Cargo.toml");
+      expect(scopes).toContain("✏️s/🔌️plugins/probeplain.ts");
+      expect(scopes).toContain("✏️s/🔌️plugins/probeCargo.toml");
       expect(scopes).not.toContain("✏️s/🔌️plugins/🧪️probe/📦️packages/🦀️rust/Cargo.toml");
     } finally {
       rmSync(root, { recursive: true, force: true });
@@ -974,13 +974,13 @@ describe("window completeness policy", () => {
       expect(policyWindowCompletenessBreaches(root, [crate]).filter((breach) => breach.kind === "taxonomy/window-component")).toHaveLength(2);
       expect(policyWindowCompletenessBreaches(root, [crate]).filter((breach) => breach.kind === "taxonomy/window-empty-facet")).toHaveLength(1);
       rmSync(join(window, "🎬️actions", "📝️.md"));
-      writeFileSync(join(action, "🦀️component.rs"), "");
-      writeFileSync(join(action, "🟦️component.ts"), "");
+      writeFileSync(join(action, "🦀️.rs"), "");
+      writeFileSync(join(action, "🟦️.ts"), "");
       expect(policyWindowCompletenessBreaches(root, [crate])).toEqual([]);
-      writeFileSync(join(window, "🎬️actions", "🦀️component.rs"), "");
+      writeFileSync(join(window, "🎬️actions", "🦀️.rs"), "");
       expect(policyWindowCompletenessBreaches(root, [crate]).map((breach) => breach.kind)).toEqual(["taxonomy/window-facet-component"]);
-      rmSync(join(window, "🎬️actions", "🦀️component.rs"));
-      rmSync(join(action, "🟦️component.ts"));
+      rmSync(join(window, "🎬️actions", "🦀️.rs"));
+      rmSync(join(action, "🟦️.ts"));
       const missingMirror = policyWindowCompletenessBreaches(root, [crate]);
       expect(missingMirror.map((breach) => breach.kind)).toEqual(["taxonomy/window-component"]);
     } finally {
@@ -1027,7 +1027,7 @@ describe("composition policy (ticket 26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM
     try {
       mkdirSync(artifact, { recursive: true });
       writeFileSync(
-        join(artifact, "🦀️component.rs"),
+        join(artifact, "🦀️.rs"),
         ['pub fn artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {', '    semio_framework_plugin::ArtifactKindSpec {', '        id: "3d.mesh".into(),', "    }", "}"].join("\n"),
       );
       const legacy = policyCanonicalArtifactKindBreaches(root);
@@ -1035,14 +1035,14 @@ describe("composition policy (ticket 26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM
       expect(legacy[0]?.priority).toBe("medium");
 
       writeFileSync(
-        join(artifact, "🦀️component.rs"),
+        join(artifact, "🦀️.rs"),
         ['pub fn artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {', '    semio_framework_plugin::ArtifactKindSpec {', '        id: "s.probe.probe".into(),', "    }", "}"].join("\n"),
       );
       expect(policyCanonicalArtifactKindBreaches(root)).toEqual([]);
 
       // 🩹 Doc-comment prose quoting the pattern must not trip the rule (the exact false-positive
       // class flagged in the UCAS ticket's own 📌️important.md sweep-the-pattern lesson).
-      writeFileSync(join(artifact, "🦀️component.rs"), '/// see `ArtifactKindSpec { id: "3d.mesh" }` for the old shape\n');
+      writeFileSync(join(artifact, "🦀️.rs"), '/// see `ArtifactKindSpec { id: "3d.mesh" }` for the old shape\n');
       expect(policyCanonicalArtifactKindBreaches(root)).toEqual([]);
     } finally {
       rmSync(root, { recursive: true, force: true });
@@ -1056,11 +1056,11 @@ describe("composition policy (ticket 26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM
     try {
       mkdirSync(schemaA, { recursive: true });
       mkdirSync(schemaB, { recursive: true });
-      writeFileSync(join(schemaA, "🦀️component.rs"), '#[child(kind = "s.probe.probeb")] pub content: store::ArtifactChild<ProbeB>,\n');
-      writeFileSync(join(schemaB, "🦀️component.rs"), "pub other: i32,\n");
+      writeFileSync(join(schemaA, "🦀️.rs"), '#[child(kind = "s.probe.probeb")] pub content: store::ArtifactChild<ProbeB>,\n');
+      writeFileSync(join(schemaB, "🦀️.rs"), "pub other: i32,\n");
       expect(policyChildSlotKindDagBreaches(root)).toEqual([]);
 
-      writeFileSync(join(schemaB, "🦀️component.rs"), '#[child(kind = "s.probe.probea")] pub back: store::ArtifactChild<ProbeA>,\n');
+      writeFileSync(join(schemaB, "🦀️.rs"), '#[child(kind = "s.probe.probea")] pub back: store::ArtifactChild<ProbeA>,\n');
       const cycles = policyChildSlotKindDagBreaches(root);
       expect(cycles).toHaveLength(1);
       expect(cycles[0]?.kind).toBe("composition/child-slot-kind-dag");
@@ -1077,15 +1077,15 @@ describe("composition policy (ticket 26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM
     try {
       mkdirSync(plugin, { recursive: true });
       mkdirSync(stdio, { recursive: true });
-      writeFileSync(join(plugin, "🦀️component.rs"), "pub struct SemioMeshSnapshot { pub vertices: Vec<f64> }\n");
-      writeFileSync(join(stdio, "🦀️component.rs"), "pub struct SemioMeshSnapshot { pub vertices: Vec<f64> }\n");
+      writeFileSync(join(plugin, "🦀️.rs"), "pub struct SemioMeshSnapshot { pub vertices: Vec<f64> }\n");
+      writeFileSync(join(stdio, "🦀️.rs"), "pub struct SemioMeshSnapshot { pub vertices: Vec<f64> }\n");
       const breaches = policyDissolvedKindRedefinitionBreaches(root);
       expect(breaches).toHaveLength(1);
       expect(breaches[0]?.kind).toBe("composition/dissolved-kind-redefinition");
-      expect(breaches[0]?.scope).toBe("✏️s/🔌️plugins/🧪️probe/🗿️artifacts/🧪️probe/🦀️component.rs");
+      expect(breaches[0]?.scope).toBe("✏️s/🔌️plugins/🧪️probe/🗿️artifacts/🦀️probe.rs");
 
-      rmSync(join(plugin, "🦀️component.rs"));
-      writeFileSync(join(plugin, "🦀️component.rs"), "pub struct ProbeOwnType { pub vertices: Vec<f64> }\n");
+      rmSync(join(plugin, "🦀️.rs"));
+      writeFileSync(join(plugin, "🦀️.rs"), "pub struct ProbeOwnType { pub vertices: Vec<f64> }\n");
       expect(policyDissolvedKindRedefinitionBreaches(root)).toEqual([]);
     } finally {
       rmSync(root, { recursive: true, force: true });
@@ -1198,7 +1198,7 @@ describe("bundle-script", () => {
   });
 
   test("gitRepoRoot uses monorepo toplevel from repo/lib/js", async () => {
-    const { gitRepoRoot } = await import("../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts");
+    const { gitRepoRoot } = await import("../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts");
     const top = gitRepoRoot(import.meta.dir);
     expect(top).toBe(getWorkspaceRoot());
     expect(existsSync(join(top, ".git"))).toBe(true);
@@ -1289,14 +1289,14 @@ describe("micro-commit", () => {
   }
 
   test("safeGitEnv replaces an unusable configured global Git config", async () => {
-    const { safeGitEnv } = await import("../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts");
+    const { safeGitEnv } = await import("../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts");
     const { devNull } = await import("node:os");
     const env = safeGitEnv({ GIT_CONFIG_GLOBAL: join(process.cwd(), ".missing-global-gitconfig") });
     expect(env.GIT_CONFIG_GLOBAL).toBe(devNull);
   });
 
   test("branchValidationError distinguishes lookup failure, detached HEAD, and a wrong branch", async () => {
-    const { branchValidationError } = await import("../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts");
+    const { branchValidationError } = await import("../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts");
     expect(branchValidationError("micro-commit", { ok: false, error: "permission denied" })).toBe("micro-commit: cannot read current branch: permission denied");
     expect(branchValidationError("micro-commit", { ok: true, name: "" })).toContain("detached HEAD");
     expect(branchValidationError("micro-commit", { ok: true, name: "🐙️ueli/feature" })).toContain('current branch "🐙️ueli/feature"');
@@ -1305,7 +1305,7 @@ describe("micro-commit", () => {
   });
 
   test("extractCounterFromSubject reads formatted subject lines", async () => {
-    const { extractCounterFromSubject } = await import("../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts");
+    const { extractCounterFromSubject } = await import("../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts");
     expect(extractCounterFromSubject("🧑️ueli🎆️26🌙️06☀️02🚩️009")).toEqual({ nnn: 9, line1Base: "🧑️ueli🎆️26🌙️06☀️02" });
     expect(extractCounterFromSubject("🐙️ueli🎆️26🌙️06☀️04🚩️397")).toEqual({ nnn: 397, line1Base: "🐙️ueli🎆️26🌙️06☀️04" });
     expect(extractCounterFromSubject("🐙️ueli🎆️26🌙️06☀️04🚩️396")).toEqual({ nnn: 396, line1Base: "🐙️ueli🎆️26🌙️06☀️04" });
@@ -1314,21 +1314,21 @@ describe("micro-commit", () => {
   });
 
   test("extractNumericCounterFromSubject reads GitKraken numeric subjects", async () => {
-    const { extractNumericCounterFromSubject } = await import("../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts");
+    const { extractNumericCounterFromSubject } = await import("../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts");
     expect(extractNumericCounterFromSubject("299")).toBe(299);
     expect(extractNumericCounterFromSubject("001")).toBe(1);
     expect(extractNumericCounterFromSubject("🐙️ueli🎆️26🌙️06☀️04🚩️151")).toBeNull();
   });
 
   test("line1BaseFromBundleTag reads WIP epoch from squash tag", async () => {
-    const { line1BaseFromBundleTag } = await import("../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts");
+    const { line1BaseFromBundleTag } = await import("../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts");
     expect(line1BaseFromBundleTag("🐙️ueli🎆️26🌙️06☀️04🚩️")).toBe("🐙️ueli🎆️26🌙️06☀️04");
     expect(line1BaseFromBundleTag("🐙️ueli🎆️26🌙️06☀️04🚩️")).toBe("🐙️ueli🎆️26🌙️06☀️04");
     expect(line1BaseFromBundleTag("🐙️ueli🎆️26🌙️06☀️04🚩️151")).toBeNull();
   });
 
   test("bumpCounterFromHistory uses max across formatted commits", async () => {
-    const { bumpCounterFromHistory } = await import("../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts");
+    const { bumpCounterFromHistory } = await import("../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts");
     const contributor = { alias: "ueli", emoji: "🐙️", name: "Ueli", email: "u@example.com" };
     const subjects = ["🐙️ueli🎆️26🌙️06☀️02🚩️033", "🐙️ueli🎆️26🌙️06☀️02🚩️032", "unrelated"];
     const bumped = bumpCounterFromHistory(subjects, contributor, new Date("2026-06-02T12:00:00"));
@@ -1339,7 +1339,7 @@ describe("micro-commit", () => {
   });
 
   test("bumpCounterFromHistory preserves selector-free history with canonical output", async () => {
-    const { bumpCounterFromHistory } = await import("../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts");
+    const { bumpCounterFromHistory } = await import("../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts");
     const contributor = { alias: "ueli", emoji: "🐙️", name: "Ueli", email: "u@example.com" };
     const bumped = bumpCounterFromHistory(["🦢️other🎆️26🌙️07☀️31🚩️999", "🐙️ueli🎆️26🌙️06☀️04🚩️397", "🐙️ueli🎆️26🌙️06☀️04🚩️396"], contributor, new Date("2026-07-31T12:00:00"));
     expect(bumped).toEqual({ line1Base: "🐙️ueli🎆️26🌙️06☀️04", nnn: "398" });
@@ -1347,7 +1347,7 @@ describe("micro-commit", () => {
   });
 
   test("bumpCounterFromHistory continues numeric GitKraken subjects with WIP epoch", async () => {
-    const { bumpCounterFromHistory } = await import("../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts");
+    const { bumpCounterFromHistory } = await import("../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts");
     const contributor = { alias: "ueli", emoji: "🐙️", name: "Ueli", email: "u@example.com" };
     const subjects = ["299", "298", "297"];
     const bumped = bumpCounterFromHistory(subjects, contributor, new Date("2026-07-17T12:00:00"), "🐙️ueli🎆️26🌙️06☀️04");
@@ -1356,13 +1356,13 @@ describe("micro-commit", () => {
   });
 
   test("normalizeBulletLines strips uloc block lines", async () => {
-    const { normalizeBulletLines } = await import("../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts");
+    const { normalizeBulletLines } = await import("../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts");
     const bullets = normalizeBulletLines("🎆️Summary\n📊️metric📃uloc💯️65k➕️1✏️1🟰️2\n📊️metric🟦️typescript📃uloc💯️65k➕️1✏️1🟰️2\n🐛️Fix bug");
     expect(bullets).toEqual(["🎆️Summary", "🐛️Fix bug"]);
   });
 
   test("bulletEmojiValidationError rejects fireworks emoji on bullets", async () => {
-    const { bulletLeadEmoji, bulletEmojiValidationError } = await import("../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts");
+    const { bulletLeadEmoji, bulletEmojiValidationError } = await import("../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts");
     expect(bulletLeadEmoji("🎆️Drop stacked intro")).toBe("🎆️");
     expect(bulletEmojiValidationError(["🎆️All bullets wrongly use fireworks"])).toContain("🎆️");
     expect(bulletEmojiValidationError(["🐛️Fix real bug"])).toBeNull();
@@ -1371,14 +1371,14 @@ describe("micro-commit", () => {
   });
 
   test("normalizeBulletLines enforces compact {emoji}{description} format", async () => {
-    const { normalizeBulletLines, formatMicroCommitBulletLine } = await import("../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts");
+    const { normalizeBulletLines, formatMicroCommitBulletLine } = await import("../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts");
     expect(formatMicroCommitBulletLine("- 🐛️ Fix PDF")).toBe("🐛️Fix PDF");
     expect(normalizeBulletLines("🐛️ Fix PDF\n- 🖼️ Tweak UI")).toEqual(["🐛️Fix PDF", "🖼️Tweak UI"]);
     expect(normalizeBulletLines(Array.from({ length: 10 }, (_, i) => `🎆️item ${i}`).join("\n"))).toHaveLength(8);
   });
 
   test("buildMicroCommitMessage separates GitKraken summary and description", async () => {
-    const { buildMicroCommitMessage } = await import("../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts");
+    const { buildMicroCommitMessage } = await import("../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts");
     const root = mkdtempSync(join(tmpdir(), "semio-micro-commit-message-"));
     const contributor = { alias: "ueli", emoji: "🐙️", name: "Ueli Saluz", email: "ueli@semio-tech.com" };
     try {
@@ -1392,7 +1392,7 @@ describe("micro-commit", () => {
       expect(lines.some((l) => l.includes("LLM-authored"))).toBe(true);
       expect(lines.at(-1)).toMatch(/^Signed-off-by: /);
       expect(lines.at(-2)).toBe("");
-      const { MICRO_COMMIT_ULOC_HEADER: ulocHeader } = await import("../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts");
+      const { MICRO_COMMIT_ULOC_HEADER: ulocHeader } = await import("../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts");
       const metricsIdx = lines.findIndex((l) => l.startsWith(ulocHeader));
       expect(metricsIdx).toBeGreaterThan(2);
       expect(lines[metricsIdx - 1]).toBe("");
@@ -1404,7 +1404,7 @@ describe("micro-commit", () => {
   });
 
   test("buildMicroCommitMessage rejects output without the required uloc footer", async () => {
-    const { buildMicroCommitMessage } = await import("../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts");
+    const { buildMicroCommitMessage } = await import("../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts");
     const { mkdtempSync, rmSync } = await import("node:fs");
     const { tmpdir } = await import("node:os");
     const contributor = { alias: "ueli", emoji: "🐙️", name: "Ueli Saluz", email: "ueli@semio-tech.com" };
@@ -1429,7 +1429,7 @@ describe("micro-commit", () => {
       formatMetricSizeCount,
       formatMetricRatio,
       COMMIT_METRIC_HEADER,
-    } = await import("../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts");
+    } = await import("../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts");
     expect(COMMIT_METRIC_HEADER).toBe("📊️metric");
     expect(formatMetricSizeCount(1024)).toBe("1.02KB");
     expect(formatMetricSizeCount(10_400_000_000)).toBe("10.4GB");
@@ -1454,7 +1454,7 @@ describe("micro-commit", () => {
   });
 
   test("formatMicroCommitMetricsLines totals all languages on the first row", async () => {
-    const { formatMicroCommitMetricsLines } = await import("../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts");
+    const { formatMicroCommitMetricsLines } = await import("../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts");
     const lines = formatMicroCommitMetricsLines([
       { lang: "TypeScript", emoji: "🟦️", code: 3000, edited: 10, added: 8, removed: 0 },
       { lang: "Markdown", emoji: "📝️", code: 44, edited: 0, added: 0, removed: 0 },
@@ -1465,7 +1465,7 @@ describe("micro-commit", () => {
   });
 
   test("buildMicroCommitMetrics merges uloc and git numstat by language", async () => {
-    const { buildMicroCommitMetrics } = await import("../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts");
+    const { buildMicroCommitMetrics } = await import("../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts");
     const root = process.cwd();
     const metrics = buildMicroCommitMetrics(root, {
       countRepoByLanguage: () => ({ Rust: 100, TypeScript: 50, JSON: 20 }),
@@ -1474,7 +1474,7 @@ describe("micro-commit", () => {
   });
 
   test("isUlocCachePlausible rejects partial caches", async () => {
-    const { isUlocCachePlausible, gitRepoRoot } = await import("../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts");
+    const { isUlocCachePlausible, gitRepoRoot } = await import("../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts");
     const prevRoot = process.env.REPO_ROOT;
     const prevGitDir = process.env.GIT_DIR;
     const prevWorkTree = process.env.GIT_WORK_TREE;
@@ -1508,7 +1508,7 @@ describe("micro-commit", () => {
   });
 
   test("shouldSkipPathForUloc skips dot paths license templates and .🦑️repo", async () => {
-    const { shouldSkipPathForUloc } = await import("../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts");
+    const { shouldSkipPathForUloc } = await import("../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts");
     const root = process.cwd();
     expect(shouldSkipPathForUloc(root, ".cursor/plans/foo.plan.md")).toBe(true);
     expect(shouldSkipPathForUloc(root, ".agents/skills/micro-commit/SKILL.md")).toBe(true);
@@ -1521,18 +1521,18 @@ describe("micro-commit", () => {
   });
 
   test("countJsonKeys counts nested object keys", async () => {
-    const { countJsonKeys } = await import("../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts");
+    const { countJsonKeys } = await import("../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts");
     expect(countJsonKeys('{"a":1,"b":{"c":2}}')).toBe(3);
   });
 
   test("appendGitDeltaSuffix formats legacy delta-only suffixes", async () => {
-    const { appendGitDeltaSuffix, formatBundleUlocSuffix } = await import("../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts");
+    const { appendGitDeltaSuffix, formatBundleUlocSuffix } = await import("../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts");
     expect(appendGitDeltaSuffix("🟦️65k", { added: 700, edited: 200, removed: 10 })).toBe("🟦️65k➕️700✏️200➖️10🟰️910");
     expect(formatBundleUlocSuffix({ added: 700, edited: 200, removed: 10 }, 65_000)).toBe("📊️metric📃uloc💯️65k📈️690➗️1.07➕️700✏️200➖️10🟰️910");
   });
 
   test("splitGitNumstatDelta separates replaced lines from net added and removed", async () => {
-    const { splitGitNumstatDelta } = await import("../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts");
+    const { splitGitNumstatDelta } = await import("../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts");
     expect(splitGitNumstatDelta(4, 2)).toEqual({ edited: 2, added: 2, removed: 0 });
     expect(splitGitNumstatDelta(2, 4)).toEqual({ edited: 2, added: 0, removed: 2 });
     expect(splitGitNumstatDelta(5, 5)).toEqual({ edited: 5, added: 0, removed: 0 });
@@ -1541,13 +1541,13 @@ describe("micro-commit", () => {
   });
 
   test("countUnifiedLocForFile uses physical lines for code and keys for json", async () => {
-    const { countUnifiedLocForFile } = await import("../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts");
+    const { countUnifiedLocForFile } = await import("../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts");
     expect(countUnifiedLocForFile("x.rs", "// c\nfn main() {}\n")).toBe(3);
     expect(countUnifiedLocForFile("x.json", '{"k":1}')).toBe(1);
   });
 
   test("classifyPathForMetrics maps TeX ecosystem extensions", async () => {
-    const { classifyPathForMetrics, langMetricsEmoji } = await import("../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts");
+    const { classifyPathForMetrics, langMetricsEmoji } = await import("../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts");
     expect(classifyPathForMetrics("mit-bestand/bericht/zwischenbericht/🖋️zwischenbericht.tex")).toBe("TeX");
     expect(classifyPathForMetrics("print/semio.sty")).toBe("TeX");
     expect(classifyPathForMetrics("print/🖋️semio.cls")).toBe("TeX");
@@ -1557,7 +1557,7 @@ describe("micro-commit", () => {
   });
 
   test("uncoveredStagedAreas flags missing cursor-plans and product coverage", async () => {
-    const { uncoveredStagedAreas } = await import("../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts");
+    const { uncoveredStagedAreas } = await import("../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts");
     const staged = [".cursor/plans/brush_fix_cfd8a931.plan.md", "framework/product/playground/renderer/react/index.tsx"];
     expect(uncoveredStagedAreas(["🫡️Only micro-commit skill wording"], staged)).toContain(".cursor/plans");
     expect(uncoveredStagedAreas(["🫡️Only micro-commit skill wording"], staged)).toContain("product");
@@ -1584,7 +1584,7 @@ describe("micro-commit", () => {
   }, 120_000);
 
   test("installMicroCommitGitHooks writes portable hooks and bun pin", async () => {
-    const { installMicroCommitGitHooks, renderMicroCommitGitHook } = await import("../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts");
+    const { installMicroCommitGitHooks, renderMicroCommitGitHook } = await import("../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts");
     const { mkdtempSync, rmSync } = await import("node:fs");
     const { tmpdir } = await import("node:os");
     const { join } = await import("node:path");
@@ -1605,7 +1605,7 @@ describe("micro-commit", () => {
   });
 
   test("handlePrepareCommitMsg inactive does not clear commit message file", async () => {
-    const { handlePrepareCommitMsg } = await import("../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts");
+    const { handlePrepareCommitMsg } = await import("../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts");
     const { mkdtempSync, writeFileSync, readFileSync, rmSync } = await import("node:fs");
     const { tmpdir } = await import("node:os");
     const { join } = await import("node:path");
@@ -1623,7 +1623,7 @@ describe("micro-commit", () => {
   });
 
   test("wipeAfterCommit clears all GK templates and prepare state", async () => {
-    const { wipeAfterCommit, writeMicroCommitTemplates } = await import("../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts");
+    const { wipeAfterCommit, writeMicroCommitTemplates } = await import("../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts");
     const { mkdtempSync, writeFileSync, readFileSync, rmSync, existsSync, readdirSync } = await import("node:fs");
     const { tmpdir } = await import("node:os");
     const { join } = await import("node:path");
@@ -1663,7 +1663,7 @@ describe("micro-commit", () => {
   });
 
   test("writeMicroCommitTemplates uses single gkcommittemplate.txt", async () => {
-    const { writeMicroCommitTemplates } = await import("../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts");
+    const { writeMicroCommitTemplates } = await import("../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts");
     const { mkdtempSync, readdirSync, rmSync, readFileSync } = await import("node:fs");
     const { tmpdir } = await import("node:os");
     const { join } = await import("node:path");
@@ -1695,7 +1695,7 @@ describe("micro-commit", () => {
   });
 
   test("shouldRefreshPreparedCommitMessage keeps user edits", async () => {
-    const { digestMicroCommitMessage, shouldRefreshPreparedCommitMessage } = await import("../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts");
+    const { digestMicroCommitMessage, shouldRefreshPreparedCommitMessage } = await import("../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts");
     const prepared = "line1\nline2\n";
     const digest = digestMicroCommitMessage(prepared);
     expect(shouldRefreshPreparedCommitMessage(prepared, digest)).toBe(true);
@@ -1815,7 +1815,7 @@ describe("package boundary guards", () => {
   });
 
   test("framework renderer host has no per-technology registerUi surface host APIs", () => {
-    const indexPath = join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx");
+    const indexPath = join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🟦️typescript/🎯️targets/⚛️react/🟦️.tsx");
     const indexSource = readFileSync(indexPath, "utf8");
     expect(indexSource).not.toMatch(/registerUi(?:Draw|Flow|Layout|Note|Puzzle2d|Puzzle3d|Puzzle5d|Sequence|Writer|Raster|Forms|Trinity|Procedural|Shooting|Gis|Cad|Dag|Lowpoly|Imperative|S)SurfaceHost/);
     expect(indexSource).toContain("bootFrameworkOs");
@@ -1835,7 +1835,7 @@ function findNearestPackageDir(filePath: string, repoRoot: string): string | und
 
 describe("commit", () => {
   test("parseCommitBundleBody reads emoji scopes dates and bullets", async () => {
-    const { parseCommitBundleBody } = await import("../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts");
+    const { parseCommitBundleBody } = await import("../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts");
     const bundles = parseCommitBundleBody("🏘️compose✍️sketchpad\n🎆️26🌙️06☀️04\n🗺️Map work\n🎆️26🌙️06☀️03\n🧪️Playground\n\n🖱️ui⚛️react\n🎆️26🌙️06☀️02\n🖥️Shell");
     expect(bundles).toHaveLength(2);
     expect(bundles[0]?.label).toBe("🏘️compose✍️sketchpad");
@@ -1844,19 +1844,19 @@ describe("commit", () => {
   });
 
   test("parseCommitBundleBody rejects path prefixes and reserved emojis", async () => {
-    const { parseCommitBundleBody } = await import("../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts");
+    const { parseCommitBundleBody } = await import("../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts");
     expect(() => parseCommitBundleBody("compose/foo|🏘️compose\n🎆️26🌙️06☀️04\n🗺️Map work")).toThrow();
     expect(() => parseCommitBundleBody("🏘️compose🔀️📊️metric\n🎆️26🌙️06☀️04\n🗺️Map work")).toThrow();
     expect(() => parseCommitBundleBody("🗺️🧩️🕸️\n🎆️26🌙️06☀️04\n🗺️Map work")).toThrow();
   });
 
   test("normalizeBundleScopeLabel strips reserved and uloc suffix", async () => {
-    const { normalizeBundleScopeLabel } = await import("../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts");
+    const { normalizeBundleScopeLabel } = await import("../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts");
     expect(normalizeBundleScopeLabel("🏘️compose🔀️📊️metric📃uloc➕️1")).toBe("🏘️compose");
   });
 
   test("isBundleScopeLine accepts area and technology root labels", async () => {
-    const { isBundleScopeLine } = await import("../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts");
+    const { isBundleScopeLine } = await import("../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts");
     expect(isBundleScopeLine("🌐️gis📍️map")).toBe(true);
     expect(isBundleScopeLine("🖱️ui⚛️react")).toBe(true);
     expect(isBundleScopeLine("🥅️framework")).toBe(true);
@@ -1865,26 +1865,26 @@ describe("commit", () => {
   });
 
   test("extractBundleDateLineFromSubject reads calendar day from micro-commit subject", async () => {
-    const { extractBundleDateLineFromSubject } = await import("../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts");
+    const { extractBundleDateLineFromSubject } = await import("../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts");
     expect(extractBundleDateLineFromSubject("🐙️ueli🎆️26🌙️06☀️04🚩️012")).toBe("🎆️26🌙️06☀️04");
     expect(extractBundleDateLineFromSubject("unrelated")).toBeNull();
   });
 
   test("extractBundleDateLineFromCommit prefers body timestamp over subject checkpoint day", async () => {
-    const { extractBundleDateLineFromCommit, extractBundleDateLineFromCommitBody } = await import("../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts");
+    const { extractBundleDateLineFromCommit, extractBundleDateLineFromCommitBody } = await import("../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts");
     const body = "🎆️26🌙️06☀️04⏰️02⌚️38⏱️38\n🗺️Map work\n";
     expect(extractBundleDateLineFromCommitBody(body)).toBe("🎆️26🌙️06☀️04");
     expect(extractBundleDateLineFromCommit("🐙️ueli🎆️26🌙️06☀️02🚩️084", body)).toBe("🎆️26🌙️06☀️04");
   });
 
   test("pathsFromNumstatRow expands rename paths", async () => {
-    const { pathsFromNumstatRow } = await import("../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts");
+    const { pathsFromNumstatRow } = await import("../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts");
     expect(pathsFromNumstatRow("old/a.ts\tnew/b.ts")).toEqual(["old/a.ts", "new/b.ts"]);
     expect(pathsFromNumstatRow("dir/{old.ts => new.ts}")).toEqual(["old.ts", "new.ts"]);
   });
 
   test("pathMatchesBundleIndex does not treat empty prefix set as match-all", async () => {
-    const { pathMatchesBundleIndex } = await import("../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts");
+    const { pathMatchesBundleIndex } = await import("../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts");
     const bundles = [
       { label: "🏘️compose✍️sketchpad", dates: [{ dateLine: "🎆️26🌙️06☀️04", bullets: ["✍️x"] }] },
       { label: "🏘️compose🗃️fixtures", dates: [{ dateLine: "🎆️26🌙️06☀️04", bullets: ["🗃️y"] }] },
@@ -1895,19 +1895,19 @@ describe("commit", () => {
   });
 
   test("formatBundleDateLine appends per-day uloc suffix", async () => {
-    const { formatBundleDateLine } = await import("../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts");
+    const { formatBundleDateLine } = await import("../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts");
     expect(formatBundleDateLine("🎆️26🌙️06☀️04", { added: 700, edited: 200, removed: 10 }, { added: 788_000, edited: 0, removed: 0 }, 65_000, 10_400_000_000)).toBe(
       "🎆️26🌙️06☀️04📊️metric📃uloc💯️65k📈️690➗️1.07➕️700✏️200➖️10🟰️910📊️metric💾size💯️10.4GB📈️788KB➗️0.008➕️788KB🟰️788KB",
     );
   });
 
   test("commitBundleBodyError rejects per-day uloc on stdin", async () => {
-    const { commitBundleBodyError } = await import("../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts");
+    const { commitBundleBodyError } = await import("../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts");
     expect(commitBundleBodyError("🏘️compose\n🎆️26🌙️06☀️04📊️metric📃uloc➕️1\n🗺️Work")).toMatch(/per-day/);
   });
 
   test("validateMicroCommitLangMetricsDeltaSum passes when language rows sum to footer", async () => {
-    const { validateMicroCommitLangMetricsDeltaSum } = await import("../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts");
+    const { validateMicroCommitLangMetricsDeltaSum } = await import("../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts");
     expect(() =>
       validateMicroCommitLangMetricsDeltaSum([
         { lang: "TypeScript", emoji: "🟦️", code: 100, edited: 5, added: 3, removed: 0 },
@@ -1919,7 +1919,7 @@ describe("commit", () => {
   test("validateBundleCommitAttribution requires bundle headers to sum to range total", async () => {
     const { mkdtempSync, writeFileSync, mkdirSync, rmSync } = await import("node:fs");
     const { tmpdir } = await import("node:os");
-    const { validateBundleCommitAttribution, parseCommitBundleBody } = await import("../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts");
+    const { validateBundleCommitAttribution, parseCommitBundleBody } = await import("../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts");
     const root = mkdtempSync(join(tmpdir(), "compose-commit-check-sum-"));
     try {
       spawnSync("git", ["init"], { cwd: root });
@@ -1947,7 +1947,7 @@ describe("commit", () => {
   });
 
   test("validateBundleDayDeltasAttribution rejects unlisted micro-commit day", async () => {
-    const { validateBundleDayDeltasAttribution } = await import("../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts");
+    const { validateBundleDayDeltasAttribution } = await import("../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts");
     const bundles = [{ label: "📚️repo🔧️js", dates: [{ dateLine: "🎆️26🌙️06☀️04", bullets: ["🔧️Net"] }] }];
     const prefixSets = [["repo/js/"]];
     const dateDeltas = new Map([
@@ -1964,7 +1964,7 @@ describe("commit", () => {
   });
 
   test("validateBundleDayDeltasAttribution rejects when listed days do not sum to bundle total", async () => {
-    const { validateBundleDayDeltasAttribution } = await import("../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts");
+    const { validateBundleDayDeltasAttribution } = await import("../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts");
     const bundles = [
       {
         label: "📚️repo🔧️js",
@@ -1988,7 +1988,7 @@ describe("commit", () => {
   test("buildCommitMessage appends per-day uloc from micro-commit dates", async () => {
     const { mkdtempSync, writeFileSync, mkdirSync, rmSync } = await import("node:fs");
     const { tmpdir } = await import("node:os");
-    const { buildCommitMessage, parseCommitBundleBody } = await import("../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts");
+    const { buildCommitMessage, parseCommitBundleBody } = await import("../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts");
     const root = mkdtempSync(join(tmpdir(), "compose-commit-day-uloc-"));
     try {
       spawnSync("git", ["init"], { cwd: root });
@@ -2023,7 +2023,7 @@ describe("commit", () => {
   test("sortCommitBundlesByEditTotal orders bundles by descending gitDeltaLineTotal", async () => {
     const { mkdtempSync, writeFileSync, mkdirSync, rmSync } = await import("node:fs");
     const { tmpdir } = await import("node:os");
-    const { sortCommitBundlesByEditTotal } = await import("../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts");
+    const { sortCommitBundlesByEditTotal } = await import("../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts");
     const mk = (label: string) => ({
       label,
       dates: [{ dateLine: "🎆️26🌙️06☀️04", bullets: ["🗺️change"] }],
@@ -2059,7 +2059,7 @@ describe("commit", () => {
   });
 
   test("buildCommitMessage renders bundle subject and footer", async () => {
-    const { buildCommitMessage, parseCommitBundleBody } = await import("../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts");
+    const { buildCommitMessage, parseCommitBundleBody } = await import("../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts");
     const contributor = { alias: "ueli", emoji: "🐙️", name: "Ueli Saluz", email: "ueli@semio-tech.com" };
     const bundles = parseCommitBundleBody("📚️repo🔧️js\n🎆️26🌙️06☀️04\n🔧️Tooling");
     const root = mkdtempSync(join(tmpdir(), "semio-bundle-message-"));
@@ -2083,7 +2083,7 @@ describe("commit", () => {
   });
 
   test("formatBundleTagName and formatBundleSubject use contributor date emojis", async () => {
-    const { formatBundleTagName, formatBundleSubject } = await import("../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts");
+    const { formatBundleTagName, formatBundleSubject } = await import("../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts");
     const c = { alias: "ueli", emoji: "🐙️", name: "U", email: "u@e.com" };
     const now = new Date("2026-06-04T12:00:00");
     expect(formatBundleTagName(c, now)).toBe("🐙️ueli🎆️26🌙️06☀️04🚩️");
@@ -2091,7 +2091,7 @@ describe("commit", () => {
   });
 
   test("formatCommitPrepareCommands emits four fenced git blocks", async () => {
-    const { formatCommitPrepareCommands } = await import("../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts");
+    const { formatCommitPrepareCommands } = await import("../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts");
     const out = formatCommitPrepareCommands({
       tagName: "🐙️ueli🎆️26🌙️06☀️04🚩️",
       wipSha: "abc123def456",
@@ -2103,7 +2103,7 @@ describe("commit", () => {
   });
 
   test("formatCommitPrepareAgentReply ends with tag name and commit message blocks", async () => {
-    const { formatCommitPrepareAgentReply } = await import("../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts");
+    const { formatCommitPrepareAgentReply } = await import("../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts");
     const commitMessage = "🐙️ueli🎆️26🌙️06☀️04🔀️\n\n🏘️compose✍️sketchpad📊️metric\n🎆️26🌙️06☀️04\n🗺️Work\n\n📊️metric📃uloc➕️1🟰️1\n\nSigned-off-by: U <u@e.com>\n";
     const out = formatCommitPrepareAgentReply({
       tagName: "🐙️ueli🎆️26🌙️06☀️04🚩️",
@@ -2117,13 +2117,13 @@ describe("commit", () => {
   });
 
   test("parseCommitSteps treats cs as squash without tag", async () => {
-    const { parseCommitSteps } = await import("../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts");
+    const { parseCommitSteps } = await import("../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts");
     expect(parseCommitSteps(["cs"])).toEqual({ tag: false, squash: true, push: false });
     expect(parseCommitSteps(["ct", "cs", "cp"])).toEqual({ tag: true, squash: true, push: true });
   });
 
   test("bulletMatchesCommitHistory detects verbatim prior commit lines", async () => {
-    const { bulletMatchesCommitHistory } = await import("../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts");
+    const { bulletMatchesCommitHistory } = await import("../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts");
     const history = new Set(["🗺️copied line from an old micro-commit"]);
     expect(bulletMatchesCommitHistory("🗺️copied line from an old micro-commit", history)).toBe(true);
     expect(bulletMatchesCommitHistory("🗺️fresh summary written from git diff", history)).toBe(false);
@@ -2131,7 +2131,7 @@ describe("commit", () => {
 });
 
 describe("command budgets", () => {
-  const indexPath = join(import.meta.dir, "📦️index.ts");
+  const indexPath = join(import.meta.dir, "🟦️.ts");
 
   /** ⏱️Runs `runCmd` in a fresh subprocess (its budget-exceeded path calls `process.exit`, which would kill the test runner in-process) against a child that sleeps far longer than its budget. */
   function spawnBudgetedSleep(budgetMs: number, envOverride?: Record<string, string>): ReturnType<typeof runProbe> {
@@ -2221,7 +2221,7 @@ describe("command budgets", () => {
   });
 
   test("testLevelBudgetMs maps levels and honors SEMIO_TEST_BUDGET_MS", async () => {
-    const { TEST_LEVEL_BUDGET_MS } = await import("../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts");
+    const { TEST_LEVEL_BUDGET_MS } = await import("../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts");
     expect(testLevelBudgetMs("fundamental")).toBe(TEST_LEVEL_BUDGET_MS.fundamental);
     expect(testLevelBudgetMs("exhaustive")).toBe(TEST_LEVEL_BUDGET_MS.exhaustive);
     const prev = process.env.SEMIO_TEST_BUDGET_MS;
@@ -2281,7 +2281,7 @@ describe("nextest execution filters", () => {
       cases: Array<{ name: string; input: string[]; build: string[]; execution: string[]; libtest: string[] }>;
       rejected: string[][];
     };
-    const validate = new Ajv({ strict: true }).compile(JSON.parse(readFileSync(join(fixtureRoot, "🔣️schema.json"), "utf8")));
+    const validate = new Ajv({ strict: true }).compile(JSON.parse(readFileSync(join(fixtureRoot, "🔣️.schema.json"), "utf8")));
     expect(validate(fixture), JSON.stringify(validate.errors)).toBe(true);
     const runtimeKeys = ["filter-expr", "partition", "run-ignored", "ignore-default-filter", "no-fail-fast"];
     for (const row of fixture.cases) {
@@ -2875,11 +2875,11 @@ pub struct AddNode {
     pub label: String,
 }
 
-#[path = "➕️add-node/🦀️component.rs"]
+#[path = "➕️add-node/🦀️.rs"]
 pub mod add_node;
 
 #[cfg(test)]
-#[path = "🧪️tests/add-node/🦀️component.rs"]
+#[path = "🧪️tests/add-node/🦀️.rs"]
 mod tests;
 
 pub enum Mutation {
@@ -3009,8 +3009,8 @@ describe("direct mutation taxonomy", () => {
     const facts = inspectRustStructure(DIRECT_MUTATION_RUST_FIXTURE);
     expect(facts.schemaVersion).toBe(1);
     expect(facts.modules).toEqual([
-      { name: "add_node", visibility: "pub", inline: false, pathTarget: "➕️add-node/🦀️component.rs", cfgTest: false },
-      { name: "tests", visibility: "private", inline: false, pathTarget: "🧪️tests/add-node/🦀️component.rs", cfgTest: true },
+      { name: "add_node", visibility: "pub", inline: false, pathTarget: "➕️add-node/🦀️.rs", cfgTest: false },
+      { name: "tests", visibility: "private", inline: false, pathTarget: "🧪️tests/add-node/🦀️.rs", cfgTest: true },
     ]);
     expect(facts.enums).toEqual([{
       name: "Mutation",
@@ -3040,9 +3040,9 @@ describe("direct mutation taxonomy", () => {
   });
 
   test("filters virtual opaque paths before reading and normalizes Windows separators", () => {
-    const outside = "🧰️framework/🧬️schema/🧬️mutations/➕️add-node/🦀️component.rs";
-    const opaque = "compose/🧬️schema/🧬️mutations/➕️add-node/🦀️component.rs";
-    const recoveredOpaque = "temp\\compose\\🧬️schema\\🧬️mutations\\➕️add-node\\🦀️component.rs";
+    const outside = "🧰️framework/🧬️schema/🧬️mutations/➕️add-node/🦀️.rs";
+    const opaque = "compose/🧬️schema/🧬️mutations/➕️add-node/🦀️.rs";
+    const recoveredOpaque = "temp\\compose\\🧬️schema\\🧬️mutations\\➕️add-node\\🦀️.rs";
     const reads: string[] = [];
     const inspected = inspectRustVirtualSources([opaque, outside, recoveredOpaque], (path) => {
       reads.push(path);
@@ -3082,7 +3082,7 @@ function semanticFixture(options: { readonly secondProductionConsumer?: boolean;
     write("🧰️framework/💡️inferences/📏width/🦀️.rs", "use super::super::modules::measure::measure;\npub fn width() -> u32 { measure(1) }\n");
     if (options.secondProductionConsumer) write("🧰️framework/💡️inferences/↕️height/🦀️.rs", "use super::super::modules::measure::measure;\npub fn height() -> u32 { measure(1) }\n");
   }
-  if (options.glueConsumer) write("🧰️framework/💡️inferences/📏width/📦️packages/🦀️rust/📦️glue.rs", '#[path = "../../../../🔨️modules/📏measure/🦀️.rs"]\npub mod measure;\n');
+  if (options.glueConsumer) write("🧰️framework/💡️inferences/📏width/📦️packages/🦀️rust/🦀️.rs", '#[path = "../../../../🔨️modules/📏measure/🦀️.rs"]\npub mod measure;\n');
   write("🧰️framework/💡️inferences/🔣️.json", JSON.stringify({ "x-semio": { kind: "collection", members: [
     { directory: "📏width", id: "width", kind: "inference", responsibility: "derived width", inference: { inputs: ["value"], target: "width" } },
     ...(options.secondProductionConsumer ? [{ directory: "↕️height", id: "height", kind: "inference", responsibility: "derived height", inference: { inputs: ["value"], target: "height" } }] : []),
@@ -3213,7 +3213,7 @@ describe("semantic collection census", () => {
   test("does not count a test call site as a second production component", () => {
     const fixture = semanticFixture();
     try {
-      const testPath = join(fixture.root, "🧰️framework/💡️inferences/📏width/🧪️tests/🟦️.ts");
+      const testPath = join(fixture.root, "🧰️framework/💡️inferences/📏width/🧪️test/🟦️s.ts");
       mkdirSync(join(testPath, ".."), { recursive: true });
       writeFileSync(testPath, 'import { measure } from "../../../🔨️modules/📏measure/🟦️.ts";\nexport const checked = measure(1);\n');
       const module = buildSemanticCensus(fixture.root, {}, fixture.taxonomy).records.find((record) => record.id === "measure");
@@ -3228,7 +3228,7 @@ describe("semantic collection census", () => {
     const fixture = semanticFixture({ glueConsumer: true });
     try {
       const census = buildSemanticCensus(fixture.root, {}, fixture.taxonomy);
-      const glueEdge = census.graph.edges.find((edge) => edge.source.endsWith("📦️glue.rs") && edge.to === "measure");
+      const glueEdge = census.graph.edges.find((edge) => edge.source.endsWith("🦀️.rs") && edge.to === "measure");
       expect(glueEdge?.production).toBe(false);
     } finally {
       rmSync(fixture.root, { recursive: true, force: true });
@@ -3240,7 +3240,7 @@ describe("semantic collection census", () => {
     try {
       const collection = join(fixture.root, "🧰️framework/💡️inferences");
       mkdirSync(join(collection, "🧪️orphan"), { recursive: true });
-      writeFileSync(join(collection, "🧪️orphan/🟦️.ts"), "export const orphan = true;\n");
+      writeFileSync(join(collection, "🟦️orphan.ts"), "export const orphan = true;\n");
       const manifest = JSON.parse(readFileSync(join(collection, "🔣️.json"), "utf8"));
       manifest["x-semio"].members.push({ directory: "🧹️stale", id: "stale", kind: "inference", responsibility: "stale result", inference: { inputs: ["x"], target: "stale" } });
       manifest["x-semio"].members[0].directory = "🧪️shared";
@@ -3266,7 +3266,7 @@ describe("semantic collection census", () => {
       "  }",
       "}",
     ].join("\n");
-    expect(resolveRustPathAttributes(join(root, "📦️glue.rs"), source).at(-1)?.target).toBe(resolve(root, "../../metrics/🦀️.rs"));
+    expect(resolveRustPathAttributes(join(root, "🦀️.rs"), source).at(-1)?.target).toBe(resolve(root, "../../metrics/🦀️.rs"));
   });
 
   test("places inference codecs below I/O rather than the inference result collection", () => {
@@ -3619,9 +3619,9 @@ describe("policyPluginDependencyParityBreaches", () => {
       mkdirSync(join(pluginDir, "📦️packages", "🦀️rust"), { recursive: true });
       mkdirSync(join(extDir, "📦️packages", "🦀️rust"), { recursive: true });
       writeFileSync(join(pluginDir, "📦️packages", "🦀️rust", "Cargo.toml"), `[package]\nname = "semio-s-plugin-cad"\n`);
-      writeFileSync(join(pluginDir, "🦀️component.rs"), `pub struct CadPlugin;\n`);
+      writeFileSync(join(pluginDir, "🦀️.rs"), `pub struct CadPlugin;\n`);
       writeFileSync(join(extDir, "📦️packages", "🦀️rust", "Cargo.toml"), `[package]\nname = "semio-s-plugin-cad-aec-building"\n[dependencies]\nsemio-s-plugin-cad = { path = "../../../📦️packages/🦀️rust" }\n`);
-      writeFileSync(join(extDir, "🦀️component.rs"), `pub fn configure() { b.depends_on("cad", "^1.0.0"); }\n`);
+      writeFileSync(join(extDir, "🦀️.rs"), `pub fn configure() { b.depends_on("cad", "^1.0.0"); }\n`);
 
       const breaches = policyPluginDependencyParityBreaches(root);
       expect(breaches.filter((b) => b.scope === "✏️s/🔌️plugins/📐️cad" && b.priority === "high")).toEqual([]);
@@ -3639,9 +3639,9 @@ describe("policyPluginDependencyParityBreaches", () => {
       mkdirSync(join(pluginDir, "📦️packages", "🦀️rust"), { recursive: true });
       mkdirSync(join(extDir, "📦️packages", "🦀️rust"), { recursive: true });
       writeFileSync(join(pluginDir, "📦️packages", "🦀️rust", "Cargo.toml"), `[package]\nname = "semio-s-plugin-cad"\n`);
-      writeFileSync(join(pluginDir, "🦀️component.rs"), `pub struct CadPlugin;\n`);
+      writeFileSync(join(pluginDir, "🦀️.rs"), `pub struct CadPlugin;\n`);
       writeFileSync(join(extDir, "📦️packages", "🦀️rust", "Cargo.toml"), `[package]\nname = "semio-s-plugin-cad-aec-building"\n`);
-      writeFileSync(join(extDir, "🦀️component.rs"), `pub fn configure() { b.depends_on("cad", "^1.0.0"); }\n`);
+      writeFileSync(join(extDir, "🦀️.rs"), `pub fn configure() { b.depends_on("cad", "^1.0.0"); }\n`);
 
       const breaches = policyPluginDependencyParityBreaches(root);
       expect(breaches.filter((b) => b.scope === "✏️s/🔌️plugins/📐️cad")).toEqual([]);
@@ -3872,7 +3872,7 @@ describe("artifact path projection authority", () => {
     const fixture = normalizationFixture("artifact-projection-submitted-proof", {}, undefined, ARTIFACT_PROJECTION_RUN_PARENT);
     let passed = false;
     try {
-      const vector = JSON.parse(readFileSync(join(DRAW_SOURCE_SCENARIO_ROOT, "🧪️submitted-proof/🔣️.json"), "utf8"));
+      const vector = JSON.parse(readFileSync(join(DRAW_SOURCE_SCENARIO_ROOT, "🔣️submitted-proof.json"), "utf8"));
       const unsigned = { ...vector.unsignedPlan, baselineCommit: fixture.baselineCommit }, plan = { ...unsigned, planDigest: createHash("sha256").update(JSON.stringify(unsigned, Object.keys(unsigned).sort())).digest("hex") };
       const path = artifactProjectionCaptureSubmittedPlan(fixture, plan);
       expect(path).toBe(join(fixture.ticketDir, vector.directoryName, `🔖️${plan.planDigest}`, vector.filename));
@@ -3948,7 +3948,7 @@ describe("artifact path projection authority", () => {
   });
 
   test("authored Draw residue route enforces its registered single-case parent budget", async () => {
-    const vector = JSON.parse(readFileSync(join(DRAW_SOURCE_SCENARIO_ROOT, "🧪️submitted-proof/🔣️.json"), "utf8")).singleCase;
+    const vector = JSON.parse(readFileSync(join(DRAW_SOURCE_SCENARIO_ROOT, "🔣️submitted-proof.json"), "utf8")).singleCase;
     await assertArtifactProjectionSingleCaseRoute(vector);
   });
 
@@ -4099,7 +4099,7 @@ describe("artifact path projection authority", () => {
   });
 
   test("authored Draw source producer context captures actual implementations with independent import parity", async () => {
-    const ts = await import("typescript"), { registryStaticImports } = await import("../../🔍️discovery/🟦️component.ts");
+    const ts = await import("typescript"), { registryStaticImports } = await import("../../🔍️discovery/🟦️.ts");
     const taxonomy = loadTaxonomy(), readPaths: string[] = [];
     const context = artifactProjectionProducerInputs(taxonomy, (path: string) => {
       readPaths.push(path);
@@ -4137,7 +4137,7 @@ describe("artifact path projection authority", () => {
   });
 
   test("authored Draw source producer retains imported JSON bytes and rejects invalid data", () => {
-    const vector = JSON.parse(readFileSync(join(import.meta.dir, "../../🧪️tests/🧪️registry-import-language/🧪️imported-data/🔣️.json"), "utf8")) as { graph: { entries: string[]; dataPath: string; files: { path: string; content: string; mode: number }[] } };
+    const vector = JSON.parse(readFileSync(join(import.meta.dir, "../../🧪️tests/🧪️registry-import-language/🔣️imported-data.json"), "utf8")) as { graph: { entries: string[]; dataPath: string; files: { path: string; content: string; mode: number }[] } };
     const taxonomy = JSON.parse(readFileSync(join(getWorkspaceRoot(), NORMALIZATION_SCHEMA_REL), "utf8")) as Taxonomy;
     Object.assign(taxonomy.generatorContracts["plugin-registry"]!.inputDiscovery!, { implementationEntryPaths: vector.graph.entries, workspaceImports: {} });
     const source = new Map(vector.graph.files.map((row) => [row.path, row])), reads: string[] = [];
@@ -4203,7 +4203,7 @@ describe("artifact path projection authority", () => {
     const virtualRoot = resolve("/draw-source-fixture");
     expect(resolve(virtualRoot, dirname(mount.manifestPath), mount.libraryEntry)).toBe(resolve(virtualRoot, root.path));
     const modulePath = relative(virtualRoot, resolve(virtualRoot, dirname(root.path), mount.moduleTarget)).replaceAll("\\", "/");
-    const { inspectRustModuleGraph, inspectRustJoinArgumentSpans, inspectRustManifestPathReferences } = await import("../../🔍️discovery/🟦️component.ts");
+    const { inspectRustModuleGraph, inspectRustJoinArgumentSpans, inspectRustManifestPathReferences } = await import("../../🔍️discovery/🟦️.ts");
     const graph = inspectRustModuleGraph(Object.keys(files), (path) => files[path], { conventionalRoots: false, strictManifests: true });
     expect([...new Set(graph.contexts.get(modulePath)?.map(({ manifestPath }) => manifestPath))]).toEqual([mount.manifestPath]);
     expect(graph.contexts.get(modulePath)?.filter(({ modulePath: segments }) => segments.join("::") === mount.moduleName).map(({ manifestPath }) => manifestPath)).toEqual([mount.manifestPath]);
@@ -4237,7 +4237,7 @@ describe("artifact path projection authority", () => {
   test("authored Draw source run parent is exact and rejects unsafe ancestry before allocation", async () => {
     const expected = [NORMALIZATION_TICKET_REL, ...DRAW_SOURCE_SCENARIO.retention.parentSegments].join("/");
     expect(expected).toBe(ARTIFACT_PROJECTION_RUN_PARENT);
-    const taxonomy = loadTaxonomy(), { registryCatalogPathMayAffect } = await import("../../🔍️discovery/🟦️component.ts");
+    const taxonomy = loadTaxonomy(), { registryCatalogPathMayAffect } = await import("../../🔍️discovery/🟦️.ts");
     const fixtureOwner = DRAW_SOURCE_SCENARIO.retention.fixtureOwnerSegments.join("/");
     expect(fixtureOwner).toBe("🧪️tests");
     expect(registryCatalogPathMayAffect(`${fixtureOwner}/🧪️fixture/🗿️artifacts/🖍️draw/🦀️.rs`, taxonomy)).toBe(true);
@@ -4414,7 +4414,7 @@ type MutationProjectionGolden = Readonly<{
 const NORMALIZATION_TICKET_REL = ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/END-TO-END-TAXONOMY-NORMALIZATION";
 const ARTIFACT_PROJECTION_RUN_PARENT = `${NORMALIZATION_TICKET_REL}/📓️draw-source-scenarios/🧪️runs`;
 const ARTIFACT_PROJECTION_RETAINED_RUNS = new Map<string, Readonly<{ device: number; inode: number; reportHash: string; name: string; startedAt: string }>>();
-const DRAW_SUBMITTED_PROOF = JSON.parse(readFileSync(join(DRAW_SOURCE_SCENARIO_ROOT, "🧪️submitted-proof/🔣️.json"), "utf8")) as Readonly<{ directoryName: string; filename: string; fileMode: number; progress: Readonly<{ externalParentSegments: readonly string[]; intervalMs: number }> }>;
+const DRAW_SUBMITTED_PROOF = JSON.parse(readFileSync(join(DRAW_SOURCE_SCENARIO_ROOT, "🔣️submitted-proof.json"), "utf8")) as Readonly<{ directoryName: string; filename: string; fileMode: number; progress: Readonly<{ externalParentSegments: readonly string[]; intervalMs: number }> }>;
 const ARTIFACT_PROJECTION_PROGRESS_RECORDS = new Map<string, { path: string; bytes: Buffer; ordinal: number }>();
 const NORMALIZATION_SCHEMA_REL = "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json";
 const TICKET_IMPORTANT_HISTORY_ROOT_REL = ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️20/SCOPED-HISTORY-APPLY";
@@ -4627,7 +4627,7 @@ function nativeMutationCatalogPaths(workspace: string): string[] {
     for (const entry of readdirSync(directory, { withFileTypes: true })) {
       const absolute = join(directory, entry.name);
       if (entry.isDirectory()) walk(absolute);
-      else if (absolute.replaceAll("\\", "/").endsWith("/🧪️oracle/🔣️.json")) paths.push(relative(workspace, absolute).replaceAll("\\", "/"));
+      else if (absolute.replaceAll("\\", "/").endsWith("/🔣️oracle.json")) paths.push(relative(workspace, absolute).replaceAll("\\", "/"));
     }
   };
   walk(root);
@@ -4635,11 +4635,11 @@ function nativeMutationCatalogPaths(workspace: string): string[] {
 }
 
 function mutationGoldenSource(entry: MutationProjectionGolden["cases"][number], leaf: string): string {
-  return `🏅️standards/${MUTATION_PROJECTION_GOLDEN.standardDirectoryName}/🪆️subsets/${MUTATION_PROJECTION_GOLDEN.subsetDirectoryName}/🧬️schema/🧬️mutations/${entry.sourceMutationDirectoryName}/🧪️tests/${entry.sourceScenarioId}/${leaf}`;
+  return `🏅️standards/${MUTATION_PROJECTION_GOLDEN.standardDirectoryName}/🪆️subsets/${MUTATION_PROJECTION_GOLDEN.subsetDirectoryName}/🧬️schema/🧬️mutations/${entry.sourceMutationDirectoryName}/tests${entry.sourceScenarioId}/${leaf}`;
 }
 
 function mutationGoldenDestination(entry: MutationProjectionGolden["cases"][number], leaf: string): string {
-  return `🧪️tests/${MUTATION_PROJECTION_GOLDEN.profileDirectoryName}/${entry.mutationDirectoryName}/🧪️${entry.scenarioId}/${leaf}`;
+  return `tests${MUTATION_PROJECTION_GOLDEN.profileDirectoryName}/${entry.mutationDirectoryName}/🧪️${entry.scenarioId}/${leaf}`;
 }
 
 function normalizationGit(root: string, args: readonly string[]): string {
@@ -4796,9 +4796,9 @@ function artifactProjectionSourceFiles(references: boolean, readLive: (path: str
   const files: Record<string, string> = {};
   for (const projection of ARTIFACT_PROJECTION_GOLDEN.projections) for (const node of projectionAuthorityNodes(projection, projection.contractId === "artifact-editor-command-bundle-v1" ? "authored-draw" : "live", readLive)) if (node.nodeKind === "file") files[artifactProjectionFixturePath(node.path)] = node.content!;
   if (references) {
-    const cadRuntime = "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🏃️runtime/🟦️component.ts";
-    const cadInteraction = "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🕹️interaction/🦀️component.rs";
-    const interactionSpec = "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🎬️interaction-spec/🦀️component.rs";
+    const cadRuntime = "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🏃️runtime/🟦️.ts";
+    const cadInteraction = "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🕹️interaction/🦀️.rs";
+    const interactionSpec = "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🎬️interaction-spec/🦀️.rs";
     files[artifactProjectionFixturePath(cadRuntime)] = readLive(cadRuntime);
     files[artifactProjectionFixturePath(cadInteraction)] = readLive(cadInteraction);
     files[artifactProjectionFixturePath(interactionSpec)] = readLive(interactionSpec);
@@ -4952,7 +4952,7 @@ function artifactProjectionNormalizationFixture(name: string, references = false
 function scopedUnrelatedProjectionStaleFixture(name: string): Readonly<{ fixture: NormalizationFixture; externalPath: string; staleToken: string }> {
   const externalPath = `🧪️external-${name}/🗿️artifacts/📐️cad/📝️.md`;
   let staleToken = "";
-  const fixture = normalizationFixture(`scoped-stale-${name}`, { "🟦️component.ts": "export const scoped = true;\n" }, ({ repoRoot }) => {
+  const fixture = normalizationFixture(`scoped-stale-${name}`, { "🟦️.ts": "export const scoped = true;\n" }, ({ repoRoot }) => {
     const schema = JSON.parse(readFileSync(join(repoRoot, NORMALIZATION_SCHEMA_REL), "utf8")) as { semanticPathProjectionReferenceConsumerContracts: Record<string, { projectionContractId: string; staleMarkers: string[] }> };
     staleToken = Object.values(schema.semanticPathProjectionReferenceConsumerContracts).find((contract) => contract.projectionContractId === "artifact-example-model-catalog-v1")!.staleMarkers[0]!;
     normalizationWriteFiles(repoRoot, { [externalPath]: "# Unrelated clean owner\n" });
@@ -5012,13 +5012,13 @@ describe("taxonomy normalization", () => {
   test("all physical mutation catalogs close the strict source-to-canonical registry", () => {
     const workspace = getWorkspaceRoot();
     const paths = ownedFilePaths(join(workspace, "✏️s", "🔌️plugins"))
-      .filter((path) => path.endsWith("/🧪️oracle/🔣️.json"))
+      .filter((path) => path.endsWith("/🔣️oracle.json"))
       .map((path) => `✏️s/🔌️plugins/${path}`);
     expect(paths).toEqual(nativeMutationCatalogPaths(workspace));
     const registrations: SemanticProjectionCatalogRegistration[] = [];
     for (const path of paths) {
       const parsed = JSON.parse(readFileSync(join(workspace, path), "utf8")) as { mutationCatalogs?: readonly { id: string; vectors: SemanticProjectionCatalogRegistration["vectors"] }[] };
-      const ownerPath = path.slice(0, -"/🧪️oracle/🔣️.json".length);
+      const ownerPath = path.slice(0, -"/🔣️oracle.json".length);
       for (const catalog of parsed.mutationCatalogs ?? []) registrations.push({ ownerPath, catalogId: catalog.id, vectors: catalog.vectors });
     }
     const vectors = registrations.flatMap((catalog) => catalog.vectors);
@@ -5027,7 +5027,7 @@ describe("taxonomy normalization", () => {
     const canonicalTuples = registrations.flatMap((catalog) => catalog.vectors.flatMap((vector) => vector.scenarios.map((scenario) => `${catalog.catalogId}\0${vector.mutationId}\0${vector.mutationDirectoryName}\0${scenario.id}`)));
     const taxonomy = loadTaxonomy();
     const reserve = taxonomy.semanticDescendantContracts[taxonomy.mutationCatalogProjection.descendantContractId].pathBudgetReserve.bytes;
-    const projectedBytes = registrations.flatMap((catalog) => catalog.vectors.flatMap((vector) => vector.scenarios.map((scenario) => new TextEncoder().encode(`${catalog.ownerPath.replace(/\/🏅️standards\/.*$/u, "")}/🧪️tests/🪆️${catalog.ownerPath.match(/\/🏅️standards\/🔖️([^/]+)\/🪆️subsets\/✳️([^/]+)$/u)![1]}-${catalog.ownerPath.match(/\/🏅️standards\/🔖️([^/]+)\/🪆️subsets\/✳️([^/]+)$/u)![2]}/${vector.mutationDirectoryName}/${scenario.directoryName}`).length + reserve)));
+    const projectedBytes = registrations.flatMap((catalog) => catalog.vectors.flatMap((vector) => vector.scenarios.map((scenario) => new TextEncoder().encode(`${catalog.ownerPath.replace(/\/🏅️standards\/.*$/u, "")}/🪆️tests${catalog.ownerPath.match(/\/🏅️standards\/🔖️([^/]+)\/🪆️subsets\/✳️([^/]+)$/u)![1]}-${catalog.ownerPath.match(/\/🏅️standards\/🔖️([^/]+)\/🪆️subsets\/✳️([^/]+)$/u)![2]}/${vector.mutationDirectoryName}/${scenario.directoryName}`).length + reserve)));
     expect(registrations).toHaveLength(MUTATION_PROJECTION_GOLDEN.registryCounts.catalogs);
     expect(vectors).toHaveLength(MUTATION_PROJECTION_GOLDEN.registryCounts.vectors);
     expect(vectors.flatMap((vector) => vector.scenarios)).toHaveLength(MUTATION_PROJECTION_GOLDEN.registryCounts.scenarios);
@@ -5054,27 +5054,27 @@ describe("taxonomy normalization", () => {
   test("the language-agnostic mutation projection golden agrees with owned filesystem discovery", () => {
     const root = mkdtempSync(join(tmpdir(), "mutation-projection-golden-"));
     try {
-      expect(MUTATION_PROJECTION_GOLDEN.sourceGlob).toBe(`🏅️standards/${MUTATION_PROJECTION_GOLDEN.standardDirectoryName}/🪆️subsets/${MUTATION_PROJECTION_GOLDEN.subsetDirectoryName}/🧬️schema/🧬️mutations/*/🧪️tests/*/🦀️component.rs`);
+      expect(MUTATION_PROJECTION_GOLDEN.sourceGlob).toBe(`🏅️standards/${MUTATION_PROJECTION_GOLDEN.standardDirectoryName}/🪆️subsets/${MUTATION_PROJECTION_GOLDEN.subsetDirectoryName}/🧬️schema/🧬️mutations/*/🧪️tests/*/🦀️.rs`);
       for (const entry of MUTATION_PROJECTION_GOLDEN.cases) {
-        const source = join(root, mutationGoldenSource(entry, "🦀️component.rs"));
+        const source = join(root, mutationGoldenSource(entry, "🦀️.rs"));
         mkdirSync(resolve(source, ".."), { recursive: true });
         writeFileSync(source, "fixture\n");
       }
       const platformBoundary = ownedFilePaths(root).filter((path) => /^🏅️standards\/[^/]+\/🪆️subsets\/[^/]+\/🧬️schema\/🧬️mutations\/[^/]+\/🧪️tests\/[^/]+\/🦀️component\.rs$/u.test(path));
-      const languageAgnostic = MUTATION_PROJECTION_GOLDEN.cases.map((entry) => mutationGoldenSource(entry, "🦀️component.rs")).sort(ownedPathByteSort);
+      const languageAgnostic = MUTATION_PROJECTION_GOLDEN.cases.map((entry) => mutationGoldenSource(entry, "🦀️.rs")).sort(ownedPathByteSort);
       expect(platformBoundary).toEqual(languageAgnostic);
       expect(MUTATION_PROJECTION_GOLDEN.cases.map((entry) => mutationGoldenDestination(entry, "🦀️.rs"))).toEqual([
-        "🧪️tests/🪆️1-any/🏷️change-annex/🧪️switches-to-national-annex-a/🦀️.rs",
-        "🧪️tests/🪆️1-any/🌾️change-humidification-required-kg-h/🧪️required-humidification-becomes-3-point-5-kg-per-hour/🦀️.rs",
-        "🧪️tests/🪆️1-any/🍀️change-humidification-provided-kg-h/🧪️provided-humidification-becomes-1-point-25-kg-per-hour/🦀️.rs",
-        "🧪️tests/🪆️1-any/🌴️change-infiltration-allowance-m3-h/🧪️raises-infiltration-allowance-to-52-point-5-m3-per-hour/🦀️.rs",
-        "🧪️tests/🪆️1-any/🔗️🎬️bind-default-scene/🧪️binds-first-scene-as-default/🦀️.rs",
-        "🧪️tests/🪆️1-any/➖️delete-generation/🧪️removes-generation-2-and-selects-generation-1/🦀️.rs",
-        "🧪️tests/🪆️1-any/✏️📦️change-asset-descriptive-metadata/🧪️restamps-generator-copyright-and-min-version/🦀️.rs",
-        "🧪️tests/🪆️1-any/✏️📄️change-document-extension-data/🧪️attaches-punctual-lights-extension-to-document-root/🦀️.rs",
-        "🧪️tests/🪆️1-any/✏️🔺️change-primitive-topology-mode/🧪️switches-primitive-from-triangles-to-triangle-strip/🦀️.rs",
-        "🧪️tests/🪆️1-any/🚚️🧩️move-required-extension/🧪️moves-unlit-requirement-behind-transform-requirement/🦀️.rs",
-        "🧪️tests/🪆️1-any/🔀️🧬️reorder-morph-target-attributes/🧪️orders-normal-before-position-in-morph-target/🦀️.rs",
+        "🧪️tests/🪆️1-any/🏷️change-annex/🦀️switches-to-national-annex-a.rs",
+        "🧪️tests/🪆️1-any/🌾️change-humidification-required-kg-h/🦀️required-humidification-becomes-3-point-5-kg-per-hour.rs",
+        "🧪️tests/🪆️1-any/🍀️change-humidification-provided-kg-h/🦀️provided-humidification-becomes-1-point-25-kg-per-hour.rs",
+        "🧪️tests/🪆️1-any/🌴️change-infiltration-allowance-m3-h/🦀️raises-infiltration-allowance-to-52-point-5-m3-per-hour.rs",
+        "🧪️tests/🪆️1-any/🔗️🎬️bind-default-scene/🦀️binds-first-scene-as-default.rs",
+        "🧪️tests/🪆️1-any/➖️delete-generation/🦀️removes-generation-2-and-selects-generation-1.rs",
+        "🧪️tests/🪆️1-any/✏️📦️change-asset-descriptive-metadata/🦀️restamps-generator-copyright-and-min-version.rs",
+        "🧪️tests/🪆️1-any/✏️📄️change-document-extension-data/🦀️attaches-punctual-lights-extension-to-document-root.rs",
+        "🧪️tests/🪆️1-any/✏️🔺️change-primitive-topology-mode/🦀️switches-primitive-from-triangles-to-triangle-strip.rs",
+        "🧪️tests/🪆️1-any/🚚️🧩️move-required-extension/🦀️moves-unlit-requirement-behind-transform-requirement.rs",
+        "🧪️tests/🪆️1-any/🔀️🧬️reorder-morph-target-attributes/🦀️orders-normal-before-position-in-morph-target.rs",
       ]);
     } finally {
       rmSync(root, { recursive: true, force: true });
@@ -5086,7 +5086,7 @@ describe("taxonomy normalization", () => {
     for (const entry of MUTATION_PROJECTION_GOLDEN.cases) {
       for (const leaf of MUTATION_PROJECTION_GOLDEN.bundle) files[`🧪️artifact/${mutationGoldenSource(entry, leaf.source)}`] = "{}\n";
     }
-    files[`🧪️artifact/🏅️standards/${MUTATION_PROJECTION_GOLDEN.standardDirectoryName}/🪆️subsets/${MUTATION_PROJECTION_GOLDEN.subsetDirectoryName}/🧪️oracle/🔣️.json`] = `${JSON.stringify({
+    files[`🧪️artifact/🏅️standards/${MUTATION_PROJECTION_GOLDEN.standardDirectoryName}/🪆️subsets/${MUTATION_PROJECTION_GOLDEN.subsetDirectoryName}/🔣️oracle.json`] = `${JSON.stringify({
       schemaVersion: 1,
       oracles: [],
       noOracleDecisions: [],
@@ -5119,7 +5119,7 @@ describe("taxonomy normalization", () => {
     const entry = MUTATION_PROJECTION_GOLDEN.cases[0]!;
     const files: Record<string, string> = {};
     for (const leaf of MUTATION_PROJECTION_GOLDEN.bundle) files[`🧪️artifact/${mutationGoldenSource(entry, leaf.source)}`] = "{}\n";
-    files[`🧪️artifact/🏅️standards/${MUTATION_PROJECTION_GOLDEN.standardDirectoryName}/🪆️subsets/${MUTATION_PROJECTION_GOLDEN.subsetDirectoryName}/🧪️oracle/🔣️.json`] = `${JSON.stringify({
+    files[`🧪️artifact/🏅️standards/${MUTATION_PROJECTION_GOLDEN.standardDirectoryName}/🪆️subsets/${MUTATION_PROJECTION_GOLDEN.subsetDirectoryName}/🔣️oracle.json`] = `${JSON.stringify({
       schemaVersion: 1,
       oracles: [],
       noOracleDecisions: [],
@@ -5186,11 +5186,11 @@ describe("taxonomy normalization", () => {
       const cadMount = plan.edits.filter(({ path }) => path === `${fixture.scope}/${DRAW_SOURCE_SCENARIO.cargoModuleRoot.path}`);
       expect(cadMount.map(({ adapter, structuredLocation, oldValue, newValue }) => ({ adapter, structuredLocation, oldValue, newValue }))).toEqual([{ adapter: "rust", structuredLocation: "rust-string-path:1:11@10", oldValue: DRAW_SOURCE_SCENARIO.oracle.cargoModuleMount.moduleTarget, newValue: DRAW_SOURCE_SCENARIO.oracle.cargoModuleMount.canonicalModuleTarget }]);
       expect(cadMount[0]!.preimage.contentHash).toBe(createHash("sha256").update(DRAW_SOURCE_SCENARIO.cargoModuleRoot.content).digest("hex"));
-      const drawExact = plan.edits.filter((edit) => (edit.oldValue.includes(`${fixture.scope}/${artifactProjectionFixturePath(draw.sourceRoot)}`) || edit.path.startsWith(`${fixture.scope}/📦️packages/🦀️rust/`) || edit.path.includes("/🧪️tests/🧪️reference/")) && edit.path !== `${fixture.scope}/${DRAW_SOURCE_SCENARIO.cargoModuleRoot.path}` && edit.oldValue !== "📦️glue.rs" && !edit.oldValue.includes("workspaceRoot") && !edit.structuredLocation.startsWith("path-collection:") && !edit.path.includes(`/${artifactProjectionFixturePath(cad.destinationRoot)}/`));
+      const drawExact = plan.edits.filter((edit) => (edit.oldValue.includes(`${fixture.scope}/${artifactProjectionFixturePath(draw.sourceRoot)}`) || edit.path.startsWith(`${fixture.scope}/📦️packages/🦀️rust/`) || edit.path.includes("/🧪️tests/🧪️reference/")) && edit.path !== `${fixture.scope}/${DRAW_SOURCE_SCENARIO.cargoModuleRoot.path}` && edit.oldValue !== "🦀️.rs" && !edit.oldValue.includes("workspaceRoot") && !edit.structuredLocation.startsWith("path-collection:") && !edit.path.includes(`/${artifactProjectionFixturePath(cad.destinationRoot)}/`));
       expect(drawExact).toHaveLength(20);
       expect(drawExact.some((edit) => edit.path.endsWith("📦️packages/🦀️rust/Cargo.toml") && edit.newValue === "../../🗿️artifacts/🖍️draw/✏️editor/🪆️1-any/🎮️commands/🖱️canvas-pointer-down/🔄️fsm/📦️packages/🦀️rust")).toBe(true);
-      expect(drawExact.some((edit) => edit.path.endsWith("🧪️tests/🧪️reference/🦀️.rs") && edit.newValue === "../../🗿️artifacts/🖍️draw/✏️editor/🪆️1-any/🎮️commands/🖱️canvas-pointer-down/🦀️.rs")).toBe(true);
-      const configurableEntries = plan.edits.filter((edit) => edit.oldValue === "📦️glue.rs" && edit.newValue === "📚️library/🦀️.rs");
+      expect(drawExact.some((edit) => edit.path.endsWith("🧪️tests/🦀️reference.rs") && edit.newValue === "../../🗿️artifacts/🖍️draw/✏️editor/🪆️1-any/🎮️commands/🖱️canvas-pointer-down/🦀️.rs")).toBe(true);
+      const configurableEntries = plan.edits.filter((edit) => edit.oldValue === "🦀️.rs" && edit.newValue === "📚️library/🦀️.rs");
       expect(configurableEntries).toHaveLength(2);
       expect(configurableEntries.every((edit) => edit.adapter === "toml" && edit.structuredLocation.startsWith("lib.path:"))).toBe(true);
       expect(configurableEntries.map((edit) => ({ path: edit.path.slice(fixture.scope.length + 1), adapter: edit.adapter, structuredLocation: edit.structuredLocation.slice(0, "lib.path".length), oldValue: edit.oldValue, newValue: edit.newValue, preimageHash: edit.preimage.contentHash }))).toEqual((draw.referenceEdits ?? []).map((edit) => ({ ...edit, path: artifactProjectionFixturePath(edit.path), preimageHash: drawSourceScenarioPreimage(edit.path) })));
@@ -5216,7 +5216,7 @@ describe("taxonomy normalization", () => {
       const schema = JSON.parse(readFileSync(schemaPath, "utf8")) as { semanticPathProjectionReferenceConsumerContracts: Record<string, { sourcePathPattern: string }> };
       schema.semanticPathProjectionReferenceConsumerContracts["cad-spatial-kernel-geometry"]!.sourcePathPattern = "^.*\\.ts$";
       writeFileSync(schemaPath, `${JSON.stringify(schema, null, 2)}\n`);
-      const runtime = join(fixture.workspace, artifactProjectionFixturePath("✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🏃️runtime/🟦️component.ts"));
+      const runtime = join(fixture.workspace, artifactProjectionFixturePath("✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🏃️runtime/🟦️.ts"));
       writeFileSync(runtime, readFileSync(runtime, "utf8").replace("/🗂️typologies/**/🔣️typology.json", "/🧪️unregistered/**/*.json"));
       const projectMapping = draw.mappings.find(({ sourcePath }) => sourcePath.endsWith("📋️project.json"))!;
       const project = join(fixture.workspace, artifactProjectionFixturePath(projectMapping.sourcePath));
@@ -5227,7 +5227,7 @@ describe("taxonomy normalization", () => {
       const { plan } = normalizationPlan(fixture);
       expect(plan.unresolved.some((entry) => entry.code === "reference-syntax-unsupported" && entry.message.includes("outside an authorized owner"))).toBe(true);
       expect(plan.unresolved.some((entry) => entry.code === "reference-syntax-unsupported" && entry.message.includes("selector or reference file"))).toBe(true);
-      expect(plan.edits.some((entry) => entry.path.endsWith("🧪️unowned/🟦️.ts"))).toBe(false);
+      expect(plan.edits.some((entry) => entry.path.endsWith("🟦️unowned.ts"))).toBe(false);
       expect(plan.unresolved.some((entry) => entry.code === "reference-syntax-unsupported" && entry.message.includes("Nonempty artifact selector"))).toBe(true);
       expect(plan.unresolved.some((entry) => entry.code === "reference-syntax-unsupported" && entry.message.includes("Escaped workspace projection glob"))).toBe(true);
       expect(plan.moves.some((move) => move.sourcePath.includes("🧪️counterfeit") && /artifact-(?:example|editor)/u.test(move.rationaleRule))).toBe(false);
@@ -5293,7 +5293,7 @@ describe("taxonomy normalization", () => {
       const marker = (projectionContractId: string): string => Object.values(taxonomy.semanticPathProjectionReferenceConsumerContracts).find((contract) => contract.projectionContractId === projectionContractId)!.staleMarkers[0]!;
       const cadConsumer = plan.edits.find((edit) => edit.structuredLocation.startsWith("artifact-catalog-marker:"))!.path;
       writeFileSync(join(fixture.repoRoot, cadConsumer), `${readFileSync(join(fixture.repoRoot, cadConsumer), "utf8")}\nexport const staleCadRoot = ${JSON.stringify(marker("artifact-example-model-catalog-v1"))};\n`);
-      const drawPackageConsumers = plan.edits.filter((edit) => edit.oldValue === "📦️glue.rs" && edit.newValue === "📚️library/🦀️.rs").map((edit) => edit.path);
+      const drawPackageConsumers = plan.edits.filter((edit) => edit.oldValue === "🦀️.rs" && edit.newValue === "📚️library/🦀️.rs").map((edit) => edit.path);
       expect(drawPackageConsumers).toHaveLength(2);
       for (const path of drawPackageConsumers) writeFileSync(join(fixture.repoRoot, path), `${readFileSync(join(fixture.repoRoot, path), "utf8")}\n# ${marker("artifact-editor-command-bundle-v1")}\n`);
       const stale = normalizationPlan(fixture).plan;
@@ -5376,14 +5376,14 @@ describe("taxonomy normalization", () => {
   }, 120_000);
 
   test("rejects a changed explicit source-admission ticket before journal mutation", () => {
-    const fixture = normalizationFixture("source-authority-ticket", { "🧪️subject/🦀️component.rs": "pub const VALUE: i32 = 1;\n" }, ({ repoRoot, workspace }) => writeFileSync(join(repoRoot, ".gitignore"), `${relative(repoRoot, workspace).replaceAll("\\", "/")}/\n`));
+    const fixture = normalizationFixture("source-authority-ticket", { "🦀️subject.rs": "pub const VALUE: i32 = 1;\n" }, ({ repoRoot, workspace }) => writeFileSync(join(repoRoot, ".gitignore"), `${relative(repoRoot, workspace).replaceAll("\\", "/")}/\n`));
     try {
       const { inventory, plan } = normalizationPlan(fixture);
       expect(plan.unresolved.filter(({ severity }) => severity === "error")).toEqual([]);
       const transactionTicket = join(fixture.ticketDir, "🧪️transaction-evidence");
       mkdirSync(transactionTicket, { recursive: true });
       const changedAdmission = inventoryTaxonomy({ ...fixture.options, ticketDir: transactionTicket });
-      expect(inventory.entries.map(({ sourcePath }) => sourcePath)).toEqual(["🧪️tests", fixture.scope, `${fixture.scope}/🧪️subject`, `${fixture.scope}/🧪️subject/🦀️component.rs`]);
+      expect(inventory.entries.map(({ sourcePath }) => sourcePath)).toEqual(["🧪️tests", fixture.scope, `${fixture.scope}/🧪️subject`, `${fixture.scope}/🦀️subject.rs`]);
       expect(changedAdmission.entries).toEqual([]);
       expect(changedAdmission.sourceTreeDigest).not.toBe(plan.sourceTreeDigest);
       const before = normalizationWorkspaceSnapshot(fixture.ticketDir);
@@ -5395,8 +5395,8 @@ describe("taxonomy normalization", () => {
   }, 60_000);
 
   test("rejects changed and newly admitted in-scope sources before journal mutation", () => {
-    const stableRelative = "🧪️stable/📝️.md";
-    const fixture = normalizationFixture("source-authority-drift", { "🧪️subject/🦀️component.rs": "pub const VALUE: i32 = 1;\n", [stableRelative]: "original\n" }, ({ repoRoot, workspace }) => writeFileSync(join(repoRoot, ".gitignore"), `${relative(repoRoot, workspace).replaceAll("\\", "/")}/\n`));
+    const stableRelative = "📝️stable.md";
+    const fixture = normalizationFixture("source-authority-drift", { "🦀️subject.rs": "pub const VALUE: i32 = 1;\n", [stableRelative]: "original\n" }, ({ repoRoot, workspace }) => writeFileSync(join(repoRoot, ".gitignore"), `${relative(repoRoot, workspace).replaceAll("\\", "/")}/\n`));
     try {
       const { plan } = normalizationPlan(fixture);
       expect(plan.unresolved.filter(({ severity }) => severity === "error")).toEqual([]);
@@ -5406,7 +5406,7 @@ describe("taxonomy normalization", () => {
       expect(() => applyTaxonomyPlan(plan, { repoRoot: fixture.repoRoot, ticketDir: fixture.ticketDir, expectedBaselineCommit: plan.baselineCommit, expectedPlanDigest: plan.planDigest })).toThrow("Plan source-tree digest cannot be rederived exactly");
       expect(normalizationWorkspaceSnapshot(fixture.ticketDir)).toEqual(changedBefore);
       writeFileSync(join(fixture.workspace, stableRelative), "original\n");
-      normalizationWriteFiles(fixture.workspace, { "🧪️in-scope-extra/📝️.md": "new ignored but explicitly admitted source\n" });
+      normalizationWriteFiles(fixture.workspace, { "📝️in-scope-extra.md": "new ignored but explicitly admitted source\n" });
       const extraBefore = normalizationWorkspaceSnapshot(fixture.ticketDir);
       expect(() => applyTaxonomyPlan(plan, { repoRoot: fixture.repoRoot, ticketDir: fixture.ticketDir, expectedBaselineCommit: plan.baselineCommit, expectedPlanDigest: plan.planDigest })).toThrow("Plan source-tree digest cannot be rederived exactly");
       expect(normalizationWorkspaceSnapshot(fixture.ticketDir)).toEqual(extraBefore);
@@ -5423,7 +5423,7 @@ describe("taxonomy normalization", () => {
   });
 
   test("normalization rejects malformed projection consumers and configurable descendants at its own schema boundary", () => {
-    const fixture = normalizationFixture("projection-schema-boundary", { "🟦️component.ts": "export const value = 1;\n" });
+    const fixture = normalizationFixture("projection-schema-boundary", { "🟦️.ts": "export const value = 1;\n" });
     try {
       const schemaPath = join(fixture.repoRoot, NORMALIZATION_SCHEMA_REL);
       const original = JSON.parse(readFileSync(schemaPath, "utf8")) as { semanticPathProjectionReferenceConsumerContracts: Record<string, Record<string, unknown>>; semanticDescendantContracts: Record<string, { requiredNodes: Record<string, unknown>[] }> };
@@ -5444,7 +5444,7 @@ describe("taxonomy normalization", () => {
   test("opaque-tree digest hashes symlink identity without reading its target", () => {
     const fixture = normalizationFixture(
       "opaque",
-      { "🟦️component.ts": "export const value = 1;\n" },
+      { "🟦️.ts": "export const value = 1;\n" },
       ({ repoRoot }) => {
         mkdirSync(join(repoRoot, "outside"), { recursive: true });
         writeFileSync(join(repoRoot, "outside", "target.txt"), "first\n");
@@ -5466,7 +5466,7 @@ describe("taxonomy normalization", () => {
   });
 
   test("an absent opaque prefix remains lexically excluded without requiring an impossible digest", () => {
-    const fixture = normalizationFixture("absent-opaque", { "🟦️component.ts": "export const value = 1;\n" });
+    const fixture = normalizationFixture("absent-opaque", { "🟦️.ts": "export const value = 1;\n" });
     try {
       rmSync(join(fixture.repoRoot, "compose"), { recursive: true, force: true });
       const inventory = inventoryTaxonomy(fixture.options);
@@ -5496,21 +5496,21 @@ describe("taxonomy normalization", () => {
     const decomposedRoot = "🧪️cafe\u0301";
     const fixture = normalizationFixture("scoped-pathspec", {
       ".gitignore": "ignored/\n",
-      "🟦️component.ts": "export const tracked = true;\n",
-      [`${literalRoot}/🟦️component.ts`]: "export const literal = true;\n",
-      [`${decomposedRoot}/🟦️component.ts`]: "export const unicode = true;\n",
+      "🟦️.ts": "export const tracked = true;\n",
+      [`${literalRoot}/🟦️.ts`]: "export const literal = true;\n",
+      [`${decomposedRoot}/🟦️.ts`]: "export const unicode = true;\n",
     });
     try {
       normalizationWriteFiles(fixture.workspace, {
-        "🧪️untracked/🟦️component.ts": "export const untracked = true;\n",
-        "ignored/🟦️component.ts": "export const ignored = true;\n",
+        "🟦️untracked.ts": "export const untracked = true;\n",
+        "ignored/🟦️.ts": "export const ignored = true;\n",
       });
-      normalizationWriteFiles(fixture.repoRoot, { "🧪️unrelated/🟦️.ts": "export const unrelated = true;\n" });
+      normalizationWriteFiles(fixture.repoRoot, { "🟦️unrelated.ts": "export const unrelated = true;\n" });
       const events: TaxonomyProgress[] = [];
       const scopedOptions: TaxonomyInventoryOptions = fixture.options;
       const inventory = inventoryTaxonomy({ ...scopedOptions, progress: (event) => events.push(event) });
       const files = inventory.entries.filter((entry) => entry.nodeKind === "file").map((entry) => entry.sourcePath);
-      expect(files).toContain(`${fixture.scope}/🧪️untracked/🟦️component.ts`);
+      expect(files).toContain(`${fixture.scope}/🟦️untracked.ts`);
       expect(files.some((path) => path.startsWith("🧪️unrelated/"))).toBe(false);
       const thirdParty = fastGlob.sync("**/*", { cwd: fixture.workspace, dot: true, followSymbolicLinks: false, onlyFiles: true })
         .map((path) => `${fixture.scope}/${path.replaceAll("\\", "/")}`)
@@ -5521,16 +5521,16 @@ describe("taxonomy normalization", () => {
       for (const phase of ["tracked-enumeration", "untracked-enumeration", "ignored-generator-admission", "explicit-ticket-admission"]) expect(events.filter((event) => event.phase === phase).map((event) => [event.current, event.total])).toEqual([[0, 1], [1, 1]]);
       for (const phase of ["directories", "files", "references"]) expect(events.find((event) => event.phase === phase)?.current).toBe(0);
       const unicode = inventoryTaxonomy({ ...scopedOptions, scope: `${fixture.scope}/🧪️café` });
-      expect(unicode.entries.some((entry) => entry.sourcePath === `${fixture.scope}/${decomposedRoot}/🟦️component.ts`)).toBe(true);
+      expect(unicode.entries.some((entry) => entry.sourcePath === `${fixture.scope}/${decomposedRoot}/🟦️.ts`)).toBe(true);
       const literal = inventoryTaxonomy({ ...scopedOptions, scope: `${fixture.scope}/${literalRoot}` });
-      expect(literal.entries.filter((entry) => entry.nodeKind === "file").map((entry) => entry.sourcePath)).toEqual([`${fixture.scope}/${literalRoot}/🟦️component.ts`]);
+      expect(literal.entries.filter((entry) => entry.nodeKind === "file").map((entry) => entry.sourcePath)).toEqual([`${fixture.scope}/${literalRoot}/🟦️.ts`]);
     } finally {
       rmSync(fixture.root, { recursive: true, force: true });
     }
   });
 
   test("an exact symlink leaf is inventoried without following target content", () => {
-    const fixture = normalizationFixture("scoped-symlink-leaf", { "🧪️target/📝️.md": "first\n" }, ({ workspace }) => symlinkSync("🧪️target/📝️.md", join(workspace, "🧪️link"), "file"));
+    const fixture = normalizationFixture("scoped-symlink-leaf", { "📝️target.md": "first\n" }, ({ workspace }) => symlinkSync("📝️target.md", join(workspace, "🧪️link"), "file"));
     try {
       const scope = `${fixture.scope}/🧪️link`;
       normalizationGit(fixture.repoRoot, ["add", "-f", "--", scope]);
@@ -5538,7 +5538,7 @@ describe("taxonomy normalization", () => {
       const first = inventoryTaxonomy({ repoRoot: fixture.repoRoot, scope, workers: 1 });
       const link = first.entries.find(({ sourcePath }) => sourcePath === scope);
       expect(link?.nodeKind).toBe("symlink");
-      expect(link?.symlinkTarget).toBe("🧪️target/📝️.md");
+      expect(link?.symlinkTarget).toBe("📝️target.md");
       writeFileSync(join(fixture.workspace, "🧪️target", "📝️.md"), "second and deliberately different\n");
       const second = inventoryTaxonomy({ repoRoot: fixture.repoRoot, scope, workers: 1 });
       expect(second.entries.find(({ sourcePath }) => sourcePath === scope)?.contentHash).toBe(link?.contentHash);
@@ -5549,9 +5549,9 @@ describe("taxonomy normalization", () => {
   });
 
   test("a scope below a symlink ancestor falls back to full Git enumeration and preserves the ancestor-only census", () => {
-    const fixture = normalizationFixture("scoped-symlink-ancestor", { "🧪️seed/📝️.md": "seed\n" }, ({ repoRoot, workspace }) => {
+    const fixture = normalizationFixture("scoped-symlink-ancestor", { "📝️seed.md": "seed\n" }, ({ repoRoot, workspace }) => {
       const target = join(repoRoot, "🧪️outside-target");
-      normalizationWriteFiles(target, { "🧪️child/📝️.md": "must not be followed\n" });
+      normalizationWriteFiles(target, { "📝️child.md": "must not be followed\n" });
       symlinkSync(process.platform === "win32" ? target : relative(workspace, target), join(workspace, "🧪️alias"), process.platform === "win32" ? "junction" : "dir");
     });
     try {
@@ -5568,13 +5568,13 @@ describe("taxonomy normalization", () => {
   });
 
   test("an exact mode-160000 ancestor falls back without admitting nested-repository content", () => {
-    const fixture = normalizationFixture("scoped-gitlink-ancestor", { "🧪️seed/📝️.md": "seed\n" });
+    const fixture = normalizationFixture("scoped-gitlink-ancestor", { "📝️seed.md": "seed\n" });
     const gitlinkRelative = `${fixture.scope}/🧪️gitlink`;
     const gitlink = join(fixture.workspace, "🧪️gitlink");
     try {
       mkdirSync(gitlink, { recursive: true });
       normalizationGit(gitlink, ["init", "--quiet"]);
-      normalizationWriteFiles(gitlink, { "🧪️child/📝️.md": "nested sentinel\n" });
+      normalizationWriteFiles(gitlink, { "📝️child.md": "nested sentinel\n" });
       normalizationGit(fixture.repoRoot, ["update-index", "--add", "--cacheinfo", `160000,${fixture.baselineCommit},${gitlinkRelative}`]);
       const scope = `${gitlinkRelative}/🧪️child`;
       const scoped = inventoryTaxonomy({ repoRoot: fixture.repoRoot, scope, workers: 1 });
@@ -5586,7 +5586,7 @@ describe("taxonomy normalization", () => {
   });
 
   test("standalone ignored-generator admission preserves scoped versus full census parity", () => {
-    const fixture = normalizationFixture("scoped-generator-admission", { "🧪️generator/🟦️.ts": "export const input = true;\n" }, ({ repoRoot, workspace }) => {
+    const fixture = normalizationFixture("scoped-generator-admission", { "🟦️generator.ts": "export const input = true;\n" }, ({ repoRoot, workspace }) => {
       const owner = relative(repoRoot, join(workspace, "🧪️generator")).replaceAll("\\", "/");
       const outputRoot = `${owner}/🤖️generated`;
       const schemaPath = join(repoRoot, NORMALIZATION_SCHEMA_REL);
@@ -5609,7 +5609,7 @@ describe("taxonomy normalization", () => {
   });
 
   test("standalone explicit-ticket admission preserves scoped versus full census parity", () => {
-    const fixture = normalizationFixture("scoped-ticket-admission", { ".gitignore": "🧪️explicit/\n", "🟦️.ts": "export const input = true;\n" }, ({ workspace }) => normalizationWriteFiles(workspace, { "🧪️explicit/📝️.md": "explicit ignored evidence\n" }));
+    const fixture = normalizationFixture("scoped-ticket-admission", { ".gitignore": "🧪️explicit/\n", "🟦️.ts": "export const input = true;\n" }, ({ workspace }) => normalizationWriteFiles(workspace, { "📝️explicit.md": "explicit ignored evidence\n" }));
     try {
       const scope = `${fixture.scope}/🧪️explicit`;
       const scoped = inventoryTaxonomy({ ...fixture.options, scope });
@@ -5625,7 +5625,7 @@ describe("taxonomy normalization", () => {
   });
 
   test("inventory cancellation is observed from every nonterminal frozen phase boundary", () => {
-    const fixture = normalizationFixture("scoped-phase-cancellation", { "🧪️subject/🟦️.ts": "export const value = true;\n" });
+    const fixture = normalizationFixture("scoped-phase-cancellation", { "🟦️subject.ts": "export const value = true;\n" });
     const cancelFile = join(fixture.root, "🛑️cancel");
     try {
       for (const phase of ["setup", "tracked-enumeration", "untracked-enumeration", "ignored-generator-admission", "explicit-ticket-admission", "directories", "files", "references"]) {
@@ -5638,7 +5638,7 @@ describe("taxonomy normalization", () => {
   });
 
   test("unscoped inventory retains the frozen Git pathspec and canonical inventory bytes", () => {
-    const fixture = normalizationFixture("unscoped-regression", { "🧪️subject/🟦️.ts": "export const value = true;\n" });
+    const fixture = normalizationFixture("unscoped-regression", { "🟦️subject.ts": "export const value = true;\n" });
     try {
       const options: TaxonomyInventoryOptions = { repoRoot: fixture.repoRoot, workers: 1 };
       const first = inventoryTaxonomy(options);
@@ -5651,14 +5651,14 @@ describe("taxonomy normalization", () => {
   });
 
   test("reversed creation order preserves scoped canonical bytes and phase sequence", () => {
-    const fixture = normalizationFixture("scoped-order", { "🧪️seed/🟦️.ts": "export const seed = true;\n" });
+    const fixture = normalizationFixture("scoped-order", { "🟦️seed.ts": "export const seed = true;\n" });
     const orderRoot = join(fixture.workspace, "🧪️order");
     try {
-      normalizationWriteFiles(orderRoot, { "🧪️a/📝️.md": "a\n", "🧪️b/📝️.md": "b\n" });
+      normalizationWriteFiles(orderRoot, { "📝️a.md": "a\n", "📝️b.md": "b\n" });
       const firstEvents: TaxonomyProgress[] = [];
       const first = inventoryTaxonomy({ ...fixture.options, scope: `${fixture.scope}/🧪️order`, progress: (event) => firstEvents.push(event) });
       rmSync(orderRoot, { recursive: true, force: true });
-      normalizationWriteFiles(orderRoot, { "🧪️b/📝️.md": "b\n", "🧪️a/📝️.md": "a\n" });
+      normalizationWriteFiles(orderRoot, { "📝️b.md": "b\n", "📝️a.md": "a\n" });
       const secondEvents: TaxonomyProgress[] = [];
       const second = inventoryTaxonomy({ ...fixture.options, scope: `${fixture.scope}/🧪️order`, progress: (event) => secondEvents.push(event) });
       expect(canonicalJson(second)).toBe(canonicalJson(first));
@@ -5670,7 +5670,7 @@ describe("taxonomy normalization", () => {
   });
 
   test("root taxonomy inventory CLI writes phases only to stderr and canonical JSON only to stdout", () => {
-    const fixture = normalizationFixture("scoped-cli-purity", { "🧪️subject/🟦️.ts": "export const value = true;\n" });
+    const fixture = normalizationFixture("scoped-cli-purity", { "🟦️subject.ts": "export const value = true;\n" });
     try {
       const scriptPath = join(getWorkspaceRoot(), "📜️script.ts");
       const child = 'const [scriptPath,repoRoot,scope]=process.argv.slice(1);const {pathToFileURL}=await import("node:url");const {CleanScript}=await import(pathToFileURL(scriptPath).href);new CleanScript(repoRoot,repoRoot).run(["taxonomy","inventory","--scope",scope,"--workers","1","--format","json"]);';
@@ -5702,7 +5702,7 @@ describe("taxonomy normalization", () => {
 
   test("an exact ticket-important leaf scope ignores unrelated ticket evidence, rolls back, and commits its history projection", () => {
     const content = "Historical ticket evidence.\n";
-    const fixture = normalizationFixture("ticket-important-history-apply", { "🟦️component.ts": "export const fixture = true;\n" }, ({ repoRoot, ticketDir }) => {
+    const fixture = normalizationFixture("ticket-important-history-apply", { "🟦️.ts": "export const fixture = true;\n" }, ({ repoRoot, ticketDir }) => {
       const source = join(repoRoot, TICKET_IMPORTANT_HISTORY_SOURCE_REL);
       mkdirSync(dirname(source), { recursive: true });
       writeFileSync(source, content);
@@ -5742,7 +5742,7 @@ describe("taxonomy normalization", () => {
       const schemaPath = join(fixture.repoRoot, NORMALIZATION_SCHEMA_REL);
       const schema = JSON.parse(readFileSync(schemaPath, "utf8")) as { semanticPathProjectionReferenceConsumerContracts: Record<string, { projectionContractId: string; sourcePathIdentities: string[]; sourcePathPattern: string; staleMarkers: string[] }> };
       const contract = Object.values(schema.semanticPathProjectionReferenceConsumerContracts).find((entry) => entry.projectionContractId === cad.contractId)!;
-      const declaredStalePath = `${fixture.scope}/🧪️declared-external/🟦️.ts`;
+      const declaredStalePath = `${fixture.scope}/🟦️declared-external.ts`;
       contract.sourcePathIdentities.push(declaredStalePath);
       contract.sourcePathPattern = `^(?:${contract.sourcePathIdentities.map((path) => path.replace(/[.*+?^${}()|[\]\\]/gu, "\\$&")).join("|")})$`;
       normalizationWriteFiles(fixture.repoRoot, { [declaredStalePath]: `export const stale = ${JSON.stringify(contract.staleMarkers[0])};\n` });
@@ -5767,9 +5767,9 @@ describe("taxonomy normalization", () => {
     const fixture = normalizationFixture("inventory", {
       ".hidden/🔣️config.json": "{}\n",
       "Cargo.toml": "[package]\nname = \"fixture\"\nversion = \"0.0.0\"\n",
-      "🦀️component.rs": "pub struct Fixture;\n",
-      "🧪️component/🟦️component.ts": "export const fixture = true;\n",
-      "🤖️generated/🟦️component.ts": "export const generated = true;\n",
+      "🦀️.rs": "pub struct Fixture;\n",
+      "🟦️component.ts": "export const fixture = true;\n",
+      "🤖️generated/🟦️.ts": "export const generated = true;\n",
     });
     try {
       let progressEvents = 0;
@@ -5794,28 +5794,28 @@ describe("taxonomy normalization", () => {
       "🧪️case/📦️packages/🦀️rust/Cargo.toml": "[package]\nname = \"fixture-rust\"\nversion = \"0.0.0\"\n",
       "🧪️case/📦️packages/🟦️typescript/package.json": "{\"name\":\"fixture-typescript\",\"exports\":{\".\":\"./🟦️.ts\"}}\n",
       "🧪️case/📦️packages/🟦️typescript/🟦️.ts": "export {};\n",
-      "🧪️case/🦀️component.rs": "pub struct Component;\n",
-      "🧪️case/🟦️component.ts": "export const component = true;\n",
-      "🧪️case/🧪️react-component/🟦️react-component.tsx": "export const ReactComponent = () => null;\n",
-      "🧪️case/🧪️types/🟦️types.d.ts": "export interface FixtureType { readonly value: number }\n",
-      "🧪️case/🧪️contract/🔣️contract.json": "{\"valid\":true}\n",
-      "🧪️case/🧪️guide/📝️guide.md": "# Fixture guide\n",
-      "🧪️case/🖼️asset.png": "not-a-decoded-image\n",
-      "🧪️case/🤖️generated/🟦️component.ts": "export const generated = true;\n",
+      "🦀️case.rs": "pub struct Component;\n",
+      "🟦️case.ts": "export const component = true;\n",
+      "🧪️case/🟦️react-componentreact-component.tsx": "export const ReactComponent = () => null;\n",
+      "🧪️case/🟦️typestypes.d.ts": "export interface FixtureType { readonly value: number }\n",
+      "🧪️case/🔣️contractcontract.json": "{\"valid\":true}\n",
+      "🧪️case/📝️guideguide.md": "# Fixture guide\n",
+      "🖼️caseasset.png": "not-a-decoded-image\n",
+      "🧪️case/🤖️generated/🟦️.ts": "export const generated = true;\n",
     });
     try {
       const { plan } = normalizationPlan(fixture);
       expect(plan.unresolved).toEqual([]);
-      expect(normalizationMove(plan, "🧪️case/🦀️component.rs").destinationPath).toMatch(/\/🧪️case\/🦀️\.rs$/u);
-      expect(normalizationMove(plan, "🧪️case/🟦️component.ts").destinationPath).toMatch(/\/🧪️case\/🟦️\.ts$/u);
-      expect(normalizationMove(plan, "🧪️react-component/🟦️react-component.tsx").destinationPath).toMatch(/\/🧪️react-component\/🟦️\.tsx$/u);
-      expect(normalizationMove(plan, "🧪️types/🟦️types.d.ts").destinationPath).toMatch(/\/🧪️types\/🟦️\.d\.ts$/u);
-      expect(normalizationMove(plan, "🧪️contract/🔣️contract.json").destinationPath).toMatch(/\/🧪️contract\/🔣️\.json$/u);
-      expect(normalizationMove(plan, "🧪️guide/📝️guide.md").destinationPath).toMatch(/\/🧪️guide\/📝️\.md$/u);
-      const asset = normalizationMove(plan, "🧪️case/🖼️asset.png").destinationPath;
+      expect(normalizationMove(plan, "🦀️case.rs").destinationPath).toMatch(/\/🧪️case\/🦀️\.rs$/u);
+      expect(normalizationMove(plan, "🟦️case.ts").destinationPath).toMatch(/\/🧪️case\/🟦️\.ts$/u);
+      expect(normalizationMove(plan, "🟦️react-componentreact-component.tsx").destinationPath).toMatch(/\/🧪️react-component\/🟦️\.tsx$/u);
+      expect(normalizationMove(plan, "🟦️typestypes.d.ts").destinationPath).toMatch(/\/🧪️types\/🟦️\.d\.ts$/u);
+      expect(normalizationMove(plan, "🔣️contractcontract.json").destinationPath).toMatch(/\/🧪️contract\/🔣️\.json$/u);
+      expect(normalizationMove(plan, "📝️guideguide.md").destinationPath).toMatch(/\/🧪️guide\/📝️\.md$/u);
+      const asset = normalizationMove(plan, "🖼️caseasset.png").destinationPath;
       expect(asset.endsWith("/🖼️.png")).toBe(true);
       expect(asset).not.toContain("asset.png");
-      expect(normalizationMove(plan, "🧪️case/🤖️generated/🟦️component.ts").destinationPath).toContain("/🤖️generated/");
+      expect(normalizationMove(plan, "🧪️case/🤖️generated/🟦️.ts").destinationPath).toContain("/🤖️generated/");
       expect(plan.moves.some((move) => move.sourcePath.endsWith("/Cargo.toml"))).toBe(false);
       expect(plan.moves.some((move) => move.sourcePath.endsWith("/package.json"))).toBe(false);
       expect(plan.moves.some((move) => move.sourcePath.endsWith("/🟦️.ts"))).toBe(false);
@@ -5832,16 +5832,16 @@ describe("taxonomy normalization", () => {
     const fixture = normalizationFixture("named-pilot", {
       "🧪️golden/🪟️d3d12/📦️packages/🦀️rust/Cargo.toml": "[package]\nname = \"d3d12-fixture\"\nversion = \"0.0.0\"\n",
       "🧪️golden/🪟️d3d12/📦️packages/🦀️rust/🦀️backend.rs": "pub struct Backend { pub device: usize }\n",
-      "🧪️golden/🧪️tests/🧪️mutate-pdf-1-7/🦀️component.rs": "pub fn mutate() {}\n",
-      "🧪️golden/🧪️tests/🧪️mutate-pdf-1-7/component.feature": "Feature: mutate PDF 1.7\n",
+      "🧪️golden/🧪️tests/🦀️mutate-pdf-1-7.rs": "pub fn mutate() {}\n",
+      "🧪️golden/🧪️tests/mutate-pdf-1-7component.feature": "Feature: mutate PDF 1.7\n",
       "🧪️golden/🖼️rathaus-ahlen-grundriss.bmp": "BMfixture\n",
     });
     try {
       const { plan } = normalizationPlan(fixture);
       const prefix = fixture.scope;
       expect(normalizationMove(plan, "🪟️d3d12/📦️packages/🦀️rust/🦀️backend.rs").destinationPath).toBe(`${prefix}/🧪️golden/🪟️d3d12/⚙️backend/🦀️.rs`);
-      const rustCase = normalizationMove(plan, "🧪️tests/🧪️mutate-pdf-1-7/🦀️component.rs").destinationPath;
-      const featureCase = normalizationMove(plan, "🧪️tests/🧪️mutate-pdf-1-7/component.feature").destinationPath;
+      const rustCase = normalizationMove(plan, "🧪️tests/🦀️mutate-pdf-1-7.rs").destinationPath;
+      const featureCase = normalizationMove(plan, "🧪️tests/mutate-pdf-1-7component.feature").destinationPath;
       expect(rustCase).toMatch(/\/🧪️mutate-pdf-1-7\/🦀️\.rs$/u);
       expect(featureCase).toBe(rustCase.replace(/🦀️\.rs$/u, "🥒️.feature"));
       expect(normalizationMove(plan, "🖼️rathaus-ahlen-grundriss.bmp").destinationPath).toBe(`${prefix}/🧪️golden/🖼️rathaus-ahlen-grundriss/🖼️.bmp`);
@@ -5853,19 +5853,19 @@ describe("taxonomy normalization", () => {
   test("normalizes NFC and VS16 and blocks same-kind, platform, and path-budget hazards", () => {
     const longPath = Array.from({ length: 18 }, (_, index) => `🧩️segment-${String(index).padStart(2, "0")}`).join("/");
     const fixture = normalizationFixture("collisions", {
-      "🧪️collision/🟦️component.ts": "export const component = 1;\n",
-      "🧪️collision/🟦️index.ts": "export const index = 2;\n",
-      "🧪️unicode/🦀component.rs": "pub struct MissingVs16;\n",
-      "🧪️unicode/🧪️cafe\u0301/🟦️component.ts": "export const nfc = true;\n",
-      "🧪️platform/CON.ts": "export const reserved = true;\n",
-      [`🧪️length/${longPath}/🟦️component.ts`]: "export const long = true;\n",
+      "🟦️collision.ts": "export const component = 1;\n",
+      "🟦️collisionindex.ts": "export const index = 2;\n",
+      "🦀cunicodeomponent.rs": "pub struct MissingVs16;\n",
+      "🧪️unicode/🧪️cafe\u0301/🟦️.ts": "export const nfc = true;\n",
+      "platformCON.ts": "export const reserved = true;\n",
+      [`🧪️length/${longPath}/🟦️.ts`]: "export const long = true;\n",
     });
     try {
       const { inventory, plan } = normalizationPlan(fixture);
       const rendered = canonicalJson(plan);
-      expect(normalizationMove(plan, "🧪️unicode/🦀component.rs").destinationPath).toContain("🦀️.rs");
-      expect(inventory.entries.some((entry) => entry.sourcePath.endsWith("🧪️unicode/🧪️cafe\u0301/🟦️component.ts"))).toBe(true);
-      expect(normalizationMove(plan, "🧪️unicode/🧪️cafe\u0301/🟦️component.ts").destinationPath.normalize("NFC")).toBe(normalizationMove(plan, "🧪️unicode/🧪️cafe\u0301/🟦️component.ts").destinationPath);
+      expect(normalizationMove(plan, "🦀cunicodeomponent.rs").destinationPath).toContain("🦀️.rs");
+      expect(inventory.entries.some((entry) => entry.sourcePath.endsWith("🧪️unicode/🧪️cafe\u0301/🟦️.ts"))).toBe(true);
+      expect(normalizationMove(plan, "🧪️unicode/🧪️cafe\u0301/🟦️.ts").destinationPath.normalize("NFC")).toBe(normalizationMove(plan, "🧪️unicode/🧪️cafe\u0301/🟦️.ts").destinationPath);
       expect(plan.moves.filter((move) => move.destinationPath.endsWith("/🟦️.ts")).length).toBeGreaterThanOrEqual(2);
       expect(rendered).toMatch(/collision/i);
       expect(rendered).toMatch(/(?:reserved|platform|windows)/i);
@@ -5878,24 +5878,24 @@ describe("taxonomy normalization", () => {
 
   test("structured reference adapters emit locations, old/new values, and preimage hashes", () => {
     const fixture = normalizationFixture("references", {
-      "package.json": "{\"name\":\"fixture\",\"exports\":{\".\":\"./🧪️subject/🟦️component.ts\"}}\n",
-      "📋️project.json": "{\"targets\":{\"build\":{\"options\":{\"entryFile\":\"🧪️subject/🟦️component.ts\"}}}}\n",
-      "🧪️subject/🦀️component.rs": "pub const VALUE: i32 = 1;\n",
-      "🧪️subject/🟦️component.ts": "export const value = 1;\n",
-      "🧪️subject/component.cpp": "int value() { return 1; }\n",
+      "package.json": "{\"name\":\"fixture\",\"exports\":{\".\":\"./🟦️subject.ts\"}}\n",
+      "📋️project.json": "{\"targets\":{\"build\":{\"options\":{\"entryFile\":\"🟦️subject.ts\"}}}}\n",
+      "🦀️subject.rs": "pub const VALUE: i32 = 1;\n",
+      "🟦️subject.ts": "export const value = 1;\n",
+      "subjectcomponent.cpp": "int value() { return 1; }\n",
       "fixture/subject/component.py": "value = 1\n",
-      "🧪️consumer/🦀️component.rs": "#[path = \"../🧪️subject/🦀️component.rs\"]\nmod subject;\n",
-      "🧪️consumer/🟦️component.ts": "export { value } from \"../🧪️subject/🟦️component.ts\";\n",
-      "🧪️consumer/🐹️component.go": "package consumer\n//go:embed ../🧪️subject/🟦️component.ts\n",
-      "🧪️consumer/🐍️component.py": "from fixture.subject.component import value\n",
-      "🧪️consumer/fixture.csproj": "<Project><ItemGroup><Compile Include=\"../🧪️subject/🟦️component.ts\" /></ItemGroup></Project>\n",
-      "🧪️consumer/🔣️paths.json": "{\"source\":\"../🧪️subject/🟦️component.ts\"}\n",
-      "🧪️consumer/🔣️paths.jsonc": "{\"source\":\"../🧪️subject/🟦️component.ts\"}\n",
-      "🧪️consumer/🔣️paths.toml": "source = \"../🧪️subject/🟦️component.ts\"\n",
-      "🧪️consumer/🔣️paths.yaml": "source: ../🧪️subject/🟦️component.ts\n",
-      "🧪️consumer/🔣️paths.xml": "<Source path=\"../🧪️subject/🟦️component.ts\" />\n",
-      "🧪️consumer/📖️references.md": "[source](../🧪️subject/🟦️component.ts)\n",
-      "🧪️consumer/CMakeLists.txt": "target_sources(fixture PRIVATE \"../🧪️subject/component.cpp\")\n",
+      "🦀️consumer.rs": "#[path = \"../🦀️subject.rs\"]\nmod subject;\n",
+      "🟦️consumer.ts": "export { value } from \"../🟦️subject.ts\";\n",
+      "🐹️consumer.go": "package consumer\n//go:embed ../🟦️subject.ts\n",
+      "🐍️consumercomponent.py": "from fixture.subject.component import value\n",
+      "consumerfixture.csproj": "<Project><ItemGroup><Compile Include=\"../🟦️subject.ts\" /></ItemGroup></Project>\n",
+      "🔣️consumerpaths.json": "{\"source\":\"../🟦️subject.ts\"}\n",
+      "🔣️consumerpaths.jsonc": "{\"source\":\"../🟦️subject.ts\"}\n",
+      "🔣️consumerpaths.toml": "source = \"../🟦️subject.ts\"\n",
+      "🔣️consumerpaths.yaml": "source: ../🟦️subject.ts\n",
+      "🔣️consumerpaths.xml": "<Source path=\"../🟦️subject.ts\" />\n",
+      "📖️consumerreferences.md": "[source](../🟦️subject.ts)\n",
+      "consumerCMakeLists.txt": "target_sources(fixture PRIVATE \"../subjectcomponent.cpp\")\n",
     });
     try {
       const { plan } = normalizationPlan(fixture);
@@ -5929,14 +5929,14 @@ describe("taxonomy normalization", () => {
 
   test("package boundaries accept thin Rust/TypeScript glue and reject domain implementation", () => {
     const fixture = normalizationFixture("package-glue", {
-      "🧪️thin/📦️packages/🦀️rust/Cargo.toml": "[package]\nname = \"thin-rust\"\nversion = \"0.0.0\"\n[lib]\npath = \"📦️glue.rs\"\n",
-      "🧪️thin/📦️packages/🦀️rust/📦️glue.rs": "pub use crate::component::*;\n",
-      "🧪️thin/📦️packages/🟦️typescript/package.json": "{\"name\":\"thin-ts\",\"exports\":{\".\":\"./📦️index.ts\"}}\n",
-      "🧪️thin/📦️packages/🟦️typescript/📦️index.ts": "export {};\n",
-      "🧪️thick/📦️packages/🦀️rust/Cargo.toml": "[package]\nname = \"thick-rust\"\nversion = \"0.0.0\"\n[lib]\npath = \"📦️glue.rs\"\n",
-      "🧪️thick/📦️packages/🦀️rust/📦️glue.rs": "pub struct Domain { pub value: i32 }\nimpl Domain { pub fn calculate(&self) -> i32 { self.value * 2 + 1 } }\n",
-      "🧪️thick/📦️packages/🟦️typescript/package.json": "{\"name\":\"thick-ts\",\"exports\":{\".\":\"./📦️index.ts\"}}\n",
-      "🧪️thick/📦️packages/🟦️typescript/📦️index.ts": "export function calculate(values: number[]): number { return values.reduce((sum, value) => sum + value, 0); }\n",
+      "🧪️thin/📦️packages/🦀️rust/Cargo.toml": "[package]\nname = \"thin-rust\"\nversion = \"0.0.0\"\n[lib]\npath = \"🦀️.rs\"\n",
+      "🧪️thin/📦️packages/🦀️rust/🦀️.rs": "pub use crate::component::*;\n",
+      "🧪️thin/📦️packages/🟦️typescript/package.json": "{\"name\":\"thin-ts\",\"exports\":{\".\":\"./🟦️.ts\"}}\n",
+      "🧪️thin/📦️packages/🟦️typescript/🟦️.ts": "export {};\n",
+      "🧪️thick/📦️packages/🦀️rust/Cargo.toml": "[package]\nname = \"thick-rust\"\nversion = \"0.0.0\"\n[lib]\npath = \"🦀️.rs\"\n",
+      "🧪️thick/📦️packages/🦀️rust/🦀️.rs": "pub struct Domain { pub value: i32 }\nimpl Domain { pub fn calculate(&self) -> i32 { self.value * 2 + 1 } }\n",
+      "🧪️thick/📦️packages/🟦️typescript/package.json": "{\"name\":\"thick-ts\",\"exports\":{\".\":\"./🟦️.ts\"}}\n",
+      "🧪️thick/📦️packages/🟦️typescript/🟦️.ts": "export function calculate(values: number[]): number { return values.reduce((sum, value) => sum + value, 0); }\n",
     });
     try {
       const inventory = inventoryTaxonomy(fixture.options);
@@ -5955,12 +5955,12 @@ describe("taxonomy normalization", () => {
   });
 
   test("stale preimages block apply without changing source bytes", () => {
-    const fixture = normalizationFixture("stale", { "🦀️component.rs": "pub const VALUE: i32 = 1;\n" });
+    const fixture = normalizationFixture("stale", { "🦀️.rs": "pub const VALUE: i32 = 1;\n" });
     try {
       const { plan } = normalizationPlan(fixture);
       expect(plan.unresolved).toEqual([]);
       expect(plan.moves.length).toBeGreaterThan(0);
-      writeFileSync(join(fixture.workspace, "🦀️component.rs"), "pub const VALUE: i32 = 2;\n");
+      writeFileSync(join(fixture.workspace, "🦀️.rs"), "pub const VALUE: i32 = 2;\n");
       const before = normalizationWorkspaceSnapshot(fixture.workspace);
       expectNormalizationApplyFailure(() => applyTaxonomyPlan(plan, { repoRoot: fixture.repoRoot, ticketDir: fixture.ticketDir, expectedBaselineCommit: plan.baselineCommit, expectedPlanDigest: plan.planDigest }));
       expect(normalizationWorkspaceSnapshot(fixture.workspace)).toEqual(before);
@@ -5973,8 +5973,8 @@ describe("taxonomy normalization", () => {
   for (const failureStage of ["after-staging", "after-moves", "after-edits", "before-verify"] as const) {
     test(`rolls back byte-for-byte when failure is injected at ${failureStage}`, () => {
       const fixture = normalizationFixture(`failure-${failureStage}`, {
-        "🧪️subject/🟦️component.ts": "export const value = 1;\n",
-        "🧪️consumer/🟦️component.ts": "export { value } from \"🧪️tests/🧪️fixture/🧪️subject/🟦️component.ts\";\n",
+        "🟦️subject.ts": "export const value = 1;\n",
+        "🟦️consumer.ts": "export { value } from \"🧪️tests/🧪️fixture/🟦️subject.ts\";\n",
       });
       try {
         const { plan } = normalizationPlan(fixture);
@@ -5990,7 +5990,7 @@ describe("taxonomy normalization", () => {
   }
 
   test("cancellation rolls back and a successful retry converges to an empty second plan", () => {
-    const cancelled = normalizationFixture("cancel", { "🟦️component.ts": "export const value = 1;\n" });
+    const cancelled = normalizationFixture("cancel", { "🟦️.ts": "export const value = 1;\n" });
     try {
       const { plan } = normalizationPlan(cancelled);
       const before = normalizationWorkspaceSnapshot(cancelled.workspace);
@@ -6003,7 +6003,7 @@ describe("taxonomy normalization", () => {
       rmSync(cancelled.root, { recursive: true, force: true });
     }
 
-    const fixture = normalizationFixture("convergence", { "🦀️component.rs": "pub const VALUE: i32 = 1;\n" });
+    const fixture = normalizationFixture("convergence", { "🦀️.rs": "pub const VALUE: i32 = 1;\n" });
     try {
       const { plan } = normalizationPlan(fixture);
       expect(plan.unresolved).toEqual([]);
@@ -6080,7 +6080,7 @@ describe("generator preview protocol", () => {
     const fixture = normalizationFixture(
       "generator-preview",
       {
-        "🧪️generator/🟦️.ts": "export const input = true;\n",
+        "🟦️generator.ts": "export const input = true;\n",
         "🧪️generator/🤖️generated/old.txt": "stale\n",
       },
       ({ repoRoot, workspace }) => {
@@ -6164,9 +6164,9 @@ describe("generator preview protocol", () => {
 
 //#region 🧾️TransactionDispositionsV2
 describe("taxonomy transaction dispositions v2", () => {
-  const sentinelCasesPath = resolve(import.meta.dir, "🧫️fixtures/🧪️transaction-sentinel-cases/🔣️.json");
-  const dispositionOutcomesPath = resolve(import.meta.dir, "🧫️fixtures/🧪️transaction-disposition-outcomes/🔣️.json");
-  const protocolPath = resolve(import.meta.dir, "🧫️fixtures/🧪️transaction-protocol/🔣️.json");
+  const sentinelCasesPath = resolve(import.meta.dir, "🧫️fixtures/🔣️transaction-sentinel-cases.json");
+  const dispositionOutcomesPath = resolve(import.meta.dir, "🧫️fixtures/🔣️transaction-disposition-outcomes.json");
+  const protocolPath = resolve(import.meta.dir, "🧫️fixtures/🔣️transaction-protocol.json");
 
   test("keeps checkout-hostile sentinels virtual and language-neutral", () => {
     const sentinelCases = JSON.parse(readFileSync(sentinelCasesPath, "utf8")) as {
@@ -6343,8 +6343,8 @@ describe("taxonomy transaction dispositions v2", () => {
     const ticket = ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/PHASE-9-RUNTIME-DEPENDENCY-REMOVAL";
     const files: Record<string, string> = {};
     for (const owner of ["pkg-a", "pkg-b", "pkg-c"]) {
-      files[`${owner}/${ticket}/🧪️target-os-errors/CACHEDIR.TAG`] = "Signature: 8a477f597d28d172789f06886806bc55\n";
-      files[`${owner}/${ticket}/🧪️unique-${owner.slice(-1)}/CACHEDIR.TAG`] = "Signature: 8a477f597d28d172789f06886806bc55\n";
+      files[`${owner}/${ticket}/target-os-errorsCACHEDIR.TAG`] = "Signature: 8a477f597d28d172789f06886806bc55\n";
+      files[`${owner}/${ticket}/unique-${owner.slice(-1)}CACHEDIR.TAG`] = "Signature: 8a477f597d28d172789f06886806bc55\n";
     }
     const fixture = normalizationFixture("transaction-embedded-v2", files, ({ repoRoot, workspace }) => {
       const canonicalManifest = join(repoRoot, ticket, "🎫️ticket.json");
@@ -6832,7 +6832,7 @@ describe("direct mutation ownership", () => {
       expect(first.created).toContain(`${relative(root, mutations).replaceAll("\\", "/")}/➕️insert-page/🦀️.rs`);
       const descriptor = JSON.parse(readFileSync(join(mutations, "➕️insert-page", "🔣️.json"), "utf8"));
       expect(descriptor).toMatchObject({ schemaVersion: 1, owner: `${relative(root, mutations).replaceAll("\\", "/")}/➕️insert-page`, semanticKind: "insert-page", payloadSchema: "🧬️schema/🔣️.json", textOpcode: "insert-page", invertibility: "explicit-mutation", diffParticipation: "detect", outcomeClasses: ["applied"], requiredLanguageSurfaces: ["rust", "json-schema", "text", "binary"] });
-      const descriptorSchema = JSON.parse(readFileSync(join(getWorkspaceRoot(), "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️mutation-descriptor.schema.json"), "utf8"));
+      const descriptorSchema = JSON.parse(readFileSync(join(getWorkspaceRoot(), "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️.schema.json"), "utf8"));
       const validateDescriptor = new Ajv({ allErrors: true, strict: true }).compile(descriptorSchema);
       expect(validateDescriptor(descriptor)).toBe(true);
       expect(validateJsonSchemaSubset(descriptorSchema, descriptor)).toEqual([]);
@@ -6970,7 +6970,7 @@ describe("direct mutation ownership", () => {
   test("resolves mutation consumers and schema-validated assignment evidence from a stable source index", () => {
     const root = mkdtempSync(join(tmpdir(), "semio-mutation-inventory-consumers-"));
     const fixturePath = join(import.meta.dir, "../../🧪️tests/🧬️mutation-inventory/🧫️fixtures/🔣️consumers.json");
-    const inventorySchemaPath = join(import.meta.dir, "../../🧪️tests/🧬️mutation-inventory/🛂️schema/🔣️inventory.json");
+    const inventorySchemaPath = join(import.meta.dir, "../../🧪️tests/🧬️mutation-inventory/🛂️schema/🔣️.json");
     const fixture = JSON.parse(readFileSync(fixturePath, "utf8")) as { schemaVersion: number; assignmentLedger: unknown; files: readonly { path: string; content: string }[] };
     const fixtureSchema = { type: "object", required: ["schemaVersion", "assignmentLedger", "files"], properties: { schemaVersion: { const: 1 }, assignmentLedger: { type: "object" }, files: { type: "array", minItems: 2, items: { type: "object", required: ["path", "content"], properties: { path: { type: "string" }, content: { type: "string" } }, additionalProperties: false } } }, additionalProperties: false };
     const taxonomy = loadTaxonomy();
@@ -7031,8 +7031,8 @@ describe("direct mutation ownership", () => {
   });
 
   test("proves direct leaf reachability through exact public canonical mounts and wrapped types", () => {
-    const fixturePath = join(import.meta.dir, "../../🧪️tests/🧬️mutation-reachability/🧫️fixtures/🔣️cases.json");
-    const schemaPath = join(import.meta.dir, "../../🧪️tests/🧬️mutation-reachability/🛂️schema/🔣️cases.json");
+    const fixturePath = join(import.meta.dir, "../../🧪️tests/🧬️mutation-reachability/🧫️fixtures/🔣️.json");
+    const schemaPath = join(import.meta.dir, "../../🧪️tests/🧬️mutation-reachability/🛂️schema/🔣️.json");
     const fixture = JSON.parse(readFileSync(fixturePath, "utf8")) as { cases: readonly { name: string; source: string; leafSource?: string; extraFiles?: readonly { path: string; source: string }[]; accepted: boolean }[] };
     expect(new Ajv({ strict: true }).compile(JSON.parse(readFileSync(schemaPath, "utf8")))(fixture)).toBe(true);
     const artifactRoot = process.env.SEMIO_TEST_ARTIFACT_DIR;
@@ -7063,7 +7063,7 @@ describe("direct mutation ownership", () => {
   });
 
   test("projects the actual wrapped mutation declaration origin through public aliases only", () => {
-    const fixturePath = join(import.meta.dir, "../../🧪️tests/🧬️mutation-type-origin/🔣️vectors.json");
+    const fixturePath = join(import.meta.dir, "../../🧪️tests/🧬️mutation-type-origin/🔣️.json");
     const schemaPath = join(import.meta.dir, "../../🧪️tests/🧬️mutation-type-origin/🛂️schema.json");
     const fixture = JSON.parse(readFileSync(fixturePath, "utf8")) as { schemaVersion: 1; mutationRoot: string; leaf: string; rustFilename: "🦀️.rs"; cases: readonly { id: string; mutationRoot?: string; leaf?: string; rustFilename?: string; virtualFilesystem?: true; repoRoot?: string; repositoryRootSymlink?: true; repositoryAncestorSymlink?: true; rootSource: string; leafSource: string; extraFiles?: readonly { path: string; source: string }[]; links?: readonly { path: string; target: string }[]; compileAccepted: boolean; expected: { sourcePath: string; declarationName: string; modulePath: string[] } | null }[] };
     expect(new Ajv({ strict: true, allErrors: true }).compile(JSON.parse(readFileSync(schemaPath, "utf8")))(fixture)).toBe(true);
@@ -7220,9 +7220,9 @@ describe("direct mutation ownership", () => {
 //#region 🧬️MutationMetadataFacts
 describe("mutation metadata facts", () => {
   test("records exact declaration and alias syntax without decoy inference", () => {
-    const fixturePath = join(import.meta.dir, "../../🧪️tests/🧬️mutation-metadata/🧫️fixtures/🔣️cases.json");
+    const fixturePath = join(import.meta.dir, "../../🧪️tests/🧬️mutation-metadata/🧫️fixtures/🔣️.json");
     const fixture = JSON.parse(readFileSync(fixturePath, "utf8"));
-    const schema = JSON.parse(readFileSync(join(import.meta.dir, "../../🧪️tests/🧬️mutation-metadata/🛂️schema/🔣️cases.json"), "utf8"));
+    const schema = JSON.parse(readFileSync(join(import.meta.dir, "../../🧪️tests/🧬️mutation-metadata/🛂️schema/🔣️.json"), "utf8"));
     expect(new Ajv({ strict: true }).compile(schema)(fixture)).toBe(true);
     const facts = inspectRustMutationMetadataFacts(fixture.source);
     expect(facts.declarations.map(({ name, kind, visibility, modulePath, derives, mutationLeaf }) => ({ name, kind, visibility, modulePath, derives, state: mutationLeaf.state, contracts: mutationLeaf.contracts, detail: mutationLeaf.detail }))).toEqual(fixture.expected.declarations);

@@ -5,7 +5,7 @@
   "displayName": "Delete Object",
   "emoji": "🗑",
   "aggregateVariant": "DeleteObject",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": "delete-object",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

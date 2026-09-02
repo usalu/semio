@@ -5,7 +5,7 @@
   "displayName": "Change Shot Height",
   "emoji": "📐️",
   "aggregateVariant": "ChangeShotHeight",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

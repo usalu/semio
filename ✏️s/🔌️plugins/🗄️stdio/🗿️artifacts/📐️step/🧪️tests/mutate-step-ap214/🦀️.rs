@@ -2,7 +2,7 @@
 //! (`step-ap214-any`, 11 kinds) gets a `mutate-<kind>` and an `inverse-<kind>` scenario, plus one
 //! identity round trip. `ruststep` 0.4 can only READ Part-21 text (confirmed empirically before any
 //! scenario was written — see the feature file's own description), so the oracle dispatcher
-//! (`../../🏅️standards/🔖️ap214/🪆️subsets/✳️any/🧪️oracle/🦀️component.rs`) performs every kind with its
+//! (`../../🏅️standards/🔖️ap214/🪆️subsets/✳️any/🦀️oracle.rs`) performs every kind with its
 //! own from-scratch Part-21 writer against a `ruststep`-parsed document, independent of this
 //! subset's own `StepSnapshot`/`engine::part21` codec; the subject fully parses into `StepSnapshot`
 //! and re-serializes from it alone (no byte pass-through). Both results are read back by the
@@ -15,7 +15,7 @@ use semio_s_plugin_stdio_test_oracle::artifacts::step::standards::v_ap214::subse
 
 //#region 🔖️Kinds
 /// 🏷️ Mirrors this subset's own `StepMutation::KINDS` (`../../🏅️standards/🔖️ap214/🪆️subsets/✳️any/
-/// 🧬️schema/🧬️mutations/🦀️component.rs`). Kept as a plain literal here rather than imported since
+/// 🧬️schema/🧬️mutations/🦀️.rs`). Kept as a plain literal here rather than imported since
 /// this adapter's oracle-only build never links the subject crate — the contract gate (mutation
 /// coverage against the `step-ap214-any` catalog) is what keeps the two lists honest against each other.
 const KINDS: &[&str] = &["no-mutation", "set-snapshot", "set-file-description", "set-file-name", "set-file-schema", "insert-entity", "remove-entity", "set-entity-name", "set-entity-arg", "insert-entity-arg", "remove-entity-arg"];
@@ -57,7 +57,7 @@ fn json_spec(kind: &str, params: Json) -> Json {
 /// ↩️ The semantically correct inverse spec for one forward `(kind, params)` pair against the
 /// pristine fixture's own known real header/entity values — id/index-aware, mirroring the same
 /// `StepMutation::inverse()` semantics `../../🏅️standards/🔖️ap214/🪆️subsets/✳️any/🧬️schema/
-/// 🧬️mutations/🦀️component.rs` documents, computed independently here since neither the oracle nor
+/// 🧬️mutations/🦀️.rs` documents, computed independently here since neither the oracle nor
 /// this adapter can reach that subject-side method.
 fn inverse_spec(kind: &str) -> Json {
     match kind {
@@ -239,7 +239,7 @@ mod subject {
 
     //#region 🔖️ValueGrammar
     /// 🔤️ The same `{"t":..., "v":...}` wire grammar the oracle dispatcher speaks
-    /// (`../../🏅️standards/🔖️ap214/🪆️subsets/✳️any/🧪️oracle/🦀️component.rs`'s own `value_from_json`),
+    /// (`../../🏅️standards/🔖️ap214/🪆️subsets/✳️any/🦀️oracle.rs`'s own `value_from_json`),
     /// independently re-implemented here against `StepValue` rather than `ruststep::ast::Parameter`.
     fn value_from_json(value: &Json) -> Result<StepValue, String> {
         match str_field(value, "t")?.as_str() {

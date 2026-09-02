@@ -1,7 +1,0 @@
-syntax = "proto3";
-// 📝️ Text representation mirror for `stdio.semio.video` (diff) — one line, empty if unchanged.
-// Structural shape is ../🛰️component.proto's SemioVideoDiff.
-package semio.s_stdio_semio_video.diff.text;
-message SemioVideoDiffTextLine {
-  string line = 1;
-}

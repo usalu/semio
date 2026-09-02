@@ -5,18 +5,21 @@
   "displayName": "Change Schema",
   "emoji": "✒️",
   "aggregateVariant": "ChangeSchema",
-  "payloadSchema": "🔣️payload.schema.json",
-  "textOpcode": null,
-  "binaryTag": null,
-  "invertibility": "explicit-mutation",
+  "payloadSchema": "🔣️.schema.json",
+  "textOpcode": "change-schema",
+  "binaryTag": 0,
+  "invertibility": "self",
   "diffParticipation": "detect",
   "outcomeClasses": [
-    "info",
-    "applied"
+    "applied",
+    "warning"
   ],
   "composition": "atomic",
   "requiredLanguageSurfaces": [
     "rust",
+    "typescript",
+    "graphql",
+    "protobuf",
     "json-schema",
     "text",
     "binary"

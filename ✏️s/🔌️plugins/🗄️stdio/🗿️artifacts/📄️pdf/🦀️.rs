@@ -1,0 +1,255 @@
+//! 🎪 `stdio.pdf` artifact — stdio reference format.
+
+use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability};
+
+pub use crate::artifacts::pdf::schema::diff::PdfDiff;
+pub use crate::artifacts::pdf::schema::mutations::PdfMutation;
+pub use crate::artifacts::pdf::schema::snapshot::PdfSnapshot;
+pub use crate::artifacts::pdf::schema::PdfArtifact;
+
+/// 🏷️ Document schema / DSL envelope id.
+pub const STDIO_PDF_DOCUMENT_SCHEMA: &str = "stdio.pdf";
+
+/// 🧬️ Artifact schema descriptor id.
+pub const PDF_ARTIFACT_SCHEMA_ID: &str = "s.stdio.pdf";
+
+//#region 🔖️Declaration
+/// 🔖️ One declaration owns the one `s.stdio.pdf` definition. Its plural schema, inference,
+/// composer, validator, language, and document-codec facets retain the independent 1.4 and 1.7
+/// registrations without duplicating the artifact identity.
+///
+/// 🧩️ Binds this executable root to its sole schema-owned definition.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn assembly(definition: semio_framework_plugin::ArtifactDefinition) -> Result<crate::registry::ArtifactAssembly, semio_framework_plugin::PluginAssemblyError> {
+    crate::registry::runtime_assembly("pdf", definition, declaration)
+}
+
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
+    let formats = crate::registry::format_descriptors_for("pdf")?;
+    let builder = semio_framework_plugin::ArtifactDeclaration::builder(definition);
+    let builder = builder.schema(crate::artifacts::pdf::standards::v1_7::subsets::base::schema::pdf_artifact_schema_descriptor());
+    let builder = builder.formats(formats);
+    let builder = builder.schemas([crate::artifacts::pdf::standards::v1_4::subsets::base::schema::pdf_artifact_schema_descriptor()]);
+    let builder = builder
+        .inferences([crate::artifacts::pdf::standards::v1_7::subsets::base::schema::inferences::pdf17_artifact_inference_descriptor(), crate::artifacts::pdf::standards::v1_4::subsets::base::schema::inferences::pdf_artifact_inference_descriptor()]);
+    let builder = builder.composers(crate::artifacts::pdf::standards::v1_7::subsets::base::io::io_registry::entries());
+    let builder = builder.composers(crate::artifacts::pdf::standards::v1_4::subsets::base::io::io_registry::entries());
+    let builder = builder.subset_validators(pdf_1_7_subset_validators());
+    let builder = builder.subset_validators(pdf_1_4_subset_validators());
+    let builder = builder.languages(pilot_languages_1_7());
+    let builder = builder.languages(pilot_languages_1_4());
+    let builder = builder.document_codec_bare::<PdfSnapshot, PdfMutation>(crate::artifacts::pdf::standards::v1_7::subsets::base::schema::snapshot::STDIO_PDF17_DOCUMENT_SCHEMA);
+    let builder = builder.document_codec_bare::<crate::artifacts::pdf::standards::v1_4::subsets::base::schema::snapshot::PdfSnapshot, crate::artifacts::pdf::standards::v1_4::subsets::base::schema::mutations::PdfMutation>(STDIO_PDF_DOCUMENT_SCHEMA);
+    builder.try_build()
+}
+
+/// 🛡️ `standards::v1_7`'s six real subsets (`a`/`x`/`e`/`ua`/`vt`/`h`), re-derived (not moved) from
+/// the same side-effect-free `subset_validator_entry_of::<V>()` constructor each subset's own
+/// `🚪️io/🦀️.rs` (module-private) `validator_entry()` calls.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn pdf_1_7_subset_validators() -> &'static [semio_framework_plugin::SubsetValidatorEntry] {
+    static ENTRIES: std::sync::OnceLock<Vec<semio_framework_plugin::SubsetValidatorEntry>> = std::sync::OnceLock::new();
+    ENTRIES
+        .get_or_init(|| {
+            vec![
+                semio_framework_plugin::subset_validator_entry_of::<crate::artifacts::pdf::standards::v1_7::subsets::a::io::PdfAValidator>(),
+                semio_framework_plugin::subset_validator_entry_of::<crate::artifacts::pdf::standards::v1_7::subsets::x::io::PdfXValidator>(),
+                semio_framework_plugin::subset_validator_entry_of::<crate::artifacts::pdf::standards::v1_7::subsets::e::io::PdfEValidator>(),
+                semio_framework_plugin::subset_validator_entry_of::<crate::artifacts::pdf::standards::v1_7::subsets::ua::io::PdfUaValidator>(),
+                semio_framework_plugin::subset_validator_entry_of::<crate::artifacts::pdf::standards::v1_7::subsets::vt::io::PdfVtValidator>(),
+                semio_framework_plugin::subset_validator_entry_of::<crate::artifacts::pdf::standards::v1_7::subsets::h::io::PdfHValidator>(),
+            ]
+        })
+        .as_slice()
+}
+
+/// 🛡️ `standards::v1_4`'s two real subsets (`a`/`x`), re-derived (not moved) the same way as
+/// `pdf_1_7_subset_validators` above.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn pdf_1_4_subset_validators() -> &'static [semio_framework_plugin::SubsetValidatorEntry] {
+    static ENTRIES: std::sync::OnceLock<Vec<semio_framework_plugin::SubsetValidatorEntry>> = std::sync::OnceLock::new();
+    ENTRIES
+        .get_or_init(|| {
+            vec![
+                semio_framework_plugin::subset_validator_entry_of::<crate::artifacts::pdf::standards::v1_4::subsets::a::io::PdfAValidator>(),
+                semio_framework_plugin::subset_validator_entry_of::<crate::artifacts::pdf::standards::v1_4::subsets::x::io::PdfXValidator>(),
+            ]
+        })
+        .as_slice()
+}
+
+/// 📌️ `standards::v1_7`'s five `LanguageSpec` rows, copied verbatim from that standard's own
+/// engine `register_pilot_languages`.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn pilot_languages_1_7() -> &'static [dsl::LanguageSpec] {
+    static LANGUAGES: std::sync::OnceLock<Vec<dsl::LanguageSpec>> = std::sync::OnceLock::new();
+    LANGUAGES
+        .get_or_init(|| {
+            vec![
+                dsl::LanguageSpec {
+                    id: "stdio.pdf.1.7",
+                    extension: Some("pdf"),
+                    role: dsl::LanguageRole::Document,
+                    grammar: Some(crate::artifacts::pdf::standards::v1_7::subsets::base::schema::snapshot::text::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(crate::artifacts::pdf::standards::v1_7::subsets::base::schema::snapshot::text::COMPONENT_GRAMMAR_PATH),
+                    protocol: Some(crate::artifacts::pdf::standards::v1_7::subsets::base::schema::snapshot::binary::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(crate::artifacts::pdf::standards::v1_7::subsets::base::schema::snapshot::binary::COMPONENT_PROTOCOL_PATH),
+                    hooks: dsl::passthrough_hooks("stdio.pdf.1.7"),
+                },
+                dsl::LanguageSpec {
+                    id: "stdio.pdf.1.7.op",
+                    extension: None,
+                    role: dsl::LanguageRole::Ops,
+                    grammar: Some(crate::artifacts::pdf::standards::v1_7::subsets::base::schema::mutations::text::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(crate::artifacts::pdf::standards::v1_7::subsets::base::schema::mutations::text::COMPONENT_GRAMMAR_PATH),
+                    protocol: Some(crate::artifacts::pdf::standards::v1_7::subsets::base::schema::mutations::binary::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(crate::artifacts::pdf::standards::v1_7::subsets::base::schema::mutations::binary::COMPONENT_PROTOCOL_PATH),
+                    hooks: dsl::passthrough_hooks("stdio.pdf.1.7.op"),
+                },
+                dsl::LanguageSpec {
+                    id: "stdio.pdf.1.7.diff",
+                    extension: None,
+                    role: dsl::LanguageRole::Diff,
+                    grammar: Some(crate::artifacts::pdf::standards::v1_7::subsets::base::schema::diff::text::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(crate::artifacts::pdf::standards::v1_7::subsets::base::schema::diff::text::COMPONENT_GRAMMAR_PATH),
+                    protocol: None,
+                    protocol_path: None,
+                    hooks: dsl::passthrough_hooks("stdio.pdf.1.7.diff"),
+                },
+                dsl::LanguageSpec {
+                    id: "stdio.pdf.1.7.pack",
+                    extension: None,
+                    role: dsl::LanguageRole::Pack,
+                    grammar: None,
+                    grammar_path: None,
+                    protocol: Some(crate::artifacts::pdf::standards::v1_7::subsets::base::schema::snapshot::binary::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(crate::artifacts::pdf::standards::v1_7::subsets::base::schema::snapshot::binary::COMPONENT_PROTOCOL_PATH),
+                    hooks: dsl::passthrough_hooks("stdio.pdf.1.7.pack"),
+                },
+                dsl::LanguageSpec {
+                    id: "stdio.pdf.1.7.spr",
+                    extension: None,
+                    role: dsl::LanguageRole::Spr,
+                    grammar: None,
+                    grammar_path: None,
+                    protocol: Some(crate::artifacts::pdf::standards::v1_7::subsets::base::schema::mutations::binary::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(crate::artifacts::pdf::standards::v1_7::subsets::base::schema::mutations::binary::COMPONENT_PROTOCOL_PATH),
+                    hooks: dsl::passthrough_hooks("stdio.pdf.1.7.spr"),
+                },
+            ]
+        })
+        .as_slice()
+}
+
+/// 📌️ `standards::v1_4`'s five `LanguageSpec` rows, copied verbatim from that standard's own
+/// engine `register_pilot_languages`.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn pilot_languages_1_4() -> &'static [dsl::LanguageSpec] {
+    static LANGUAGES: std::sync::OnceLock<Vec<dsl::LanguageSpec>> = std::sync::OnceLock::new();
+    LANGUAGES
+        .get_or_init(|| {
+            vec![
+                dsl::LanguageSpec {
+                    id: "stdio.pdf",
+                    extension: Some("pdf"),
+                    role: dsl::LanguageRole::Document,
+                    grammar: Some(crate::artifacts::pdf::standards::v1_4::subsets::base::schema::snapshot::text::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(crate::artifacts::pdf::standards::v1_4::subsets::base::schema::snapshot::text::COMPONENT_GRAMMAR_PATH),
+                    protocol: Some(crate::artifacts::pdf::standards::v1_4::subsets::base::schema::snapshot::binary::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(crate::artifacts::pdf::standards::v1_4::subsets::base::schema::snapshot::binary::COMPONENT_PROTOCOL_PATH),
+                    hooks: dsl::passthrough_hooks("stdio.pdf"),
+                },
+                dsl::LanguageSpec {
+                    id: "stdio.pdf.op",
+                    extension: None,
+                    role: dsl::LanguageRole::Ops,
+                    grammar: Some(crate::artifacts::pdf::standards::v1_4::subsets::base::schema::mutations::text::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(crate::artifacts::pdf::standards::v1_4::subsets::base::schema::mutations::text::COMPONENT_GRAMMAR_PATH),
+                    protocol: Some(crate::artifacts::pdf::standards::v1_4::subsets::base::schema::mutations::binary::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(crate::artifacts::pdf::standards::v1_4::subsets::base::schema::mutations::binary::COMPONENT_PROTOCOL_PATH),
+                    hooks: dsl::passthrough_hooks("stdio.pdf.op"),
+                },
+                dsl::LanguageSpec {
+                    id: "stdio.pdf.diff",
+                    extension: None,
+                    role: dsl::LanguageRole::Diff,
+                    grammar: Some(crate::artifacts::pdf::standards::v1_4::subsets::base::schema::diff::text::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(crate::artifacts::pdf::standards::v1_4::subsets::base::schema::diff::text::COMPONENT_GRAMMAR_PATH),
+                    protocol: None,
+                    protocol_path: None,
+                    hooks: dsl::passthrough_hooks("stdio.pdf.diff"),
+                },
+                dsl::LanguageSpec {
+                    id: "stdio.pdf.pack",
+                    extension: None,
+                    role: dsl::LanguageRole::Pack,
+                    grammar: None,
+                    grammar_path: None,
+                    protocol: Some(crate::artifacts::pdf::standards::v1_4::subsets::base::schema::snapshot::binary::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(crate::artifacts::pdf::standards::v1_4::subsets::base::schema::snapshot::binary::COMPONENT_PROTOCOL_PATH),
+                    hooks: dsl::passthrough_hooks("stdio.pdf.pack"),
+                },
+                dsl::LanguageSpec {
+                    id: "stdio.pdf.spr",
+                    extension: None,
+                    role: dsl::LanguageRole::Spr,
+                    grammar: None,
+                    grammar_path: None,
+                    protocol: Some(crate::artifacts::pdf::standards::v1_4::subsets::base::schema::mutations::binary::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(crate::artifacts::pdf::standards::v1_4::subsets::base::schema::mutations::binary::COMPONENT_PROTOCOL_PATH),
+                    hooks: dsl::passthrough_hooks("stdio.pdf.spr"),
+                },
+            ]
+        })
+        .as_slice()
+}
+//#endregion 🔖️Declaration
+
+//#region 🔖️ArtifactKind
+/// 🗂️ This artifact's `ArtifactKindSpec`.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn artifact_kind() -> ArtifactKindSpec {
+    ArtifactKindSpec {
+        id: "stdio.pdf".into(),
+        name: "Pdf".into(),
+        source_format: STDIO_PDF_DOCUMENT_SCHEMA.into(),
+        component_kind: "stdio".into(),
+        dimension: "data".into(),
+        media_capability: OsMediaCapability::MeshOnly,
+        media_type: MediaType { class: MediaClass::Data, form: MediaForm::Value },
+        schema: STDIO_PDF_DOCUMENT_SCHEMA.into(),
+        export_formats: vec![],
+        import_formats: vec![],
+        export_stdio_kinds: vec![],
+        import_stdio_kinds: vec![],
+    }
+}
+//#endregion 🔖️ArtifactKind
+//#region 🚪️DerivedIoRegistry
+pub mod io_registry {
+    use crate::artifacts::pdf::standards::v1_4::subsets::base::io::io_registry as v1_4;
+    use crate::artifacts::pdf::standards::v1_7::subsets::base::io::io_registry as v1_7;
+    use semio_framework_plugin::{register_composer_entries, ComposeError, ComposedArtifact, ComposerEntry, Dialect, ErasedComposeSource};
+    use std::sync::OnceLock;
+
+    static ENTRIES: OnceLock<Vec<&'static ComposerEntry>> = OnceLock::new();
+
+    // 🚫️async: E1 pure table accessor consumed by OnceLock::get_or_init's sync closure — see R9
+    pub fn entries() -> &'static [&'static ComposerEntry] {
+        ENTRIES.get_or_init(|| v1_4::entries().iter().chain(v1_7::entries().iter()).collect()).as_slice()
+    }
+
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn compose(target: Dialect, sources: &[ErasedComposeSource]) -> Result<ComposedArtifact, ComposeError> {
+        let entry = entries().iter().find(|e| e.writes == target).ok_or_else(|| ComposeError { message: format!("PdfComposer: no entry writes {:?}", target), diagnostics: Vec::new() })?;
+        semio_framework_plugin::resolve_ready((entry.compose)(sources))
+    }
+
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn register() {
+        let _ = register_composer_entries(v1_4::entries());
+        let _ = register_composer_entries(v1_7::entries());
+    }
+}
+//#endregion 🚪️DerivedIoRegistry

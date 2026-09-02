@@ -11,20 +11,20 @@ from the format's own committed specification:
 
 * the envelope — `semio <schema>.dsl v<version>` preamble for text, and the
   `0x89 'S' 'E' 'M' 0D 0A 1A 0A` magic + little-endian u32 token length + token for binary — is
-  specified in `🧰️framework/🛍️products/💻️os/🔨️modules/🧬️semio/🦀️component.rs`'s envelope section;
+  specified in `🧰️framework/🛍️products/💻️os/🔨️modules/🧬️semio/🦀️.rs`'s envelope section;
 * the DSL body is the committed grammar
-  `../../🏅️standards/🔖️v1/🪆️subsets/✳️drawing/🧬️schema/📸️snapshot/📝️text/📖️component.grammar.semio`
+  `../../🏅️standards/🔖️v1/🪆️subsets/✳️drawing/🧬️schema/📸️snapshot/📝️text/📖️.grammar.semio`
   — `document = artifact-mark schema-line canvas-line styles-line layers-line`, the four
   single-letter `node` tags with `G`'s genuinely recursive `children`, the six `segment` tags, and
   the three `option-` productions;
-* the pack body is the committed protocol `…/📸️snapshot/💾️binary/📡️component.protocol.semio` and its
+* the pack body is the committed protocol `…/📸️snapshot/💾️binary/📡️.protocol.semio` and its
   Kaitai mirror, which declare `format` and the varint-length-prefixed `schema` and then stop at one
   opaque `payload` chain by their own admission. That layer was DERIVED from the committed
   `✳️any/📚️examples/🖍️sketch` bytes against their readable DSL twin — which between them exhibit
   every node tag and every segment tag, including the arc — and the derivation is pinned by
   re-encoding that committed file byte for byte, which a misreading could not do;
 * the seventeen verbs, their argument lists and their JSON wire form are the committed grammar
-  `…/🧬️schema/🧬️mutations/📝️text/📖️component.grammar.semio`, the committed proto mirror and the
+  `…/🧬️schema/🧬️mutations/📝️text/📖️.grammar.semio`, the committed proto mirror and the
   committed per-kind `(before, mutation, after)` specification vectors, which pin each verb's
   semantics — including what the four hierarchy verbs do to a nested tree.
 
@@ -81,7 +81,7 @@ KINDS = (
     "change-stroke-width",
 )
 
-ARTIFACT_DSL = "local://🗣️artifact.dsl.semio"
+ARTIFACT_DSL = "local://🗣️.dsl.semio"
 ARTIFACT_PACK = "local://🎒️artifact.pack.semio"
 
 

@@ -1,5 +1,5 @@
 //! 🔄️ `change-coefficient` — sets a numeric leaf's value in the equation tree, addressed by
-//! `EquationNodeLabel` (never a positional path — see `📸️snapshot/🦀️component.rs`'s `🔖️Equation`
+//! `EquationNodeLabel` (never a positional path — see `📸️snapshot/🦀️.rs`'s `🔖️Equation`
 //! region for why). First real mutation over `MathematicalSnapshot.equation`
 //! (26/08/12/DISSOLVE-KERNELS-AND-MODULES-INTO-EVENT-SOURCED-ARTIFACTS, wave M3a's `roots`
 //! vertical slice).

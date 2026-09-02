@@ -2,7 +2,7 @@ import { expect, test } from "bun:test";
 import Ajv from "ajv/dist/2020";
 import { closeSync, constants, fstatSync, lstatSync, openSync, readFileSync } from "node:fs";
 import { join, parse, resolve, sep } from "node:path";
-import * as discovery from "../../🔍️discovery/🟦️component.ts";
+import * as discovery from "../../🔍️discovery/🟦️.ts";
 import { compilerFacts, compilerParseDiagnostics, strictSourceDiagnostics, type Facts, type Vector } from "./🧪️oracle/🟦️.ts";
 
 //#region 🔒️Inputs
@@ -83,7 +83,7 @@ test("TypeScript declaration inspector rejects an unspecified or unsupported lan
 });
 
 test("TypeScript declaration grammar has strict standalone source types", () => {
-  const source = asset("../../🔍️discovery/🟦️component.ts"), begin = "//#region 🟦️TypeScriptDeclarationFacts", finish = "//#endregion 🟦️TypeScriptDeclarationFacts";
+  const source = asset("../../🔍️discovery/🟦️.ts"), begin = "//#region 🟦️TypeScriptDeclarationFacts", finish = "//#endregion 🟦️TypeScriptDeclarationFacts";
   const start = source.indexOf(begin), end = source.indexOf(finish);
   expect(start).toBeGreaterThanOrEqual(0);
   expect(end).toBeGreaterThan(start);

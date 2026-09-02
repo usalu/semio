@@ -1,0 +1,79 @@
+dialect grammar
+grammar semio.cad.diff
+extension semio
+start document
+
+# cad wave: real one-line `DiffCodec::print_diff`/`parse_diff` shape ALREADY emitted by
+# `🔺️diff/🦀️.rs` (`print_cad_diff`/`parse_cad_diff`) — token-per-nonempty-collection,
+# space-separated (space is lexer trivia, irrelevant at this dialect level); each collection field
+# encodes as the shared `engine::triples::enc_named_triple`/`dec_named_triple`
+# `[removed];[modified];[added]` bracket-depth-aware triple (recipe's own collection-triple shape,
+# §1.4). All 3 top-level fields are optional (an unchanged diff prints as the empty string).
+document = layers-line? blocks-line? entities-line?
+
+layers-line = "layers" "=" layers-triple
+layers-triple = "[" removed-list? "]" ";" "[" layer-modified-list? "]" ";" "[" layer-added-list? "]"
+layer-modified-list = layer-modified {"," layer-modified}*
+layer-modified = hex ":" layer-diff
+layer-added-list = layer {"," layer}*
+
+blocks-line = "blocks" "=" blocks-triple
+blocks-triple = "[" removed-list? "]" ";" "[" block-modified-list? "]" ";" "[" block-added-list? "]"
+block-modified-list = block-modified {"," block-modified}*
+block-modified = hex ":" block-diff
+block-added-list = block {"," block}*
+
+entities-line = "entities" "=" entities-triple
+entities-triple = "[" removed-list? "]" ";" "[" entity-record-modified-list? "]" ";" "[" entity-record-added-list? "]"
+entity-record-modified-list = entity-record-modified {"," entity-record-modified}*
+entity-record-modified = hex ":" entity-record-diff
+entity-record-added-list = entity-record {"," entity-record}*
+
+removed-list = hex {"," hex}*
+
+# `enc_*_diff`/`dec_*_diff` — each entity diff's `Option<T>` fields, printed via the shared `[0]`
+# (None) / `[1,<value>]` (Some) tri-state tag (recipe §1.4's "tri-state" pattern), field order
+# matching `🔺️diff/🦀️.rs`'s `CadLayerDiff`/`CadEntityRecordDiff`/`CadBlockDiff` exactly.
+layer-diff = "[" option-i32 "," option-str "," option-bool "]"
+entity-record-diff = "[" option-str "," option-entity "]"
+block-diff = "[" option-point2 "," option-entities-triple "]"
+
+option-i32 = "[" "0" "]" | "[" "1" "," i32 "]"
+option-str = "[" "0" "]" | "[" "1" "," hex "]"
+option-bool = "[" "0" "]" | "[" "1" "," bool "]"
+option-point2 = "[" "0" "]" | "[" "1" "," point2 "]"
+option-entity = "[" "0" "]" | "[" "1" "," entity "]"
+option-entities-triple = "[" "0" "]" | "[" "1" "," entities-triple "]"
+
+# `enc_layer`/`enc_entity_record`/`enc_block`/`enc_entity` — the same full-VALUE codecs
+# `📸️snapshot/📝️text/📖️.grammar.semio` declares (restated here so this leaf grammar is
+# self-contained, matching the repo's existing per-facet convention).
+layer = "[" hex "," i32 "," hex "," bool "]"
+entity-record = "[" hex "," hex "," entity "]"
+entity-record-items = entity-record {"," entity-record}*
+entity-record-list = "[" entity-record-items? "]"
+block = "[" hex "," point2 "," entity-record-list "]"
+
+entity = line | arc | circle | ellipse | polyline | text-entity | insert | solid | dimension
+line = "L" "[" point2 "," point2 "]"
+arc = "A" "[" point2 "," number "," number "," number "]"
+circle = "C" "[" point2 "," number "]"
+ellipse = "E" "[" point2 "," point2 "," number "," number "," number "]"
+polyline = "P" "[" point2-list "," bool "]"
+text-entity = "T" "[" point2 "," number "," number "," hex "]"
+insert = "I" "[" hex "," point2 "," point2 "," number "]"
+solid = "S" "[" point2 "," point2 "," point2 "," point2 "]"
+dimension = "D" "[" point2 "," point2 "," number "," hex "]"
+
+point2 = "[" number "," number "]"
+point2-list = "[" point2-items? "]"
+point2-items = point2 {"," point2}*
+
+i32 = INT
+bool = "0" | "1"
+
+number = INT | FLOAT
+
+# `hex` (bare `hex`, deliberately NOT defined as a production here) is the framework's built-in
+# `hex` MACRO — see the sibling `📸️snapshot/📝️text/📖️.grammar.semio`'s own `hex` doc
+# comment for why a hand-rolled `{INT|IDENT}*` production would be wrong here.

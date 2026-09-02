@@ -21,12 +21,12 @@
     },
     "authority": {
       "const": {
-        "catalog": "../../📦️packages/🟦️typescript/🧫️fixtures/🧪️cad-draw-path-projection/🔣️.json",
+        "catalog": "../../📦️packages/🟦️typescript/🧫️fixtures/🔣️cad-draw-path-projection.json",
         "catalogSha256": "1410a74ccc87561fd4a4b91db7d503614fe21ddce8bc78dee923d8237820f3e0",
         "projectionIndex": 1,
         "projectionContractId": "artifact-editor-command-bundle-v1",
         "mappingDigest": "1f28fcc6e28e54001a9df6ce98b1c30b565cd42b824ed2491bb9b5e407b7436b",
-        "authoredSource": "../🧪️draw-source-scenario/🔣️.json",
+        "authoredSource": "../🔣️draw-source-scenario.json",
         "authoredSourceSha256": "06eb64d107f0b771963b52f0c84fa8f42e8c47ab8faf305590f7b4319b8d1adf"
       }
     },

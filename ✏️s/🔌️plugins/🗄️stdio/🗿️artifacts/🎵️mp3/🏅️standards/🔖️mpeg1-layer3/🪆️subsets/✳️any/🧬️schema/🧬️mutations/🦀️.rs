@@ -50,7 +50,7 @@ pub fn apply_mp3_mutation(snapshot: &mut Mp3Snapshot, mutation: &Mp3Mutation) ->
 
 //#region 🔖️Kinds
 impl Mp3Mutation {
-    /// 🏷️ Kebab-case kind spelling — the exact vocabulary `../../🧪️oracle/🔣️.json`'s
+    /// 🏷️ Kebab-case kind spelling — the exact vocabulary `../../🔣️oracle.json`'s
     /// `mutationCatalogs[].kinds` declares and `mutate-mp3-mpeg1-layer3`'s Scenario Outline row ids
     /// equal. Hand-matched rather than derived, so [`KINDS`] is checked against something with its
     /// own reason to be right; and exhaustive, so a variant added to the enum is a COMPILE error
@@ -158,7 +158,7 @@ mod tests {
     /// the CATALOG is what the contract gate counts against, and this is the only check that ties it
     /// to the enum. `variants()` already carries every declared variant, `kind()` is an exhaustive
     /// match, and the manifest is read as committed text — so a kind added to one of the three and
-    /// not the others fails here. The sibling `KINDS` in `../../🧪️oracle/🦀️component.rs` mirrors
+    /// not the others fails here. The sibling `KINDS` in `../../🦀️oracle.rs` mirrors
     /// this one from the oracle crate, which must never link this crate; it can only compare
     /// strings, whereas this test compares against real values.
     #[test]
@@ -167,7 +167,7 @@ mod tests {
         let from_kinds: std::collections::BTreeSet<&str> = KINDS.iter().copied().collect();
         assert_eq!(from_variants, from_kinds, "KINDS must equal every Mp3Mutation variant's kind()");
         assert_eq!(KINDS.len(), 4, "KINDS must list exactly the declared 4 kinds");
-        let manifest = include_str!("../../🧪️oracle/🔣️.json");
+        let manifest = include_str!("../../🔣️oracle.json");
         for kind in KINDS {
             assert!(manifest.contains(&format!("\"{kind}\"")), "the oracle catalog manifest must declare kind {kind:?}");
         }
@@ -228,14 +228,14 @@ mod tests {
 
 //#region 🧪️FixtureTests
 // 🧪️ Handcrafted mutation fixtures (contract D1, ticket 26/08/20/COMPOSE-TO-PUZZLE5D-MIGRATION),
-// one case per mutation leaf. Wired HERE and not in `📦️glue.rs`: that file is shared with the
+// one case per mutation leaf. Wired HERE and not in `🦀️.rs`: that file is shared with the
 // agents migrating the other stdio artifacts, so the production mounts there stay untouched while
 // this artifact owns its own test mount. `#[path = "."]` re-bases the children on this file's own
 // directory, which is what makes the leaf-relative path below resolve.
 #[cfg(test)]
 #[path = "."]
 mod fixture_tests {
-    #[path = "📄set-snapshot/🧪️tests/retitles-the-id3v2-tit2-frame/🦀️component.rs"]
+    #[path = "📄set-snapshot/🧪️tests/retitles-the-id3v2-tit2-frame/🦀️.rs"]
     mod tests_set_snapshot_retitles_the_id3v2_tit2_frame;
 }
 //#endregion 🧪️FixtureTests

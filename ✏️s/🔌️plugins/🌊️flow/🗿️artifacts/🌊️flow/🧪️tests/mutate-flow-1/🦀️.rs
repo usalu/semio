@@ -2,13 +2,13 @@
 //! wave 12 (the gate hole that exempted every vocabulary with no catalog).
 //!
 //! Recorded no-oracle decision `flow-widget-graph-mutation-semantics`
-//! (`../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️oracle/🔣️.json`): `s.flow.flow` is a
+//! (`../../🏅️standards/🔖️1/🪆️subsets/✳️any/🔣️oracle.json`): `s.flow.flow` is a
 //! semio-NATIVE artifact with no third-party reader or writer in any ecosystem, so this adapter
 //! registers NO oracle handler at all. That is deliberate and it is the honest shape: a recorded
 //! no-oracle case is never dispatched in the oracle role, and an oracle handler that could only
 //! re-read what the subject just produced would be a stub reporting a pass. All evidence therefore
 //! lives in the SUBJECT role below, where each handler asserts its law through the shared
-//! `✏️s/🔌️plugins/🗄️stdio/🧪️oracle/⚖️law/🦀️component.rs` module before it returns.
+//! `✏️s/🔌️plugins/🗄️stdio/🧪️oracle/⚖️law/🦀️.rs` module before it returns.
 //!
 //! The subject half is `sut`-gated because the generated host links this repository's crate only
 //! for the subject role (fleet brief §5.3).
@@ -17,14 +17,14 @@ use semio_repo_test_host::Adapter;
 
 //#region 🔖️Vocabulary
 /// 🏷️ Mirrors `FlowMutation::KINDS`
-/// (`../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs`) — duplicated rather
+/// (`../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs`) — duplicated rather
 /// than imported so the oracle-only build never links the subject crate. The contract's
 /// mutation-coverage gate keeps this list honest against the catalog, and
 /// `kinds_match_the_enum_and_the_catalog` in that production file keeps it honest against the enum.
 const KINDS: &[&str] = &["create-widget", "delete-widget", "reorder-widgets", "replace-widget", "connect-widgets", "disconnect-widgets", "reorder-synapses", "update-synapse-endpoints", "move-widgets", "duplicate-widget"];
 
 /// 📄️ The plugin's own committed real flow artifact, read where the domain already keeps it.
-const FLOW_ASSET: &str = "asset://🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio";
+const FLOW_ASSET: &str = "asset://🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/🗣️.dsl.semio";
 
 /// 🧫️ The four widgets, two synapses and two layout entries the composed content child is seeded
 /// with — see this fixture's own `_provenance` member for which committed leaf payload each value
@@ -109,7 +109,7 @@ mod subject {
     }
 
     /// 🔁️ The identity law on the real committed bytes. The carrier is deliberately byte-exact:
-    /// `📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio` is this codec's OWN output — a semio-native
+    /// `📚️examples/🎬️demo/🖼️assets/🗣️.dsl.semio` is this codec's OWN output — a semio-native
     /// envelope no foreign writer ever produced — so reproducing it exactly is the correct answer and
     /// anything else is codec or fixture drift. That is why `carrier_is_exact` stands here in place
     /// of the wave's usual "output must differ from input" tripwire.

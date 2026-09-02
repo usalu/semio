@@ -5,7 +5,7 @@
   "displayName": "Delete Site Context",
   "emoji": "🗑️📍",
   "aggregateVariant": "DeleteSiteContext",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

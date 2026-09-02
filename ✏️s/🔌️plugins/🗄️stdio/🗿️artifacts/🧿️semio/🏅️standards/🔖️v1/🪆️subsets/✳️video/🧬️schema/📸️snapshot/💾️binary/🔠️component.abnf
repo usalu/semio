@@ -1,8 +1,0 @@
-; ABNF mirror (descriptive, not test-parsed — the real byte-level walker is
-; ../📡️component.protocol.semio, walked by dsl::walk_protocol) for s.stdio.semio.video snapshot
-; (binary), post-envelope-unwrap payload.
-document      = format schema-len schema-bytes payload
-format        = OCTET                 ; PACK_BINARY_FORMAT, currently 1
-schema-len    = 1*OCTET                ; LEB128 varint
-schema-bytes  = *OCTET                 ; UTF-8 schema id, e.g. stdio.semio.video
-payload       = *OCTET                 ; streams — see ../🦀️component.rs's encode_video_snapshot_binary; opaque here (protocol-array-of-records gap)

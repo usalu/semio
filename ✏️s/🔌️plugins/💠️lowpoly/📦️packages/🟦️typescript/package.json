@@ -10,7 +10,7 @@
     "test": "bun nx run @semio-tech/lowpoly-js:test"
   },
   "exports": {
-    ".": "./📦️index.ts"
+    ".": "./🟦️.ts"
   },
   "dependencies": {
     "ajv": "^8.20.0"

@@ -1,9 +1,0 @@
-module Stdio_semio_flow_mutations;
-
-# `format` (1 byte) + `tag` (1 byte, variant ordinal), then an opaque `payload` tail (the variant's
-# own `key=value ...` argument text) — see the sibling `📡️component.protocol.semio`'s comment.
-type Document = unit {
-    format: uint8;
-    tag: uint8;
-    payload: bytes &eod;
-};

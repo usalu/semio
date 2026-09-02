@@ -5,17 +5,19 @@
   "displayName": "Change Merge Policy",
   "emoji": "🛡️",
   "aggregateVariant": "ChangeMergePolicy",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
-  "invertibility": "non-invertible",
-  "diffParticipation": "none",
+  "invertibility": "self",
+  "diffParticipation": "apply-only",
   "outcomeClasses": [
-    "applied"
+    "applied",
+    "warning"
   ],
   "composition": "atomic",
   "requiredLanguageSurfaces": [
     "rust",
+    "typescript",
     "json-schema"
   ]
 }

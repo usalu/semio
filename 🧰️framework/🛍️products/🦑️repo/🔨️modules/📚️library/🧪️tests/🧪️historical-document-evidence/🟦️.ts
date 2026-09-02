@@ -1,7 +1,7 @@
 import { expect, test } from "bun:test";
 import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
-import * as discovery from "../../🔍️discovery/🟦️component.ts";
+import * as discovery from "../../🔍️discovery/🟦️.ts";
 import * as normalization from "../../🧹️normalization/🟦️.ts";
 
 const libraryRoot = resolve(import.meta.dir, "../.."), root = resolve(libraryRoot, "../../../../..");
@@ -90,7 +90,7 @@ function fixture() {
 
 test("ticket narrative, evidence and scratch never block a move, a production file still does, and a ticket-embedded package boundary is never swept in", () => {
   const { repoRoot, put, git } = fixture();
-  const scope = "🧪️tests/🧪️fixture", source = `${scope}/🦀️component.rs`, final = `${scope}/🦀️.rs`;
+  const scope = "🧪️tests/🧪️fixture", source = `${scope}/🦀️.rs`, final = `${scope}/🦀️.rs`;
   const prose = (owner: string) => `Earlier the component lived at ${source} before ${owner} moved it.\n`;
 
   const closedTicketDir = ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️27/HISTREF-CLOSED-FIXTURE";
@@ -101,7 +101,7 @@ test("ticket narrative, evidence and scratch never block a move, a production fi
   const looseScratch = `${closedTicketDir}/loose-scratch.txt`;
   const workingNote = `${closedTicketDir}/📌️note.md`;
   const cursorPlan = ".cursor/plans/histref_fixture_test_deadbeef.plan.md";
-  const productionDoc = "🧪️tests/🧪️histref-production-neighbor/📖️notes.md";
+  const productionDoc = "🧪️tests/📖️histref-production-neighbornotes.md";
   const embeddedManifest = `${closedTicketDir}/embedded-pkg/Cargo.toml`;
   const embeddedSource = `${closedTicketDir}/embedded-pkg/lib.rs`;
   const embeddedReport = `${closedTicketDir}/embedded-pkg/📓️note.md`;

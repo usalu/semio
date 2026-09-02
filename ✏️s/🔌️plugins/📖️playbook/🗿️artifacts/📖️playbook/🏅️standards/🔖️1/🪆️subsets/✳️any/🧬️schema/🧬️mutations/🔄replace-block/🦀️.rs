@@ -1,5 +1,5 @@
 //! 🔄 Playbook mutation — `ReplaceBlock`: whole-value swap of a block's configuration. `PlaybookBlock`
-//! carries ~18 kind-dependent optional fields (see the artifact's `🦀️component.rs`) edited together
+//! carries ~18 kind-dependent optional fields (see the artifact's `🦀️.rs`) edited together
 //! as one property-panel form, never one field at a time — this fails `update`'s "all fields
 //! required, cohesive facet" restriction (most fields are `Option` and only a kind-dependent subset
 //! applies at once), so it takes taxonomy's `replace` verb ("whole-value swap of a large structured

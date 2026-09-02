@@ -1,0 +1,115 @@
+//! 🧪️ `delete-asset` fixture — `removes-the-logo-asset`.
+//!
+//! Source of truth is the committed JSON quartet beside this file (contract D1, ticket
+//! `26/08/20/COMPOSE-TO-PUZZLE5D-MIGRATION`). The `.op.semio`/`.spr.semio`/`.dsl.semio`/
+//! `.pack.semio`/`.patch.semio` encodings are derived from it by `fixtures generate` and are
+//! asserted by the shared codec-matrix harness, not here.
+
+use crate::artifacts::note::schema::mutations::{apply_note_mutation, inverse_note_mutation, NoteMutation};
+use crate::artifacts::note::{NoteDiff, NoteSnapshot};
+use protocol::Mutation;
+
+const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️.json");
+const AFTER: &str = include_str!("📸️snapshot/➡️after/🔣️.json");
+const MUTATION: &str = include_str!("🦠️mutation/🔣️.json");
+const DIFF: &str = include_str!("🔺️diff/🔣️.json");
+const OUTCOME: &str = include_str!("🎯️outcome/🔣️.json");
+
+fn before() -> NoteSnapshot {
+    serde_json::from_str(BEFORE).expect("before snapshot decodes")
+}
+fn expected_after() -> NoteSnapshot {
+    serde_json::from_str(AFTER).expect("after snapshot decodes")
+}
+fn mutation() -> NoteMutation {
+    serde_json::from_str(MUTATION).expect("mutation decodes")
+}
+
+/// ▶️ `delete-asset` emits a single-key asset REMOVAL entry (`None` value) for the addressed key.
+#[semio_framework_async_macros::async_test]
+async fn applies_to_committed_after() {
+    let applied = apply_note_mutation(&before(), &mutation()).expect("delete-asset applies to its committed before-snapshot");
+    assert_eq!(applied, expected_after(), "delete-asset/removes-the-logo-asset: applied state differs from committed after-snapshot");
+}
+
+/// ↩️ The inverse is `create-asset` re-carrying the base's own prior asset value verbatim.
+#[semio_framework_async_macros::async_test]
+async fn inverse_restores_before() {
+    let base = before();
+    let forward = mutation();
+    let mut snapshot = apply_note_mutation(&base, &forward).expect("delete-asset applies forward");
+    let mut undo = inverse_note_mutation(&base, &forward);
+    undo.reverse();
+    for step in &undo {
+        snapshot = apply_note_mutation(&snapshot, step).expect("delete-asset inverse step applies");
+    }
+    assert_eq!(snapshot, base, "delete-asset/removes-the-logo-asset: inverse did not restore the before-snapshot");
+}
+
+/// 🔣️ Both committed snapshots and the committed mutation are already canonical: decode→encode is a fixed point.
+#[semio_framework_async_macros::async_test]
+async fn committed_json_is_canonical() {
+    for (label, text) in [("before", BEFORE), ("after", AFTER)] {
+        let decoded: NoteSnapshot = serde_json::from_str(text).expect("snapshot decodes");
+        let reencoded = serde_json::to_value(&decoded).expect("snapshot encodes");
+        let original: serde_json::Value = serde_json::from_str(text).expect("snapshot reparses");
+        assert_eq!(reencoded, original, "delete-asset/removes-the-logo-asset: committed {label} JSON is not canonical");
+    }
+    let reencoded = serde_json::to_value(mutation()).expect("mutation encodes");
+    let original: serde_json::Value = serde_json::from_str(MUTATION).expect("mutation reparses");
+    assert_eq!(reencoded, original, "delete-asset/removes-the-logo-asset: committed mutation JSON is not canonical");
+}
+
+/// 🎯️ `asset-logo` exists in the base, so the `mutation.target-missing` error guard does not fire.
+#[semio_framework_async_macros::async_test]
+async fn declared_outcome_holds() {
+    let outcome: serde_json::Value = serde_json::from_str(OUTCOME).expect("outcome decodes");
+    let status = outcome.get("status").and_then(serde_json::Value::as_str).expect("outcome carries a status");
+    assert_eq!(status, "applied", "delete-asset/removes-the-logo-asset: this fixture declares an applied outcome");
+    let produced = mutation().diff(&before());
+    let blocked = produced.messages().iter().any(|message| matches!(message.level, protocol::Severity::Error | protocol::Severity::Fatal));
+    assert!(!blocked, "delete-asset/removes-the-logo-asset: declared applied but the diff builder rejected it: {:?}", produced.messages());
+    apply_note_mutation(&before(), &mutation()).expect("delete-asset/removes-the-logo-asset: declared applied but the diff would not apply");
+}
+
+/// 🔺️ One `assets.entries` REMOVAL (a `null` value under the key); `blocks` stays `None`, which is the machine-readable proof that this leaf has no block cascade.
+///
+/// The single most load-bearing assertion in the fixture: `before`+`after` only prove the end
+/// state, whereas this pins WHICH collections and fields this mutation is allowed to touch.
+#[semio_framework_async_macros::async_test]
+async fn produces_committed_diff() {
+    let outcome = <NoteMutation as protocol::Mutation<NoteSnapshot>>::diff(&mutation(), &before());
+    let produced = serde_json::to_value(outcome.diff()).expect("produced diff encodes");
+    let committed: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff decodes");
+    assert_eq!(produced, committed, "delete-asset/removes-the-logo-asset: produced diff differs from the committed 🔺️diff/🔣️.json");
+}
+
+/// 🔣️ The committed diff round-trips through the note artifact's own `NoteDiff`: its container is
+/// `#[serde(default)]` with no `skip_serializing_if`, so all 23 fields must be present, `null` for
+/// every slot `delete-asset` leaves alone.
+#[semio_framework_async_macros::async_test]
+async fn committed_diff_is_canonical() {
+    let decoded: NoteDiff = serde_json::from_str(DIFF).expect("committed diff decodes");
+    let reencoded = serde_json::to_value(&decoded).expect("diff re-encodes");
+    let original: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff reparses");
+    assert_eq!(reencoded, original, "delete-asset/removes-the-logo-asset: committed diff JSON is not canonical");
+}
+
+/// 🩹 The committed single-key asset removal carries `before` to `after` on its own.
+#[semio_framework_async_macros::async_test]
+async fn committed_diff_applies_to_after() {
+    let decoded: NoteDiff = serde_json::from_str(DIFF).expect("committed diff decodes");
+    let produced = <NoteDiff as protocol::MutationDiff<NoteSnapshot>>::apply(&decoded, &before()).expect("committed diff applies to the before-snapshot");
+    assert_eq!(produced, expected_after(), "delete-asset/removes-the-logo-asset: committed diff did not carry before to after");
+}
+
+/// 🗑️ The asset map empties (and therefore disappears from the JSON); the image blocks that referenced the key are deliberately left dangling — this leaf has no block cascade.
+#[semio_framework_async_macros::async_test]
+async fn asset_map_empties_and_referencing_blocks_are_left_dangling() {
+    let base = before();
+    let applied = apply_note_mutation(&base, &mutation()).expect("delete-asset applies");
+    assert!(base.assets.contains_key("asset-logo"), "delete-asset/removes-the-logo-asset: the base must carry the key being deleted");
+    assert!(applied.assets.is_empty(), "delete-asset/removes-the-logo-asset: the asset map must end up empty");
+    assert_eq!(applied.blocks, base.blocks, "delete-asset has NO block cascade — the image blocks keep their now-dangling imageKey");
+    assert!(!AFTER.contains("assets"), "an empty asset map is skipped by serde, so the committed after-snapshot must carry no \"assets\" key");
+}

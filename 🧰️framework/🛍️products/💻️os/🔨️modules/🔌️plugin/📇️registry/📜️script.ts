@@ -14,8 +14,8 @@
 import { createHash } from "node:crypto";
 import { existsSync, lstatSync, mkdirSync, readdirSync, readFileSync, readSync, rmSync, statSync, writeFileSync } from "node:fs";
 import { basename, dirname, join, relative } from "node:path";
-import type { AreaState, ArtifactScaffoldLeaf, ArtifactScaffoldOptions, ArtifactScaffoldResult, DiscoveredPackage, PackageRole, RegistryCatalogInputView } from "../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts";
-import { authorArtifactScaffold, BundleScript, canonicalPrimaryFilenameForKind, discoverCatalogPackages, discoverPackageProblems, discoverPackages, getWorkspaceRoot, loadCatalogTaxonomy, parseRegistryCatalogProjection, registryCatalogInputView, registryCatalogProjectedInputView, registryExampleCatalog, runBundleScriptMain, runVitest, ScriptRouter, validateGeneratorContractsAgainstWorkspace } from "../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts";
+import type { AreaState, ArtifactScaffoldLeaf, ArtifactScaffoldOptions, ArtifactScaffoldResult, DiscoveredPackage, PackageRole, RegistryCatalogInputView } from "../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { authorArtifactScaffold, BundleScript, canonicalPrimaryFilenameForKind, discoverCatalogPackages, discoverPackageProblems, discoverPackages, getWorkspaceRoot, loadCatalogTaxonomy, parseRegistryCatalogProjection, registryCatalogInputView, registryCatalogProjectedInputView, registryExampleCatalog, runBundleScriptMain, runVitest, ScriptRouter, validateGeneratorContractsAgainstWorkspace } from "../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { generateLaunchJson, LAUNCH_OUTPUT_REL_PATH } from "./🖥️launch.ts";
 
 //#region 🔖️PluginRegistryEntry
@@ -24,8 +24,8 @@ export type PluginHostMetadata = {
   readonly hostAppId: string;
 };
 
-/** 🛂️ `#️⃣PackageHashes` mirror (`🛂️manifest/🦀️component.rs`) — content hashes the `check` gate
- * verifies against the built wasm. Present only once a crate has a `🔣️descriptor.json`. */
+/** 🛂️ `#️⃣PackageHashes` mirror (`🛂️manifest/🦀️.rs`) — content hashes the `check` gate
+ * verifies against the built wasm. Present only once a crate has a `🔣️.json`. */
 export type PluginDescriptorHashes = {
   readonly wasmSha256: string;
   readonly coreWasmSha256: string;
@@ -52,7 +52,7 @@ export type PluginRegistryEntry = {
   readonly host?: PluginHostMetadata;
   /** 🎬️ `kernel::ActivationEvent` rows, flattened to `📓️design-abi.md` §2's canonical dash-separated
    * strings (`on-command:<id>`, `on-view-visible:<id>`, `on-file-type:<ext>`, `on-artifact-kind:<kind>`,
-   * `on-extension-request:<point>`, `on-startup-finished`) — sourced from `🔣️descriptor.json`, empty
+   * `on-extension-request:<point>`, `on-startup-finished`) — sourced from `🔣️.json`, empty
    * for a crate that has none yet (E1-describe lands ahead of the W3 plugin migrations that produce
    * one per crate — see `parsePluginCargo`'s own doc for the fallback rule). */
   readonly activationEvents: readonly string[];
@@ -160,7 +160,7 @@ function findPluginCargoFiles(root: string, packages?: readonly DiscoveredPackag
  * Consequence while the paths disagreed: `plugin-registry:check` reported `🗒️note` as having no
  * descriptor while a real, fresh, committed one sat at the owner root and `descriptor_is_fresh()`
  * passed against it. The gate and the test were reading different files and both looked green.
- * `descriptor_is_fresh()` (`🔌️plugin/🦀️component.rs`), the dev `📜️script.ts` build step, and every
+ * `descriptor_is_fresh()` (`🔌️plugin/🦀️.rs`), the dev `📜️script.ts` build step, and every
  * plugin crate's own `📜️script.ts describe` command all use the owner root; this is the last leg. */
 const DESCRIPTOR_JSON_REL_PATH = TAXONOMY.generatorContracts["plugin-registry"].inputDiscovery!.descriptorRelativePath.split("/");
 
@@ -193,7 +193,7 @@ function formatActivationEvent(raw: unknown): string | undefined {
   }
 }
 
-/** 🔣️ Reads and loosely-shapes `<cratePath>/🤖️generated/🔣️descriptor.json` (the
+/** 🔣️ Reads and loosely-shapes `<cratePath>/🤖️generated/🔣️.json` (the
  * `semio-framework-plugin-describe` emitter's JSON mirror of `PackageDescriptor`) — `undefined` when
  * the crate has none yet (every crate today: E1-describe lands ahead of the W3 plugin migrations
  * that produce one per crate; see `parsePluginCargo`'s doc for the fallback this enables). Loosely
@@ -213,7 +213,7 @@ function readDescriptorJson(repoRoot: string, cratePath: string, view: RegistryC
 
 /**
  * @emoji 🔣️ Parses one plugin/extension crate manifest into its catalog row. `📓️design-abi.md` §3:
- * when `<cratePath>/🤖️generated/🔣️descriptor.json` exists, `capabilities`/`contributes`/
+ * when `<cratePath>/🤖️generated/🔣️.json` exists, `capabilities`/`contributes`/
  * `activationEvents`/`extensionPoints`/`executionMode`/`hashes` are read from it — Cargo
  * `[package.metadata.semio]` no longer carries `contributes` for a migrated crate (kept only for
  * `role`/`extends`/`mode`/playground rows, per the design doc). **Transitional fallback**: no plugin
@@ -1051,7 +1051,7 @@ const BUILDER_FACET_DIR = "🏗️builder";
 const DECOMPOSER_FACET_DIR = "🪓️decomposer";
 const LEGACY_WASM_DIR = "🕸️wasm";
 const TAXONOMY_TS_LEAF_FILENAME = primaryFilenameForKind(TAXONOMY.ecosystems["🟦️typescript"].componentFileKindId);
-/** @emoji 🪟️ A window dir may only contain these children, each itself a `🦀️component.rs` leaf. */
+/** @emoji 🪟️ A window dir may only contain these children, each itself a `🦀️.rs` leaf. */
 const TAXONOMY_WINDOW_CHILDREN = new Set(TAXONOMY.windowChildDirs);
 const TAXONOMY_LEAF_FILENAME = primaryFilenameForKind(TAXONOMY.ecosystems[RUST_LANG].componentFileKindId);
 /** @emoji 🚪️ Rust entry filename and its Shape V2 home relative to the owner root. */
@@ -1947,7 +1947,7 @@ function validateDescriptors(entries: readonly PluginRegistryEntry[], repoRoot: 
   for (const entry of entries) {
     const descriptorPath = join(entry.cratePath, ...DESCRIPTOR_JSON_REL_PATH);
     if (entry.hashes === undefined && entry.executionMode === undefined && entry.activationEvents.length === 0 && entry.extensionPoints.length === 0) {
-      // 🚧️ No `🔣️descriptor.json` (or one too malformed to read) — see `readDescriptorJson`.
+      // 🚧️ No `🔣️.json` (or one too malformed to read) — see `readDescriptorJson`.
       warnings.push(`${entry.pluginId}: no ${descriptorPath} yet — run \`bun ./📜️script.ts describe\` in ${entry.cratePath} after building its wasm32-wasip2 component`);
       continue;
     }
@@ -1988,7 +1988,7 @@ function validateDescriptors(entries: readonly PluginRegistryEntry[], repoRoot: 
     }
   }
   if (described > 0 || warnings.length === 0) {
-    console.log(`descriptor gate: ${described}/${entries.length} crates have a 🔣️descriptor.json.`);
+    console.log(`descriptor gate: ${described}/${entries.length} crates have a 🔣️.json.`);
   }
   return { warnings, errors };
 }

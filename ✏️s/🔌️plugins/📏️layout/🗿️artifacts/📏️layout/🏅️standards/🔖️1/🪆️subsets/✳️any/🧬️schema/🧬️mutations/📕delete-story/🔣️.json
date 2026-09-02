@@ -5,7 +5,7 @@
   "displayName": "Delete Story",
   "emoji": "📕",
   "aggregateVariant": "DeleteStory",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

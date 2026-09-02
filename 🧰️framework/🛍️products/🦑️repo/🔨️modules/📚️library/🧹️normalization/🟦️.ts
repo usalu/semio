@@ -28,14 +28,14 @@ import {
   writeSync,
 } from "node:fs";
 import type { Stats } from "node:fs";
-import { registryCatalogInputPaths, registryCatalogInputView, registryCatalogPathMayAffect, semanticPackageAdapterPreview, semanticPackageGeneratedLeafPreview, semanticPackageIgnoredGeneratedOutputPaths, semanticPackageJoinedPathReferenceAuthority, semanticPackageAuthoredFragmentReferences, semanticPackageProjectionAuthority, semanticPackageProjectionCatalog, type GeneratorProjectionActivation, type RegistryCatalogInputDiscovery, type RegistryCatalogInputView, type SemanticPackageGeneration, type SemanticPackageProjectionCase } from "../🔍️discovery/🟦️component.ts";
+import { registryCatalogInputPaths, registryCatalogInputView, registryCatalogPathMayAffect, semanticPackageAdapterPreview, semanticPackageGeneratedLeafPreview, semanticPackageIgnoredGeneratedOutputPaths, semanticPackageJoinedPathReferenceAuthority, semanticPackageAuthoredFragmentReferences, semanticPackageProjectionAuthority, semanticPackageProjectionCatalog, type GeneratorProjectionActivation, type RegistryCatalogInputDiscovery, type RegistryCatalogInputView, type SemanticPackageGeneration, type SemanticPackageProjectionCase } from "../🔍️discovery/🟦️.ts";
 import { tmpdir } from "node:os";
-import { parseGeneratorInputProjection, parseSemanticOwnedCurrentSourceRevisions, parseSemanticOwnedDocumentCorrections, semanticExactOwnedDocumentCorrectionAuthority, semanticOwnedInputFileSnapshot, type GeneratorInputProjection, type SemanticOwnedInputFileSnapshot } from "../🔍️discovery/🟦️component.ts";
-import { inspectRustAssertionMessageSpans, inspectRustCargoManifest, inspectRustJoinArgumentSpans, inspectRustManifestPathCandidates, inspectRustManifestPathReferences, inspectRustModuleGraph, inspectRustModuleGraphFacts, inspectRustNonRepoJoinBaseSpans, rustTokens as rustSyntaxTokens, rustTokenPairs, validateFrozenCoordinateEvidenceContracts, type RustModuleGraph, type FrozenCoordinateEvidenceContract } from "../🔍️discovery/🟦️component.ts";
-import { validateFrozenMarkdownCoordinateEvidenceContracts, type FrozenMarkdownCoordinateEvidenceContract } from "../🔍️discovery/🟦️component.ts";
-import { mutationPayloadSchemaRelativePath } from "../🔍️discovery/🟦️component.ts";
+import { parseGeneratorInputProjection, parseSemanticOwnedCurrentSourceRevisions, parseSemanticOwnedDocumentCorrections, semanticExactOwnedDocumentCorrectionAuthority, semanticOwnedInputFileSnapshot, type GeneratorInputProjection, type SemanticOwnedInputFileSnapshot } from "../🔍️discovery/🟦️.ts";
+import { inspectRustAssertionMessageSpans, inspectRustCargoManifest, inspectRustJoinArgumentSpans, inspectRustManifestPathCandidates, inspectRustManifestPathReferences, inspectRustModuleGraph, inspectRustModuleGraphFacts, inspectRustNonRepoJoinBaseSpans, rustTokens as rustSyntaxTokens, rustTokenPairs, validateFrozenCoordinateEvidenceContracts, type RustModuleGraph, type FrozenCoordinateEvidenceContract } from "../🔍️discovery/🟦️.ts";
+import { validateFrozenMarkdownCoordinateEvidenceContracts, type FrozenMarkdownCoordinateEvidenceContract } from "../🔍️discovery/🟦️.ts";
+import { mutationPayloadSchemaRelativePath } from "../🔍️discovery/🟦️.ts";
 import { basename, dirname, isAbsolute, join, parse, posix, relative, resolve, sep } from "node:path";
-import { artifactPathProjectionCatalogRoots, createTaxonomyPathMatcher, renderArtifactPathProjectionRoot, semanticArtifactEmptyFacetProjectionAuthority, semanticExactOwnedFileCatalog, semanticExactOwnedFileProjectionAuthority, semanticOwnedFileHistoryProjectionAuthority, semanticOwnedFileProjectionAuthority, semanticOwnedPrimaryFileProjectionAuthority, semanticPathProjectionAuthority, semanticPathProjectionReferenceConsumers, validateTaxonomy, type TaxonomyPathMatcher, type SemanticExactOwnedFileCase, type SemanticExactOwnedFileCatalog, type SemanticFacetPrimaryFileProjectionContract, type SemanticPathProjectionReferenceConsumerForm, type SemanticProjectionAuthorityNode, type Taxonomy as DiscoveryTaxonomy } from "../🔍️discovery/🟦️component.ts";
+import { artifactPathProjectionCatalogRoots, createTaxonomyPathMatcher, renderArtifactPathProjectionRoot, semanticArtifactEmptyFacetProjectionAuthority, semanticExactOwnedFileCatalog, semanticExactOwnedFileProjectionAuthority, semanticOwnedFileHistoryProjectionAuthority, semanticOwnedFileProjectionAuthority, semanticOwnedPrimaryFileProjectionAuthority, semanticPathProjectionAuthority, semanticPathProjectionReferenceConsumers, validateTaxonomy, type TaxonomyPathMatcher, type SemanticExactOwnedFileCase, type SemanticExactOwnedFileCatalog, type SemanticFacetPrimaryFileProjectionContract, type SemanticPathProjectionReferenceConsumerForm, type SemanticProjectionAuthorityNode, type Taxonomy as DiscoveryTaxonomy } from "../🔍️discovery/🟦️.ts";
 //#endregion 🔌️Adapters
 
 //#region 📜️Contracts
@@ -854,15 +854,15 @@ interface LoadedTaxonomy {
 }
 
 const TAXONOMY_RELATIVE_PATH = "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json";
-const TRANSACTION_SENTINEL_CASES_FIXTURE_PATH = "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🧫️fixtures/🧪️transaction-sentinel-cases/🔣️.json";
-const TICKET_IMPORTANT_EXACT_MUTATIONS_FIXTURE_PATH = "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🧫️fixtures/🧪️ticket-important-exact-mutations/🔣️.json";
+const TRANSACTION_SENTINEL_CASES_FIXTURE_PATH = "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🧫️fixtures/🔣️transaction-sentinel-cases.json";
+const TICKET_IMPORTANT_EXACT_MUTATIONS_FIXTURE_PATH = "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🧫️fixtures/🔣️ticket-important-exact-mutations.json";
 const TICKET_IMPORTANT_EXACT_GOVERNED_SOURCES = [
   ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️07/☀️12/ENFORCE-WINDOW-APP-PANEL-AND-PLUGIN-CONTRACTS-AT-COMPILE-TIME/🧪️window-policy-fixture/🎛️apps/🧪️fixture/🎭️modes/🧪️mode/🪟️windows/🧪️component-window/👥️presence/📌️important.md",
   ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️20/INTERACTIVE-JOB-RUNTIME-REFACTOR/PHASE-1-5-DE-ASYNC-REPAIR-SWEEP/📌️important.md",
   ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️20/INTERACTIVE-JOB-RUNTIME-REFACTOR/PHASE-9-RUNTIME-DEPENDENCY-REMOVAL/📌️important.md",
 ] as const;
 const LEXICAL_OPAQUE_ROOTS = ["compose", "temp/compose"] as const;
-const GENERIC_SEMANTIC_STEMS = new Set(["asset", "assets", "component", "components", "descriptor", "glue", "test", "tests", "implementation", "impl", "index"]);
+const GENERIC_SEMANTIC_STEMS = new Set(["asset", "assets", "component", "components", "descriptor", "glue", "test", "tests", "implementation", "impl", "index", "cases", "vectors"]);
 const WINDOWS_RESERVED = /^(?:con|prn|aux|nul|com[1-9]|lpt[1-9])(?:\.|$)/i;
 const SEGMENTER = new Intl.Segmenter("und", { granularity: "grapheme" });
 
@@ -1181,7 +1181,7 @@ function parseTaxonomy(raw: unknown, path: string): LoadedTaxonomy {
       const kindId = requiredString(spec.kindId, `${name}.kindId`);
       if (!fileKinds[kindId]) throw new Error(`Taxonomy v7 ${name} references unknown file kind ${kindId}`);
       const sourceFilename = spec.sourceFilename === undefined ? undefined : requiredString(spec.sourceFilename, `${name}.sourceFilename`).normalize("NFC");
-      if (sourceFilename !== undefined && (kindId !== "rust-source" || sourceFilename !== "🦀️component.rs")) throw new Error(`Taxonomy v7 ${name}.sourceFilename is not the frozen Draw Rust source leaf`);
+      if (sourceFilename !== undefined && (kindId !== "rust-source" || sourceFilename !== "🦀️.rs")) throw new Error(`Taxonomy v7 ${name}.sourceFilename is not the frozen Draw Rust source leaf`);
       return { pathSegments, nodeType: "file", kindId, ...(sourceFilename ? { sourceFilename } : {}) };
     }
     if (spec.fixedFilenameContractId !== undefined) {
@@ -3052,7 +3052,7 @@ function configurableContract(path: string, taxonomy: LoadedTaxonomy, packageInf
  * runs, so the attribute alternative only matters for direct callers of `isRustDeclarativeStatementSequence`
  * — or one call to the framework's own `plugin_exports!` macro (any qualifying `::`-path prefix,
  * e.g. `semio_framework_plugin::plugin_exports!(plugin::plugin, plugin::NoteApps);`): every one of
- * the 33 plugin `📦️glue.rs` files ends with exactly this, registering the crate's `Plugin`/`Apps`
+ * the 33 plugin `🦀️.rs` files ends with exactly this, registering the crate's `Plugin`/`Apps`
  * builder with the framework — never a local definition, never expanded here, pure wiring like the
  * `mod`/`use` lines around it. Named narrowly (not "any macro call") so an actual proc-macro or
  * declarative-macro body elsewhere in a glue file still fails this check and reports its real role.
@@ -3060,7 +3060,7 @@ function configurableContract(path: string, taxonomy: LoadedTaxonomy, packageInf
  * stripping its purely-declarative nested `mod {}` children — a body that held nothing else (e.g.
  * `pub mod any { mod component; pub use component::*; }`) reduces to pure whitespace, and `+` used
  * to reject that empty remainder as "not declarative", poisoning every ancestor wrapper all the way
- * to the file root (this is exactly why every one of the 33 plugin `📦️glue.rs` files — pure `mod`
+ * to the file root (this is exactly why every one of the 33 plugin `🦀️.rs` files — pure `mod`
  * nesting around leaf `component.rs` re-exports — read `unresolved` instead of `declaration`). */
 const RUST_DECLARATIVE_STATEMENT_SEQUENCE = /^(?:\s*(?:pub\s+)?(?:mod|use)\b[^;]*;|\s*(?:pub\s+)?extern\s+crate\b[^;]*;|\s*(?:pub\s+)?type\s+\w+[^=;{]*=[^;]*;|\s*#!?\[[^\]]+\]\s*|\s*(?:[\w]+::)*plugin_exports!\s*\([^()]*\)\s*;)*$/s;
 
@@ -3070,7 +3070,7 @@ function isRustDeclarativeStatementSequence(source: string): boolean {
 
 /** 🪆️ Recursively strips `mod name { ... }`/`pub mod name { ... }` blocks whose entire body is
  * itself nothing but declarative wiring, so a namespacing wrapper around otherwise-thin re-exports —
- * e.g. `📡️replication/📦️packages/🦀️rust/📦️glue.rs`'s `pub mod codec { #[path = "..."] mod x; pub use
+ * e.g. `📡️replication/📦️packages/🦀️rust/🦀️.rs`'s `pub mod codec { #[path = "..."] mod x; pub use
  * x::*; }` — does not defeat the flat grammar above, which only recognizes semicolon-terminated
  * statements. A block whose body is NOT purely declarative is left untouched, so the outer check
  * correctly still fails on its stray `{`/`}`. */
@@ -3712,7 +3712,7 @@ function mutationReferenceProjectionState(token: ReferenceToken, target: string 
 
 function projectedStructuralValue(row: MutationStructuralPath): string {
   const scenario = splitLeadingEmoji(row.scenario).emoji ? row.scenario : `🧪️${row.scenario}`;
-  return `🧪️tests/🪆️${row.standard}-${row.subset}/${row.mutation}/${scenario}${canonicalProjectionSuffix(row.suffix)}`.normalize("NFC");
+  return `🪆️tests${row.standard}-${row.subset}/${row.mutation}/${scenario}${canonicalProjectionSuffix(row.suffix)}`.normalize("NFC");
 }
 
 function structuralProjectionToken(content: string, row: MutationStructuralPath, adapter: TaxonomyReferenceAdapter, label: string, artifactRoot: string | null, prefix = ""): ReferenceToken {
@@ -3811,8 +3811,8 @@ function tomlTokens(path: string, content: string): ReferenceToken[] {
  * fallback candidate's span/value match and be properly rewritten in place instead. */
 function rustTokens(path: string, content: string, index?: ReferencePathIndex): ReferenceToken[] {
   // 🪪️ `owner_file: "<repo-relative path>"` is `bounded_first_step_tool_proofs!`'s self-declared
-  // authority field (`🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️component.rs`) — 36 editor
-  // `🦀️component.rs` files each name their OWN path here as a plain literal, never through `.join()`,
+  // authority field (`🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️.rs`) — 36 editor
+  // `🦀️.rs` files each name their OWN path here as a plain literal, never through `.join()`,
   // so none of the join-chain detectors above ever see it; mirrors the existing `#[path=…]`/`include!`
   // bare-literal style rather than inventing a second one.
   const rows = regexTokens(content, "rust", "rust-string-path", [/#\s*\[\s*path\s*=\s*"([^"]+)"/gu, /\b(?:include|include_str|include_bytes)!\s*\(\s*"([^"]+)"/gu, /\bowner_file\s*:\s*"([^"]+)"/gu]);
@@ -4558,18 +4558,18 @@ function rustReferenceGraph(path: string, index: ReferencePathIndex): RustRefere
 }
 
 /** 🧮️ Admits a complete finite interpretation only through one unchanged physical Cargo source chain. An ancestor's glob import (`use x::*`) is never disqualifying here — file participation comes only from `mod`/`#[path]` declarations, which `inspectRustModuleGraphFacts` already tracks completely regardless of glob re-exports; a glob only affects NAME resolution, never which physical files exist in the graph. A non-literal `.join(...)` argument is separately, structurally unrepresentable by every extractor this function consumes (`inspectRustManifestPathReferences`/`inspectRustManifestPathCandidates`/`inspectRustJoinArgumentSpans` all require a string literal, or a loop bound to string literals, to record anything at all) — so it can never reach this proof as a false `finite` positive regardless of glob imports. */
-/** 🛡️ Exact, fully-qualified invocation heads of framework-owned macros verified (by reading their `macro_rules!` bodies in full) to expand to zero `mod` items, so calling them can never hide additional module structure from the static crate-graph prover below. Every plugin's crate-root `glue.rs` calls exactly the first of these once; matched only against the comment-free, single-space-joined token stream `rustCodeOnlyTextForMacroTrust` builds, never raw text, so a decoy in a string literal or comment cannot match. Adding an entry here is a safety-relevant claim about a macro's expansion, not a formatting nicety — verify the full `macro_rules!` body contains no `mod` token before adding one. `derive_artifact_facets!` (`🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️component.rs`, both its primary arm and its `@children_ty` dispatch arms) expands only to `struct`/`impl` items built from `$crate`-qualified type paths and method delegations — zero `mod` tokens anywhere in its body — and is invoked once per artifact subset's `🧬️schema/🦀️component.rs` across the plugin tree, so leaving it untrusted was blocking the crate-graph proof for every ancestor that calls it, not just one. */
+/** 🛡️ Exact, fully-qualified invocation heads of framework-owned macros verified (by reading their `macro_rules!` bodies in full) to expand to zero `mod` items, so calling them can never hide additional module structure from the static crate-graph prover below. Every plugin's crate-root `glue.rs` calls exactly the first of these once; matched only against the comment-free, single-space-joined token stream `rustCodeOnlyTextForMacroTrust` builds, never raw text, so a decoy in a string literal or comment cannot match. Adding an entry here is a safety-relevant claim about a macro's expansion, not a formatting nicety — verify the full `macro_rules!` body contains no `mod` token before adding one. `derive_artifact_facets!` (`🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️.rs`, both its primary arm and its `@children_ty` dispatch arms) expands only to `struct`/`impl` items built from `$crate`-qualified type paths and method delegations — zero `mod` tokens anywhere in its body — and is invoked once per artifact subset's `🧬️schema/🦀️component.rs` across the plugin tree, so leaving it untrusted was blocking the crate-graph proof for every ancestor that calls it, not just one. */
 const RUST_MODULE_STRUCTURE_TRANSPARENT_MACRO_INVOCATIONS: readonly string[] = [
   "semio_framework_plugin :: plugin_exports !",
   "semio_framework_plugin :: derive_artifact_facets !",
 ];
 
-/** 🛡️ Bare names of crate-LOCAL `macro_rules!` macros — declared directly inside an ancestor file this guard scans, not merely called from one — verified (by reading the full `macro_rules! name { … }` body) to expand to zero `mod` items. `stdio`'s crate-root `📦️glue.rs` declares `impl_serde_op_codec!` this way: its body is two trait impls (`protocol::OpText`/`protocol::OpBinary`) built entirely from method calls (`serde_json::to_string`/`to_vec`/`from_str`/`from_slice`, `.expect`/`.map_err`) — zero `mod` tokens anywhere in the expansion template. Unlike `RUST_MODULE_STRUCTURE_TRANSPARENT_MACRO_INVOCATIONS` (an external macro's exact call-site text), a name registered here needs BOTH its definition head (`macro_rules ! name`) and every local invocation (`name !`) scrubbed, since both live in the same ancestor file being trusted. */
+/** 🛡️ Bare names of crate-LOCAL `macro_rules!` macros — declared directly inside an ancestor file this guard scans, not merely called from one — verified (by reading the full `macro_rules! name { … }` body) to expand to zero `mod` items. `stdio`'s crate-root `🦀️.rs` declares `impl_serde_op_codec!` this way: its body is two trait impls (`protocol::OpText`/`protocol::OpBinary`) built entirely from method calls (`serde_json::to_string`/`to_vec`/`from_str`/`from_slice`, `.expect`/`.map_err`) — zero `mod` tokens anywhere in the expansion template. Unlike `RUST_MODULE_STRUCTURE_TRANSPARENT_MACRO_INVOCATIONS` (an external macro's exact call-site text), a name registered here needs BOTH its definition head (`macro_rules ! name`) and every local invocation (`name !`) scrubbed, since both live in the same ancestor file being trusted. */
 const RUST_MODULE_STRUCTURE_TRANSPARENT_MACRO_DEFINITIONS: readonly string[] = [
   "impl_serde_op_codec",
 ];
 
-/** 🛡️ Bare names of Rust standard-library macros that the language itself guarantees are expression/statement-position only — none can ever expand to, or contain, an item-position `mod`, so their mere presence can never hide module structure. This is a closed, deliberately narrow allowlist (not "trust all of std"): only macros actually encountered in a repository ancestor file get registered, one at a time, exactly like every other entry on this page. `stdio`'s `📦️glue.rs` uses `format!` (`semantic_fingerprint`'s error path) and `unreachable!` (`hash_hex_bytes`'s exhaustiveness arm) — both ordinary value-producing expressions, no different in kind from a plain function call as far as module structure is concerned. The `assert*!` family is the same kind of claim: `assert!`/`assert_eq!`/`assert_ne!`/`debug_assert!`/`debug_assert_eq!`/`debug_assert_ne!` expand only to a boolean check plus a `panic!` arm (itself already covered by this same guarantee) — never an item — and appear in essentially every `#[cfg(test)] mod tests` block repo-wide, so leaving them untrusted was disqualifying nearly any ancestor file with tests, independent of whichever other construct also happened to be in it. `vec!` is the same guarantee again: it expands only to a sequence of `Vec::new()`/`.push(...)` calls (or `<[_]>::into_vec(box [...])`), always in expression position — `stdio.pdf`'s `✳️a` schema ancestor (`🧬️schema/🦀️component.rs`) builds a `PdfSnapshot { pages: vec![...] }` test fixture with it, which was disqualifying the pdf `✳️a`/`✳️x` mutation files' `CARGO_MANIFEST_DIR` proof (confirmed by direct instrumentation of `rustFiniteManifestTargets`, not by re-reading the regex). */
+/** 🛡️ Bare names of Rust standard-library macros that the language itself guarantees are expression/statement-position only — none can ever expand to, or contain, an item-position `mod`, so their mere presence can never hide module structure. This is a closed, deliberately narrow allowlist (not "trust all of std"): only macros actually encountered in a repository ancestor file get registered, one at a time, exactly like every other entry on this page. `stdio`'s `🦀️.rs` uses `format!` (`semantic_fingerprint`'s error path) and `unreachable!` (`hash_hex_bytes`'s exhaustiveness arm) — both ordinary value-producing expressions, no different in kind from a plain function call as far as module structure is concerned. The `assert*!` family is the same kind of claim: `assert!`/`assert_eq!`/`assert_ne!`/`debug_assert!`/`debug_assert_eq!`/`debug_assert_ne!` expand only to a boolean check plus a `panic!` arm (itself already covered by this same guarantee) — never an item — and appear in essentially every `#[cfg(test)] mod tests` block repo-wide, so leaving them untrusted was disqualifying nearly any ancestor file with tests, independent of whichever other construct also happened to be in it. `vec!` is the same guarantee again: it expands only to a sequence of `Vec::new()`/`.push(...)` calls (or `<[_]>::into_vec(box [...])`), always in expression position — `stdio.pdf`'s `✳️a` schema ancestor (`🧬️schema/🦀️component.rs`) builds a `PdfSnapshot { pages: vec![...] }` test fixture with it, which was disqualifying the pdf `✳️a`/`✳️x` mutation files' `CARGO_MANIFEST_DIR` proof (confirmed by direct instrumentation of `rustFiniteManifestTargets`, not by re-reading the regex). */
 const RUST_MODULE_STRUCTURE_TRANSPARENT_STD_EXPRESSION_MACROS: readonly string[] = [
   "format",
   "unreachable",
@@ -5312,7 +5312,7 @@ function nestedCargoReferenceTokens(path: string, content: string, packages: rea
   };
   for (const splice of row.sourceSplices) if (path === splice.sourcePath) add(splice.oldValue, splice.oldValue, splice.newValue, splice.sourcePath, "rust");
   if (path === row.sourceRoot + "/Cargo.toml") {
-    if (row.id === "jcoprobe-guest") add('path = "🦀️component.rs"', "🦀️component.rs", "📚️library/🦀️.rs", row.sourceRoot + "/🦀️component.rs", "toml");
+    if (row.id === "jcoprobe-guest") add('path = "🦀️.rs"', "🦀️.rs", "📚️library/🦀️.rs", row.sourceRoot + "/🦀️.rs", "toml");
     else {
       add('build = "build.rs"', "build.rs", "🏗️builder/🦀️.rs", row.sourceRoot + "/build.rs", "toml");
       add('path = "🦀️lib.rs"', "🦀️lib.rs", "📚️library/🦀️.rs", row.sourceRoot + "/🦀️lib.rs", "toml");
@@ -5320,8 +5320,8 @@ function nestedCargoReferenceTokens(path: string, content: string, packages: rea
     }
   }
   if (row.id === "wgpu-renderer" && path === row.sourceRoot + "/package.json") {
-    add('".": "./📦️index.ts"', ".", ".", row.sourceRoot, "json");
-    add('".": "./📦️index.ts"', "./📦️index.ts", "./🟦️typescript/📚️library/🟦️.ts", row.sourceRoot + "/📦️index.ts", "json");
+    add('".": "./🟦️.ts"', ".", ".", row.sourceRoot, "json");
+    add('".": "./🟦️.ts"', "./🟦️.ts", "./🟦️typescript/📚️library/🟦️.ts", row.sourceRoot + "/🟦️.ts", "json");
     add('"directory": "framework/product/os/module/renderer/wgpu"', "framework/product/os/module/renderer/wgpu", row.destinationRoot, row.sourceRoot, "json");
   }
   if (row.id === "wgpu-renderer" && path === row.sourceRoot + "/📋️project.json") {
@@ -5338,7 +5338,7 @@ function nestedCargoReferenceTokens(path: string, content: string, packages: rea
       for (const selector of row.mappings.filter((entry) => entry.sourcePath.endsWith(".test.ts") && call[0].includes(JSON.stringify(basename(entry.sourcePath))))) add(call[0], basename(selector.sourcePath), posix.relative(row.destinationRoot, selector.destinationPath), selector.sourcePath, "typescript");
     }
   }
-  if (row.id === "jcoprobe-guest" && path === row.sourceRoot + "/🦀️component.rs") {
+  if (row.id === "jcoprobe-guest" && path === row.sourceRoot + "/🦀️.rs") {
     const target = row.sourceRoot + "/🧬️schema/📜️world.wit", rendered = "../📦️packages/🦀️rust/🧬️schema/📜️world.wit";
     add('path: "🧬️schema/📜️world.wit"', "🧬️schema/📜️world.wit", "🧬️schema/📜️world.wit", target, "rust");
     add("`👽️guest/🧬️schema/📜️world.wit`", "👽️guest/🧬️schema/📜️world.wit", rendered, target, "rust");
@@ -5874,7 +5874,7 @@ function projectMutationTestBundles(
   }
   for (const [subsetRoot, subsetSources] of [...bySubset.entries()].sort(([left], [right]) => left.localeCompare(right))) {
     const catalogEntry = projectionCatalogEntryForSubset(entries, subsetRoot);
-    const catalogPath = catalogEntry?.sourcePath ?? `${subsetRoot}/🧪️oracle/🔣️.json`;
+    const catalogPath = catalogEntry?.sourcePath ?? `${subsetRoot}/🔣️oracle.json`;
     const catalog = catalogEntry?.nodeKind === "file" ? projectionCatalogVectors(absolutePath(repoRoot, catalogPath), subsetSources[0]) : { vectors: [] as readonly MutationProjectionVector[], error: `catalog is missing at ${catalogPath}` };
     if (catalog.error) {
       for (const source of subsetSources) entries.get(source.scenarioRoot)?.violations.push(violation("projection-catalog-invalid", catalogPath, catalog.error));

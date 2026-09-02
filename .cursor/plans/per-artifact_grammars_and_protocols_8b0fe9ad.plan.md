@@ -74,11 +74,11 @@ One generic text grammar and one generic binary codec serve all 52 artifacts:
 
 ```
 ✏️s/🔌️plugins/<plugin>/🗿️artifacts/<artifact>/
-  🗣️dsl/   🦀️component.rs  🟦️component.ts  📖️component.grammar.semio
-  🔧️op/   🦀️component.rs  🟦️component.ts  📖️component.grammar.semio
-  🔺️diff/ 🦀️component.rs  🟦️component.ts  📖️component.grammar.semio
-  🎒️pack/ 🦀️component.rs  🟦️component.ts  📡️component.protocol.semio
-  📡️spr/  🦀️component.rs  🟦️component.ts  📡️component.protocol.semio
+  🗣️dsl/   🦀️.rs  🟦️.ts  📖️.grammar.semio
+  🔧️op/   🦀️.rs  🟦️.ts  📖️.grammar.semio
+  🔺️diff/ 🦀️.rs  🟦️.ts  📖️.grammar.semio
+  🎒️pack/ 🦀️.rs  🟦️.ts  📡️.protocol.semio
+  📡️spr/  🦀️.rs  🟦️.ts  📡️.protocol.semio
   ⚙️engine/ (no spec file)
 ```
 
@@ -87,8 +87,8 @@ Scale: 52 artifacts x 5 facets = 260 spec files + 260 TS facades, plus 34 app `�
 ```mermaid
 flowchart TB
   spec["component.grammar.semio / component.protocol.semio<br/>normative spec"]
-  rs["🦀️component.rs<br/>handcrafted parser / codec"]
-  ts["🟦️component.ts<br/>WASM facade"]
+  rs["🦀️.rs<br/>handcrafted parser / codec"]
+  ts["🟦️.ts<br/>WASM facade"]
   sweep["conformance sweep<br/>recognizer vs parser"]
   lsp["LanguageSpec + LanguageSession"]
   writer["writer live diagnostics"]
@@ -106,8 +106,8 @@ flowchart TB
 
 [🔣️taxonomy.json](🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️implementations/🟦️typescript/🔣️taxonomy.json) currently permits only a language leaf file inside a facet dir (`_treePurityComment`, Shape V2). Adding `.semio` files and a TS leaf requires:
 
-- New key `artifactSpecFilenames` mapping each facet to its spec filename and dialect: `🗣️dsl`/`🔧️op`/`🔺️diff` → `📖️component.grammar.semio`; `🎒️pack`/`📡️spr` → `📡️component.protocol.semio`.
-- Fix `ecosystems.🟦️typescript.leafFilename` from `🟦️component.tsx` to `🟦️component.ts`; keep `.tsx` only on `targets.⚛️react`. This is already the de-facto convention (12 of 13 existing TS leaves in `✏️s/🔌️plugins` are `.ts`) and today's value is a latent inconsistency.
+- New key `artifactSpecFilenames` mapping each facet to its spec filename and dialect: `🗣️dsl`/`🔧️op`/`🔺️diff` → `📖️.grammar.semio`; `🎒️pack`/`📡️spr` → `📡️.protocol.semio`.
+- Fix `ecosystems.🟦️typescript.leafFilename` from `🟦️.tsx` to `🟦️.ts`; keep `.tsx` only on `targets.⚛️react`. This is already the de-facto convention (12 of 13 existing TS leaves in `✏️s/🔌️plugins` are `.ts`) and today's value is a latent inconsistency.
 - Extend `validateTaxonomy` / `validateTaxonomyTree` in [🟦️discovery.ts](🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️implementations/🟦️typescript/🟦️discovery.ts) and [registry 📜️script.ts](🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚡️implementations/🟦️typescript/📇️registry/📜️script.ts) so a facet is complete only with all three files.
 - Extend `policyTaxonomyDirsBreaches` in [📜️script.ts](📜️script.ts) to accept the new filenames.
 
@@ -125,7 +125,7 @@ Design a declarative binary-format language over the primitives the codecs actua
 
 ### M4. TypeScript facade mechanism
 
-Only 3 of 32 plugins have a TS package today ([flow](✏️s/🔌️plugins/🌊️flow/📦️packages/🟦️typescript), cad, animate). Each plugin needs `📦️packages/🟦️typescript` with `package.json`, `📋️project.json`, `📜️script.ts`, `📦️index.ts` barrel re-exporting every facet's `🟦️component.ts`. Each facade exposes `parse`/`print` or `encode`/`decode` bound to the plugin's WASM export — no parsing logic in TS. A conformance test per facet asserts the TS facade and Rust agree on the same fixture.
+Only 3 of 32 plugins have a TS package today ([flow](✏️s/🔌️plugins/🌊️flow/📦️packages/🟦️typescript), cad, animate). Each plugin needs `📦️packages/🟦️typescript` with `package.json`, `📋️project.json`, `📜️script.ts`, `📦️index.ts` barrel re-exporting every facet's `🟦️.ts`. Each facade exposes `parse`/`print` or `encode`/`decode` bound to the plugin's WASM export — no parsing logic in TS. A conformance test per facet asserts the TS facade and Rust agree on the same fixture.
 
 ### M5. Language registry and shared LSP host
 
@@ -133,7 +133,7 @@ Complete section A5/A6 of the absorbed architecture: collapse the `🔖️Idiom`
 
 ### M6. Writer integration
 
-[Writer's main window](✏️s/🔌️plugins/✒️writer/🎛️apps/✒️writer/🎭️modes/✏️edit/🪟️windows/✒️main/🦀️component.rs) currently forks on `language_id == "jack"` and calls `trinity::core` directly, with regex tokenizers in [the engine](✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/⚙️engine/🦀️component.rs). Replace every fork with `LanguageSession` calls onto the existing `TextEditorScene` JSON plumbing (kept — it is the law-preserving renderer boundary). Drop the `trinity_jack` dependency. Add `WriterCommand::OpenDocument{uri,text}` resolving extension to language via the registry. Replace the static `#[dsl(lang = "jack")]` on `WriterProjection.text` with `#[dsl(lang_from = "language_id")]`.
+[Writer's main window](✏️s/🔌️plugins/✒️writer/🎛️apps/✒️writer/🎭️modes/✏️edit/🪟️windows/✒️main/🦀️.rs) currently forks on `language_id == "jack"` and calls `trinity::core` directly, with regex tokenizers in [the engine](✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/⚙️engine/🦀️.rs). Replace every fork with `LanguageSession` calls onto the existing `TextEditorScene` JSON plumbing (kept — it is the law-preserving renderer boundary). Drop the `trinity_jack` dependency. Add `WriterCommand::OpenDocument{uri,text}` resolving extension to language via the registry. Replace the static `#[dsl(lang = "jack")]` on `WriterProjection.text` with `#[dsl(lang_from = "language_id")]`.
 
 ### M7. Enforcement (the forcing function)
 

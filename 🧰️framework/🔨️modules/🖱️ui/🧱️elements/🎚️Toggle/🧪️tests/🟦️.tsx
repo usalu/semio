@@ -3,7 +3,7 @@ import * as React from "react";
 import { act } from "react";
 import { fireEvent, render } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
-import { Toggle } from "../🟦️component.tsx";
+import { Toggle } from "../🟦️.tsx";
 // #endregion 🔌️Adapters
 
 // #region 🗡️ToggleMatrix

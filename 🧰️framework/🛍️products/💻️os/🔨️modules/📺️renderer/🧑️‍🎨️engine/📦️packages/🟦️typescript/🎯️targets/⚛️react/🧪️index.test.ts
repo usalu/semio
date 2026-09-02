@@ -1,10 +1,10 @@
 import { act as reactAct, createElement, useState, type ReactElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { Layout } from "@semio-tech/ui-react";
-import { resolvePluginCanvasStatus, type PluginSupervisorState } from "../../../../🧱️elements/Shell/🟦️component.tsx";
+import { resolvePluginCanvasStatus, type PluginSupervisorState } from "../../../../🧱️elements/Shell/🟦️.tsx";
 import bootCanvasFixture from "../../../../🧱️elements/Shell/🧪️fixtures/🔣️boot-canvas.json";
-import { dispatchInvokeExtensionEffect, runInvokeExtensionEffect } from "../../../../🧱️elements/ShellHost/🟦️component.tsx";
-import type { LoadedProgramState } from "../../../../🧱️elements/Shell/🟦️component.tsx";
+import { dispatchInvokeExtensionEffect, runInvokeExtensionEffect } from "../../../../🧱️elements/ShellHost/🟦️.tsx";
+import type { LoadedProgramState } from "../../../../🧱️elements/Shell/🟦️.tsx";
 import extensionInvocationFixture from "../../../../🧱️elements/ShellHost/🧪️fixtures/🔣️extension-invocation.json";
 import extensionInvocationSchema from "../../../../🧱️elements/ShellHost/🧪️fixtures/🔣️extension-invocation.schema.json";
 import Ajv from "ajv";
@@ -181,7 +181,7 @@ describe("extension invocation completion ownership", () => {
   });
 
   it("captures before the host queue and cancels queued evaluation after replacement", async () => {
-    const { serializePerActor } = await import("../../../../🧱️elements/PluginRuntime/🟦️component.tsx");
+    const { serializePerActor } = await import("../../../../🧱️elements/PluginRuntime/🟦️.tsx");
     const entered = Promise.withResolvers<void>();
     const release = Promise.withResolvers<void>();
     let generation = 1;
@@ -442,7 +442,7 @@ import graphParameterFixture from "../../../../../../../../../../🧰️framewor
 import graphPickSchema from "../../../../🧱️elements/NodeGraph/🧪️fixtures/🔣️pick-target.schema.json";
 import graphPickFixture from "../../../../🧱️elements/NodeGraph/🧪️fixtures/🔣️pick-target.json";
 import graphParameterSchema from "../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🎚️parameter/🧬️schema/🔣️graph-parameter.schema.json";
-import * as flowSessionLoader from "../../../../🧱️elements/WasmSessionLoader/🟦️component.tsx";
+import * as flowSessionLoader from "../../../../🧱️elements/WasmSessionLoader/🟦️.tsx";
 import { cleanup, fireEvent, render, waitFor } from "@semio-tech/ui-react/test";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import {
@@ -480,11 +480,11 @@ import {
   ENTWERFEN_MIT_BESTAND_GENERATOR_BRAND,
   ENTWERFEN_MIT_BESTAND_KOORDINATOR_BRAND,
   ENTWERFEN_MIT_BESTAND_VERFOLGEN_BRAND,
-} from "../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🧑️‍💻️dev/🏷️brand/📦️index.ts";
+} from "../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🧑️‍💻️dev/🏷️brand/🟦️.ts";
 import { ENTWERFEN_MIT_BESTAND_BRAND_IDS, ENTWERFEN_MIT_BESTAND_GENERAL_INTRODUCTION } from "../../../../../../../../../../♻️mit-bestand/🧺️demonstrator/🟦️brand.ts";
 import { Footer, navbarFillItem, SelectionMarquee, uiDataLabel, formatKeybindingShortcut, buildKeysByActionId, type PanelTabNode, type TreeDataSection } from "@semio-tech/ui-react";
-import { renderUiControl } from "../../../../🧱️elements/Interpreter/🟦️component.tsx";
-import { parseWorldBrushPreview } from "../../../../🧱️elements/World3dHost/🟦️component.tsx";
+import { renderUiControl } from "../../../../🧱️elements/Interpreter/🟦️.tsx";
+import { parseWorldBrushPreview } from "../../../../🧱️elements/World3dHost/🟦️.tsx";
 import { aProjectOfLuhUdkFooterItem, fundedByZukunftBauFooterItem, LUH_LOGO_URL, LUH_URL, UDK_LOGO_URL, UDK_URL, ZUKUNFT_BAU_PROJECT_URL } from "../../../../../../../../../../♻️mit-bestand/🧺️demonstrator/⚛️footer.tsx";
 import {
   Canvas2dHost,
@@ -726,7 +726,7 @@ import {
   peerIdsSelecting,
   peerIdsHovering,
   SyncAttachCard,
-} from "./📦️index.tsx";
+} from "./🟦️.tsx";
 import { decodeWorldProjectionTemplateId, encodeWorldProjectionTemplateId } from "@semio-tech/infinite-world-r3f";
 
 //#region 🔌️jsdom polyfills
@@ -829,7 +829,7 @@ function buildContractNode(spec: ContractNodeSpec): BuiltNode {
  * getServerSnapshot, which is required for server-rendered content"). Every pre-migration test in
  * this describe block used `renderToStaticMarkup` (the old Interpreter had no store/hook to trip
  * this on); this helper uses client-side `render()` instead, which does not hit the SSR path — a
- * test-only workaround, not a fix for the underlying gap. See `UiDocumentStore/🟦️component.tsx`'s
+ * test-only workaround, not a fix for the underlying gap. See `UiDocumentStore/🟦️.tsx`'s
  * `useUiNode`/`useUiDocumentRoot`/`useUiDocumentRevision`.
  */
 function renderContractTree(root: ContractNodeSpec, presenceByKey?: Readonly<Record<string, UiPresenceOverlayEntry>>): string {
@@ -1686,7 +1686,7 @@ describe("framework plugin runtime", () => {
   // file): channel v12 retired `AppCommand::RefreshUi`/`SectionProbe` and `AppFrame::UiSection` —
   // window-body refresh is no longer a request/response round trip at all, it is a
   // `Event::SurfaceVisible` submission read back through `TurnResult.uiPatches` via the
-  // `ActivationRegistry`/`ShardClient` pair `loadPluginModule` owns (`🧱️elements/PluginRuntime/🟦️component.tsx`'s
+  // `ActivationRegistry`/`ShardClient` pair `loadPluginModule` owns (`🧱️elements/PluginRuntime/🟦️.tsx`'s
   // `🔖️ActorAdapter` region). `adaptPluginHandle` alone (what this test constructs, via a bare
   // fake with no actor and no ShardClient) genuinely has no wire path left to ask for a
   // section body over, so its own `refreshUi` is an honest empty result — asserted here rather than
@@ -1696,7 +1696,7 @@ describe("framework plugin runtime", () => {
   // `KernelPluginWasmHandle`'s old synchronous `exchange(instanceId, frames) -> Promise<frames>`
   // per-call RPC is gone (`📌️important.md`'s "Replace, never wrap" list) — split into fire-and-forget
   // `enqueue(instanceId, events): void` plus the handle-wide `outcomes: AsyncIterable<TurnOutcome>`
-  // broadcast `AppChannelClient` correlates FIFO against (`🎠️kernel/🟦️component.ts`'s
+  // broadcast `AppChannelClient` correlates FIFO against (`🎠️kernel/🟦️.ts`'s
   // `PluginWasmHandle` header doc). This helper re-creates `exchange`'s old request/reply shape on
   // top of the two new primitives, purely for these fakes' own convenience — production code never
   // has a synchronous responder like this to call.
@@ -1855,10 +1855,10 @@ describe("framework plugin runtime", () => {
 
   // 🧬️ H1-react — `withSerializedPluginWasmHandle` (which queued concurrent per-call requests
   // transparently against the old synchronous wasm handle) is deleted alongside `PluginWorkerClient`
-  // (`🎠️kernel/🟦️component.ts`'s own doc comment names it). The reason it existed still applies:
+  // (`🎠️kernel/🟦️.ts`'s own doc comment names it). The reason it existed still applies:
   // `🟨️shard-worker.js` REJECTS (does not queue) a second in-flight `turn` for the same actor
   // (`inFlightTurnActors` guard, `🌐plugin-web-materialize.ts`). `serializePerActor`
-  // (`PluginRuntime/🟦️component.tsx`'s `🔖️ActorAdapter` region) is `loadPluginModule`'s real
+  // (`PluginRuntime/🟦️.tsx`'s `🔖️ActorAdapter` region) is `loadPluginModule`'s real
   // replacement — every `submitTurn` call for one actor funnels through it — exercised directly here
   // since it is a plain, generic per-key promise queue.
   it("serializePerActor queues concurrent turns for the same actor one at a time, never overlapping", async () => {
@@ -1937,7 +1937,7 @@ describe("framework plugin runtime", () => {
 
   // 🧬️ H1-react — `AppFrame::Effects`/`Events` no longer exist (channel v12, A4-channel). Effects
   // now travel as real `kernel::Effect` values directly on `TurnResult.effects`
-  // (`⚛️reactor/🦀️component.rs`'s `poll`), demuxed by `loadPluginModule`'s turn loop into
+  // (`⚛️reactor/🦀️.rs`'s `poll`), demuxed by `loadPluginModule`'s turn loop into
   // `pendingTurnEffects`/drained by `performInvocation` — a mechanism a bare command-only fake (no
   // ShardClient turn ever runs) has nothing to populate, so `requestedEffects` is honestly `[]` here.
   // `output`/`uiScope`/`historyPatch` still arrive on the SAME `AppFrame::Invocation` frame, unchanged
@@ -2010,7 +2010,7 @@ describe("framework plugin runtime", () => {
     expect(typeof handle.readConflicts).toBe("function");
     const instanceId = await handle.createApp("main");
 
-    // ⚖️ Same call the Settings merge-policy `Select`'s `dispatchSetMergePolicy` makes (`ShellHost/🟦️component.tsx`).
+    // ⚖️ Same call the Settings merge-policy `Select`'s `dispatchSetMergePolicy` makes (`ShellHost/🟦️.tsx`).
     await handle.setMergePolicy(instanceId, "Vigilant");
     expect(sentCommands[0]).toEqual({ setMergePolicy: { seq: 1, policy: 2 } });
 
@@ -2226,7 +2226,7 @@ describe("framework external slots", () => {
       destroyApp: async () => {},
       takeSegmentedDownloadChunk: async () => undefined,
       // 🎫️ `exchange-removal`: this handle is only ever placed in `ExternalSlotResolverContext.plugins`
-      // (typed `ReadonlyMap<string, PluginWasmHandle>`, `🎠️kernel/🟦️component.ts`) — `resolveExternalSlots`
+      // (typed `ReadonlyMap<string, PluginWasmHandle>`, `🎠️kernel/🟦️.ts`) — `resolveExternalSlots`
       // degrades to "unavailable" before ever touching `enqueue`/`outcomes` (see this test's own header
       // doc), so these two only need to satisfy the shape, never actually fire.
       enqueue: () => {},
@@ -2444,7 +2444,7 @@ describe("declarative forms parity", () => {
   // `ActionBinding`, dispatched through `dispatchTrigger`/`emitIntent`), not a separately-importable
   // factory this file's OWNS can call in isolation — there is no equivalent unit boundary left.
   // See this packet's report for a production-bug flag this deletion surfaced: `TreeView`'s current
-  // `handleDrop` (`Interpreter/🟦️component.tsx`) calls `dispatchTrigger(context, record, "drop")`
+  // `handleDrop` (`Interpreter/🟦️.tsx`) calls `dispatchTrigger(context, record, "drop")`
   // with NO input payload at all, discarding the drop event's target/payload/position entirely —
   // this test's old assertion (`args: { kind, targetId, dropPosition }`) has no successor to assert
   // against today.
@@ -3760,7 +3760,7 @@ describe("framework renderer hosts", () => {
         engagementPreviewJson: '[{"kind":"point","role":"origin","position":[0,0,0]},{"kind":"box-preview","role":"preview","cornerA":[0,0,0],"cornerB":[2,2,0]}]',
         // 🖱️ Context menus are no longer pushed as scene JSON — a right-click round-trips through
         // `requestContextMenu`/`ContextMenuItemSpec` on demand instead (see `openSurfaceContextMenu`,
-        // renderer `📦️index.tsx`), so `World3dScene` has no `contextMenuJson` field to cover here.
+        // renderer `🟦️.tsx`), so `World3dScene` has no `contextMenuJson` field to cover here.
         statusJson: '{"computing":true,"label":"Evaluating"}',
         terrainJson: '{"tileUrlTemplate":"/dem/{z}/{x}/{y}.png","projectOriginLon":9.7382,"projectOriginLat":52.3759,"exaggeration":1.5,"colorRamp":"hypsometric","minZoom":6,"maxZoom":14}',
       },
@@ -4046,7 +4046,7 @@ describe("framework renderer hosts", () => {
   });
 
   // 🆔️ Ticket 26/08/16/HUB-SPACES-LIVE-PRESENCE-AND-COLLABORATIVE-STUDIOS lane 3-F: a plugin-authored
-  // row's own `id` (now reachable from `TableWindowKit::render_rows`, `🔌️plugin/🦀️component.rs`) must
+  // row's own `id` (now reachable from `TableWindowKit::render_rows`, `🔌️plugin/🦀️.rs`) must
   // survive all the way to the DOM as `data-row-id` (contract §C0's `"space:<id>"`/`"artifact:<id>"`
   // grammar) — this was already true of `TableHost`/`Table` before lane 3-F; these two tests lock it in.
   it("stamps a row's own id onto the rendered row's data-row-id attribute", () => {
@@ -4259,7 +4259,7 @@ describe("framework renderer hosts", () => {
   it("interprets virtual file system component scenes", async () => {
     // 🧬️ MIGRATION: `Component::Surface`'s single `SurfaceProps.doc` (a pack-encoded opaque payload)
     // replaces the old `componentScene`/`virtualFileSystem` field pair — `surfacePropsToComponentSceneNode`
-    // (Interpreter/🟦️component.tsx) decodes `doc.bytes` back into the exact scene sub-field shape
+    // (Interpreter/🟦️.tsx) decodes `doc.bytes` back into the exact scene sub-field shape
     // `VirtualFileSystemHost` (unowned, unchanged) already reads.
     const doc = {
       schemaJson: JSON.stringify({
@@ -5225,7 +5225,7 @@ describe("s workflow flow routing", () => {
   });
 
   // 📇️ ticket 26/08/16/HUB-SPACES-LIVE-PRESENCE-AND-COLLABORATIVE-STUDIOS §C0/§C3/§C6 — pure-function
-  // coverage of the identity/directory helpers `ShellHost/🟦️component.tsx` exports for this. Full
+  // coverage of the identity/directory helpers `ShellHost/🟦️.tsx` exports for this. Full
   // end-to-end coverage (a real `openDocument` binding snapshot with/without a resolved identity, an
   // `os.open-artifact{documentId}` effect resulting in a worker `open` request with hub+folder
   // bindings) would need `fetch`/`Worker`/`DirectoryClient` mocking this already-huge shared suite has

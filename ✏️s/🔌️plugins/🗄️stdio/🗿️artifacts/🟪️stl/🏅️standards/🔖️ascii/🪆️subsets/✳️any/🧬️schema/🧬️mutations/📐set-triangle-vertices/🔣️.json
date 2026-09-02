@@ -5,7 +5,7 @@
   "displayName": "Set Triangle Vertices",
   "emoji": "📐",
   "aggregateVariant": "SetTriangleVertices",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

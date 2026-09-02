@@ -5,8 +5,8 @@
 
 // #region 🔌️Adapters
 import { clsx } from "clsx";
-import { defineTestAdapter, type AdapterContext } from "../../../../../../🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🟦️typescript/📦️index.ts";
-import { cn, type ClassNameInput } from "../../🟦️component.ts";
+import { defineTestAdapter, type AdapterContext } from "../../../../../../🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🟦️typescript/🟦️.ts";
+import { cn, type ClassNameInput } from "../../🟦️.ts";
 // #endregion 🔌️Adapters
 
 // #region 🧫️Vectors

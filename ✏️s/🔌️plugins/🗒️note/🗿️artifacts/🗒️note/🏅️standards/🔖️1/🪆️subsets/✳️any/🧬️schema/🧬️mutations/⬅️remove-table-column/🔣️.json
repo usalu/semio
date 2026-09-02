@@ -5,7 +5,7 @@
   "displayName": "Remove Table Column",
   "emoji": "⬅️",
   "aggregateVariant": "RemoveTableColumn",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": "remove-table-column",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

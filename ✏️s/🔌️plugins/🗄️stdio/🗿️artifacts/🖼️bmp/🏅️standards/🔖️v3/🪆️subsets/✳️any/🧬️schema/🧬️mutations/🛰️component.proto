@@ -1,8 +1,0 @@
-syntax = "proto3";
-package stdio.bmp.mutation;
-import "📐️change-header-fields/🛰️component.proto";
-import "📥️insert-palette-entry/🛰️component.proto";
-import "📤️remove-palette-entry/🛰️component.proto";
-import "🎨️replace-palette-entry/🛰️component.proto";
-import "🟪️replace-pixel-data/🛰️component.proto";
-message BmpMutation { oneof mutation { ChangeHeaderFieldsMutation change_header_fields = 2; InsertPaletteEntryMutation insert_palette_entry = 3; RemovePaletteEntryMutation remove_palette_entry = 4; ReplacePaletteEntryMutation replace_palette_entry = 5; ReplacePixelDataMutation replace_pixel_data = 6; } }

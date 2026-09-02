@@ -5,7 +5,7 @@ import stableStringify from "fast-json-stable-stringify";
 
 //#region 🧬️Contract
 const fixture = await Bun.file(new URL("./🔣️ordered-map.json", import.meta.url)).json();
-const schema = await Bun.file(new URL("./🔣️ordered-map.schema.json", import.meta.url)).json();
+const schema = await Bun.file(new URL("./🔣️.schema.json", import.meta.url)).json();
 const validate = new Ajv({ strict: true, allErrors: true }).compile(schema);
 assert(validate(fixture), JSON.stringify(validate.errors));
 assert.equal(new Set(fixture.cases.map((row: any) => row.id)).size, fixture.cases.length);
@@ -57,8 +57,8 @@ for (const mutant of [{ ...sharedFixture, extra: true }, { ...sharedFixture, exp
 console.log("[DEBUG] Shared-owner source fixtures=1 hostileRejections=2 oracle=fast-json-stable-stringify runtimeClaims=0");
 //#endregion 📤️SharedOwnership
 //#region 🧺️SetContract
-const setFixture = await Bun.file(new URL("../🧺️set/🧪️fixtures/🔣️ordered-set.json", import.meta.url)).json();
-const setSchema = await Bun.file(new URL("../🧺️set/🧬️schema/🔣️ordered-set.schema.json", import.meta.url)).json();
+const setFixture = await Bun.file(new URL("../🧺️set/🧪️fixture/🔣️s.json", import.meta.url)).json();
+const setSchema = await Bun.file(new URL("../🧺️set/🧬️schema/🔣️.schema.json", import.meta.url)).json();
 const validateSet = new Ajv({ strict: true, allErrors: true }).compile(setSchema);
 assert(validateSet(setFixture), JSON.stringify(validateSet.errors));
 const orderedSet = [...new Set<string>(setFixture.values)].sort((a, b) => Buffer.compare(Buffer.from(a), Buffer.from(b)));

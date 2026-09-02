@@ -19,7 +19,7 @@ impl Drop for OwnedOperator { fn drop(&mut self) { assert!(self.text.is_empty())
 
 #[test]
 fn registry_fixture_preserves_readers_and_retires_every_exact_owner() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("🧪️fixtures/🔣️retirement.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("🧪️fixtures/🔣️.json")).unwrap();
     let mut expected_bytes = None;
     for grant in fixture["grants"].as_array().unwrap() {
         let maximum_bytes = grant.as_u64().unwrap() as usize;
@@ -132,7 +132,7 @@ impl Drop for FaultingOperator { fn drop(&mut self) { assert!(self.text.is_empty
 
 #[test]
 fn supervising_cursor_recovers_operator_fault_after_exact_payload_handoff() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("🧪️fixtures/🔣️retirement.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("🧪️fixtures/🔣️.json")).unwrap();
     let drops = Arc::new(AtomicUsize::new(0));
     let mut registry = Registry::new();
     registry.register_operator(OperatorInfo::default(), vec![OperatorImpl { schemas: vec![], operator: Box::new(FaultingOperator { text: fixture["payload"].as_str().unwrap().into(), drops: Arc::clone(&drops) }) }], &[]);

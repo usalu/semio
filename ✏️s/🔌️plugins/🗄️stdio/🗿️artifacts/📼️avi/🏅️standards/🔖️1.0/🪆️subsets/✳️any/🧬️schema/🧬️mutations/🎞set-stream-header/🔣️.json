@@ -5,7 +5,7 @@
   "displayName": "Set Stream Header",
   "emoji": "🎞",
   "aggregateVariant": "SetStreamHeader",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

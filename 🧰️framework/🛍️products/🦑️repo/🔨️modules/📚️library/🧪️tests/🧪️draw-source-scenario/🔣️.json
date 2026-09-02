@@ -31,10 +31,10 @@
   "cargoModuleRoot": {
     "path": "📦️packages/🦀️rust/📚️library/🦀️.rs",
     "format": "rust",
-    "content": "#[path = \"../../../🗿️artifacts/📐️cad/🎬️interaction-spec/🦀️component.rs\"]\nmod cad_interaction_spec;\n"
+    "content": "#[path = \"../../../🗿️artifacts/📐️cad/🎬️interaction-spec/🦀️.rs\"]\nmod cad_interaction_spec;\n"
   },
   "cadConsumerMount": {
-    "sourcePath": "✏️s/🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🟦️component.ts",
+    "sourcePath": "✏️s/🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🟦️.ts",
     "path": "✏️s/🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🟦️.ts",
     "meaning": "unchanged-live-cad-bytes-in-authored-canonical-fixture-context"
   },
@@ -48,7 +48,7 @@
     {
       "path": "🔄️fsm/✨️macros/📦️packages/🦀️rust/Cargo.toml",
       "format": "toml",
-      "content": "[package]\nname = \"semio-s-plugin-draw-fsm-macros\"\nversion = \"0.1.0\"\nedition = \"2021\"\n\n[lib]\nproc-macro = true\npath = \"📦️glue.rs\"\n"
+      "content": "[package]\nname = \"semio-s-plugin-draw-fsm-macros\"\nversion = \"0.1.0\"\nedition = \"2021\"\n\n[lib]\nproc-macro = true\npath = \"🦀️.rs\"\n"
     },
     {
       "path": "🔄️fsm/✨️macros/📦️packages/🦀️rust/📋️project.json",
@@ -61,19 +61,19 @@
       "content": "import { dirname } from \"node:path\";\nexport const packageRoot = dirname(import.meta.path);\n"
     },
     {
-      "path": "🔄️fsm/✨️macros/📦️packages/🦀️rust/📦️glue.rs",
+      "path": "🔄️fsm/✨️macros/📦️packages/🦀️rust/🦀️.rs",
       "format": "rust",
-      "content": "extern crate proc_macro;\n#[path = \"../../🦀️component.rs\"]\nmod component;\n#[proc_macro]\npub fn fixture(input: proc_macro::TokenStream) -> proc_macro::TokenStream { component::expand(input) }\n"
+      "content": "extern crate proc_macro;\n#[path = \"../../🦀️.rs\"]\nmod component;\n#[proc_macro]\npub fn fixture(input: proc_macro::TokenStream) -> proc_macro::TokenStream { component::expand(input) }\n"
     },
     {
-      "path": "🔄️fsm/✨️macros/🦀️component.rs",
+      "path": "🔄️fsm/✨️macros/🦀️.rs",
       "format": "rust",
       "content": "pub fn expand(input: proc_macro::TokenStream) -> proc_macro::TokenStream { input }\n"
     },
     {
       "path": "🔄️fsm/📦️packages/🦀️rust/Cargo.toml",
       "format": "toml",
-      "content": "[package]\nname = \"semio-s-plugin-draw-fsm\"\nversion = \"0.1.0\"\nedition = \"2021\"\n\n[lib]\npath = \"📦️glue.rs\"\n\n[dependencies]\nfsm_macros = { path = \"../../✨️macros/📦️packages/🦀️rust\", package = \"semio-s-plugin-draw-fsm-macros\" }\n"
+      "content": "[package]\nname = \"semio-s-plugin-draw-fsm\"\nversion = \"0.1.0\"\nedition = \"2021\"\n\n[lib]\npath = \"🦀️.rs\"\n\n[dependencies]\nfsm_macros = { path = \"../../✨️macros/📦️packages/🦀️rust\", package = \"semio-s-plugin-draw-fsm-macros\" }\n"
     },
     {
       "path": "🔄️fsm/📦️packages/🦀️rust/📋️project.json",
@@ -86,17 +86,17 @@
       "content": "import { dirname } from \"node:path\";\nexport const packageRoot = dirname(import.meta.path);\n"
     },
     {
-      "path": "🔄️fsm/📦️packages/🦀️rust/📦️glue.rs",
+      "path": "🔄️fsm/📦️packages/🦀️rust/🦀️.rs",
       "format": "rust",
-      "content": "#[path = \"../../🦀️component.rs\"]\nmod component;\npub use component::transition;\n"
+      "content": "#[path = \"../../🦀️.rs\"]\nmod component;\npub use component::transition;\n"
     },
     {
-      "path": "🔄️fsm/🦀️component.rs",
+      "path": "🔄️fsm/🦀️.rs",
       "format": "rust",
       "content": "pub fn transition(value: u32) -> u32 { value + 1 }\n"
     },
     {
-      "path": "🦀️component.rs",
+      "path": "🦀️.rs",
       "format": "rust",
       "content": "pub fn pointer_down(value: u32) -> u32 { value + 1 }\n"
     }
@@ -118,14 +118,14 @@
       "content": "[package]\nname = \"draw-source-consumer\"\nversion = \"0.1.0\"\nedition = \"2021\"\n\n[lib]\npath = \"📚️library/🦀️.rs\"\n\n[dependencies]\nfsm = { path = \"../../{{artifactSourceRoot}}/🔄️fsm/📦️packages/🦀️rust\", package = \"semio-s-plugin-draw-fsm\" }\n"
     },
     {
-      "path": "🧪️tests/🧪️reference/🦀️.rs",
+      "path": "🧪️tests/🦀️reference.rs",
       "format": "rust",
-      "content": "#[path = \"../../{{artifactSourceRoot}}/🦀️component.rs\"]\nmod command;\npub fn invoke(value: u32) -> u32 { command::pointer_down(value) }\n"
+      "content": "#[path = \"../../{{artifactSourceRoot}}/🦀️.rs\"]\nmod command;\npub fn invoke(value: u32) -> u32 { command::pointer_down(value) }\n"
     },
     {
       "path": "📜️script.ts",
       "format": "typescript",
-      "content": "declare const root: string;\ndeclare function policyReadFileSafe(root: string, path: string): string;\nconst drawEditorSources = [\n  \"__SCOPE__/{{artifactSourceRoot}}/🦀️component.rs\",\n].map((file) => policyReadFileSafe(root, file));\nexport { drawEditorSources };\n"
+      "content": "declare const root: string;\ndeclare function policyReadFileSafe(root: string, path: string): string;\nconst drawEditorSources = [\n  \"__SCOPE__/{{artifactSourceRoot}}/🦀️.rs\",\n].map((file) => policyReadFileSafe(root, file));\nexport { drawEditorSources };\n"
     }
   ],
   "retention": {
@@ -147,8 +147,8 @@
     "destinationDirectoryCount": 9,
     "destinationNodeCount": 20,
     "configuration": [
-      { "path": "🔄️fsm/✨️macros/📦️packages/🦀️rust/Cargo.toml", "sourceEntry": "📦️glue.rs", "destinationEntry": "📚️library/🦀️.rs" },
-      { "path": "🔄️fsm/📦️packages/🦀️rust/Cargo.toml", "sourceEntry": "📦️glue.rs", "destinationEntry": "📚️library/🦀️.rs" }
+      { "path": "🔄️fsm/✨️macros/📦️packages/🦀️rust/Cargo.toml", "sourceEntry": "🦀️.rs", "destinationEntry": "📚️library/🦀️.rs" },
+      { "path": "🔄️fsm/📦️packages/🦀️rust/Cargo.toml", "sourceEntry": "🦀️.rs", "destinationEntry": "📚️library/🦀️.rs" }
     ],
     "workspaceMemberCount": 2,
     "dependencyUserCount": 8,
@@ -162,7 +162,7 @@
       "packageName": "draw-source-consumer",
       "libraryEntry": "📚️library/🦀️.rs",
       "moduleName": "cad_interaction_spec",
-      "moduleTarget": "../../../🗿️artifacts/📐️cad/🎬️interaction-spec/🦀️component.rs",
+      "moduleTarget": "../../../🗿️artifacts/📐️cad/🎬️interaction-spec/🦀️.rs",
       "canonicalModuleTarget": "../../../🗿️artifacts/📐️cad/🎬️interaction-spec/🦀️.rs"
     }
   }

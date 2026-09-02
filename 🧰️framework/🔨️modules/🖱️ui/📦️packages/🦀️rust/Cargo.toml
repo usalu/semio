@@ -14,7 +14,7 @@ id = "ui"
 workspace = true
 
 [lib]
-path = "📦️glue.rs"
+path = "🦀️.rs"
 
 [features]
 default = []
@@ -32,7 +32,7 @@ tui-bindgen = ["tui", "dep:wasm-bindgen"]
 # backs `prepared.rs`'s job-driven CPU staging/admission state machine (first-party, itself already
 # wasip2-safe). Neither reintroduces the `wasm-bindgen` leak this ticket closes. Ticket
 # 26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS.
-wgpu = ["dep:serde", "dep:serde_json", "dep:dsl", "dep:bytemuck", "dep:semio-framework-job"]
+wgpu = ["dep:serde", "dep:serde_json", "dep:semio-framework-os-kernel", "dep:semio-framework-value-derive", "dep:bytemuck", "dep:semio-framework-job"]
 # 🎨️ Full retained-mode engine for `wgpu`: arena/tree/layout/text/input/gpu rendering.
 wgpu-engine = [
     "wgpu",
@@ -66,7 +66,14 @@ ui_scene = { path = "../../🎬️scene/📦️packages/🦀️rust", package = 
 semio-framework-geometry = { path = "../../../📐️geometry/📦️packages/🦀️rust", package = "semio-framework-geometry", optional = true }
 semio-framework-job = { path = "../../../🧵️job/📦️packages/🦀️rust", optional = true }
 semio-framework-async = { path = "../../../⏳️async/📦️packages/🦀️rust", optional = true }
-dsl = { path = "../../../../🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-framework-os-kernel", optional = true }
+# 🧬️ ONE entry, under the real package name: `#[derive(ToValue, FromValue)]`'s generated code is
+# rooted at the literal `::semio_framework_os_kernel::` path (see `📓️serde-fanout-playbook.md`), so a
+# `dsl = { package = "semio-framework-os-kernel" }` rename alone does not satisfy it. Cargo rejects
+# two entries for one package under different names, so the `dsl` alias is established in code
+# instead — `extern crate semio_framework_os_kernel as dsl;` in `🦀️.rs`, the same way
+# `🔌️plugin`'s own glue aliases this crate.
+semio-framework-os-kernel = { path = "../../../../🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-framework-os-kernel", optional = true }
+semio-framework-value-derive = { path = "../../../🌱️value/✨️derive/📦️packages/🦀️rust", package = "semio-framework-value-derive", optional = true }
 ui_contract = { path = "../../🧬️contract/📦️packages/🦀️rust", package = "semio-framework-ui-contract" }
 serde = { version = "1.0.219", features = ["derive"], optional = true }
 serde_json = { version = "1.0.140", optional = true }
@@ -78,8 +85,8 @@ swash = { version = "0.2.6", default-features = false, features = ["render", "st
 bytemuck = { version = "1.24.0", features = ["derive"], optional = true }
 # ⚠️ RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS (26/09/01): restored after an
 # attempt to move this behind a `not(target_env = "p2")` target table — reverted because
-# `♾️infinite`'s `🌍️world/🦀️component.rs` unconditionally names wgpu-engine symbols that need this
-# tier to exist even for `wasm32-wasip2`. See `🎯️targets/🧊️wgpu/📦️glue.rs`'s top docstring.
+# `♾️infinite`'s `🌍️world/🦀️.rs` unconditionally names wgpu-engine symbols that need this
+# tier to exist even for `wasm32-wasip2`. See `🎯️targets/🧊️wgpu/🦀️.rs`'s top docstring.
 wgpu = { version = "27.0.1", default-features = false, features = ["wgsl"], optional = true }
 taffy = { version = "0.9", default-features = false, features = ["std", "flexbox", "taffy_tree"], optional = true }
 

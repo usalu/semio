@@ -5,7 +5,7 @@
   "displayName": "Delete Resource",
   "emoji": "🗑️📦",
   "aggregateVariant": "DeleteResource",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

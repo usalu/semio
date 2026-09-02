@@ -1,10 +1,9 @@
 //! 🛠️ Process3d mutation — `CreateMachine` (repurposes the pre-migration `🛠️machines/` triad dir —
 //! glue.rs path-includes this exact directory outside this facet's writable boundary, so the
 //! directory name stays `🛠️machines`; see the migration report's `sharedFileRequests` for the
-//! rename once a later pass can touch `📦️glue.rs`).
+//! rename once a later pass can touch `🦀️.rs`).
 
 use crate::artifacts::process3d::diff::Process3dDiff;
-use crate::artifacts::process3d::mutations::create_machine::CreateMachine;
 use crate::artifacts::process3d::mutations::delete_machine::DeleteMachine;
 use crate::artifacts::process3d::mutations::Process3dMutation;
 use crate::artifacts::process3d::{Process3dSnapshot, Workshop, WorkshopMachine};

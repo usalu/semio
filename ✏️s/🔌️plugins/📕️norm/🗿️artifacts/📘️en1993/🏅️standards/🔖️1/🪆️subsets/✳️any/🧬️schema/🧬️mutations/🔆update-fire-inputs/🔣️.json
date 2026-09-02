@@ -5,7 +5,7 @@
   "displayName": "Update Fire Inputs",
   "emoji": "🔆",
   "aggregateVariant": "UpdateFireInputs",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

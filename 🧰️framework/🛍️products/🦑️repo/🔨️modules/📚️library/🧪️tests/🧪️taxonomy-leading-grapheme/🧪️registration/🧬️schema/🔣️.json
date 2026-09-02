@@ -8,7 +8,7 @@
     "contractId": { "const": "taxonomy-leading-grapheme-registration-v1" },
     "command": { "const": "taxonomy-leading-grapheme" },
     "target": { "const": "test-taxonomy-leading-grapheme" },
-    "source": { "const": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧪️taxonomy-leading-grapheme/🟦️.ts" },
+    "source": { "const": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🟦️taxonomy-leading-grapheme.ts" },
     "runner": { "const": "runTestBudgeted" },
     "budget": { "const": "default" },
     "launchName": { "const": "🧹clean🧩️taxonomy🧪️taxonomy-leading-grapheme" },

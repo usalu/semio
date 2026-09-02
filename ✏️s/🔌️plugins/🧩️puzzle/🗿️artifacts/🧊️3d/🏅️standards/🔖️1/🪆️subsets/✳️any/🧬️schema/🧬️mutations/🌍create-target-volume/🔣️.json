@@ -5,7 +5,7 @@
   "displayName": "Create Target Volume",
   "emoji": "🌍",
   "aggregateVariant": "CreateTargetVolume",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": "create-target-volume",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

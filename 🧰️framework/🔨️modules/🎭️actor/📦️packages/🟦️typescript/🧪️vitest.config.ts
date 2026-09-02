@@ -24,7 +24,7 @@ export default {
     // all while the suite still reports green.
     include: [],
     coverage: { include: ["🧵️shard-client.ts", "📬️mailbox.ts", "🧵️turn-scheduler.ts"] },
-    includeSource: ["🧵️shard-client.ts", "📬️mailbox.ts", "🧵️turn-scheduler.ts", "../../🚪️lifetime/🟦️component.ts", "../../🚪️lifetime/🩹️patch/🟦️component.ts", "../../🪪️activation/🚪️instance/📥️output/🟦️component.ts", "../../📄️page/🟦️component.ts", "../../📤️return/🟦️component.ts", "../../📤️return/📨️response/🟦️component.ts"],
+    includeSource: ["🧵️shard-client.ts", "📬️mailbox.ts", "🧵️turn-scheduler.ts", "../../🚪️lifetime/🟦️.ts", "../../🚪️lifetime/🩹️patch/🟦️.ts", "../../🪪️activation/🚪️instance/📥️output/🟦️.ts", "../../📄️page/🟦️.ts", "../../📤️return/🟦️.ts", "../../📤️return/📨️response/🟦️.ts"],
     passWithNoTests: false,
   },
 };

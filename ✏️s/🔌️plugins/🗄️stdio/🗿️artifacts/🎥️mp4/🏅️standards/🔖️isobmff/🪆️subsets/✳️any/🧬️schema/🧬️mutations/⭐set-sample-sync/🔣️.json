@@ -5,7 +5,7 @@
   "displayName": "Set Sample Sync",
   "emoji": "⭐",
   "aggregateVariant": "SetSampleSync",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

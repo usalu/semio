@@ -1,5 +1,5 @@
 /** @emoji 🎯️ Canonical concept → catalog icon assignments — each distinct meaning maps to exactly one icon. */
-import type { IconName } from "./📦️index.ts";
+import type { IconName } from "./🟦️.ts";
 
 // #region FrameworkIconConcepts
 /** @emoji 🧰️ Domain-neutral icon concepts owned by the framework itself (chrome, generic graph shapes,

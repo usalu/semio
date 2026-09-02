@@ -7,21 +7,21 @@ IMPLEMENTATION, written in another language from the format's own committed spec
 
 * the envelope — `semio <plugin>.<artifact>.<component> v<version>` for text, and the
   `0x89 'S' 'E' 'M' 0D 0A 1A 0A` magic + little-endian u32 token length + token for binary — is
-  specified in `🧰️framework/🛍️products/💻️os/🔨️modules/🧬️semio/🦀️component.rs`'s `🔖️Envelope`/
+  specified in `🧰️framework/🛍️products/💻️os/🔨️modules/🧬️semio/🦀️.rs`'s `🔖️Envelope`/
   `🔖️Binary`/`🔖️Text` regions, the carrier's normative description;
 * the DSL body is the committed grammar
-  `../../🏅️standards/🔖️v1/🪆️subsets/✳️graph/🧬️schema/📸️snapshot/📝️text/📖️component.grammar.semio`
+  `../../🏅️standards/🔖️v1/🪆️subsets/✳️graph/🧬️schema/📸️snapshot/📝️text/📖️.grammar.semio`
   (`document = artifact-mark schema-line nodes-line edges-line`, `node = "[" hex "," hex "," hex ","
   hex "," hex "," "[" port-list? "]" "," "[" property-list? "]" "]"`, `port-kind = "i" | "o" | "x"`,
   and the restated `SemioValue` production `Z|B|I|F|S|Y|L|M|R`);
-* the JSON projection is the committed schema `…/📸️snapshot/🔣️component.json`, whose `ports.kind`
-  enum is `in|out|inOut`, plus `✳️value`'s own `…/✳️value/🧬️schema/📸️snapshot/🔣️component.json` for
+* the JSON projection is the committed schema `…/📸️snapshot/🔣️.json`, whose `ports.kind`
+  enum is `in|out|inOut`, plus `✳️value`'s own `…/✳️value/🧬️schema/📸️snapshot/🔣️.json` for
   the `SemioValue` member names (`lexeme`, `value`, `items`, `entries`, `id`);
 * the eleven verbs and their argument lists are the committed grammar
-  `…/🧬️schema/🧬️mutations/📝️text/📖️component.grammar.semio`, and their JSON wire form is the
+  `…/🧬️schema/🧬️mutations/📝️text/📖️.grammar.semio`, and their JSON wire form is the
   committed per-kind specification vectors under `…/🧬️mutations/<kind>/🧪️tests/<fixture>/`;
 * the pack body's `format u8` + varint-length-prefixed `schema` is the committed protocol
-  `…/📸️snapshot/💾️binary/📡️component.protocol.semio`, whose prose then names — but declines to
+  `…/📸️snapshot/💾️binary/📡️.protocol.semio`, whose prose then names — but declines to
   frame — "per-node varint-length-prefixed id/kind/label strings plus a fixed 16-byte position,
   nested ports/properties lists; per-edge four length-prefixed strings". That named-but-unframed
   layout was written out here from the protocol's own sentence, with the port-kind and value-tag
@@ -77,7 +77,7 @@ TOWER_PACK = "local://🎒️nakagin-capsule-tower.pack.semio"
 #: 🕸️ The tiny committed wires graph, kept for the BYTE half of the identity law: its two files were
 #: written by the RUST codec, so this implementation reproducing them is a cross-language byte
 #: agreement the tower pair — written by this implementation — cannot restate.
-WIRES_DSL = "asset://🏅️standards/🔖️v1/🪆️subsets/✳️graph/📚️examples/🕸️wires/🖼️assets/🗣️example.dsl.semio"
+WIRES_DSL = "asset://🏅️standards/🔖️v1/🪆️subsets/✳️graph/📚️examples/🕸️wires/🖼️assets/🗣️.dsl.semio"
 WIRES_PACK = "asset://🏅️standards/🔖️v1/🪆️subsets/✳️graph/📚️examples/🕸️wires/🖼️assets/🎒️example.pack.semio"
 
 

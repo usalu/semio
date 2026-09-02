@@ -5,7 +5,7 @@
   "displayName": "Change Grid Spacing",
   "emoji": "📏️",
   "aggregateVariant": "ChangeGridSpacing",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": "change-grid-spacing",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

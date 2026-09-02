@@ -1,0 +1,30 @@
+(* ISO/IEC 14977 EBNF mirror (descriptive, not test-parsed — the real recognizer is
+   ../📖️.grammar.semio, walked by dsl::Recognizer) for s.stdio.semio.graph's mutation op
+   text representation (protocol::OpText::print_op/parse_op). *)
+op = create node | delete node | change node kind | change node label | move node
+   | add node port | remove node port | add node property | remove node property
+   | create edge | delete edge ;
+
+create node           = "createNode", ":", hex, ",", hex, ",", hex, ",", hex, ",", hex, ",", "[", [ port list ], "]", ",", "[", [ property list ], "]" ;
+delete node           = "deleteNode", ":", hex ;
+change node kind      = "changeNodeKind", ":", hex, ",", hex ;
+change node label     = "changeNodeLabel", ":", hex, ",", hex ;
+move node             = "moveNode", ":", hex, ",", hex, ",", hex ;
+add node port         = "addNodePort", ":", hex, ",", integer, ",", port ;
+remove node port      = "removeNodePort", ":", hex, ",", integer ;
+add node property     = "addNodeProperty", ":", hex, ",", integer, ",", property ;
+remove node property  = "removeNodeProperty", ":", hex, ",", integer ;
+create edge           = "createEdge", ":", hex, ",", hex, ",", hex, ",", hex, ",", hex ;
+delete edge           = "deleteEdge", ":", hex ;
+
+port list     = port, { ",", port } ;
+port          = "[", hex, ",", port kind, "]" ;
+port kind     = "i" | "o" | "x" ;
+property list = property, { ",", property } ;
+property      = hex, ":", value ;
+
+hex           = { hex digit } ;
+hex digit     = "0" | "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9" | "a" | "b" | "c" | "d" | "e" | "f" ;
+integer       = digit, { digit } ;
+digit         = "0" | "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9" ;
+value         = ? the ✳️value subset's own SemioValue text grammar, reused verbatim ? ;

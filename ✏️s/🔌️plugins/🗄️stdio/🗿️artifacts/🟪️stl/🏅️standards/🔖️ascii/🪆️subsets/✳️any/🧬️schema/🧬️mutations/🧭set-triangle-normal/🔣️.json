@@ -5,7 +5,7 @@
   "displayName": "Set Triangle Normal",
   "emoji": "🧭",
   "aggregateVariant": "SetTriangleNormal",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

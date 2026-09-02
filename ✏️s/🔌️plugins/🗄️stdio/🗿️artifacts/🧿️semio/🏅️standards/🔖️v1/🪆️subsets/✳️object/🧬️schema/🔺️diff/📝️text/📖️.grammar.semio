@@ -1,0 +1,15 @@
+dialect grammar
+grammar stdio.semio.object.diff
+extension semio
+start diff
+
+# UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM object wave (W2c). Real one-line `DiffCodec::print_diff`/
+# `parse_diff` shape ALREADY emitted by `../🦀️.rs` (`print_object_diff`/
+# `parse_object_diff`) — `;`-joined `tag=value` fields, one per touched field of
+# `SemioObjectSnapshot` (`transform`/`brep`/`mesh`/`properties`).
+diff = field-list?
+field-list = field {";" field}*
+field = "t" "=" transform-value | "b" "=" child | "m" "=" child | "p" "=" child
+transform-value = "[" number "," number "," number "," number "," number "," number "," number "," number "," number "," number "]"
+child = "[" "]" | "[" hex "," hex "]"
+number = INT | FLOAT

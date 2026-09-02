@@ -1,9 +1,0 @@
-syntax = "proto3";
-// 💾️ SemioTableDiff binary frame — descriptive twin of 📡️component.protocol.semio.
-package semio.s_stdio_semio_table.diff.binary;
-
-message SemioTableDiffFrame {
-  uint32 format = 1;
-  uint32 presence = 2; // bit0=columns, bit1=rows
-  bytes payload = 3;   // opaque: present sections only
-}

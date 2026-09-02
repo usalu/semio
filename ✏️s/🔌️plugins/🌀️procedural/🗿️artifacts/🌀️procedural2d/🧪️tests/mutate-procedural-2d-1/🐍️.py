@@ -13,7 +13,7 @@ carrier.
 
 **What it was written from.**
 
-* ``🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🔣️component.json`` — the two members of the
+* ``🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🔣️.json`` — the two members of the
   snapshot and the shape of each half.
 * rules 1, 2, 3 and 4 of
   `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/📓️derivation-rules.md`.
@@ -38,7 +38,7 @@ raises `mutation.cascade` at level `info` HERE and raises nothing in the 3d sibl
 that is byte-for-byte identical in both committed vectors; and this subset spells one argument
 `question_id` in snake_case, the only snake_case identifier in either document model.**
 
-**No Rust was read to write this.** `🦀️component.rs` beside this file registers the SUBJECT half
+**No Rust was read to write this.** `🦀️.rs` beside this file registers the SUBJECT half
 only. All fourteen kinds are adjudicated and none is refused: this document holds no composed child,
 so nothing here depends on a content-addressing function no specification states.
 """

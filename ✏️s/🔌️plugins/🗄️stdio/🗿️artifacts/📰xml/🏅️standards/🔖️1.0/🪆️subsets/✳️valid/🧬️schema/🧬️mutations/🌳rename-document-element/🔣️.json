@@ -5,7 +5,7 @@
   "displayName": "Rename Document Element",
   "emoji": "🌳",
   "aggregateVariant": "RenameDocumentElement",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

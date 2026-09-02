@@ -5,7 +5,7 @@
   "displayName": "Change K Soil",
   "emoji": "🐑",
   "aggregateVariant": "ChangeKSoil",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

@@ -5,7 +5,7 @@
   "displayName": "Resize Grip 3d",
   "emoji": "📏",
   "aggregateVariant": "ResizeGrip3d",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": "resize-grip-3d",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

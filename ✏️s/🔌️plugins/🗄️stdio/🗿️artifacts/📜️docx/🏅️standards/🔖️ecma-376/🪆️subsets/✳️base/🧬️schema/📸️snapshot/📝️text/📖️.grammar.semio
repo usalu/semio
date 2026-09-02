@@ -1,0 +1,132 @@
+dialect grammar
+grammar stdio.docx.snapshot
+extension xml
+start document
+comment none
+string double raw
+string single raw
+
+# FG-wave (docx is this wave's OPC pattern-setter, see this ticket's own brief): `stdio.docx`
+# (ECMA-376 WordprocessingML) is a ZIP/OPC package -- binary-native AT THE CONTAINER level (this
+# facet's binary sibling, ../💾️binary/📡️.protocol.semio, restates zip's own real ZIP/OPC
+# byte layout, `🎒️zip/🏅️standards/🔖️2.0/…/📡️.protocol.semio`). THIS grammar facet
+# instead models the real TEXT syntax of the XML parts an OPC docx package carries --
+# `[Content_Types].xml`, `_rels/.rels` (+ any per-part `*.rels`), this format's own
+# `word/document.xml` body, and `word/styles.xml` -- restated from xml's own real FG1 grammar
+# (`📰xml/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📝️text/📖️.grammar.semio`,
+# cited verbatim wherever the shape is identical) since cross-artifact `use` does not resolve at
+# walk time (`📖️grammar-recipe.md` §2.1/§3) -- the SAME honest-restatement precedent every OPC
+# family member has used since zip's own P2 pilot. This is the pattern the wave's sibling agents
+# (xlsx, pptx, bcf, ifc/2x3) restate from in turn.
+#
+# Real element/attribute vocabulary traced directly from this artifact's own real Rust codec (not
+# invented, not guessed):
+# - `[Content_Types].xml`: `<Types xmlns=..>` / `<Default Extension=.. ContentType=../>` /
+#   `<Override PartName=.. ContentType=../>` -- `🎒️zip/📦️opc/🦀️.rs`'s
+#   `content_types_to_xml`/`content_types_from_xml` (:80-176, `CONTENT_TYPES_NS` :53).
+# - `_rels/.rels` (and any per-part `*.rels`): `<Relationships xmlns=..>` /
+#   `<Relationship Id=.. Type=.. Target=.. TargetMode=?../>` (`TargetMode` only present when
+#   `External`) -- same file's `relationships_to_xml`/`relationships_from_xml` (:178-292,
+#   `RELATIONSHIPS_NS` :54).
+# - `word/document.xml`: `<w:document xmlns:w=..><w:body>(w:p|w:tbl)*</w:body></w:document>`, each
+#   `w:p` a `w:pPr?` (`w:pStyle w:val=`, then raw-retained extension content) + `w:r`*
+#   (`w:rPr?`(`w:b`/`w:i`/`w:u w:val="single"`, then raw-retained extension content) +
+#   `w:t xml:space="preserve"`text), each `w:tbl` a `w:tblPr?`(raw-retained) + `w:tr`*
+#   (`w:trPr?`(raw-retained) + `w:tc`*(`w:tcPr?`(raw-retained) + nested `(w:p|w:tbl)*`)) --
+#   `⚙️engine/🦀️.rs`'s `document_to_xml`/`document_from_xml`/`paragraph_to_xml`/
+#   `run_to_xml`/`table_to_xml`/`row_to_xml`/`cell_to_xml` (:63-288). "Raw-retained extension
+#   content" = this artifact's own `extra_*_properties: Vec<XmlNode>` fields (any `w:rPr`/`w:pPr`/
+#   `w:trPr`/`w:tcPr`/`w:tblPr` child this typed model doesn't interpret, carried verbatim on
+#   round-trip, per `📸️snapshot/🦀️.rs`'s own doc comment) -- modeled below as `x-elem*`,
+#   a restatement of xml's own generic recursive element/content grammar (`x-` prefixed to avoid
+#   colliding with this file's own docx-specific production names).
+# - `word/styles.xml`: `<w:styles xmlns:w=..>(<w:style w:styleId=><w:name w:val=/>
+#   <w:basedOn w:val=/>?</w:style>)*</w:styles>` -- same engine file's `styles_to_xml`/
+#   `styles_from_xml` (:293-338).
+#
+# `comment none`: XML has no `#`-comment syntax (same rationale xml's own grammar file documents --
+# this vocabulary's numeric character references, if any future growth needed them, use `#` as a
+# literal sigil immediately after `&`).
+#
+# `string double raw` + `string single raw` (restated verbatim from xml's own grammar, same real
+# quirk): every attribute value here is quoted `"`/`'` and captured VERBATIM -- entity decoding in
+# this artifact's own real parser only ever runs over element CONTENT text (`xml_unescape_text`,
+# transitively via the shared `xml_document_from_text`), never attribute values.
+#
+# `<`/`>`/`&`/`;` below are the P2-M1-promoted single-char terminals (LT/GT/AMP/SEMICOLON); `:`
+# (namespace-prefixed names, `w:document`/`xml:space`/…) was already a real single-char lexer
+# token, so a colon-bearing name is modeled the SAME way xml's own `name = IDENT ":" IDENT | IDENT`
+# production does -- decomposed into separate literal tokens, never one fused literal string.
+document = part+
+part = content-types-part | relationships-part | document-part | styles-part
+
+# ── [Content_Types].xml ────────────────────────────────────────────────────────────────────────
+content-types-part = LT "Types" "xmlns" "=" TEXT GT ct-entry* LT "/" "Types" GT
+ct-entry = ct-default | ct-override
+ct-default = LT "Default" "Extension" "=" TEXT "ContentType" "=" TEXT "/" GT
+ct-override = LT "Override" "PartName" "=" TEXT "ContentType" "=" TEXT "/" GT
+
+# ── _rels/.rels (and any per-part *.rels) ──────────────────────────────────────────────────────
+relationships-part = LT "Relationships" "xmlns" "=" TEXT GT relationship* LT "/" "Relationships" GT
+relationship = LT "Relationship" "Id" "=" TEXT "Type" "=" TEXT "Target" "=" TEXT rel-target-mode? "/" GT
+rel-target-mode = "TargetMode" "=" TEXT
+
+# ── word/document.xml ──────────────────────────────────────────────────────────────────────────
+document-part = LT "w" ":" "document" "xmlns" ":" "w" "=" TEXT GT LT "w" ":" "body" GT block* LT "/" "w" ":" "body" GT LT "/" "w" ":" "document" GT
+block = paragraph | table
+
+paragraph = LT "w" ":" "p" GT para-props? run* LT "/" "w" ":" "p" GT
+para-props = LT "w" ":" "pPr" GT para-style? x-elem* LT "/" "w" ":" "pPr" GT
+para-style = LT "w" ":" "pStyle" "w" ":" "val" "=" TEXT "/" GT
+
+run = LT "w" ":" "r" GT run-props? run-text LT "/" "w" ":" "r" GT
+run-props = LT "w" ":" "rPr" GT run-flag* x-elem* LT "/" "w" ":" "rPr" GT
+# `w:b`/`w:i` are UNATTRIBUTED self-closing tags (`<w:b/>`, no space, no attribute between the
+# name and `/`) -- confirmed live (a real conformance-test bisection, not assumed) that the shared
+# lexer's `is_ident_continue` includes `/` (`🔍️lexer/🦀️.rs`'s own `is_ident_continue`,
+# alongside `_`/`-`/`.`) -- so with NOTHING between the element name and the slash, the two fuse
+# into ONE `IDENT` token (`"b/"`, not `"b"` then `"/"`); `w:pStyle`'s own self-closing tag never
+# hits this because its attribute's closing quote breaks the identifier run before `/`. Modeled as
+# ONE fused-literal token below (`"b/"`/`"i/"`), not two separate tokens -- this is a genuine,
+# artifact-agnostic lexer property (any unattributed self-closing tag immediately followed by `/`
+# hits it), not a docx-specific hack; `w:u` never needs this treatment since it always carries
+# `w:val=`.
+run-flag = bold-flag | italic-flag | underline-flag
+bold-flag = LT "w" ":" "b/" GT
+italic-flag = LT "w" ":" "i/" GT
+underline-flag = LT "w" ":" "u" "w" ":" "val" "=" TEXT "/" GT
+run-text = LT "w" ":" "t" "xml" ":" "space" "=" TEXT GT text-run? LT "/" "w" ":" "t" GT
+text-run = {IDENT | INT | FLOAT}+
+
+table = LT "w" ":" "tbl" GT table-props? row* LT "/" "w" ":" "tbl" GT
+table-props = LT "w" ":" "tblPr" GT x-elem* LT "/" "w" ":" "tblPr" GT
+row = LT "w" ":" "tr" GT row-props? cell* LT "/" "w" ":" "tr" GT
+row-props = LT "w" ":" "trPr" GT x-elem* LT "/" "w" ":" "trPr" GT
+cell = LT "w" ":" "tc" GT cell-props? block* LT "/" "w" ":" "tc" GT
+cell-props = LT "w" ":" "tcPr" GT x-elem* LT "/" "w" ":" "tcPr" GT
+
+# ── word/styles.xml ────────────────────────────────────────────────────────────────────────────
+styles-part = LT "w" ":" "styles" "xmlns" ":" "w" "=" TEXT GT style* LT "/" "w" ":" "styles" GT
+style = LT "w" ":" "style" "w" ":" "styleId" "=" TEXT GT LT "w" ":" "name" "w" ":" "val" "=" TEXT "/" GT style-based-on? LT "/" "w" ":" "style" GT
+style-based-on = LT "w" ":" "basedOn" "w" ":" "val" "=" TEXT "/" GT
+
+# ── Raw-retained extension content (`extra_*_properties: Vec<XmlNode>`) ──────────────────────────
+# Restated (not `use`d) from xml's own generic recursive element/content grammar -- the SAME
+# `📰xml/…/📸️snapshot/📝️text/📖️.grammar.semio` productions this file cites above,
+# `x-`-prefixed to stay a distinct namespace from this file's own docx-specific productions. Covers
+# any future/unmodeled `w:rPr`/`w:pPr`/`w:trPr`/`w:tcPr`/`w:tblPr` child this typed model doesn't
+# interpret but must still round-trip verbatim.
+x-elem = x-empty-tag | x-open-tag x-content x-close-tag
+x-empty-tag = LT x-name x-attr* "/" GT
+x-open-tag = LT x-name x-attr* GT
+x-close-tag = LT "/" x-name GT
+x-attr = x-name "=" TEXT
+x-name = IDENT ":" IDENT | IDENT
+x-content = {x-elem | x-reference | x-cdata | x-comment | text-run}*
+x-reference = x-entity-ref | x-char-ref
+x-entity-ref = AMP IDENT SEMICOLON
+x-char-ref = AMP "#" INT SEMICOLON | AMP "#" IDENT SEMICOLON
+x-cdata = LT "!" "[" "CDATA" "[" x-cdata-body "]" "]" GT
+x-cdata-body = {IDENT | INT | FLOAT}*
+x-comment = LT "!" "--" x-comment-body "--" GT
+x-comment-body = {IDENT | INT | FLOAT}*

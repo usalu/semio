@@ -1,0 +1,66 @@
+dialect protocol
+protocol binary.diff
+version 1
+schema stdio.binary
+start pack
+
+# P2-P3: real binary diff frame -- CONFIRMED ALREADY REAL, not a text-as-binary shortcut needing
+# upgrade. `BinaryDiff { splices: Vec<ByteSplice> }` is a plain struct with zero `Option<Option<T>>`
+# tri-state fields and zero data-carrying enums anywhere in its type tree (`ByteSplice` itself is
+# `#[derive(dsl::DslRecord)]`) -- per this program's own F6 finding, this is the ONE clean
+# full-derive-path success in the entire 31-standard program. `#[derive(dsl::DslDiff)]`'s generated
+# `DiffCodec::encode_diff`/`decode_diff` (`✨️derive/🦀️.rs`'s `derive_dsl_diff`) route
+# through `store::pack_rt::encode_document`/`decode_document` -- NOT the lightweight container-less
+# `encode_record_body` the sibling mutations facet uses, but the FULL `.spk` binary document
+# container (magic + 32-byte header + a sequence of framed, individually-CRC'd, deflate-compressed
+# segments + a fixed 84-byte footer), confirmed by direct read of both the derive macro and
+# `🎒️pack/📐️format/🦀️.rs`'s own module doc ("the `SPK` binary document container"). This
+# EXACT layout (magic `0x8953504B0D0A1A0A`, `header fixed 24`, a repeated tag-dispatched segment
+# block, `footer fixed 84`) is the framework's own canonical worked example for this dialect
+# (`📖️grammar/🦀️.rs`'s `protocol_parse_print_round_trip_retains_body`/
+# `protocol_parses_rich_struct_enum_segment_forms` tests use the identical magic/header-size/
+# footer-size triple) -- restated here honestly rather than assumed, since cross-artifact `use` to
+# point at a shared framework-level description does not yet resolve at walk time (P2-M3, same
+# documented limitation as the `semio.envelope` file every OTHER artifact's snapshot pack facet
+# would otherwise want to `use`).
+#
+# Segment frame (`encode_segment`, `🎒️pack/📐️format/🦀️.rs`): `kind u8, flags u8, seg_len
+# varint, [raw_len varint if compressed], payload (seg_len bytes, deflate-compressed when
+# `flags==3`), crc32 u32`. `encode_document` (called with `PackEncodeOptions::default()`,
+# `codec: CodecId(1)` = deflate) ALWAYS writes exactly this sequence of segment kinds for a diff
+# this small (confirmed by direct observation of real `encode_diff()` output, byte for byte):
+# `KIND_SYMBOLS=3` (flags=3, compressed), `KIND_DOCUMENT=4` (flags=3), `KIND_MANIFEST=1` (flags=3),
+# `KIND_END=0` (flags=0, the repeat's own sentinel -- `encode_segment(KIND_END, CodecId(0), &[])`
+# is always uncompressed by construction). All four arms share the identical field shape below
+# (kind is the only real discriminator); the `if flags eq 3` guard on `raw_len` is real and
+# structural (matches `decode_segment_at`'s own `compressed = flags & 0x01 != 0` check), not just
+# true empirically for this artifact's fixtures. Segment PAYLOAD bytes are deflate-compressed --
+# an honest opaque boundary at the protocol-description level, the same documented treatment this
+# program gives every other compressed byte run (zlib/deflate container payloads, PNG IDAT, ...);
+# the Rust `encode_diff`/`decode_diff` side IS genuinely, fully structured real binary (round-trip
+# tested independently, see this artifact's `diff_codec_text_binary_roundtrip_law`). The 84-byte
+# footer (magic `SPKFOOT1` + version + flags + manifest offset/len + file_len + a 32-byte content
+# hash + prev-footer-offset + its own crc32) is likewise one opaque fixed trailer at this
+# description layer -- `Block::Footer` has no field-level detail in this dialect at all (same
+# honest-boundary treatment as PDF/DWG's own undecoded regions), its real field layout stays
+# Rust-side in `🎒️pack/📐️format/🦀️.rs`'s `Footer::parse`/`write_bytes`.
+framing magic 0x8953504B0D0A1A0A
+header fixed 24
+field version_major u16
+field version_minor u16
+field required_flags u32
+field optional_flags u32
+field header_crc32 u32
+field reserved fixed 8
+
+repeat segments {
+  tag u8
+  trailer u32
+  until 0
+  arm 3 { flags u8 seg_len varint raw_len varint if flags eq 3 payload Array(u8, Field(seg_len)) }
+  arm 4 { flags u8 seg_len varint raw_len varint if flags eq 3 payload Array(u8, Field(seg_len)) }
+  arm 1 { flags u8 seg_len varint raw_len varint if flags eq 3 payload Array(u8, Field(seg_len)) }
+  arm 0 { flags u8 seg_len varint raw_len varint if flags eq 3 payload Array(u8, Field(seg_len)) }
+}
+
+footer fixed 84

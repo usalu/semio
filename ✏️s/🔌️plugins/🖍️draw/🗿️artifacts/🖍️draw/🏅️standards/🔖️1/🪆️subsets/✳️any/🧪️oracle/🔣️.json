@@ -34,7 +34,7 @@
         "win32-x64"
       ],
       "homepage": "https://docs.rs/quick-xml",
-      "rationale": "🎨️ A QUALIFYING CARRIER ORACLE FOR ELEVEN OF THIS SUBSET'S FOURTEEN KINDS — SVG IS THE ONLY REAL CARRIER `draw` EXPORTS, AND THE SCOPE IS THE WHOLE POINT OF THE REGISTRATION.\n\nSTEP 0, done first: this session's own `contract` run flags `draw`'s pdf/dwg/png serializers verbatim — \"The pdf serializer never reads its input\", \"The dwg serializer never reads its input\", \"The png serializer never reads its input\" — and reading all three bodies confirms why: each does `serde_json::to_value(from)` then `serde_json::from_value(..)` into the target type, with no relation between `DrawSnapshot`'s fields and the target's — a structural-coercion stub, the fourth shape this repository's worklist added to the original three (`print_dsl`, pack-envelope transmute, never-reads-input). `dxf` was the same shape by hand-inspection (confirmed independently by the same `contract` run). Registering a reader against any of the four would either fail outright on the coerced garbage or, worse, accept it as a structurally-valid-but-wrong document.\n\nsvg is different: `DrawIntoSvg` dispatches through a real bridge — `draw_document_to_svg` (`…🖍️draw/…/🚪️io/🦀️component.rs:159-179`) builds a genuine `SemioDrawingSnapshot` (`draw_document_to_semio_drawing`, lines 141-154: real per-node `Group{transform,children}` wrapping a `Path`/`Text`/`Image` leaf, a real quaternion-composed transform via `matrix_to_semio_transform`, a real base64 data-URI decode for images) and dispatches through `io_dispatch` into `semio@v1/drawing`'s OWN already-qualified svg bridge, which renders through the SAME `write_svg_xml` that subset's own `quick-xml-drawing-svg-reader` already reads. This is not a new wire vocabulary — it is the one already-qualified for a sibling subset, confirmed here by reading `draw`'s bridge in full rather than inferring it from the directory tree (the worklist's own caveat: \"not independently re-verified... budget did not extend to that function's own body\" — this pass closes that gap).\n\nWHAT IT DISCHARGES, READ FROM THE BRIDGE BODY: `create-layer`/`delete-layer`/`duplicate-layer`/`reorder-layer`/`set-layer-visible` are witnessed structurally — a scene node appears, disappears, is inserted, changes address, or (for `set-layer-visible`) vanishes entirely, because `flatten_draw_document_to_scene_nodes` skips `!base.visible` layers before they ever become a scene node (`…🧬️schema/🦀️component.rs:593-595`). `update-layer-transform` is witnessed via the wrapping `<g transform=\"matrix(...)\">` (`matrix_to_semio_transform`, lines 62-69). `replace-layer-fill`/`replace-layer-stroke`/`set-layer-opacity` are witnessed via the interned `SemioDrawStyle`'s fill/stroke/stroke-width/opacity (`intern_semio_style`, lines 98-109) — for Path/Text layers, where the leaf actually references the interned style; an Image leaf never references it at all (line 130), so these three are NOT witnessable when the target layer is an Image, a real but narrower carve-out than the mutation's own general vocabulary, matching the same shape `semio@v1/presentation`'s Table-shape exclusion already documents. `set-layer-boolean-operation`/`update-layer-trace-params` are witnessed INDIRECTLY: both recompute real geometry through this repository's own `semio_s_2d` kernel (`resolve_boolean_layer_segments`/`resolve_trace_layer_segments`, lines 1154-1232) before it ever reaches the bridge, so a changed operation or parameter set produces a different `d` attribute — the reader witnesses the RESULT of the recomputation, never the operation name itself, which is honest: quick-xml has no opinion on what a correct boolean union looks like, it only reports whether two exported paths' points agree.\n\nWHAT IT CANNOT DISCHARGE, STATED AS A LIMIT AND NOT AS A GAP TO BE PAPERED OVER, READ FROM THE SAME BRIDGE BODY: `rename-layer` — no `SemioDrawNode` variant carries an `id`/`name` field at all (lines 121-139), and the ONE `SemioDrawLayer` this bridge ever emits takes its name from `doc.title`, never from an individual layer, so a per-layer rename has no representation anywhere downstream. `set-layer-locked` — `DrawSceneNode` has no `locked` field at all (`…🧬️schema/🦀️component.rs:169-186`); it is a pure editor-mode flag with no rendering effect. `set-layer-blend-mode` — `DrawSceneNode.blend_mode` is read off the layer (line 178 of the scene-node struct) but `intern_semio_style` never reads it (lines 98-109), so it never reaches `SemioDrawStyle` or any `SemioDrawNode` variant. A reader cannot witness a change to something the bytes never carried, so these three kinds carry no `oracleRequirement` this entry discharges and instead keep the `draw-1-mutate-uncarried` capability recorded in `noOracleDecisions` below.\n\nMEASURED, via this subset's own probe (`🔬️probes/📜️script.ts svg-compare`, `semio-draw-oracle-probe` v0.1.0 wrapping `quick-xml` 0.42.0): two encodings of the same scene — attribute order and number formatting varied (`1` against `1.0`) — compare `equal:true` with every deviation `0`; one path endpoint moved by 0.05 separates at `maxPathPointDeviation:0.05000000000000071`; one fill channel changed by 5 (0..255 scale, measured as 250 on the 0..1 wire encoding scaled by 255) separates at `maxColorChannelDeviation:250` — two DIFFERENT metrics, both real, both separating from the same accepted pair."
+      "rationale": "🎨️ A QUALIFYING CARRIER ORACLE FOR ELEVEN OF THIS SUBSET'S FOURTEEN KINDS — SVG IS THE ONLY REAL CARRIER `draw` EXPORTS, AND THE SCOPE IS THE WHOLE POINT OF THE REGISTRATION.\n\nSTEP 0, done first: this session's own `contract` run flags `draw`'s pdf/dwg/png serializers verbatim — \"The pdf serializer never reads its input\", \"The dwg serializer never reads its input\", \"The png serializer never reads its input\" — and reading all three bodies confirms why: each does `serde_json::to_value(from)` then `serde_json::from_value(..)` into the target type, with no relation between `DrawSnapshot`'s fields and the target's — a structural-coercion stub, the fourth shape this repository's worklist added to the original three (`print_dsl`, pack-envelope transmute, never-reads-input). `dxf` was the same shape by hand-inspection (confirmed independently by the same `contract` run). Registering a reader against any of the four would either fail outright on the coerced garbage or, worse, accept it as a structurally-valid-but-wrong document.\n\nsvg is different: `DrawIntoSvg` dispatches through a real bridge — `draw_document_to_svg` (`…🖍️draw/…/🚪️io/🦀️.rs:159-179`) builds a genuine `SemioDrawingSnapshot` (`draw_document_to_semio_drawing`, lines 141-154: real per-node `Group{transform,children}` wrapping a `Path`/`Text`/`Image` leaf, a real quaternion-composed transform via `matrix_to_semio_transform`, a real base64 data-URI decode for images) and dispatches through `io_dispatch` into `semio@v1/drawing`'s OWN already-qualified svg bridge, which renders through the SAME `write_svg_xml` that subset's own `quick-xml-drawing-svg-reader` already reads. This is not a new wire vocabulary — it is the one already-qualified for a sibling subset, confirmed here by reading `draw`'s bridge in full rather than inferring it from the directory tree (the worklist's own caveat: \"not independently re-verified... budget did not extend to that function's own body\" — this pass closes that gap).\n\nWHAT IT DISCHARGES, READ FROM THE BRIDGE BODY: `create-layer`/`delete-layer`/`duplicate-layer`/`reorder-layer`/`set-layer-visible` are witnessed structurally — a scene node appears, disappears, is inserted, changes address, or (for `set-layer-visible`) vanishes entirely, because `flatten_draw_document_to_scene_nodes` skips `!base.visible` layers before they ever become a scene node (`…🧬️schema/🦀️component.rs:593-595`). `update-layer-transform` is witnessed via the wrapping `<g transform=\"matrix(...)\">` (`matrix_to_semio_transform`, lines 62-69). `replace-layer-fill`/`replace-layer-stroke`/`set-layer-opacity` are witnessed via the interned `SemioDrawStyle`'s fill/stroke/stroke-width/opacity (`intern_semio_style`, lines 98-109) — for Path/Text layers, where the leaf actually references the interned style; an Image leaf never references it at all (line 130), so these three are NOT witnessable when the target layer is an Image, a real but narrower carve-out than the mutation's own general vocabulary, matching the same shape `semio@v1/presentation`'s Table-shape exclusion already documents. `set-layer-boolean-operation`/`update-layer-trace-params` are witnessed INDIRECTLY: both recompute real geometry through this repository's own `semio_s_2d` kernel (`resolve_boolean_layer_segments`/`resolve_trace_layer_segments`, lines 1154-1232) before it ever reaches the bridge, so a changed operation or parameter set produces a different `d` attribute — the reader witnesses the RESULT of the recomputation, never the operation name itself, which is honest: quick-xml has no opinion on what a correct boolean union looks like, it only reports whether two exported paths' points agree.\n\nWHAT IT CANNOT DISCHARGE, STATED AS A LIMIT AND NOT AS A GAP TO BE PAPERED OVER, READ FROM THE SAME BRIDGE BODY: `rename-layer` — no `SemioDrawNode` variant carries an `id`/`name` field at all (lines 121-139), and the ONE `SemioDrawLayer` this bridge ever emits takes its name from `doc.title`, never from an individual layer, so a per-layer rename has no representation anywhere downstream. `set-layer-locked` — `DrawSceneNode` has no `locked` field at all (`…🧬️schema/🦀️component.rs:169-186`); it is a pure editor-mode flag with no rendering effect. `set-layer-blend-mode` — `DrawSceneNode.blend_mode` is read off the layer (line 178 of the scene-node struct) but `intern_semio_style` never reads it (lines 98-109), so it never reaches `SemioDrawStyle` or any `SemioDrawNode` variant. A reader cannot witness a change to something the bytes never carried, so these three kinds carry no `oracleRequirement` this entry discharges and instead keep the `draw-1-mutate-uncarried` capability recorded in `noOracleDecisions` below.\n\nMEASURED, via this subset's own probe (`🔬️probes/📜️script.ts svg-compare`, `semio-draw-oracle-probe` v0.1.0 wrapping `quick-xml` 0.42.0): two encodings of the same scene — attribute order and number formatting varied (`1` against `1.0`) — compare `equal:true` with every deviation `0`; one path endpoint moved by 0.05 separates at `maxPathPointDeviation:0.05000000000000071`; one fill channel changed by 5 (0..255 scale, measured as 250 on the 0..1 wire encoding scaled by 255) separates at `maxColorChannelDeviation:250` — two DIFFERENT metrics, both real, both separating from the same accepted pair."
     },
     {
       "id": "serde-json-draw-carrier-reader",
@@ -79,7 +79,7 @@
         "draw-1-mutate",
         "draw-1-mutate-uncarried"
       ],
-      "rationale": "PARTIALLY SUPERSEDED by the `quick-xml-draw-1-mutate` registration, which discharges `create-layer`, `delete-layer`, `duplicate-layer`, `reorder-layer`, `set-layer-visible`, `update-layer-transform`, `replace-layer-fill`, `replace-layer-stroke`, `set-layer-opacity`, `set-layer-boolean-operation` and `update-layer-trace-params` through this subset's real SVG export (`draw_document_to_svg`, a genuine bridge into `semio@v1/drawing`'s own already-qualified svg carrier — read in full, `…🖍️draw/…/🚪️io/🦀️component.rs:141-186`). This decision now stands only for the remaining three kinds — `rename-layer`, `set-layer-locked` and `set-layer-blend-mode` — whose fields (`name`/`id`, `locked`, `blend_mode`) that bridge never forwards into the emitted SVG at all; `dwg`/`dxf`/`pdf`/`png` remain confirmed structural-coercion or never-reads-its-input stubs, none of them a carrier for anything.\n\nNo third-party library reads or writes this subset's carriers. THAT SURVEY STANDS, AND IT IS NOT WHAT THIS DECISION NOW RESTS ON. Surveying and declining a third-party LIBRARY is a different judgement from declining a SECOND IMPLEMENTATION, and until this re-examination that is the only judgement this decision had ever made. The sentence it used to lean on — that this subset's own shape IS its specification and so not a fact an external implementation could confirm or refute — is refuted inside this repository: `mutate-note-1`, whose document is a z-ordered tree of six differently-shaped typed blocks, took Python second implementations over this same `.dsl.semio` carrier, from the same kind of committed material, and between them they surfaced findings no single-implementation case could produce. So THIS DECISION IS A DEBT, NOT A JUDGEMENT, and it is recorded as one here rather than left reading as a verdict.\n\nWHAT A SECOND IMPLEMENTATION HERE WOULD BE WRITTEN FROM: `../🧬️schema/📸️snapshot/🔣️component.json` for the document's members, the rules of `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/📓️derivation-rules.md` that this vocabulary was derived by, and the fourteen committed `(before, mutation, after, outcome)` specification vectors under `../🧬️schema/🧬️mutations/<kind>/🧪️tests/<fixture>/`. The nearest transferable recipe is `mutate-note-1`: a z-ordered canvas of typed elements whose inverses restore position.\n\nWHAT BLOCKS IT TODAY, precisely. This case's committed specification vectors are NOT declared as `asset://` fixtures. Its `Examples` table carries the payloads inline, and the Rust adapter reaches the committed `(before, mutation, after, outcome)` files through `include_str!` instead. Two consequences follow: the execution plan does not pin those files' digests, so a silently edited vector changes the result rather than the plan; and a Python reference cannot read them at all, because the Python host resolves a fixture only through the plan and raises on an undeclared URI. Declaring them — the shape `mutate-program-1`, `mutate-note-1` and `mutate-block-3d-1` already use — is the one edit that unblocks this case, and it strengthens the case whether or not a reference follows. AND, SEPARATELY, `identity-round-trip` WOULD STILL BE REFUSED. This subset's committed snapshot text grammar describes a DIFFERENT DOCUMENT: it is the generic `family-scene` canvas grammar — `doc-body = schema-line layers-block`, `layer = shape-layer | path-layer | text-layer` — and the committed artifact carries no `layers` block at all. `📖️playbook` and `📋️forms` carry byte-identical copies of the same canvas grammar over two more unrelated documents.\n\nWHAT IS ASSERTED IN THE MEANTIME is unchanged and is listed in `substitutes`: the committed specification vectors, replayed end to end through the platform, and the metamorphic laws the subject handler asserts in role. The ceiling on all of it is unchanged too and is worth restating: no second producer runs beside them, so a mistake shared by the handcrafted vector and the production code passes unseen.",
+      "rationale": "PARTIALLY SUPERSEDED by the `quick-xml-draw-1-mutate` registration, which discharges `create-layer`, `delete-layer`, `duplicate-layer`, `reorder-layer`, `set-layer-visible`, `update-layer-transform`, `replace-layer-fill`, `replace-layer-stroke`, `set-layer-opacity`, `set-layer-boolean-operation` and `update-layer-trace-params` through this subset's real SVG export (`draw_document_to_svg`, a genuine bridge into `semio@v1/drawing`'s own already-qualified svg carrier — read in full, `…🖍️draw/…/🚪️io/🦀️.rs:141-186`). This decision now stands only for the remaining three kinds — `rename-layer`, `set-layer-locked` and `set-layer-blend-mode` — whose fields (`name`/`id`, `locked`, `blend_mode`) that bridge never forwards into the emitted SVG at all; `dwg`/`dxf`/`pdf`/`png` remain confirmed structural-coercion or never-reads-its-input stubs, none of them a carrier for anything.\n\nNo third-party library reads or writes this subset's carriers. THAT SURVEY STANDS, AND IT IS NOT WHAT THIS DECISION NOW RESTS ON. Surveying and declining a third-party LIBRARY is a different judgement from declining a SECOND IMPLEMENTATION, and until this re-examination that is the only judgement this decision had ever made. The sentence it used to lean on — that this subset's own shape IS its specification and so not a fact an external implementation could confirm or refute — is refuted inside this repository: `mutate-note-1`, whose document is a z-ordered tree of six differently-shaped typed blocks, took Python second implementations over this same `.dsl.semio` carrier, from the same kind of committed material, and between them they surfaced findings no single-implementation case could produce. So THIS DECISION IS A DEBT, NOT A JUDGEMENT, and it is recorded as one here rather than left reading as a verdict.\n\nWHAT A SECOND IMPLEMENTATION HERE WOULD BE WRITTEN FROM: `../🧬️schema/📸️snapshot/🔣️.json` for the document's members, the rules of `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/📓️derivation-rules.md` that this vocabulary was derived by, and the fourteen committed `(before, mutation, after, outcome)` specification vectors under `../🧬️schema/🧬️mutations/<kind>/🧪️tests/<fixture>/`. The nearest transferable recipe is `mutate-note-1`: a z-ordered canvas of typed elements whose inverses restore position.\n\nWHAT BLOCKS IT TODAY, precisely. This case's committed specification vectors are NOT declared as `asset://` fixtures. Its `Examples` table carries the payloads inline, and the Rust adapter reaches the committed `(before, mutation, after, outcome)` files through `include_str!` instead. Two consequences follow: the execution plan does not pin those files' digests, so a silently edited vector changes the result rather than the plan; and a Python reference cannot read them at all, because the Python host resolves a fixture only through the plan and raises on an undeclared URI. Declaring them — the shape `mutate-program-1`, `mutate-note-1` and `mutate-block-3d-1` already use — is the one edit that unblocks this case, and it strengthens the case whether or not a reference follows. AND, SEPARATELY, `identity-round-trip` WOULD STILL BE REFUSED. This subset's committed snapshot text grammar describes a DIFFERENT DOCUMENT: it is the generic `family-scene` canvas grammar — `doc-body = schema-line layers-block`, `layer = shape-layer | path-layer | text-layer` — and the committed artifact carries no `layers` block at all. `📖️playbook` and `📋️forms` carry byte-identical copies of the same canvas grammar over two more unrelated documents.\n\nWHAT IS ASSERTED IN THE MEANTIME is unchanged and is listed in `substitutes`: the committed specification vectors, replayed end to end through the platform, and the metamorphic laws the subject handler asserts in role. The ceiling on all of it is unchanged too and is worth restating: no second producer runs beside them, so a mistake shared by the handcrafted vector and the production code passes unseen.",
       "substitutes": [
         "specification-vectors",
         "metamorphic-laws"
@@ -608,7 +608,7 @@
         {
           "id": "set-layer-visible",
           "capability": "draw-1-mutate",
-          "payloadSchema": "../🧬️schema/🧬️mutations/👁️set-layer-visible/🔣️payload.schema.json",
+          "payloadSchema": "../🧬️schema/🧬️mutations/👁️set-layer-visible/🔣️.schema.json",
           "outcomes": [
             "applied",
             "no-op",
@@ -641,7 +641,7 @@
         {
           "id": "set-layer-locked",
           "capability": "draw-1-mutate",
-          "payloadSchema": "../🧬️schema/🧬️mutations/🔒️set-layer-locked/🔣️payload.schema.json",
+          "payloadSchema": "../🧬️schema/🧬️mutations/🔒️set-layer-locked/🔣️.schema.json",
           "outcomes": [
             "applied",
             "no-op",
@@ -671,7 +671,7 @@
         {
           "id": "set-layer-opacity",
           "capability": "draw-1-mutate",
-          "payloadSchema": "../🧬️schema/🧬️mutations/🌫️set-layer-opacity/🔣️payload.schema.json",
+          "payloadSchema": "../🧬️schema/🧬️mutations/🌫️set-layer-opacity/🔣️.schema.json",
           "outcomes": [
             "applied",
             "no-op",
@@ -705,7 +705,7 @@
         {
           "id": "set-layer-blend-mode",
           "capability": "draw-1-mutate",
-          "payloadSchema": "../🧬️schema/🧬️mutations/🖌️set-layer-blend-mode/🔣️payload.schema.json",
+          "payloadSchema": "../🧬️schema/🧬️mutations/🖌️set-layer-blend-mode/🔣️.schema.json",
           "outcomes": [
             "applied",
             "no-op",
@@ -735,7 +735,7 @@
         {
           "id": "rename-layer",
           "capability": "draw-1-mutate",
-          "payloadSchema": "../🧬️schema/🧬️mutations/✏️rename-layer/🔣️payload.schema.json",
+          "payloadSchema": "../🧬️schema/🧬️mutations/✏️rename-layer/🔣️.schema.json",
           "outcomes": [
             "applied",
             "no-op",
@@ -765,7 +765,7 @@
         {
           "id": "update-layer-transform",
           "capability": "draw-1-mutate",
-          "payloadSchema": "../🧬️schema/🧬️mutations/🔄️update-layer-transform/🔣️payload.schema.json",
+          "payloadSchema": "../🧬️schema/🧬️mutations/🔄️update-layer-transform/🔣️.schema.json",
           "outcomes": [
             "applied",
             "no-op",
@@ -798,7 +798,7 @@
         {
           "id": "replace-layer-fill",
           "capability": "draw-1-mutate",
-          "payloadSchema": "../🧬️schema/🧬️mutations/🔁replace-layer-fill/🦠️mutation/🦀️component.rs#ReplaceLayerFill",
+          "payloadSchema": "../🧬️schema/🧬️mutations/🔁replace-layer-fill/🦠️mutation/🦀️.rs#ReplaceLayerFill",
           "outcomes": [
             "applied",
             "no-op",
@@ -832,7 +832,7 @@
         {
           "id": "replace-layer-stroke",
           "capability": "draw-1-mutate",
-          "payloadSchema": "../🧬️schema/🧬️mutations/♻️replace-layer-stroke/🦠️mutation/🦀️component.rs#ReplaceLayerStroke",
+          "payloadSchema": "../🧬️schema/🧬️mutations/♻️replace-layer-stroke/🦠️mutation/🦀️.rs#ReplaceLayerStroke",
           "outcomes": [
             "applied",
             "no-op",
@@ -866,7 +866,7 @@
         {
           "id": "set-layer-boolean-operation",
           "capability": "draw-1-mutate",
-          "payloadSchema": "../🧬️schema/🧬️mutations/🔀set-layer-boolean-operation/🔣️payload.schema.json",
+          "payloadSchema": "../🧬️schema/🧬️mutations/🔀set-layer-boolean-operation/🔣️.schema.json",
           "outcomes": [
             "applied",
             "no-op",
@@ -900,7 +900,7 @@
         {
           "id": "update-layer-trace-params",
           "capability": "draw-1-mutate",
-          "payloadSchema": "../🧬️schema/🧬️mutations/🔧update-layer-trace-params/🔣️payload.schema.json",
+          "payloadSchema": "../🧬️schema/🧬️mutations/🔧update-layer-trace-params/🔣️.schema.json",
           "outcomes": [
             "applied",
             "no-op",
@@ -934,7 +934,7 @@
         {
           "id": "create-layer",
           "capability": "draw-1-mutate",
-          "payloadSchema": "../🧬️schema/🧬️mutations/🌱create-layer/🦠️mutation/🦀️component.rs#CreateLayer",
+          "payloadSchema": "../🧬️schema/🧬️mutations/🌱create-layer/🦠️mutation/🦀️.rs#CreateLayer",
           "outcomes": [
             "applied",
             "rejected"
@@ -966,7 +966,7 @@
         {
           "id": "duplicate-layer",
           "capability": "draw-1-mutate",
-          "payloadSchema": "../🧬️schema/🧬️mutations/🧬️duplicate-layer/🔣️payload.schema.json",
+          "payloadSchema": "../🧬️schema/🧬️mutations/🧬️duplicate-layer/🔣️.schema.json",
           "outcomes": [
             "applied",
             "rejected"
@@ -998,7 +998,7 @@
         {
           "id": "delete-layer",
           "capability": "draw-1-mutate",
-          "payloadSchema": "../🧬️schema/🧬️mutations/🗑️delete-layer/🔣️payload.schema.json",
+          "payloadSchema": "../🧬️schema/🧬️mutations/🗑️delete-layer/🔣️.schema.json",
           "outcomes": [
             "applied",
             "rejected"
@@ -1030,7 +1030,7 @@
         {
           "id": "reorder-layer",
           "capability": "draw-1-mutate",
-          "payloadSchema": "../🧬️schema/🧬️mutations/🔃reorder-layer/🔣️payload.schema.json",
+          "payloadSchema": "../🧬️schema/🧬️mutations/🔃reorder-layer/🔣️.schema.json",
           "outcomes": [
             "applied",
             "no-op",

@@ -1,8 +1,8 @@
 //! 🦀️ Raw-binary exhaustive mutation case — Rust adapter. Ticket 26/08/23/END-TO-END-TESTING-
 //! REFACTOR wave 7. Recorded no-oracle decision `raw-buffer-no-format` (`../../🏅️standards/🔖️raw/
-//! 🪆️subsets/✳️any/🧪️oracle/🔣️.json`): a raw byte buffer has no format, so `oracle` here
+//! 🪆️subsets/✳️any/🔣️oracle.json`): a raw byte buffer has no format, so `oracle` here
 //! drives this subset's own independently written specification-vector implementation
-//! (`../../🏅️standards/🔖️raw/🪆️subsets/✳️any/🧪️oracle/🦀️component.rs`'s `oracle_apply_mutation`,
+//! (`../../🏅️standards/🔖️raw/🪆️subsets/✳️any/🦀️oracle.rs`'s `oracle_apply_mutation`,
 //! which never touches the subject's own `BinaryDiff`/`apply_binary_mutation`); `subject` drives
 //! this repository's own `apply_binary_mutation` over the full 5-kind `BinaryMutation` vocabulary,
 //! then cross-checks its own result against that SAME independent reference before returning —
@@ -20,7 +20,7 @@ use semio_s_plugin_stdio_test_oracle::law::{carrier_is_exact, inverse_restores};
 
 //#region 🔖️Kinds
 /// 🏷️ Mirrors this subset's own `BinaryMutation::KINDS` (`../../🏅️standards/🔖️raw/🪆️subsets/✳️any/
-/// 🧬️schema/🧬️mutations/🦀️component.rs`). Kept as a plain literal here rather than imported since
+/// 🧬️schema/🧬️mutations/🦀️.rs`). Kept as a plain literal here rather than imported since
 /// this adapter's oracle-only build never links the subject crate — the contract gate (mutation
 /// coverage against the `binary-raw-any` catalog) is what keeps the two lists honest against
 /// each other.
@@ -50,7 +50,7 @@ fn bytes_json(bytes: &[u8]) -> Json {
 }
 /// 🔎️ A byte payload as the wire protocol carries it: a plain JSON array of 0-255 numbers (the
 /// protocol's `Json` has no base64 accessor — see `../../../🎥️mp4/🧪️tests/mutate-mp4-isobmff/
-/// 🦀️component.rs`'s own local `bytes` helper, which this mirrors).
+/// 🦀️.rs`'s own local `bytes` helper, which this mirrors).
 fn bytes_field(value: &Json, key: &str) -> Vec<u8> {
     match value.get(key) {
         Some(Json::Array(items)) => items.iter().filter_map(|item| if let Json::Number(number) = item { Some(*number as u8) } else { None }).collect(),
@@ -77,7 +77,7 @@ fn projection_of(bytes: &[u8]) -> Json {
 /// `truncate-at` example alone removes a 283 KB real tail no literal could carry legibly.
 /// `set-snapshot` inverts through a REAL `set-snapshot` carrying the pristine buffer as its own
 /// payload — mirroring `BinaryMutation::inverse`'s own `SetSnapshot` arm (`../../🏅️standards/
-/// 🔖️raw/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs`) — rather than the caller handing
+/// 🔖️raw/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs`) — rather than the caller handing
 /// the untouched input straight back, which would let the scenario pass without the independent
 /// implementation performing the undo at all.
 fn inverse_spec(kind: &str, input: &[u8], params: &Json) -> Json {
@@ -138,7 +138,7 @@ fn inverse_oracle(ctx: &Context) -> Result<Outcome, String> {
 }
 
 /// 🔮️ For a raw buffer `decode`/`encode` really is the identity (`carrier_native_is_raw`,
-/// `../../🏅️standards/🔖️raw/🪆️subsets/✳️any/🚪️io/🦀️component.rs`), so the trusted reference result
+/// `../../🏅️standards/🔖️raw/🪆️subsets/✳️any/🚪️io/🦀️.rs`), so the trusted reference result
 /// is simply the pristine original bytes — byte equality IS correct here, honestly, not a
 /// contrived pass. The no-byte-pass-through tripwire every parsed format in this wave asserts is
 /// therefore genuinely inapplicable, and inverting it would be a fabricated law; the reference
@@ -214,7 +214,7 @@ use semio_s_plugin_stdio_test_oracle::law::{carrier_is_exact, inverse_restores};
     /// established by its own `extern crate semio_framework_os_kernel as store;`, and not reachable
     /// from an external test-host crate). `BinarySnapshot::decode_pack`/`encode_pack` are proven
     /// to be exactly this identity by `carrier_native_is_raw` (`../../🏅️standards/🔖️raw/🪆️subsets/
-    /// ✳️any/🚪️io/🦀️component.rs`), so constructing/reading the public `bytes` field directly here
+    /// ✳️any/🚪️io/🦀️.rs`), so constructing/reading the public `bytes` field directly here
     /// is the same operation, not a shortcut around it.
     fn decode(input: &[u8]) -> BinarySnapshot {
         BinarySnapshot { bytes: input.to_vec(), ..Default::default() }
@@ -228,9 +228,9 @@ use semio_s_plugin_stdio_test_oracle::law::{carrier_is_exact, inverse_restores};
     ///
     /// Cross-checked here, INSIDE `subject`, against `oracle_apply_mutation` — this subset's own
     /// independently written specification reference (`../../🏅️standards/🔖️raw/🪆️subsets/✳️any/
-    /// 🧪️oracle/🦀️component.rs`). That is deliberate, not redundant with the top-level `oracle`
+    /// 🦀️oracle.rs`). That is deliberate, not redundant with the top-level `oracle`
     /// registrations above: the test framework's `oracleDecision` (`🧰️framework/🛍️products/🦑️repo/
-    /// 🔨️modules/🧪️test/📜️script.ts`) never invokes the `oracle` role at all for a feature carrying
+    /// 🔨️modules/🧪️tests/📜️cript.ts`) never invokes the `oracle` role at all for a feature carrying
     /// `@no-oracle-` instead of `@oracle-` — its whole `oracle`/parity machinery exists for a
     /// registered THIRD-PARTY reference, which this subset by definition has none of. `subject` is
     /// therefore the only role the runner ever actually executes for this case, so the

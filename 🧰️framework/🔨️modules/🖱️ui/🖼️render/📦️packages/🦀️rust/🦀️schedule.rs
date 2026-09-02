@@ -1,7 +1,7 @@
 //! @emoji ⏱️ `InvalidationReason` and the `FrameScheduler` that makes idle windows cost zero frames.
 //!
 //! `should_render(now) -> Option<InvalidationReason>` returning `None` is the whole point of this
-//! file: the defect this program replaces is `wgpu-old`'s `📦️glue.rs` calling `request_redraw` every
+//! file: the defect this program replaces is `wgpu-old`'s `🦀️.rs` calling `request_redraw` every
 //! frame unconditionally (`ControlFlow::Poll`). A caller (the not-yet-landed `os_host`/`winit_app`
 //! region) is expected to poll this once per wake and only build/present a frame when it returns
 //! `Some`.

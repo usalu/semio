@@ -5,7 +5,7 @@
   "displayName": "Change Silo Hydraulic Radius M",
   "emoji": "📊",
   "aggregateVariant": "ChangeSiloHydraulicRadiusM",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

@@ -13,7 +13,7 @@ const repoRoot = resolve(dir, "../../..");
 export default defineConfig({
   root: dir,
   resolve: {
-    alias: [{ find: "@semio-tech/framework-os", replacement: resolve(repoRoot, "./🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/🟦️glue.ts") }],
+    alias: [{ find: "@semio-tech/framework-os", replacement: resolve(repoRoot, "./🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/🟦️.ts") }],
   },
   test: {
     name: "os-hub-ts",

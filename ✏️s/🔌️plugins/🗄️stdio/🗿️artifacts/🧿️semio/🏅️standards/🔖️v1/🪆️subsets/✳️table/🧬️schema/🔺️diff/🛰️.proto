@@ -1,0 +1,16 @@
+syntax = "proto3";
+// 🔺️ SemioTableDiff schema — real facet mirror of the Rust `🦀️.rs` sibling.
+package semio.s_stdio_semio_table.diff;
+
+import "../📸️snapshot/🛰️.proto";
+
+message SemioTableColumnListDiff {
+  repeated semio.s_stdio_semio_table.snapshot.SemioTableColumn values = 1;
+}
+message SemioTableRowListDiff {
+  repeated semio.s_stdio_semio_table.snapshot.SemioTableRow values = 1;
+}
+message SemioTableDiff {
+  optional SemioTableColumnListDiff columns = 1;
+  optional SemioTableRowListDiff rows = 2;
+}

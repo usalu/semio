@@ -7,7 +7,7 @@
 // #region 🔌️Adapters
 import { fireEvent, render } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
-import { parseOwnedHotkeyChords, keyboardEventMatchesOwnedHotkey, normalizeHotkeyKey, useHotkeys, type ControlKeybindingOptions } from "../🟦️component.tsx";
+import { parseOwnedHotkeyChords, keyboardEventMatchesOwnedHotkey, normalizeHotkeyKey, useHotkeys, type ControlKeybindingOptions } from "../🟦️.tsx";
 // #endregion 🔌️Adapters
 
 // #region ⌨️OwnedHotkeys

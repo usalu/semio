@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "contract": "taxonomy-cli-plan-cancellation-v1",
-  "sourcePath": "🧰️framework/🧪️tests/🧪️cli-cancellation/🦀️component.rs",
+  "sourcePath": "🧰️framework/🧪️tests/🦀️cli-cancellation.rs",
   "source": "pub const VALUE: usize = 1;\n",
   "cancelPath": "🧪️control/⛔️cancel",
   "phase": "incoming-candidates",

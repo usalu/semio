@@ -1,0 +1,83 @@
+syntax = "proto3";
+package semio.s.raster.raster.mutation;
+
+message CreateLayer {
+  optional string parent_id = 1;
+  uint32 index = 2;
+  bytes layer = 3; // RasterLayerNode, see ../📸️snapshot/🛰️.proto
+}
+
+message DeleteLayer {
+  string layer_id = 1;
+}
+
+message ReorderLayers {
+  string layer_id = 1;
+  optional string parent_id = 2;
+  uint32 index = 3;
+}
+
+message RenameLayer {
+  string layer_id = 1;
+  string new_name = 2;
+}
+
+message ChangeLayerVisible {
+  string layer_id = 1;
+  bool new_visible = 2;
+}
+
+message ChangeLayerOpacity {
+  string layer_id = 1;
+  float new_opacity = 2;
+}
+
+message ChangeLayerBlendMode {
+  string layer_id = 1;
+  string new_blend_mode = 2;
+}
+
+message MoveLayer {
+  string layer_id = 1;
+  double new_x = 2;
+  double new_y = 3;
+}
+
+message ResizeLayer {
+  string layer_id = 1;
+  uint32 new_width = 2;
+  uint32 new_height = 3;
+}
+
+message ChangeLayerAdjustmentKind {
+  string layer_id = 1;
+  string new_adjustment_kind = 2;
+}
+
+message AddLayerAsset {
+  string asset_id = 1;
+  string mime = 2;
+  bytes data = 3;
+}
+
+message RemoveLayerAsset {
+  string asset_id = 1;
+}
+
+// Tags 1..12 assigned in dispatch-enum variant order (= grammar alternation order); append-only.
+message RasterMutation {
+  oneof mutation {
+    CreateLayer create_layer = 1;
+    DeleteLayer delete_layer = 2;
+    ReorderLayers reorder_layers = 3;
+    RenameLayer rename_layer = 4;
+    ChangeLayerVisible change_layer_visible = 5;
+    ChangeLayerOpacity change_layer_opacity = 6;
+    ChangeLayerBlendMode change_layer_blend_mode = 7;
+    MoveLayer move_layer = 8;
+    ResizeLayer resize_layer = 9;
+    ChangeLayerAdjustmentKind change_layer_adjustment_kind = 10;
+    AddLayerAsset add_layer_asset = 11;
+    RemoveLayerAsset remove_layer_asset = 12;
+  }
+}

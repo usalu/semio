@@ -6,7 +6,7 @@
 //! what `lopdf` exposes — so the mutation is applied through the library and the result is read back
 //! through it, and nothing in this repository predicts what the judge is judging.
 //!
-//! @see ../../../🧪️oracle/🦀️component.rs — the subset's own vocabulary.
+//! @see ../../../🦀️oracle.rs — the subset's own vocabulary.
 
 use lopdf::{dictionary, Document, Object, ObjectId, Stream};
 

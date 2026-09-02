@@ -20,7 +20,7 @@ ports = { react = 6090, wgpu = 6190 }
 
 [lib]
 crate-type = ["cdylib", "rlib"]
-path = "📦️glue.rs"
+path = "🦀️.rs"
 
 [dependencies]
 semio-s-plugin-stdio = { path = "../../../🗄️stdio/📦️packages/🦀️rust", package = "semio-s-plugin-stdio", default-features = false }
@@ -35,3 +35,9 @@ serde_json.workspace = true
 
 [dev-dependencies]
 semio-framework-async-macros = { path = "../../../../../🧰️framework/🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust" }
+zip = { version = "6", default-features = false, features = ["deflate"] }
+# 🚫️ NOT a path dev-dependency on `semio-s-plugin-stdio-test-oracle`. That crate declares its own
+# `[workspace]` on purpose ("linked by generated cache-local test hosts by path and must not join
+# the repository workspace"), so a direct path dep from a workspace member makes cargo fail with
+# "multiple workspace roots found in the same workspace" — which breaks EVERY cargo command
+# repo-wide, for every session. Reach the oracle through a generated test host instead.

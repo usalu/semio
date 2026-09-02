@@ -5,7 +5,7 @@
   "displayName": "Change Comfort Category",
   "emoji": "🪛",
   "aggregateVariant": "ChangeComfortCategory",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

@@ -170,24 +170,24 @@ for (const compiler of compilers) test(compiler.name + " proves exact immutable 
 test("the exact live mixed-template collection is admitted without reading or executing its inputs", () => {
   const path = join(root, vector.liveInput), bytes = readFileSync(path), content = bytes.toString("utf8"), expected = oracle(content);
   expect(expected).toHaveLength(2);
-  expect(expected.some((row) => row.value.endsWith("/🧬️mutations/🦀️component.rs"))).toBe(true);
+  expect(expected.some((row) => row.value.endsWith("/🧬️mutations/🦀️.rs"))).toBe(true);
   for (const compiler of compilers) expect(implementation(compiler).authority(content).map(({ value, start, end, physicalTargets }: Token) => ({ value, start, end, physicalTargets }))).toEqual(expected);
   expect(readFileSync(path).equals(bytes)).toBe(true);
 });
 
 test("rejected for-of proof cannot fall through the separate weak distant-map authority", () => {
   const rows = vector.cases.filter((entry: any) => entry.id.startsWith("rejected-for-of"));
-  for (const compiler of compilers) for (const row of rows) expect(implementation(compiler).parse("reader.ts", row.source).filter((token: Token) => token.value === "🧪️targets/🟦️old.ts"), row.id).toEqual([]);
+  for (const compiler of compilers) for (const row of rows) expect(implementation(compiler).parse("reader.ts", row.source).filter((token: Token) => token.value === "🟦️targetsold.ts"), row.id).toEqual([]);
 });
 
 test("exact physical resolution and leaf rewriting remain separate from reader proof", () => {
-  const row = vector.cases[0], oldTarget = row.expected[0].value, destination = "🧪️targets/🟦️.ts";
+  const row = vector.cases[0], oldTarget = row.expected[0].value, destination = "🟦️targets.ts";
   for (const compiler of compilers) {
     const actual = implementation(compiler), token = actual.authority(row.source)[0];
-    expect(actual.resolve("🧪️consumer/reader.ts", token, actual.index([]))).toBeNull();
-    expect(actual.resolve("🧪️consumer/reader.ts", token, actual.index(["🧪️consumer/" + oldTarget]))).toBeNull();
-    expect(actual.resolve("🧪️consumer/reader.ts", token, actual.index([oldTarget]))).toBe(oldTarget);
-    const rewritten = actual.rewrite("🧪️consumer/reader.ts", token.value, oldTarget, destination);
+    expect(actual.resolve("consumerreader.ts", token, actual.index([]))).toBeNull();
+    expect(actual.resolve("consumerreader.ts", token, actual.index(["🧪️consumer/" + oldTarget]))).toBeNull();
+    expect(actual.resolve("consumerreader.ts", token, actual.index([oldTarget]))).toBe(oldTarget);
+    const rewritten = actual.rewrite("consumerreader.ts", token.value, oldTarget, destination);
     expect(rewritten).toBe(destination);
     const changed = row.source.slice(0, token.start) + rewritten + row.source.slice(token.end);
     expect(oracle(changed).map((entry) => entry.value)).toEqual([destination]);
@@ -202,10 +202,10 @@ test("neutral map-only boundaries match independent AST for-of detection without
     expect(validate(row)).toBe(true);
     const tree = ts.createSourceFile("boundary.ts", row.source, ts.ScriptTarget.Latest, true), literals: ts.StringLiteral[] = [];
     let forOf = false;
-    const visit = (node: ts.Node): void => { if (ts.isForOfStatement(node)) forOf = true; if (ts.isStringLiteral(node) && node.text === "🧪️targets/🟦️old.ts") literals.push(node); ts.forEachChild(node, visit); };
+    const visit = (node: ts.Node): void => { if (ts.isForOfStatement(node)) forOf = true; if (ts.isStringLiteral(node) && node.text === "🟦️targetsold.ts") literals.push(node); ts.forEachChild(node, visit); };
     visit(tree);
     expect(forOf ? [] : literals.map((node) => node.text), row.id).toEqual(row.expected);
-    for (const compiler of compilers) expect(implementation(compiler).parse("reader.ts", row.source).filter((token: Token) => token.value === "🧪️targets/🟦️old.ts").map((token: Token) => token.value), row.id).toEqual(row.expected);
+    for (const compiler of compilers) expect(implementation(compiler).parse("reader.ts", row.source).filter((token: Token) => token.value === "🟦️targetsold.ts").map((token: Token) => token.value), row.id).toEqual(row.expected);
   }
 });
 

@@ -1,8 +1,0 @@
-//! 📝️ Text representation codec surface for `stdio.semio.drawing` (snapshot). The real parse/
-//! print lives on `SemioDrawingSnapshot`'s `store::ArtifactDsl` impl (📸️snapshot/🦀️component.rs)
-//! -- this module exposes the grammar source for tooling/introspection, matching svg's own
-//! `📝️text/🦀️component.rs` convention.
-
-/// 📖️ Grammar include.
-pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️component.grammar.semio");
-pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️component.grammar.semio");

@@ -5,7 +5,7 @@
   "displayName": "Change Vortex Kind Color",
   "emoji": "🎨",
   "aggregateVariant": "ChangeVortexKindColor",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": "change-vortex-kind-color",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

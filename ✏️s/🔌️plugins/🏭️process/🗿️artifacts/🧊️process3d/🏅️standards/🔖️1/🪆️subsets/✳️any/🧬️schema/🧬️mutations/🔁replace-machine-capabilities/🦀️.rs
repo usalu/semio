@@ -3,7 +3,6 @@
 //! `📓️derivation-rules.md` rule 2).
 
 use crate::artifacts::process3d::diff::Process3dDiff;
-use crate::artifacts::process3d::mutations::replace_machine_capabilities::ReplaceMachineCapabilities;
 use crate::artifacts::process3d::mutations::Process3dMutation;
 use crate::artifacts::process3d::{Capability, Process3dSnapshot, Workshop};
 use semio_framework_value_derive::{FromValue, ToValue};

@@ -22,7 +22,7 @@ engines = ["./🧰️framework/🛍️products/💻️os/🔨️modules/🌊️f
 
 [lib]
 crate-type = ["cdylib", "rlib"]
-path = "📦️glue.rs"
+path = "🦀️.rs"
 
 [dependencies]
 semio-framework = { path = "../../../../../🧰️framework/📦️packages/🦀️rust", package = "semio-framework" }

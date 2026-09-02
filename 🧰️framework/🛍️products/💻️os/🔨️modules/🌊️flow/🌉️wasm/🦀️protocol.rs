@@ -10,7 +10,7 @@ use std::rc::Rc;
 
 //#region 🧬️Contract
 
-pub const FLOW_ABI_SCHEMA: &str = include_str!("🧬️schema/🔣️component.json");
+pub const FLOW_ABI_SCHEMA: &str = include_str!("🧬️schema/🔣️.json");
 pub const FLOW_ABI_LEDGER: &str = include_str!("🧪️fixtures/📒️ledger.tsv");
 pub const FLOW_ABI_LIMITS: &str = include_str!("🧪️fixtures/📐️limits.tsv");
 pub const FLOW_ABI_TRACE: &str = include_str!("🧪️fixtures/🎞️trace.tsv");

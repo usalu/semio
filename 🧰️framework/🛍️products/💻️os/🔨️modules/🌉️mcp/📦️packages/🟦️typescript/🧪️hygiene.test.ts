@@ -1,5 +1,5 @@
 /** 🧪️ Stdio hygiene suite (packet `P5-conformance-tests`, brief §3.4) — a black-box process-level
- * proof, independent of `🚚️transport/🦀️component.rs`'s own in-memory `Cursor`-based unit tests
+ * proof, independent of `🚚️transport/🦀️.rs`'s own in-memory `Cursor`-based unit tests
  * (`one_request_line_produces_exactly_one_response_line_on_stdout`,
  * `malformed_json_logs_to_the_log_writer_and_never_pollutes_stdout_with_non_json_text`,
  * `eof_ends_the_loop_cleanly`): those exercise `StdioTransport` in memory, never the REAL process's
@@ -8,8 +8,8 @@
  * in-memory `Cursor` test structurally cannot observe. */
 import { existsSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-import { resolveMcpBinaryPath, spawnRawMcp } from "../../🟦️component.ts";
-import { getWorkspaceRoot } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts";
+import { resolveMcpBinaryPath, spawnRawMcp } from "../../🟦️.ts";
+import { getWorkspaceRoot } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 
 const repoRoot = getWorkspaceRoot();
 const bin = resolveMcpBinaryPath(repoRoot);

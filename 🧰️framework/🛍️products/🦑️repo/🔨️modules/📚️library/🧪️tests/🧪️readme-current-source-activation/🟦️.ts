@@ -6,7 +6,7 @@ import Ajv from "ajv";
 import stableStringify from "fast-json-stable-stringify";
 import { findNodeAtLocation, getNodeValue, parse as parseJson, parseTree, type ParseError } from "jsonc-parser";
 import ts from "typescript";
-import * as discovery from "../../🔍️discovery/🟦️component.ts";
+import * as discovery from "../../🔍️discovery/🟦️.ts";
 import * as normalization from "../../🧹️normalization/🟦️.ts";
 
 const library = resolve(import.meta.dir, "../.."), root = resolve(library, "../../../../..");
@@ -65,7 +65,7 @@ function reviewedInput(role: "source" | "expectation") {
 const ownerRow = catalogDocument.cases[vector.catalogCaseIndex], currentInput = reviewedInput("source"), expectationInput = reviewedInput("expectation");
 const taxonomyInput = capture(vector.taxonomyPath), originalTaxonomy = JSON.parse(taxonomyInput.bytes.toString("utf8"));
 const normalizerInput = capture(relative(root, join(library, "🧹️normalization/🟦️.ts")).replaceAll("\\", "/"));
-capture(relative(root, join(library, "🔍️discovery/🟦️component.ts")).replaceAll("\\", "/"));
+capture(relative(root, join(library, "🔍️discovery/🟦️.ts")).replaceAll("\\", "/"));
 let baselineBytes: Buffer | undefined;
 
 /** 🧬️ Verifies the immutable Git object independently of all expectation declarations. */

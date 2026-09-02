@@ -9,13 +9,13 @@ committed specification:
 
 * the envelope — `semio <plugin>.<artifact>.<component> v<version>` preamble for text, and the
   `0x89 'S' 'E' 'M' 0D 0A 1A 0A` magic + little-endian u32 token length + token for binary — is
-  specified in `🧰️framework/🛍️products/💻️os/🔨️modules/🧬️semio/🦀️component.rs`'s envelope region;
+  specified in `🧰️framework/🛍️products/💻️os/🔨️modules/🧬️semio/🦀️.rs`'s envelope region;
 * the DSL body is the committed grammar
-  `../../🏅️standards/🔖️v1/🪆️subsets/✳️model/🧬️schema/📸️snapshot/📝️text/📖️component.grammar.semio`
+  `../../🏅️standards/🔖️v1/🪆️subsets/✳️model/🧬️schema/📸️snapshot/📝️text/📖️.grammar.semio`
   (`document = artifact-mark schema-line spatial-line elements-line relations-line`, and the
   `spatial-kind`, `element-class`, `geometry-ref`, `pset-value`, `relation-kind`, `opt-str` and
   `transform` productions it declares, in the order it declares them);
-* the pack body is the committed protocol `…/📸️snapshot/💾️binary/📡️component.protocol.semio`
+* the pack body is the committed protocol `…/📸️snapshot/💾️binary/📡️.protocol.semio`
   (`format u8`, then the varint-length-prefixed UTF-8 `schema`), whose description then stops at the
   repeated `spatial`/`elements`/`relations` records by its own admission and names only their shape —
   "varint counts, per-field length-prefixes, real `f64` LE coordinates, u8 enum tags". That prose was
@@ -29,7 +29,7 @@ committed specification:
   declared order alone, are exercised by the real artifact this case mutates, and a disagreement
   about them would surface as a red `identity-round-trip` rather than as a silent one;
 * the eleven verbs and their argument lists are the committed grammar
-  `…/🧬️schema/🧬️mutations/📝️text/📖️component.grammar.semio` and the committed JSON schema, and what
+  `…/🧬️schema/🧬️mutations/📝️text/📖️.grammar.semio` and the committed JSON schema, and what
   each verb MEANS is the committed `(before, mutation, after)` specification vector per kind in this
   case's own `🧫️fixtures/` — including the facts a name alone does not settle: `insert-*` carries no
   index and APPENDS, `remove-*` does NOT cascade into the collections that reference the removed
@@ -826,7 +826,7 @@ def inverse_mutation(document: dict, mutation: dict) -> list:
 
 
 # region 🔖️Scenario input
-BUILDING_DSL = "asset://🏅️standards/🔖️v1/🪆️subsets/✳️any/📚️examples/🏢️building/🖼️assets/🗣️example.dsl.semio"
+BUILDING_DSL = "asset://🏅️standards/🔖️v1/🪆️subsets/✳️any/📚️examples/🏢️building/🖼️assets/🗣️.dsl.semio"
 BUILDING_PACK = "asset://🏅️standards/🔖️v1/🪆️subsets/✳️any/📚️examples/🏢️building/🖼️assets/🎒️example.pack.semio"
 TOWER_DSL = "local://🏗️nakagin-capsule-tower.dsl.semio"
 TOWER_PACK = "local://🏗️nakagin-capsule-tower.pack.semio"

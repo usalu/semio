@@ -6,10 +6,10 @@ type Group = { status: "Migrated" | "BatchOnlyPendingRewrite"; lanes: string[]; 
 type Fixture = { routeCount: number; retainedRoutes: string[]; frameworkOwnedRoutes: string[]; groups: Group[]; globals: unknown[]; scanThenMonolithRoutes: string[]; laws: Record<string, boolean> };
 
 const root = resolve(import.meta.dir, "..");
-const sourcePath = resolve(root, "🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs");
-const retainedPath = resolve(root, "🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧵️retained/🦀️component.rs");
-const schemaPath = resolve(import.meta.dir, "🔣️schema.json");
-const fixturePath = resolve(import.meta.dir, "🔣️component.json");
+const sourcePath = resolve(root, "🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs");
+const retainedPath = resolve(root, "🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧵️retained/🦀️.rs");
+const schemaPath = resolve(import.meta.dir, "🔣️.schema.json");
+const fixturePath = resolve(import.meta.dir, "🔣️.json");
 
 const exact = (left: string[], right: string[]) => new Set(left).size === left.length && new Set(right).size === right.length && JSON.stringify([...left].sort()) === JSON.stringify([...right].sort());
 

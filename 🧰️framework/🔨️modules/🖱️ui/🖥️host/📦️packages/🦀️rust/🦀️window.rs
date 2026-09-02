@@ -1,5 +1,5 @@
 //! @emoji 🪟️ Window/canvas hosting, the scheduler's wake transport, cursor application, clipboard,
-//! and IME plumbing — the crate's other half of the U1 sync/async boundary that `📦️glue.rs` and
+//! and IME plumbing — the crate's other half of the U1 sync/async boundary that `🦀️.rs` and
 //! `🦀️event.rs` both point back to this file for.
 //!
 //! **The U1 boundary, made explicit.** Every `winit::application::ApplicationHandler` callback below

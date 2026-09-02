@@ -5,7 +5,7 @@
   "displayName": "Delete Report Record",
   "emoji": "🗑️📑",
   "aggregateVariant": "DeleteReportRecord",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

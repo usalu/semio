@@ -2,10 +2,10 @@
 /** 🧭️ Repo CLI task router. */
 import { existsSync } from "node:fs";
 import { join } from "node:path";
-import type { FileLinter } from "../../../../📚️library/📦️packages/🟦️typescript/📦️index.ts";
-import { BundleScript, ScriptRouter, buildBudgetMs, defineLint, resolveCliBin, runBundleScriptMain, runCmd, runTestBudgeted } from "../../../../📚️library/📦️packages/🟦️typescript/📦️index.ts";
+import type { FileLinter } from "../../../../📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { BundleScript, ScriptRouter, buildBudgetMs, defineLint, resolveCliBin, runBundleScriptMain, runCmd, runTestBudgeted } from "../../../../📚️library/📦️packages/🟦️typescript/🟦️.ts";
 
-export const policyFile = "🐹️component.go";
+export const policyFile = "🐹️.go";
 
 const REPO_CLIENT_DIR = join("🧰️framework", "🛍️products", "🦑️repo", "🔨️modules", "💻️client");
 const REPO_MCP_GO = join(REPO_CLIENT_DIR, "🔌️mcp");

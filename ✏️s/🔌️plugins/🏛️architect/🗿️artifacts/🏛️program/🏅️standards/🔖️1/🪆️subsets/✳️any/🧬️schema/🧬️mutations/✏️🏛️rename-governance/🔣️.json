@@ -5,7 +5,7 @@
   "displayName": "Rename Governance",
   "emoji": "✏️🏛️",
   "aggregateVariant": "RenameGovernance",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

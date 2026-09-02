@@ -1,7 +1,7 @@
 //#region 📦️Imports
-use super::{DemoSnapshot, DemoDiff, SeverityMutation, RestoreN};
-use serde::{Deserialize, Serialize};
+use super::{DemoDiff, DemoSnapshot, RestoreN, SeverityMutation};
 use semio_framework_value_derive::{FromValue, ToValue};
+use serde::{Deserialize, Serialize};
 //#endregion 📦️Imports
 
 //#region 🧬️Payload
@@ -10,7 +10,9 @@ use semio_framework_value_derive::{FromValue, ToValue};
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[dsl(keyword = "set-error-n")]
-pub struct SetErrorN { pub n: i32 }
+pub struct SetErrorN {
+    pub n: i32,
+}
 //#endregion 🧬️Payload
 
 //#region ⚙️Behavior
@@ -22,8 +24,12 @@ impl crate::os_spr::MutationKind<DemoSnapshot, SeverityMutation> for SetErrorN {
     fn inverse(&self, base: &DemoSnapshot) -> Vec<SeverityMutation> {
         vec![SeverityMutation::RestoreN(RestoreN { n: base.n })]
     }
-    fn label(&self) -> String { "Set Error N".into() }
-    fn target(&self) -> Vec<String> { vec!["n".into()] }
+    fn label(&self) -> String {
+        "Set Error N".into()
+    }
+    fn target(&self) -> Vec<String> {
+        vec!["n".into()]
+    }
 }
 //#endregion ⚙️Behavior
 
@@ -32,6 +38,8 @@ impl crate::os_spr::MutationKind<DemoSnapshot, SeverityMutation> for SetErrorN {
 mod tests {
     use super::*;
     #[test]
-    fn direct_fixture_leaf_contract() { super::super::assert_fixture_descriptor::<SetErrorN>(include_str!("🔣️.json")); }
+    fn direct_fixture_leaf_contract() {
+        super::super::assert_fixture_descriptor::<SetErrorN>(include_str!("🔣️.json"));
+    }
 }
 //#endregion 🧪️Tests

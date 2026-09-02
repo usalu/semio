@@ -18,7 +18,7 @@ function significantConsoleErrors(messages: string[]): string[] {
 
 type BootOutcome = "ready" | "error" | "not-found" | "artifact-missing";
 
-/** @emoji 🚦️ Reads the shell's readiness beacon (`#region 🔖️ReadinessBeacon` in `ShellHost/🟦️component.tsx`), which stamps the pluginId onto exactly one of three dataset keys on `<html>`. */
+/** @emoji 🚦️ Reads the shell's readiness beacon (`#region 🔖️ReadinessBeacon` in `ShellHost/🟦️.tsx`), which stamps the pluginId onto exactly one of three dataset keys on `<html>`. */
 async function bootOutcome(page: Page, pluginId: string): Promise<BootOutcome> {
   await page.waitForFunction(
     (id) => {

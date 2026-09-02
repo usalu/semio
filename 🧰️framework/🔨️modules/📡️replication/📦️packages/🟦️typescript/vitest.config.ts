@@ -5,7 +5,7 @@ import { defineConfig } from "vitest/config";
 // #endregion 🔌️Adapters
 
 const configDir = dirname(fileURLToPath(import.meta.url));
-const root = resolve(configDir, "../.."); // 📡️replication module root — owner of 🟦️component.ts
+const root = resolve(configDir, "../.."); // 📡️replication module root — owner of 🟦️.ts
 
 /**
  * @emoji 🧪️ Vitest for `@semio-tech/framework-replication` (inline `import.meta.vitest`).
@@ -23,7 +23,7 @@ export default defineConfig({
   root,
   resolve: {
     alias: {
-      "@semio-tech/framework-replication": resolve(root, "📦️packages/🟦️typescript/🟦️glue.ts"),
+      "@semio-tech/framework-replication": resolve(root, "📦️packages/🟦️typescript/🟦️.ts"),
     },
   },
   test: {

@@ -5,7 +5,7 @@
   "displayName": "Set Comments1",
   "emoji": "💬",
   "aggregateVariant": "SetComments1",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

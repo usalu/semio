@@ -1926,7 +1926,7 @@
       ],
       "users": [
         "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test",
-        "✏️s/🔌️plugins/🗄️stdio/🧪️oracle/🔣️.json"
+        "✏️s/🔌️plugins/🗄️stdio/🔣️oracle.json"
       ],
       "productionReachable": false,
       "oracleIds": [
@@ -2018,7 +2018,7 @@
         "test-oracle"
       ],
       "users": [
-        "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️oracle/🔣️.json"
+        "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/🔣️oracle.json"
       ],
       "productionReachable": false,
       "oracleIds": [
@@ -2037,7 +2037,7 @@
       ],
       "users": [
         "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test",
-        "✏️s/🔌️plugins/🗄️stdio/🧪️oracle/🔣️.json"
+        "✏️s/🔌️plugins/🗄️stdio/🔣️oracle.json"
       ],
       "productionReachable": false,
       "oracleIds": [
@@ -2140,7 +2140,7 @@
       ],
       "users": [
         "✏️s/🔌️plugins/🗄️stdio/🧪️oracle",
-        "✏️s/🔌️plugins/🗄️stdio/🧪️oracle/🔣️.json"
+        "✏️s/🔌️plugins/🗄️stdio/🔣️oracle.json"
       ],
       "productionReachable": false,
       "oracleIds": [

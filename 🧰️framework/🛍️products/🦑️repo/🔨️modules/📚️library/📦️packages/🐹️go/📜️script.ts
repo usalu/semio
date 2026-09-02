@@ -1,7 +1,7 @@
 #!/usr/bin/env bun
 /** 🧭️ `repo-go-lib` router: `bun ./📜️script.ts test`. */
 import { dirname, join } from "node:path";
-import { BundleScript, ScriptRouter, goLevelTestArgs, goCoverageArgs, resolveTestLevel, runBundleScriptMain, runTestBudgeted } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts";
+import { BundleScript, ScriptRouter, goLevelTestArgs, goCoverageArgs, resolveTestLevel, runBundleScriptMain, runTestBudgeted } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 
 const ownerRoot = join(dirname(import.meta.dir), "..");
 

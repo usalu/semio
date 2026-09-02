@@ -5,7 +5,7 @@
   "displayName": "Delete Service Requirement",
   "emoji": "🗑️🛎️",
   "aggregateVariant": "DeleteServiceRequirement",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

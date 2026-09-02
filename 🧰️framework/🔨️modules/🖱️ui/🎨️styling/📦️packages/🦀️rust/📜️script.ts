@@ -1,16 +1,16 @@
 #!/usr/bin/env bun
-/** @emoji ⚙️ Reads `framework/ui/styling/🔣️tokens.json`; emits palette CSS, TS, C#, Rust, and Python styling artifacts. */
+/** @emoji ⚙️ Reads `framework/ui/styling/🔣️.json`; emits palette CSS, TS, C#, Rust, and Python styling artifacts. */
 import { existsSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs";
 import { dirname, join, relative } from "node:path";
 import { fileURLToPath } from "node:url";
-import { BundleScript, ScriptRouter, runBundleScriptMain, runVitest, getWorkspaceRoot } from "../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts";
-import { parseUiTheme, resolveThemeMetrics, resolveThemePaint, type ThemePaintRef, type UiTheme } from "../🟦️typescript/📦️index.ts";
+import { BundleScript, ScriptRouter, runBundleScriptMain, runVitest, getWorkspaceRoot } from "../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { parseUiTheme, resolveThemeMetrics, resolveThemePaint, type ThemePaintRef, type UiTheme } from "../🟦️typescript/🟦️.ts";
 
 /** @emoji 🧭️ `import.meta.dir` is a Bun-only extension; fall back to `import.meta.url` so this module loads
  * under Vitest (which transforms it outside the Bun runtime) for the inline 🌓️Levels generator tests. */
 const stylingRoot = import.meta.dir ?? dirname(fileURLToPath(import.meta.url));
 const stylingOwnerRoot = join(stylingRoot, "..", "..");
-const tokensPath = join(stylingOwnerRoot, "🔣️tokens.json");
+const tokensPath = join(stylingOwnerRoot, "🔣️.json");
 const generatedCssDir = join(stylingOwnerRoot, "🤖️generated");
 const netPaletteDir = join(stylingOwnerRoot, "net", "Elements.Styling", "Generated");
 const pyGeneratedPath = join(stylingOwnerRoot, "📦️packages", "🐍️python", "🎨️styling", "🤖️generated.py");
@@ -52,7 +52,7 @@ interface Tokens {
 
 /** @emoji 👥️ The 12-hue session-color wheel (contract freeze §C7.5) driving `--presence-0..11` CSS vars,
  * `presence::HUES/LIGHT/DARK` (Rust), and `STYLING_PRESENCE_PALETTES` (TS) — the pure twins in
- * `👥️PresenceBar/{🧊️component.rs,🟦️component.tsx}` derive every peer's color from these three numbers
+ * `👥️PresenceBar/{🧊️component.rs,🟦️.tsx}` derive every peer's color from these three numbers
  * plus the hub-assigned palette index. */
 interface StylingPresence {
   hues: readonly number[];
@@ -172,7 +172,7 @@ const LEVELS_DEFAULT: StylingLevels = {
 };
 
 /** @emoji 👥️ Fallback presence palette (contract freeze §C7.5) — used when a `*.theme.json` predates the
- * `presence` block; `🔣️tokens.json` and every premade theme carry their own copy of these same values. */
+ * `presence` block; `🔣️.json` and every premade theme carry their own copy of these same values. */
 const PRESENCE_DEFAULT: StylingPresence = {
   hues: [0, 210, 120, 30, 270, 180, 330, 60, 240, 150, 300, 90],
   light: { s: 0.68, l: 0.32 },
@@ -340,7 +340,7 @@ function paletteGroupNames(resolvedAppearances: ReturnType<typeof resolveAppeara
 
 function emitPaletteFonts(tokens: Tokens): string {
   const assetBase = "/asset";
-  const lines: string[] = ["/* Generated from framework/ui/styling/🔣️tokens.json — run `bun ./📜️script.ts generate`. */"];
+  const lines: string[] = ["/* Generated from framework/ui/styling/🔣️.json — run `bun ./📜️script.ts generate`. */"];
   for (const face of tokens.fontFaces) {
     const fam = face.family.includes(" ") ? JSON.stringify(face.family) : `"${face.family}"`;
     lines.push("@font-face {");
@@ -356,7 +356,7 @@ function emitPaletteFonts(tokens: Tokens): string {
 }
 
 function emitPaletteTheme(tokens: Tokens): string {
-  const lines: string[] = ["/* Generated from framework/ui/styling/🔣️tokens.json — run `bun ./📜️script.ts generate`. */", "@theme {", "  /* Primary brand colors */"];
+  const lines: string[] = ["/* Generated from framework/ui/styling/🔣️.json — run `bun ./📜️script.ts generate`. */", "@theme {", "  /* Primary brand colors */"];
   for (const [k, v] of Object.entries(tokens.colors)) {
     lines.push(`  ${colorKeyToCssVar(k)}: ${v};`);
   }
@@ -386,7 +386,7 @@ function pct(fraction: number): string {
  * `presence_color`/`presenceColor` twins. */
 function emitPalettePresence(tokens: Tokens): string {
   const presence = tokens.presence ?? PRESENCE_DEFAULT;
-  const lines: string[] = ["/* Generated from framework/ui/styling/🔣️tokens.json — run `bun ./📜️script.ts generate`. */", ":root {"];
+  const lines: string[] = ["/* Generated from framework/ui/styling/🔣️.json — run `bun ./📜️script.ts generate`. */", ":root {"];
   presence.hues.forEach((h, i) => {
     lines.push(`  --presence-${i}: hsl(${h}deg ${pct(presence.light.s)}% ${pct(presence.light.l)}%);`);
   });
@@ -407,7 +407,7 @@ function emitJsonConst(name: string, value: unknown, indent = ""): string {
   return `${indent}export const ${name} = ${JSON.stringify(value, null, 2).replaceAll("\n", `\n${indent}`)} as const;\n`;
 }
 
-/** @emoji 🎨️ Builds the default "semio" `UiTheme` verbatim from 🔣️tokens.json (the paint refs stay unresolved). */
+/** @emoji 🎨️ Builds the default "semio" `UiTheme` verbatim from 🔣️.json (the paint refs stay unresolved). */
 function buildSemioUiTheme(tokens: Tokens): UiTheme {
   return {
     id: "semio",
@@ -425,7 +425,7 @@ function buildSemioUiTheme(tokens: Tokens): UiTheme {
 }
 
 function emitTypeScriptTokens(tokens: Tokens, resolvedAppearances: ReturnType<typeof resolveAppearances>): string {
-  const lines: string[] = ["/* Generated from framework/ui/styling/🔣️tokens.json — run `bun ./📜️script.ts generate`. */", ""];
+  const lines: string[] = ["/* Generated from framework/ui/styling/🔣️.json — run `bun ./📜️script.ts generate`. */", ""];
   lines.push("export const STYLING_TOKENS = {");
   for (const [k, v] of Object.entries(tokens.colors)) {
     lines.push(`  "${k}": "${v}",`);
@@ -464,7 +464,7 @@ function emitTypeScriptTokens(tokens: Tokens, resolvedAppearances: ReturnType<ty
 }
 
 function emitCSharp(tokens: Tokens): string {
-  const lines: string[] = ["// <auto-generated />", "// Generated from framework/ui/styling/🔣️tokens.json — run `bun ./📜️script.ts generate`.", "using System;", "", "namespace Semio.Framework.Ui.Styling;", "", "public static class Palette", "{"];
+  const lines: string[] = ["// <auto-generated />", "// Generated from framework/ui/styling/🔣️.json — run `bun ./📜️script.ts generate`.", "using System;", "", "namespace Semio.Framework.Ui.Styling;", "", "public static class Palette", "{"];
   for (const [k, v] of Object.entries(tokens.colors)) {
     lines.push(`  public const string ${toPascalCase(k)} = "${v}";`);
   }
@@ -530,7 +530,7 @@ function emitCSharp(tokens: Tokens): string {
 }
 
 function emitRust(tokens: Tokens, resolvedAppearances: ReturnType<typeof resolveAppearances>): string {
-  const lines: string[] = ["// @emoji 🎨️ Auto-generated from framework/ui/styling/🔣️tokens.json — do not edit by hand.", ""];
+  const lines: string[] = ["// @emoji 🎨️ Auto-generated from framework/ui/styling/🔣️.json — do not edit by hand.", ""];
   for (const [group, values] of Object.entries({ strokes: tokens.strokes, radii: tokens.radii, opacities: tokens.opacities })) {
     if (!values) {
       continue;
@@ -632,7 +632,7 @@ function emitRust(tokens: Tokens, resolvedAppearances: ReturnType<typeof resolve
 
 function emitPython(tokens: Tokens, resolvedAppearances: ReturnType<typeof resolveAppearances>): string {
   const lines: string[] = [
-    '"""@emoji 🎨️ Auto-generated from framework/ui/styling/🔣️tokens.json — do not edit by hand."""',
+    '"""@emoji 🎨️ Auto-generated from framework/ui/styling/🔣️.json — do not edit by hand."""',
     "from __future__ import annotations",
     "from dataclasses import dataclass",
     "from typing import Final",
@@ -793,7 +793,7 @@ export function renderStylingArtifacts(): readonly StylingArtifact[] {
 /** @emoji 📋️ Proves the adapter manifest declares exactly the artifacts emitted by the shared renderer. */
 function validateStylingOutputManifest(artifacts: readonly StylingArtifact[]): void {
   const manifest = JSON.parse(readFileSync(adaptersManifestPath, "utf8")) as StylingAdapterManifest;
-  if (manifest.tokens !== "🔣️tokens.json") throw new Error(`styling adapter manifest tokens must be 🔣️tokens.json, got ${JSON.stringify(manifest.tokens)}`);
+  if (manifest.tokens !== "🔣️.json") throw new Error(`styling adapter manifest tokens must be 🔣️.json, got ${JSON.stringify(manifest.tokens)}`);
   const declared = manifest.adapters.flatMap((adapter) => adapter.outputs).sort();
   const rendered = artifacts.map((artifact) => relative(stylingOwnerRoot, artifact.path)).sort();
   if (new Set(declared).size !== declared.length) throw new Error("styling adapter manifest contains duplicate outputs");
@@ -887,9 +887,9 @@ class FontsScript extends BundleScript {
   }
 }
 
-/** 🧪️ Runs the in-source `import.meta.vitest` coverage in `🟦️vite-elements-assets.ts` (the generic
+/** 🧪️ Runs the in-source `import.meta.vitest` coverage in `🟦️.ts` (the generic
  * `tileProxyVitePlugin`/`staticDirVitePlugin`/`meshCollectionVitePlugin`/`playgroundAssetVitePlugins`
- * factories among others) — `framework/ui/styling/🧪️tests/🟦️.ts`'s `bun:test` cases run separately via `bun test`. */
+ * factories among others) — `framework/ui/styling/🧪️test/🟦️s.ts`'s `bun:test` cases run separately via `bun test`. */
 class TestScript extends BundleScript {
   run(segments: string[]): void {
     runVitest(this.root, segments, "🧪️vitest.config.ts");

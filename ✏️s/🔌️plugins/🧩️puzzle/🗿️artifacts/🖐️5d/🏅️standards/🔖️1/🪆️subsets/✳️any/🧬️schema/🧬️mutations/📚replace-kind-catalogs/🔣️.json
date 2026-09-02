@@ -5,7 +5,7 @@
   "displayName": "Replace Kind Catalogs",
   "emoji": "📚",
   "aggregateVariant": "ReplaceKindCatalogs",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": "replace-kind-catalogs",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

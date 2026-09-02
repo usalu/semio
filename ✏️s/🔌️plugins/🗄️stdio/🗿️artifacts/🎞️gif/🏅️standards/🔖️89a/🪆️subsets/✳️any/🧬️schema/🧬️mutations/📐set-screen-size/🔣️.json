@@ -5,7 +5,7 @@
   "displayName": "Set Screen Size",
   "emoji": "📐",
   "aggregateVariant": "SetScreenSize",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

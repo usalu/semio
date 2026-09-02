@@ -1,0 +1,8 @@
+; ABNF mirror (descriptive, not test-parsed — the real byte-level walker is
+; ../📡️.protocol.semio, walked by dsl::walk_protocol) for s.stdio.semio.video mutations
+; (binary) — REAL binary op frame (video wave, replacing the old print_op().into_bytes()
+; text-as-binary shortcut).
+document  = format tag payload
+format    = OCTET      ; OP_BINARY_FORMAT, currently 1
+tag       = OCTET      ; SemioVideoMutation variant ordinal, 0-7 — see ../🦀️.rs's OP_KEYWORDS
+payload   = *OCTET     ; the variant's own key=value ... argument text

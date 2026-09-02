@@ -1,0 +1,20 @@
+dialect grammar stdio.tsv.diff
+root = diff
+; wire text is the hand-rolled space-separated token grammar `protocol::DiffCodec` prints
+; (see 🦀️.rs `print_tsv_diff`/`parse_tsv_diff`) — not JSON. Every top-level field
+; that changed appears as one `name=value` token; string/row values are lowercase hex (TSV
+; cells legally contain almost anything except tab/CR/LF, which this grammar's own separators
+; are built from).
+diff = token *(SP token)
+token = "trailing-newline=" BIT
+      / "line-ending=" ("lf" / "crlf")
+      / "records{" removed ";" modified ";" added "}"
+removed = "[" *(INT ",") "]"
+modified = "[" *(INT ":" rowdiff ",") "]"
+added = "[" *(INT ":" row ",") "]"
+rowdiff = "[0]" / "[1,[" *(option ",") "]]"
+row = "[" *(hexstr ",") "]"
+option = "[0]" / "[1," hexstr "]"
+hexstr = *HEXDIG
+BIT = "0" / "1"
+SP = " "

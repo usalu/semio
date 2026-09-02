@@ -5,7 +5,7 @@
   "displayName": "Rename Vortex Kind",
   "emoji": "🖋",
   "aggregateVariant": "RenameVortexKind",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": "rename-vortex-kind",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

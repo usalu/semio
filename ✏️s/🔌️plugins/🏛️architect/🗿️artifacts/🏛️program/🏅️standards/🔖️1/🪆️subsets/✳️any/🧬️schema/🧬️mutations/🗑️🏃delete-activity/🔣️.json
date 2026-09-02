@@ -5,7 +5,7 @@
   "displayName": "Delete Activity",
   "emoji": "🗑️🏃",
   "aggregateVariant": "DeleteActivity",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

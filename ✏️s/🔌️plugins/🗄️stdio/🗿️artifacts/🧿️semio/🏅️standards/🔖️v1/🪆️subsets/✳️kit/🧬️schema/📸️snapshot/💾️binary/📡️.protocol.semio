@@ -1,0 +1,21 @@
+dialect protocol
+protocol s.stdio.semio.kit.snapshot
+version 1
+schema s.stdio.semio.kit
+start body
+framing record
+
+# UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM kit wave (W2c). `format u8` (real, fixed) then
+# `schema_len`/`schema_bytes` (real, varint-length-prefixed UTF-8) are genuinely, fully described.
+# Past that, types/designs/objects/models/properties/representations (all variable-length
+# repeated/optional records) are modeled as one opaque trailing `payload` chain — the same
+# `protocol-array-of-records`-style boundary every sibling subset's own protocol description uses.
+# The real Rust `encode_kit_snapshot_binary`/`decode_kit_snapshot_binary` (`../../🦀️.rs`)
+# stays genuinely, fully structured and is round-trip tested independently.
+header fixed 1
+field format u8
+
+segment schema_len varint
+segment schema_bytes Array(u8, Field(schema_len))
+
+chain payload bytes

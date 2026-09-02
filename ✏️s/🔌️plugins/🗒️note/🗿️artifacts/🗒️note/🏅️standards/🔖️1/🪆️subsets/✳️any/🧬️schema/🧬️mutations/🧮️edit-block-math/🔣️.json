@@ -5,7 +5,7 @@
   "displayName": "Edit Block Math",
   "emoji": "🧮️",
   "aggregateVariant": "EditBlockMath",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": "edit-block-math",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

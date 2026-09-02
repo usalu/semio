@@ -8,7 +8,7 @@
     "contractId": { "const": "taxonomy-pattern-compiler-reuse-registration-v1" },
     "command": { "const": "taxonomy-pattern-compiler-reuse" },
     "target": { "const": "test-taxonomy-pattern-compiler-reuse" },
-    "source": { "const": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧪️taxonomy-pattern-compiler-reuse/🟦️.ts" },
+    "source": { "const": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🟦️taxonomy-pattern-compiler-reuse.ts" },
     "runner": { "const": "runTestBudgeted" },
     "budget": { "const": "default" },
     "launchName": { "const": "🧹clean🧩️taxonomy🧪️taxonomy-pattern-compiler-reuse" },

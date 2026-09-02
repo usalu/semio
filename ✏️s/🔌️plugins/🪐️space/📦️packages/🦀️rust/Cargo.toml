@@ -23,7 +23,7 @@ user_ports = { react = [6072, 6073], wgpu = [6067, 6068] }
 
 [lib]
 crate-type = ["cdylib", "rlib"]
-path = "📦️glue.rs"
+path = "🦀️.rs"
 
 [dependencies]
 semio-s-plugin-stdio = { path = "../../../🗄️stdio/📦️packages/🦀️rust", package = "semio-s-plugin-stdio", default-features = false }
@@ -43,12 +43,14 @@ semio-framework-schema = { path = "../../../../../🧰️framework/🔨️module
 semio-framework-value-derive = { path = "../../../../../🧰️framework/🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust", package = "semio-framework-value-derive" }
 pack = { path = "../../../../../🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust", package = "semio-framework-pack" }
 base64_codec = { path = "../../../../../🧰️framework/🔨️modules/🚪️io/🔤️base64/📦️packages/🦀️rust", package = "semio-framework-io-base64" }
+semio-framework-ui-contract = { path = "../../../../../🧰️framework/🔨️modules/🖱️ui/🧬️contract/📦️packages/🦀️rust", package = "semio-framework-ui-contract" }
+semio-framework-ui-scene = { path = "../../../../../🧰️framework/🔨️modules/🖱️ui/🎬️scene/📦️packages/🦀️rust", package = "semio-framework-ui-scene" }
 
 [dev-dependencies]
 semio-framework-async-macros = { path = "../../../../../🧰️framework/🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust" }
 # 🌱️ Test-only: every production/`#[cfg(test)]`-adjacent call site now runs on `ToValue`/`FromValue`
 # (ticket `26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS`). What remains is the
-# `🧪️tests/<case>/🦀️component.rs` per-mutation fixture-comparison suite, which deliberately keeps
+# `🧪️tests/<case>/🦀️.rs` per-mutation fixture-comparison suite, which deliberately keeps
 # `serde_json` as the differential third-party oracle its own assertions are named after (CLAUDE.md:
 # "You SHOULD use existing libraries as possible to test our implementation").
 serde = { workspace = true }

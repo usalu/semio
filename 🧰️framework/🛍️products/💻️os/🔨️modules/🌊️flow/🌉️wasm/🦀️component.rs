@@ -5959,7 +5959,7 @@ mod domain_laws {
 
     #[test]
     fn production_reachability_fixture_and_hostile_source_census_reject_the_old_route() {
-        let component = include_str!("🦀️component.rs");
+        let component = include_str!("🦀️.rs");
         let production = component.split_once("//#region 🧪️DomainLaws").expect("Flow production/test boundary").0;
         let bridge_protocol = include_str!("🦀️protocol.rs");
         let protocol_production = bridge_protocol.split_once("//#region 🧪️Laws").expect("Flow protocol production/test boundary").0;
@@ -5970,7 +5970,7 @@ mod domain_laws {
         let packaged_browser = include_str!("../🫀️core/pkg/🟨️flow-browser.js");
         let package_manifest = include_str!("../🫀️core/pkg/package.json");
         let package_build = include_str!("../🫀️core/📦️packages/🦀️rust/📜️script.ts");
-        let production_loader = include_str!("../../📺️renderer/🧑️‍🎨️engine/🧱️elements/WasmSessionLoader/🟦️component.tsx");
+        let production_loader = include_str!("../../📺️renderer/🧑️‍🎨️engine/🧱️elements/WasmSessionLoader/🟦️.tsx");
         for symbol in ["vcsCheckpoint", "vcsFault", "vcsRetryCheckpoint"] {
             assert!(schema.contains(symbol));
             assert!(host.contains(symbol));

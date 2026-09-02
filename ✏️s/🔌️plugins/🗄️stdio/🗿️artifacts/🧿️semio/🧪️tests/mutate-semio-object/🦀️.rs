@@ -4,7 +4,7 @@
 //! This file is the subject half only. The oracle is `🐍️component.py` beside it: an independent
 //! Python implementation of the same carrier and the same nine-verb vocabulary, written from the
 //! committed grammar, protocol and JSON schema, registered as `semio-object-python-independent` in
-//! `../../🏅️standards/🔖️v1/🪆️subsets/✳️object/🧪️oracle/🔣️.json`. Registering oracle
+//! `../../🏅️standards/🔖️v1/🪆️subsets/✳️object/🔣️oracle.json`. Registering oracle
 //! handlers here as well would put this repository's answer on both sides of the comparison, which
 //! is the exact failure the platform exists to prevent — so it registers none.
 //!
@@ -28,7 +28,7 @@ use semio_repo_test_host::{Context, Json};
 
 //#region 🔖️Kinds
 /// 🏷️ Mirrors `SemioObjectMutation::KINDS` (`../../🏅️standards/🔖️v1/🪆️subsets/✳️object/🧬️schema/
-/// 🧬️mutations/🦀️component.rs`) — duplicated, not imported, because registration happens before the
+/// 🧬️mutations/🦀️.rs`) — duplicated, not imported, because registration happens before the
 /// subject crate is necessarily linked. `kinds_match_the_enum_and_the_catalog` in that production
 /// file keeps the list honest against the enum, and the contract's mutation-coverage gate keeps it
 /// honest against the catalog and this feature.
@@ -38,7 +38,7 @@ const KINDS: &[&str] = &["move-object", "rotate-object", "scale-object", "create
 /// populated, the only committed document that exercises the `ArtifactChild` codec three slots at a
 /// time rather than one at a time.
 #[cfg(feature = "sut")]
-const CRATE_DSL: &str = "asset://🏅️standards/🔖️v1/🪆️subsets/✳️object/📚️examples/📦️crate/🖼️assets/🗣️example.dsl.semio";
+const CRATE_DSL: &str = "asset://🏅️standards/🔖️v1/🪆️subsets/✳️object/📚️examples/📦️crate/🖼️assets/🗣️.dsl.semio";
 /// 🎒️ The same object in its binary envelope, written by a separate codec from the DSL text.
 #[cfg(feature = "sut")]
 const CRATE_PACK: &str = "asset://🏅️standards/🔖️v1/🪆️subsets/✳️object/📚️examples/📦️crate/🖼️assets/🎒️example.pack.semio";

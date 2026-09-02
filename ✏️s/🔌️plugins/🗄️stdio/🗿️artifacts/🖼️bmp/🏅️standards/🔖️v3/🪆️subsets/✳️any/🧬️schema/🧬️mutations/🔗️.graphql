@@ -1,0 +1,8 @@
+# 🧬️ Transparent BmpMutation descriptor assembly.
+# change-header-fields/ChangeHeaderFields: 📐️change-header-fields/🔗️.graphql
+# insert-palette-entry/InsertPaletteEntry: 📥️insert-palette-entry/🔗️.graphql
+# remove-palette-entry/RemovePaletteEntry: 📤️remove-palette-entry/🔗️.graphql
+# replace-palette-entry/ReplacePaletteEntry: 🎨️replace-palette-entry/🔗️.graphql
+# replace-pixel-data/ReplacePixelData: 🟪️replace-pixel-data/🔗️.graphql
+enum BmpMutationKind { CHANGE_HEADER_FIELDS INSERT_PALETTE_ENTRY REMOVE_PALETTE_ENTRY REPLACE_PALETTE_ENTRY REPLACE_PIXEL_DATA }
+input BmpMutation { change_header_fields: ChangeHeaderFieldsMutation insert_palette_entry: InsertPaletteEntryMutation remove_palette_entry: RemovePaletteEntryMutation replace_palette_entry: ReplacePaletteEntryMutation replace_pixel_data: ReplacePixelDataMutation }

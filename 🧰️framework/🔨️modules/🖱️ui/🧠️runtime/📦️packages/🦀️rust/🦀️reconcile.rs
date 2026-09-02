@@ -19,7 +19,7 @@ use std::collections::HashSet;
 use std::mem::{size_of, take};
 use std::sync::{LazyLock, Mutex};
 
-#[path = "../../📤️output/🦀️component.rs"]
+#[path = "../../📤️output/🦀️.rs"]
 mod output;
 pub use output::{SurfaceReconcileOutputReservation, SurfaceReconcileOutputs, SurfaceReconcileOutputTransfer};
 
@@ -3787,7 +3787,7 @@ mod tests {
     }
 
     mod output_pool_tests {
-        include!("../../📤️output/🧪️tests/🦀️.rs");
+        include!("../../📤️output/🧪️test/🦀️s.rs");
     }
 
     //#region 🔖️Fixtures

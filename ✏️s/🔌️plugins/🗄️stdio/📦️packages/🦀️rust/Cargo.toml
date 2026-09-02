@@ -16,7 +16,7 @@ role = "plugin"
 
 [lib]
 crate-type = ["cdylib", "rlib"]
-path = "📦️glue.rs"
+path = "🦀️.rs"
 
 # 🔌️ Only the ROOT plugin of a component may emit `plugin_exports!`'s `#[no_mangle]` installer
 # symbols. stdio is unusual: it is a plugin in its own right AND an rlib dependency of other plugins

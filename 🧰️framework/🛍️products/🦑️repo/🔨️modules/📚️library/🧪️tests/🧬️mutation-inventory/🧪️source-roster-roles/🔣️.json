@@ -10,7 +10,7 @@
       {"path":"owner/🦀️.rs","sha256":"2222222222222222222222222222222222222222222222222222222222222222","role":"source"},
       {"path":"ledger/🔣️.json","sha256":"3333333333333333333333333333333333333333333333333333333333333333","role":"assignment-ledger"},
       {"path":"taxonomy/🔣️.json","sha256":"4444444444444444444444444444444444444444444444444444444444444444","role":"taxonomy-schema"},
-      {"path":"library/🔣️mutation-descriptor.schema.json","sha256":"5555555555555555555555555555555555555555555555555555555555555555","role":"mutation-descriptor-schema"}
+      {"path":"library/🔣️.schema.json","sha256":"5555555555555555555555555555555555555555555555555555555555555555","role":"mutation-descriptor-schema"}
     ],
     "records": [],
     "unresolved": [],

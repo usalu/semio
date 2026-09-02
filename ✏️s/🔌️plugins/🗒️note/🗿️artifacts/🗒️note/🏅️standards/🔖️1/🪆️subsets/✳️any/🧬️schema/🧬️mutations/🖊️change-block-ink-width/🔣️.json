@@ -5,7 +5,7 @@
   "displayName": "Change Block Ink Width",
   "emoji": "🖊️",
   "aggregateVariant": "ChangeBlockInkWidth",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": "change-block-ink-width",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

@@ -1,13 +1,13 @@
 // #region 🔌️Adapters
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import { createWorkspaceViteResolveConfig } from "../../../../../../../../../🧰️framework/🔨️modules/🖱️ui/🎨️styling/🟦️vite-elements-assets.ts";
+import { createWorkspaceViteResolveConfig } from "../../../../../../../../../🧰️framework/🔨️modules/🖱️ui/🎨️styling/🟦️.ts";
 import { defineOwnedTestConfig, uiReactBuildPlugin } from "../../../../../../../../🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/🟦️build-tooling.ts";
 // #endregion 🔌️Adapters
 
 const configDir = dirname(fileURLToPath(import.meta.url));
 const repoRoot = resolve(configDir, "../../../../../../../../..");
-const componentSource = "../../🟦️component.tsx";
+const componentSource = "../../🟦️.tsx";
 const reactRoot = resolve(repoRoot, "node_modules/react");
 const reactDomRoot = resolve(repoRoot, "node_modules/react-dom");
 const threeModule = resolve(repoRoot, "node_modules/three/build/three.module.js");
@@ -15,7 +15,7 @@ const threePackageRoot = resolve(repoRoot, "node_modules/three");
 
 const workspaceResolve = createWorkspaceViteResolveConfig(repoRoot);
 
-/** @emoji 🧪️ Vitest for `@semio-tech/infinite-world-r3f` — in-source `import.meta.vitest` on `🟦️component.tsx`. */
+/** @emoji 🧪️ Vitest for `@semio-tech/infinite-world-r3f` — in-source `import.meta.vitest` on `🟦️.tsx`. */
 export default defineOwnedTestConfig({
   root: configDir,
   plugins: [uiReactBuildPlugin()],
@@ -24,8 +24,8 @@ export default defineOwnedTestConfig({
   resolve: {
     alias: [
       ...(workspaceResolve.resolve?.alias ?? []),
-      { find: "@semio-tech/ui-react", replacement: resolve(repoRoot, "🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx") },
-      { find: "@semio-tech/ui-styling", replacement: resolve(repoRoot, "🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🟦️typescript/📦️index.ts") },
+      { find: "@semio-tech/ui-react", replacement: resolve(repoRoot, "🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/🟦️.tsx") },
+      { find: "@semio-tech/ui-styling", replacement: resolve(repoRoot, "🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🟦️typescript/🟦️.ts") },
       { find: /^react\/jsx-dev-runtime$/, replacement: resolve(reactRoot, "jsx-dev-runtime.js") },
       { find: /^react\/jsx-runtime$/, replacement: resolve(reactRoot, "jsx-runtime.js") },
       { find: /^react$/, replacement: resolve(reactRoot, "index.js") },

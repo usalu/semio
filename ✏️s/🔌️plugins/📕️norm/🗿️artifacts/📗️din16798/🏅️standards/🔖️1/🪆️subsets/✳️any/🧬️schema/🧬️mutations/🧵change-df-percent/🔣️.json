@@ -5,7 +5,7 @@
   "displayName": "Change Df Percent",
   "emoji": "🧵",
   "aggregateVariant": "ChangeDfPercent",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

@@ -17,7 +17,7 @@
 //
 //   bun 📜️script.ts list-mutations s.stdio.semio v1 brep
 //
-// @see 🦀️component.rs — the binary that reads the dispatch enum
+// @see 🦀️.rs — the binary that reads the dispatch enum
 // @see 🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json — RuntimeMutationInventory
 
 //#endregion 🧲️Header

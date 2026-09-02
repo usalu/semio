@@ -945,7 +945,7 @@ mod tests {
 
         let version = ArtifactVersion(42);
         let value = crate::value::ToValue::to_value(&version);
-        assert_eq!(value, crate::value::DslValue::Number(42.0));
+        assert_eq!(value, crate::value::DslValue::uint(42));
         assert_eq!(<ArtifactVersion as crate::value::FromValue>::from_value(value).unwrap(), version);
     }
 

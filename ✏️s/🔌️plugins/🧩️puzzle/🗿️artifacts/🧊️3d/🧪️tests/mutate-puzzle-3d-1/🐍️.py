@@ -14,7 +14,7 @@ took Python second implementations over this same carrier.
 
 **What it was written from.**
 
-* ``🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🔣️component.json`` — the seven members of
+* ``🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🔣️.json`` — the seven members of
   `Puzzle3dSnapshot`.
 * rules 2, 4 and 7 of
   `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/📓️derivation-rules.md`.
@@ -25,12 +25,12 @@ took Python second implementations over this same carrier.
   a union — `scale-object` writes a per-axis triple over a uniform scalar and `scale-target-volume`
   writes a uniform scalar over a per-axis triple.
 
-The verbs were NOT read from ``…/🧬️schema/🧬️mutations/🔣️component.json``: that file is titled
+The verbs were NOT read from ``…/🧬️schema/🧬️mutations/🔣️.json``: that file is titled
 `Puzzle3dMutation` but declares the SNAPSHOT's members, the pre-migration whole-snapshot-shaped
 generic schema `s.architect.program`'s own mutation schema records itself as superseding. It was never
 replaced here.
 
-**No Rust was read to write this.** `🦀️component.rs` beside this file registers the SUBJECT half
+**No Rust was read to write this.** `🦀️.rs` beside this file registers the SUBJECT half
 only.
 
 **One kind this implementation REFUSES, by clause rather than by absence.** See `UNDERDETERMINED`.

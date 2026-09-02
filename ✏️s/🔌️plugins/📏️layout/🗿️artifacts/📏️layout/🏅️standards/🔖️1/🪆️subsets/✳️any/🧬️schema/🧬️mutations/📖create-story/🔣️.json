@@ -5,7 +5,7 @@
   "displayName": "Create Story",
   "emoji": "📖",
   "aggregateVariant": "CreateStory",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

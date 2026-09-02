@@ -1,0 +1,21 @@
+# import CreateStepInput from "./🌱create-step/🔗️.graphql"
+# import DeleteStepInput from "./🗑️delete-step/🔗️.graphql"
+# import MoveStepInput from "./📍move-step/🔗️.graphql"
+# import EditStepParamsInput from "./🔧edit-step-params/🔗️.graphql"
+# import ChangeStepCollapsedInput from "./🗂️change-step-collapsed/🔗️.graphql"
+# import ConnectStepsInput from "./🔗connect-steps/🔗️.graphql"
+# import DisconnectStepsInput from "./✂️disconnect-steps/🔗️.graphql"
+# import DuplicateStepInput from "./🧬duplicate-step/🔗️.graphql"
+
+scalar JSON
+
+input SequenceMutationInput @oneOf {
+  createStep: CreateStepInput
+  deleteStep: DeleteStepInput
+  moveStep: MoveStepInput
+  editStepParams: EditStepParamsInput
+  changeStepCollapsed: ChangeStepCollapsedInput
+  connectSteps: ConnectStepsInput
+  disconnectSteps: DisconnectStepsInput
+  duplicateStep: DuplicateStepInput
+}

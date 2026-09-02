@@ -8,7 +8,7 @@
     "target": "test-readme-current-source-activation",
     "command": "bun ./📜️script.ts test readme-current-source-activation",
     "route": "readme-current-source-activation",
-    "source": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧪️readme-current-source-activation/🟦️.ts",
+    "source": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🟦️readme-current-source-activation.ts",
     "launchName": "🧹clean🧩️taxonomy🧪️readme-current-source-activation",
     "launchCommand": "bun nx run @semio-tech/repo-lib:test-readme-current-source-activation --skip-nx-cache",
     "launchGroup": "4_gate",
@@ -16,10 +16,10 @@
   },
   "contractId": "readme-license-owner-leaves-v1",
   "revisionId": "testing-readme-protocol-v2-reviewed",
-  "revisionInput": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧪️readme-current-source-revision/🔣️.json",
+  "revisionInput": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🔣️readme-current-source-revision.json",
   "revisionInputSha256": "1dbd35594578a7e2ed00707686263004872c4b925e895b066d8f04ff4693ac58",
   "taxonomyPath": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json",
-  "catalogPath": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🧫️fixtures/🧪️readme-license-owner-authority/🔣️.json",
+  "catalogPath": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🧫️fixtures/🔣️readme-license-owner-authority.json",
   "catalogSha256": "051394741822e92d51f3bda15ce64d84c236582c6927335c9c5e0ac3c18a1da4",
   "catalogCaseIndex": 31,
   "baseline": {
@@ -69,11 +69,11 @@
     "expectedFrozenSelectors": 3
   },
   "runParent": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/END-TO-END-TAXONOMY-NORMALIZATION/📓️readme-current-plan-readiness/📓️activation/🧾️runs",
-  "unregisteredPath": "🧪️tests/🧪️unregistered/📝️.md",
+  "unregisteredPath": "🧪️tests/📝️unregistered.md",
   "generatorIsolation": {
     "contractId": "plugin-registry",
     "removeField": "inputDiscovery",
-    "inputPatterns": ["🧪️tests/🧪️unrelated-producer/🔣️.json"],
+    "inputPatterns": ["🧪️tests/🔣️unrelated-producer.json"],
     "reason": "This initial packet proves exact owner admission and planning, not registry output generation. No producer is invoked and production generator contracts are unchanged."
   },
   "laws": {

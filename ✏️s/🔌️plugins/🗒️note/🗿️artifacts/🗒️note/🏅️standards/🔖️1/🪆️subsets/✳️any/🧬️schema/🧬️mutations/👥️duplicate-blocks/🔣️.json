@@ -5,7 +5,7 @@
   "displayName": "Duplicate Blocks",
   "emoji": "👥️",
   "aggregateVariant": "DuplicateBlocks",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": "duplicate-blocks",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

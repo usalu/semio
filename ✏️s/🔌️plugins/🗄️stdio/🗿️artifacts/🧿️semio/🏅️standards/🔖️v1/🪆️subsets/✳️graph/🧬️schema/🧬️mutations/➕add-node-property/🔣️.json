@@ -5,7 +5,7 @@
   "displayName": "Add Node Property",
   "emoji": "➕",
   "aggregateVariant": "AddNodeProperty",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

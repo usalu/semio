@@ -1,7 +1,7 @@
 //! 🗺️ Web-Mercator / slippy-tile oracle test for `tiled_map::projection` and `tiled_map::tiles`.
 //!
 //! Reads the SAME frozen fixture as the sibling Python oracle adapter
-//! (`../../🗺️tiled-map/🧪️tests/web-mercator-tile-oracle/🧫️fixtures/🔣️vectors.json`), whose `projection`,
+//! (`../../🗺️tiled-map/🧪️tests/web-mercator-tile-oracle/🧫️fixtures/🔣️.json`), whose `projection`,
 //! `tileNumbering` and `tileBounds` arrays were computed independently by the `mercantile` third-party
 //! library (pure Python, zero runtime deps) from the published EPSG:3857 / OSM slippy-tile spec. This
 //! file asserts this repository's Rust implementation reproduces the same numbers, discharging
@@ -11,7 +11,7 @@
 //! `lodBands` are NOT checked here — no third-party reference exists for the repository-owned
 //! `GIS_MAP_LOD_MAX_SPAN_DEG`/`GIS_MAP_LOD_TILE_Z` band scheme, and the functions that resolve them
 //! (`active_map_lod`, `viewport_lon_span_degrees`) are crate-private, reachable only from
-//! `tiled-map/🦀️component.rs`'s own `mod tests` — see `.🧬semio/…/GIS-MAP-END-TO-END/📓️research/📝️map-math-oracle-tests.md` for the ready-to-apply diff covering those, plus the zoom/pan invariants
+//! `tiled-map/🦀️.rs`'s own `mod tests` — see `.🧬semio/…/GIS-MAP-END-TO-END/📓️research/📝️map-math-oracle-tests.md` for the ready-to-apply diff covering those, plus the zoom/pan invariants
 //! that need `MAX_VISIBLE_TILE_REQUESTS`.
 //!
 //! @see 🧰️framework/🔨️modules/🗺️surface/🗺️tiled-map/🧪️tests/web-mercator-tile-oracle/🥒️.feature
@@ -35,7 +35,7 @@ fn fixture() -> Value {
         "🧪️tests",
         "web-mercator-tile-oracle",
         "🧫️fixtures",
-        "🔣️vectors.json",
+        "🔣️.json",
     ]
     .iter()
     .collect();
@@ -178,7 +178,7 @@ fn zoom_in_then_out_by_one_wheel_step_returns_original_zoom() {
 #[test]
 fn visible_tile_count_stays_within_the_request_budget() {
     // 256 mirrors the crate-private `MAX_VISIBLE_TILE_REQUESTS` at
-    // 🧰️framework/🔨️modules/🗺️surface/🗺️tiled-map/🦀️component.rs:96 — not reachable from outside the
+    // 🧰️framework/🔨️modules/🗺️surface/🗺️tiled-map/🦀️.rs:96 — not reachable from outside the
     // crate, so this bound is duplicated here and pinned again from inside `mod tests` in the diff.
     const EXPECTED_MAX_VISIBLE_TILE_REQUESTS: usize = 256;
     for zoom in [MAP_CAMERA_ZOOM_MIN, 5_000.0, 500_000.0, 100_000_000.0] {

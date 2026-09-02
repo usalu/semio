@@ -5,7 +5,7 @@
   "displayName": "Move Grip 3d",
   "emoji": "🧭",
   "aggregateVariant": "MoveGrip3d",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": "move-grip-3d",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

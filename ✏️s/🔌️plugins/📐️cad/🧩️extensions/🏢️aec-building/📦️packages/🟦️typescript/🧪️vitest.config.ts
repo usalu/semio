@@ -14,7 +14,7 @@ export default defineConfig({
     mode: "test",
     environment: "node",
     include: [],
-    coverage: { include: ["🟦️component.ts"] },
-    includeSource: ["🟦️component.ts"],
+    coverage: { include: ["🟦️.ts"] },
+    includeSource: ["🟦️.ts"],
   },
 });

@@ -5,7 +5,7 @@
   "displayName": "Update Step",
   "emoji": "🩹",
   "aggregateVariant": "UpdateStep",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": "update-step",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

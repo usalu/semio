@@ -1,0 +1,12 @@
+syntax = "proto3";
+// 🔺️ SemioTextDiff schema — real facet mirror of the Rust `🦀️.rs` sibling.
+package semio.s_stdio_semio_text.diff;
+
+import "../📸️snapshot/🛰️.proto";
+
+message SemioTextRunListDiff {
+  repeated semio.s_stdio_semio_text.snapshot.SemioTextRun values = 1;
+}
+message SemioTextDiff {
+  optional SemioTextRunListDiff runs = 1;
+}

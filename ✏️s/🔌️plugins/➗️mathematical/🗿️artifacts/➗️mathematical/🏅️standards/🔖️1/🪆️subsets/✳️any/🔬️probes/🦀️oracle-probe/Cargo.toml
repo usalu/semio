@@ -16,10 +16,10 @@ description = "🔬️ Third-party carrier reader for s.mathematical.mathematica
 
 [[bin]]
 name = "semio-mathematical-oracle-probe"
-path = "🦀️component.rs"
+path = "🦀️.rs"
 
 # 🔮️ TEST-ONLY BY CONSTRUCTION, AND A READER ONLY. Already an approved `test-oracle` entry in the
 # repository's 🔒️dependencies.json (registered there for the `sequence` subset's own csv oracle). It is
-# never asked what a mutation should produce — see this subset's 🧪️oracle/🔣️.json.
+# never asked what a mutation should produce — see this subset's 🔣️oracle.json.
 [dependencies]
 csv = "1"

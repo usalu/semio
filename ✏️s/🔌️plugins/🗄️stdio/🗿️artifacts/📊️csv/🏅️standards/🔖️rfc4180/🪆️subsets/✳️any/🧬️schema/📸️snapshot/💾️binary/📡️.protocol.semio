@@ -1,0 +1,25 @@
+dialect protocol
+protocol stdio.csv.snapshot
+version 1
+schema stdio.csv
+start payload
+
+# This artifact is TEXT-NATIVE (RFC 4180) — there is no "binary CSV". This file describes the
+# PACK CONTAINER: the SEMIO envelope's post-unwrap payload only. The envelope itself (8-byte
+# magic + u32le token length + UTF-8 token) is described ONCE, framework-side, at
+# 🧰️framework/🛍️products/💻️os/🔨️modules/🧬️semio/📡️protocol/📡️.protocol.semio (P2-M3
+# deliverable 3). Cross-artifact `use` cannot yet resolve that file at walk time (confirmed
+# still non-functional both sides — P2-M3 §5, P2-W0 §0) so this file does NOT declare
+# `use semio.envelope` and pretend it does anything — it starts exactly where the envelope's
+# own `chain bytes` clause hands off, matching how `m5_handcrafted_protocol_conformance`'s own
+# `inner_payload_from_semio_example` already `unwrap_binary`s the `.pack.semio` fixture before
+# handing bytes to this protocol's `walk_protocol` (P2-M3 §1c's own instruction to FG-wave
+# agents, honored here).
+#
+# `CsvSnapshot::encode_pack_with` (🧬️schema/📸️snapshot/🦀️.rs) writes NO further binary
+# structure of its own beyond the envelope — the entire payload IS the UTF-8 RFC 4180 text
+# (byte-identical to `encode_csv`'s output; see ../📝️text/📖️.grammar.semio for its
+# real grammar). `framing record` (not `framing magic ...`) since there is no magic prefix at
+# this facet's own boundary — the magic already lives in the envelope file above.
+framing record
+chain utf8

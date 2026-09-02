@@ -3,7 +3,7 @@
 //!
 //! Every scenario copies the immutable real 1.5s H.264 excerpt into the case work directory first;
 //! the committed fixture is never written to. `oracle` drives the registered `mp4` 0.14 reference
-//! implementation (`../../🏅️standards/🔖️isobmff/🪆️subsets/✳️any/🧪️oracle/🦀️component.rs`'s own
+//! implementation (`../../🏅️standards/🔖️isobmff/🪆️subsets/✳️any/🦀️oracle.rs`'s own
 //! `oracle_apply_mutation`); `subject` drives this repository's own `decode_mp4`/`encode_mp4`/
 //! `apply_mp4_mutation` over the full 9-kind `Mp4Mutation` vocabulary. Both results are read back by
 //! the SAME independent `project_mp4_mutation` (`mp4`) before the `semantic-mp4-mutate-v1` profile
@@ -15,7 +15,7 @@ use semio_s_plugin_stdio_test_oracle::artifacts::mp4::standards::v_isobmff::subs
 use semio_s_plugin_stdio_test_oracle::law;
 
 //#region 🔖️Kinds
-/// 📇️ The catalog's own kinds (`../../🏅️standards/🔖️isobmff/🪆️subsets/✳️any/🧪️oracle/🔣️.json`),
+/// 📇️ The catalog's own kinds (`../../🏅️standards/🔖️isobmff/🪆️subsets/✳️any/🔣️oracle.json`),
 /// duplicated as a plain constant rather than reached through the subject crate — this loop drives
 /// oracle registration too, which must build and run with the subject crate absent entirely.
 const KINDS: &[&str] = &["set-snapshot", "set-ftyp", "insert-track", "remove-track", "set-track-dimensions", "set-track-codec", "insert-sample", "remove-sample", "set-sample-sync"];
@@ -91,7 +91,7 @@ mod subject {
 
     //#region 🔖️SpecReading
     /// 🔎️ A second, independently written reading of the SAME `params` JSON schema the oracle reads
-    /// in `../../../🏅️standards/🔖️isobmff/🪆️subsets/✳️any/🧪️oracle/🦀️component.rs` — deliberately not
+    /// in `../../../🏅️standards/🔖️isobmff/🪆️subsets/✳️any/🦀️oracle.rs` — deliberately not
     /// shared code, so a bug in one reading has nothing to hide behind in the other.
     fn number(value: &Json, key: &str, fallback: f64) -> f64 {
         match value.get(key) {
@@ -138,7 +138,7 @@ mod subject {
     /// 🧮️ Re-groups a retained `stsc` chunking onto a shortened sample list, so the document
     /// `set-snapshot` hands over is internally consistent rather than carrying a grouping that
     /// claims more samples than the track holds. The encoder reconciles a stale grouping on its own
-    /// (`../../🏅️standards/🔖️isobmff/🪆️subsets/✳️any/🚪️io/🦀️component.rs`'s
+    /// (`../../🏅️standards/🔖️isobmff/🪆️subsets/✳️any/🚪️io/🦀️.rs`'s
     /// `normalized_chunk_sample_counts`, pinned by its own test), but a case that means "replace the
     /// document with THIS one" must hand over a document a real producer could have written.
     fn grouping_for(retained: &[u32], samples: usize) -> Vec<u32> {
@@ -197,7 +197,7 @@ mod subject {
 
     //#region 🔖️Inverse
     /// ↩️ `Mp4Mutation::inverse` in closed form — the same per-variant mapping
-    /// `../../🏅️standards/🔖️isobmff/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs`'s own
+    /// `../../🏅️standards/🔖️isobmff/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs`'s own
     /// `Mutation::inverse` impl gives, transplanted rather than called through the trait (same
     /// precedent as `mutate-pdf-1-7`'s own `inverse_of`/`mutate-wav-riff-pcm`'s own
     /// `restore_mutation`): a bug in one reading has nothing to hide behind in the other.
@@ -270,7 +270,7 @@ mod subject {
     /// `mdat`) that this ffmpeg `-c copy -movflags +faststart` fixture's own layout already is.
     /// That is not an excuse for a weaker claim, it is a STRONGER one, and the artifact holds
     /// itself to it independently of this case:
-    /// `../../🏅️standards/🔖️isobmff/🪆️subsets/✳️any/🚪️io/🦀️component.rs`'s own
+    /// `../../🏅️standards/🔖️isobmff/🪆️subsets/✳️any/🚪️io/🦀️.rs`'s own
     /// `exact_bauen_mit_bestand_fixture_round_trips_byte_for_byte` asserts the same equality on the
     /// full real recording. `law::reparsed_not_copied` would be exactly backwards here: it would
     /// demand that a lossless container codec LOSE something. The evidence that a parse really

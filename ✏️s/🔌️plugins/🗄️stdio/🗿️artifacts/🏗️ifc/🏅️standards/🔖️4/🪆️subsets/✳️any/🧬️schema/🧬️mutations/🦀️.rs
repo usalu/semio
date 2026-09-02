@@ -22,11 +22,11 @@ use protocol::{Mutation, OpText};
 /// semio-s-plugin-stdio --lib` output, verbatim:
 /// ```text
 /// error[E0277]: the trait bound `v4::subsets::any::schema::snapshot::component::IfcValue: DslField` is not satisfied
-///   --> …/🧬️mutations/🦀️component.rs:27:21   (SetFileDescription { values: Vec<IfcValue> })
+///   --> …/🧬️mutations/🦀️.rs:27:21   (SetFileDescription { values: Vec<IfcValue> })
 /// error[E0277]: the trait bound `v4::subsets::any::schema::snapshot::component::IfcSnapshot: DslField` is not satisfied
-///   --> …/🧬️mutations/🦀️component.rs:23:19   (SetSnapshot { snapshot: IfcSnapshot })
+///   --> …/🧬️mutations/🦀️.rs:23:19   (SetSnapshot { snapshot: IfcSnapshot })
 /// error[E0277]: the trait bound `v4::subsets::any::schema::snapshot::component::IfcEntity: DslField` is not satisfied
-///   --> …/🧬️mutations/🦀️component.rs:40:17   (InsertEntity { entity: IfcEntity })
+///   --> …/🧬️mutations/🦀️.rs:40:17   (InsertEntity { entity: IfcEntity })
 /// ```
 /// Same root cause as `IfcDiff` (§3a): `IfcValue` carries fields on 7 of its 9 variants, has no
 /// `DslField` impl, and every variant here either carries it directly (`values`/`value`) or
@@ -86,7 +86,7 @@ pub enum IfcMutation {
 }
 
 /// 📇️ Kebab-case spelling of every `IfcMutation` variant, in declaration order — the exhaustive
-/// mutation catalog `../../🧪️oracle/🔣️.json`'s `kinds` array is required to match verbatim
+/// mutation catalog `../../🔣️oracle.json`'s `kinds` array is required to match verbatim
 /// (`kinds_const_matches_enum_variants_in_declaration_order` below is what keeps that honest; the
 /// framework never parses Rust to check it itself).
 pub const KINDS: &[&str] = &[
@@ -192,7 +192,7 @@ impl OpText for IfcMutation {
 //#region 🔖️OpBinaryCodec
 /// 🧪️ P2-FG1: mutation-specific real binary primitives backing the upgraded `OpBinary` impl below
 /// — reuses `IfcDiff`'s `pub(crate)` recursive `enc_entity_bin`/`enc_ifc_value_list_bin`/
-/// `write_str_bin` primitives (`../../🔺️diff/🦀️component.rs`, imported above) for the SHARED
+/// `write_str_bin` primitives (`../../🔺️diff/🦀️.rs`, imported above) for the SHARED
 /// `IfcEntity`/`IfcValue` shape (same intra-artifact-reuse split the TEXT codec above already
 /// uses), only `IfcHeader`/`IfcSnapshot`'s own binary shape is genuinely new here.
 fn enc_ifc_header_bin(h: &IfcHeader, out: &mut Vec<u8>) {
@@ -220,7 +220,7 @@ fn dec_ifc_snapshot_bin(reader: &mut store::ByteReader<'_>) -> Result<IfcSnapsho
 //#endregion 🔖️OpBinaryCodec
 
 /// 🧪️ P2-FG1: REAL binary op frame (`format u8 | tag u8 | variant payload`), matching
-/// `../💾️binary/📡️component.protocol.semio`'s `header fixed 2` + `chain payload bytes` shape —
+/// `../💾️binary/📡️.protocol.semio`'s `header fixed 2` + `chain payload bytes` shape —
 /// upgraded from F6's `print_op().into_bytes()` text-as-binary shortcut (`IfcMutation` was one of 4
 /// of stdio's 7 FG1 standards still on that shortcut per this wave's own P2-FG1 census). `tag` is
 /// the `IfcMutation` variant ordinal, same 1-10 order `parse_ifc_mutation`'s own keyword match
@@ -772,7 +772,7 @@ mod tests {
     //#region 🔖️kinds_const
     /// 🧪️ Wave-7 gate: `KINDS` must match the enum's own variants, in declaration order, and its
     /// spellings must match `print_op`'s own keyword for each — the two lists the mutation catalog
-    /// (`../../🧪️oracle/🔣️.json`) and the feature file are checked against never drift apart.
+    /// (`../../🔣️oracle.json`) and the feature file are checked against never drift apart.
     #[test]
     fn kinds_const_matches_enum_variants_in_declaration_order() {
         let base = base_snapshot();
@@ -801,14 +801,14 @@ mod tests {
 
 //#region 🧪️FixtureTests
 // 🧪️ Handcrafted mutation fixtures (contract D1, ticket 26/08/20/COMPOSE-TO-PUZZLE5D-MIGRATION),
-// one case per mutation leaf. Wired HERE and not in `📦️glue.rs`: that file is shared with the
+// one case per mutation leaf. Wired HERE and not in `🦀️.rs`: that file is shared with the
 // agents migrating the other stdio artifacts, so the production mounts there stay untouched while
 // this artifact owns its own test mount. `#[path = "."]` re-bases the children on this file's own
 // directory, which is what makes the leaf-relative path below resolve.
 #[cfg(test)]
 #[path = "."]
 mod fixture_tests {
-    #[path = "📄set-snapshot/🧪️tests/renames-the-exterior-wall/🦀️component.rs"]
+    #[path = "📄set-snapshot/🧪️tests/renames-the-exterior-wall/🦀️.rs"]
     mod tests_set_snapshot_renames_the_exterior_wall;
 }
 //#endregion 🧪️FixtureTests

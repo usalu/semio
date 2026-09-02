@@ -6,7 +6,7 @@ use crate::os_store::ErasedSnapshotRetirement;
 //#region 🧪️Retirement
 #[test]
 fn flow_retirement_typed_serde_oracle_and_exact_bytes_survive_worker_transfer() {
-    let fixture = crate::os_pack::json::parse(include_str!("🧪️fixtures/🔣️retirement.json")).unwrap();
+    let fixture = crate::os_pack::json::parse(include_str!("🧪️fixtures/🔣️.json")).unwrap();
     for maximum in [1, 4096] {
         let value: crate::FlowFixture = crate::os_dsl::FromValue::from_value(crate::os_pack::json::to_dsl_value(fixture.get("fixture").unwrap())).unwrap();
         let oracle: crate::FlowFixture = crate::os_dsl::FromValue::from_value(crate::os_dsl::ToValue::to_value(&value)).unwrap();

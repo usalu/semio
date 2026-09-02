@@ -28,7 +28,7 @@
 use crate::artifacts::semio::standards::v1::subsets::animation::schema::{mutations::SemioAnimationMutation, snapshot::SemioAnimationSnapshot};
 use crate::artifacts::semio::standards::v1::subsets::any::schema::diff::SemioDiff;
 use crate::artifacts::semio::standards::v1::subsets::any::schema::snapshot::{SemioSnapshot, SemioSubsetSnapshot};
-use crate::artifacts::semio::standards::v1::subsets::audio::schema::{mutations::SemioAudioMutation, snapshot::SemioAudioSnapshot};
+use crate::artifacts::semio::standards::v1::subsets::audio::schema::{mutations::{set_sample_rate, SemioAudioMutation}, snapshot::SemioAudioSnapshot};
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::{mutations::SemioBrepMutation, snapshot::SemioBrepSnapshot};
 use crate::artifacts::semio::standards::v1::subsets::cad::schema::{mutations::SemioCadMutation, snapshot::SemioCadSnapshot};
 use crate::artifacts::semio::standards::v1::subsets::document::schema::{mutations::SemioDocumentMutation, snapshot::SemioDocumentSnapshot};
@@ -157,7 +157,7 @@ pub enum SemioMutation {
 }
 
 /// 🏷️ Kebab-case spelling of every `SemioMutation` variant, in declaration order — the vocabulary
-/// the `semio-v1-any` mutation catalog (`../../🧪️oracle/🔣️.json`) declares and
+/// the `semio-v1-any` mutation catalog (`../../🔣️oracle.json`) declares and
 /// `mutate-semio-any`'s exhaustive test case measures itself against. The eighteen wrapper variants
 /// are spelled by their SUBSET name (`brep`, `mesh`, …), which is what the envelope actually routes
 /// on; `kinds_match_the_enum_and_the_catalog` below pins the list with a WILDCARD-FREE match, so a
@@ -310,7 +310,7 @@ pub(crate) fn agg_inverse(this: &SemioMutation, base: &SemioSnapshot) -> Vec<Sem
 /// Text is one `tag:payload` line: `payload` for the 18 wrapped variants is exactly that subset's
 /// OWN already-real `OpText::print_op()`/`parse_op()` output (genuine reuse, never re-derived
 /// here); `setSnapshot`'s payload is hex(`SemioSnapshot::print_dsl`) — real delegation to this
-/// envelope's own now-real `ArtifactDsl` (📸️snapshot/🦀️component.rs), hex-flattened to keep
+/// envelope's own now-real `ArtifactDsl` (📸️snapshot/🦀️.rs), hex-flattened to keep
 /// `print_op`'s one-physical-line contract.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn subset_mutation_tag(m: &SemioMutation) -> &'static str {
@@ -521,7 +521,7 @@ impl OpBinary for SemioMutation {
 //#region 🔖️Demo
 /// 🌱 All 19 top-level [`SemioMutation`] tags (`SetSnapshot` and each of the 18 wrapped-kind
 /// representative variants) — full dispatch-table coverage for this facet's grammar/protocol
-/// conformance-law tests. Single source of truth shared with `🎹️composer/🦀️component.rs`'s
+/// conformance-law tests. Single source of truth shared with `🎹️composer/🦀️.rs`'s
 /// `ops_grammar_conformance_law`/`protocol_walk_law`.
 #[cfg(test)]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -594,7 +594,7 @@ mod tests {
         let _ = apply_semio_mutation(&mut round, &inv1[0]);
         assert_eq!(round, base);
 
-        let wrapped = SemioMutation::ApplyAudio(apply_audio::ApplyAudio { mutation: SemioAudioMutation::SetSampleRate { sample_rate: 96_000 } });
+        let wrapped = SemioMutation::ApplyAudio(apply_audio::ApplyAudio { mutation: SemioAudioMutation::SetSampleRate(set_sample_rate::SetSampleRate { sample_rate: 96_000 }) });
         let d2 = <SemioMutation as Mutation<SemioSnapshot>>::diff(&wrapped, &base);
         assert!(matches!(d2.diff(), SemioDiff::Audio(_)));
         let mut applied = base.clone();
@@ -633,7 +633,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn kind_mismatch_wrapped_mutation_records_an_error_outcome() {
         let base = flow_base();
-        let wrapped = SemioMutation::ApplyAudio(apply_audio::ApplyAudio { mutation: SemioAudioMutation::SetSampleRate { sample_rate: 1 } });
+        let wrapped = SemioMutation::ApplyAudio(apply_audio::ApplyAudio { mutation: SemioAudioMutation::SetSampleRate(set_sample_rate::SetSampleRate { sample_rate: 1 }) });
         let diff = <SemioMutation as Mutation<SemioSnapshot>>::diff(&wrapped, &base);
         assert_eq!(diff.diff(), &SemioDiff::NoChange);
         assert!(diff.messages().iter().any(|message| message.code.0 == "mutation.target-missing"));
@@ -879,7 +879,7 @@ mod tests {
         let base = audio_base();
         let cases = [
             SemioMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: base.clone() }),
-            SemioMutation::ApplyAudio(apply_audio::ApplyAudio { mutation: SemioAudioMutation::SetSampleRate { sample_rate: 22_050 } }),
+            SemioMutation::ApplyAudio(apply_audio::ApplyAudio { mutation: SemioAudioMutation::SetSampleRate(set_sample_rate::SetSampleRate { sample_rate: 22_050 }) }),
             SemioMutation::ApplyFlow(apply_flow::ApplyFlow { mutation: SemioFlowMutation::SetSnapshot(crate::artifacts::semio::standards::v1::subsets::flow::schema::mutations::set_snapshot::SetSnapshot { snapshot: Default::default() }) }),
         ];
         for m in cases {
@@ -959,7 +959,7 @@ mod tests {
         for (kind, arm) in KINDS[1..].iter().zip(arms) {
             assert_eq!(*kind, semio_subset_tag(&enveloped(arm)), "KINDS must follow SemioSubsetSnapshot's own declaration order and the envelope's own runtime subset tag");
         }
-        let manifest = include_str!("../../🧪️oracle/🔣️.json");
+        let manifest = include_str!("../../🔣️oracle.json");
         for kind in KINDS {
             assert!(manifest.contains(&format!("\"{kind}\"")), "KINDS entry {kind:?} must also appear in the committed oracle manifest's catalog");
         }
@@ -970,9 +970,9 @@ mod tests {
 
 //#region 🧪️FixtureCases
 /// 🧪️ Handcrafted `📄set-snapshot` fixture cases, wired from this tree's own mutations root so
-/// `📦️glue.rs` stays untouched (`#[path]` on a non-inline module resolves against this file's own
+/// `🦀️.rs` stays untouched (`#[path]` on a non-inline module resolves against this file's own
 /// directory).
 #[cfg(test)]
-#[path = "📄set-snapshot/🧪️tests/replaces-the-envelope-wrapping-a-value-subset/🦀️component.rs"]
+#[path = "📄set-snapshot/🧪️tests/replaces-the-envelope-wrapping-a-value-subset/🦀️.rs"]
 mod set_snapshot_replaces_the_envelope_wrapping_a_value_subset;
 //#endregion 🧪️FixtureCases

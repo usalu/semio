@@ -7,25 +7,25 @@ IMPLEMENTATION, written in another language from the format's own committed spec
 
 * the envelope — `semio <plugin>.<artifact>.<component> v<version>` for text, and the
   `0x89 'S' 'E' 'M' 0D 0A 1A 0A` magic + little-endian u32 token length + token for binary — is
-  specified in `🧰️framework/🛍️products/💻️os/🔨️modules/🧬️semio/🦀️component.rs`'s `🔖️Envelope`/
+  specified in `🧰️framework/🛍️products/💻️os/🔨️modules/🧬️semio/🦀️.rs`'s `🔖️Envelope`/
   `🔖️Binary`/`🔖️Text` regions, the carrier's normative description;
 * the child handle's and the representation link's `target` string is the ONE dialect-coordinate
   codec in the repository, `<artifact_id>!<kind>@<standard>/<subset>`, specified by
-  `ArtifactRef::to_uri`/`parse_uri` in `🧰️framework/🔨️modules/🚪️io/🧬️schema/🦀️component.rs`, and the
+  `ArtifactRef::to_uri`/`parse_uri` in `🧰️framework/🔨️modules/🚪️io/🧬️schema/🦀️.rs`, and the
   three pin shapes are `LinkPin` (`Head`, `Checkpoint { id }`, `Snapshot { blob: BlobRef }`, and
   `BlobRef { hash, size, media_type }`) in `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/
-  🦀️component.rs`;
+  🦀️.rs`;
 * the DSL body is the committed grammar
-  `../../🏅️standards/🔖️v1/🪆️subsets/✳️kit/🧬️schema/📸️snapshot/📝️text/📖️component.grammar.semio`
+  `../../🏅️standards/🔖️v1/🪆️subsets/✳️kit/🧬️schema/📸️snapshot/📝️text/📖️.grammar.semio`
   (`document = artifact-mark schema-line types-line designs-line objects-line models-line
   properties-line representations-line`, `pin = "[" "h" "]" | "[" "c" "," hex "]" | "[" "s" "," hex
   "," INT "," hex "]"`, `transform` = ten positional numbers);
-* the JSON projection is the committed schema `…/📸️snapshot/🔣️component.json`;
+* the JSON projection is the committed schema `…/📸️snapshot/🔣️.json`;
 * the fifteen verbs and their argument lists are the committed grammar
-  `…/🧬️schema/🧬️mutations/📝️text/📖️component.grammar.semio`, and their JSON wire form is the
+  `…/🧬️schema/🧬️mutations/📝️text/📖️.grammar.semio`, and their JSON wire form is the
   committed per-kind specification vectors under `…/🧬️mutations/<kind>/🧪️tests/<fixture>/`;
 * the pack body's `format u8` + varint-length-prefixed `schema` is the committed protocol
-  `…/📸️snapshot/💾️binary/📡️component.protocol.semio`, whose prose then names — but declines to
+  `…/📸️snapshot/💾️binary/📡️.protocol.semio`, whose prose then names — but declines to
   frame — "types/designs/objects/models/properties/representations (all variable-length
   repeated/optional records)". That named-but-unframed layout was written out here in the order the
   grammar's `document` lists those collections and is PINNED by `pack_bytes` re-encoding the
@@ -73,7 +73,7 @@ TOWER_PACK = "local://🎒️nakagin-capsule-tower.pack.semio"
 #: 🪑️ The tiny committed furniture kit, kept for the BYTE half of the identity law: its two files were
 #: written by the RUST codec, so this implementation reproducing them is a cross-language byte
 #: agreement the tower pair — written by this implementation — cannot restate.
-FURNITURE_DSL = "asset://🏅️standards/🔖️v1/🪆️subsets/✳️kit/📚️examples/🪑️furniture/🖼️assets/🗣️example.dsl.semio"
+FURNITURE_DSL = "asset://🏅️standards/🔖️v1/🪆️subsets/✳️kit/📚️examples/🪑️furniture/🖼️assets/🗣️.dsl.semio"
 FURNITURE_PACK = "asset://🏅️standards/🔖️v1/🪆️subsets/✳️kit/📚️examples/🪑️furniture/🖼️assets/🎒️example.pack.semio"
 
 

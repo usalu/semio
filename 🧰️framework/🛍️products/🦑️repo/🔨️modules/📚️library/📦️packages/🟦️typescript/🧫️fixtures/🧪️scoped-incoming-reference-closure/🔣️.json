@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "contract": "referenceClosure",
   "scope": "🧰️framework/🔨️modules/🌱️value",
-  "source": "🔣️component.json",
+  "source": "🔣️.json",
   "destination": "🔣️.json",
   "payload": "{\"answer\":42}\n",
   "consumers": [

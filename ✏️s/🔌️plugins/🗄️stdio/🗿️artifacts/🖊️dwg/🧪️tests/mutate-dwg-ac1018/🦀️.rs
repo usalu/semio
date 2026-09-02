@@ -29,7 +29,7 @@
 //! repository has one decoder for both — recorded as a real gap, not resolved here.
 //!
 //! No differential oracle is registered (`../../🏅️standards/🔖️ac1018/🪆️subsets/✳️any/🧪️oracle/
-//! 🔣️component.json`'s `noOracleDecisions`), so the platform never dispatches the oracle role for
+//! 🔣️.json`'s `noOracleDecisions`), so the platform never dispatches the oracle role for
 //! this feature; the handlers are registered in the shape every stdio case has, compute a real
 //! answer from an independently hand-written preamble reader that never calls this repository's
 //! R2004+ decoder, and assert their laws in role.

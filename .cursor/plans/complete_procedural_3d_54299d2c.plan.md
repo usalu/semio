@@ -42,14 +42,14 @@ The blank flow window and blank preview share a single cause chain:
 1. `semio-framework-os-flow` **does not compile**. Its glue has a wrong relative `#[path]` depth for every extension:
 
 ```
-error: couldn't read `🌊️flow/📦️packages/🦀️rust/./../../../🧩️extensions/📃️list/🦀️component.rs`:
+error: couldn't read `🌊️flow/📦️packages/🦀️rust/./../../../🧩️extensions/📃️list/🦀️.rs`:
        No such file or directory (os error 2)
   --> 🌊️flow/📦️packages/🦀️rust/📦️glue.rs:16:3
 ```
 
 Because `pub mod extensions` carries `#[path = "."]`, its children resolve relative to `📦️packages/🦀️rust/`, so they need `../../🧩️extensions/...` (which exists), not `../../../` (which does not). Same class as the existing `SHAPE-V2-RETROFIT-PATH-PREFIX-BUG-AUDIT` ticket.
 
-1. The crate is also missing the dependencies its mounted source needs. [🦀️component.rs](🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/🦀️component.rs) lines 3-5 use `crate::infinite::...`, `math::...` and `neural_engine`, but [Cargo.toml](🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/Cargo.toml) declares no `infinite`, no `math`, and no `neural_engine` alias, and [📦️glue.rs](🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/📦️glue.rs) adds no `extern crate ... as ...` aliases for them.
+1. The crate is also missing the dependencies its mounted source needs. [🦀️.rs](🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/🦀️.rs) lines 3-5 use `crate::infinite::...`, `math::...` and `neural_engine`, but [Cargo.toml](🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/Cargo.toml) declares no `infinite`, no `math`, and no `neural_engine` alias, and [📦️glue.rs](🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/📦️glue.rs) adds no `extern crate ... as ...` aliases for them.
 2. Consequently there is **no wasm build** for flow core: no `📜️script.ts` with a `wasm` target anywhere under `🌊️flow`, no `crate-type = ["cdylib"]`, no `[target.'cfg(target_arch = "wasm32")'.dependencies]`. The real `FlowSession` (123 `#[wasm_bindgen]` items, all behind `#[cfg(target_arch = "wasm32")]`) is therefore never compiled.
 3. In its place, [pkg/flow_core.js](🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/pkg/flow_core.js) is a hand-written no-op stub (written Aug 6 19:38). There is no `flow_core_bg.wasm` in the repo. The stub returns exactly what the user sees:
 
@@ -116,7 +116,7 @@ Read goals from `.🦑️repo/🎯️goals/` (repo MCP namespace is absent this 
 
 ## Phase 4 - Complete the BREP kernel
 
-You chose the full kernel, so nothing reachable from procedural 3D stays an approximation. All work is in `✏️s/🔨️modules/🧊️3d/📐️brep/`, added inside the existing `#region` structure of each module's `🦀️component.rs`, with tests extended in the existing `#region 🧪️Tests` blocks (no new files).
+You chose the full kernel, so nothing reachable from procedural 3D stays an approximation. All work is in `✏️s/🔨️modules/🧊️3d/📐️brep/`, added inside the existing `#region` structure of each module's `🦀️.rs`, with tests extended in the existing `#region 🧪️Tests` blocks (no new files).
 
 Wave A - sweeps and tessellation (unblocks the node catalogue)
 

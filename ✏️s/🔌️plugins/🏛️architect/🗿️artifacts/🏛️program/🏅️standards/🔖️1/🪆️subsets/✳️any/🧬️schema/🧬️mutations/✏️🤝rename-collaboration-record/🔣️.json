@@ -5,7 +5,7 @@
   "displayName": "Rename Collaboration Record",
   "emoji": "✏️🤝",
   "aggregateVariant": "RenameCollaborationRecord",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

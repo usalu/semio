@@ -1,7 +1,7 @@
 //! 🦀️ EN 1999 exhaustive mutation case — Rust adapter. Ticket
 //! 26/08/23/END-TO-END-TESTING-REFACTOR, wave 14 (the no-oracle conversion). The recorded
 //! no-oracle decision `en1999-1-mutation-semantics` is gone from
-//! `../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️oracle/🔣️.json`, because a reference now
+//! `../../🏅️standards/🔖️1/🪆️subsets/✳️any/🔣️oracle.json`, because a reference now
 //! exists to compare against: `s.norm.en1999` is a
 //! semio-native artifact with no third-party reader or writer, so its reference is a second
 //! IMPLEMENTATION: the independent Python `🐍️component.py` beside this file, registered as the
@@ -21,7 +21,7 @@
 //! `✏️s/🔌️plugins/🗄️stdio/🧪️oracle/⚖️law` module (`law::mutation_is_observable`,
 //! `law::inverse_restores`, `law::round_trip_preserves`, `law::carrier_is_exact`) that the
 //! stdio mutation cases use, reached through the `oracleHostPackages` entry this plugin
-//! declares in `✏️s/🔌️plugins/📕️norm/🧪️oracle/🔣️.json`. What `parity` adds on top is the
+//! declares in `✏️s/🔌️plugins/📕️norm/🔣️oracle.json`. What `parity` adds on top is the
 //! one thing a single implementation can never provide: that a second implementation, written in
 //! another language from the same written specification, reaches the same document.
 //!
@@ -31,9 +31,9 @@
 //! unreachable from here. The subset's own production code therefore exports the bridges
 //! (`decode_en1999_snapshot_json`/`encode_en1999_snapshot_json`,
 //! `decode_en1999_dsl`/`encode_en1999_dsl`, `decode_en1999_pack`/`encode_en1999_pack` in
-//! `../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️component.rs`;
+//! `../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs`;
 //! `decode_en1999_mutation_json`, `apply_en1999_mutation`, `inverse_en1999_mutation` in
-//! `../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs`), whose
+//! `../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs`), whose
 //! signatures name only reachable types. This side reaches the committed vectors through
 //! `include_str!` and the Python side through the `asset://` URIs the feature declares, so both
 //! read the SAME committed bytes and neither holds a Rust or Python literal transcribed beside
@@ -52,7 +52,7 @@ use semio_repo_test_host::{digest, parse_json, Adapter, Context, Json, Outcome};
 use semio_s_plugin_stdio_test_oracle::law;
 
 //#region 🔖️Kinds
-/// 🏷️ Mirrors `En1999Mutation::KINDS` (`../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs`) —
+/// 🏷️ Mirrors `En1999Mutation::KINDS` (`../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs`) —
 /// duplicated, not imported, because the oracle-only build must not link the subject crate. The
 /// contract's mutation-coverage gate keeps this list honest against the catalog;
 /// `kinds_match_the_enum_and_the_catalog` in that production file keeps it honest against the enum.
@@ -103,160 +103,160 @@ const PACK_ASSET: &str = "asset://🏅️standards/🔖️1/🪆️subsets/✳�
 fn fixture_text(kind: &str) -> (&'static str, &'static str, &'static str, &'static str) {
     match kind {
         "change-n-ed-kn" => (
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦎change-n-ed-kn/🧪️tests/raises-axial-force-to-180-kn/📸️snapshot/⬅️before/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦎change-n-ed-kn/🧪️tests/raises-axial-force-to-180-kn/🦠️mutation/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦎change-n-ed-kn/🧪️tests/raises-axial-force-to-180-kn/📸️snapshot/➡️after/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦎change-n-ed-kn/🧪️tests/raises-axial-force-to-180-kn/🎯️outcome/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦎change-n-ed-kn/🧪️tests/raises-axial-force-to-180-kn/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦎change-n-ed-kn/🧪️tests/raises-axial-force-to-180-kn/🦠️mutation/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦎change-n-ed-kn/🧪️tests/raises-axial-force-to-180-kn/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦎change-n-ed-kn/🧪️tests/raises-axial-force-to-180-kn/🎯️outcome/🔣️.json"),
         ),
         "change-m-ed-knm" => (
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐍change-m-ed-knm/🧪️tests/raises-design-moment-to-9-5-knm/📸️snapshot/⬅️before/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐍change-m-ed-knm/🧪️tests/raises-design-moment-to-9-5-knm/🦠️mutation/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐍change-m-ed-knm/🧪️tests/raises-design-moment-to-9-5-knm/📸️snapshot/➡️after/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐍change-m-ed-knm/🧪️tests/raises-design-moment-to-9-5-knm/🎯️outcome/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐍change-m-ed-knm/🧪️tests/raises-design-moment-to-9-5-knm/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐍change-m-ed-knm/🧪️tests/raises-design-moment-to-9-5-knm/🦠️mutation/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐍change-m-ed-knm/🧪️tests/raises-design-moment-to-9-5-knm/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐍change-m-ed-knm/🧪️tests/raises-design-moment-to-9-5-knm/🎯️outcome/🔣️.json"),
         ),
         "change-a-mm2" => (
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦂change-a-mm2/🧪️tests/enlarges-section-area-to-2250-mm2/📸️snapshot/⬅️before/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦂change-a-mm2/🧪️tests/enlarges-section-area-to-2250-mm2/🦠️mutation/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦂change-a-mm2/🧪️tests/enlarges-section-area-to-2250-mm2/📸️snapshot/➡️after/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦂change-a-mm2/🧪️tests/enlarges-section-area-to-2250-mm2/🎯️outcome/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦂change-a-mm2/🧪️tests/enlarges-section-area-to-2250-mm2/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦂change-a-mm2/🧪️tests/enlarges-section-area-to-2250-mm2/🦠️mutation/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦂change-a-mm2/🧪️tests/enlarges-section-area-to-2250-mm2/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦂change-a-mm2/🧪️tests/enlarges-section-area-to-2250-mm2/🎯️outcome/🔣️.json"),
         ),
         "change-w-el-mm3" => (
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦟change-w-el-mm3/🧪️tests/raises-section-modulus-to-40000-mm3/📸️snapshot/⬅️before/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦟change-w-el-mm3/🧪️tests/raises-section-modulus-to-40000-mm3/🦠️mutation/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦟change-w-el-mm3/🧪️tests/raises-section-modulus-to-40000-mm3/📸️snapshot/➡️after/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦟change-w-el-mm3/🧪️tests/raises-section-modulus-to-40000-mm3/🎯️outcome/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦟change-w-el-mm3/🧪️tests/raises-section-modulus-to-40000-mm3/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦟change-w-el-mm3/🧪️tests/raises-section-modulus-to-40000-mm3/🦠️mutation/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦟change-w-el-mm3/🧪️tests/raises-section-modulus-to-40000-mm3/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦟change-w-el-mm3/🧪️tests/raises-section-modulus-to-40000-mm3/🎯️outcome/🔣️.json"),
         ),
         "change-alloy" => (
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦗change-alloy/🧪️tests/switches-alloy-to-aw7020t6/📸️snapshot/⬅️before/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦗change-alloy/🧪️tests/switches-alloy-to-aw7020t6/🦠️mutation/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦗change-alloy/🧪️tests/switches-alloy-to-aw7020t6/📸️snapshot/➡️after/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦗change-alloy/🧪️tests/switches-alloy-to-aw7020t6/🎯️outcome/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦗change-alloy/🧪️tests/switches-alloy-to-aw7020t6/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦗change-alloy/🧪️tests/switches-alloy-to-aw7020t6/🦠️mutation/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦗change-alloy/🧪️tests/switches-alloy-to-aw7020t6/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦗change-alloy/🧪️tests/switches-alloy-to-aw7020t6/🎯️outcome/🔣️.json"),
         ),
         "change-chi" => (
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕷️change-chi/🧪️tests/lowers-buckling-chi-to-0-5/📸️snapshot/⬅️before/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕷️change-chi/🧪️tests/lowers-buckling-chi-to-0-5/🦠️mutation/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕷️change-chi/🧪️tests/lowers-buckling-chi-to-0-5/📸️snapshot/➡️after/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕷️change-chi/🧪️tests/lowers-buckling-chi-to-0-5/🎯️outcome/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕷️change-chi/🧪️tests/lowers-buckling-chi-to-0-5/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕷️change-chi/🧪️tests/lowers-buckling-chi-to-0-5/🦠️mutation/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕷️change-chi/🧪️tests/lowers-buckling-chi-to-0-5/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕷️change-chi/🧪️tests/lowers-buckling-chi-to-0-5/🎯️outcome/🔣️.json"),
         ),
         "change-it-mm4" => (
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐜change-it-mm4/🧪️tests/raises-torsion-constant-to-10240-mm4/📸️snapshot/⬅️before/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐜change-it-mm4/🧪️tests/raises-torsion-constant-to-10240-mm4/🦠️mutation/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐜change-it-mm4/🧪️tests/raises-torsion-constant-to-10240-mm4/📸️snapshot/➡️after/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐜change-it-mm4/🧪️tests/raises-torsion-constant-to-10240-mm4/🎯️outcome/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐜change-it-mm4/🧪️tests/raises-torsion-constant-to-10240-mm4/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐜change-it-mm4/🧪️tests/raises-torsion-constant-to-10240-mm4/🦠️mutation/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐜change-it-mm4/🧪️tests/raises-torsion-constant-to-10240-mm4/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐜change-it-mm4/🧪️tests/raises-torsion-constant-to-10240-mm4/🎯️outcome/🔣️.json"),
         ),
         "change-l-cr-mm" => (
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦔change-l-cr-mm/🧪️tests/lengthens-buckling-length-to-4000-mm/📸️snapshot/⬅️before/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦔change-l-cr-mm/🧪️tests/lengthens-buckling-length-to-4000-mm/🦠️mutation/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦔change-l-cr-mm/🧪️tests/lengthens-buckling-length-to-4000-mm/📸️snapshot/➡️after/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦔change-l-cr-mm/🧪️tests/lengthens-buckling-length-to-4000-mm/🎯️outcome/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦔change-l-cr-mm/🧪️tests/lengthens-buckling-length-to-4000-mm/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦔change-l-cr-mm/🧪️tests/lengthens-buckling-length-to-4000-mm/🦠️mutation/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦔change-l-cr-mm/🧪️tests/lengthens-buckling-length-to-4000-mm/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦔change-l-cr-mm/🧪️tests/lengthens-buckling-length-to-4000-mm/🎯️outcome/🔣️.json"),
         ),
         "change-theta-c" => (
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦇change-theta-c/🧪️tests/raises-fatigue-detail-theta-c-to-225-mpa/📸️snapshot/⬅️before/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦇change-theta-c/🧪️tests/raises-fatigue-detail-theta-c-to-225-mpa/🦠️mutation/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦇change-theta-c/🧪️tests/raises-fatigue-detail-theta-c-to-225-mpa/📸️snapshot/➡️after/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦇change-theta-c/🧪️tests/raises-fatigue-detail-theta-c-to-225-mpa/🎯️outcome/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦇change-theta-c/🧪️tests/raises-fatigue-detail-theta-c-to-225-mpa/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦇change-theta-c/🧪️tests/raises-fatigue-detail-theta-c-to-225-mpa/🦠️mutation/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦇change-theta-c/🧪️tests/raises-fatigue-detail-theta-c-to-225-mpa/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦇change-theta-c/🧪️tests/raises-fatigue-detail-theta-c-to-225-mpa/🎯️outcome/🔣️.json"),
         ),
         "change-delta-sigma-ed" => (
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦉change-delta-sigma-ed/🧪️tests/raises-fatigue-stress-range-to-62-5-mpa/📸️snapshot/⬅️before/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦉change-delta-sigma-ed/🧪️tests/raises-fatigue-stress-range-to-62-5-mpa/🦠️mutation/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦉change-delta-sigma-ed/🧪️tests/raises-fatigue-stress-range-to-62-5-mpa/📸️snapshot/➡️after/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦉change-delta-sigma-ed/🧪️tests/raises-fatigue-stress-range-to-62-5-mpa/🎯️outcome/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦉change-delta-sigma-ed/🧪️tests/raises-fatigue-stress-range-to-62-5-mpa/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦉change-delta-sigma-ed/🧪️tests/raises-fatigue-stress-range-to-62-5-mpa/🦠️mutation/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦉change-delta-sigma-ed/🧪️tests/raises-fatigue-stress-range-to-62-5-mpa/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦉change-delta-sigma-ed/🧪️tests/raises-fatigue-stress-range-to-62-5-mpa/🎯️outcome/🔣️.json"),
         ),
         "change-delta-sigma-c" => (
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐴change-delta-sigma-c/🧪️tests/upgrades-detail-category-to-90-mpa/📸️snapshot/⬅️before/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐴change-delta-sigma-c/🧪️tests/upgrades-detail-category-to-90-mpa/🦠️mutation/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐴change-delta-sigma-c/🧪️tests/upgrades-detail-category-to-90-mpa/📸️snapshot/➡️after/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐴change-delta-sigma-c/🧪️tests/upgrades-detail-category-to-90-mpa/🎯️outcome/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐴change-delta-sigma-c/🧪️tests/upgrades-detail-category-to-90-mpa/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐴change-delta-sigma-c/🧪️tests/upgrades-detail-category-to-90-mpa/🦠️mutation/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐴change-delta-sigma-c/🧪️tests/upgrades-detail-category-to-90-mpa/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐴change-delta-sigma-c/🧪️tests/upgrades-detail-category-to-90-mpa/🎯️outcome/🔣️.json"),
         ),
         "change-fatigue-m" => (
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐎change-fatigue-m/🧪️tests/flattens-sn-slope-to-m-5/📸️snapshot/⬅️before/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐎change-fatigue-m/🧪️tests/flattens-sn-slope-to-m-5/🦠️mutation/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐎change-fatigue-m/🧪️tests/flattens-sn-slope-to-m-5/📸️snapshot/➡️after/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐎change-fatigue-m/🧪️tests/flattens-sn-slope-to-m-5/🎯️outcome/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐎change-fatigue-m/🧪️tests/flattens-sn-slope-to-m-5/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐎change-fatigue-m/🧪️tests/flattens-sn-slope-to-m-5/🦠️mutation/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐎change-fatigue-m/🧪️tests/flattens-sn-slope-to-m-5/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐎change-fatigue-m/🧪️tests/flattens-sn-slope-to-m-5/🎯️outcome/🔣️.json"),
         ),
         "change-n-cycles" => (
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦄change-n-cycles/🧪️tests/doubles-fatigue-cycles-to-2000000/📸️snapshot/⬅️before/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦄change-n-cycles/🧪️tests/doubles-fatigue-cycles-to-2000000/🦠️mutation/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦄change-n-cycles/🧪️tests/doubles-fatigue-cycles-to-2000000/📸️snapshot/➡️after/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦄change-n-cycles/🧪️tests/doubles-fatigue-cycles-to-2000000/🎯️outcome/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦄change-n-cycles/🧪️tests/doubles-fatigue-cycles-to-2000000/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦄change-n-cycles/🧪️tests/doubles-fatigue-cycles-to-2000000/🦠️mutation/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦄change-n-cycles/🧪️tests/doubles-fatigue-cycles-to-2000000/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦄change-n-cycles/🧪️tests/doubles-fatigue-cycles-to-2000000/🎯️outcome/🔣️.json"),
         ),
         "change-v-weld-ed-kn" => (
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐑change-v-weld-ed-kn/🧪️tests/raises-weld-shear-to-48-kn/📸️snapshot/⬅️before/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐑change-v-weld-ed-kn/🧪️tests/raises-weld-shear-to-48-kn/🦠️mutation/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐑change-v-weld-ed-kn/🧪️tests/raises-weld-shear-to-48-kn/📸️snapshot/➡️after/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐑change-v-weld-ed-kn/🧪️tests/raises-weld-shear-to-48-kn/🎯️outcome/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐑change-v-weld-ed-kn/🧪️tests/raises-weld-shear-to-48-kn/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐑change-v-weld-ed-kn/🧪️tests/raises-weld-shear-to-48-kn/🦠️mutation/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐑change-v-weld-ed-kn/🧪️tests/raises-weld-shear-to-48-kn/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐑change-v-weld-ed-kn/🧪️tests/raises-weld-shear-to-48-kn/🎯️outcome/🔣️.json"),
         ),
         "change-weld-throat-mm" => (
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐐change-weld-throat-mm/🧪️tests/thickens-weld-throat-to-6-5-mm/📸️snapshot/⬅️before/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐐change-weld-throat-mm/🧪️tests/thickens-weld-throat-to-6-5-mm/🦠️mutation/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐐change-weld-throat-mm/🧪️tests/thickens-weld-throat-to-6-5-mm/📸️snapshot/➡️after/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐐change-weld-throat-mm/🧪️tests/thickens-weld-throat-to-6-5-mm/🎯️outcome/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐐change-weld-throat-mm/🧪️tests/thickens-weld-throat-to-6-5-mm/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐐change-weld-throat-mm/🧪️tests/thickens-weld-throat-to-6-5-mm/🦠️mutation/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐐change-weld-throat-mm/🧪️tests/thickens-weld-throat-to-6-5-mm/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐐change-weld-throat-mm/🧪️tests/thickens-weld-throat-to-6-5-mm/🎯️outcome/🔣️.json"),
         ),
         "change-weld-length-mm" => (
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐮change-weld-length-mm/🧪️tests/lengthens-weld-to-200-mm/📸️snapshot/⬅️before/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐮change-weld-length-mm/🧪️tests/lengthens-weld-to-200-mm/🦠️mutation/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐮change-weld-length-mm/🧪️tests/lengthens-weld-to-200-mm/📸️snapshot/➡️after/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐮change-weld-length-mm/🧪️tests/lengthens-weld-to-200-mm/🎯️outcome/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐮change-weld-length-mm/🧪️tests/lengthens-weld-to-200-mm/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐮change-weld-length-mm/🧪️tests/lengthens-weld-to-200-mm/🦠️mutation/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐮change-weld-length-mm/🧪️tests/lengthens-weld-to-200-mm/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐮change-weld-length-mm/🧪️tests/lengthens-weld-to-200-mm/🎯️outcome/🔣️.json"),
         ),
         "change-beta-w" => (
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐷change-beta-w/🧪️tests/raises-weld-correlation-beta-w-to-0-75/📸️snapshot/⬅️before/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐷change-beta-w/🧪️tests/raises-weld-correlation-beta-w-to-0-75/🦠️mutation/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐷change-beta-w/🧪️tests/raises-weld-correlation-beta-w-to-0-75/📸️snapshot/➡️after/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐷change-beta-w/🧪️tests/raises-weld-correlation-beta-w-to-0-75/🎯️outcome/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐷change-beta-w/🧪️tests/raises-weld-correlation-beta-w-to-0-75/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐷change-beta-w/🧪️tests/raises-weld-correlation-beta-w-to-0-75/🦠️mutation/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐷change-beta-w/🧪️tests/raises-weld-correlation-beta-w-to-0-75/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐷change-beta-w/🧪️tests/raises-weld-correlation-beta-w-to-0-75/🎯️outcome/🔣️.json"),
         ),
         "change-sheet-b-mm" => (
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐗change-sheet-b-mm/🧪️tests/widens-sheet-to-320-mm/📸️snapshot/⬅️before/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐗change-sheet-b-mm/🧪️tests/widens-sheet-to-320-mm/🦠️mutation/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐗change-sheet-b-mm/🧪️tests/widens-sheet-to-320-mm/📸️snapshot/➡️after/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐗change-sheet-b-mm/🧪️tests/widens-sheet-to-320-mm/🎯️outcome/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐗change-sheet-b-mm/🧪️tests/widens-sheet-to-320-mm/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐗change-sheet-b-mm/🧪️tests/widens-sheet-to-320-mm/🦠️mutation/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐗change-sheet-b-mm/🧪️tests/widens-sheet-to-320-mm/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐗change-sheet-b-mm/🧪️tests/widens-sheet-to-320-mm/🎯️outcome/🔣️.json"),
         ),
         "change-sheet-t-mm" => (
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦌change-sheet-t-mm/🧪️tests/thickens-sheet-to-3-5-mm/📸️snapshot/⬅️before/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦌change-sheet-t-mm/🧪️tests/thickens-sheet-to-3-5-mm/🦠️mutation/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦌change-sheet-t-mm/🧪️tests/thickens-sheet-to-3-5-mm/📸️snapshot/➡️after/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦌change-sheet-t-mm/🧪️tests/thickens-sheet-to-3-5-mm/🎯️outcome/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦌change-sheet-t-mm/🧪️tests/thickens-sheet-to-3-5-mm/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦌change-sheet-t-mm/🧪️tests/thickens-sheet-to-3-5-mm/🦠️mutation/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦌change-sheet-t-mm/🧪️tests/thickens-sheet-to-3-5-mm/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦌change-sheet-t-mm/🧪️tests/thickens-sheet-to-3-5-mm/🎯️outcome/🔣️.json"),
         ),
         "change-sheet-k-sigma" => (
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐘change-sheet-k-sigma/🧪️tests/raises-sheet-plate-buckling-k-sigma-to-6-25/📸️snapshot/⬅️before/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐘change-sheet-k-sigma/🧪️tests/raises-sheet-plate-buckling-k-sigma-to-6-25/🦠️mutation/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐘change-sheet-k-sigma/🧪️tests/raises-sheet-plate-buckling-k-sigma-to-6-25/📸️snapshot/➡️after/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐘change-sheet-k-sigma/🧪️tests/raises-sheet-plate-buckling-k-sigma-to-6-25/🎯️outcome/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐘change-sheet-k-sigma/🧪️tests/raises-sheet-plate-buckling-k-sigma-to-6-25/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐘change-sheet-k-sigma/🧪️tests/raises-sheet-plate-buckling-k-sigma-to-6-25/🦠️mutation/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐘change-sheet-k-sigma/🧪️tests/raises-sheet-plate-buckling-k-sigma-to-6-25/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐘change-sheet-k-sigma/🧪️tests/raises-sheet-plate-buckling-k-sigma-to-6-25/🎯️outcome/🔣️.json"),
         ),
         "change-sheet-w-el-mm3" => (
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦏change-sheet-w-el-mm3/🧪️tests/raises-sheet-section-modulus-to-12800-mm3/📸️snapshot/⬅️before/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦏change-sheet-w-el-mm3/🧪️tests/raises-sheet-section-modulus-to-12800-mm3/🦠️mutation/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦏change-sheet-w-el-mm3/🧪️tests/raises-sheet-section-modulus-to-12800-mm3/📸️snapshot/➡️after/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦏change-sheet-w-el-mm3/🧪️tests/raises-sheet-section-modulus-to-12800-mm3/🎯️outcome/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦏change-sheet-w-el-mm3/🧪️tests/raises-sheet-section-modulus-to-12800-mm3/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦏change-sheet-w-el-mm3/🧪️tests/raises-sheet-section-modulus-to-12800-mm3/🦠️mutation/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦏change-sheet-w-el-mm3/🧪️tests/raises-sheet-section-modulus-to-12800-mm3/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦏change-sheet-w-el-mm3/🧪️tests/raises-sheet-section-modulus-to-12800-mm3/🎯️outcome/🔣️.json"),
         ),
         "change-sheet-m-ed-knm" => (
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦛change-sheet-m-ed-knm/🧪️tests/raises-sheet-design-moment-to-1-25-knm/📸️snapshot/⬅️before/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦛change-sheet-m-ed-knm/🧪️tests/raises-sheet-design-moment-to-1-25-knm/🦠️mutation/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦛change-sheet-m-ed-knm/🧪️tests/raises-sheet-design-moment-to-1-25-knm/📸️snapshot/➡️after/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦛change-sheet-m-ed-knm/🧪️tests/raises-sheet-design-moment-to-1-25-knm/🎯️outcome/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦛change-sheet-m-ed-knm/🧪️tests/raises-sheet-design-moment-to-1-25-knm/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦛change-sheet-m-ed-knm/🧪️tests/raises-sheet-design-moment-to-1-25-knm/🦠️mutation/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦛change-sheet-m-ed-knm/🧪️tests/raises-sheet-design-moment-to-1-25-knm/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦛change-sheet-m-ed-knm/🧪️tests/raises-sheet-design-moment-to-1-25-knm/🎯️outcome/🔣️.json"),
         ),
         "change-shell-t-mm" => (
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐪change-shell-t-mm/🧪️tests/thickens-shell-to-6-25-mm/📸️snapshot/⬅️before/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐪change-shell-t-mm/🧪️tests/thickens-shell-to-6-25-mm/🦠️mutation/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐪change-shell-t-mm/🧪️tests/thickens-shell-to-6-25-mm/📸️snapshot/➡️after/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐪change-shell-t-mm/🧪️tests/thickens-shell-to-6-25-mm/🎯️outcome/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐪change-shell-t-mm/🧪️tests/thickens-shell-to-6-25-mm/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐪change-shell-t-mm/🧪️tests/thickens-shell-to-6-25-mm/🦠️mutation/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐪change-shell-t-mm/🧪️tests/thickens-shell-to-6-25-mm/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐪change-shell-t-mm/🧪️tests/thickens-shell-to-6-25-mm/🎯️outcome/🔣️.json"),
         ),
         "change-shell-r-mm" => (
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐫change-shell-r-mm/🧪️tests/widens-shell-radius-to-750-mm/📸️snapshot/⬅️before/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐫change-shell-r-mm/🧪️tests/widens-shell-radius-to-750-mm/🦠️mutation/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐫change-shell-r-mm/🧪️tests/widens-shell-radius-to-750-mm/📸️snapshot/➡️after/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐫change-shell-r-mm/🧪️tests/widens-shell-radius-to-750-mm/🎯️outcome/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐫change-shell-r-mm/🧪️tests/widens-shell-radius-to-750-mm/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐫change-shell-r-mm/🧪️tests/widens-shell-radius-to-750-mm/🦠️mutation/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐫change-shell-r-mm/🧪️tests/widens-shell-radius-to-750-mm/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐫change-shell-r-mm/🧪️tests/widens-shell-radius-to-750-mm/🎯️outcome/🔣️.json"),
         ),
         "change-sigma-ed-shell-mpa" => (
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦒change-sigma-ed-shell-mpa/🧪️tests/raises-shell-design-stress-to-165-mpa/📸️snapshot/⬅️before/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦒change-sigma-ed-shell-mpa/🧪️tests/raises-shell-design-stress-to-165-mpa/🦠️mutation/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦒change-sigma-ed-shell-mpa/🧪️tests/raises-shell-design-stress-to-165-mpa/📸️snapshot/➡️after/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦒change-sigma-ed-shell-mpa/🧪️tests/raises-shell-design-stress-to-165-mpa/🎯️outcome/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦒change-sigma-ed-shell-mpa/🧪️tests/raises-shell-design-stress-to-165-mpa/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦒change-sigma-ed-shell-mpa/🧪️tests/raises-shell-design-stress-to-165-mpa/🦠️mutation/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦒change-sigma-ed-shell-mpa/🧪️tests/raises-shell-design-stress-to-165-mpa/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦒change-sigma-ed-shell-mpa/🧪️tests/raises-shell-design-stress-to-165-mpa/🎯️outcome/🔣️.json"),
         ),
         "change-annex" => (
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦘change-annex/🧪️tests/switches-national-annex-to-en/📸️snapshot/⬅️before/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦘change-annex/🧪️tests/switches-national-annex-to-en/🦠️mutation/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦘change-annex/🧪️tests/switches-national-annex-to-en/📸️snapshot/➡️after/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦘change-annex/🧪️tests/switches-national-annex-to-en/🎯️outcome/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦘change-annex/🧪️tests/switches-national-annex-to-en/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦘change-annex/🧪️tests/switches-national-annex-to-en/🦠️mutation/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦘change-annex/🧪️tests/switches-national-annex-to-en/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦘change-annex/🧪️tests/switches-national-annex-to-en/🎯️outcome/🔣️.json"),
         ),
         other => panic!("mutate-en1999-1: no committed fixture is registered for kind {other:?}"),
     }
@@ -268,7 +268,7 @@ fn canonical(text: &str) -> Json {
     parse_json(text).unwrap_or_else(|error| panic!("committed fixture JSON must parse: {error}"))
 }
 
-/// 🎯️ The status the committed `🎯️outcome/🔣️component.json` declares for one kind — `applied` or
+/// 🎯️ The status the committed `🎯️outcome/🔣️.json` declares for one kind — `applied` or
 /// `rejected` — read out of the committed file rather than transcribed beside it, so the contract a
 /// row is held to cannot drift away from the vector that states it.
 #[cfg(feature = "sut")]
@@ -281,7 +281,7 @@ fn committed_status(kind: &str) -> String {
 //#region 🔖️Carrier
 /// 🧵️ The canonical carrier bytes as a comparable projection: the envelope preamble, every body line
 /// as written, and the digest and length of what was emitted. `.dsl.semio` has no grammar document in
-/// this repository — the committed `📖️component.grammar.semio` is the repository-wide `payload = OCTET+`
+/// this repository — the committed `📖️.grammar.semio` is the repository-wide `payload = OCTET+`
 /// placeholder — so the identity scenario compares the two implementations at the carrier level rather
 /// than mapping carrier tokens onto the snapshot's enum spellings, a mapping nothing states. The
 /// independent Python implementation builds the identical shape from ITS re-emission, and `digest` is
@@ -309,7 +309,7 @@ mod subject {
     use semio_s_plugin_stdio_test_oracle::law;
 
     //#region 🔖️FixtureDecode
-    /// 🧫️ Decodes the SAME committed fixture text `../🦀️component.rs::fixture_text` embeds, through
+    /// 🧫️ Decodes the SAME committed fixture text `../🦀️.rs::fixture_text` embeds, through
     /// this subset's own production JSON bridge — real deserialization of the committed bytes, never
     /// a Rust literal transcribed beside them.
     fn snapshot_of(text: &str, label: &str, kind: &str) -> Result<En1999Snapshot, String> {

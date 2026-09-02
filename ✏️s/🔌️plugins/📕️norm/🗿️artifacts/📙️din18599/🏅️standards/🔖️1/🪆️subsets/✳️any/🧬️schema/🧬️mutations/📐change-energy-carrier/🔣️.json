@@ -5,7 +5,7 @@
   "displayName": "Change Energy Carrier",
   "emoji": "📐",
   "aggregateVariant": "ChangeEnergyCarrier",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

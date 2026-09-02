@@ -1612,6 +1612,7 @@ checksum = "843fba2746e448b37e26a819579957415c8cef339bf08564fe8b7ddbd959573c"
 dependencies = [
  "crc32fast",
  "miniz_oxide",
+ "zlib-rs",
 ]
 
 [[package]]
@@ -5224,7 +5225,7 @@ dependencies = [
  "tiny-skia",
  "tokio",
  "usvg 0.45.1",
- "zip",
+ "zip 2.4.2",
 ]
 
 [[package]]
@@ -5281,6 +5282,7 @@ dependencies = [
  "semio-framework-job",
  "semio-framework-math",
  "semio-framework-os-kernel",
+ "semio-framework-pixels",
  "semio-framework-ui",
  "semio-framework-ui-styling",
  "semio-framework-value-derive",
@@ -5345,7 +5347,7 @@ dependencies = [
  "ureq",
  "wasm-bindgen",
  "web-sys",
- "zip",
+ "zip 2.4.2",
 ]
 
 [[package]]
@@ -5383,6 +5385,7 @@ dependencies = [
 name = "semio-framework-os-kernel-neural-engine"
 version = "0.1.0"
 dependencies = [
+ "semio-framework-pack",
  "semio-framework-replication",
  "serde",
  "serde_json",
@@ -5654,6 +5657,7 @@ dependencies = [
  "semio-framework-job",
  "semio-framework-os-infinite",
  "semio-framework-os-kernel",
+ "semio-framework-pixels",
  "semio-framework-ui-styling",
  "serde",
  "serde_json",
@@ -5696,6 +5700,7 @@ dependencies = [
  "semio-framework-ui-contract",
  "semio-framework-ui-scene",
  "semio-framework-ui-styling",
+ "semio-framework-value-derive",
  "serde",
  "serde_json",
  "swash",
@@ -5867,8 +5872,8 @@ name = "semio-s-imperative-extension-sdk"
 version = "0.1.0"
 dependencies = [
  "semio-framework",
+ "semio-framework-os-kernel",
  "semio-framework-os-kernel-neural-engine",
- "serde",
  "serde_json",
 ]
 
@@ -5911,6 +5916,7 @@ dependencies = [
  "semio-s-plugin-stdio",
  "serde",
  "serde_json",
+ "zip 6.0.0",
 ]
 
 [[package]]
@@ -6422,7 +6428,6 @@ dependencies = [
  "semio-framework-ui",
  "semio-framework-value-derive",
  "semio-s-plugin-stdio",
- "serde_json",
 ]
 
 [[package]]
@@ -6770,6 +6775,8 @@ dependencies = [
  "semio-framework-pack",
  "semio-framework-plugin",
  "semio-framework-schema",
+ "semio-framework-ui-contract",
+ "semio-framework-ui-scene",
  "semio-framework-value-derive",
  "semio-s-plugin-stdio",
  "serde",
@@ -10537,6 +10544,26 @@ dependencies = [
  "thiserror 2.0.18",
  "zopfli",
 ]
+
+[[package]]
+name = "zip"
+version = "6.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "eb2a05c7c36fde6c09b08576c9f7fb4cda705990f73b58fe011abf7dfb24168b"
+dependencies = [
+ "arbitrary",
+ "crc32fast",
+ "flate2",
+ "indexmap",
+ "memchr",
+ "zopfli",
+]
+
+[[package]]
+name = "zlib-rs"
+version = "0.6.7"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "34b31d188d9d685a4f9c7b46d6e36631b07058d2cfe190267adce54dc230bf12"
 
 [[package]]
 name = "zmij"

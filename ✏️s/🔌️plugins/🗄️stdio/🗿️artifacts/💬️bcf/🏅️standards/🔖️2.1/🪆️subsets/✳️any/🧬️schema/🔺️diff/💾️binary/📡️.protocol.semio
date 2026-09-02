@@ -1,0 +1,42 @@
+dialect protocol
+protocol stdio.bcf.diff
+version 1
+schema stdio.bcf
+start record
+
+# FG-wave: REAL binary diff frame, replacing F6's `print_diff().into_bytes()` text-as-binary
+# shortcut (`../../🦀️.rs`'s old `DiffCodec::encode_diff`/`decode_diff`) -- per this
+# ticket's own `📖️grammar-recipe.md` §4/§6 census, 100% of stdio's `DiffCodec` impls were still on
+# this shortcut before this pilot ladder. `format u8` + `flags u8` (bit0 = `version` present, bit1
+# = `topics` present, bit2 = `parts` present -- `BcfDiff`'s exact THREE independently-optional
+# top-level fields, in that field-declaration order) as two REAL fixed fields, individually
+# protocol-walked -- same shape `📜️docx/…/🔺️diff/💾️binary/📡️.protocol.semio`'s own
+# `flags` header uses (restated here, per-artifact bit assignment; bcf needs 3 bits where docx's
+# `DocxDiff` only needed 2, since bcf's own `BcfDiff` has one more top-level field).
+#
+# Past that header, `version`/`topics`/`parts` (whichever `flags` marks present, in that FIXED
+# order) are bundled into ONE opaque trailing `bytes` chain: `topics`'s own recursive
+# `NamedTripleDiff<String,BcfTopicDiff,BcfTopic>` nests BACK through a modified topic's own
+# `comments`/`viewpoints` collection triples, and `viewpoints`' own `BcfViewpointDiff.camera` field
+# reaches the genuinely data-carrying `BcfCamera` enum -- the SAME `protocol-prim-ref-recursion`
+# mechanism gap every other stdio artifact's diff payload hits (`Prim::Ref` unconditionally errors
+# in `walk_protocol`, confirmed unchanged through every pilot, `📖️grammar-recipe.md` §5). This
+# dialect's `Cond` also cannot test an individual FLAG BIT (only a field's whole value against a
+# literal), so a per-bit-guarded field list isn't expressible even before the recursion is
+# considered -- `version` itself IS flat/non-recursive, but bundling it into the same opaque tail
+# as `topics`/`parts` (rather than describing it alone as a real field) keeps ONE single decode
+# path honest and simple, the same minimal-surface choice docx's own diff protocol file documents.
+#
+# The Rust `encode_diff`/`decode_diff` side stays genuinely, fully structured past this header --
+# real LEB128-varint-framed collection counts, per-field 1-byte tri-state presence tags, and
+# recursive per-variant binary sub-encoders for `BcfTopic`/`BcfTopicDiff`/`BcfComment`/
+# `BcfCommentDiff`/`BcfViewpoint`/`BcfViewpointDiff`/`BcfCamera`/`BcfComponents`/`BcfRawPart`/
+# `BcfPartDiff` (see `../../🦀️.rs`'s own `BinaryPrimitives`/`ValueBinaryCodecs`/
+# `GenericNamedTripleBinaryCodecs`/`DiffValueBinaryCodecs` regions) -- round-trip tested
+# independently of this protocol description, same honest-boundary treatment
+# `📖️grammar-recipe.md` §2.5 documents.
+framing record
+header fixed 2
+field format u8
+field flags u8
+chain payload bytes

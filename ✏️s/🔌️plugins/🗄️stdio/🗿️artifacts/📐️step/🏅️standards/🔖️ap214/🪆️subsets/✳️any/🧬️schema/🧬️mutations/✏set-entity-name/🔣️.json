@@ -5,7 +5,7 @@
   "displayName": "Set Entity Name",
   "emoji": "✏",
   "aggregateVariant": "SetEntityName",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": "set-entity-name",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

@@ -4,12 +4,12 @@
 //! the repository's root workspace and Cargo.lock).
 //!
 //! This binary is the READER the repository's `image-bmp-3-mutate-reader` oracle registration
-//! (`../../🧪️oracle/🔣️.json`) points at. It never applies a mutation and never predicts what one
+//! (`../../🔣️oracle.json`) points at. It never applies a mutation and never predicts what one
 //! should produce: `build` writes each recipe's before/after bytes as literal, hand-picked typed
 //! values (never by executing this repository's own `BmpMutation` dispatch), and `project` only
 //! decodes an already-real file through `image`'s own public decoder API and reports what it
 //! found. Nothing here re-implements BITMAPINFOHEADER byte-offset parsing the way the sibling
-//! `🧪️oracle/🦀️component.rs` (a `cross-semio-implementation`, read only as a spec reference, never
+//! `🦀️oracle.rs` (a `cross-semio-implementation`, read only as a spec reference, never
 //! copied from) does — every field this binary reports comes from a method `image` itself
 //! exposes: `BmpDecoder::dimensions`/`get_palette`/`set_indexed_color`/`read_image`, or
 //! `image::load_from_memory(..).to_rgb8()` for a direct-colour file. Fields `image`'s public API

@@ -5,7 +5,7 @@
   "displayName": "Create Decision",
   "emoji": "🌱✅",
   "aggregateVariant": "CreateDecision",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

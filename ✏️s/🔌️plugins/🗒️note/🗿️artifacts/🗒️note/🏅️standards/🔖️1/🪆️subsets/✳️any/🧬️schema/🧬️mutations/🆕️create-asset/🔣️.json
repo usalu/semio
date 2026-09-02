@@ -5,7 +5,7 @@
   "displayName": "Create Asset",
   "emoji": "🆕️",
   "aggregateVariant": "CreateAsset",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": "create-asset",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

@@ -2,8 +2,8 @@
 import * as React from "react";
 import { fireEvent, render } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
-import { ButtonGroupItem } from "../../🧱️elements/🎛️ButtonGroup/🟦️component.tsx";
-import { Slot } from "./🟦️slot.tsx";
+import { ButtonGroupItem } from "../../🧱️elements/🎛️ButtonGroup/🟦️.tsx";
+import { Slot } from "./🟦️.tsx";
 // #endregion 🔌️Adapters
 
 // #region 🪆️SingleChildSlotMatrix

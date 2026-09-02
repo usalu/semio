@@ -120,7 +120,7 @@ import { SortableContext, useSortable, verticalListSortingStrategy } from "@dnd-
 import { CSS } from "@dnd-kit/utilities";
 import { Clone, Edges, GizmoHelper, GizmoViewport, Grid, Line as DreiLine, OrbitControls, OrthographicCamera, Outlines, PerspectiveCamera, Text as DreiText, TransformControls, useGLTF } from "@react-three/drei";
 import { Canvas as ThreeCanvas, createPortal as r3fCreatePortal, ThreeEvent, useFrame, useStore, useThree } from "@react-three/fiber";
-import { rankFuzzyItems, type FuzzySearchField, type FuzzySearchOptions, type FuzzySearchResult } from "../../../../🔨️modules/🔎️fuzzy-ranking/🟦️component.ts";
+import { rankFuzzyItems, type FuzzySearchField, type FuzzySearchOptions, type FuzzySearchResult } from "../../../../🔨️modules/🔎️fuzzy-ranking/🟦️.ts";
 import {
   applyNodeChanges,
   Background,
@@ -149,13 +149,13 @@ import { I18nextProvider, initReactI18next, useTranslation } from "react-i18next
 // 🕹️wave-0: imported directly from the module's own source (not via `@semio-tech/framework`) — the
 // `🛂️manifest` module already re-exports a same-named, owned-schema-generated `MergeMode`/`SelectionMode`
 // family through that barrel, so a second barrel export of the hand-written mirror would collide.
-import { type MergeMode } from "../../../../../🕹️interaction/🟦️component.ts";
+import { type MergeMode } from "../../../../../🕹️interaction/🟦️.ts";
 // #endregion 🔌️Adapters
 
 // #region 🔌️Ports
-// 🧱️core-extracted: ReactHostPort + reactHostPort moved to 🧱️elements/🔌️Ports/🟦️component.tsx (a
+// 🧱️core-extracted: ReactHostPort + reactHostPort moved to 🧱️elements/🔌️Ports/🟦️.tsx (a
 // module-top-level circular-import fix, see that file's header comment) — imported below, not redefined.
-import { reactHostPort, setReactHostPort, type ReactHostPort } from "../../../../🧱️elements/🔌️Ports/🟦️component.tsx";
+import { reactHostPort, setReactHostPort, type ReactHostPort } from "../../../../🧱️elements/🔌️Ports/🟦️.tsx";
 export { reactHostPort, type ReactHostPort };
 export {
   interactiveJobPort,
@@ -173,18 +173,18 @@ export interface ThreeHostPort {
   readonly drei: { OrbitControls: typeof OrbitControls; Grid: typeof Grid };
 }
 
-// 🧱️core-extracted: SceneHostPort + sceneHostPort moved to 🧱️elements/🔌️Ports/🟦️component.tsx (same
+// 🧱️core-extracted: SceneHostPort + sceneHostPort moved to 🧱️elements/🔌️Ports/🟦️.tsx (same
 // module-top-level circular-import fix as reactHostPort above, triggered by Scene's top-level
 // `sceneHostPort.drei.Line` read) — imported below, not redefined.
-import { sceneHostPort, setSceneHostPort, type SceneHostPort } from "../../../../🧱️elements/🔌️Ports/🟦️component.tsx";
+import { sceneHostPort, setSceneHostPort, type SceneHostPort } from "../../../../🧱️elements/🔌️Ports/🟦️.tsx";
 export { sceneHostPort, type SceneHostPort };
 // #endregion 🔌️Ports
 
 // #region 🔌️PortWiring
-import { flowHostPort, setFlowHostPort, type FlowHostPort, HostReactFlow, HostReactFlowProvider } from "../../../../🧱️elements/🔌️Ports/🟦️component.tsx";
+import { flowHostPort, setFlowHostPort, type FlowHostPort, HostReactFlow, HostReactFlowProvider } from "../../../../🧱️elements/🔌️Ports/🟦️.tsx";
 export { flowHostPort, type FlowHostPort, HostReactFlow, HostReactFlowProvider };
 // 🧱️core-extracted: reactHostPort's `let` binding + default value now live in
-// 🧱️elements/🔌️Ports/🟦️component.tsx (imported above, in the 🔌️Ports region) — reassignment below
+// 🧱️elements/🔌️Ports/🟦️.tsx (imported above, in the 🔌️Ports region) — reassignment below
 // goes through the imported setReactHostPort() setter, since an ES import binding can't be assigned to
 // directly.
 
@@ -233,11 +233,11 @@ export function configureHostPorts(overrides: HostPortOverrides): () => void {
 // #endregion 🔌️PortWiring
 
 // #region 🐚️ShellScope
-import { type SelectionModeStore, type ShellScope, createShellScope, ShellScopeContext, ShellScopeProvider, useShellScope, useShellScopeOptional, shellScopeStorageOrBrowserFallback } from "../../../../🧱️elements/🐚️ShellScope/🟦️component.tsx";
+import { type SelectionModeStore, type ShellScope, createShellScope, ShellScopeContext, ShellScopeProvider, useShellScope, useShellScopeOptional, shellScopeStorageOrBrowserFallback } from "../../../../🧱️elements/🐚️ShellScope/🟦️.tsx";
 export { type SelectionModeStore, type ShellScope, createShellScope, ShellScopeContext, ShellScopeProvider, useShellScope, useShellScopeOptional, shellScopeStorageOrBrowserFallback };
 // #endregion 🐚️ShellScope
 
-import { registerShellActivityRoot, activeShellRoot, useShellKeydown, useIsActiveShellRoot, NULL_SHELL_ROOT_REF } from "../../../../🧱️elements/🐚️ShellScope/🟦️component.tsx";
+import { registerShellActivityRoot, activeShellRoot, useShellKeydown, useIsActiveShellRoot, NULL_SHELL_ROOT_REF } from "../../../../🧱️elements/🐚️ShellScope/🟦️.tsx";
 export { registerShellActivityRoot, activeShellRoot, useShellKeydown, useIsActiveShellRoot, NULL_SHELL_ROOT_REF };
 
 // #region 🔖️IconRenderPort
@@ -632,7 +632,7 @@ export const dropZoneReadyClass = cn(dropZoneReadyFillClass, dropZoneReadyTextCl
 
 /** @emoji 🌀️ Maps shell chrome {@link UiStatus} to the shared border ring utilities. */
 
-import { cn } from "../../../../🔨️modules/🏷️class-name-composition/🟦️component.ts";
+import { cn } from "../../../../🔨️modules/🏷️class-name-composition/🟦️.ts";
 export { cn };
 import {
   waitingBorderClass,
@@ -644,7 +644,7 @@ import {
   chromeStatusBorderClass,
   loadingBorderElementClass,
   waitingBorderElementClass,
-} from "../../../../🔨️modules/🌀️status-border-presentation/🟦️component.ts";
+} from "../../../../🔨️modules/🌀️status-border-presentation/🟦️.ts";
 export { waitingBorderClass, waitingBorderActiveClass, loadingBorderClass, loadingBorderActiveClass, waitingBorderStateClass, loadingBorderStateClass, chromeStatusBorderClass, loadingBorderElementClass, waitingBorderElementClass };
 import {
   interactiveControlTransitionClass,
@@ -657,7 +657,7 @@ import {
   interactiveHoverFillClass,
   interactiveActiveFillClass,
   interactiveActiveBorderClass,
-} from "../../../../🔨️modules/🖱️interaction-presentation/🟦️component.ts";
+} from "../../../../🔨️modules/🖱️interaction-presentation/🟦️.ts";
 export {
   interactiveControlTransitionClass,
   interactiveOnClass,
@@ -670,15 +670,15 @@ export {
   interactiveActiveFillClass,
   interactiveActiveBorderClass,
 };
-import { formControlFocusBorderClass, uiFormControlBrowserDefaultProps } from "../../../../🔨️modules/📝️form-control-presentation/🟦️component.ts";
+import { formControlFocusBorderClass, uiFormControlBrowserDefaultProps } from "../../../../🔨️modules/📝️form-control-presentation/🟦️.ts";
 export { formControlFocusBorderClass, uiFormControlBrowserDefaultProps };
-import { borderNormalBottomClass, borderNormalClass, borderElementClass } from "../../../../🔨️modules/📏️border-presentation/🟦️component.ts";
+import { borderNormalBottomClass, borderNormalClass, borderElementClass } from "../../../../🔨️modules/📏️border-presentation/🟦️.ts";
 export { borderNormalBottomClass, borderNormalClass, borderElementClass };
-import { veilClass, glassClass, surfaceClass } from "../../../../🔨️modules/🌈️surface-presentation/🟦️component.ts";
+import { veilClass, glassClass, surfaceClass } from "../../../../🔨️modules/🌈️surface-presentation/🟦️.ts";
 export { veilClass, glassClass, surfaceClass };
-import { menuListItemClassName } from "../../../../🔨️modules/📋️menu-item-presentation/🟦️component.ts";
+import { menuListItemClassName } from "../../../../🔨️modules/📋️menu-item-presentation/🟦️.ts";
 export { menuListItemClassName };
-import { shellFloorPaints, shellFloorFillClass } from "../../../../🔨️modules/🏠️shell-floor-presentation/🟦️component.ts";
+import { shellFloorPaints, shellFloorFillClass } from "../../../../🔨️modules/🏠️shell-floor-presentation/🟦️.ts";
 export { shellFloorPaints, shellFloorFillClass };
 import {
   chromeControlItemBaseClass,
@@ -690,7 +690,7 @@ import {
   chromeControlGroupClass,
   chromeControlItemOnClass,
   chromeControlTabActiveClass,
-} from "../../../../🔨️modules/🎛️chrome-control-presentation/🟦️component.ts";
+} from "../../../../🔨️modules/🎛️chrome-control-presentation/🟦️.ts";
 export { chromeControlItemBaseClass, chromeControlItemClass, chromeControlTabItemClass, modeDockTabClassName, windowPaneChromeToggleClass, chromeControlGroupShellClass, chromeControlGroupClass, chromeControlItemOnClass, chromeControlTabActiveClass };
 
 // #region 🔖️SelectionMarquee
@@ -1195,7 +1195,7 @@ import {
   type IconSource,
   type ControlIcon,
   type IconProps,
-} from "../../../../🧱️elements/🔣️Icons/🟦️component.tsx";
+} from "../../../../🧱️elements/🔣️Icons/🟦️.tsx";
 export {
   resolveIconSizePx,
   decodeIcon,
@@ -1363,7 +1363,7 @@ import {
   type ContextMenuNavDirection,
   type TextSelectionContextMenuLabels,
   type TextSelectionContextMenuActions,
-} from "../../../../🧱️elements/🖱️ContextMenu/🟦️component.tsx";
+} from "../../../../🧱️elements/🖱️ContextMenu/🟦️.tsx";
 export {
   createDOMEventBinding,
   getElementById,
@@ -1435,7 +1435,7 @@ import {
   humanizeControlSegment,
   humanizeControlId,
   humanizeEngagementStepId,
-} from "../../../../🧱️elements/🚗️UiDriver/🟦️component.tsx";
+} from "../../../../🧱️elements/🚗️UiDriver/🟦️.tsx";
 export type { UiDriverLabels, UiDriverLabelTier, UiDriverDrag, UiDriverReveal, UiDriverTooltips, UiDriverHotkeys, UiDriver };
 export {
   DEFAULT_UI_DRIVER,
@@ -1469,8 +1469,8 @@ export {
 // #endregion UiDriver
 
 // #region ⌨️UiKeybindings
-import { parseKeybindingChords, formatKeybindingShortcut } from "../../../../🔨️modules/⌨️keybinding-text-interpretation/🟦️component.ts";
-import { formatControlTooltipText } from "../../../../🔨️modules/⌨️control-tooltip-presentation/🟦️component.ts";
+import { parseKeybindingChords, formatKeybindingShortcut } from "../../../../🔨️modules/⌨️keybinding-text-interpretation/🟦️.ts";
+import { formatControlTooltipText } from "../../../../🔨️modules/⌨️control-tooltip-presentation/🟦️.ts";
 import {
   buildKeysByActionId,
   SHELL_KEYBINDINGS,
@@ -1486,9 +1486,9 @@ import {
   type ControlKeybindingCallback,
   type ControlKeybindingOptions,
   type ControlKeybindingDependencies,
-} from "../../../../🔨️modules/⌨️control-keybinding-context/🟦️component.tsx";
-import { ControlHotkeyBadge, type ControlHotkeyBadgeProps } from "../../../../🔨️modules/⌨️control-hotkey-presentation/🟦️component.tsx";
-import { readStoredUiKeybindingOverrides, writeStoredUiKeybindingOverrides } from "../../../../🔨️modules/💾️keybinding-persistence/🟦️component.ts";
+} from "../../../../🔨️modules/⌨️control-keybinding-context/🟦️.tsx";
+import { ControlHotkeyBadge, type ControlHotkeyBadgeProps } from "../../../../🔨️modules/⌨️control-hotkey-presentation/🟦️.tsx";
+import { readStoredUiKeybindingOverrides, writeStoredUiKeybindingOverrides } from "../../../../🔨️modules/💾️keybinding-persistence/🟦️.ts";
 export {
   parseKeybindingChords,
   formatKeybindingShortcut,
@@ -2098,7 +2098,7 @@ import {
   type WindowSilhouetteSafeClearances,
   type PendingWindowSilhouetteMetrics,
   type WindowSilhouetteGeometry,
-} from "../../../../🧱️elements/🪟️WindowSilhouette/🟦️component.tsx";
+} from "../../../../🧱️elements/🪟️WindowSilhouette/🟦️.tsx";
 export {
   WINDOW_SILHOUETTE_GEOMETRY_SCHEMA,
   WINDOW_SILHOUETTE_PATH_INSET,
@@ -2131,7 +2131,7 @@ export {
   type PendingWindowSilhouetteMetrics,
   type WindowSilhouetteGeometry,
 };
-import { ChromeControlHint } from "../../../../🧱️elements/💡️ChromeControlHint/🟦️component.tsx";
+import { ChromeControlHint } from "../../../../🧱️elements/💡️ChromeControlHint/🟦️.tsx";
 export { ChromeControlHint };
 // #endregion 🎛️UiChromeCompact
 
@@ -2148,7 +2148,7 @@ export { ChromeControlHint };
 /** @emoji 🪁️ Supported UI locale codes — the single source is `@semio-tech/framework`'s
  * `ShellLocale`, so a brand's `locks.locale` and this chrome bundle's coverage can never drift apart. */
 // #region UiLabel
-import { uiDataLabel, type UiLabel } from "../../../../🧱️elements/🏷️UiLabel/🟦️component.tsx";
+import { uiDataLabel, type UiLabel } from "../../../../🧱️elements/🏷️UiLabel/🟦️.tsx";
 export { uiDataLabel, type UiLabel };
 // #endregion UiLabel
 
@@ -2169,7 +2169,7 @@ import {
   type UiI18nPort,
   type UiRegisteredTranslationKey,
   UI_RIBBON_PARENT_CATEGORIES,
-} from "../../../../🧱️elements/📚️I18n/🟦️component.tsx";
+} from "../../../../🧱️elements/📚️I18n/🟦️.tsx";
 export type {
   UiLocale,
   UiLabelPair,
@@ -2327,9 +2327,9 @@ export const uiChromeTranslationBundles = {
             catalogue: { label: { normal: "Katalog", beginner: "Katalog" } },
             // 🏠️ "Space" here is a deliberate, deferred duplicate of the host plugin's own manifest label
             // (`App::builder(S_PLAY_APP_ID, LocalizedLabel::native("Space", "Space"))`,
-            // ✏️s/🔌️plugins/🪐️space/⚙️engine/🪐️space/🦀️component.rs:869) — reading it from there via
+            // ✏️s/🔌️plugins/🪐️space/⚙️engine/🪐️space/🦀️.rs:869) — reading it from there via
             // `resolveManifestLabel(hostApp.label, …)` (the same pattern `appWindowLabel` already uses)
-            // is the correct fix, EXCEPT `ShellHost/🟦️component.tsx`'s `hostApp` lookup (line ~1132,
+            // is the correct fix, EXCEPT `ShellHost/🟦️.tsx`'s `hostApp` lookup (line ~1132,
             // `manifest.apps.find(app => app.id === hostConfig?.hostAppId)`) is ALREADY always
             // `undefined`: `hostConfig.hostAppId` is the raw Cargo.toml `host = { shell = "studio" }`
             // alias, never the real dialect-derived `AppDefinition.id`
@@ -2338,11 +2338,11 @@ export const uiChromeTranslationBundles = {
             // `hostApp?.label` today would render an EMPTY category header, not "Space" — a regression.
             // Fix plan (needs a new field, not a string-matching workaround): add
             // `AppDefinition.host_role: Option<HostRole>` (`Landing`/`Host`) in
-            // `🧰️framework/🔨️modules/🛂️manifest/🦀️component.rs` (~3034), a `.host_role(...)` builder
+            // `🧰️framework/🔨️modules/🛂️manifest/🦀️.rs` (~3034), a `.host_role(...)` builder
             // method on `AppBuilder`/forwarded by `EditorBuilder`/`ViewerBuilder`
-            // (`🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️component.rs`), set it in
+            // (`🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️.rs`), set it in
             // `create_home_app()`/`create_space_app()`, regenerate the TS mirror, then have
-            // `ShellHost/🟦️component.tsx:1132-1133` match on `hostRole` instead of the broken id
+            // `ShellHost/🟦️.tsx:1132-1133` match on `hostRole` instead of the broken id
             // comparison. See
             // `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️29/STUBS-AND-PLACEHOLDERS-COMPLETION/📓️hostapp-label-layering.md`.
             hostApp: { label: { normal: "Space", beginner: "Space" } },
@@ -3144,9 +3144,9 @@ export const uiChromeTranslationBundles = {
             catalogue: { label: { normal: "Catalogue", beginner: "Catalogue" } },
             // 🏠️ "Space" here is a deliberate, deferred duplicate of the host plugin's own manifest label
             // (`App::builder(S_PLAY_APP_ID, LocalizedLabel::native("Space", "Space"))`,
-            // ✏️s/🔌️plugins/🪐️space/⚙️engine/🪐️space/🦀️component.rs:869) — reading it from there via
+            // ✏️s/🔌️plugins/🪐️space/⚙️engine/🪐️space/🦀️.rs:869) — reading it from there via
             // `resolveManifestLabel(hostApp.label, …)` (the same pattern `appWindowLabel` already uses)
-            // is the correct fix, EXCEPT `ShellHost/🟦️component.tsx`'s `hostApp` lookup (line ~1132,
+            // is the correct fix, EXCEPT `ShellHost/🟦️.tsx`'s `hostApp` lookup (line ~1132,
             // `manifest.apps.find(app => app.id === hostConfig?.hostAppId)`) is ALREADY always
             // `undefined`: `hostConfig.hostAppId` is the raw Cargo.toml `host = { shell = "studio" }`
             // alias, never the real dialect-derived `AppDefinition.id`
@@ -3155,11 +3155,11 @@ export const uiChromeTranslationBundles = {
             // `hostApp?.label` today would render an EMPTY category header, not "Space" — a regression.
             // Fix plan (needs a new field, not a string-matching workaround): add
             // `AppDefinition.host_role: Option<HostRole>` (`Landing`/`Host`) in
-            // `🧰️framework/🔨️modules/🛂️manifest/🦀️component.rs` (~3034), a `.host_role(...)` builder
+            // `🧰️framework/🔨️modules/🛂️manifest/🦀️.rs` (~3034), a `.host_role(...)` builder
             // method on `AppBuilder`/forwarded by `EditorBuilder`/`ViewerBuilder`
-            // (`🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️component.rs`), set it in
+            // (`🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️.rs`), set it in
             // `create_home_app()`/`create_space_app()`, regenerate the TS mirror, then have
-            // `ShellHost/🟦️component.tsx:1132-1133` match on `hostRole` instead of the broken id
+            // `ShellHost/🟦️.tsx:1132-1133` match on `hostRole` instead of the broken id
             // comparison. See
             // `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️29/STUBS-AND-PLACEHOLDERS-COMPLETION/📓️hostapp-label-layering.md`.
             hostApp: { label: { normal: "Space", beginner: "Space" } },
@@ -6425,7 +6425,7 @@ export const TutorialGhostPointer: React.FC<TutorialGhostPointerProps> = ({ cue,
 // #endregion 🎥️Tutorial
 
 // #region 🗨️Dialog
-import { UIDialog, type UIDialogProps } from "../../../../🧱️elements/💬️UIDialog/🟦️component.tsx";
+import { UIDialog, type UIDialogProps } from "../../../../🧱️elements/💬️UIDialog/🟦️.tsx";
 export { UIDialog, type UIDialogProps };
 // #endregion 🗨️Dialog
 
@@ -6448,7 +6448,7 @@ import {
   type SurfaceActiveBindProps,
   useSurfaceActive,
   setSurfaceActiveRoot,
-} from "../../../../🧱️elements/🌈️Surface/🟦️component.tsx";
+} from "../../../../🧱️elements/🌈️Surface/🟦️.tsx";
 export {
   type Level,
   LEVELS,
@@ -6503,7 +6503,7 @@ export const shellChromeFrameLayerClass = "pointer-events-none absolute inset-0 
 export const floatingMenuSurfaceClass = cn(glassClass, "overflow-hidden rounded-md border shadow-sm text-element", borderNormalClass);
 
 // #region 📋️MenuItem
-import { MenuItem, menuItemClassName, type MenuItemProps } from "../../../../🧱️elements/📋️MenuItem/🟦️component.tsx";
+import { MenuItem, menuItemClassName, type MenuItemProps } from "../../../../🧱️elements/📋️MenuItem/🟦️.tsx";
 export { MenuItem, menuItemClassName, type MenuItemProps };
 
 /** @emoji 🪟️ Action row inside {@link floatingMenuSurfaceClass}. */
@@ -6573,7 +6573,7 @@ export function panelAnchorTabBarClass(direction: "up" | "down", expanded = fals
 export const panelAnchorTabButtonClass = cn(panelTabButtonClass, "px-tiny");
 
 // #region 🫳️DragAffordance
-import { DragHandle, HANDLE_HOVER_SCOPE_ATTR } from "../../../../🧱️elements/🧱️DragHandle/🟦️component.tsx";
+import { DragHandle, HANDLE_HOVER_SCOPE_ATTR } from "../../../../🧱️elements/🧱️DragHandle/🟦️.tsx";
 export { DragHandle, HANDLE_HOVER_SCOPE_ATTR };
 // #endregion 🫳️DragAffordance
 
@@ -6601,7 +6601,7 @@ import {
   type PanelTabSelectionOptions,
   type PanelDock,
   type PanelTabBarProps,
-} from "../../../../🧱️elements/📑️PanelTabBar/🟦️component.tsx";
+} from "../../../../🧱️elements/📑️PanelTabBar/🟦️.tsx";
 export {
   reconcileActivePath,
   singleTreeLeaf,
@@ -6656,7 +6656,7 @@ export function anchorHorizontal(anchor: Anchor): "left" | "middle" | "right" {
 
 // #region 🧭️Flow Context
 /** @emoji 🧭️ Horizontal reading direction — `"rtl"` mirrors icon/label order and rides on native CSS `dir`. */
-import { type FlowInline, type FlowBlock, type Flow, FlowProvider, useFlow } from "../../../../🔨️modules/🧭️flow-direction-context/🟦️component.tsx";
+import { type FlowInline, type FlowBlock, type Flow, FlowProvider, useFlow } from "../../../../🔨️modules/🧭️flow-direction-context/🟦️.tsx";
 export { type FlowInline, type FlowBlock, type Flow, FlowProvider, useFlow };
 
 /** @emoji 🧭️ The mirrored {@link Flow} a {@link Panel} or {@link Pane} grows into — right anchors flip inline, bottom anchors flip block; middle anchors (row or column) never mirror. */
@@ -7926,7 +7926,7 @@ import {
   readWindowContentDeadLinePx,
   readScrollerContentOverflows,
   useWindowContentDeadLineScroll,
-} from "../../../../🧱️elements/🚧️WindowContentDeadLine/🟦️component.tsx";
+} from "../../../../🧱️elements/🚧️WindowContentDeadLine/🟦️.tsx";
 export {
   windowChromeScrollClearanceVar,
   windowContentDeadLineVar,
@@ -8012,7 +8012,7 @@ export const windowMeasureToggleCompactClass =
 // #endregion 🎈️Level Context
 
 // #region 🐹️Element
-import { type ElementProps } from "../../../../🔨️modules/🆔️element-identity/🟦️component.ts";
+import { type ElementProps } from "../../../../🔨️modules/🆔️element-identity/🟦️.ts";
 export type { ElementProps };
 
 //#region 🧭️ElementState
@@ -8091,14 +8091,14 @@ export function celebrateAllElements(durationMs = CELEBRATE_STAMP_DURATION_MS, r
 //#endregion 🧭️ElementState
 
 //#region 🆔️ElementId
-import { ELEMENT_ID_PATTERN, isElementId, elementIdSegment, childElementId, assertElementId, elementIdSelector, useFirstDraggableElementAlias } from "../../../../🧱️elements/🆔️ElementId/🟦️component.tsx";
+import { ELEMENT_ID_PATTERN, isElementId, elementIdSegment, childElementId, assertElementId, elementIdSelector, useFirstDraggableElementAlias } from "../../../../🧱️elements/🆔️ElementId/🟦️.tsx";
 export { ELEMENT_ID_PATTERN, isElementId, elementIdSegment, childElementId, assertElementId, elementIdSelector, useFirstDraggableElementAlias };
 //#endregion 🆔️ElementId
 
 // #endregion 🐹️Element
 
 // #region 🪆️Command
-import { Command, CommandDialog, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList, CommandShortcut } from "../../../../🧱️elements/⌨️Command/🟦️component.tsx";
+import { Command, CommandDialog, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList, CommandShortcut } from "../../../../🧱️elements/⌨️Command/🟦️.tsx";
 export { Command, CommandDialog, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList, CommandShortcut };
 // #endregion 🪆️Command
 
@@ -8110,12 +8110,12 @@ export { Command, CommandDialog, CommandEmpty, CommandGroup, CommandInput, Comma
 // #endregion 🎛️CommandPanel
 
 // #region 🎮️Footer
-import { Footer, type FooterProps } from "../../../../🧱️elements/🔚️Footer/🟦️component.tsx";
+import { Footer, type FooterProps } from "../../../../🧱️elements/🔚️Footer/🟦️.tsx";
 export { Footer, type FooterProps };
 // #endregion 🎮️Footer
 
 // #region 🪨️Layout
-import { Layout, type LayoutMobilePanelProps, type LayoutProps } from "../../../../🧱️elements/📐️Layout/🟦️component.tsx";
+import { Layout, type LayoutMobilePanelProps, type LayoutProps } from "../../../../🧱️elements/📐️Layout/🟦️.tsx";
 export { Layout, type LayoutMobilePanelProps, type LayoutProps };
 // #endregion 🪨️Layout
 
@@ -8133,7 +8133,7 @@ import {
   type PopoverProps,
   type PopoverSide,
   type PopoverTriggerProps,
-} from "../../../../🧱️elements/🗨️Popover/🟦️component.tsx";
+} from "../../../../🧱️elements/🗨️Popover/🟦️.tsx";
 export {
   Popover,
   PopoverAnchor,
@@ -8152,9 +8152,9 @@ export {
 
 // #region 🌥️Base Components
 // #region 🏷️Label
-import { Label, useLabel, useIdLabel, useControlAccessibleLabel, useControlInlineText, useControlTooltipText, resolveTranslationLabel, useUiTranslation } from "../../../../🧱️elements/🏷️Label/🟦️component.tsx";
+import { Label, useLabel, useIdLabel, useControlAccessibleLabel, useControlInlineText, useControlTooltipText, resolveTranslationLabel, useUiTranslation } from "../../../../🧱️elements/🏷️Label/🟦️.tsx";
 export { Label, useLabel, useIdLabel, useControlAccessibleLabel, useControlInlineText, useControlTooltipText, resolveTranslationLabel, useUiTranslation };
-export type { ControlTooltipTextOptions } from "../../../../🧱️elements/🏷️Label/🟦️component.tsx";
+export type { ControlTooltipTextOptions } from "../../../../🧱️elements/🏷️Label/🟦️.tsx";
 // #endregion 🏷️Label
 
 // #endregion 🌥️Base Components
@@ -8219,12 +8219,12 @@ export const Aside: React.FC<AsideProps> = ({ kind = "note", title, children }) 
 // #endregion 📣️Aside
 
 // #region 📻️TableAvatar
-import { TableAvatar, type TableAvatarProps } from "../../../../🧱️elements/📻️TableAvatar/🟦️component.tsx";
+import { TableAvatar, type TableAvatarProps } from "../../../../🧱️elements/📻️TableAvatar/🟦️.tsx";
 export { TableAvatar, type TableAvatarProps };
 // #endregion 📻️TableAvatar
 
 // #region 👥️PresenceBar
-import { PresenceBar, presenceColor, presenceCssVar, PRESENCE_BAR_DEFAULT_MAX, type PresenceAppearance, type PresenceBarProps, type PresenceHsl, type PresencePeer, type PresenceRole } from "../../../../🧱️elements/👥️PresenceBar/🟦️component.tsx";
+import { PresenceBar, presenceColor, presenceCssVar, PRESENCE_BAR_DEFAULT_MAX, type PresenceAppearance, type PresenceBarProps, type PresenceHsl, type PresencePeer, type PresenceRole } from "../../../../🧱️elements/👥️PresenceBar/🟦️.tsx";
 export { PresenceBar, presenceColor, presenceCssVar, PRESENCE_BAR_DEFAULT_MAX, type PresenceAppearance, type PresenceBarProps, type PresenceHsl, type PresencePeer, type PresenceRole };
 // #endregion 👥️PresenceBar
 
@@ -8511,7 +8511,7 @@ export const UI_ELEMENT_REGISTRY = ["Window", "Panel", "Canvas", "Button", "Slid
 //#endregion 🧭️UiElementRegistry
 
 // #region 🦴️Skeletons
-import { skeletonPulseClass, SkeletonBlock, elementSkeleton, WindowBodySkeleton, PanelTreeSkeleton, CanvasSkeleton, type ElementSkeletonKind } from "../../../../🧱️elements/🦴️Skeletons/🟦️component.tsx";
+import { skeletonPulseClass, SkeletonBlock, elementSkeleton, WindowBodySkeleton, PanelTreeSkeleton, CanvasSkeleton, type ElementSkeletonKind } from "../../../../🧱️elements/🦴️Skeletons/🟦️.tsx";
 export { skeletonPulseClass, SkeletonBlock, elementSkeleton, WindowBodySkeleton, PanelTreeSkeleton, CanvasSkeleton, type ElementSkeletonKind };
 // #endregion 🦴️Skeletons
 
@@ -8549,7 +8549,7 @@ export { Section };
 // #endregion 🖲️Section
 
 // #region 🏷️Field
-import { Field, type FieldProps } from "../../../../🧱️elements/📝️Field/🟦️component.tsx";
+import { Field, type FieldProps } from "../../../../🧱️elements/📝️Field/🟦️.tsx";
 export { Field, type FieldProps };
 // #endregion 🏷️Field
 
@@ -8558,32 +8558,32 @@ export { Field, type FieldProps };
 // #region 🛒️Input Components
 
 // #region 🌩️ActionGroup
-import { Action, ActionDropdown, ActionGroup, ActionGroupItem, actionGroupItemVariants, type ActionDropdownOption, type ActionDropdownProps, type ActionProps } from "../../../../🧱️elements/⚡️ActionGroup/🟦️component.tsx";
+import { Action, ActionDropdown, ActionGroup, ActionGroupItem, actionGroupItemVariants, type ActionDropdownOption, type ActionDropdownProps, type ActionProps } from "../../../../🧱️elements/⚡️ActionGroup/🟦️.tsx";
 export { Action, ActionDropdown, ActionGroup, ActionGroupItem, actionGroupItemVariants, type ActionDropdownOption, type ActionDropdownProps, type ActionProps };
 // #endregion 🌩️ActionGroup
 
 // #region 🌩️ButtonGroup
-import { ButtonGroup, ButtonGroupItem, buttonGroupItemVariants } from "../../../../🧱️elements/🎛️ButtonGroup/🟦️component.tsx";
+import { ButtonGroup, ButtonGroupItem, buttonGroupItemVariants } from "../../../../🧱️elements/🎛️ButtonGroup/🟦️.tsx";
 export { ButtonGroup, ButtonGroupItem, buttonGroupItemVariants };
 // #endregion 🌩️ButtonGroup
 
 // #region 🌩️Button
-import { Button, type ButtonProps } from "../../../../🧱️elements/🔘️Button/🟦️component.tsx";
+import { Button, type ButtonProps } from "../../../../🧱️elements/🔘️Button/🟦️.tsx";
 export { Button, type ButtonProps };
 // #endregion 🌩️Button
 
 // #region 🧾️Form
-import { Form, type FormProps } from "../../../../🧱️elements/🧾️Form/🟦️component.tsx";
+import { Form, type FormProps } from "../../../../🧱️elements/🧾️Form/🟦️.tsx";
 export { Form, type FormProps };
 // #endregion 🧾️Form
 
 // #region ☑️Checkbox
-import { Checkbox, type CheckboxProps, type CheckboxState } from "../../../../🧱️elements/☑️Checkbox/🟦️component.tsx";
+import { Checkbox, type CheckboxProps, type CheckboxState } from "../../../../🧱️elements/☑️Checkbox/🟦️.tsx";
 export { Checkbox, type CheckboxProps, type CheckboxState };
 // #endregion ☑️Checkbox
 
 // #region 🩺️Input
-import { Input, CollapsedFieldDisplay, fitCollapsedFieldText, resolveCollapsedFieldDisplayState, COLLAPSED_FIELD_ELLIPSIS, formatNumber } from "../../../../🧱️elements/✏️Input/🟦️component.tsx";
+import { Input, CollapsedFieldDisplay, fitCollapsedFieldText, resolveCollapsedFieldDisplayState, COLLAPSED_FIELD_ELLIPSIS, formatNumber } from "../../../../🧱️elements/✏️Input/🟦️.tsx";
 export { Input, CollapsedFieldDisplay, fitCollapsedFieldText, resolveCollapsedFieldDisplayState, COLLAPSED_FIELD_ELLIPSIS, formatNumber };
 // #endregion 🩺️Input
 
@@ -8613,7 +8613,7 @@ import {
   type SelectSide,
   type SelectTriggerProps,
   type SelectValueProps,
-} from "../../../../🧱️elements/☑️Select/🟦️component.tsx";
+} from "../../../../🧱️elements/☑️Select/🟦️.tsx";
 export {
   Select,
   SelectContent,
@@ -8655,22 +8655,22 @@ import {
   type SliderProps,
   type SliderRange,
   type SliderValue,
-} from "../../../../🧱️elements/🎚️Slider/🟦️component.tsx";
+} from "../../../../🧱️elements/🎚️Slider/🟦️.tsx";
 export { Slider, sliderValuesMatch, resolveSliderDraftClear, clampSliderValuesToReady, normalizeSliderRange, normalizeSliderValues, type SliderDirection, type SliderOrientation, type SliderProps, type SliderRange, type SliderValue };
 // #endregion 🏩️Slider
 
 // #region 🏬️Stepper
-import { Stepper } from "../../../../🧱️elements/🪜️Stepper/🟦️component.tsx";
+import { Stepper } from "../../../../🧱️elements/🪜️Stepper/🟦️.tsx";
 export { Stepper };
 // #endregion 🏬️Stepper
 
 // #region 🎏️Textarea
-import { Textarea } from "../../../../🧱️elements/📄️Textarea/🟦️component.tsx";
+import { Textarea } from "../../../../🧱️elements/📄️Textarea/🟦️.tsx";
 export { Textarea };
 // #endregion 🎏️Textarea
 
 // #region 🗡️Toggle
-import { Toggle, type ToggleItem, type ToggleProps } from "../../../../🧱️elements/🎚️Toggle/🟦️component.tsx";
+import { Toggle, type ToggleItem, type ToggleProps } from "../../../../🧱️elements/🎚️Toggle/🟦️.tsx";
 export { Toggle };
 export type { ToggleItem, ToggleProps };
 // #endregion 🗡️Toggle
@@ -8685,13 +8685,13 @@ import {
   type ToggleGroupItemProps,
   type ToggleGroupOrientation,
   type ToggleGroupDirection,
-} from "../../../../🧱️elements/🎛️ToggleGroup/🟦️component.tsx";
+} from "../../../../🧱️elements/🎛️ToggleGroup/🟦️.tsx";
 export { ToggleGroup, ToggleGroupItem };
 export type { ToggleGroupProps, ToggleGroupSingleProps, ToggleGroupMultipleProps, ToggleGroupItemProps, ToggleGroupOrientation, ToggleGroupDirection };
 // #endregion 🧩️ToggleGroup
 
 // #region 🧫️Ring
-import { Ring, type RingOrbData, type RingProps } from "../../../../🧱️elements/⭕️Ring/🟦️component.tsx";
+import { Ring, type RingOrbData, type RingProps } from "../../../../🧱️elements/⭕️Ring/🟦️.tsx";
 export { Ring };
 export type { RingOrbData, RingProps };
 // #endregion 🧫️Ring
@@ -8701,7 +8701,7 @@ export type { RingOrbData, RingProps };
 // #region 🗼️Aggregation Components
 
 // #region 🖥️Collapsible
-import { Collapsible, CollapsibleContent, CollapsibleTrigger, type CollapsibleContentProps, type CollapsibleProps, type CollapsibleTriggerProps } from "../../../../🧱️elements/↕️Collapsible/🟦️component.tsx";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger, type CollapsibleContentProps, type CollapsibleProps, type CollapsibleTriggerProps } from "../../../../🧱️elements/↕️Collapsible/🟦️.tsx";
 export { Collapsible, CollapsibleContent, CollapsibleTrigger };
 export type { CollapsibleContentProps, CollapsibleProps, CollapsibleTriggerProps };
 // #endregion 🖥️Collapsible
@@ -8727,7 +8727,7 @@ import {
   type DialogProps,
   type DialogTitleProps,
   type DialogTriggerProps,
-} from "../../../../🧱️elements/💬️Dialog/🟦️component.tsx";
+} from "../../../../🧱️elements/💬️Dialog/🟦️.tsx";
 export {
   Dialog,
   DialogClose,
@@ -8764,7 +8764,7 @@ import {
   ResizableHandle,
   ResizablePanel,
   ResizablePanelGroup,
-} from "../../../../🧱️elements/↕️Resizable/🟦️component.tsx";
+} from "../../../../🧱️elements/↕️Resizable/🟦️.tsx";
 export {
   RESIZABLE_HIT_TARGET_MIN_FINE_PX,
   RESIZABLE_HIT_TARGET_MIN_COARSE_PX,
@@ -8781,7 +8781,7 @@ export {
 // #endregion 🪬️Resizable
 
 // #region 🎮️Scrollable
-import { Scrollable } from "../../../../🧱️elements/📜️Scrollable/🟦️component.tsx";
+import { Scrollable } from "../../../../🧱️elements/📜️Scrollable/🟦️.tsx";
 export { Scrollable };
 // #endregion 🎮️Scrollable
 
@@ -8940,12 +8940,12 @@ export function NavbarTrailingFullscreenSlot({ onToggle }: { readonly onToggle?:
 // #endregion 🖥️Fullscreen
 
 // #region 🩺️Navbar
-import { Navbar, type NavbarItem, type NavbarProps, SemioLogo, ShellBrandLogo, navbarFillItem } from "../../../../🧱️elements/🔝️Navbar/🟦️component.tsx";
+import { Navbar, type NavbarItem, type NavbarProps, SemioLogo, ShellBrandLogo, navbarFillItem } from "../../../../🧱️elements/🔝️Navbar/🟦️.tsx";
 export { Navbar, type NavbarItem, type NavbarProps, SemioLogo, ShellBrandLogo, navbarFillItem };
 // #endregion 🩺️Navbar
 
 // #region 🧪️NavbarExampleSelect
-import { NavbarExampleSelect, type NavbarExampleOption, type NavbarExampleSelectProps } from "../../../../🧱️elements/🧪️NavbarExampleSelect/🟦️component.tsx";
+import { NavbarExampleSelect, type NavbarExampleOption, type NavbarExampleSelectProps } from "../../../../🧱️elements/🧪️NavbarExampleSelect/🟦️.tsx";
 export { NavbarExampleSelect, type NavbarExampleOption, type NavbarExampleSelectProps };
 // #endregion 🧪️NavbarExampleSelect
 
@@ -9001,13 +9001,13 @@ import {
   type TabsOrientation,
   type TabsDirection,
   type TabsActivationMode,
-} from "../../../../🧱️elements/📑️Tabs/🟦️component.tsx";
+} from "../../../../🧱️elements/📑️Tabs/🟦️.tsx";
 export { Tabs, TabsContent, TabsList, TabsTrigger };
 export type { TabsProps, TabsListProps, TabsTriggerProps, TabsContentProps, TabsOrientation, TabsDirection, TabsActivationMode };
 // #endregion 🏷️Tabs
 
 // #region 🖼️IconSelector
-import { IconSelector, type IconSelectorProps } from "../../../../🧱️elements/🔣️IconSelector/🟦️component.tsx";
+import { IconSelector, type IconSelectorProps } from "../../../../🧱️elements/🔣️IconSelector/🟦️.tsx";
 export { IconSelector, type IconSelectorProps };
 // #endregion 🖼️IconSelector
 
@@ -9104,7 +9104,7 @@ import {
   type WindowMeasureTreeGroupProps,
   type WindowMeasureTreeLeafProps,
   type WindowPaneChromeToggleProps,
-} from "../../../../🧱️elements/🪵️Tree/🟦️component.tsx";
+} from "../../../../🧱️elements/🪵️Tree/🟦️.tsx";
 export {
   BasicChatPanel,
   CATALOGUE_DRAG_MIME,
@@ -9218,7 +9218,7 @@ import {
   useNativeDragAndDrop,
   PanelTreeUnitsPane,
   PanelEmptyDockZone,
-} from "../../../../🧱️elements/🖼️Panel/🟦️component.tsx";
+} from "../../../../🧱️elements/🖼️Panel/🟦️.tsx";
 export { Panel, staticTreePanelDefinition, usePointerDrag, useNativeDragAndDrop, PanelTreeUnitsPane, PanelEmptyDockZone };
 export type { PanelProps, TreePanelConfig, TreePanelDefinition, TreePanelSource };
 // #endregion 🧭️Panel
@@ -9565,11 +9565,11 @@ export const Pane: React.FC<PaneProps> = ({
 
 // #region 🩻️Ribbon Components
 
-import { RibbonZone, RibbonDivider, RibbonGroup, RibbonItem } from "../../../../🧱️elements/🎀️Ribbon/🟦️component.tsx";
+import { RibbonZone, RibbonDivider, RibbonGroup, RibbonItem } from "../../../../🧱️elements/🎀️Ribbon/🟦️.tsx";
 export { RibbonZone, RibbonDivider, RibbonGroup, RibbonItem };
 
 // #region 🎀️Ribbon
-import { Ribbon, type RibbonDirection, type RibbonRow, type RibbonProps } from "../../../../🧱️elements/🎀️Ribbon/🟦️component.tsx";
+import { Ribbon, type RibbonDirection, type RibbonRow, type RibbonProps } from "../../../../🧱️elements/🎀️Ribbon/🟦️.tsx";
 export { Ribbon };
 export type { RibbonDirection, RibbonRow, RibbonProps };
 // #endregion 🎀️Ribbon
@@ -10479,7 +10479,7 @@ export { Engagement };
 // #region 🔍️Window Components
 
 // #region 🌊️Window
-import { Window, type WindowConfig } from "../../../../🧱️elements/🪟️Window/🟦️component.tsx";
+import { Window, type WindowConfig } from "../../../../🧱️elements/🪟️Window/🟦️.tsx";
 export { Window, type WindowConfig };
 // #endregion 🌊️Window
 
@@ -10497,7 +10497,7 @@ import {
   Diagram,
   useDiagramLayout,
   DiagramSkeleton,
-} from "../../../../🧱️elements/📊️Diagram/🟦️component.tsx";
+} from "../../../../🧱️elements/📊️Diagram/🟦️.tsx";
 export { DIAGRAM_UNIT, type DiagramLayoutDirection, type DiagramLayoutOptions, type DiagramForceConfig, defaultDiagramForceConfig, type DiagramProps, Diagram, useDiagramLayout, DiagramSkeleton };
 // #endregion 🧫️Diagram
 
@@ -10572,7 +10572,7 @@ import {
   type GumballVisualPalette,
   type GumballHandleVisualState,
   type UnifiedGumballProps,
-} from "../../../../🧱️elements/🎬️Scene/🟦️component.tsx";
+} from "../../../../🧱️elements/🎬️Scene/🟦️.tsx";
 export {
   sceneFrameControlRef,
   SCENE_GIZMO_LABELS,
@@ -10647,12 +10647,12 @@ export {
 // #endregion 📍️Scene
 
 // #region 🛎️Table
-import { type SortDirection, type TableColumn, type HierarchicalRowData, type DragDropConfig, type TableProps, Table, type TableSkeletonProps, TableSkeleton } from "../../../../🧱️elements/📊️Table/🟦️component.tsx";
+import { type SortDirection, type TableColumn, type HierarchicalRowData, type DragDropConfig, type TableProps, Table, type TableSkeletonProps, TableSkeleton } from "../../../../🧱️elements/📊️Table/🟦️.tsx";
 export { type SortDirection, type TableColumn, type HierarchicalRowData, type DragDropConfig, type TableProps, Table, type TableSkeletonProps, TableSkeleton };
 // #endregion 🛎️Table
 
 // #region 🗄️HistoryTable
-import { type HistoryColumnAuthor, type HistoryColumn, type HistoryTableProps, HistoryTable } from "../../../../🧱️elements/📜️HistoryTable/🟦️component.tsx";
+import { type HistoryColumnAuthor, type HistoryColumn, type HistoryTableProps, HistoryTable } from "../../../../🧱️elements/📜️HistoryTable/🟦️.tsx";
 export { type HistoryColumnAuthor, type HistoryColumn, type HistoryTableProps, HistoryTable };
 // #endregion 🗄️HistoryTable
 
@@ -10685,7 +10685,7 @@ import {
   type VirtualFileSystemNode,
   type VirtualFileSystemRow,
   type VirtualFileSystemProps,
-} from "../../../../🧱️elements/📁️VirtualFileSystem/🟦️component.tsx";
+} from "../../../../🧱️elements/📁️VirtualFileSystem/🟦️.tsx";
 export {
   VIRTUAL_FILE_SYSTEM_DEMO_DESCRIPTOR_KINDS,
   VIRTUAL_FILE_SYSTEM_DEMO_FILE_NODE_KINDS,
@@ -10783,7 +10783,7 @@ import {
   type AppProps,
   type UiAppDescriptor,
   type UiProps,
-} from "../../../../🧱️elements/🎨️Canvas/🟦️component.tsx";
+} from "../../../../🧱️elements/🎨️Canvas/🟦️.tsx";
 export {
   Canvas,
   panelGhostSessionBridge,
@@ -18275,8 +18275,8 @@ export type { FuzzySearchField, FuzzySearchOptions, FuzzySearchResult };
 // #endregion 🔔️Search
 
 // #region 🌨️Styling
-export { styleVariants } from "../../../../🔨️modules/🏷️style-variants/🟦️component.ts";
-export type { StyleCompoundVariant, StyleVariantCompiler, StyleVariantConfiguration, StyleVariantProps, StyleVariantSchema, StyleVariantSelection } from "../../../../🔨️modules/🏷️style-variants/🟦️component.ts";
+export { styleVariants } from "../../../../🔨️modules/🏷️style-variants/🟦️.ts";
+export type { StyleCompoundVariant, StyleVariantCompiler, StyleVariantConfiguration, StyleVariantProps, StyleVariantSchema, StyleVariantSelection } from "../../../../🔨️modules/🏷️style-variants/🟦️.ts";
 // #endregion 🌨️Styling
 
 // #region 📮️Resizable Panels
@@ -21862,10 +21862,10 @@ if (treeVitest) {
 
     //#region 🏠️LocalInteractionCompositionTests
     it("TutorialLocalInteraction preserves exact three-map authored changes against Immer", async () => {
-      const source = await import("../../../../../🛂️manifest/🎬️tutorial/🏠️local-interaction/🟦️component.ts");
+      const source = await import("../../../../../🛂️manifest/🎬️tutorial/🏠️local-interaction/🟦️.ts");
       const { readFileSync } = await import("node:fs"); const { fileURLToPath } = await import("node:url"); const { dirname, resolve } = await import("node:path"); const fixture: unknown = JSON.parse(readFileSync(resolve(dirname(fileURLToPath(import.meta.url)), "../../../../../🛂️manifest/🧪️fixtures/🔣️tutorial-local-interaction.json"), "utf8")); const { default: schema } = await import("../../../../../🛂️manifest/🧪️fixtures/🔣️tutorial-local-interaction.schema.json"); const { default: localSchema } = await import("../../../../../📡️replication/📡️wire/🏠️local-interaction/🧬️schema/🏠️local-interaction/🔣️.schema.json");
       const { default: Ajv } = await import("ajv"); const { produce, enableMapSet } = await import("immer"); const assert: typeof import("node:assert") = (await import("node:assert")).default;
-      type State = import("../../../../../📡️replication/📡️wire/🏠️local-interaction/🟦️.ts").LocalInteractionState; type Change = import("../../../../../🛂️manifest/🎬️tutorial/🏠️local-interaction/🟦️component.ts").TutorialLocalInteractionChange;
+      type State = import("../../../../../📡️replication/📡️wire/🏠️local-interaction/🟦️.ts").LocalInteractionState; type Change = import("../../../../../🛂️manifest/🎬️tutorial/🏠️local-interaction/🟦️.ts").TutorialLocalInteractionChange;
       const validate = new Ajv({ strict: true, allErrors: true }).addSchema(localSchema).compile<{ cases: readonly { name: string; before: State; after: State; changes: readonly Change[] }[] }>(schema); expect(validate(fixture)).toBe(true); if (!validate(fixture)) throw new Error("Invalid tutorial local interaction fixture"); enableMapSet();
       expect(typeof source.diffTutorialLocalInteractionCold).toBe("function"); expect(typeof source.applyTutorialLocalInteractionCold).toBe("function");
       for (const row of fixture.cases) {

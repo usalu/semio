@@ -22,7 +22,7 @@
 //   bun 📜️script.ts generate [--out <dir>] [--only <recipe-id>]
 //   bun 📜️script.ts manifests                     # emit the fixtureManifests block for 🧪️oracle
 //
-// @see ../🧪️oracle/🔣️.json — the oracles these bytes are attributed to
+// @see ../🔣️oracle.json — the oracles these bytes are attributed to
 // @see .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️27/SUBSET-SCOPED-EXTERNAL-ORACLE-MUTATION-TESTING/📓️document-subset-oracle.md
 // @see ../../✳️mesh/🏭️generator/📜️script.ts — the pilot this file mirrors in CLI shape and manifest fields
 
@@ -87,7 +87,7 @@ const XMLDOM_VERSION = "0.9.10";
 const MDAST_TO_MARKDOWN_VERSION = "2.1.2";
 
 /** 📎️ Fixture file paths are resolved against the OWNER'S ORACLE directory, never against this fixture
- *  directory — the registry loader stamps `manifestDir` to where `🧪️oracle/🔣️.json` lives. A bare
+ *  directory — the registry loader stamps `manifestDir` to where `🔣️oracle.json` lives. A bare
  *  `<recipe>/<file>` therefore resolves to a non-existent `🧪️oracle/<recipe>/<file>` and every digest
  *  reads as a mismatch; the mesh pilot lost 369 fixtures to exactly that. */
 const FIXTURE_PATH_PREFIX = "../🧫️fixtures/";

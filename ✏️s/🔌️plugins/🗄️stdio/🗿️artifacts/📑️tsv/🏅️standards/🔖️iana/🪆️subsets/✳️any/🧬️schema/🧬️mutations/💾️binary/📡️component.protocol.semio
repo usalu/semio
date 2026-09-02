@@ -1,4 +1,0 @@
-dialect protocol stdio.tsv.mutations
-; protocol::OpBinary raw text encoding of TsvMutation — NOT wrapped in the shared `.semio`
-; binary envelope
-payload = *OCTET   ; UTF-8 hand-rolled mutation text (see ../📝️text/📖️component.grammar.semio)

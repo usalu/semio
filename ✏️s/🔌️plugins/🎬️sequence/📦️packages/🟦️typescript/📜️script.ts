@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
 /** sequence TypeScript package */
-import { BundleScript, ScriptRouter, runBundleScriptMain } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts";
+import { BundleScript, ScriptRouter, runBundleScriptMain } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 class TestScript extends BundleScript {
   run(): void { console.log("[DEBUG] sequence ts ok"); }
 }

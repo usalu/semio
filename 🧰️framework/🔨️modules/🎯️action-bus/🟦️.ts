@@ -11,7 +11,7 @@ import {
   type WindowMeasure,
   SET_ACTIVE_TOOL_ACTION_ID,
   SET_ACTIVE_UTILITY_ACTION_ID,
-} from "../🛂️manifest/🟦️component.ts";
+} from "../🛂️manifest/🟦️.ts";
 
 //#region 🧰️ActionUtilities
 /** 🧰️ A resolved utility ready for the utility bar — the TS twin of Rust `DerivedUtilitySpec` in `ui_wgpu`. */

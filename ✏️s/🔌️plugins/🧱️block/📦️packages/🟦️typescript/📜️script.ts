@@ -2,7 +2,7 @@
 /** 🧱️ Block source, schema, and publication-authority laws. */
 import { resolve } from "node:path";
 import Ajv from "ajv";
-import { BundleScript, ScriptRouter, runBundleScriptMain } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts";
+import { BundleScript, ScriptRouter, runBundleScriptMain } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 type Fixture = { schema: string; owner: "Block5dPlayApp"; source: string; routes: { id: string; lane: "Artifact" }[]; laws: Record<string, boolean>; ui: { locales: ["en", "de"]; accessibleLabels: boolean; customizableUi: boolean } };
 
 const exact = (left: string[], right: string[]): boolean => JSON.stringify([...left].sort()) === JSON.stringify([...right].sort()) && new Set(left).size === left.length && new Set(right).size === right.length;
@@ -21,8 +21,8 @@ function oracle(fixture: Fixture, source: string): boolean {
 class TestScript extends BundleScript {
   async run(): Promise<void> {
     const plugin = resolve(this.root, "../..");
-    const fixture = await Bun.file(resolve(plugin, "🧪️publication-authority/🔣️component.json")).json() as Fixture;
-    const schema = await Bun.file(resolve(plugin, "🧪️publication-authority/🔣️schema.json")).json();
+    const fixture = await Bun.file(resolve(plugin, "🔣️publication-authority.json")).json() as Fixture;
+    const schema = await Bun.file(resolve(plugin, "🔣️publication-authority.schema.json")).json();
     const validate = new Ajv({ allErrors: true, strict: true }).compile(schema);
     if (!validate(fixture)) throw new Error(`Block fixture failed strict Ajv: ${JSON.stringify(validate.errors)}`);
     const source = await Bun.file(resolve(plugin, fixture.source)).text();

@@ -38,7 +38,7 @@
       "const": "🧰️framework/🔨️modules/🌱️value/💾️resident/🦀️.rs"
     },
     "testPath": {
-      "const": "🧰️framework/🔨️modules/🌱️value/💾️resident/🧪️tests/🦀️.rs"
+      "const": "🧰️framework/🔨️modules/🌱️value/💾️resident/🧪️test/🦀️s.rs"
     },
     "fixturePath": {
       "const": "🧰️framework/🔨️modules/🌱️value/💾️resident/🧪️fixture.json"
@@ -101,7 +101,7 @@
           "default": [
             "{projectRoot}/**/*",
             "{workspaceRoot}/🧰️framework/🔨️modules/🌱️value/💾️resident/🦀️.rs",
-            "{workspaceRoot}/🧰️framework/🔨️modules/🌱️value/💾️resident/🧪️tests/🦀️.rs",
+            "{workspaceRoot}/🧰️framework/🔨️modules/🌱️value/💾️resident/🧪️test/🦀️s.rs",
             "{workspaceRoot}/🧰️framework/🔨️modules/🌱️value/💾️resident/🧪️fixture.json",
             "{workspaceRoot}/🧰️framework/🔨️modules/🌱️value/💾️resident/🧪️schema.json",
             "{workspaceRoot}/🧰️framework/🔨️modules/🌱️value/💾️resident/🧬️schema.json",
@@ -150,11 +150,11 @@
     "rejectedEntryPaths": {
       "const": [
         "../../../🦀️.rs",
-        "../../../🦀️component.rs",
-        "../../🦀️component.rs",
+        "../../../🦀️.rs",
+        "../../🦀️.rs",
         "../🦀️.rs",
         "../../🧪️.rs",
-        "../../🧪️tests/🦀️.rs"
+        "../../🧪️test/🦀️s.rs"
       ]
     },
     "launch": {

@@ -1,8 +1,8 @@
 //! 🧬️ Versioned semantic UI wire-type metadata and its owned TypeScript projection — extracted
-//! from owner `📦️packages/🦀️rust/📦️glue.rs` (`#[cfg(feature = "typegen")] mod schema_metadata;`)
+//! from owner `📦️packages/🦀️rust/🦀️.rs` (`#[cfg(feature = "typegen")] mod schema_metadata;`)
 //! so that file stays pure wiring (no `struct`/`impl` of its own), which keeps its taxonomy
 //! package role classified as thin delegation rather than implementation — otherwise it competes
-//! with `🦀️component.rs` for the crate's one canonical implementation slot.
+//! with `🦀️.rs` for the crate's one canonical implementation slot.
 
 use std::collections::HashSet;
 
@@ -324,7 +324,7 @@ export type KeyValueListProps = { entries: Array<KeyValueEntry>, };"####,
  * `Terminology` axes, and its whole point (`From<LabelText>` wired to the `app_labels!` macro,
  * no `From<&str>`) is a compile-time-checked-label enforcement mechanism that lives at the
  * authoring boundary, not the wire boundary — and this crate must not depend on that package at
- * all (no engine, no wgpu; see `📦️glue.rs`). This is therefore a minimal, independent transparent
+ * all (no engine, no wgpu; see `🦀️.rs`). This is therefore a minimal, independent transparent
  * string. The localization/terminology resolution that used to happen via `LabelText::fill` still
  * happens upstream of the runtime (manifest/host), before a `Label` ever reaches this contract.
  */
@@ -614,7 +614,7 @@ export type SurfaceKind = "canvas-2d" | "world-3d" | "node-graph" | "text-editor
         typescript: r####"/**
  * 🗺️ An embedded product surface. Replaces the old `UiComponentSceneNode`'s 15 sparse
  * `Option<XxxScene>` fields with exactly ONE payload, identified by `doc_schema` — the 15 product
- * scene structs themselves stay product payloads and move to `🖱️ui/🎬️scene/🦀️component.rs` in a
+ * scene structs themselves stay product payloads and move to `🖱️ui/🎬️scene/🦀️.rs` in a
  * later packet, never into this dependency-free contract crate. See this file's own module doc for
  * the exact reasoning behind each field (and each field the scaffold this replaces used to carry but
  * no longer does).
@@ -896,7 +896,7 @@ layoutEpoch: bigint, };"####,
  * resolve (heap-allocated, not an inline field) rather than the infinitely-sized-struct problem
  * direct node-in-node nesting would create.
  *
- * ⚠️ The os-kernel's `DslValue` (`🧰️framework/🔨️modules/🌱️value/🦀️component.rs`) must NEVER appear in
+ * ⚠️ The os-kernel's `DslValue` (`🧰️framework/🔨️modules/🌱️value/🦀️.rs`) must NEVER appear in
  * this crate — this crate has no such dependency and stays `wasm32-wasip2`/`wasm32-unknown-unknown`
  * safe by construction. `From`/`Into` conversions between `UiValue` and `DslValue` belong in the
  * os-kernel crate, never here.

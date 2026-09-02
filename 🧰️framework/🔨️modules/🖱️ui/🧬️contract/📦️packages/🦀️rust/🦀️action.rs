@@ -145,19 +145,19 @@ impl<'de> Deserialize<'de> for UiText {
 #[path = "../../📋️list/🧪️component.rs"]
 mod fixed_list_storage_tests;
 
-#[path = "../../📋️list/🦀️storage.rs"]
+#[path = "../../📋️list/🦀️.rs"]
 mod fixed_list_storage;
 pub use fixed_list_storage::{UiFixedListAllocationError, UiFixedListProgress};
 
-#[path = "../../🔗️bindings/📋️copy/🦀️component.rs"]
+#[path = "../../🔗️bindings/📋️copy/🦀️.rs"]
 mod binding_copy;
 pub use binding_copy::{UiBindingsCopy, UiBindingsCopyProgress};
 
-#[path = "../../📋️copy/🦀️component.rs"]
+#[path = "../../📋️copy/🦀️.rs"]
 mod component_copy;
 pub use component_copy::{UiComponentCopy, UiComponentCopyProgress};
 
-#[path = "../../⚖️compare/🦀️component.rs"]
+#[path = "../../⚖️compare/🦀️.rs"]
 mod component_compare;
 pub use component_compare::{UiComponentCompare, UiComponentCompareProgress};
 pub use component_compare::UiComponentComparisonCursor;
@@ -817,7 +817,7 @@ pub fn close_ui_value_page_one() -> bool {
     close_ui_value_page_with_grant(1, 4096).expect("exact UI value retirement queue remains valid").complete
 }
 
-#[path = "../../♻️retirement/🦀️component.rs"]
+#[path = "../../♻️retirement/🦀️.rs"]
 mod retirement;
 pub use retirement::{close_ui_value_page_with_grant, UiValueRetirement, UiValueRetirementStep};
 pub(crate) use retirement::{UiArenaHandback, UiArenaHandbacks, UiTypedRetire, UiTypedRetirementCursor};
@@ -1364,7 +1364,7 @@ pub struct UiIntent {
 /// to resolve (heap-allocated, not an inline field) rather than the infinitely-sized-struct problem
 /// direct node-in-node nesting would create.
 ///
-/// ⚠️ The os-kernel's `DslValue` (`🧰️framework/🔨️modules/🌱️value/🦀️component.rs`) must NEVER appear in
+/// ⚠️ The os-kernel's `DslValue` (`🧰️framework/🔨️modules/🌱️value/🦀️.rs`) must NEVER appear in
 /// this crate — this crate has no such dependency and stays `wasm32-wasip2`/`wasm32-unknown-unknown`
 /// safe by construction. `From`/`Into` conversions between `UiValue` and `DslValue` belong in the
 /// os-kernel crate, never here.

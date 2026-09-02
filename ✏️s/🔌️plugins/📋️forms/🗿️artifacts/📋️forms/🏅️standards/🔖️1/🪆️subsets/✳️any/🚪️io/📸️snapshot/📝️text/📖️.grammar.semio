@@ -1,0 +1,37 @@
+dialect grammar
+grammar forms.forms
+extension forms
+use family-scene
+start document
+
+# Real grammar for `FormsSnapshot::print_dsl`/`parse_dsl`
+# (🚪️io/📸️snapshot/📝️text/🦀️.rs's `print_forms_snapshot_body`/`parse_forms_snapshot_body`,
+# lines 66-105) — a hand-rolled hex/bracket `key=value` line codec, one line per field, same
+# convention `raster.document`/`playbook.playbook` use. This REPLACES the stale, cross-plugin
+# copy-pasted "canvas layer" template (`layers { shape/path/text { canvas-field* } }`,
+# `add-layer`/`set-stroke`/`move-layer`/`set-fill`) this file previously carried — see
+# `.🧬semio/…/STUBS-AND-PLACEHOLDERS-COMPLETION/📓️grammar-envelope-transcription.md` for how that
+# mismatch was discovered (forms is a step/block wizard, never a layered canvas).
+#
+# Note: the real preamble is `semio forms.form.dsl v1` — `FormsSnapshot::envelope_id()`
+# (line 117-119) returns `crate::artifacts::forms::FORMS_DOCUMENT_SCHEMA`, whose own const value is
+# `"forms.form"` (🦀️.rs:16), NOT `"forms.forms"` — this grammar's own `grammar` header line
+# is left untouched per the ticket brief (already corrected by a sibling agent), but the body below
+# reflects the real runtime literal.
+artifact-mark = "semio forms.form.dsl v1"
+document = artifact-mark schema-line id-line version-line title-line structure-line results-line
+
+schema-line = "schema" "=" hex
+id-line = "id" "=" hex
+version-line = "version" "=" hex
+title-line = "title" "=" opt-hex
+structure-line = "structure" "=" child-handle
+results-line = "results" "=" child-handle
+
+# `title`'s absent form is a bare `-`, NOT the `[0]`/`[1,...]` bracket convention
+# `raster.document`/`playbook.playbook` use — a distinct hand-rolled `enc_opt_str` in this file.
+opt-hex = "-" | hex
+child-handle = "[" hex "," hex "]"
+
+# `hex` (bare, deliberately not defined as a local production) is the framework's built-in `hex`
+# macro — every hex-bracket-encoded leaf string is `enc_str` (lowercase-hex UTF-8 bytes).

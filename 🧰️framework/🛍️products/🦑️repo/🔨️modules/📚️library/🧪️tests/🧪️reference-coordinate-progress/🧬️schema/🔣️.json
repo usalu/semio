@@ -87,7 +87,7 @@
           "const": "reference-coordinate-progress"
         },
         "testPath": {
-          "const": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧪️reference-coordinate-progress/🟦️.ts"
+          "const": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🟦️reference-coordinate-progress.ts"
         },
         "launchName": {
           "const": "🧹clean🧩️taxonomy🧪️reference-coordinate-progress"

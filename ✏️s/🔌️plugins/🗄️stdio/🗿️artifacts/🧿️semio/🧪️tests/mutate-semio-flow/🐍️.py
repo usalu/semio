@@ -7,14 +7,14 @@ a second IMPLEMENTATION, written in another language from the format's own commi
 
 * the envelope — `semio <plugin>.<artifact>.<component> v<version>` preamble for text, and the
   `0x89 'S' 'E' 'M' 0D 0A 1A 0A` magic + little-endian u32 token length + token for binary — is
-  specified in `🧰️framework/🛍️products/💻️os/🔨️modules/🧬️semio/🦀️component.rs`'s envelope region;
+  specified in `🧰️framework/🛍️products/💻️os/🔨️modules/🧬️semio/🦀️.rs`'s envelope region;
 * the DSL body is the committed grammar
-  `../../🏅️standards/🔖️v1/🪆️subsets/✳️flow/🧬️schema/📸️snapshot/📝️text/📖️component.grammar.semio`
+  `../../🏅️standards/🔖️v1/🪆️subsets/✳️flow/🧬️schema/📸️snapshot/📝️text/📖️.grammar.semio`
   (`document = artifact-mark schema-line nodes-line edges-line`, `node = "[" hex "," hex "," hex ","
   "[" param-list? "]" "," "[" number "," number "]" "]"`, `edge = "[" hex "," port "," port "," hex
   "]"`, `port = "[" hex "," hex "]"`, and `number = INT | FLOAT` printed by Rust's own `{}` Display,
   which is why `number_text` below drops a trailing `.0` and refuses exponent notation);
-* the pack body is the committed protocol `…/📸️snapshot/💾️binary/📡️component.protocol.semio`
+* the pack body is the committed protocol `…/📸️snapshot/💾️binary/📡️.protocol.semio`
   (`format u8`, then the varint-length-prefixed UTF-8 `schema`), whose description then stops at the
   repeated `nodes`/`edges` records by its own admission and names only their shape — "varint counts,
   per-field length-prefixes, real `f64` LE coordinates". That prose was turned into the reader and
@@ -22,7 +22,7 @@ a second IMPLEMENTATION, written in another language from the format's own commi
   the committed `🎒️example.pack.semio`: `pack_bytes` re-encodes that file byte for byte, which a
   misreading could not do;
 * the thirteen verbs and their argument lists are the committed grammar
-  `…/🧬️schema/🧬️mutations/📝️text/📖️component.grammar.semio`, and what each verb MEANS is the
+  `…/🧬️schema/🧬️mutations/📝️text/📖️.grammar.semio`, and what each verb MEANS is the
   committed `(before, mutation, after)` specification vector per kind in this case's own
   `🧫️fixtures/` — including the two facts a name alone does not settle: `insert-node`/`insert-edge`
   carry no index and APPEND, and `remove-node` does NOT cascade into the edges that name it.
@@ -550,7 +550,7 @@ def inverse_mutation(document: dict, mutation: dict) -> list:
 
 
 # region 🔖️Scenario input
-PIPELINE_DSL = "asset://🏅️standards/🔖️v1/🪆️subsets/✳️any/📚️examples/🌊️pipeline/🖼️assets/🗣️example.dsl.semio"
+PIPELINE_DSL = "asset://🏅️standards/🔖️v1/🪆️subsets/✳️any/📚️examples/🌊️pipeline/🖼️assets/🗣️.dsl.semio"
 PIPELINE_PACK = "asset://🏅️standards/🔖️v1/🪆️subsets/✳️any/📚️examples/🌊️pipeline/🖼️assets/🎒️example.pack.semio"
 TOWER_DSL = "local://🏗️nakagin-capsule-tower.dsl.semio"
 TOWER_PACK = "local://🏗️nakagin-capsule-tower.pack.semio"

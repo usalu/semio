@@ -3,7 +3,7 @@ name = "semio-framework-plugin-describe"
 version = "0.1.0"
 edition = "2021"
 rust-version = "1.88"
-description = "Build-time descriptor emitter: instantiates a built plugin/extension component once and writes its static PackageDescriptor (🛂️descriptor.semio + 🔣️descriptor.json), never called at runtime"
+description = "Build-time descriptor emitter: instantiates a built plugin/extension component once and writes its static PackageDescriptor (🛂️.descriptor.semio + 🔣️.json), never called at runtime"
 
 [package.metadata.semio]
 role = "tool"
@@ -13,7 +13,7 @@ id = "plugin-describe"
 workspace = true
 
 [lib]
-path = "📦️glue.rs"
+path = "🦀️.rs"
 
 [[bin]]
 name = "semio-framework-plugin-describe"
@@ -25,7 +25,7 @@ path = "📦️main.rs"
 semio-framework = { path = "../../../../../../../📦️packages/🦀️rust", package = "semio-framework" }
 # 🔁️ direct dependency (not just transitive through `semio-framework`) so this crate can declare its
 # own `extern crate semio_framework_os_kernel as store;` / `as dsl;` aliases — the same pattern every
-# plugin crate's own `📦️glue.rs` already uses (see `🔌️plugin/📦️packages/🦀️rust/📦️glue.rs`) — for
+# plugin crate's own `🦀️.rs` already uses (see `🔌️plugin/📦️packages/🦀️rust/🦀️.rs`) — for
 # `store::pack_rt::{encode_wire_value,decode_wire_value}` / `dsl::{to_dsl_value,from_dsl_value}`.
 semio-framework-os-kernel = { path = "../../../../../📦️packages/🦀️rust", package = "semio-framework-os-kernel" }
 semio-framework-plugin-host = { path = "../../../🖥️host/📦️packages/🦀️rust" }

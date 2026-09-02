@@ -1,11 +1,11 @@
 //! 🧪️ Strict semantic-key and delimiter laws for owned Store schema cursors.
 
-use super::*;
 use super::tests::{drive_owned_schema, owned_schema_test_cursor, OWNED_SCHEMA_TEST_FIELDS};
+use super::*;
 
 //#region 🧪️Fixture
 fn fixture() -> serde_json::Value {
-    serde_json::from_str(include_str!("🔣️vectors.json")).expect("owned schema record vectors")
+    serde_json::from_str(include_str!("🔣️.json")).expect("owned schema record vectors")
 }
 
 fn source_case<'a>(row: &'a serde_json::Value) -> &'a str {
@@ -126,14 +126,8 @@ fn owned_schema_record_cancellation_fixture_retires_every_owned_page() {
         let cancel = semio_framework_job::root_cancel_token();
         cancel.cancel_now();
         let mut preview_sequence = 0;
-        let mut context = semio_framework_job::StepContext::new(
-            semio_framework_job::OperationId(1),
-            semio_framework_job::Generation(1),
-            semio_framework_job::StepBudget::new(1, u64::MAX),
-            cancel,
-            semio_framework_job::default_now_us,
-            &mut preview_sequence,
-        );
+        let mut context =
+            semio_framework_job::StepContext::new(semio_framework_job::OperationId(1), semio_framework_job::Generation(1), semio_framework_job::StepBudget::new(1, u64::MAX), cancel, semio_framework_job::default_now_us, &mut preview_sequence);
         let result = cursor.step(&mut context);
         close_owned_schema(&mut cursor);
         assert_eq!(result, OwnedSchemaRecordStep::Cancelled, "{}", row["name"]);

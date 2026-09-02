@@ -1,5 +1,0 @@
-; abnf stdio.html diff (binary representation)
-document = diff-text
-; diff-text = UTF-8 bytes of print_diff's output verbatim (protocol::DiffCodec::encode_diff is a
-; pure passthrough of the text form) -- see the sibling ../📝️text/📖️component.grammar.semio.
-diff-text = *OCTET

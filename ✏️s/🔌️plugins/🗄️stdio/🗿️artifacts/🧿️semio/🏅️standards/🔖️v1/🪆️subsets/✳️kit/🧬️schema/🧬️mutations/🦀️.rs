@@ -1,5 +1,5 @@
 //! 🧬️ SemioKitMutation — document mutation dispatch. Vocabulary derived from
-//! `📸️snapshot/🦀️component.rs`'s `SemioKitSnapshot` shape: two owned-CHILD collections
+//! `📸️snapshot/🦀️.rs`'s `SemioKitSnapshot` shape: two owned-CHILD collections
 //! (`objects`/`models`, `create`/`delete` pairs), one optional owned-CHILD slot (`properties`,
 //! `create`/`delete`), one LINK collection (`representations`, `bind`/`unbind` attach/detach plus
 //! `change` to re-pin), and two id-keyed value collections (`types`: `add`/`remove`/`rename`;
@@ -53,7 +53,7 @@ pub enum SemioKitMutation {
 }
 
 /// 🏷️ Kebab-case spelling of every `SemioKitMutation` variant, in declaration order — the
-/// vocabulary the `semio-v1-kit` mutation catalog (`../../🧪️oracle/🔣️.json`) declares and
+/// vocabulary the `semio-v1-kit` mutation catalog (`../../🔣️oracle.json`) declares and
 /// `mutate-semio-kit`'s exhaustive test case measures itself against. `kinds_match_the_enum_and_
 /// the_catalog` below is what keeps this list honest against the enum, since the framework never
 /// parses Rust.
@@ -78,7 +78,7 @@ pub const KINDS: &[&str] = &[
 
 //#region 🔖️Apply
 /// ▶️ Applies a mutation to `snapshot` in place, returning the diff — kept from the pre-wave facet
-/// (consumed by `../🦀️component.rs`'s `SemioKitBuilderConstruction::mutate`).
+/// (consumed by `../🦀️.rs`'s `SemioKitBuilderConstruction::mutate`).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn apply_semio_kit_mutation(snapshot: &mut SemioKitSnapshot, mutation: &SemioKitMutation) -> protocol::MutationOutcome<SemioKitDiff> {
     use protocol::Mutation;
@@ -97,10 +97,10 @@ pub fn inverse_semio_kit_mutation(mutation: &SemioKitMutation, base: &SemioKitSn
 }
 
 /// 📥️ Decodes this subset's own default-derived JSON projection — the exact shape the committed
-/// `<kind>/🧪️tests/<fixture>/🦠️mutation/🔣️component.json` specification-vector fixtures carry
+/// `<kind>/🧪️tests/<fixture>/🦠️mutation/🔣️.json` specification-vector fixtures carry
 /// (externally tagged by variant name, snake_case payload fields — no `#[value(rename_all)]` on
 /// this enum or its payload structs) — into a real `SemioKitMutation`. Same rationale as
-/// `../📸️snapshot/🦀️component.rs`'s `decode_kit_snapshot_json`.
+/// `../📸️snapshot/🦀️.rs`'s `decode_kit_snapshot_json`.
 pub fn decode_kit_mutation_json(text: &str) -> Result<SemioKitMutation, String> {
     pack::from_json_str(text).map_err(|error| error.to_string())
 }
@@ -285,7 +285,7 @@ mod tests {
         for (kind, descriptor) in KINDS.iter().zip(descriptors.iter()) {
             assert_eq!(*kind, descriptor.kind, "KINDS must match #[derive(dsl::Mutations)]'s own declaration order and spelling");
         }
-        let manifest = include_str!("../../🧪️oracle/🔣️.json");
+        let manifest = include_str!("../../🔣️oracle.json");
         for kind in KINDS {
             assert!(manifest.contains(&format!("\"{kind}\"")), "KINDS entry {kind:?} must also appear in the committed oracle manifest's catalog");
         }
@@ -295,41 +295,41 @@ mod tests {
 
 //#region 🧪️FixtureTests
 /// 🧪️ Handcrafted mutation fixtures (contract D1, ticket `26/08/20/COMPOSE-TO-PUZZLE5D-MIGRATION`)
-/// — one case per triad leaf, self-wired here rather than in `📦️glue.rs` so this subset owns its
+/// — one case per triad leaf, self-wired here rather than in `🦀️.rs` so this subset owns its
 /// own test surface. `#[path = "."]` re-roots the nested `#[path]`s at THIS file's directory (the
 /// `🧬️mutations` root) instead of the implicit `🦀️component/` child directory.
 #[cfg(test)]
 #[path = "."]
 mod fixture_tests {
-    #[path = "🆕add-design/🧪️tests/adds-an-empty-roof-design/🦀️component.rs"]
+    #[path = "🆕add-design/🧪️tests/adds-an-empty-roof-design/🦀️.rs"]
     mod tests_add_design_adds_an_empty_roof_design;
-    #[path = "➕add-type/🧪️tests/appends-a-slab-type-to-the-catalogue/🦀️component.rs"]
+    #[path = "➕add-type/🧪️tests/appends-a-slab-type-to-the-catalogue/🦀️.rs"]
     mod tests_add_type_appends_a_slab_type_to_the_catalogue;
-    #[path = "🔗bind-representation/🧪️tests/binds-a-second-representation-to-an-existing-type/🦀️component.rs"]
+    #[path = "🔗bind-representation/🧪️tests/binds-a-second-representation-to-an-existing-type/🦀️.rs"]
     mod tests_bind_representation_binds_a_second_representation_to_an_existing_type;
-    #[path = "📌change-representation-pin/🧪️tests/repins-the-representation-from-head-to-a-checkpoint/🦀️component.rs"]
+    #[path = "📌change-representation-pin/🧪️tests/repins-the-representation-from-head-to-a-checkpoint/🦀️.rs"]
     mod tests_change_representation_pin_repins_the_representation_from_head_to_a_checkpoint;
-    #[path = "🏛️create-model/🧪️tests/attaches-a-second-model-child/🦀️component.rs"]
+    #[path = "🏛️create-model/🧪️tests/attaches-a-second-model-child/🦀️.rs"]
     mod tests_create_model_attaches_a_second_model_child;
-    #[path = "🏗️create-object/🧪️tests/attaches-a-second-object-child/🦀️component.rs"]
+    #[path = "🏗️create-object/🧪️tests/attaches-a-second-object-child/🦀️.rs"]
     mod tests_create_object_attaches_a_second_object_child;
-    #[path = "🏷️create-properties/🧪️tests/attaches-a-properties-child-to-a-kit-that-has-none/🦀️component.rs"]
+    #[path = "🏷️create-properties/🧪️tests/attaches-a-properties-child-to-a-kit-that-has-none/🦀️.rs"]
     mod tests_create_properties_attaches_a_properties_child_to_a_kit_that_has_none;
-    #[path = "💣delete-model/🧪️tests/detaches-the-only-model-child-and-keeps-the-object-child/🦀️component.rs"]
+    #[path = "💣delete-model/🧪️tests/detaches-the-only-model-child-and-keeps-the-object-child/🦀️.rs"]
     mod tests_delete_model_detaches_the_only_model_child_and_keeps_the_object_child;
-    #[path = "🪓delete-object/🧪️tests/detaches-the-only-object-child-and-keeps-the-model-child/🦀️component.rs"]
+    #[path = "🪓delete-object/🧪️tests/detaches-the-only-object-child-and-keeps-the-model-child/🦀️.rs"]
     mod tests_delete_object_detaches_the_only_object_child_and_keeps_the_model_child;
-    #[path = "🚫delete-properties/🧪️tests/detaches-the-properties-child-and-leaves-every-other-collection-alone/🦀️component.rs"]
+    #[path = "🚫delete-properties/🧪️tests/detaches-the-properties-child-and-leaves-every-other-collection-alone/🦀️.rs"]
     mod tests_delete_properties_detaches_the_properties_child_and_leaves_every_other_collection_alone;
-    #[path = "🖊️edit-design/🧪️tests/replaces-the-designs-pieces-and-connections-in-one-step/🦀️component.rs"]
+    #[path = "🖊️edit-design/🧪️tests/replaces-the-designs-pieces-and-connections-in-one-step/🦀️.rs"]
     mod tests_edit_design_replaces_the_designs_pieces_and_connections_in_one_step;
-    #[path = "🗑️remove-design/🧪️tests/removes-the-only-design-together-with-its-pieces/🦀️component.rs"]
+    #[path = "🗑️remove-design/🧪️tests/removes-the-only-design-together-with-its-pieces/🦀️.rs"]
     mod tests_remove_design_removes_the_only_design_together_with_its_pieces;
-    #[path = "➖remove-type/🧪️tests/removes-the-column-type-and-keeps-the-beam-type/🦀️component.rs"]
+    #[path = "➖remove-type/🧪️tests/removes-the-column-type-and-keeps-the-beam-type/🦀️.rs"]
     mod tests_remove_type_removes_the_column_type_and_keeps_the_beam_type;
-    #[path = "✏️rename-type/🧪️tests/renames-the-beam-type-without-recategorising-it/🦀️component.rs"]
+    #[path = "✏️rename-type/🧪️tests/renames-the-beam-type-without-recategorising-it/🦀️.rs"]
     mod tests_rename_type_renames_the_beam_type_without_recategorising_it;
-    #[path = "✂️unbind-representation/🧪️tests/unbinds-the-leading-representation-and-keeps-the-trailing-one/🦀️component.rs"]
+    #[path = "✂️unbind-representation/🧪️tests/unbinds-the-leading-representation-and-keeps-the-trailing-one/🦀️.rs"]
     mod tests_unbind_representation_unbinds_the_leading_representation_and_keeps_the_trailing_one;
 }
 //#endregion 🧪️FixtureTests

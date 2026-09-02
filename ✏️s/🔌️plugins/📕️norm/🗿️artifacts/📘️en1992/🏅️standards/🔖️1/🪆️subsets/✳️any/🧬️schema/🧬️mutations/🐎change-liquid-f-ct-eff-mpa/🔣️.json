@@ -5,7 +5,7 @@
   "displayName": "Change Liquid F Ct Eff Mpa",
   "emoji": "🐎",
   "aggregateVariant": "ChangeLiquidFCtEffMpa",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

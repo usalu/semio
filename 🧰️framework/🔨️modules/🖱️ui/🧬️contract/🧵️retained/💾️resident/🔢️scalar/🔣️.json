@@ -3583,7 +3583,7 @@
     "nxTarget": "@semio-tech/framework-renderer-react:test-long",
     "router": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🟦️typescript/🎯️targets/⚛️react/📜️script.ts",
     "project": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🟦️typescript/🎯️targets/⚛️react/📋️project.json",
-    "testHost": "UiDocumentStore/🟦️component.tsx / TypedWire",
+    "testHost": "UiDocumentStore/🟦️.tsx / TypedWire",
     "selectors": [
       "OwnedResidentScalarDeclaration",
       "OwnedResidentScalarReceiptModel",

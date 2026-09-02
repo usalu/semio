@@ -1,7 +1,7 @@
 {
   "$schema": "../🧬️schema/🔣️.json",
   "schemaVersion": 2,
-  "_comment": "📇️ The framework's OWN registry. It holds only what is domain-neutral: decisions about the test platform itself, plus the tolerance vocabulary every owner's comparison pipeline resolves against. Every reference implementation and every measurement probe that knows a file format, a geometry kernel or any other domain belongs to that domain's owner and reaches the platform through `<owner>/🧪️oracle/🔣️.json`, which is discovered by convention. Nothing in this file may name a plugin, a product or a format.",
+  "_comment": "📇️ The framework's OWN registry. It holds only what is domain-neutral: decisions about the test platform itself, plus the tolerance vocabulary every owner's comparison pipeline resolves against. Every reference implementation and every measurement probe that knows a file format, a geometry kernel or any other domain belongs to that domain's owner and reaches the platform through `<owner>/🔣️oracle.json`, which is discovered by convention. Nothing in this file may name a plugin, a product or a format.",
   "oracles": [],
   "probes": [],
   "noOracleDecisions": [

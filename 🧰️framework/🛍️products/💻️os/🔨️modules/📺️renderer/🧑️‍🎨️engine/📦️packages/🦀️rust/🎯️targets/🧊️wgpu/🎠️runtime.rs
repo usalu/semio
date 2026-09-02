@@ -23,13 +23,13 @@
 //! as "the natural place a future packet should inject a single real, externally-owned `WorkerPool`
 //! instead of ever falling through to a crate-private lazy default" — the renderer is not allowed to
 //! size or own its own thread pool, that is the entire point of Phase 1. The caller
-//! (`📦️glue.rs`'s `crate::renderer_worker_pool()`, `kernel_runtime::KernelThreadState::new`) injects
+//! (`🦀️.rs`'s `crate::renderer_worker_pool()`, `kernel_runtime::KernelThreadState::new`) injects
 //! the ONE process-wide pool this whole renderer crate shares — with the directory-client
 //! `TokioHostRuntime` in `Shell/🧊️component.rs` — rather than this type minting a second one.
 //!
 //! Native-only end to end (unchanged): [`semio_framework_actor::ShardKind::Native`] — the execution
 //! HOST is "native process, shared pool," never wasm — so this module stays mounted
-//! `#[cfg(not(target_arch = "wasm32"))]` from `📦️glue.rs`.
+//! `#[cfg(not(target_arch = "wasm32"))]` from `🦀️.rs`.
 
 use semio_framework::kernel::{BrokerCapabilityGrant, Budget as TurnBudget, TurnResult as KernelTurnResult};
 use semio_framework_actor::{ActivationEvent, ActorId, ActorKind, Backpressure, Decision, Envelope, FailureEscalation, Kernel, KernelError, Lane, PackageId, ShardKind, WindowId};

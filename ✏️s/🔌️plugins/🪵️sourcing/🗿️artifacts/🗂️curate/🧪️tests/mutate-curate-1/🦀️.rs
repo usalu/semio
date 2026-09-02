@@ -22,10 +22,10 @@
 //!
 //! **How the fixture reaches typed values.** The generated test host links only
 //! `semio-repo-test-host` and, behind `sut`, this plugin's own crate — no `serde`, no `serde_json`,
-//! and this crate's `protocol`/`store` extern-crate aliases are private (`📦️glue.rs`). The subset's
+//! and this crate's `protocol`/`store` extern-crate aliases are private (`🦀️.rs`). The subset's
 //! own production code exports the bridges instead: `decode_curate_snapshot_json`/
 //! `encode_curate_snapshot_json`/`parse_curate_dsl`/`print_curate_dsl`/`curate_selection_summary`
-//! (`…/🧬️schema/📸️snapshot/🦀️component.rs`) and `decode_sourcing_mutation_json`/
+//! (`…/🧬️schema/📸️snapshot/🦀️.rs`) and `decode_sourcing_mutation_json`/
 //! `apply_sourcing_mutation_reporting`/`inverse_sourcing_mutation_steps`
 //! (`…/🧬️schema/🧬️mutations/🦀️.rs`).
 //!

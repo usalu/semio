@@ -5,7 +5,7 @@
   "displayName": "Edit Node Text",
   "emoji": "✏️",
   "aggregateVariant": "EditNodeText",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": "edit-node-text",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

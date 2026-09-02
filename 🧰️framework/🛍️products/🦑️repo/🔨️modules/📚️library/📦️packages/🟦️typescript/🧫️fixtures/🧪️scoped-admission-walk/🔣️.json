@@ -3,11 +3,11 @@
   "ticketRoot": "🧪️tests/🧪️ticket",
   "generatorRoots": ["🧪️tests/🧪️generator/🤖️generated", "🧪️tests/🧪️other-generator/🤖️generated"],
   "files": {
-    "🧪️tests/🧪️subject/📝️.md": "ordinary scoped leaf\n",
-    "🧪️tests/🧪️ticket/🧪️subject/📝️.md": "explicit ignored ticket leaf\n",
-    "🧪️tests/🧪️ticket/🧪️outside/📝️.md": "unrelated ticket evidence\n",
-    "🧪️tests/🧪️generator/🤖️generated/🧪️subject/📝️.md": "owned ignored generated leaf\n",
-    "🧪️tests/🧪️generator/🤖️generated/🧪️outside/📝️.md": "unrelated generated leaf\n",
+    "🧪️tests/📝️subject.md": "ordinary scoped leaf\n",
+    "🧪️tests/🧪️ticket/📝️subject.md": "explicit ignored ticket leaf\n",
+    "🧪️tests/🧪️ticket/📝️outside.md": "unrelated ticket evidence\n",
+    "🧪️tests/🧪️generator/🤖️generated/📝️subject.md": "owned ignored generated leaf\n",
+    "🧪️tests/🧪️generator/🤖️generated/📝️outside.md": "unrelated generated leaf\n",
     "🧪️tests/🧪️other-generator/🤖️generated/📝️.md": "unrelated generator owner\n"
   },
   "cases": [

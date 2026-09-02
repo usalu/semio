@@ -5,7 +5,7 @@
   "displayName": "Delete Part",
   "emoji": "🗑",
   "aggregateVariant": "DeletePart",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": "delete-part",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

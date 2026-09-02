@@ -1,0 +1,17 @@
+dialect protocol
+protocol stdio.semio.kit.diff
+version 1
+schema s.stdio.semio.kit
+start body
+framing record
+
+# UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM kit wave (W2c). Real binary diff frame: `format u8` +
+# `presence u8` (bit0=types, bit1=designs, bit2=objects, bit3=models, bit4=properties,
+# bit5=representations) are two REAL fixed fields; the present fields' own encodings follow as one
+# opaque trailing `payload` chain — the real Rust `encode_diff`/`decode_diff`
+# (`../../🦀️.rs`) stays genuinely structured.
+header fixed 2
+field format u8
+field presence u8
+
+chain payload bytes

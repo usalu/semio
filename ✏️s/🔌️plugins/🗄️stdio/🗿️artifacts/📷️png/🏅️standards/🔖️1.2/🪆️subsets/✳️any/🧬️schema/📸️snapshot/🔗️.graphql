@@ -1,0 +1,125 @@
+# 🧬️ PngSnapshot schema facet — mirrors 🦀️.rs field-for-field.
+
+"🎨️ PNG §11.2.2 IHDR color type. PALETTE requires a PLTE chunk."
+enum PngColorType {
+  GRAYSCALE
+  RGB
+  PALETTE
+  GRAYSCALE_ALPHA
+  RGBA
+}
+
+"🎨️ One PLTE entry — a weak value (whole-value replaced in diffs)."
+type PngRgb {
+  r: Int!
+  g: Int!
+  b: Int!
+}
+
+"👁️ Typed tRNS payload — shape depends on colorType (§11.3.3)."
+type PngTransparency {
+  colorType: String!
+  alpha: [Int!]
+  gray: Int
+  r: Int
+  g: Int
+  b: Int
+}
+
+"📐️ cHRM — CIE xy chromaticity coordinates, each value * 100000 (§11.3.5.2)."
+type PngChromaticities {
+  whiteX: Int!
+  whiteY: Int!
+  redX: Int!
+  redY: Int!
+  greenX: Int!
+  greenY: Int!
+  blueX: Int!
+  blueY: Int!
+}
+
+"🖌️ sRGB rendering intent (§11.3.5.3)."
+enum PngSrgbIntent {
+  PERCEPTUAL
+  RELATIVE_COLORIMETRIC
+  SATURATION
+  ABSOLUTE_COLORIMETRIC
+}
+
+"📏️ pHYs — pixel-per-unit density (§11.3.5.4)."
+type PngPhysicalDims {
+  ppuX: Int!
+  ppuY: Int!
+  unitIsMeter: Boolean!
+}
+
+"🕰️ tIME — last modification time, UTC (§11.3.6.1)."
+type PngTimestamp {
+  year: Int!
+  month: Int!
+  day: Int!
+  hour: Int!
+  minute: Int!
+  second: Int!
+}
+
+"🖼️ bKGD — default background color; shape depends on colorType (§11.3.5.1)."
+type PngBackground {
+  colorType: String!
+  gray: Int
+  r: Int
+  g: Int
+  b: Int
+  index: Int
+}
+
+"🔤 Which of tEXt/zTXt/iTXt (§11.3.4) a PngTextChunk came from."
+enum PngTextKind {
+  TEXT
+  Z_TEXT
+  I_TEXT
+}
+
+"💬️ One tEXt/zTXt/iTXt chunk. Index-keyed within PngSnapshot.textChunks."
+type PngTextChunk {
+  keyword: String!
+  value: String!
+  compressed: Boolean!
+  kind: PngTextKind!
+  languageTag: String!
+  translatedKeyword: String!
+}
+
+"🗃️ A chunk the codec doesn't specifically model, retained verbatim."
+type PngChunk {
+  kind: [Int!]!
+  data: [Int!]!
+}
+
+"🧭️ One slot in the file's real chunk sequence."
+type PngChunkMarker {
+  chunk: String!
+  index: Int
+}
+
+"📸️ Complete stdio.png 1.2 semantic snapshot. schema is an identity field, never diffed."
+type PngSnapshot {
+  schema: String! @state(class: ARTIFACT)
+  width: Int! @state(class: ARTIFACT)
+  height: Int! @state(class: ARTIFACT)
+  bitDepth: Int! @state(class: ARTIFACT)
+  colorType: PngColorType! @state(class: ARTIFACT)
+  interlace: Boolean! @state(class: ARTIFACT)
+  plte: [PngRgb!] @state(class: ARTIFACT)
+  trns: PngTransparency @state(class: ARTIFACT)
+  gama: Int @state(class: ARTIFACT)
+  chrm: PngChromaticities @state(class: ARTIFACT)
+  srgb: PngSrgbIntent @state(class: ARTIFACT)
+  phys: PngPhysicalDims @state(class: ARTIFACT)
+  time: PngTimestamp @state(class: ARTIFACT)
+  bkgd: PngBackground @state(class: ARTIFACT)
+  textChunks: [PngTextChunk!]! @state(class: ARTIFACT)
+  pixels: [Int!]! @state(class: ARTIFACT)
+  chunkOrder: [PngChunkMarker!]! @state(class: ARTIFACT)
+  unknownChunks: [PngChunk!]! @state(class: ARTIFACT)
+}

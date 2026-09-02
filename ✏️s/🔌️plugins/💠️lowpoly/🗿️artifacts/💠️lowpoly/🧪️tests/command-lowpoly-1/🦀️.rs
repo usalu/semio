@@ -18,7 +18,7 @@ mod subject {
     use semio_s_plugin_lowpoly::editor::lowpoly::{ArtifactView, ConfigView, HistoryView, LowpolyCommand};
 
     /// 🧾️ One representative value per group, mirroring the crate's own `every_command()` test
-    /// helper's example payloads exactly (`✏️editor/🦀️component.rs`'s `#[cfg(test)] mod tests`), so a
+    /// helper's example payloads exactly (`✏️editor/🦀️.rs`'s `#[cfg(test)] mod tests`), so a
     /// drift between the two is a drift this case would also have to be told about by hand.
     fn representative(group: &str) -> Option<LowpolyCommand> {
         match group {

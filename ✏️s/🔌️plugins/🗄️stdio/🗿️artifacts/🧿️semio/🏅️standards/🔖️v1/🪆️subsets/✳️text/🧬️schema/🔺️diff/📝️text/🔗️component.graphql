@@ -1,5 +1,0 @@
-# 📝️ Text-facet grammar mirror (descriptive) — see ../🔗️component.graphql for the canonical facet
-# schema; this file describes the DSL-text ENCODING of the diff shape.
-type SemioTextDiffDsl {
-  runsWire: String
-}

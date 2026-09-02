@@ -5,7 +5,7 @@
   "displayName": "Change Stream Sync",
   "emoji": "⏱️",
   "aggregateVariant": "ChangeStreamSync",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": "change-stream-sync",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

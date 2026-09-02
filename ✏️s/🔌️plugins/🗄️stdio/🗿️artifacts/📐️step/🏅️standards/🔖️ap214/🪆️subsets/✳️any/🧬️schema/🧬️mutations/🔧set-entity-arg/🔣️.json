@@ -5,7 +5,7 @@
   "displayName": "Set Entity Arg",
   "emoji": "🔧",
   "aggregateVariant": "SetEntityArg",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": "set-entity-arg",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

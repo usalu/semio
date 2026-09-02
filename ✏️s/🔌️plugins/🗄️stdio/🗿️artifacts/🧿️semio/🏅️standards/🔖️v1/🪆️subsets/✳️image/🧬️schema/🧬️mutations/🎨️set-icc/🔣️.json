@@ -5,7 +5,7 @@
   "displayName": "Set Icc",
   "emoji": "🎨️",
   "aggregateVariant": "SetIcc",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

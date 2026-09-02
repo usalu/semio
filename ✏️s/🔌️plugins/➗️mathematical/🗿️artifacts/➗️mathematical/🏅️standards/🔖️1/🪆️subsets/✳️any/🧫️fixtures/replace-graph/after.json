@@ -1,0 +1,63 @@
+{
+  "equation": {
+    "expr": {
+      "kind": "add",
+      "label": 0,
+      "terms": [
+        {
+          "factors": [
+            {
+              "denom": "4",
+              "kind": "rational",
+              "label": 2,
+              "numer": "3"
+            },
+            {
+              "kind": "symbol",
+              "label": 3,
+              "name": "x"
+            }
+          ],
+          "kind": "mul",
+          "label": 1
+        },
+        {
+          "kind": "integer",
+          "label": 4,
+          "lexeme": "2"
+        }
+      ]
+    },
+    "nextLabel": 5
+  },
+  "geometry": {
+    "points": [
+      {
+        "x": 1.0,
+        "y": 2.0
+      },
+      {
+        "x": 3.0,
+        "y": 4.0
+      },
+      {
+        "x": 5.0,
+        "y": 6.0
+      }
+    ]
+  },
+  "graph": {
+    "algorithm": "bfs",
+    "algorithmSeed": "z",
+    "directed": false,
+    "edges": [],
+    "nodes": [
+      {
+        "id": "z",
+        "label": "Z",
+        "x": 70.0,
+        "y": 80.0
+      }
+    ]
+  }
+}

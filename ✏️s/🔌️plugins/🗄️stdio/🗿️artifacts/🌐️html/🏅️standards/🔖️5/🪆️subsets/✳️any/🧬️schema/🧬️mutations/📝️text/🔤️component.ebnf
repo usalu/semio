@@ -1,3 +1,0 @@
-(* ebnf stdio.html mutations -- hand-rolled `keyword arg=value ...` grammar, see the sibling
-   ../📖️component.grammar.semio for the full production rules. *)
-document = keyword, { " ", arg, "=", value } ;

@@ -20,7 +20,7 @@ ports = { react = 6078, wgpu = 6178 }
 
 [lib]
 crate-type = ["cdylib", "rlib"]
-path = "📦️glue.rs"
+path = "🦀️.rs"
 
 [dependencies]
 semio-framework = { workspace = true }

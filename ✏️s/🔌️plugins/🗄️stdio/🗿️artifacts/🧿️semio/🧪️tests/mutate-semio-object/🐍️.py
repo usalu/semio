@@ -7,21 +7,21 @@ IMPLEMENTATION, written in another language from the format's own committed spec
 
 * the envelope — `semio <plugin>.<artifact>.<component> v<version>` for text, and the
   `0x89 'S' 'E' 'M' 0D 0A 1A 0A` magic + little-endian u32 token length + token for binary — is
-  specified in `🧰️framework/🛍️products/💻️os/🔨️modules/🧬️semio/🦀️component.rs`'s `🔖️Envelope`/
+  specified in `🧰️framework/🛍️products/💻️os/🔨️modules/🧬️semio/🦀️.rs`'s `🔖️Envelope`/
   `🔖️Binary`/`🔖️Text` regions, the carrier's normative description;
 * the child handle's `target` string is the ONE dialect-coordinate codec in the repository,
   `<artifact_id>!<kind>@<standard>/<subset>`, specified by `ArtifactRef::to_uri`/`parse_uri` in
-  `🧰️framework/🔨️modules/🚪️io/🧬️schema/🦀️component.rs`;
+  `🧰️framework/🔨️modules/🚪️io/🧬️schema/🦀️.rs`;
 * the DSL body is the committed grammar
-  `../../🏅️standards/🔖️v1/🪆️subsets/✳️object/🧬️schema/📸️snapshot/📝️text/📖️component.grammar.semio`
+  `../../🏅️standards/🔖️v1/🪆️subsets/✳️object/🧬️schema/📸️snapshot/📝️text/📖️.grammar.semio`
   (`document = artifact-mark schema-line transform-line brep-line mesh-line properties-line`,
   `child = "[" "]" | "[" hex "," hex "]"`, `number = INT | FLOAT`);
-* the JSON projection is the committed schema `…/📸️snapshot/🔣️component.json`;
+* the JSON projection is the committed schema `…/📸️snapshot/🔣️.json`;
 * the nine verbs and their argument lists are the committed grammar
-  `…/🧬️schema/🧬️mutations/📝️text/📖️component.grammar.semio`, and their JSON wire form is the
+  `…/🧬️schema/🧬️mutations/📝️text/📖️.grammar.semio`, and their JSON wire form is the
   committed per-kind specification vectors under `…/🧬️mutations/<kind>/🧪️tests/<fixture>/`;
 * the pack body's `format u8` + varint-length-prefixed `schema` is the committed protocol
-  `…/📸️snapshot/💾️binary/📡️component.protocol.semio`, whose prose then names — but declines to
+  `…/📸️snapshot/💾️binary/📡️.protocol.semio`, whose prose then names — but declines to
   frame — "`transform` (10 fixed f64 LE) plus the three optional child-handle slots
   (`brep`/`mesh`/`properties`, each a presence byte + two length-prefixed strings when present)".
   That named-but-unframed layout was written out here from the protocol's own sentence and is
@@ -55,7 +55,7 @@ PACK_FORMAT = 1
 #: which is also the order the pack frame writes them.
 SLOTS = ("brep", "mesh", "properties")
 
-CRATE_DSL = "asset://🏅️standards/🔖️v1/🪆️subsets/✳️object/📚️examples/📦️crate/🖼️assets/🗣️example.dsl.semio"
+CRATE_DSL = "asset://🏅️standards/🔖️v1/🪆️subsets/✳️object/📚️examples/📦️crate/🖼️assets/🗣️.dsl.semio"
 CRATE_PACK = "asset://🏅️standards/🔖️v1/🪆️subsets/✳️object/📚️examples/📦️crate/🖼️assets/🎒️example.pack.semio"
 
 

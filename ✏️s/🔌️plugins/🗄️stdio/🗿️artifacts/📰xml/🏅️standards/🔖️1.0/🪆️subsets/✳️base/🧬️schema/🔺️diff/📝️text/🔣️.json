@@ -1,0 +1,6 @@
+{
+  "$id": "https://semio.tech/schema/stdio.xml/diff/text.xml",
+  "title": "XmlDiffText",
+  "description": "JSON text per the sibling ../🔣️.json XmlDiff shape.",
+  "type": "string"
+}

@@ -5,7 +5,7 @@
   "displayName": "Remove Stream Frame",
   "emoji": "➖",
   "aggregateVariant": "RemoveStreamFrame",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": "remove-stream-frame",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

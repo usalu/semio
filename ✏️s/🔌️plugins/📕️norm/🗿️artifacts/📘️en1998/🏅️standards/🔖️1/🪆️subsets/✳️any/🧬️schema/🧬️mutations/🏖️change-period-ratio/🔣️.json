@@ -5,7 +5,7 @@
   "displayName": "Change Period Ratio",
   "emoji": "🏖️",
   "aggregateVariant": "ChangePeriodRatio",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

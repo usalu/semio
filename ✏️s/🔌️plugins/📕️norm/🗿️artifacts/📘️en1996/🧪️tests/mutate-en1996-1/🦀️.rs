@@ -1,7 +1,7 @@
 //! 🦀️ EN 1996 exhaustive mutation case — Rust adapter. Ticket
 //! 26/08/23/END-TO-END-TESTING-REFACTOR, wave 14 (the no-oracle conversion). The recorded
 //! no-oracle decision `en1996-1-mutation-semantics` is gone from
-//! `../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️oracle/🔣️.json`, because a reference now
+//! `../../🏅️standards/🔖️1/🪆️subsets/✳️any/🔣️oracle.json`, because a reference now
 //! exists to compare against: `s.norm.en1996` is a
 //! semio-native artifact with no third-party reader or writer, so its reference is a second
 //! IMPLEMENTATION: the independent Python `🐍️component.py` beside this file, registered as the
@@ -20,7 +20,7 @@
 //! `✏️s/🔌️plugins/🗄️stdio/🧪️oracle/⚖️law` module (`law::mutation_is_observable`,
 //! `law::inverse_restores`, `law::round_trip_preserves`, `law::carrier_is_exact`) that the
 //! stdio mutation cases use, reached through the `oracleHostPackages` entry this plugin
-//! declares in `✏️s/🔌️plugins/📕️norm/🧪️oracle/🔣️.json`. What `parity` adds on top is the
+//! declares in `✏️s/🔌️plugins/📕️norm/🔣️oracle.json`. What `parity` adds on top is the
 //! one thing a single implementation can never provide: that a second implementation, written in
 //! another language from the same written specification, reaches the same document.
 //!
@@ -30,9 +30,9 @@
 //! unreachable from here. The subset's own production code therefore exports the bridges
 //! (`decode_en1996_snapshot_json`/`encode_en1996_snapshot_json`,
 //! `decode_en1996_dsl`/`encode_en1996_dsl`, `decode_en1996_pack`/`encode_en1996_pack` in
-//! `../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️component.rs`;
+//! `../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs`;
 //! `decode_en1996_mutation_json`, `apply_en1996_mutation`, `inverse_en1996_mutation` in
-//! `../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs`), whose
+//! `../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs`), whose
 //! signatures name only reachable types. This side reaches the committed vectors through
 //! `include_str!` and the Python side through the `asset://` URIs the feature declares, so both
 //! read the SAME committed bytes and neither holds a Rust or Python literal transcribed beside
@@ -51,7 +51,7 @@ use semio_repo_test_host::{digest, parse_json, Adapter, Context, Json, Outcome};
 use semio_s_plugin_stdio_test_oracle::law;
 
 //#region 🔖️Kinds
-/// 🏷️ Mirrors `En1996Mutation::KINDS` (`../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs`) —
+/// 🏷️ Mirrors `En1996Mutation::KINDS` (`../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs`) —
 /// duplicated, not imported, because the oracle-only build must not link the subject crate. The
 /// contract's mutation-coverage gate keeps this list honest against the catalog;
 /// `kinds_match_the_enum_and_the_catalog` in that production file keeps it honest against the enum.
@@ -98,136 +98,136 @@ const PACK_ASSET: &str = "asset://🏅️standards/🔖️1/🪆️subsets/✳�
 fn fixture_text(kind: &str) -> (&'static str, &'static str, &'static str, &'static str) {
     match kind {
         "change-m-ed-knm" => (
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐change-m-ed-knm/🧪️tests/raises-the-design-bending-moment-to-12-5-knm/📸️snapshot/⬅️before/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐change-m-ed-knm/🧪️tests/raises-the-design-bending-moment-to-12-5-knm/🦠️mutation/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐change-m-ed-knm/🧪️tests/raises-the-design-bending-moment-to-12-5-knm/📸️snapshot/➡️after/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐change-m-ed-knm/🧪️tests/raises-the-design-bending-moment-to-12-5-knm/🎯️outcome/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐change-m-ed-knm/🧪️tests/raises-the-design-bending-moment-to-12-5-knm/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐change-m-ed-knm/🧪️tests/raises-the-design-bending-moment-to-12-5-knm/🦠️mutation/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐change-m-ed-knm/🧪️tests/raises-the-design-bending-moment-to-12-5-knm/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐change-m-ed-knm/🧪️tests/raises-the-design-bending-moment-to-12-5-knm/🎯️outcome/🔣️.json"),
         ),
         "change-n-ed-kn" => (
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔽change-n-ed-kn/🧪️tests/raises-the-design-axial-force-to-320-kn/📸️snapshot/⬅️before/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔽change-n-ed-kn/🧪️tests/raises-the-design-axial-force-to-320-kn/🦠️mutation/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔽change-n-ed-kn/🧪️tests/raises-the-design-axial-force-to-320-kn/📸️snapshot/➡️after/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔽change-n-ed-kn/🧪️tests/raises-the-design-axial-force-to-320-kn/🎯️outcome/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔽change-n-ed-kn/🧪️tests/raises-the-design-axial-force-to-320-kn/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔽change-n-ed-kn/🧪️tests/raises-the-design-axial-force-to-320-kn/🦠️mutation/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔽change-n-ed-kn/🧪️tests/raises-the-design-axial-force-to-320-kn/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔽change-n-ed-kn/🧪️tests/raises-the-design-axial-force-to-320-kn/🎯️outcome/🔣️.json"),
         ),
         "change-v-ed-kn" => (
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔼change-v-ed-kn/🧪️tests/raises-the-design-shear-force-to-48-kn/📸️snapshot/⬅️before/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔼change-v-ed-kn/🧪️tests/raises-the-design-shear-force-to-48-kn/🦠️mutation/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔼change-v-ed-kn/🧪️tests/raises-the-design-shear-force-to-48-kn/📸️snapshot/➡️after/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔼change-v-ed-kn/🧪️tests/raises-the-design-shear-force-to-48-kn/🎯️outcome/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔼change-v-ed-kn/🧪️tests/raises-the-design-shear-force-to-48-kn/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔼change-v-ed-kn/🧪️tests/raises-the-design-shear-force-to-48-kn/🦠️mutation/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔼change-v-ed-kn/🧪️tests/raises-the-design-shear-force-to-48-kn/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔼change-v-ed-kn/🧪️tests/raises-the-design-shear-force-to-48-kn/🎯️outcome/🔣️.json"),
         ),
         "change-h-ed-kn" => (
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/↔️change-h-ed-kn/🧪️tests/raises-the-design-sliding-force-to-26-kn/📸️snapshot/⬅️before/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/↔️change-h-ed-kn/🧪️tests/raises-the-design-sliding-force-to-26-kn/🦠️mutation/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/↔️change-h-ed-kn/🧪️tests/raises-the-design-sliding-force-to-26-kn/📸️snapshot/➡️after/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/↔️change-h-ed-kn/🧪️tests/raises-the-design-sliding-force-to-26-kn/🎯️outcome/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/↔️change-h-ed-kn/🧪️tests/raises-the-design-sliding-force-to-26-kn/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/↔️change-h-ed-kn/🧪️tests/raises-the-design-sliding-force-to-26-kn/🦠️mutation/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/↔️change-h-ed-kn/🧪️tests/raises-the-design-sliding-force-to-26-kn/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/↔️change-h-ed-kn/🧪️tests/raises-the-design-sliding-force-to-26-kn/🎯️outcome/🔣️.json"),
         ),
         "change-z-mm3" => (
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➡️change-z-mm3/🧪️tests/raises-the-section-modulus-to-9500000-mm3/📸️snapshot/⬅️before/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➡️change-z-mm3/🧪️tests/raises-the-section-modulus-to-9500000-mm3/🦠️mutation/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➡️change-z-mm3/🧪️tests/raises-the-section-modulus-to-9500000-mm3/📸️snapshot/➡️after/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➡️change-z-mm3/🧪️tests/raises-the-section-modulus-to-9500000-mm3/🎯️outcome/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➡️change-z-mm3/🧪️tests/raises-the-section-modulus-to-9500000-mm3/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➡️change-z-mm3/🧪️tests/raises-the-section-modulus-to-9500000-mm3/🦠️mutation/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➡️change-z-mm3/🧪️tests/raises-the-section-modulus-to-9500000-mm3/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➡️change-z-mm3/🧪️tests/raises-the-section-modulus-to-9500000-mm3/🎯️outcome/🔣️.json"),
         ),
         "change-area-mm2" => (
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⬅️change-area-mm2/🧪️tests/enlarges-the-gross-area-to-640000-mm2/📸️snapshot/⬅️before/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⬅️change-area-mm2/🧪️tests/enlarges-the-gross-area-to-640000-mm2/🦠️mutation/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⬅️change-area-mm2/🧪️tests/enlarges-the-gross-area-to-640000-mm2/📸️snapshot/➡️after/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⬅️change-area-mm2/🧪️tests/enlarges-the-gross-area-to-640000-mm2/🎯️outcome/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⬅️change-area-mm2/🧪️tests/enlarges-the-gross-area-to-640000-mm2/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⬅️change-area-mm2/🧪️tests/enlarges-the-gross-area-to-640000-mm2/🦠️mutation/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⬅️change-area-mm2/🧪️tests/enlarges-the-gross-area-to-640000-mm2/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⬅️change-area-mm2/🧪️tests/enlarges-the-gross-area-to-640000-mm2/🎯️outcome/🔣️.json"),
         ),
         "change-shear-area-mm2" => (
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📏change-shear-area-mm2/🧪️tests/enlarges-the-shear-area-to-384000-mm2/📸️snapshot/⬅️before/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📏change-shear-area-mm2/🧪️tests/enlarges-the-shear-area-to-384000-mm2/🦠️mutation/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📏change-shear-area-mm2/🧪️tests/enlarges-the-shear-area-to-384000-mm2/📸️snapshot/➡️after/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📏change-shear-area-mm2/🧪️tests/enlarges-the-shear-area-to-384000-mm2/🎯️outcome/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📏change-shear-area-mm2/🧪️tests/enlarges-the-shear-area-to-384000-mm2/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📏change-shear-area-mm2/🧪️tests/enlarges-the-shear-area-to-384000-mm2/🦠️mutation/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📏change-shear-area-mm2/🧪️tests/enlarges-the-shear-area-to-384000-mm2/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📏change-shear-area-mm2/🧪️tests/enlarges-the-shear-area-to-384000-mm2/🎯️outcome/🔣️.json"),
         ),
         "change-fk-mpa" => (
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🟩change-fk-mpa/🧪️tests/raises-the-characteristic-compressive-strength-to-7-5-mpa/📸️snapshot/⬅️before/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🟩change-fk-mpa/🧪️tests/raises-the-characteristic-compressive-strength-to-7-5-mpa/🦠️mutation/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🟩change-fk-mpa/🧪️tests/raises-the-characteristic-compressive-strength-to-7-5-mpa/📸️snapshot/➡️after/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🟩change-fk-mpa/🧪️tests/raises-the-characteristic-compressive-strength-to-7-5-mpa/🎯️outcome/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🟩change-fk-mpa/🧪️tests/raises-the-characteristic-compressive-strength-to-7-5-mpa/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🟩change-fk-mpa/🧪️tests/raises-the-characteristic-compressive-strength-to-7-5-mpa/🦠️mutation/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🟩change-fk-mpa/🧪️tests/raises-the-characteristic-compressive-strength-to-7-5-mpa/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🟩change-fk-mpa/🧪️tests/raises-the-characteristic-compressive-strength-to-7-5-mpa/🎯️outcome/🔣️.json"),
         ),
         "change-f-vk-mpa" => (
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️change-f-vk-mpa/🧪️tests/raises-the-characteristic-shear-strength-to-0-375-mpa/📸️snapshot/⬅️before/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️change-f-vk-mpa/🧪️tests/raises-the-characteristic-shear-strength-to-0-375-mpa/🦠️mutation/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️change-f-vk-mpa/🧪️tests/raises-the-characteristic-shear-strength-to-0-375-mpa/📸️snapshot/➡️after/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️change-f-vk-mpa/🧪️tests/raises-the-characteristic-shear-strength-to-0-375-mpa/🎯️outcome/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️change-f-vk-mpa/🧪️tests/raises-the-characteristic-shear-strength-to-0-375-mpa/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️change-f-vk-mpa/🧪️tests/raises-the-characteristic-shear-strength-to-0-375-mpa/🦠️mutation/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️change-f-vk-mpa/🧪️tests/raises-the-characteristic-shear-strength-to-0-375-mpa/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️change-f-vk-mpa/🧪️tests/raises-the-characteristic-shear-strength-to-0-375-mpa/🎯️outcome/🔣️.json"),
         ),
         "change-annex" => (
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔨change-annex/🧪️tests/switches-from-the-german-na-to-the-recommended-en-annex/📸️snapshot/⬅️before/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔨change-annex/🧪️tests/switches-from-the-german-na-to-the-recommended-en-annex/🦠️mutation/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔨change-annex/🧪️tests/switches-from-the-german-na-to-the-recommended-en-annex/📸️snapshot/➡️after/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔨change-annex/🧪️tests/switches-from-the-german-na-to-the-recommended-en-annex/🎯️outcome/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔨change-annex/🧪️tests/switches-from-the-german-na-to-the-recommended-en-annex/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔨change-annex/🧪️tests/switches-from-the-german-na-to-the-recommended-en-annex/🦠️mutation/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔨change-annex/🧪️tests/switches-from-the-german-na-to-the-recommended-en-annex/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔨change-annex/🧪️tests/switches-from-the-german-na-to-the-recommended-en-annex/🎯️outcome/🔣️.json"),
         ),
         "change-masonry-class" => (
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗺️change-masonry-class/🧪️tests/downgrades-manufacturing-control-to-class-4/📸️snapshot/⬅️before/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗺️change-masonry-class/🧪️tests/downgrades-manufacturing-control-to-class-4/🦠️mutation/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗺️change-masonry-class/🧪️tests/downgrades-manufacturing-control-to-class-4/📸️snapshot/➡️after/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗺️change-masonry-class/🧪️tests/downgrades-manufacturing-control-to-class-4/🎯️outcome/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗺️change-masonry-class/🧪️tests/downgrades-manufacturing-control-to-class-4/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗺️change-masonry-class/🧪️tests/downgrades-manufacturing-control-to-class-4/🦠️mutation/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗺️change-masonry-class/🧪️tests/downgrades-manufacturing-control-to-class-4/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗺️change-masonry-class/🧪️tests/downgrades-manufacturing-control-to-class-4/🎯️outcome/🔣️.json"),
         ),
         "change-design-situation" => (
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧱change-design-situation/🧪️tests/switches-the-design-situation-to-seismic/📸️snapshot/⬅️before/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧱change-design-situation/🧪️tests/switches-the-design-situation-to-seismic/🦠️mutation/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧱change-design-situation/🧪️tests/switches-the-design-situation-to-seismic/📸️snapshot/➡️after/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧱change-design-situation/🧪️tests/switches-the-design-situation-to-seismic/🎯️outcome/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧱change-design-situation/🧪️tests/switches-the-design-situation-to-seismic/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧱change-design-situation/🧪️tests/switches-the-design-situation-to-seismic/🦠️mutation/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧱change-design-situation/🧪️tests/switches-the-design-situation-to-seismic/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧱change-design-situation/🧪️tests/switches-the-design-situation-to-seismic/🎯️outcome/🔣️.json"),
         ),
         "change-mu" => (
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏗️change-mu/🧪️tests/raises-the-bed-joint-friction-coefficient-to-0-625/📸️snapshot/⬅️before/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏗️change-mu/🧪️tests/raises-the-bed-joint-friction-coefficient-to-0-625/🦠️mutation/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏗️change-mu/🧪️tests/raises-the-bed-joint-friction-coefficient-to-0-625/📸️snapshot/➡️after/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏗️change-mu/🧪️tests/raises-the-bed-joint-friction-coefficient-to-0-625/🎯️outcome/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏗️change-mu/🧪️tests/raises-the-bed-joint-friction-coefficient-to-0-625/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏗️change-mu/🧪️tests/raises-the-bed-joint-friction-coefficient-to-0-625/🦠️mutation/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏗️change-mu/🧪️tests/raises-the-bed-joint-friction-coefficient-to-0-625/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏗️change-mu/🧪️tests/raises-the-bed-joint-friction-coefficient-to-0-625/🎯️outcome/🔣️.json"),
         ),
         "change-wall-thickness-mm" => (
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎢change-wall-thickness-mm/🧪️tests/thickens-the-wall-to-300-mm/📸️snapshot/⬅️before/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎢change-wall-thickness-mm/🧪️tests/thickens-the-wall-to-300-mm/🦠️mutation/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎢change-wall-thickness-mm/🧪️tests/thickens-the-wall-to-300-mm/📸️snapshot/➡️after/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎢change-wall-thickness-mm/🧪️tests/thickens-the-wall-to-300-mm/🎯️outcome/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎢change-wall-thickness-mm/🧪️tests/thickens-the-wall-to-300-mm/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎢change-wall-thickness-mm/🧪️tests/thickens-the-wall-to-300-mm/🦠️mutation/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎢change-wall-thickness-mm/🧪️tests/thickens-the-wall-to-300-mm/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎢change-wall-thickness-mm/🧪️tests/thickens-the-wall-to-300-mm/🎯️outcome/🔣️.json"),
         ),
         "change-fire-resistance-min" => (
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧊change-fire-resistance-min/🧪️tests/raises-the-fire-resistance-requirement-from-r60-to-r90/📸️snapshot/⬅️before/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧊change-fire-resistance-min/🧪️tests/raises-the-fire-resistance-requirement-from-r60-to-r90/🦠️mutation/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧊change-fire-resistance-min/🧪️tests/raises-the-fire-resistance-requirement-from-r60-to-r90/📸️snapshot/➡️after/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧊change-fire-resistance-min/🧪️tests/raises-the-fire-resistance-requirement-from-r60-to-r90/🎯️outcome/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧊change-fire-resistance-min/🧪️tests/raises-the-fire-resistance-requirement-from-r60-to-r90/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧊change-fire-resistance-min/🧪️tests/raises-the-fire-resistance-requirement-from-r60-to-r90/🦠️mutation/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧊change-fire-resistance-min/🧪️tests/raises-the-fire-resistance-requirement-from-r60-to-r90/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧊change-fire-resistance-min/🧪️tests/raises-the-fire-resistance-requirement-from-r60-to-r90/🎯️outcome/🔣️.json"),
         ),
         "change-unit" => (
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌡️change-unit/🧪️tests/switches-the-masonry-unit-from-clay-to-calcium-silicate/📸️snapshot/⬅️before/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌡️change-unit/🧪️tests/switches-the-masonry-unit-from-clay-to-calcium-silicate/🦠️mutation/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌡️change-unit/🧪️tests/switches-the-masonry-unit-from-clay-to-calcium-silicate/📸️snapshot/➡️after/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌡️change-unit/🧪️tests/switches-the-masonry-unit-from-clay-to-calcium-silicate/🎯️outcome/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌡️change-unit/🧪️tests/switches-the-masonry-unit-from-clay-to-calcium-silicate/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌡️change-unit/🧪️tests/switches-the-masonry-unit-from-clay-to-calcium-silicate/🦠️mutation/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌡️change-unit/🧪️tests/switches-the-masonry-unit-from-clay-to-calcium-silicate/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌡️change-unit/🧪️tests/switches-the-masonry-unit-from-clay-to-calcium-silicate/🎯️outcome/🔣️.json"),
         ),
         "change-exposure" => (
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💧change-exposure/🧪️tests/moves-the-wall-to-exposure-class-mx3/📸️snapshot/⬅️before/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💧change-exposure/🧪️tests/moves-the-wall-to-exposure-class-mx3/🦠️mutation/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💧change-exposure/🧪️tests/moves-the-wall-to-exposure-class-mx3/📸️snapshot/➡️after/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💧change-exposure/🧪️tests/moves-the-wall-to-exposure-class-mx3/🎯️outcome/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💧change-exposure/🧪️tests/moves-the-wall-to-exposure-class-mx3/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💧change-exposure/🧪️tests/moves-the-wall-to-exposure-class-mx3/🦠️mutation/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💧change-exposure/🧪️tests/moves-the-wall-to-exposure-class-mx3/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💧change-exposure/🧪️tests/moves-the-wall-to-exposure-class-mx3/🎯️outcome/🔣️.json"),
         ),
         "change-mortar" => (
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌬️change-mortar/🧪️tests/upgrades-the-general-purpose-mortar-to-m10/📸️snapshot/⬅️before/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌬️change-mortar/🧪️tests/upgrades-the-general-purpose-mortar-to-m10/🦠️mutation/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌬️change-mortar/🧪️tests/upgrades-the-general-purpose-mortar-to-m10/📸️snapshot/➡️after/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌬️change-mortar/🧪️tests/upgrades-the-general-purpose-mortar-to-m10/🎯️outcome/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌬️change-mortar/🧪️tests/upgrades-the-general-purpose-mortar-to-m10/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌬️change-mortar/🧪️tests/upgrades-the-general-purpose-mortar-to-m10/🦠️mutation/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌬️change-mortar/🧪️tests/upgrades-the-general-purpose-mortar-to-m10/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌬️change-mortar/🧪️tests/upgrades-the-general-purpose-mortar-to-m10/🎯️outcome/🔣️.json"),
         ),
         "change-bed-joint-thickness-mm" => (
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔥change-bed-joint-thickness-mm/🧪️tests/thickens-the-bed-joint-to-the-15-mm-upper-limit/📸️snapshot/⬅️before/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔥change-bed-joint-thickness-mm/🧪️tests/thickens-the-bed-joint-to-the-15-mm-upper-limit/🦠️mutation/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔥change-bed-joint-thickness-mm/🧪️tests/thickens-the-bed-joint-to-the-15-mm-upper-limit/📸️snapshot/➡️after/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔥change-bed-joint-thickness-mm/🧪️tests/thickens-the-bed-joint-to-the-15-mm-upper-limit/🎯️outcome/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔥change-bed-joint-thickness-mm/🧪️tests/thickens-the-bed-joint-to-the-15-mm-upper-limit/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔥change-bed-joint-thickness-mm/🧪️tests/thickens-the-bed-joint-to-the-15-mm-upper-limit/🦠️mutation/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔥change-bed-joint-thickness-mm/🧪️tests/thickens-the-bed-joint-to-the-15-mm-upper-limit/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔥change-bed-joint-thickness-mm/🧪️tests/thickens-the-bed-joint-to-the-15-mm-upper-limit/🎯️outcome/🔣️.json"),
         ),
         "change-storeys" => (
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/❄️change-storeys/🧪️tests/adds-a-third-storey-at-the-simplified-method-limit/📸️snapshot/⬅️before/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/❄️change-storeys/🧪️tests/adds-a-third-storey-at-the-simplified-method-limit/🦠️mutation/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/❄️change-storeys/🧪️tests/adds-a-third-storey-at-the-simplified-method-limit/📸️snapshot/➡️after/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/❄️change-storeys/🧪️tests/adds-a-third-storey-at-the-simplified-method-limit/🎯️outcome/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/❄️change-storeys/🧪️tests/adds-a-third-storey-at-the-simplified-method-limit/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/❄️change-storeys/🧪️tests/adds-a-third-storey-at-the-simplified-method-limit/🦠️mutation/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/❄️change-storeys/🧪️tests/adds-a-third-storey-at-the-simplified-method-limit/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/❄️change-storeys/🧪️tests/adds-a-third-storey-at-the-simplified-method-limit/🎯️outcome/🔣️.json"),
         ),
         "change-h-ef-mm" => (
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⚡change-h-ef-mm/🧪️tests/lengthens-the-effective-height-to-2750-mm/📸️snapshot/⬅️before/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⚡change-h-ef-mm/🧪️tests/lengthens-the-effective-height-to-2750-mm/🦠️mutation/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⚡change-h-ef-mm/🧪️tests/lengthens-the-effective-height-to-2750-mm/📸️snapshot/➡️after/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⚡change-h-ef-mm/🧪️tests/lengthens-the-effective-height-to-2750-mm/🎯️outcome/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⚡change-h-ef-mm/🧪️tests/lengthens-the-effective-height-to-2750-mm/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⚡change-h-ef-mm/🧪️tests/lengthens-the-effective-height-to-2750-mm/🦠️mutation/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⚡change-h-ef-mm/🧪️tests/lengthens-the-effective-height-to-2750-mm/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⚡change-h-ef-mm/🧪️tests/lengthens-the-effective-height-to-2750-mm/🎯️outcome/🔣️.json"),
         ),
         "change-t-ef-mm" => (
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔆change-t-ef-mm/🧪️tests/raises-the-effective-thickness-to-300-mm/📸️snapshot/⬅️before/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔆change-t-ef-mm/🧪️tests/raises-the-effective-thickness-to-300-mm/🦠️mutation/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔆change-t-ef-mm/🧪️tests/raises-the-effective-thickness-to-300-mm/📸️snapshot/➡️after/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔆change-t-ef-mm/🧪️tests/raises-the-effective-thickness-to-300-mm/🎯️outcome/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔆change-t-ef-mm/🧪️tests/raises-the-effective-thickness-to-300-mm/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔆change-t-ef-mm/🧪️tests/raises-the-effective-thickness-to-300-mm/🦠️mutation/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔆change-t-ef-mm/🧪️tests/raises-the-effective-thickness-to-300-mm/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔆change-t-ef-mm/🧪️tests/raises-the-effective-thickness-to-300-mm/🎯️outcome/🔣️.json"),
         ),
         other => panic!("mutate-en1996-1: no committed fixture is registered for kind {other:?}"),
     }
@@ -239,7 +239,7 @@ fn canonical(text: &str) -> Json {
     parse_json(text).unwrap_or_else(|error| panic!("committed fixture JSON must parse: {error}"))
 }
 
-/// 🎯️ The status the committed `🎯️outcome/🔣️component.json` declares for one kind — `applied` or
+/// 🎯️ The status the committed `🎯️outcome/🔣️.json` declares for one kind — `applied` or
 /// `rejected` — read out of the committed file rather than transcribed beside it, so the contract a
 /// row is held to cannot drift away from the vector that states it.
 #[cfg(feature = "sut")]
@@ -252,7 +252,7 @@ fn committed_status(kind: &str) -> String {
 //#region 🔖️Carrier
 /// 🧵️ The canonical carrier bytes as a comparable projection: the envelope preamble, every body line
 /// as written, and the digest and length of what was emitted. `.dsl.semio` has no grammar document in
-/// this repository — the committed `📖️component.grammar.semio` is the repository-wide `payload = OCTET+`
+/// this repository — the committed `📖️.grammar.semio` is the repository-wide `payload = OCTET+`
 /// placeholder — so the identity scenario compares the two implementations at the carrier level rather
 /// than mapping carrier tokens onto the snapshot's enum spellings, a mapping nothing states. The
 /// independent Python implementation builds the identical shape from ITS re-emission, and `digest` is
@@ -280,7 +280,7 @@ mod subject {
     use semio_s_plugin_stdio_test_oracle::law;
 
     //#region 🔖️FixtureDecode
-    /// 🧫️ Decodes the SAME committed fixture text `../🦀️component.rs::fixture_text` embeds, through
+    /// 🧫️ Decodes the SAME committed fixture text `../🦀️.rs::fixture_text` embeds, through
     /// this subset's own production JSON bridge — real deserialization of the committed bytes, never
     /// a Rust literal transcribed beside them.
     fn snapshot_of(text: &str, label: &str, kind: &str) -> Result<En1996Snapshot, String> {

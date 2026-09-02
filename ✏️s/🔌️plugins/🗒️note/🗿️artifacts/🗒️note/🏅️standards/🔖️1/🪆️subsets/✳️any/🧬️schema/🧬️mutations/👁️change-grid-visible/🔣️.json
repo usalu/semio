@@ -5,7 +5,7 @@
   "displayName": "Change Grid Visible",
   "emoji": "👁️",
   "aggregateVariant": "ChangeGridVisible",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": "change-grid-visible",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

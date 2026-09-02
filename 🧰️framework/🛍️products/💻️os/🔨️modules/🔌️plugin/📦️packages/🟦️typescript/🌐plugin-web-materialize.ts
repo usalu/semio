@@ -12,11 +12,11 @@ import { spawn } from "node:child_process";
 import { copyFileSync, existsSync, mkdirSync, readFileSync, readdirSync, renameSync, writeFileSync } from "node:fs";
 import { dirname, join, relative } from "node:path";
 import ts from "typescript";
-import { ACTOR_INSTANCE_LIFECYCLE_MAXIMUM_BYTES, encodeActorInstanceLifecycle } from "../../../../../../../🧰️framework/🔨️modules/🎭️actor/🚪️lifetime/🟦️component.ts";
-import { ACTOR_UI_PATCH_RECEIPT_MAXIMUM_BYTES, encodeActorUiPatchReceipt, validateActorUiPatchPairing } from "../../../../../../../🧰️framework/🔨️modules/🎭️actor/🚪️lifetime/🩹️patch/🟦️component.ts";
-import { buildBudgetMs, resolveWorkspaceBin, runCmdStatus, runNodeBinStatus, semioBuildMode } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts";
+import { ACTOR_INSTANCE_LIFECYCLE_MAXIMUM_BYTES, encodeActorInstanceLifecycle } from "../../../../../../../🧰️framework/🔨️modules/🎭️actor/🚪️lifetime/🟦️.ts";
+import { ACTOR_UI_PATCH_RECEIPT_MAXIMUM_BYTES, encodeActorUiPatchReceipt, validateActorUiPatchPairing } from "../../../../../../../🧰️framework/🔨️modules/🎭️actor/🚪️lifetime/🩹️patch/🟦️.ts";
+import { buildBudgetMs, resolveWorkspaceBin, runCmdStatus, runNodeBinStatus, semioBuildMode } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 
-export const PLUGIN_HOST_SHIM_FILE = "🟨️host-shim.js";
+export const PLUGIN_HOST_SHIM_FILE = "🟨️.js";
 export const SHARD_WORKER_FILE = "🟨️shard-worker.js";
 
 export type PluginWebMaterializeContext = {
@@ -81,7 +81,7 @@ export function ensurePreview2ShimVendorAt(preview2VendorDir: string, repoRoot: 
  * thrown, so a future Rust-side `ShardFrame` variant can reach a live worker before its TS mirror
  * lands without wedging it. An `Envelope` whose `payload.kind` is `"effect-complete"`/`"effect-error"`
  * is routed to `deliverEffectResult` instead of a normal turn (🧪️ terra-web-bridges, see that
- * function's own doc) — it settles a `🟨️host-shim.js` Promise, it is never itself a turn to run.
+ * function's own doc) — it settles a `🟨️.js` Promise, it is never itself a turn to run.
  *
  * 🧪️ terra-web-bridges (async-worlds): every WIT function the target world exports/imports is now
  * `async func`, and jco's JS glue for that ALWAYS calls `new WebAssembly.Suspending(...)`/
@@ -208,7 +208,7 @@ async function loadActor(actorId, activationGeneration, moduleUrl) {
   }
 }
 
-// 🧪️ terra-web-bridges: settles a \`🟨️host-shim.js\` \`effectRequest\` Promise from an \`effect-complete\`/
+// 🧪️ terra-web-bridges: settles a \`🟨️.js\` \`effectRequest\` Promise from an \`effect-complete\`/
 // \`effect-error\` envelope — see \`hostShimSource\`'s own doc for the wire shape this expects
 // (\`envelope.payload.payload.requestId\`, \`.value\` on complete / \`.message\` on error). A missing actor
 // (already disposed, or the envelope arrived before \`activate\`) is silently dropped rather than
@@ -259,7 +259,7 @@ self.addEventListener("message", async (event) => {
     return;
   }
   // 🧪️ terra-web-bridges: an effect-complete/effect-error \`"frame"\` is a REPLY to something THIS
-  // worker sent (\`🟨️host-shim.js\`'s \`effectRequest\`), never a request expecting a \`reply()\` of its
+  // worker sent (\`🟨️.js\`'s \`effectRequest\`), never a request expecting a \`reply()\` of its
   // own — settled directly, before the generic requestId/actorId-gated dispatch below (which always
   // posts a \`"result"\` back, wrong for a message that is itself already an answer).
   if (kind === "frame" && msg.frame && msg.frame.kind === "Envelope" && msg.frame.envelope && msg.frame.envelope.payload && (msg.frame.envelope.payload.kind === "effect-complete" || msg.frame.envelope.payload.kind === "effect-error")) {
@@ -608,7 +608,7 @@ function rewriteJcoAsyncResultLiftingAt(modulePath: string): void {
 
 //#region 🧊️JcoComponentAssetVersioning
 const JCO_HOST_SHIM_URL_HELPER = `function __semioActivationHostUrl() {
-  const url = new URL("./🟨️host-shim.js", import.meta.url);
+  const url = new URL("./🟨️.js", import.meta.url);
   const source = new URL(import.meta.url);
   for (const key of ["actor", "activation", "v"]) {
     const value = source.searchParams.get(key);
@@ -662,10 +662,10 @@ export function transpilePluginComponent(artifact: string, outDir: string, compo
   // the SAME wasm and produced 0 bytes of difference). `world actor`'s import surface is now `pure`
   // (component.wit's `interface pure { log; now-ms; trace-span; }`, still plain `func`) PLUS
   // `host-async` (`interface host-async`, ~:887 — 24 `async func` imports + `emit`/`emit-patch`) —
-  // both map to the SAME `🟨️host-shim.js`, which now implements both interfaces' exports from one file.
+  // both map to the SAME `🟨️.js`, which now implements both interfaces' exports from one file.
   if (
     runNodeBinStatus(
-      ["@bytecodealliance/jco", "transpile", artifact, "-o", outDir, "--name", componentBase, "--map", "semio:framework/pure=./🟨️host-shim.js", "--map", "semio:framework/host-async=./🟨️host-shim.js"],
+      ["@bytecodealliance/jco", "transpile", artifact, "-o", outDir, "--name", componentBase, "--map", "semio:framework/pure=./🟨️.js", "--map", "semio:framework/host-async=./🟨️.js"],
       ctx.repoRoot,
     ) !== 0
   ) {
@@ -755,7 +755,7 @@ export async function transpilePluginComponentAsync(artifact: string, outDir: st
     // 🧪️ terra-web-bridges: same flags/map pair as the sync {@link transpilePluginComponent} above —
     // see that function's own doc for why no `--async-mode` flag is needed and why `host-async` maps
     // to the same shim file `pure` already does.
-    await spawnNodeBinAsync(["@bytecodealliance/jco", "transpile", artifact, "-o", outDir, "--name", componentBase, "--map", "semio:framework/pure=./🟨️host-shim.js", "--map", "semio:framework/host-async=./🟨️host-shim.js"], ctx.repoRoot);
+    await spawnNodeBinAsync(["@bytecodealliance/jco", "transpile", artifact, "-o", outDir, "--name", componentBase, "--map", "semio:framework/pure=./🟨️.js", "--map", "semio:framework/host-async=./🟨️.js"], ctx.repoRoot);
   } catch {
     throw new Error(`jco transpile failed for ${artifact}`);
   }

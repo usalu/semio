@@ -1,7 +1,7 @@
 {
   "schemaVersion": 2,
   "launcherPath": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📜️script.ts",
-  "testPath": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧪️transaction-v2/🟦️.test.ts",
+  "testPath": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🟦️transaction-v2.ts",
   "absoluteBundleExpression": "bundle",
   "runIdExpression": "runId",
   "runIdEntropyCall": "crypto.randomUUID()",

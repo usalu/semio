@@ -5,10 +5,10 @@
   "displayName": "Move Page",
   "emoji": "🔀️",
   "aggregateVariant": "MovePage",
-  "payloadSchema": "🔣️payload.schema.json",
-  "textOpcode": null,
-  "binaryTag": null,
-  "invertibility": "non-invertible",
+  "payloadSchema": "🔣️.schema.json",
+  "textOpcode": "move-page",
+  "binaryTag": 13,
+  "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
   "outcomeClasses": [
     "applied"
@@ -16,6 +16,9 @@
   "composition": "atomic",
   "requiredLanguageSurfaces": [
     "rust",
+    "typescript",
+    "graphql",
+    "protobuf",
     "json-schema",
     "text",
     "binary"

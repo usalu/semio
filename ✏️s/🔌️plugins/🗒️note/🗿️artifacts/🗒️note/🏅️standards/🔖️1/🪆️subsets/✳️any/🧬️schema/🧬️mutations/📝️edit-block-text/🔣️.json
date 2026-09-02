@@ -5,7 +5,7 @@
   "displayName": "Edit Block Text",
   "emoji": "📝️",
   "aggregateVariant": "EditBlockText",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": "edit-block-text",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

@@ -1,0 +1,20 @@
+syntax = "proto3";
+// 💡️ SemioMeshInference facet mirror — see the sibling 🦀️.rs for the real source of
+// truth. `computed_normals`/`tessellation_preview` are deliberately absent (see that file's
+// module doc comment for why).
+package semio.s_stdio_semio_mesh.inference;
+
+message SemioAabbPoint3 {
+  double x = 1;
+  double y = 2;
+  double z = 3;
+}
+
+message SemioAabb {
+  SemioAabbPoint3 min = 1;
+  SemioAabbPoint3 max = 2;
+}
+
+message SemioMeshInference {
+  map<string, SemioAabb> aabb = 1;
+}

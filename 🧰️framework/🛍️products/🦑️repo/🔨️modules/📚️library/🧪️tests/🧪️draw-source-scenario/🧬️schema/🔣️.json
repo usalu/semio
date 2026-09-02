@@ -40,14 +40,14 @@
           "properties": {
             "path": { "const": "📦️packages/🦀️rust/📚️library/🦀️.rs" },
             "format": { "const": "rust" },
-            "content": { "const": "#[path = \"../../../🗿️artifacts/📐️cad/🎬️interaction-spec/🦀️component.rs\"]\nmod cad_interaction_spec;\n" }
+            "content": { "const": "#[path = \"../../../🗿️artifacts/📐️cad/🎬️interaction-spec/🦀️.rs\"]\nmod cad_interaction_spec;\n" }
           }
         }
       ]
     },
     "cadConsumerMount": {
       "const": {
-        "sourcePath": "✏️s/🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🟦️component.ts",
+        "sourcePath": "✏️s/🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🟦️.ts",
         "path": "✏️s/🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🟦️.ts",
         "meaning": "unchanged-live-cad-bytes-in-authored-canonical-fixture-context"
       }
@@ -72,14 +72,14 @@
         { "contains": { "type": "object", "required": ["path", "format"], "properties": { "path": { "const": "🔄️fsm/✨️macros/📦️packages/🦀️rust/Cargo.toml" }, "format": { "const": "toml" } } } },
         { "contains": { "type": "object", "required": ["path", "format"], "properties": { "path": { "const": "🔄️fsm/✨️macros/📦️packages/🦀️rust/📋️project.json" }, "format": { "const": "json" } } } },
         { "contains": { "type": "object", "required": ["path", "format"], "properties": { "path": { "const": "🔄️fsm/✨️macros/📦️packages/🦀️rust/📜️script.ts" }, "format": { "const": "typescript" } } } },
-        { "contains": { "type": "object", "required": ["path", "format"], "properties": { "path": { "const": "🔄️fsm/✨️macros/📦️packages/🦀️rust/📦️glue.rs" }, "format": { "const": "rust" } } } },
-        { "contains": { "type": "object", "required": ["path", "format"], "properties": { "path": { "const": "🔄️fsm/✨️macros/🦀️component.rs" }, "format": { "const": "rust" } } } },
+        { "contains": { "type": "object", "required": ["path", "format"], "properties": { "path": { "const": "🔄️fsm/✨️macros/📦️packages/🦀️rust/🦀️.rs" }, "format": { "const": "rust" } } } },
+        { "contains": { "type": "object", "required": ["path", "format"], "properties": { "path": { "const": "🔄️fsm/✨️macros/🦀️.rs" }, "format": { "const": "rust" } } } },
         { "contains": { "type": "object", "required": ["path", "format"], "properties": { "path": { "const": "🔄️fsm/📦️packages/🦀️rust/Cargo.toml" }, "format": { "const": "toml" } } } },
         { "contains": { "type": "object", "required": ["path", "format"], "properties": { "path": { "const": "🔄️fsm/📦️packages/🦀️rust/📋️project.json" }, "format": { "const": "json" } } } },
         { "contains": { "type": "object", "required": ["path", "format"], "properties": { "path": { "const": "🔄️fsm/📦️packages/🦀️rust/📜️script.ts" }, "format": { "const": "typescript" } } } },
-        { "contains": { "type": "object", "required": ["path", "format"], "properties": { "path": { "const": "🔄️fsm/📦️packages/🦀️rust/📦️glue.rs" }, "format": { "const": "rust" } } } },
-        { "contains": { "type": "object", "required": ["path", "format"], "properties": { "path": { "const": "🔄️fsm/🦀️component.rs" }, "format": { "const": "rust" } } } },
-        { "contains": { "type": "object", "required": ["path", "format"], "properties": { "path": { "const": "🦀️component.rs" }, "format": { "const": "rust" } } } }
+        { "contains": { "type": "object", "required": ["path", "format"], "properties": { "path": { "const": "🔄️fsm/📦️packages/🦀️rust/🦀️.rs" }, "format": { "const": "rust" } } } },
+        { "contains": { "type": "object", "required": ["path", "format"], "properties": { "path": { "const": "🔄️fsm/🦀️.rs" }, "format": { "const": "rust" } } } },
+        { "contains": { "type": "object", "required": ["path", "format"], "properties": { "path": { "const": "🦀️.rs" }, "format": { "const": "rust" } } } }
       ],
       "items": { "$ref": "#/definitions/input" }
     },
@@ -92,7 +92,7 @@
         { "contains": { "type": "object", "required": ["path", "format"], "properties": { "path": { "const": "Cargo.toml" }, "format": { "const": "toml" } } } },
         { "contains": { "type": "object", "required": ["path", "format"], "properties": { "path": { "const": "🔣️.json" }, "format": { "const": "json" } } } },
         { "contains": { "type": "object", "required": ["path", "format"], "properties": { "path": { "const": "📦️packages/🦀️rust/Cargo.toml" }, "format": { "const": "toml" } } } },
-        { "contains": { "type": "object", "required": ["path", "format"], "properties": { "path": { "const": "🧪️tests/🧪️reference/🦀️.rs" }, "format": { "const": "rust" } } } },
+        { "contains": { "type": "object", "required": ["path", "format"], "properties": { "path": { "const": "🧪️tests/🦀️reference.rs" }, "format": { "const": "rust" } } } },
         { "contains": { "type": "object", "required": ["path", "format"], "properties": { "path": { "const": "📜️script.ts" }, "format": { "const": "typescript" } } } }
       ],
       "items": { "$ref": "#/definitions/input" }
@@ -144,7 +144,7 @@
             "required": ["path", "sourceEntry", "destinationEntry"],
             "properties": {
               "path": { "type": "string", "minLength": 1 },
-              "sourceEntry": { "const": "📦️glue.rs" },
+              "sourceEntry": { "const": "🦀️.rs" },
               "destinationEntry": { "const": "📚️library/🦀️.rs" }
             }
           }
@@ -165,7 +165,7 @@
             "packageName": { "const": "draw-source-consumer" },
             "libraryEntry": { "const": "📚️library/🦀️.rs" },
             "moduleName": { "const": "cad_interaction_spec" },
-            "moduleTarget": { "const": "../../../🗿️artifacts/📐️cad/🎬️interaction-spec/🦀️component.rs" },
+            "moduleTarget": { "const": "../../../🗿️artifacts/📐️cad/🎬️interaction-spec/🦀️.rs" },
             "canonicalModuleTarget": { "const": "../../../🗿️artifacts/📐️cad/🎬️interaction-spec/🦀️.rs" }
           }
         }

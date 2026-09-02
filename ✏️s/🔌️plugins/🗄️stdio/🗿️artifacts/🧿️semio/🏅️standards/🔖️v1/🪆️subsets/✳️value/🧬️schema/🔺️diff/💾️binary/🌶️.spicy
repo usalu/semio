@@ -1,0 +1,11 @@
+module Semio_value_diff;
+
+# REAL binary diff frame (upgraded from the old print_diff-bytes-verbatim shortcut): `format u8` +
+# `presence u8` (bit0=root, bit1=nodes) fixed header, then 0-2 recursive LEB128-varint payloads
+# back-to-back as one opaque `payload` tail (real Rust-side recursion, see
+# ../📝️text/📖️.grammar.semio for the equivalent tag-prefixed text shape).
+type Document = unit {
+    format: uint8;
+    presence: uint8;
+    payload: bytes &eod;
+};

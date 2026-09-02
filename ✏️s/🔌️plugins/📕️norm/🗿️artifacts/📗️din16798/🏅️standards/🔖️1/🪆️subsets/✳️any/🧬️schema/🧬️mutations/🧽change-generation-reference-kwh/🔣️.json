@@ -5,7 +5,7 @@
   "displayName": "Change Generation Reference Kwh",
   "emoji": "🧽",
   "aggregateVariant": "ChangeGenerationReferenceKwh",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

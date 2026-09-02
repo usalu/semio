@@ -5,7 +5,7 @@
   "displayName": "Change Retrofit Knowledge Level",
   "emoji": "🏟️",
   "aggregateVariant": "ChangeRetrofitKnowledgeLevel",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

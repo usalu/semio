@@ -1,4 +1,0 @@
-# 📝️ SemioTableMutation text op — descriptive twin of 📖️component.grammar.semio.
-type SemioTableMutationTextOp {
-  line: String! # "keyword:arg1,arg2,..."
-}

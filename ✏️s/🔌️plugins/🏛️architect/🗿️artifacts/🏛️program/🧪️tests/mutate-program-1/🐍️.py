@@ -14,10 +14,10 @@ case's rationale used to call its own vocabulary un-adjudicable.
 
 **What it was written from.**
 
-* ``🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔣️component.json`` — the 266 payload
+* ``🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔣️.json`` — the 266 payload
   shapes: 66 `{id}` payloads, 64 `{id,newName}` payloads, 66 whole-record payloads, and the six
   facet payloads `newTitle`/`newMeta`, `newCode`/`newProject`, `newFramework`/`newGovernance`.
-* ``🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🔣️component.json`` — the register list and
+* ``🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🔣️.json`` — the register list and
   its order.
 * `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/📓️derivation-rules.md`
   rules 1, 2 and 4 — which verbs a document-level facet, an id-keyed register and an edge register
@@ -29,8 +29,8 @@ case's rationale used to call its own vocabulary un-adjudicable.
   `mutation.target-missing` with the id as its path rather than a no-op, and that the snapshot's
   47th register is serialized `artifacts` even though the committed JSON Schema requires `documents`.
 
-**No Rust was read to write this.** `🦀️component.rs` beside this file registers the SUBJECT half
-only, and no file under `🧬️mutations/<slug>/{🦠️mutation,↩️inverse,🔺️diff}/🦀️component.rs` was read.
+**No Rust was read to write this.** `🦀️.rs` beside this file registers the SUBJECT half
+only, and no file under `🧬️mutations/<slug>/{🦠️mutation,↩️inverse,🔺️diff}/🦀️.rs` was read.
 The verb table below is derived from the schemas and the vectors, and was checked by replaying all
 266 committed vectors offline before the oracle was registered.
 
@@ -404,7 +404,7 @@ REGISTER_OF = {
     "governance": "governance",
 }
 """🗄️ Which member of the snapshot each noun addresses. The 66 array registers are named by
-`📸️snapshot/🔣️component.json`; the pairing with a verb's noun is the derivation `📓️derivation-rules.md`
+`📸️snapshot/🔣️.json`; the pairing with a verb's noun is the derivation `📓️derivation-rules.md`
 rule 2 describes and is spelled out here because it is not always the noun's own plural —
 `user-profile` lives in `users`, `program-element` in `elements`, `document` in `artifacts`."""
 
@@ -426,7 +426,7 @@ TARGET_MISSING = "mutation.target-missing"
 
 def camel(noun):
     """🔤️ lowerCamelCase of a hyphenated noun — the whole-record payload key of a `create`,
-    `replace` or `connect`, exactly as `🧬️mutations/🔣️component.json` names it."""
+    `replace` or `connect`, exactly as `🧬️mutations/🔣️.json` names it."""
     head, *rest = noun.split("-")
     return head + "".join(word[:1].upper() + word[1:] for word in rest)
 
@@ -744,7 +744,7 @@ def refuse_carrier(ctx):
     """🚧️ `identity-round-trip` reads this subset's own `.dsl.semio` text carrier, and this
     implementation refuses it by clause rather than by absence.
 
-    1. The committed grammar `🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📝️text/📖️component.grammar.semio`
+    1. The committed grammar `🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📝️text/📖️.grammar.semio`
        is the repository-wide placeholder: its whole body is `payload = OCTET+`, and its `header`
        production declares `"schema" SP "stdio.json"` — which the committed artifact contradicts on
        its first line with `semio architect.program.dsl v1`.
@@ -752,7 +752,7 @@ def refuse_carrier(ctx):
        `ownership=consultant-ids=[ ] participant-ids=[ ] tags=[ ] notes=[ ]`, and only a field table
        can say that `consultant-ids` and `participant-ids` belong to `ownership` while `tags` does
        not. The committed JSON Schema is not that table: all seventy record `$defs` in
-       `🧬️schema/📸️snapshot/🔣️component.json` are `{"type": "object", "additionalProperties": true}`
+       `🧬️schema/📸️snapshot/🔣️.json` are `{"type": "object", "additionalProperties": true}`
        with no `properties` at all, and 133 of the mutation payload objects likewise.
     3. That same row header writes `tags` and `notes`, which no committed snapshot vector carries on
        any record of any register, so no document states whether they belong to the compared
@@ -767,10 +767,10 @@ def refuse_carrier(ctx):
         "repository-wide placeholder `payload = OCTET+` whose header production declares `\"schema\" SP \"stdio.json\"`, contradicted by the "
         "artifact's own first line `semio architect.program.dsl v1`; the notation flattens nested records into `key=key=value` "
         "(`ownership=consultant-ids=[ ] participant-ids=[ ] tags=[ ] notes=[ ]`) with no committed field table to bound them, because all "
-        "seventy record `$defs` of `🧬️schema/📸️snapshot/🔣️component.json` are `{\"type\": \"object\", \"additionalProperties\": true}` with no "
+        "seventy record `$defs` of `🧬️schema/📸️snapshot/🔣️.json` are `{\"type\": \"object\", \"additionalProperties\": true}` with no "
         "`properties`; and it writes `tags` and `notes` members that no committed snapshot vector carries on any record. Publishing a real "
         "grammar for this carrier closes it. Read %d bytes of the committed artifact and refused to guess their meaning."
-        % len(ctx.fixture_bytes(uri_in(ctx, "🗣️example.dsl.semio")))
+        % len(ctx.fixture_bytes(uri_in(ctx, "🗣️.dsl.semio")))
     )
 # endregion 🔖️Handlers
 

@@ -1,6 +1,0 @@
-{
-  "$id": "https://semio.tech/schema/s.stdio.semio.cad/diff/text.json",
-  "title": "SemioCadDiffText",
-  "description": "protocol::DiffCodec::print_diff/parse_diff wire text -- no semio envelope; see ../🔣️component.json for the decoded diff's real schema.",
-  "type": "string"
-}

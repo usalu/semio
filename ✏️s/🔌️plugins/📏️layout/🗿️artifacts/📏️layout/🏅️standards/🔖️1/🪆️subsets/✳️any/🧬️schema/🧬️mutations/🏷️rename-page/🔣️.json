@@ -5,7 +5,7 @@
   "displayName": "Rename Page",
   "emoji": "🏷️",
   "aggregateVariant": "RenamePage",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

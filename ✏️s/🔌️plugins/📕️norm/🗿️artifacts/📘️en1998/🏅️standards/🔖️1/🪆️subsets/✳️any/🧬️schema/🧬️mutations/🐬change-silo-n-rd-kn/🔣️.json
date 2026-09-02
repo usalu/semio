@@ -5,7 +5,7 @@
   "displayName": "Change Silo N Rd Kn",
   "emoji": "🐬",
   "aggregateVariant": "ChangeSiloNRdKn",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

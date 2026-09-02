@@ -5,7 +5,7 @@
   "displayName": "Rename Generation",
   "emoji": "🏷️",
   "aggregateVariant": "RenameGeneration",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

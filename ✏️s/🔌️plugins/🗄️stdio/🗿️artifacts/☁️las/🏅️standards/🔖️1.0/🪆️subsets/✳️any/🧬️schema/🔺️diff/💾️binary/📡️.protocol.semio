@@ -1,0 +1,38 @@
+dialect protocol
+protocol stdio.las.diff
+version 1
+schema stdio.las
+start diff
+framing record
+
+# Ticket 26/08/10/ARTIFACT-SYSTEM-OVERHAUL-REAL-CODECS-RUNTIME-REUSE-EVOLUTION: real binary diff
+# frame -- replaces both the pre-existing placeholder (`dialect protocol stdio.las.diff` /
+# `magic = %x00` / `payload = *OCTET`, pseudo-ABNF entirely outside this framework's real
+# `.protocol.semio` dialect) AND the F6 `print_diff().into_bytes()` text-as-binary shortcut this
+# artifact's `DiffCodec::encode_diff` used to fall back to (see ../🦀️.rs's upgraded
+# `impl protocol::DiffCodec for LasDiff`, `#region 🔖️BinaryDiffCodec`). `LasDiff` is FLAT -- every
+# header field a top-level `Option<T>` scalar, matching zip's own `ZipDiff` shape (not json's
+# self-recursive `JsonValue`) -- so the top-level shape genuinely IS "two real fixed leading
+# fields, then one variable tail":
+#
+# `format` (=1, `store::pack_rt::OP_BINARY_FORMAT`) + `header_mask` (a `u32` bitmask, bit i =
+# header field i present in declaration order -- genuinely, honestly real 4-byte-LE-walkable
+# regardless of which bits are set; the walker just reads the 4 bytes, it never needs to
+# interpret their meaning to know how many bytes this FIELD occupies).
+#
+# What stays opaque is the VARIABLE part downstream of that mask: which of the 25 header fields'
+# VALUES are actually present (variable count/shape depending on the mask's bits, not a single
+# earlier-field comparison `Cond` can express), plus the two runtime-counted, index-keyed
+# collection triples (`vlrs`/`points`) -- the SAME category of gap zip's own `entries` hits
+# (`protocol-array-of-records`, filed in this wave's `mechanism_gaps`): this dialect's `Array`
+# primitive repeats one FIXED-WIDTH `Prim`, not a repeated multi-field RECORD of runtime-varying
+# per-item shape, and `Cond` can gate at most one unconditionally-decoded field against a single
+# scalar comparison, never 25 independent bitmask bits. The Rust `encode_diff`/`decode_diff` side
+# (same file, `#region 🔖️BinaryDiffCodec`) IS genuinely, fully structured, real LEB128-varint- and
+# fixed-width-framed binary all the way down (round-trip tested by
+# `diff_codec_text_binary_roundtrip_law`) -- this protocol file honestly bounds only what it can
+# field-by-field walk: the two real leading fields, then one opaque trailing chain.
+
+field format u8
+field header_mask u32
+chain payload bytes

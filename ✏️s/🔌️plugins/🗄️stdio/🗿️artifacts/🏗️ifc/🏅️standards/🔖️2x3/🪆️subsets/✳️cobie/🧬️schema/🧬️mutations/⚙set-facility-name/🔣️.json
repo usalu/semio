@@ -5,7 +5,7 @@
   "displayName": "Set Facility Name",
   "emoji": "⚙",
   "aggregateVariant": "SetFacilityName",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

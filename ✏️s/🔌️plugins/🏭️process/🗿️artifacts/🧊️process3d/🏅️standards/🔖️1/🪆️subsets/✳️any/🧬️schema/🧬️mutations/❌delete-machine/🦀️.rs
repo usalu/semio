@@ -3,7 +3,6 @@
 
 use crate::artifacts::process3d::diff::Process3dDiff;
 use crate::artifacts::process3d::mutations::create_machine::CreateMachine;
-use crate::artifacts::process3d::mutations::delete_machine::DeleteMachine;
 use crate::artifacts::process3d::mutations::Process3dMutation;
 use crate::artifacts::process3d::{Process3dSnapshot, Workshop};
 use semio_framework_value_derive::{FromValue, ToValue};

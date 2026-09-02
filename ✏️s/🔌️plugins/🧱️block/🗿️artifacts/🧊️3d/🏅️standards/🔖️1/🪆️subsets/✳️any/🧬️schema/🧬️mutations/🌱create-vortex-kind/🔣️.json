@@ -5,7 +5,7 @@
   "displayName": "Create Vortex Kind",
   "emoji": "🌱",
   "aggregateVariant": "CreateVortexKind",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": "create-vortex-kind",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

@@ -12,7 +12,7 @@ export default defineConfig({
     // `includeSource`. Listing the same file in BOTH keys made vitest collect it twice and report
     // double the real test count. Add new in-source files to `includeSource`/`coverage.include` only.
     include: [],
-    includeSource: ["📜️script.ts", "../../../🔌️plugin/📤️return/🟦️component.ts", "../../../🔌️plugin/📥️poll/🏘️composition/🟦️component.ts"],
-    coverage: { include: ["📜️script.ts", "../../../🔌️plugin/📤️return/🟦️component.ts", "../../../🔌️plugin/📥️poll/🏘️composition/🟦️component.ts"] },
+    includeSource: ["📜️script.ts", "../../../🔌️plugin/📤️return/🟦️.ts", "../../../🔌️plugin/📥️poll/🏘️composition/🟦️.ts"],
+    coverage: { include: ["📜️script.ts", "../../../🔌️plugin/📤️return/🟦️.ts", "../../../🔌️plugin/📥️poll/🏘️composition/🟦️.ts"] },
   },
 });

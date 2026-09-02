@@ -5,7 +5,7 @@
   "displayName": "Apply Drawing",
   "emoji": "🖊",
   "aggregateVariant": "ApplyDrawing",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

@@ -1,0 +1,7 @@
+; ABNF-style descriptive mirror of `stdio.semio`'s real `SemioMutation` binary frame (past the
+; `semio_format` envelope) -- see the authoritative `📡️.protocol.semio` for the
+; conformance-tested version.
+document = format tag payload
+format   = %x01                  ; OP_BINARY_FORMAT
+tag      = OCTET                 ; mutation variant ordinal (0=SetSnapshot, 1-18=subset)
+payload  = *OCTET                ; opaque tail: wrapped subset's own real encode_op()/encode_pack() bytes

@@ -5,7 +5,7 @@
   "displayName": "Delete Camera Calibration",
   "emoji": "🚫",
   "aggregateVariant": "DeleteCameraCalibration",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": "delete-camera-calibration",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

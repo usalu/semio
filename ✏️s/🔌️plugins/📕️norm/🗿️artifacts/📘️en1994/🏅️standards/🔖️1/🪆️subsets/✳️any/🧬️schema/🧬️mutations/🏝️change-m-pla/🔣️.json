@@ -5,7 +5,7 @@
   "displayName": "Change M Pla",
   "emoji": "🏝️",
   "aggregateVariant": "ChangeMPla",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

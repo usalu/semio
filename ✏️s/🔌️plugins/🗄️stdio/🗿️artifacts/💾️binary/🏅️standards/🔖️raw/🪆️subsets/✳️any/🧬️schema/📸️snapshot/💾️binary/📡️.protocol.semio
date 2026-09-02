@@ -1,0 +1,20 @@
+dialect protocol
+protocol binary.snapshot
+version 1
+schema stdio.binary
+start body
+
+# P2-P3: `stdio.binary` is BINARY-NATIVE and, per the recipe's own documented "format IS bytes"
+# exception, has no structure at all beyond the raw payload: `store::ArtifactPack::encode_pack_with`
+# (📸️snapshot/🦀️.rs) is `store::semio_format::wrap_binary(&envelope, &self.bytes)` -- the
+# SEMIO binary envelope (8-byte magic + version + component + plugin/artifact token, all described
+# ONCE, framework-side, at `semio.envelope`'s own `.protocol.semio` per P2-M3's report) wrapping
+# `self.bytes` verbatim, byte for byte, with zero further framing. Per M3's own documented guidance
+# (`p2-m3-report.md` §5 point 4): "model it as if the bytes you're walking already start at the
+# payload" -- this file does NOT re-describe the envelope's magic/header/token (the real harness
+# `unwrap_binary`s that before ever handing bytes to `walk_protocol`, confirmed by reading
+# `m5_handcrafted_protocol_conformance`'s fixture-resolution path). What remains after the envelope
+# is unwrapped is the artifact's own `bytes` field, verbatim -- one opaque trailing chain, exactly
+# the "one `chain bytes`" shape called out as this artifact's whole protocol deliverable.
+framing record
+chain payload bytes

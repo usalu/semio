@@ -5,7 +5,7 @@
   "displayName": "Delete Tile",
   "emoji": "🗑",
   "aggregateVariant": "DeleteTile",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": "delete-tile",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

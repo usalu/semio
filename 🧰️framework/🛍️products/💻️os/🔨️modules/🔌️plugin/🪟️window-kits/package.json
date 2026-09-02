@@ -6,13 +6,13 @@
   "type": "module",
   "private": true,
   "exports": {
-    "./text": "./📝️text/🟦️component.ts",
-    "./table": "./📊️table/🟦️component.ts",
-    "./tree": "./🌳️tree/🟦️component.ts",
-    "./image": "./🖼️image/🟦️component.ts",
-    "./mesh": "./🧊️mesh/🟦️component.ts",
-    "./document": "./📄️document/🟦️component.ts",
-    "./media": "./🎬️media/🟦️component.ts"
+    "./text": "./📝️text/🟦️.ts",
+    "./table": "./📊️table/🟦️.ts",
+    "./tree": "./🌳️tree/🟦️.ts",
+    "./image": "./🖼️image/🟦️.ts",
+    "./mesh": "./🧊️mesh/🟦️.ts",
+    "./document": "./📄️document/🟦️.ts",
+    "./media": "./🎬️media/🟦️.ts"
   },
   "dependencies": {
     "@semio-tech/framework": "workspace:*"

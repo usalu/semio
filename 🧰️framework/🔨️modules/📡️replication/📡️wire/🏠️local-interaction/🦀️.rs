@@ -427,28 +427,11 @@ fn nibble(byte: u8) -> u8 { if byte <= b'9' { byte - b'0' } else { byte - b'a' +
 /// shipped type needing `serde::Serialize`/`Deserialize`. `serde_json` stays a dev-dependency only.
 #[cfg(test)]
 fn json_to_dsl(value: serde_json::Value) -> crate::value::DslValue {
-    match value {
-        serde_json::Value::Null => crate::value::DslValue::Null,
-        serde_json::Value::Bool(b) => crate::value::DslValue::Bool(b),
-        serde_json::Value::Number(n) => crate::value::DslValue::Number(n.as_f64().unwrap_or(0.0)),
-        serde_json::Value::String(s) => crate::value::DslValue::String(s),
-        serde_json::Value::Array(items) => crate::value::DslValue::Array(items.into_iter().map(json_to_dsl).collect()),
-        serde_json::Value::Object(map) => crate::value::DslValue::Object(map.into_iter().map(|(k, v)| (k, json_to_dsl(v))).collect()),
-    }
+    crate::value::DslValue::from(&value)
 }
 #[cfg(test)]
 fn dsl_to_json(value: &crate::value::DslValue) -> serde_json::Value {
-    match value {
-        crate::value::DslValue::Null => serde_json::Value::Null,
-        crate::value::DslValue::Bool(b) => serde_json::Value::Bool(*b),
-        crate::value::DslValue::Number(n) => {
-            let number = if n.fract() == 0.0 && n.abs() < 9e15 { serde_json::Number::from(*n as i64) } else { serde_json::Number::from_f64(*n).unwrap_or_else(|| serde_json::Number::from(0)) };
-            serde_json::Value::Number(number)
-        }
-        crate::value::DslValue::String(s) => serde_json::Value::String(s.clone()),
-        crate::value::DslValue::Array(items) => serde_json::Value::Array(items.iter().map(dsl_to_json).collect()),
-        crate::value::DslValue::Object(entries) => serde_json::Value::Object(entries.iter().map(|(k, v)| (k.clone(), dsl_to_json(v))).collect()),
-    }
+    serde_json::Value::from(value)
 }
 /// 🌱️ Test-only convenience: decode a `DslValue` (typically freshly built by `json_to_dsl`) via
 /// `FromValue`, panicking with the decode error on failure (mirrors `serde_json::from_value(...)

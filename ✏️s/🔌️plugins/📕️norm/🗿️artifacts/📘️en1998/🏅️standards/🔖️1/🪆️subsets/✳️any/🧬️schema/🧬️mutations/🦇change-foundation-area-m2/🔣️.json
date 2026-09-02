@@ -5,7 +5,7 @@
   "displayName": "Change Foundation Area M2",
   "emoji": "🦇",
   "aggregateVariant": "ChangeFoundationAreaM2",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

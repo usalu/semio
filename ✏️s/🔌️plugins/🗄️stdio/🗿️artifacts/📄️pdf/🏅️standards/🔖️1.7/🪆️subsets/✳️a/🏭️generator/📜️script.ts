@@ -9,7 +9,7 @@
 // (PDF/A-2, PDF/A-3) conformance-class catalog.
 //
 // Every base/mutated pair `🦀️lopdf-engine/src/generate.rs` writes is produced by the SAME registered `lopdf`
-// 0.44 reference implementation named `lopdf-pdf-1-7-a-mutate` in `../🧪️oracle/🔣️.json` —
+// 0.44 reference implementation named `lopdf-pdf-1-7-a-mutate` in `../🔣️oracle.json` —
 // `document::pdf_conformance` inside the standalone, already-qualified
 // `semio-s-plugin-stdio-test-oracle` crate, the identical engine the differential test case
 // `../../../../../../🧪️tests/mutate-pdf-1-7-a` drives — never this repository's own production PDF
@@ -45,7 +45,7 @@ const SUBSET = "a";
 const ORACLE_ID = "lopdf-pdf-1-7-a-mutate-reader";
 const COMPARISON_PROFILE = "semantic-pdf-conformance-a-v1";
 // 🧾️ Kept in step with `🦀️lopdf-engine/src/generate.rs::KINDS` (itself the same list as
-// `../🧪️oracle/🔣️.json`'s `pdf-1-7-a` catalog) — `manifests` walks whichever recipe directories the
+// `../🔣️oracle.json`'s `pdf-1-7-a` catalog) — `manifests` walks whichever recipe directories the
 // engine actually wrote rather than trusting this constant, so a drift here fails loudly as a
 // missing-directory error instead of silently under-registering a kind.
 const KINDS: readonly string[] = ["insert-javascript-action", "remove-javascript-action", "insert-launch-action", "remove-launch-action", "insert-embedded-file", "remove-embedded-file", "set-af-relationship", "remove-af-relationship", "set-output-intent", "remove-output-intent", "embed-font-file", "remove-font-file"];

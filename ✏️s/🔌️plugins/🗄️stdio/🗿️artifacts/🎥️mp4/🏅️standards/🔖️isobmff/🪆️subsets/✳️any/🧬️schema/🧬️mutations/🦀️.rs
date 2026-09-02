@@ -50,7 +50,7 @@ pub enum Mp4Mutation {
 }
 
 /// 📇️ Kebab-case spelling of every `Mp4Mutation` variant, in declaration order — the ground truth
-/// `../../🧪️oracle/🔣️.json`'s own `kinds` list is checked against (the framework never
+/// `../../🔣️oracle.json`'s own `kinds` list is checked against (the framework never
 /// parses Rust, so `kinds_const_matches_enum_variants_in_declaration_order` below is what keeps the
 /// declaration honest). Wave 7 fleet brief, ticket 26/08/23/END-TO-END-TESTING-REFACTOR.
 pub const KINDS: &[&str] = &["set-snapshot", "set-ftyp", "insert-track", "remove-track", "set-track-dimensions", "set-track-codec", "insert-sample", "remove-sample", "set-sample-sync"];
@@ -332,14 +332,14 @@ mod tests {
 
 //#region 🧪️FixtureTests
 // 🧪️ Handcrafted mutation fixtures (contract D1, ticket 26/08/20/COMPOSE-TO-PUZZLE5D-MIGRATION),
-// one case per mutation leaf. Wired HERE and not in `📦️glue.rs`: that file is shared with the
+// one case per mutation leaf. Wired HERE and not in `🦀️.rs`: that file is shared with the
 // agents migrating the other stdio artifacts, so the production mounts there stay untouched while
 // this artifact owns its own test mount. `#[path = "."]` re-bases the children on this file's own
 // directory, which is what makes the leaf-relative path below resolve.
 #[cfg(test)]
 #[path = "."]
 mod fixture_tests {
-    #[path = "📄set-snapshot/🧪️tests/promotes-the-second-sample-to-a-sync-frame/🦀️component.rs"]
+    #[path = "📄set-snapshot/🧪️tests/promotes-the-second-sample-to-a-sync-frame/🦀️.rs"]
     mod tests_set_snapshot_promotes_the_second_sample_to_a_sync_frame;
 }
 //#endregion 🧪️FixtureTests

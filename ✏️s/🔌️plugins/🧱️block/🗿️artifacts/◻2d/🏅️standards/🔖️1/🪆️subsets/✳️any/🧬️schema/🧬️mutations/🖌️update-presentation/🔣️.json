@@ -5,7 +5,7 @@
   "displayName": "Update Presentation",
   "emoji": "🖌️",
   "aggregateVariant": "UpdatePresentation",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": "update-presentation",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

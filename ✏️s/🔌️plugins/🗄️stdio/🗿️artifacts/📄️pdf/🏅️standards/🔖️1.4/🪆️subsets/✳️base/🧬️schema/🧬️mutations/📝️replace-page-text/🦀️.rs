@@ -52,15 +52,15 @@ impl MutationKind<PdfSnapshot, PdfMutation> for ReplacePageText {
 //#endregion 🔖️Behavior
 
 //#region 🔖️Codecs
-#[path = "💾️binary/🦀️component.rs"]
+#[path = "💾️binary/🦀️.rs"]
 pub mod binary;
-#[path = "📝️text/🦀️component.rs"]
+#[path = "📝️text/🦀️.rs"]
 pub mod text;
 //#endregion 🔖️Codecs
 
 //#region 🧪️Tests
 #[cfg(test)]
-#[path = "🧪️tests/round-trips-the-concrete-inverse/🦀️component.rs"]
+#[path = "🧪️tests/round-trips-the-concrete-inverse/🦀️.rs"]
 mod tests_round_trips_the_concrete_inverse;
 
 #[cfg(test)]
@@ -73,7 +73,7 @@ mod tests {
     /// `replace-page-text` must raise, leave the document untouched, and offer no undo.
     #[test]
     fn missing_page_refuses_without_inverse_or_state_change() {
-        let mutation: PdfMutation = serde_json::from_str(include_str!("🧪️tests/round-trips-the-concrete-inverse/🦠️mutation/🔣️component.json")).expect("committed replace-page-text payload decodes");
+        let mutation: PdfMutation = serde_json::from_str(include_str!("🧪️tests/round-trips-the-concrete-inverse/🦠️mutation/🔣️.json")).expect("committed replace-page-text payload decodes");
         let base = PdfSnapshot { pages: Vec::new(), ..Default::default() };
         let mut state = base.clone();
         assert!(!mutation.diff(&state).apply_to(&mut state).messages().is_empty(), "replace-page-text: an unaddressable page must be refused");

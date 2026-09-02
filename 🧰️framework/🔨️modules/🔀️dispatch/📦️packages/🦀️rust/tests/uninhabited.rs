@@ -10,7 +10,7 @@ use semio_framework_dispatch_macros::{dyn_enum, dyn_enum_close};
 // `&mut self` is deliberately NOT mixed with `self: Arc<Self>` here — `#[dyn_enum]` rejects that
 // combination on the SAME trait (an `Arc<Self>` method needs shared `Arc<Concrete>` variant storage,
 // which `&mut self` cannot safely reach through; see `analyze_rejects_arc_self_mixed_with_mut_self` in
-// `🦀️component.rs`). `&mut self`'s own uninhabited case is covered separately by `mut_receiver.rs`.
+// `🦀️.rs`). `&mut self`'s own uninhabited case is covered separately by `mut_receiver.rs`.
 #[dyn_enum]
 pub trait Widget {
     async fn render(&self) -> String;

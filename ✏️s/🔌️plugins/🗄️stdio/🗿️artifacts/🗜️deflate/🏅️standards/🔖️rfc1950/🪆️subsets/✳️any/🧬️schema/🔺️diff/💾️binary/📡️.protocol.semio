@@ -1,0 +1,32 @@
+dialect protocol
+protocol deflate.diff
+version 1
+schema stdio.deflate
+start record
+
+# P2-FG2: REAL binary diff frame, replacing F6's `print_diff().into_bytes()` text-as-binary
+# shortcut (`../../🦀️.rs`'s old `DiffCodec::encode_diff` -- per the P2-W0 census, 100%
+# of stdio's `DiffCodec` impls were still on this shortcut). `format u8` + `flags u8` (bit0 =
+# `compression_method` present, bit1 = `window_bits` present, bit2 = `compression_level_hint`
+# present, bit3 = `dict_id` present, bit4 = `payload` present -- `DeflateDiff` has FIVE
+# independently-optional top-level fields, so this is a bitmask rather than one `has_value` bool)
+# as two REAL fixed fields, individually protocol-walked.
+#
+# Past that header, all five fields (whichever `flags` marks present, in that FIXED order) are
+# bundled into ONE opaque trailing `bytes` chain rather than five separately-declared conditional
+# fields: this dialect's `Cond` (`if flags eq N`) can only test a field's WHOLE value against a
+# literal, not an individual BIT of it (no bitwise-AND primitive exists -- `📖️grammar-recipe.md`
+# §2.2's own `Cond` section), so a per-bit-guarded field list isn't expressible here. Filed as
+# `protocol-cond-no-bitmask` (this wave's report `mechanism_gaps`) -- the SAME gap this program's
+# prior wave already identified for an analogous multi-bit `flags` byte
+# (`../../../../../../📰xml/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🧬️schema/🔺️diff/💾️binary/
+# 📡️.protocol.semio`'s own identical `format`/`flags`/`chain` shape, copied here
+# verbatim in spirit). The Rust `encode_diff`/`decode_diff` side stays genuinely, fully
+# structured (bit-tested, individually typed, incl. `dict_id`'s own tri-state
+# presence-then-value byte) and round-trip tested independently -- this protocol description's
+# depth limit is honest, not a shortcut.
+framing record
+header fixed 2
+field format u8
+field flags u8
+chain payload bytes

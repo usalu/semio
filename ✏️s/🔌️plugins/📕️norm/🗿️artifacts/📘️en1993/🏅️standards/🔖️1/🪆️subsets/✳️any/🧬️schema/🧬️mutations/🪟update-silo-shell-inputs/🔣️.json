@@ -5,7 +5,7 @@
   "displayName": "Update Silo Shell Inputs",
   "emoji": "🪟",
   "aggregateVariant": "UpdateSiloShellInputs",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

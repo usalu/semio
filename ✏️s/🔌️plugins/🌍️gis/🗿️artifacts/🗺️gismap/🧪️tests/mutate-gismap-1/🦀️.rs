@@ -27,7 +27,7 @@
 use semio_repo_test_host::{parse_json, Adapter, Json};
 
 //#region 🔖️Kinds
-/// 🏷️ Mirrors `KINDS` in `../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs` — duplicated, not
+/// 🏷️ Mirrors `KINDS` in `../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs` — duplicated, not
 /// imported, because the oracle-only build must not link the subject crate. The contract's
 /// mutation-coverage gate keeps this list honest against the catalog, and that file's own
 /// `kinds_match_the_enum_and_the_catalog` keeps it honest against both the enum and the manifest.
@@ -57,7 +57,7 @@ const UNOBSERVABLE: &[&str] = &[];
 /// 🗣️ The real committed document this artifact ships as its own example — a Liège fragment with the
 /// Institut de Botanique and Lycée Block 3000 at their true coordinates.
 #[cfg(feature = "sut")]
-const DSL_ASSET: &str = "asset://🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio";
+const DSL_ASSET: &str = "asset://🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/🗣️.dsl.semio";
 
 /// 🧫️ That same document with three regions added, each the axis-aligned envelope of geometry
 /// already inside it. Derived once, provenance recorded in the feature description, because the
@@ -82,88 +82,88 @@ struct Vector {
 fn vector(kind: &str) -> Vector {
     match kind {
         "create-position" => Vector {
-            before: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🆕create-position/🧪️tests/adds-lighthouse-position-after-harbor/📸️snapshot/⬅️before/🔣️component.json"),
-            mutation: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🆕create-position/🧪️tests/adds-lighthouse-position-after-harbor/🦠️mutation/🔣️component.json"),
-            after: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🆕create-position/🧪️tests/adds-lighthouse-position-after-harbor/📸️snapshot/➡️after/🔣️component.json"),
-            diff: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🆕create-position/🧪️tests/adds-lighthouse-position-after-harbor/🔺️diff/🔣️component.json"),
-            outcome: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🆕create-position/🧪️tests/adds-lighthouse-position-after-harbor/🎯️outcome/🔣️component.json"),
+            before: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🆕create-position/🧪️tests/adds-lighthouse-position-after-harbor/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🆕create-position/🧪️tests/adds-lighthouse-position-after-harbor/🦠️mutation/🔣️.json"),
+            after: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🆕create-position/🧪️tests/adds-lighthouse-position-after-harbor/📸️snapshot/➡️after/🔣️.json"),
+            diff: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🆕create-position/🧪️tests/adds-lighthouse-position-after-harbor/🔺️diff/🔣️.json"),
+            outcome: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🆕create-position/🧪️tests/adds-lighthouse-position-after-harbor/🎯️outcome/🔣️.json"),
         },
         "delete-position" => Vector {
-            before: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑delete-position/🧪️tests/removes-lighthouse-position/📸️snapshot/⬅️before/🔣️component.json"),
-            mutation: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑delete-position/🧪️tests/removes-lighthouse-position/🦠️mutation/🔣️component.json"),
-            after: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑delete-position/🧪️tests/removes-lighthouse-position/📸️snapshot/➡️after/🔣️component.json"),
-            diff: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑delete-position/🧪️tests/removes-lighthouse-position/🔺️diff/🔣️component.json"),
-            outcome: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑delete-position/🧪️tests/removes-lighthouse-position/🎯️outcome/🔣️component.json"),
+            before: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑delete-position/🧪️tests/removes-lighthouse-position/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑delete-position/🧪️tests/removes-lighthouse-position/🦠️mutation/🔣️.json"),
+            after: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑delete-position/🧪️tests/removes-lighthouse-position/📸️snapshot/➡️after/🔣️.json"),
+            diff: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑delete-position/🧪️tests/removes-lighthouse-position/🔺️diff/🔣️.json"),
+            outcome: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑delete-position/🧪️tests/removes-lighthouse-position/🎯️outcome/🔣️.json"),
         },
         "replace-position-data" => Vector {
-            before: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔁replace-position-data/🧪️tests/rewrites-harbor-position-payload/📸️snapshot/⬅️before/🔣️component.json"),
-            mutation: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔁replace-position-data/🧪️tests/rewrites-harbor-position-payload/🦠️mutation/🔣️component.json"),
-            after: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔁replace-position-data/🧪️tests/rewrites-harbor-position-payload/📸️snapshot/➡️after/🔣️component.json"),
-            diff: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔁replace-position-data/🧪️tests/rewrites-harbor-position-payload/🔺️diff/🔣️component.json"),
-            outcome: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔁replace-position-data/🧪️tests/rewrites-harbor-position-payload/🎯️outcome/🔣️component.json"),
+            before: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔁replace-position-data/🧪️tests/rewrites-harbor-position-payload/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔁replace-position-data/🧪️tests/rewrites-harbor-position-payload/🦠️mutation/🔣️.json"),
+            after: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔁replace-position-data/🧪️tests/rewrites-harbor-position-payload/📸️snapshot/➡️after/🔣️.json"),
+            diff: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔁replace-position-data/🧪️tests/rewrites-harbor-position-payload/🔺️diff/🔣️.json"),
+            outcome: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔁replace-position-data/🧪️tests/rewrites-harbor-position-payload/🎯️outcome/🔣️.json"),
         },
         "reorder-positions" => Vector {
-            before: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔀reorder-positions/🧪️tests/moves-harbor-position-to-end/📸️snapshot/⬅️before/🔣️component.json"),
-            mutation: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔀reorder-positions/🧪️tests/moves-harbor-position-to-end/🦠️mutation/🔣️component.json"),
-            after: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔀reorder-positions/🧪️tests/moves-harbor-position-to-end/📸️snapshot/➡️after/🔣️component.json"),
-            diff: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔀reorder-positions/🧪️tests/moves-harbor-position-to-end/🔺️diff/🔣️component.json"),
-            outcome: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔀reorder-positions/🧪️tests/moves-harbor-position-to-end/🎯️outcome/🔣️component.json"),
+            before: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔀reorder-positions/🧪️tests/moves-harbor-position-to-end/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔀reorder-positions/🧪️tests/moves-harbor-position-to-end/🦠️mutation/🔣️.json"),
+            after: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔀reorder-positions/🧪️tests/moves-harbor-position-to-end/📸️snapshot/➡️after/🔣️.json"),
+            diff: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔀reorder-positions/🧪️tests/moves-harbor-position-to-end/🔺️diff/🔣️.json"),
+            outcome: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔀reorder-positions/🧪️tests/moves-harbor-position-to-end/🎯️outcome/🔣️.json"),
         },
         "create-route" => Vector {
-            before: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🛣️create-route/🧪️tests/adds-tram-route-after-ferry/📸️snapshot/⬅️before/🔣️component.json"),
-            mutation: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🛣️create-route/🧪️tests/adds-tram-route-after-ferry/🦠️mutation/🔣️component.json"),
-            after: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🛣️create-route/🧪️tests/adds-tram-route-after-ferry/📸️snapshot/➡️after/🔣️component.json"),
-            diff: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🛣️create-route/🧪️tests/adds-tram-route-after-ferry/🔺️diff/🔣️component.json"),
-            outcome: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🛣️create-route/🧪️tests/adds-tram-route-after-ferry/🎯️outcome/🔣️component.json"),
+            before: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🛣️create-route/🧪️tests/adds-tram-route-after-ferry/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🛣️create-route/🧪️tests/adds-tram-route-after-ferry/🦠️mutation/🔣️.json"),
+            after: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🛣️create-route/🧪️tests/adds-tram-route-after-ferry/📸️snapshot/➡️after/🔣️.json"),
+            diff: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🛣️create-route/🧪️tests/adds-tram-route-after-ferry/🔺️diff/🔣️.json"),
+            outcome: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🛣️create-route/🧪️tests/adds-tram-route-after-ferry/🎯️outcome/🔣️.json"),
         },
         "delete-route" => Vector {
-            before: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️delete-route/🧪️tests/removes-tram-route/📸️snapshot/⬅️before/🔣️component.json"),
-            mutation: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️delete-route/🧪️tests/removes-tram-route/🦠️mutation/🔣️component.json"),
-            after: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️delete-route/🧪️tests/removes-tram-route/📸️snapshot/➡️after/🔣️component.json"),
-            diff: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️delete-route/🧪️tests/removes-tram-route/🔺️diff/🔣️component.json"),
-            outcome: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️delete-route/🧪️tests/removes-tram-route/🎯️outcome/🔣️component.json"),
+            before: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️delete-route/🧪️tests/removes-tram-route/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️delete-route/🧪️tests/removes-tram-route/🦠️mutation/🔣️.json"),
+            after: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️delete-route/🧪️tests/removes-tram-route/📸️snapshot/➡️after/🔣️.json"),
+            diff: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️delete-route/🧪️tests/removes-tram-route/🔺️diff/🔣️.json"),
+            outcome: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️delete-route/🧪️tests/removes-tram-route/🎯️outcome/🔣️.json"),
         },
         "replace-route-data" => Vector {
-            before: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/♻️replace-route-data/🧪️tests/rewrites-ferry-route-payload/📸️snapshot/⬅️before/🔣️component.json"),
-            mutation: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/♻️replace-route-data/🧪️tests/rewrites-ferry-route-payload/🦠️mutation/🔣️component.json"),
-            after: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/♻️replace-route-data/🧪️tests/rewrites-ferry-route-payload/📸️snapshot/➡️after/🔣️component.json"),
-            diff: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/♻️replace-route-data/🧪️tests/rewrites-ferry-route-payload/🔺️diff/🔣️component.json"),
-            outcome: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/♻️replace-route-data/🧪️tests/rewrites-ferry-route-payload/🎯️outcome/🔣️component.json"),
+            before: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/♻️replace-route-data/🧪️tests/rewrites-ferry-route-payload/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/♻️replace-route-data/🧪️tests/rewrites-ferry-route-payload/🦠️mutation/🔣️.json"),
+            after: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/♻️replace-route-data/🧪️tests/rewrites-ferry-route-payload/📸️snapshot/➡️after/🔣️.json"),
+            diff: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/♻️replace-route-data/🧪️tests/rewrites-ferry-route-payload/🔺️diff/🔣️.json"),
+            outcome: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/♻️replace-route-data/🧪️tests/rewrites-ferry-route-payload/🎯️outcome/🔣️.json"),
         },
         "reorder-routes" => Vector {
-            before: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭reorder-routes/🧪️tests/moves-bus-route-to-front/📸️snapshot/⬅️before/🔣️component.json"),
-            mutation: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭reorder-routes/🧪️tests/moves-bus-route-to-front/🦠️mutation/🔣️component.json"),
-            after: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭reorder-routes/🧪️tests/moves-bus-route-to-front/📸️snapshot/➡️after/🔣️component.json"),
-            diff: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭reorder-routes/🧪️tests/moves-bus-route-to-front/🔺️diff/🔣️component.json"),
-            outcome: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭reorder-routes/🧪️tests/moves-bus-route-to-front/🎯️outcome/🔣️component.json"),
+            before: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭reorder-routes/🧪️tests/moves-bus-route-to-front/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭reorder-routes/🧪️tests/moves-bus-route-to-front/🦠️mutation/🔣️.json"),
+            after: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭reorder-routes/🧪️tests/moves-bus-route-to-front/📸️snapshot/➡️after/🔣️.json"),
+            diff: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭reorder-routes/🧪️tests/moves-bus-route-to-front/🔺️diff/🔣️.json"),
+            outcome: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭reorder-routes/🧪️tests/moves-bus-route-to-front/🎯️outcome/🔣️.json"),
         },
         "create-region" => Vector {
-            before: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌐create-region/🧪️tests/adds-old-town-region-after-harbor-district/📸️snapshot/⬅️before/🔣️component.json"),
-            mutation: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌐create-region/🧪️tests/adds-old-town-region-after-harbor-district/🦠️mutation/🔣️component.json"),
-            after: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌐create-region/🧪️tests/adds-old-town-region-after-harbor-district/📸️snapshot/➡️after/🔣️component.json"),
-            diff: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌐create-region/🧪️tests/adds-old-town-region-after-harbor-district/🔺️diff/🔣️component.json"),
-            outcome: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌐create-region/🧪️tests/adds-old-town-region-after-harbor-district/🎯️outcome/🔣️component.json"),
+            before: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌐create-region/🧪️tests/adds-old-town-region-after-harbor-district/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌐create-region/🧪️tests/adds-old-town-region-after-harbor-district/🦠️mutation/🔣️.json"),
+            after: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌐create-region/🧪️tests/adds-old-town-region-after-harbor-district/📸️snapshot/➡️after/🔣️.json"),
+            diff: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌐create-region/🧪️tests/adds-old-town-region-after-harbor-district/🔺️diff/🔣️.json"),
+            outcome: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌐create-region/🧪️tests/adds-old-town-region-after-harbor-district/🎯️outcome/🔣️.json"),
         },
         "delete-region" => Vector {
-            before: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧹delete-region/🧪️tests/removes-old-town-region/📸️snapshot/⬅️before/🔣️component.json"),
-            mutation: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧹delete-region/🧪️tests/removes-old-town-region/🦠️mutation/🔣️component.json"),
-            after: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧹delete-region/🧪️tests/removes-old-town-region/📸️snapshot/➡️after/🔣️component.json"),
-            diff: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧹delete-region/🧪️tests/removes-old-town-region/🔺️diff/🔣️component.json"),
-            outcome: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧹delete-region/🧪️tests/removes-old-town-region/🎯️outcome/🔣️component.json"),
+            before: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧹delete-region/🧪️tests/removes-old-town-region/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧹delete-region/🧪️tests/removes-old-town-region/🦠️mutation/🔣️.json"),
+            after: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧹delete-region/🧪️tests/removes-old-town-region/📸️snapshot/➡️after/🔣️.json"),
+            diff: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧹delete-region/🧪️tests/removes-old-town-region/🔺️diff/🔣️.json"),
+            outcome: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧹delete-region/🧪️tests/removes-old-town-region/🎯️outcome/🔣️.json"),
         },
         "replace-region-data" => Vector {
-            before: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔄replace-region-data/🧪️tests/rewrites-harbor-district-region-payload/📸️snapshot/⬅️before/🔣️component.json"),
-            mutation: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔄replace-region-data/🧪️tests/rewrites-harbor-district-region-payload/🦠️mutation/🔣️component.json"),
-            after: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔄replace-region-data/🧪️tests/rewrites-harbor-district-region-payload/📸️snapshot/➡️after/🔣️component.json"),
-            diff: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔄replace-region-data/🧪️tests/rewrites-harbor-district-region-payload/🔺️diff/🔣️component.json"),
-            outcome: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔄replace-region-data/🧪️tests/rewrites-harbor-district-region-payload/🎯️outcome/🔣️component.json"),
+            before: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔄replace-region-data/🧪️tests/rewrites-harbor-district-region-payload/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔄replace-region-data/🧪️tests/rewrites-harbor-district-region-payload/🦠️mutation/🔣️.json"),
+            after: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔄replace-region-data/🧪️tests/rewrites-harbor-district-region-payload/📸️snapshot/➡️after/🔣️.json"),
+            diff: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔄replace-region-data/🧪️tests/rewrites-harbor-district-region-payload/🔺️diff/🔣️.json"),
+            outcome: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔄replace-region-data/🧪️tests/rewrites-harbor-district-region-payload/🎯️outcome/🔣️.json"),
         },
         "reorder-regions" => Vector {
-            before: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔃reorder-regions/🧪️tests/moves-park-region-between-2-districts/📸️snapshot/⬅️before/🔣️component.json"),
-            mutation: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔃reorder-regions/🧪️tests/moves-park-region-between-2-districts/🦠️mutation/🔣️component.json"),
-            after: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔃reorder-regions/🧪️tests/moves-park-region-between-2-districts/📸️snapshot/➡️after/🔣️component.json"),
-            diff: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔃reorder-regions/🧪️tests/moves-park-region-between-2-districts/🔺️diff/🔣️component.json"),
-            outcome: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔃reorder-regions/🧪️tests/moves-park-region-between-2-districts/🎯️outcome/🔣️component.json"),
+            before: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔃reorder-regions/🧪️tests/moves-park-region-between-2-districts/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔃reorder-regions/🧪️tests/moves-park-region-between-2-districts/🦠️mutation/🔣️.json"),
+            after: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔃reorder-regions/🧪️tests/moves-park-region-between-2-districts/📸️snapshot/➡️after/🔣️.json"),
+            diff: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔃reorder-regions/🧪️tests/moves-park-region-between-2-districts/🔺️diff/🔣️.json"),
+            outcome: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔃reorder-regions/🧪️tests/moves-park-region-between-2-districts/🎯️outcome/🔣️.json"),
         },
         other => panic!("mutate-gismap-1: no specification vector registered for kind {other:?}"),
     }

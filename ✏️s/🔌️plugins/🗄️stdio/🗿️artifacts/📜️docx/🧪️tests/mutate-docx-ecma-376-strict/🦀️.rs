@@ -5,7 +5,7 @@
 //! namespace and every relationship the Transitional `officeDocument` base. Ten kinds move it onto
 //! the ISO/IEC 29500-1 Strict class along one axis each and back off again. `oracle` handlers drive
 //! the registered `quick-xml` 0.42 + `zip` 6 pair through this subset's own
-//! `../../🏅️standards/🔖️ecma-376/🪆️subsets/✳️strict/🧪️oracle/🦀️component.rs`; `subject` handlers
+//! `../../🏅️standards/🔖️ecma-376/🪆️subsets/✳️strict/🦀️oracle.rs`; `subject` handlers
 //! drive `decode_docx`/`apply_docx_strict_mutation`/`encode_docx`; both results are read back by
 //! the SAME independent `project_package` before `semantic-ooxml-docx-strict-v1` compares them.
 //! The subject half is `sut`-gated so the oracle-only run never compiles the local implementation.

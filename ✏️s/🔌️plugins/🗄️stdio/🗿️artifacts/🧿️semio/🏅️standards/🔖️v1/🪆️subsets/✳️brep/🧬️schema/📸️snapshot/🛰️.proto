@@ -1,0 +1,64 @@
+syntax = "proto3";
+// 🧬️ SemioBrepSnapshot facet mirror — see the sibling 🦀️.rs for the real source of truth.
+package semio.s_stdio_semio_brep.snapshot;
+
+message SemioPoint3 { double x = 1; double y = 2; double z = 3; }
+
+message BrepCurveLine { SemioPoint3 origin = 1; SemioPoint3 direction = 2; }
+message BrepCurveCircle { SemioPoint3 center = 1; SemioPoint3 axis = 2; double radius = 3; }
+message BrepCurveEllipse { SemioPoint3 center = 1; SemioPoint3 axis = 2; double radius_major = 3; double radius_minor = 4; }
+message BrepCurveNurbs { repeated SemioPoint3 control_points = 1; repeated double weights = 2; uint32 degree = 3; repeated double knots = 4; }
+message BrepCurve {
+  oneof kind {
+    BrepCurveLine line = 1;
+    BrepCurveCircle circle = 2;
+    BrepCurveEllipse ellipse = 3;
+    BrepCurveNurbs nurbs = 4;
+  }
+}
+
+message BrepSurfacePlane { SemioPoint3 origin = 1; SemioPoint3 normal = 2; }
+message BrepSurfaceCylinder { SemioPoint3 origin = 1; SemioPoint3 axis = 2; double radius = 3; }
+message BrepSurfaceCone { SemioPoint3 origin = 1; SemioPoint3 axis = 2; double radius = 3; double half_angle = 4; }
+message BrepSurfaceSphere { SemioPoint3 center = 1; double radius = 2; }
+message BrepSurfaceTorus { SemioPoint3 center = 1; SemioPoint3 axis = 2; double major_radius = 3; double minor_radius = 4; }
+message BrepSurfaceNurbs {
+  repeated SemioPoint3 control_points = 1;
+  repeated double weights = 2;
+  uint32 u_count = 3;
+  uint32 v_count = 4;
+  uint32 degree_u = 5;
+  uint32 degree_v = 6;
+  repeated double knots_u = 7;
+  repeated double knots_v = 8;
+}
+message BrepSurface {
+  oneof kind {
+    BrepSurfacePlane plane = 1;
+    BrepSurfaceCylinder cylinder = 2;
+    BrepSurfaceCone cone = 3;
+    BrepSurfaceSphere sphere = 4;
+    BrepSurfaceTorus torus = 5;
+    BrepSurfaceNurbs nurbs = 6;
+  }
+}
+
+message BrepVertex { string id = 1; SemioPoint3 point = 2; }
+message BrepEdge { string id = 1; string start_vertex = 2; string end_vertex = 3; BrepCurve curve = 4; }
+message BrepLoopEdge { string edge = 1; bool orientation = 2; }
+message BrepLoop { string id = 1; repeated BrepLoopEdge edges = 2; }
+message BrepFace { string id = 1; string outer_loop = 2; repeated string inner_loops = 3; BrepSurface surface = 4; bool orientation = 5; }
+message BrepShellFace { string face = 1; bool orientation = 2; }
+message BrepShell { string id = 1; repeated BrepShellFace faces = 2; }
+message BrepSolidShell { string shell = 1; bool is_void = 2; }
+message BrepSolid { string id = 1; repeated BrepSolidShell shells = 2; }
+
+message SemioBrepSnapshot {
+  string schema = 1;
+  repeated BrepVertex vertices = 2;
+  repeated BrepEdge edges = 3;
+  repeated BrepLoop loops = 4;
+  repeated BrepFace faces = 5;
+  repeated BrepShell shells = 6;
+  repeated BrepSolid solids = 7;
+}

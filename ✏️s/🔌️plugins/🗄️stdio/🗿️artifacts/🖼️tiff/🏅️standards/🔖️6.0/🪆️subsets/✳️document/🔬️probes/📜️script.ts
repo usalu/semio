@@ -73,7 +73,7 @@ function readTiff(path: string): TiffDoc {
 //#region ⚖️Compare
 /** ⚖️ Positional structural equality — IFD index and, within an IFD, tag id order are this
  *  format's own on-disk layout; the codec already sorts each IFD's entries by tag id (mirroring
- *  the sibling `🧪️oracle/🦀️component.rs`'s own `entries.sort_by_key(|t| t.tag)`), so this compares
+ *  the sibling `🦀️oracle.rs`'s own `entries.sort_by_key(|t| t.tag)`), so this compares
  *  ordered arrays throughout — no reordering before diffing. */
 function diffAt(path: string, expected: unknown, actual: unknown, diffs: string[]): void {
   if (Array.isArray(expected) && Array.isArray(actual)) {

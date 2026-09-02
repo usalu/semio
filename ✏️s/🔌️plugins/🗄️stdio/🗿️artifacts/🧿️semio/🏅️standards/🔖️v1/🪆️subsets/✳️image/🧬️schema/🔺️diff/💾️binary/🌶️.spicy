@@ -1,0 +1,13 @@
+module Stdio_semio_image_diff;
+
+# Spicy mirror (descriptive, not test-parsed — the real byte-level walker is
+# ../📡️.protocol.semio, walked by dsl::walk_protocol) for `SemioImageDiff`'s real binary
+# diff frame. `format`/`presence` are real fixed fields; the per-present-field payload is one
+# opaque trailing blob (`protocol-cond-cannot-chain` gap), same boundary the real protocol file
+# uses.
+
+public type DiffFrame = unit {
+    format: uint8;                                          # DIFF_BINARY_FORMAT, currently 1
+    presence: uint8;                                         # bit0..bit6, see .ksy sibling
+    payload: bytes &eod;                                      # 0-7 varint-length-prefixed text blobs
+};

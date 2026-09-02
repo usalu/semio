@@ -1,0 +1,7 @@
+{
+  "$id": "https://semio.tech/schema/s.stdio.semio.table/snapshot.text.json",
+  "title": "SemioTableSnapshotTextBody",
+  "description": "Descriptive twin of 📖️.grammar.semio — three lines: schema=<hex>, columns=[<col>,...], rows=[<row>,...].",
+  "type": "string",
+  "pattern": "^schema=[0-9a-f]*\\ncolumns=\\[.*\\]\\nrows=\\[.*\\]$"
+}

@@ -5,7 +5,7 @@
   "displayName": "Replace Sparse",
   "emoji": "⭐",
   "aggregateVariant": "ReplaceSparse",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": "replace-sparse",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

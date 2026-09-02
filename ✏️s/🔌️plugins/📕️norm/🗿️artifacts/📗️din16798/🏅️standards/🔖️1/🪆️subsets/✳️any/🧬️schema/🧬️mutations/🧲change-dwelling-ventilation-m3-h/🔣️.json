@@ -5,7 +5,7 @@
   "displayName": "Change Dwelling Ventilation M3 H",
   "emoji": "🧲",
   "aggregateVariant": "ChangeDwellingVentilationM3H",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

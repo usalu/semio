@@ -1,4 +1,4 @@
-import { BROWSER_HOST_INITIAL_POLL_BYTES, BROWSER_HOST_MAX_ENCODED_EVENT_BYTES, BROWSER_HOST_MAX_EVENT_BODY_BYTES, createBrowserHostImports } from "./🟨️browser-host.js";
+import { BROWSER_HOST_INITIAL_POLL_BYTES, BROWSER_HOST_MAX_ENCODED_EVENT_BYTES, BROWSER_HOST_MAX_EVENT_BODY_BYTES, createBrowserHostImports } from "./🟨️.js";
 
 const equal = (actual, expected, law) => {
   if (actual !== expected) throw new Error(`${law}: ${actual} !== ${expected}`);

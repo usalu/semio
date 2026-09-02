@@ -5,7 +5,7 @@
   "displayName": "Update Geo Params",
   "emoji": "🌐",
   "aggregateVariant": "UpdateGeoParams",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": "update-geo-params",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

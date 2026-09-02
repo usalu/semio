@@ -2,7 +2,7 @@
 //!
 //! Every scenario copies the immutable real-world fixture into the case work directory first; the
 //! committed archive is never written to. `oracle` drives the registered `zip` reference
-//! implementation (`../../🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧪️oracle/🦀️component.rs`), `subject`
+//! implementation (`../../🏅️standards/🔖️2.0/🪆️subsets/✳️any/🦀️oracle.rs`), `subject`
 //! drives this repository's own decode/mutate/encode round trip through the real `ZipMutation`
 //! vocabulary, and both results are read back by the INDEPENDENT `zip` reader before the
 //! `semantic-archive-mutate-v1` profile compares them. The subject half is gated behind the
@@ -20,8 +20,8 @@ use semio_s_plugin_stdio_test_oracle::law::{carrier_is_exact, inverse_restores, 
 
 //#region 🔖️Input
 /// 🦠️ Every declared `ZipMutation` variant, kebab-case — mirrors `../../🏅️standards/🔖️2.0/🪆️subsets/
-/// ✳️any/🧬️schema/🧬️mutations/🦀️component.rs`'s `KINDS` and that same standard's
-/// `🧪️oracle/🔣️.json` catalog. Declared locally rather than imported so the oracle-only
+/// ✳️any/🧬️schema/🧬️mutations/🦀️.rs`'s `KINDS` and that same standard's
+/// `🔣️oracle.json` catalog. Declared locally rather than imported so the oracle-only
 /// role's registration loop never has to link `semio-s-plugin-stdio`.
 const KINDS: [&str; 6] = ["set-snapshot", "set-archive-comment", "add-entry", "remove-entry", "rename-entry", "set-entry-data"];
 
@@ -132,7 +132,7 @@ mod subject {
 
     /// ↩️ This mutation's own inverse against `original` — the snapshot as it stood before the
     /// forward mutation ran. Mirrors `../../🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/
-    /// 🦀️component.rs`'s `agg_inverse` algebra directly (not through the `protocol::Mutation`
+    /// 🦀️.rs`'s `agg_inverse` algebra directly (not through the `protocol::Mutation`
     /// trait) so this adapter carries no dependency on that internal crate. Missing/already-absent
     /// target ⇒ `Vec::new()` — there is no "no-op mutation", only an inverse with nothing to undo.
     fn invert_zip_mutation(original: &ZipSnapshot, mutation: &ZipMutation) -> Vec<ZipMutation> {

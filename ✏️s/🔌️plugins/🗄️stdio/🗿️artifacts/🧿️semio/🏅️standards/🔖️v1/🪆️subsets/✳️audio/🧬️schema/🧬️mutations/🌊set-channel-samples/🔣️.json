@@ -5,7 +5,7 @@
   "displayName": "Set Channel Samples",
   "emoji": "🌊",
   "aggregateVariant": "SetChannelSamples",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

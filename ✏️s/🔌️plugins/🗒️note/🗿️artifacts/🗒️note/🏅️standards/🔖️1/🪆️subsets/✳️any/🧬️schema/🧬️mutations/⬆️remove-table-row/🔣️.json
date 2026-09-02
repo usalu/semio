@@ -5,7 +5,7 @@
   "displayName": "Remove Table Row",
   "emoji": "⬆️",
   "aggregateVariant": "RemoveTableRow",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": "remove-table-row",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

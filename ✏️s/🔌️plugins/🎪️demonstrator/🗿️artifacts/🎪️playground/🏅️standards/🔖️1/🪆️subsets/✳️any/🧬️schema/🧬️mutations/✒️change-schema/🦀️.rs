@@ -95,9 +95,9 @@ mod tests {
 
     #[test]
     fn committed_json_bridge_round_trips() {
-        let before = include_str!("🧪️tests/retags-the-playground-document-schema/📸️snapshot/⬅️before/🔣️component.json");
-        let operation = include_str!("🧪️tests/retags-the-playground-document-schema/🦠️mutation/🔣️component.json");
-        let after = include_str!("🧪️tests/retags-the-playground-document-schema/📸️snapshot/➡️after/🔣️component.json");
+        let before = include_str!("🧪️tests/retags-the-playground-document-schema/📸️snapshot/⬅️before/🔣️.json");
+        let operation = include_str!("🧪️tests/retags-the-playground-document-schema/🦠️mutation/🔣️.json");
+        let after = include_str!("🧪️tests/retags-the-playground-document-schema/📸️snapshot/➡️after/🔣️.json");
         let applied: serde_json::Value = serde_json::from_str(&apply_playground_mutation_json(before, operation).expect("apply committed mutation")).expect("decode bridge answer");
         let expected: serde_json::Value = serde_json::from_str(after).expect("decode committed after snapshot");
         assert_eq!(applied["snapshot"], expected);
@@ -141,7 +141,7 @@ mod tests {
     fn kinds_match_the_language_neutral_catalog() {
         let descriptors = PlaygroundMutation::kinds();
         assert_eq!(KINDS.len(), descriptors.len());
-        let manifest = include_str!("../../../🧪️oracle/🔣️.json");
+        let manifest = include_str!("../../../🔣️oracle.json");
         for (kind, descriptor) in KINDS.iter().zip(descriptors.iter()) {
             assert_eq!(*kind, descriptor.kind);
             assert!(manifest.contains(&format!("\"{kind}\"")));

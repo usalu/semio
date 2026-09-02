@@ -4,8 +4,8 @@ export default defineConfig({
   test: {
     name: "@semio-tech/flow-js",
     environment: "node",
-    include: ["📦️index.ts"],
-    coverage: { include: ["📦️index.ts"] },
+    include: ["🟦️.ts"],
+    coverage: { include: ["🟦️.ts"] },
     passWithNoTests: true,
   },
 });

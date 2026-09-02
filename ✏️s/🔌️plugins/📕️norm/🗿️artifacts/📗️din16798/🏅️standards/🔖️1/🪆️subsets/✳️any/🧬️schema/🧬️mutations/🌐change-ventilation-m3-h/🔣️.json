@@ -5,7 +5,7 @@
   "displayName": "Change Ventilation M3 H",
   "emoji": "🌐",
   "aggregateVariant": "ChangeVentilationM3H",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

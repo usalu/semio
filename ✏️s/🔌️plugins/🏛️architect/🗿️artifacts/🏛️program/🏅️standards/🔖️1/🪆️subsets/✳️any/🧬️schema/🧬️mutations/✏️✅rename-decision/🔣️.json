@@ -5,7 +5,7 @@
   "displayName": "Rename Decision",
   "emoji": "✏️✅",
   "aggregateVariant": "RenameDecision",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

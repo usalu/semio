@@ -1,0 +1,21 @@
+(* ISO/IEC 14977 EBNF mirror (descriptive, not test-parsed — the real recognizer is
+   ../📖️.grammar.semio, walked by dsl::Recognizer) for s.stdio.semio.table's diff text
+   line (protocol::DiffCodec::print_diff/parse_diff). *)
+document      = [ field list ] ;
+field list    = field, { ";", field } ;
+field         = columns field | rows field ;
+columns field = "columns", "=", "[", [ column list ], "]" ;
+column list   = column, { ",", column } ;
+column        = "[", hex, ",", cell kind, "]" ;
+cell kind     = "n" | "b" | "i" | "f" | "s" | "y" ;
+rows field    = "rows", "=", "[", [ row list ], "]" ;
+row list      = row, { ",", row } ;
+row           = "[", [ list item ], "]" ;
+
+value         = "Z" | "B", "[", bit, "]" | "I", "[", hex, "]" | "F", "[", hex, "]" | "S", "[", hex, "]" | "Y", "[", hex, "]" | "L", "[", { list item }, "]" | "M", "[", { map item }, "]" | "R", "[", hex, "]" ;
+list item     = value, [ "," ] ;
+map item      = hex, ":", value, [ "," ] ;
+bit           = "0" | "1" ;
+
+hex           = { hex digit } ;
+hex digit     = "0" | "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9" | "a" | "b" | "c" | "d" | "e" | "f" ;

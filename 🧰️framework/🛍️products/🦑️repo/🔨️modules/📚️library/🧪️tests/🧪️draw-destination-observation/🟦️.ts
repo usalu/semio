@@ -8,7 +8,7 @@ import fg from "fast-glob";
 import { parse, type ParseError } from "jsonc-parser";
 import * as toml from "@iarna/toml";
 import * as ts from "typescript";
-import { loadCatalogTaxonomy, noFollowDirectoryAncestry, semanticOwnedInputFileSnapshot, semanticPathProjectionAuthority, type SemanticProjectionAuthorityNode } from "../../🔍️discovery/🟦️component.ts";
+import { loadCatalogTaxonomy, noFollowDirectoryAncestry, semanticOwnedInputFileSnapshot, semanticPathProjectionAuthority, type SemanticProjectionAuthorityNode } from "../../🔍️discovery/🟦️.ts";
 
 type ObservationCase = Readonly<{ id: string; mutation: string; expected: "accepted" | "rejected"; error: string | null; contentReads: number }>;
 type ObservationVector = Readonly<{ schemaVersion: number; contractId: string; authority: Readonly<{ catalog: string; catalogSha256: string; projectionIndex: number; projectionContractId: string; mappingDigest: string; authoredSource: string; authoredSourceSha256: string }>; observation: Readonly<{ files: number; directories: number; nodes: number; maxPathBytes: number }>; foldVectors: readonly Readonly<{ left: string; right: string; equal: boolean }>[]; cases: readonly ObservationCase[]; ancestorSwap: Readonly<{ boundaries: readonly ("reader-before-content" | "fact" | "names" | "content")[]; error: string; descendantObservations: number; contentReads: number }> }>;
@@ -28,7 +28,7 @@ const authoredPath = resolve(import.meta.dir, vector.authority.authoredSource), 
 const authoredSchemaPath = join(dirname(authoredPath), "🧬️schema/🔣️.json"), authoredSchema = JSON.parse(readFileSync(authoredSchemaPath, "utf8"));
 const taxonomy = loadCatalogTaxonomy();
 const reportOwner = join(repoRoot, ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/END-TO-END-TAXONOMY-NORMALIZATION/📓️draw-destination-observation");
-const inputPaths = [import.meta.filename, join(import.meta.dir, "🔣️.json"), join(import.meta.dir, "🧬️schema/🔣️.json"), catalogPath, authoredPath, authoredSchemaPath, join(libraryRoot, "🔣️taxonomy.json"), join(libraryRoot, "🔍️discovery/🟦️component.ts"), join(import.meta.dir, "🧪️registration/🔣️.json"), join(import.meta.dir, "🧪️registration/🧬️schema/🔣️.json")];
+const inputPaths = [import.meta.filename, join(import.meta.dir, "🔣️.json"), join(import.meta.dir, "🧬️schema/🔣️.json"), catalogPath, authoredPath, authoredSchemaPath, join(libraryRoot, "🔣️taxonomy.json"), join(libraryRoot, "🔍️discovery/🟦️.ts"), join(import.meta.dir, "🧪️registration/🔣️.json"), join(import.meta.dir, "🧪️registration/🧬️schema/🔣️.json")];
 const hash = (bytes: string | Uint8Array): string => createHash("sha256").update(bytes).digest("hex");
 const byteOrder = (left: string, right: string): number => Buffer.from(left).compare(Buffer.from(right));
 const validateNeutral = new Ajv({ strict: true, allErrors: true }).compile(schema);
@@ -190,7 +190,7 @@ function materialize(run: Run, row: ObservationCase): Readonly<{ root: string; d
     if (row.mutation === "file-is-directory" && path === projection.mappings[0]!.destinationPath) mkdirSync(absolute);
     else {
       const wrong = row.mutation === "wrong-macros-entry" && path === projection.mappings[0]!.destinationPath || row.mutation === "wrong-fsm-entry" && path === projection.mappings[5]!.destinationPath;
-      writeFileSync(absolute, wrong ? original.replace("📚️library/🦀️.rs", "📦️glue.rs") : original, { flag: "wx", mode: 0o644 });
+      writeFileSync(absolute, wrong ? original.replace("📚️library/🦀️.rs", "🦀️.rs") : original, { flag: "wx", mode: 0o644 });
       chmodSync(absolute, 0o644);
     }
   }
@@ -198,7 +198,7 @@ function materialize(run: Run, row: ObservationCase): Readonly<{ root: string; d
   if (row.mutation === "source-present" || row.mutation === "missing-root-with-source") {
     const source = join(run.repoRoot, projection.sourceRoot);
     mkdirSync(source, { recursive: true });
-    writeFileSync(join(source, "🦀️component.rs"), "THIS OLD SOURCE MUST NEVER BE READ\n", { flag: "wx" });
+    writeFileSync(join(source, "🦀️.rs"), "THIS OLD SOURCE MUST NEVER BE READ\n", { flag: "wx" });
   }
   if (row.mutation === "extra-file" || row.mutation === "nfc-extra") writeFileSync(join(destination, row.mutation === "nfc-extra" ? "e\u0301vidence" : "unknown"), "unowned\n", { flag: "wx" });
   if (row.mutation === "extra-directory") mkdirSync(join(destination, "unknown"));
@@ -366,7 +366,7 @@ test("Draw destination observation has the closed default-budget canonical regis
   const directory = join(import.meta.dir, "🧪️registration"), bytes = readFileSync(join(directory, "🔣️.json"), "utf8"), registration = JSON.parse(bytes);
   const validate = new Ajv({ strict: true, allErrors: true }).compile(JSON.parse(readFileSync(join(directory, "🧬️schema/🔣️.json"), "utf8")));
   expect(validate(registration), JSON.stringify(validate.errors)).toBe(true);
-  for (const invalid of [{ ...registration, source: "🟦️component.ts" }, { ...registration, budget: 120000 }, { ...registration, budgetMs: 120000 }, { ...registration, filter: "selected" }, { ...registration, runner: "other" }, { ...registration, launchOrder: 410.210 }]) expect(validate(invalid)).toBe(false);
+  for (const invalid of [{ ...registration, source: "🟦️.ts" }, { ...registration, budget: 120000 }, { ...registration, budgetMs: 120000 }, { ...registration, filter: "selected" }, { ...registration, runner: "other" }, { ...registration, launchOrder: 410.210 }]) expect(validate(invalid)).toBe(false);
   const errors: ParseError[] = [];
   expect(parse(bytes, errors, { disallowComments: true, allowTrailingComma: false })).toEqual(registration);
   expect(errors).toEqual([]);

@@ -1,0 +1,6 @@
+# 📝️ Text representation mirror for `stdio.semio.video` (snapshot) — envelope header + hex(JSON)
+# body; the JSON body's own structure is ../🔗️.graphql's SemioVideoSnapshot.
+type SemioVideoSnapshotTextEnvelope {
+  header: String!
+  bodyHex: String!
+}

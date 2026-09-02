@@ -3,11 +3,11 @@
 //! isolated from the repository's root workspace and Cargo.lock).
 //!
 //! This binary is a READER-based external oracle mechanism for this repository's own PNG 1.2/any
-//! mutation vocabulary (`🧪️oracle/🔣️.json`, oracle id `png-png-1-2-mutate-reader`). Every recipe's
+//! mutation vocabulary (`🔣️oracle.json`, oracle id `png-png-1-2-mutate-reader`). Every recipe's
 //! BEFORE and AFTER document is authored directly as a typed `png::Info` value below — never by
 //! executing this repository's own `PngMutation` dispatch/diff — then handed to `png::Encoder` to
 //! become real bytes. `project` decodes real bytes back with `png::Decoder`, independent of, and
-//! never sharing code with, this repository's own `🧪️oracle/🦀️component.rs` (which computes what
+//! never sharing code with, this repository's own `🦀️oracle.rs` (which computes what
 //! a mutation SHOULD produce and is registered `cross-semio-implementation`, not a reader).
 //!
 //! Two subcommands:
@@ -254,7 +254,7 @@ fn doc_json(d: &Decoded) -> String {
 /// only, so every recipe returns BOTH a before and an after document (no `-rejected-` counterpart
 /// exists in this catalog, unlike `avi`). Each AFTER state touches exactly the field(s) that kind's
 /// real `PngMutation` variant touches (see `../../../../../../🧬️schema/🧬️mutations/🦀️.rs` and each
-/// `📐️<kind>/🛰️component.proto` for the field list) — the values themselves are hand-chosen by this
+/// `📐️<kind>/🛰️.proto` for the field list) — the values themselves are hand-chosen by this
 /// binary, never computed from any mutation dispatch.
 fn recipe(id: &str) -> Option<(Doc, Doc)> {
     match id {

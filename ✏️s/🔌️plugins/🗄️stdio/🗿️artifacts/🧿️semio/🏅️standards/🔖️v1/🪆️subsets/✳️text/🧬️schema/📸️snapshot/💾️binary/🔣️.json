@@ -1,0 +1,12 @@
+{
+  "$id": "https://semio.tech/schema/s.stdio.semio.text.snapshot/binary.json",
+  "title": "SemioTextSnapshotPackHeader",
+  "description": "Pack-binary-encoding header mirror of the snapshot facet — see ../🔣️.json for the canonical facet schema.",
+  "type": "object",
+  "properties": {
+    "format": { "type": "integer" },
+    "schemaLen": { "type": "integer" },
+    "schemaBytes": { "type": "string" },
+    "payload": { "type": "string", "contentEncoding": "hex" }
+  }
+}

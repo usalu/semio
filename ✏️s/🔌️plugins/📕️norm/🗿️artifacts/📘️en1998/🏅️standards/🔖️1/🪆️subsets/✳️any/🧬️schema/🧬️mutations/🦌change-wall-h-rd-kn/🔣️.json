@@ -5,7 +5,7 @@
   "displayName": "Change Wall H Rd Kn",
   "emoji": "🦌",
   "aggregateVariant": "ChangeWallHRdKn",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

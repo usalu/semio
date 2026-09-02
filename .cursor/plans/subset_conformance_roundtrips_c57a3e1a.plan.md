@@ -73,7 +73,7 @@ Assign existing examples deterministically: use sniffed dialect first, then uniq
 
 ## Integrated real-world roundtrip law
 
-Extend existing Rust `test_support` in [store](🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️component.rs) and the existing TypeScript testkit with one staged harness:
+Extend existing Rust `test_support` in [store](🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️.rs) and the existing TypeScript testkit with one staged harness:
 
 1. Load the vendored asset and verify provenance/non-empty content.
 2. Sniff and analyze to the expected subset dialect.
@@ -91,9 +91,9 @@ Extend existing Rust `test_support` in [store](🧰️framework/🛍️products/
 
 Extend existing files only:
 
-- [plugin component](🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️component.rs): add a declarative `subset!` macro beside the existing artifact-facet derive. It emits registration and inline tests in its invoking module, never new test files.
-- [store component](🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️component.rs): integrated Rust roundtrip stages reusing existing law helpers.
-- [command component](🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🎮️command/🦀️component.rs), [IO component](🧰️framework/🔨️modules/🚪️io/🦀️component.rs), and [schema component](🧰️framework/🔨️modules/🧬️schema/🦀️component.rs): inference metadata integration, fidelity declarations, and registry enumeration without duplicating the inference ticket's API.
+- [plugin component](🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️.rs): add a declarative `subset!` macro beside the existing artifact-facet derive. It emits registration and inline tests in its invoking module, never new test files.
+- [store component](🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️.rs): integrated Rust roundtrip stages reusing existing law helpers.
+- [command component](🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🎮️command/🦀️.rs), [IO component](🧰️framework/🔨️modules/🚪️io/🦀️.rs), and [schema component](🧰️framework/🔨️modules/🧬️schema/🦀️.rs): inference metadata integration, fidelity declarations, and registry enumeration without duplicating the inference ticket's API.
 - [root script](📜️script.ts): deterministic `generate plugin-glue`, subset-aware example verification, and subset conformance policies. Land policies as reporting/medium severity, then promote to high only at final seal.
 - [launch configurations](.vscode/launch.json): add subset conformance, subset examples, roundtrip, and inference-law gates plus a single-subset development command in existing group/order conventions.
 - [Vitest aggregator](🧪️vitest.config.ts): ensure every TypeScript subset test region executes and remove broken-project exclusions as repaired.

@@ -10,19 +10,19 @@
 //! `dxf` 0.6 both WRITES (`Drawing::save`) and READS (`Drawing::load`) DXF R12: only `Ink` blocks'
 //! raw `points.windows(2)` become `LINE` entities on layer `"0"` — no `x`/`y`/`rotation` transform,
 //! no visibility filter, no width — reproducing `NoteIntoDxf::serialize`'s body exactly (see
-//! `../../🚪️io/📤️export/🧵️serializers/🗿️artifacts/🖊️dxf/🔖️r12/✳️any/🦀️component.rs`).
+//! `../../🚪️io/📤️export/🧵️serializers/🗿️artifacts/🖊️dxf/🔖️r12/✳️any/🦀️.rs`).
 //!
 //! `quick-xml` 0.42 both WRITES (`quick_xml::Writer`) and READS (`quick_xml::Reader`) the SVG XML:
 //! every VISIBLE block (flatten + `block_visible` filter — visibility IS honoured here) wrapped in
 //! `<g transform="matrix(a,b,c,d,e,f)">` where the matrix is the block's own `x`/`y`/`rotation`, and
-//! kind-specific content inside (see `../../🚪️io/🦀️component.rs`'s `draw_node_from_note_block`).
+//! kind-specific content inside (see `../../🚪️io/🦀️.rs`'s `draw_node_from_note_block`).
 //!
 //! `lopdf` 0.44 both WRITES (`Document::save_to`) and READS (`Document::load_mem` +
 //! `content::Content::decode`) the PDF: `title` + every `Text` block's paragraphs, space-joined, onto
 //! ONE page — no visibility filter (the same cross-carrier bug DXF has), no position, no other kind
-//! (see `../../🚪️io/📤️export/🧵️serializers/🗿️artifacts/📄️pdf/🔖️1.4/✳️any/🦀️component.rs`).
+//! (see `../../🚪️io/📤️export/🧵️serializers/🗿️artifacts/📄️pdf/🔖️1.4/✳️any/🦀️.rs`).
 //!
-//! @see ../../🧪️oracle/🔣️.json — the three oracle registrations this binary reuses (pinned to the
+//! @see ../../🔣️oracle.json — the three oracle registrations this binary reuses (pinned to the
 //!      exact same versions) and the `fixtureManifests`/`probes` entries this binary's output feeds.
 //! @see .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️27/SUBSET-SCOPED-EXTERNAL-ORACLE-MUTATION-TESTING/📓️note-layout-carrier-oracle-findings.md
 //!      — the 16-witnessable/17-un-oracled split this corpus covers (16, no more, no less).

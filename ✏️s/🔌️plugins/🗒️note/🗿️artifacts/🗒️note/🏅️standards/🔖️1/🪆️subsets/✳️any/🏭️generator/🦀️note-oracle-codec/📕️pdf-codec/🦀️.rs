@@ -1,5 +1,5 @@
 //! 📄️ PDF carrier — writer AND reader, both `lopdf` 0.44, matching `lopdf-note-text-reader` in
-//! `../../🧪️oracle/🔣️.json`. Reproduces `NoteIntoPdf::serialize`'s body exactly: `title` + every
+//! `../../🔣️oracle.json`. Reproduces `NoteIntoPdf::serialize`'s body exactly: `title` + every
 //! `Text` block's paragraph runs, space-joined, onto ONE page's `Tj` text stream — no visibility
 //! filter (the same cross-carrier bug DXF has, confirmed on a second serializer), no position, no
 //! other block kind.

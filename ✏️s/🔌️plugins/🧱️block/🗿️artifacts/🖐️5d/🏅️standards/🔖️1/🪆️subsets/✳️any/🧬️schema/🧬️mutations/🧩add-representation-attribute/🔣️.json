@@ -5,7 +5,7 @@
   "displayName": "Add Representation Attribute",
   "emoji": "🧩",
   "aggregateVariant": "AddRepresentationAttribute",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": "add-representation-attribute",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

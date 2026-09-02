@@ -87,30 +87,30 @@ fn fixture() -> Fixture {
 }
 
 fn pages(row: &Case) -> Vec<Vec<u8>> {
-    let pages = row.pages.iter().map(|page| {
-        let padding = page.length.checked_sub(page.suffix.len()).expect("explicit UTF-8 suffix fits page");
-        let mut bytes = vec![b' '; padding];
-        bytes.extend_from_slice(page.suffix.as_bytes());
-        assert!(!bytes.is_empty() && bytes.len() <= OWNED_SCHEMA_DECODE_PAGE_BYTES);
-        bytes
-    }).collect::<Vec<_>>();
+    let pages = row
+        .pages
+        .iter()
+        .map(|page| {
+            let padding = page.length.checked_sub(page.suffix.len()).expect("explicit UTF-8 suffix fits page");
+            let mut bytes = vec![b' '; padding];
+            bytes.extend_from_slice(page.suffix.as_bytes());
+            assert!(!bytes.is_empty() && bytes.len() <= OWNED_SCHEMA_DECODE_PAGE_BYTES);
+            bytes
+        })
+        .collect::<Vec<_>>();
     assert!(pages.iter().take(pages.len() - 1).all(|page| page.len() == OWNED_SCHEMA_DECODE_PAGE_BYTES));
     assert_eq!(serde_json::from_slice::<serde_json::Value>(&pages.concat()).expect("neutral page JSON"), row.expected_document);
     pages
 }
 
 fn record(pages: &[Vec<u8>]) -> OwnedSchemaRecordCursor {
-    let mut admitted = OwnedSchemaDecodePages::try_with_credits(OwnedSchemaDecodeCredits {
-        maximum_pages: pages.len(),
-        maximum_bytes: pages.iter().map(Vec::len).sum(),
-    }).expect("exact page credits");
+    let mut admitted = OwnedSchemaDecodePages::try_with_credits(OwnedSchemaDecodeCredits { maximum_pages: pages.len(), maximum_bytes: pages.iter().map(Vec::len).sum() }).expect("exact page credits");
     for bytes in pages {
         let page = OwnedSchemaDecodePage::try_from_slice(bytes).expect("bounded actual page");
         admitted.admit_page(page).unwrap_or_else(|_| panic!("valid full-nonterminal admission"));
     }
     admitted.seal().expect("seal exact pages");
-    artifact_envelope_decode_record(semio_framework_job::OperationId(66), semio_framework_job::Generation(1), admitted)
-        .unwrap_or_else(|_| panic!("unstarted actual envelope record"))
+    artifact_envelope_decode_record(semio_framework_job::OperationId(66), semio_framework_job::Generation(1), admitted).unwrap_or_else(|_| panic!("unstarted actual envelope record"))
 }
 
 fn note(failures: &mut Vec<String>, label: &str, condition: bool, detail: impl std::fmt::Debug) {
@@ -162,7 +162,14 @@ impl CountedField {
 }
 
 impl ArtifactEnvelopeFieldDecoder<(), ()> for CountedField {
-    fn accept_field_token(&mut self, _field_id: u16, _token: OwnedSchemaToken, _terminal: bool, _source: &OwnedSchemaRecordCursor, _cx: &mut semio_framework_job::StepContext<'_>) -> Result<ArtifactEnvelopeFieldDecodeStep, OwnedSchemaDecodeDiagnostic> {
+    fn accept_field_token(
+        &mut self,
+        _field_id: u16,
+        _token: OwnedSchemaToken,
+        _terminal: bool,
+        _source: &OwnedSchemaRecordCursor,
+        _cx: &mut semio_framework_job::StepContext<'_>,
+    ) -> Result<ArtifactEnvelopeFieldDecodeStep, OwnedSchemaDecodeDiagnostic> {
         self.counts.accept_calls.fetch_add(1, Ordering::SeqCst);
         Err(Self::unexpected())
     }
@@ -256,11 +263,7 @@ fn witness(record: Option<&OwnedSchemaRecordCursor>) -> Option<RecordWitness> {
 }
 
 enum Subject {
-    Registered {
-        rejected: ArtifactEnvelopeDecodeRejected<(), ()>,
-        registry: Arc<ArtifactEnvelopeFieldDecoderRegistry<(), ()>>,
-        ticket: ArtifactEnvelopeFieldDecoderTicket,
-    },
+    Registered { rejected: ArtifactEnvelopeDecodeRejected<(), ()>, registry: Arc<ArtifactEnvelopeFieldDecoderRegistry<(), ()>>, ticket: ArtifactEnvelopeFieldDecoderTicket },
     Unadmitted(ArtifactEnvelopeUnadmittedDecodeRejected<(), ()>),
 }
 
@@ -281,7 +284,9 @@ fn detach_and_close(registry: &Arc<ArtifactEnvelopeFieldDecoderRegistry<(), ()>>
                 if result.as_ref() == Ok(&SnapshotRetirementStep::Complete) && returned.terminal_is_empty() {
                     break;
                 }
-                if let Err(error) = result { failures.push(format!("returned close: {error}")); }
+                if let Err(error) = result {
+                    failures.push(format!("returned close: {error}"));
+                }
             }
             note(failures, "returned owner bounded terminal", returned.terminal_is_empty(), returned.terminal_is_empty());
         }
@@ -303,7 +308,9 @@ impl Subject {
                 let mut rejected = ArtifactEnvelopeUnadmittedDecodeRejected::new(record, fields);
                 for _ in 0..close_bound {
                     let result = rejected.close_step(1, OWNED_SCHEMA_DECODE_PAGE_BYTES);
-                    if result.as_ref() == Ok(&SnapshotRetirementStep::Complete) && rejected.terminal_is_empty() { break; }
+                    if result.as_ref() == Ok(&SnapshotRetirementStep::Complete) && rejected.terminal_is_empty() {
+                        break;
+                    }
                 }
                 note(failures, "refused setup bounded terminal", rejected.terminal_is_empty(), rejected.terminal_is_empty());
                 return None;
@@ -319,7 +326,9 @@ impl Subject {
                 for _ in 0..close_bound {
                     detach_and_close(&registry, Some(ticket), None, failures);
                     semio_framework_job::InteractiveJob::close_step(&mut authority, 1, OWNED_SCHEMA_DECODE_PAGE_BYTES);
-                    if authority.terminal_is_empty() { break; }
+                    if authority.terminal_is_empty() {
+                        break;
+                    }
                 }
                 note(failures, "refused rejection bounded terminal", authority.terminal_is_empty(), authority.terminal_is_empty());
                 None
@@ -386,7 +395,9 @@ impl Subject {
             if let Self::Registered { registry, ticket, .. } = self {
                 detach_and_close(registry, Some(*ticket), None, failures);
             }
-            if self.terminal_is_empty() { break; }
+            if self.terminal_is_empty() {
+                break;
+            }
             if let Err(error) = self.close_step(Grant { maximum_items: 1, maximum_bytes: OWNED_SCHEMA_DECODE_PAGE_BYTES }) {
                 failures.push(format!("wrapper bounded teardown: {error}"));
             }
@@ -405,7 +416,9 @@ fn actual(result: &Result<SnapshotRetirementStep, String>, record: Option<&Owned
         Err(error) => (format!("error:{error}"), 0, 0),
     };
     Expected {
-        kind, released_items, released_bytes,
+        kind,
+        released_items,
+        released_bytes,
         remaining_pages: record.map_or(0, |record| record.tokens.pages.page_count()),
         remaining_bytes: record.map_or(0, |record| record.tokens.pages.byte_count()),
         record_present: record.is_some(),
@@ -429,14 +442,16 @@ fn check_case(registered: bool, row: &Case, vector: &FieldVector, failures: &mut
         note(failures, &format!("{} close {index}", row.id), observed == close.expected, (&observed, &close.expected));
         if let Some(current) = witness(subject.record()) {
             let expected_contents = original_pages.iter().take(close.expected.remaining_pages).flatten().copied().map(Some).collect::<Vec<_>>();
-            note(failures, &format!("{} original retained page prefix {index}", row.id),
-                current.storage == original.storage && current.capacity == original.capacity && current.sealed && current.contents == expected_contents, current);
+            note(failures, &format!("{} original retained page prefix {index}", row.id), current.storage == original.storage && current.capacity == original.capacity && current.sealed && current.contents == expected_contents, current);
         } else {
             note(failures, &format!("{} record removal {index}", row.id), !close.expected.record_present, close.expected.record_present);
         }
-        note(failures, &format!("{} grant not exceeded {index}", row.id),
+        note(
+            failures,
+            &format!("{} grant not exceeded {index}", row.id),
             observed.released_items <= close.grant.maximum_items && observed.released_bytes <= close.grant.maximum_bytes && observed.released_items <= 1,
-            (&observed, close.grant.maximum_items, close.grant.maximum_bytes));
+            (&observed, close.grant.maximum_items, close.grant.maximum_bytes),
+        );
     }
     subject.teardown(failures);
     drop(subject);

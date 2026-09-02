@@ -1,0 +1,55 @@
+dialect grammar
+grammar stdio.gif.mutations
+start op
+
+# Real one-line op-text form this artifact's `dsl::DslOps`-derived `OpText::print_op`/
+# `parse_op` (../🦀️.rs, `dsl::print`/`dsl::parse` over the derived `DslVariants`
+# spec) ACTUALLY emits — captured verbatim from a real `mutation.print_op()` call over every
+# variant (P2-FG2 debug probe, deleted after capture; see this artifact's report). Kebab-case
+# keyword + kebab-case `field=value` tokens; a `#[dsl(block)]`/struct-valued field prints as
+# `field { inner-fields }`; ANY `Option<T>` field (block-struct OR plain scalar) is OMITTED
+# ENTIRELY, not even an empty marker, when `None` — this dialect's mutations text form has no
+# tri-state bracket tag at all (that `[0]`/`[1,value]` convention is this artifact's DIFF
+# codec's own SEPARATE hand-rolled grammar, confirmed NOT shared by the mutations text form —
+# `SetFrameTransparency { transparent_index: None }` prints as bare `"...index=0"`, no
+# `transparent-index` token whatsoever). A `Vec<T>` field prints as `field=[ item-fields
+# item-fields ... ]` — items back-to-back with NO separator token (the parser relies on each
+# item's own FIXED field count, exactly like this dialect's other positional-tuple value
+# grammars). A plain `String` field (not `#[dsl(base64)]`-tagged) prints as a BARE, unquoted
+# `IDENT` token (the shared lexer's `is_ident_continue` allows `.`/`-`/`_`/`/` — confirmed by
+# reading `🔍️lexer/🦀️.rs` directly, NOT assumed — so `schema=stdio.gif` lexes as one
+# `Ident`, never `Text`); only a `#[dsl(base64)]`-tagged `Vec<u8>` payload (`indices`) prints
+# QUOTED, matching `Terminal(TEXT)`.
+comment none
+
+op = set-snapshot-op | set-screen-size-op | set-global-color-table-op | set-background-color-index-op | set-pixel-aspect-ratio-op | insert-image-op | remove-image-op | move-image-op | set-image-geometry-op | set-image-pixels-op | set-image-interlace-op
+
+set-snapshot-op = "set-snapshot" "snapshot" "{" snapshot-fields "}"
+set-screen-size-op = "set-screen-size" "width" "=" INT "height" "=" INT
+set-global-color-table-op = "set-global-color-table" gct-clause?
+set-background-color-index-op = "set-background-color-index" "index" "=" INT
+set-pixel-aspect-ratio-op = "set-pixel-aspect-ratio" "ratio" "=" INT
+insert-image-op = "insert-image" "index" "=" INT "image" "{" image-fields "}"
+remove-image-op = "remove-image" "index" "=" INT
+move-image-op = "move-image" "from" "=" INT "to" "=" INT
+set-image-geometry-op = "set-image-geometry" "index" "=" INT "left" "=" INT "top" "=" INT "width" "=" INT "height" "=" INT
+set-image-pixels-op = "set-image-pixels" "index" "=" INT "indices" "=" TEXT
+set-image-interlace-op = "set-image-interlace" "index" "=" INT "interlace" "=" BOOL
+
+# `GifSnapshot`'s own derived record shape — non-block scalar fields FIRST (declaration
+# order), block/`Vec`-of-struct fields LAST (declaration order among those): `schema` is the
+# document's real hand-rolled envelope-id string, `gct` an optional Global Color Table block,
+# `images` the flattened image list.
+snapshot-fields = "schema" "=" IDENT "width" "=" INT "height" "=" INT "background-color-index" "=" INT "pixel-aspect-ratio" "=" INT gct-clause? "images" "=" "[" image-fields* "]"
+
+gct-clause = "gct" "{" color-table-fields "}"
+lct-clause = "lct" "{" color-table-fields "}"
+color-table-fields = "sorted" "=" BOOL "colors" "=" "[" rgb-item* "]"
+rgb-item = "r" "=" INT "g" "=" INT "b" "=" INT
+
+# `GifImage`'s own derived record shape — scalar fields (`left`/`top`/`width`/`height`/
+# `interlace`/`indices`, the last a base64-quoted `#[dsl(base64)]` byte vector) first, the one
+# block field (`lct`, `Option<GifColorTable>`) last, omitted entirely when `None`. Reused both
+# for `insert-image`'s mandatory `image { ... }` payload and for each flattened item inside a
+# snapshot's `images=[ ... ]` list.
+image-fields = "left" "=" INT "top" "=" INT "width" "=" INT "height" "=" INT "interlace" "=" BOOL "indices" "=" TEXT lct-clause?

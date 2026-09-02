@@ -1,7 +1,7 @@
 #!/usr/bin/env bun
 /** 🎪️ `@semio-tech/demonstrator-plugin` router: `bun ./📜️script.ts test`. */
 import { join } from "node:path";
-import { BundleScript, ScriptRouter, resolveTestLevel, runBundleScriptMain, runCargoTestBudgeted } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts";
+import { BundleScript, ScriptRouter, resolveTestLevel, runBundleScriptMain, runCargoTestBudgeted } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { describePluginComponent } from "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️describe/📦️packages/🦀️rust/📜️script.ts";
 
 class TestScript extends BundleScript {
@@ -11,8 +11,8 @@ class TestScript extends BundleScript {
   }
 }
 
-/** @emoji 🛂️ Builds this crate's `wasm32-wasip2` component and re-emits `🛂️descriptor.semio` +
- * `🔣️descriptor.json` at this plugin's own owner root (D0-descriptor-plumbing) — the command
+/** @emoji 🛂️ Builds this crate's `wasm32-wasip2` component and re-emits `🛂️.descriptor.semio` +
+ * `🔣️.json` at this plugin's own owner root (D0-descriptor-plumbing) — the command
  * `📇️registry:check`'s own descriptor-gate warning tells a developer to run. */
 class DescribeScript extends BundleScript {
   run(): void {

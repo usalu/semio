@@ -6,15 +6,15 @@ third-party library in any ecosystem speaks, so the second producer THE STANDARD
 second IMPLEMENTATION, written in another language from the format's own committed specification:
 
 * the envelope — the mandatory `semio <envelope-id>.dsl v<version>` preamble line — is specified in
-  `🧰️framework/🛍️products/💻️os/🔨️modules/🧬️semio/🦀️component.rs`'s envelope section;
+  `🧰️framework/🛍️products/💻️os/🔨️modules/🧬️semio/🦀️.rs`'s envelope section;
 * the DSL body is the committed grammar
-  `../../🏅️standards/🔖️v1/🪆️subsets/✳️cad/🧬️schema/📸️snapshot/📝️text/📖️component.grammar.semio`
+  `../../🏅️standards/🔖️v1/🪆️subsets/✳️cad/🧬️schema/📸️snapshot/📝️text/📖️.grammar.semio`
   — `document = artifact-mark schema-line layers-line blocks-line entities-line`,
   `layer = "[" hex "," i32 "," hex "," bool "]"`, `entity-record = "[" hex "," hex "," entity "]"`,
   `block = "[" hex "," point2 "," entity-record-list "]"` and the nine single-letter-tagged
   `entity` variants `L`/`A`/`C`/`E`/`P`/`T`/`I`/`S`/`D` with the field lists that grammar gives;
 * the sixteen verbs, their named arguments and the three `option-…` spellings are the committed
-  grammar `…/🧬️schema/🧬️mutations/📝️text/📖️component.grammar.semio`, and their JSON wire form is
+  grammar `…/🧬️schema/🧬️mutations/📝️text/📖️.grammar.semio`, and their JSON wire form is
   this case's committed per-kind specification vectors under `🧫️fixtures/`.
 
 Two leaves the grammar states by reference rather than in full, and how each was settled:
@@ -101,7 +101,7 @@ TAG_OF_ENTITY = {name: tag for tag, (name, _) in ENTITY_FIELDS.items()}
 DOCUMENT_SCHEMA = "stdio.semio.cad"
 DSL_PREAMBLE = "semio stdio.semio.cad.dsl v1"
 
-DRAWING_DSL = "asset://🏅️standards/🔖️v1/🪆️subsets/✳️any/📚️examples/📐️drawing/🖼️assets/🗣️example.dsl.semio"
+DRAWING_DSL = "asset://🏅️standards/🔖️v1/🪆️subsets/✳️any/📚️examples/📐️drawing/🖼️assets/🗣️.dsl.semio"
 DRAWING_PACK = "asset://🏅️standards/🔖️v1/🪆️subsets/✳️any/📚️examples/📐️drawing/🖼️assets/🎒️example.pack.semio"
 
 # endregion 🔖️Vocabulary
@@ -445,7 +445,7 @@ def put_record(record: dict) -> bytes:
 
 def parse_pack(payload: bytes) -> dict:
     """📦️ The binary twin of the DSL. The committed protocol
-    `../../🏅️standards/🔖️v1/🪆️subsets/✳️cad/🧬️schema/📸️snapshot/💾️binary/📡️component.protocol.semio`
+    `../../🏅️standards/🔖️v1/🪆️subsets/✳️cad/🧬️schema/📸️snapshot/💾️binary/📡️.protocol.semio`
     fully describes the envelope and the `format u8` + varint-length-prefixed `schema` head, and
     then declares the three collections one opaque trailing `payload` chain by its own admission.
     That layer was therefore DERIVED from the committed `🎒️example.pack.semio` bytes: varint counts,

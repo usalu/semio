@@ -1,7 +1,7 @@
 //! @emoji 📄️ `UiSnapshot` / `UiNodeRecord` / `UiNodeId` / `UiPatch` / `UiPatchOp` and the revision
 //! model — the flat, id-keyed document every renderer reads and every reconciler writes. No type in
 //! this file nests another node inline; a node only ever refers to a child by [`UiNodeId`], which is
-//! what keeps the whole surface schema-projectable (see the crate's `📦️glue.rs` header).
+//! what keeps the whole surface schema-projectable (see the crate's `🦀️.rs` header).
 //!
 //! 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md. Every `fn`
 //! below is plain sync by owner ruling U1, which supersedes this program's general async-everything
@@ -89,10 +89,10 @@ pub const UI_DOCUMENT_PATCH_OPS: usize = UI_DOCUMENT_NODES * 9 + 1;
 pub type UiNodeChildren = crate::UiFixedList<UiNodeId, UI_DOCUMENT_NODES>;
 pub type UiNodeBindings = crate::UiFixedList<crate::ActionBinding, UI_NODE_BINDINGS>;
 pub type UiSnapshotNodes = crate::UiFixedList<UiNodeRecord, UI_DOCUMENT_NODES>;
-#[path = "../../♻️retirement/📋️patch/🦀️component.rs"]
+#[path = "../../♻️retirement/📋️patch/🦀️.rs"]
 mod patch_storage;
 pub use patch_storage::{UiPatchAllocationError, UiPatchOps, UiPendingPatchOp};
-#[path = "../../♻️retirement/📋️patch/📨️pending/📄️whole/🦀️component.rs"]
+#[path = "../../♻️retirement/📋️patch/📨️pending/📄️whole/🦀️.rs"]
 mod pending_whole_patch;
 pub use pending_whole_patch::UiPendingPatch;
 
@@ -418,7 +418,7 @@ impl<'a> Iterator for UiSubtreeIter<'a> {
 //#endregion 🗄️SnapshotState
 
 //#region 🪪️DocumentLease
-#[path = "../../🎟️resident/🦀️component.rs"]
+#[path = "../../🎟️resident/🦀️.rs"]
 mod resident;
 pub use resident::*;
 #[cfg(test)]
@@ -752,10 +752,10 @@ pub fn close_ui_document_page_one() -> bool {
 mod typed_retirement;
 pub use typed_retirement::close_ui_document_page_with_grant;
 use typed_retirement::{close_document_owner, hand_back_document_owner};
-#[path = "../../⚖️compare/📄️document/🦀️component.rs"]
+#[path = "../../⚖️compare/📄️document/🦀️.rs"]
 mod document_component_compare;
 pub use document_component_compare::{UiDocumentComponentCompare, UiDocumentCompareAdmission, UiDocumentCompareError};
-#[path = "../../📄️document/🎟️assembly/🦀️component.rs"]
+#[path = "../../📄️document/🎟️assembly/🦀️.rs"]
 mod document_assembly;
 pub use document_assembly::{UiDocumentAssembly, UiDocumentAssemblyError, UiDocumentAssemblyErrorKind, UiDocumentAssemblyProgress, UiDocumentRead, UiDocumentRootIdentity};
 //#endregion 🪪️DocumentLease

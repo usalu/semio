@@ -1,0 +1,11 @@
+# 🔺️ SemioTableDiff schema — real facet mirror of the Rust `🦀️.rs` sibling.
+type SemioTableColumnListDiff {
+  values: [SemioTableColumn!]!
+}
+type SemioTableRowListDiff {
+  values: [SemioTableRow!]!
+}
+type SemioTableDiff {
+  columns: SemioTableColumnListDiff @state(class: ARTIFACT)
+  rows: SemioTableRowListDiff @state(class: ARTIFACT)
+}

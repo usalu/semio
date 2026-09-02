@@ -1,0 +1,40 @@
+(* ebnf trinity.jack.mutations *)
+(* Below: ISO-14977-style mirror of the normative 📖️.grammar.semio (same production
+   names, kebab-case -> "space case"). This facet's .semio defines no header/body/payload
+   envelope (`start line`); the two lines above are preserved verbatim from the prior
+   identity fix for traceability but are not referenced below. *)
+document = header, body ;
+header = 'schema', space, 'trinity.jack.mutations', newline ;
+
+line = create node
+     | delete node
+     | create edge
+     | delete edge
+     | rename node
+     | move node
+     | change data property
+     | remove data property ;
+create node = 'create-node', space, id, space, text, space, text, space, number, space, number, space, number, space, number, space, port table ;
+delete node = 'delete-node', space, id ;
+create edge = 'create-edge', space, id, space, text, space, text, space, text, space, property bag ;
+delete edge = 'delete-edge', space, id ;
+rename node = 'rename-node', space, id, space, text ;
+move node = 'move-node', space, id, space, number, space, number ;
+change data property = 'change-data-property', space, entity, space, text, space, value ;
+remove data property = 'remove-data-property', space, entity, space, text ;
+entity = 'node', ':', id
+     | 'edge', ':', id ;
+port table = '{', newline, { port row }, '}' ;
+port row = octet, { octet } ;
+property bag = '{', newline, { property row }, '}' ;
+property row = octet, { octet } ;
+value = octet, { octet } ;
+id = octet, { octet } ;
+number = octet, { octet } ;
+text = octet, { octet } ;
+
+(* Framework dialect-primitive terminals, given one concrete definition each for a
+   self-contained mirror (not defined in the .semio itself — ticket-reported deviation). *)
+newline = [ '\r' ], '\n' ;
+octet = ? any single raw byte ? ;
+space = ' ' ;

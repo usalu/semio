@@ -2,7 +2,7 @@
   "name": "@semio-tech/framework-os-mcp",
   "$schema": "../../../../../../../node_modules/nx/schemas/project-schema.json",
   "namedInputs": {
-    "default": ["{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🟦️component.ts", "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/**/🦀️component.rs", "{projectRoot}/**/*"]
+    "default": ["{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🟦️.ts", "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/**/🦀️.rs", "{projectRoot}/**/*"]
   },
   "targets": {
     "test": {

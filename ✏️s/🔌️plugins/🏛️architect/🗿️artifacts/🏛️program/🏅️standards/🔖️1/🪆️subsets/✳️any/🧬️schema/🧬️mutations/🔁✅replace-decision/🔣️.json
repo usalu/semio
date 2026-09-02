@@ -5,7 +5,7 @@
   "displayName": "Replace Decision",
   "emoji": "🔁✅",
   "aggregateVariant": "ReplaceDecision",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

@@ -1,6 +1,6 @@
 //! 🦀️ Playground exhaustive mutation case — Rust adapter. Recorded no-oracle decision
 //! `playground-mutation-semantics`
-//! (`../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️oracle/🔣️.json`): `s.demonstrator.playground`
+//! (`../../🏅️standards/🔖️1/🪆️subsets/✳️any/🔣️oracle.json`): `s.demonstrator.playground`
 //! is a semio-NATIVE format with no third-party reader or writer.
 //!
 //! The vocabulary is one kind because the snapshot is one field, and what this case is really
@@ -21,10 +21,10 @@
 //!
 //! **How the fixture reaches typed values.** The generated host links only `semio-repo-test-host`,
 //! the law module and — behind `sut` — this plugin's crate, whose `protocol`/`store`/`serde_json`
-//! extern-crate aliases are private (`📦️glue.rs`). The oracle role therefore reads the committed
+//! extern-crate aliases are private (`🦀️.rs`). The oracle role therefore reads the committed
 //! bytes with `include_str!` and the platform's own JSON reader, and the subject role hands the SAME
 //! bytes to the production bridges `apply_playground_mutation_json`, `undo_playground_mutation_json` and
-//! `round_trip_playground_dsl` that this subset's `🧬️schema/🧬️mutations/🦀️component.rs` exports for it.
+//! `round_trip_playground_dsl` that this subset's `🧬️schema/🧬️mutations/🦀️.rs` exports for it.
 //! The subject half is gated behind the generated host's `sut` feature so an oracle-only run never
 //! compiles the local implementation.
 
@@ -33,7 +33,7 @@ use semio_s_plugin_stdio_test_oracle::law;
 
 //#region 🔖️Kinds
 /// 🏷️ Mirrors `KINDS` in
-/// `../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs` — duplicated, not
+/// `../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs` — duplicated, not
 /// imported, because the oracle-only build must not link the subject crate. The contract's
 /// mutation-coverage gate keeps this list honest against the catalog and
 /// `kinds_match_the_enum_and_the_catalog` in that production file keeps it honest against the enum.
@@ -48,7 +48,7 @@ const KINDS: &[&str] = &[
 const UNOBSERVABLE: &[&str] = &[];
 
 /// 🚨️ The diagnostic code a declared no-op or refusal must raise, from the leaf's own committed
-/// `🎯️outcome/🔣️component.json`. A vector that stopped raising it would otherwise be
+/// `🎯️outcome/🔣️.json`. A vector that stopped raising it would otherwise be
 /// indistinguishable from a mutation that quietly did nothing. Read only by the subject role —
 /// the oracle role answers with the committed after-document, which already IS the declared outcome.
 #[cfg(feature = "sut")]
@@ -56,7 +56,7 @@ const DECLARED_CODE: &[(&str, &str)] = &[];
 
 /// 🗣️ The real committed example this artifact ships — the identity law's input.
 #[cfg(feature = "sut")]
-const DSL_ASSET: &str = "asset://🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio";
+const DSL_ASSET: &str = "asset://🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/🗣️.dsl.semio";
 //#endregion 🔖️Kinds
 
 //#region 🔖️Fixtures
@@ -66,9 +66,9 @@ const DSL_ASSET: &str = "asset://🏅️standards/🔖️1/🪆️subsets/✳️
 fn fixture_text(kind: &str) -> (&'static str, &'static str, &'static str) {
     match kind {
         "change-schema" => (
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✒️change-schema/🧪️tests/retags-the-playground-document-schema/📸️snapshot/⬅️before/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✒️change-schema/🧪️tests/retags-the-playground-document-schema/🦠️mutation/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✒️change-schema/🧪️tests/retags-the-playground-document-schema/📸️snapshot/➡️after/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✒️change-schema/🧪️tests/retags-the-playground-document-schema/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✒️change-schema/🧪️tests/retags-the-playground-document-schema/🦠️mutation/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✒️change-schema/🧪️tests/retags-the-playground-document-schema/📸️snapshot/➡️after/🔣️.json"),
         ),
         other => panic!("mutate-playground-1: {other:?} is not a declared kind of this subset"),
     }
@@ -165,7 +165,7 @@ mod subject {
     /// 🔁️ The identity law in role, on the real committed example. Its two halves are asserted
     /// separately: the reparsed document must agree with the first parse, and the reprinted text must
     /// reproduce the committed bytes. The byte half is `carrier_is_exact` rather than the wave's
-    /// usual no-pass-through tripwire because the committed `🗣️example.dsl.semio` is this codec's OWN
+    /// usual no-pass-through tripwire because the committed `🗣️.dsl.semio` is this codec's OWN
     /// canonical output, committed as the artifact's example — reproducing it exactly is the correct
     /// answer here and any divergence is codec drift this case exists to catch.
     pub fn round_trip(ctx: &Context) -> Result<Outcome, String> {

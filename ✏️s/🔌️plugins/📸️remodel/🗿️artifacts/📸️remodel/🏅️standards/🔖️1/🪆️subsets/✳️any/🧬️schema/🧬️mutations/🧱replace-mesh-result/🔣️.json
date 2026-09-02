@@ -5,7 +5,7 @@
   "displayName": "Replace Mesh Result",
   "emoji": "🧱",
   "aggregateVariant": "ReplaceMeshResult",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": "replace-mesh-result",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

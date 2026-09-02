@@ -1,0 +1,7 @@
+; ABNF-style descriptive mirror of `stdio.semio.cad`'s real `DiffCodec` binary frame -- see the
+; authoritative `📡️.protocol.semio` for the conformance-tested version.
+document       = format presence payload
+format         = %x01                  ; DIFF_BINARY_FORMAT
+presence       = OCTET                 ; bit0=layers bit1=blocks bit2=entities
+payload        = *OCTET                ; 0-3 varint-length-prefixed text blobs, one per present
+                                        ; collection; see component.rs's DiffCodec::encode_diff

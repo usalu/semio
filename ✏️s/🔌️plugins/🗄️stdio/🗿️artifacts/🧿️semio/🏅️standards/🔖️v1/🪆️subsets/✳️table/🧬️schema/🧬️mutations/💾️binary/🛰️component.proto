@@ -1,9 +1,0 @@
-syntax = "proto3";
-// 💾️ SemioTableMutation binary frame — descriptive twin of 📡️component.protocol.semio.
-package semio.s_stdio_semio_table.mutations.binary;
-
-message SemioTableMutationFrame {
-  uint32 format = 1;
-  uint32 tag = 2;    // variant ordinal, 0-7
-  bytes payload = 3; // opaque: the variant's own argument tail
-}

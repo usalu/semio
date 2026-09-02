@@ -1,0 +1,5 @@
+module Stdio_xml_mutations;
+# UTF-8 JSON encoding of XmlMutation -- see the sibling ../🔣️.json shape.
+type Document = unit {
+    json_payload: bytes &eod;
+};

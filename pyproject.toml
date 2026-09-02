@@ -37,7 +37,7 @@ test = [
 # `compose/py` and `compose/engine`. Non-compose Python tests are NOT discovered through it. They are
 # owned by their language-neutral domain owner as `🧪️tests/<case>/🐍️component.py` adapters and are
 # executed by the repository's own Python host
-# (`🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🐍️python/🐍️host.py`), which loads
+# (`🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🐍️python/🐍️.py`), which loads
 # exactly the adapter the coordinator names and needs no discovery configuration at all. Do not widen
 # `testpaths` to pull non-compose paths back in — see ticket 26/08/23/END-TO-END-TESTING-REFACTOR.
 [tool.pytest.ini_options]

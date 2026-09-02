@@ -33,7 +33,7 @@ import {
   isDirectoryStreamMessageKind,
 } from "@semio-tech/framework-os";
 import { expect, it } from "vitest";
-import { type HubHandle, findFreePort, getWorkspaceRoot, startHub } from "./📦️index.ts";
+import { type HubHandle, findFreePort, getWorkspaceRoot, startHub } from "./🟦️.ts";
 
 const HUB_E2E = process.env.HUB_E2E === "1";
 const TEST_TIMEOUT_MS = 240_000;

@@ -5,5 +5,5 @@
     "baseUrl": ".",
     "allowImportingTsExtensions": true
   },
-  "include": ["📦️index.ts", "../../🟦️component.ts"]
+  "include": ["🟦️.ts", "../../🟦️.ts"]
 }

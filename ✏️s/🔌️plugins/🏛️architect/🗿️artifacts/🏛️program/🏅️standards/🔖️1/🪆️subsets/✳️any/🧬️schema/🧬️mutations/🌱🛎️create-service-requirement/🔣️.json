@@ -5,7 +5,7 @@
   "displayName": "Create Service Requirement",
   "emoji": "🌱🛎️",
   "aggregateVariant": "CreateServiceRequirement",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

@@ -1,0 +1,4 @@
+; abnf stdio.csv mutations (binary) — protocol::OpBinary: raw UTF-8 JSON bytes of
+; CsvMutation, NOT wrapped in the shared `.semio` envelope.
+document = payload
+payload = *OCTET   ; UTF-8 JSON object per sibling ../📝️text/📖️.grammar.semio

@@ -5,7 +5,7 @@
   "displayName": "Scale Camera3d",
   "emoji": "🔍",
   "aggregateVariant": "ScaleCamera3d",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": "scale-camera3d",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

@@ -5,7 +5,7 @@
   "displayName": "Delete Program Element",
   "emoji": "🗑️🧱",
   "aggregateVariant": "DeleteProgramElement",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

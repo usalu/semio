@@ -5,8 +5,8 @@
 
 // #region 🔌️Adapters
 import { cva } from "class-variance-authority";
-import { defineTestAdapter, type AdapterContext } from "../../../../../../🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🟦️typescript/📦️index.ts";
-import { styleVariants } from "../../🟦️component.ts";
+import { defineTestAdapter, type AdapterContext } from "../../../../../../🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🟦️typescript/🟦️.ts";
+import { styleVariants } from "../../🟦️.ts";
 // #endregion 🔌️Adapters
 
 // #region 🧫️Vectors

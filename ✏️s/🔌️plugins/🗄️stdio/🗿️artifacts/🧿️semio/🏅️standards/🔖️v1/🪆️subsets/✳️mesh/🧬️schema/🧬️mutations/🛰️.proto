@@ -1,0 +1,55 @@
+syntax = "proto3";
+// 🧬️ SemioMeshMutation facet mirror — see the sibling 🦀️.rs for the real source of
+// truth. Seventeen-verb mesh vocabulary; `ReplacePrimitiveGeometry` is SMO's approved rename of
+// the old `SetPrimitiveGeometry`, completed by DKM after SMO wound down.
+package semio.s_stdio_semio_mesh.mutations;
+
+import "../📸️snapshot/🛰️.proto";
+
+message CreateMesh { semio.s_stdio_semio_mesh.snapshot.SemioMesh mesh = 1; }
+message DeleteMesh { string id = 1; }
+message CreatePrimitive { string mesh_id = 1; semio.s_stdio_semio_mesh.snapshot.SemioPrimitive primitive = 2; }
+message DeletePrimitive { string mesh_id = 1; string primitive_id = 2; }
+message SetPrimitiveTopology { string mesh_id = 1; string primitive_id = 2; semio.s_stdio_semio_mesh.snapshot.SemioTopology topology = 3; }
+message ReplacePrimitiveGeometry {
+  string mesh_id = 1;
+  string primitive_id = 2;
+  repeated semio.s_stdio_semio_mesh.snapshot.SemioPoint3 positions = 3;
+  repeated semio.s_stdio_semio_mesh.snapshot.SemioPoint3 normals = 4;
+  repeated semio.s_stdio_semio_mesh.snapshot.SemioUv uvs = 5;
+  repeated semio.s_stdio_semio_mesh.snapshot.SemioRgba colors = 6;
+  repeated uint32 indices = 7;
+}
+message SetPrimitiveMaterial { string mesh_id = 1; string primitive_id = 2; optional string material_id = 3; }
+message CreateMaterial { semio.s_stdio_semio_mesh.snapshot.SemioMaterial material = 1; }
+message DeleteMaterial { string id = 1; }
+message ChangeMaterialBaseColor { string id = 1; semio.s_stdio_semio_mesh.snapshot.SemioRgba new_base_color = 2; }
+message ChangeMaterialMetallic { string id = 1; float new_metallic = 2; }
+message ChangeMaterialRoughness { string id = 1; float new_roughness = 2; }
+message CreateTexture { semio.s_stdio_semio_mesh.snapshot.SemioTexture texture = 1; }
+message DeleteTexture { string id = 1; }
+message ChangeTextureMime { string id = 1; string new_mime = 2; }
+message ReplaceTextureBytes { string id = 1; bytes new_bytes = 2; }
+message MoveVertex { string mesh_id = 1; string primitive_id = 2; uint64 vertex_index = 3; semio.s_stdio_semio_mesh.snapshot.SemioPoint3 new_point = 4; }
+
+message SemioMeshMutation {
+  oneof mutation {
+    CreateMesh create_mesh = 1;
+    DeleteMesh delete_mesh = 2;
+    CreatePrimitive create_primitive = 3;
+    DeletePrimitive delete_primitive = 4;
+    SetPrimitiveTopology set_primitive_topology = 5;
+    ReplacePrimitiveGeometry replace_primitive_geometry = 6;
+    SetPrimitiveMaterial set_primitive_material = 7;
+    CreateMaterial create_material = 8;
+    DeleteMaterial delete_material = 9;
+    ChangeMaterialBaseColor change_material_base_color = 10;
+    ChangeMaterialMetallic change_material_metallic = 11;
+    ChangeMaterialRoughness change_material_roughness = 12;
+    CreateTexture create_texture = 13;
+    DeleteTexture delete_texture = 14;
+    ChangeTextureMime change_texture_mime = 15;
+    ReplaceTextureBytes replace_texture_bytes = 16;
+    MoveVertex move_vertex = 17;
+  }
+}

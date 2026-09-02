@@ -321,7 +321,7 @@
         {
           "id": "change-material-base-color",
           "capability": "semio-v1-mesh-mutate",
-          "payloadSchema": "🔣️payload.schema.json",
+          "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "rejected",
             "applied"
@@ -358,7 +358,7 @@
         {
           "id": "change-material-metallic",
           "capability": "semio-v1-mesh-mutate",
-          "payloadSchema": "🔣️payload.schema.json",
+          "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "rejected",
             "applied"
@@ -395,7 +395,7 @@
         {
           "id": "change-material-roughness",
           "capability": "semio-v1-mesh-mutate",
-          "payloadSchema": "🔣️payload.schema.json",
+          "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "rejected",
             "applied"
@@ -432,7 +432,7 @@
         {
           "id": "change-texture-mime",
           "capability": "semio-v1-mesh-mutate",
-          "payloadSchema": "🔣️payload.schema.json",
+          "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "rejected",
             "applied"
@@ -469,7 +469,7 @@
         {
           "id": "create-material",
           "capability": "semio-v1-mesh-mutate",
-          "payloadSchema": "🔣️payload.schema.json",
+          "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "applied"
           ],
@@ -505,7 +505,7 @@
         {
           "id": "create-mesh",
           "capability": "semio-v1-mesh-mutate",
-          "payloadSchema": "🔣️payload.schema.json",
+          "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "applied"
           ],
@@ -544,7 +544,7 @@
         {
           "id": "create-primitive",
           "capability": "semio-v1-mesh-mutate",
-          "payloadSchema": "🔣️payload.schema.json",
+          "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "rejected",
             "applied"
@@ -584,7 +584,7 @@
         {
           "id": "create-texture",
           "capability": "semio-v1-mesh-mutate",
-          "payloadSchema": "🔣️payload.schema.json",
+          "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "applied"
           ],
@@ -620,7 +620,7 @@
         {
           "id": "delete-material",
           "capability": "semio-v1-mesh-mutate",
-          "payloadSchema": "🔣️payload.schema.json",
+          "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "rejected",
             "applied"
@@ -657,7 +657,7 @@
         {
           "id": "delete-mesh",
           "capability": "semio-v1-mesh-mutate",
-          "payloadSchema": "🔣️payload.schema.json",
+          "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "rejected",
             "applied"
@@ -697,7 +697,7 @@
         {
           "id": "delete-primitive",
           "capability": "semio-v1-mesh-mutate",
-          "payloadSchema": "🔣️payload.schema.json",
+          "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "rejected",
             "applied"
@@ -737,7 +737,7 @@
         {
           "id": "delete-texture",
           "capability": "semio-v1-mesh-mutate",
-          "payloadSchema": "🔣️payload.schema.json",
+          "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "rejected",
             "applied"
@@ -774,7 +774,7 @@
         {
           "id": "move-vertex",
           "capability": "semio-v1-mesh-mutate",
-          "payloadSchema": "🔣️payload.schema.json",
+          "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "rejected",
             "applied"
@@ -814,7 +814,7 @@
         {
           "id": "replace-primitive-geometry",
           "capability": "semio-v1-mesh-mutate",
-          "payloadSchema": "🔣️payload.schema.json",
+          "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "rejected",
             "applied"
@@ -854,7 +854,7 @@
         {
           "id": "replace-texture-bytes",
           "capability": "semio-v1-mesh-mutate",
-          "payloadSchema": "🔣️payload.schema.json",
+          "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "rejected",
             "applied"
@@ -891,7 +891,7 @@
         {
           "id": "set-primitive-material",
           "capability": "semio-v1-mesh-mutate",
-          "payloadSchema": "🔣️payload.schema.json",
+          "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "rejected",
             "applied"
@@ -928,7 +928,7 @@
         {
           "id": "set-primitive-topology",
           "capability": "semio-v1-mesh-mutate",
-          "payloadSchema": "🔣️payload.schema.json",
+          "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "rejected",
             "applied"

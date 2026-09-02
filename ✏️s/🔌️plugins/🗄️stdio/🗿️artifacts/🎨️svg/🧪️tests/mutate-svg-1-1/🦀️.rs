@@ -3,7 +3,7 @@
 //!
 //! Every scenario copies the real, committed `🔣️qr-code.svg` fixture into the case work directory
 //! first; the committed asset is never written to. `oracle` drives the registered `quick-xml`
-//! reference implementation (`../../🏅️standards/🔖️1.1/🪆️subsets/✳️base/🧪️oracle/🦀️component.rs`'s own
+//! reference implementation (`../../🏅️standards/🔖️1.1/🪆️subsets/✳️base/🦀️oracle.rs`'s own
 //! `oracle_apply_mutation`/`oracle_apply_mutation_inverse`); `subject` drives this repository's own
 //! `SvgSnapshot::import_utf8`/`export_utf8`/`apply_svg_mutation` over the full 11-kind `SvgMutation`
 //! vocabulary. Both results are read back by the SAME independent `project_svg_1_1` (`quick-xml`)
@@ -15,7 +15,7 @@ use semio_s_plugin_stdio_test_oracle::artifacts::svg::standards::v1_1::subsets::
 
 //#region 🔖️Kinds
 /// 📇️ Kebab-case spelling of every `SvgMutation` variant, mirrored from
-/// `../../🏅️standards/🔖️1.1/🪆️subsets/✳️base/🧬️schema/🧬️mutations/🦀️component.rs`'s own `KINDS` --
+/// `../../🏅️standards/🔖️1.1/🪆️subsets/✳️base/🧬️schema/🧬️mutations/🦀️.rs`'s own `KINDS` --
 /// duplicated rather than imported because the ORACLE-only build of this adapter must never link
 /// `semio-s-plugin-stdio` (see this file's own header).
 const KINDS: &[&str] = &["set-declaration", "set-doctype", "insert-element", "remove-element", "set-element-name", "set-attribute", "set-text", "set-view-box", "set-transform"];
@@ -234,7 +234,7 @@ mod subject {
 
     //#region 🔖️Inverse
     /// ↩️ `SvgMutation::inverse` in closed form (`../../🏅️standards/🔖️1.1/🪆️subsets/✳️base/🧬️schema/
-    /// 🧬️mutations/🦀️component.rs`'s own `Mutation<SvgSnapshot>::inverse`), transplanted rather than
+    /// 🧬️mutations/🦀️.rs`'s own `Mutation<SvgSnapshot>::inverse`), transplanted rather than
     /// called through the `protocol::Mutation` trait -- this adapter's generated crate never links
     /// `protocol` directly, only `semio-s-plugin-stdio` and `semio-s-plugin-stdio-test-oracle`.
     fn inverse_of(mutation: &SvgMutation, base: &SvgSnapshot) -> SvgMutation {

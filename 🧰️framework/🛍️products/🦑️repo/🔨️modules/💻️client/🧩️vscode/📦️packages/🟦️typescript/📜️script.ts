@@ -3,7 +3,7 @@
 import { builtinModules } from "node:module";
 import { resolve } from "node:path";
 import { build, type InlineConfig } from "vite";
-import { BundleScript, ScriptRouter, resolveTestLevel, runBunx, runBundleScriptMain, TEST_LEVELS } from "../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts";
+import { BundleScript, ScriptRouter, resolveTestLevel, runBunx, runBundleScriptMain, TEST_LEVELS } from "../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 
 //#region Build
 const extensionExternals = new Set(["vscode", ...builtinModules, ...builtinModules.map((name) => `node:${name}`)]);
@@ -28,7 +28,7 @@ function extensionBuildConfig(root: string, entry: string, outputDirectory: stri
 
 /** 🧩️Builds the extension host entry and its extension-host test bundle. */
 async function buildExtension(root: string, watch: boolean): Promise<void> {
-  await build(extensionBuildConfig(root, "🟦️extension.ts", "out", "extension.js", watch));
+  await build(extensionBuildConfig(root, "🟦️.ts", "out", "extension.js", watch));
   if (!watch) await build(extensionBuildConfig(root, "🧪️extension.test.ts", "out/test", "extension.test.js", false));
 }
 //#endregion

@@ -5,7 +5,7 @@
   "displayName": "Set Sample Flags",
   "emoji": "🚩",
   "aggregateVariant": "SetSampleFlags",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

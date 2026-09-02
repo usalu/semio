@@ -5,7 +5,7 @@
   "displayName": "Set Compression Params",
   "emoji": "🧮",
   "aggregateVariant": "SetCompressionParams",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

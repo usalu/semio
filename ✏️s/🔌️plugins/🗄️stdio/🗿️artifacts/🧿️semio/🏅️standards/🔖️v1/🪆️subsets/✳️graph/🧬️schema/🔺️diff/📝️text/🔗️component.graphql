@@ -1,6 +1,0 @@
-# 📝️ Text-facet grammar mirror, GraphQL SDL shape (descriptive) — see ../🔗️component.graphql for
-# the canonical facet schema; this file describes the DIFF-TEXT ENCODING of the same shape.
-type SemioGraphDiffDsl {
-  nodesWire: String
-  edgesWire: String
-}

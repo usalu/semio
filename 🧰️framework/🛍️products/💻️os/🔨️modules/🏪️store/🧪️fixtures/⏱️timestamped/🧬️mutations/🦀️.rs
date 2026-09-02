@@ -1,10 +1,12 @@
-use super::{DemoSnapshot, DemoDiff, assert_fixture_descriptor};
-use serde::{Deserialize, Serialize};
+use super::{assert_fixture_descriptor, DemoDiff, DemoSnapshot};
 use semio_framework_value_derive::{FromValue, ToValue};
+use serde::{Deserialize, Serialize};
 
-#[path = "🔢️set-n/🦀️.rs"] mod set_n;
+#[path = "🔢️set-n/🦀️.rs"]
+mod set_n;
 pub use set_n::SetN;
-#[path = "↩️restore-n/🦀️.rs"] mod restore_n;
+#[path = "↩️restore-n/🦀️.rs"]
+mod restore_n;
 pub use restore_n::RestoreN;
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, dsl::Mutations, dsl::DslOps)]

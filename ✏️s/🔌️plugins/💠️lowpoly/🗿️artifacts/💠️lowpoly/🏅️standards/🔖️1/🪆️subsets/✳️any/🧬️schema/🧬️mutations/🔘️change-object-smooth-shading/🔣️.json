@@ -5,7 +5,7 @@
   "displayName": "Change Object Smooth Shading",
   "emoji": "🔘️",
   "aggregateVariant": "ChangeObjectSmoothShading",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

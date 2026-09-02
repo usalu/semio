@@ -1,0 +1,12 @@
+{
+  "name": "@semio-tech/fixture-generator-stdio-bcf-2-1-any",
+  "targets": {
+    "🏭️generator": {
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts generate",
+        "forwardAllArgs": true
+      }
+    }
+  }
+}

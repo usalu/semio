@@ -1,0 +1,3 @@
+# 📝️ Text-wire representation for stdio.semio.drawing (snapshot): a scalar line, real shape
+# documented in 🅰️.g4 -- preamble + hex-encoded JSON(SemioDrawingSnapshot).
+scalar SemioDrawingSnapshotText

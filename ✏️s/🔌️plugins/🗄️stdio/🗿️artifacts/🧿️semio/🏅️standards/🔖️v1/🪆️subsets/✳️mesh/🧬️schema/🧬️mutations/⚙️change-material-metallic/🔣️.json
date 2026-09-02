@@ -5,7 +5,7 @@
   "displayName": "Change Material Metallic",
   "emoji": "⚙️",
   "aggregateVariant": "ChangeMaterialMetallic",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

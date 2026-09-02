@@ -3,14 +3,14 @@
 //! with no catalog).
 //!
 //! Recorded no-oracle decision `shooting-render-scene-mutation-semantics`
-//! (`../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️oracle/🔣️.json`): `s.shooting.shooting` is a
+//! (`../../🏅️standards/🔖️1/🪆️subsets/✳️any/🔣️oracle.json`): `s.shooting.shooting` is a
 //! semio-NATIVE artifact, and the 3D-scene interchange formats that come closest (glTF 2.0, USD,
 //! Collada) model no SHOT at all — eleven of the thirty-one kinds address one — so this adapter
 //! registers NO oracle handler. That is deliberate and it is the honest shape: a recorded no-oracle
 //! case is never dispatched in the oracle role, and an oracle handler that could only re-read what
 //! the subject just produced would be a stub reporting a pass. All evidence therefore lives in the
 //! SUBJECT role below, where each handler asserts its law through the shared
-//! `✏️s/🔌️plugins/🗄️stdio/🧪️oracle/⚖️law/🦀️component.rs` module before it returns.
+//! `✏️s/🔌️plugins/🗄️stdio/🧪️oracle/⚖️law/🦀️.rs` module before it returns.
 //!
 //! The subject half is `sut`-gated because the generated host links this repository's crate only
 //! for the subject role (fleet brief §5.3).
@@ -19,7 +19,7 @@ use semio_repo_test_host::Adapter;
 
 //#region 🔖️Vocabulary
 /// 🏷️ Mirrors `ShootingMutation::KINDS`
-/// (`../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs`) — duplicated rather
+/// (`../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs`) — duplicated rather
 /// than imported so the oracle-only build never links the subject crate. The contract's
 /// mutation-coverage gate keeps this list honest against the catalog, and
 /// `kinds_match_the_enum_and_the_catalog` in that production file keeps it honest against the enum.
@@ -59,11 +59,11 @@ const KINDS: &[&str] = &[
 
 /// 📸️ The one before-snapshot all thirty-one of this vocabulary's committed leaf fixtures share, read
 /// where the domain already keeps it rather than copied into a thirty-second place.
-const BASE_SNAPSHOT: &str = "asset://🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✏️rename-asset/🧪️tests/renames-asset-hero-to-lead/📸️snapshot/⬅️before/🔣️component.json";
+const BASE_SNAPSHOT: &str = "asset://🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✏️rename-asset/🧪️tests/renames-asset-hero-to-lead/📸️snapshot/⬅️before/🔣️.json";
 
 /// 📄️ The plugin's own committed real DSL artifact — the only input that can carry evidence about
 /// the handcrafted block/table text grammar.
-const DSL_ASSET: &str = "asset://🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio";
+const DSL_ASSET: &str = "asset://🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/🗣️.dsl.semio";
 //#endregion 🔖️Vocabulary
 
 //#region 🔖️Subject
@@ -116,7 +116,7 @@ mod subject {
     /// ↩️ The inverse law, asserted in role: applying the kind and then its OWN computed inverse must
     /// land back on the committed scene's projection exactly. The steps are replayed in the order the
     /// vocabulary emits them, which is this subset's own convention —
-    /// `🧬️mutations/🦀️component.rs`'s `round_trip` test helper replays `backwards` forward, unlike its
+    /// `🧬️mutations/🦀️.rs`'s `round_trip` test helper replays `backwards` forward, unlike its
     /// `present` and `sequence` siblings which reverse.
     pub fn inverse(ctx: &Context) -> Result<Outcome, String> {
         let spec = ctx.doc_json()?;
@@ -133,7 +133,7 @@ mod subject {
     }
 
     /// 🔁️ The identity law on the real committed DSL bytes. The carrier is deliberately byte-exact:
-    /// `📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio` is this codec's OWN output — a semio-native
+    /// `📚️examples/🎬️demo/🖼️assets/🗣️.dsl.semio` is this codec's OWN output — a semio-native
     /// envelope no foreign writer ever produced — so reproducing it exactly is the correct answer and
     /// anything else is codec or fixture drift. That is why `carrier_is_exact` stands here in place
     /// of the wave's usual "output must differ from input" tripwire.

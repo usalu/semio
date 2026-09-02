@@ -3506,7 +3506,7 @@
       "name": "🧹clean🧩️taxonomy🧪️wgpu-source-phase",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun ./node_modules/nx/bin/nx.js exec --projects=workspace --skipNxCache -- bun \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/END-TO-END-TAXONOMY-NORMALIZATION/📓️wgpu-source-phase-metadata/🧪️contract/📜️script.ts\" test",
+      "command": "bun ./node_modules/nx/bin/nx.js exec --projects=workspace --skipNxCache -- bun \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/END-TO-END-TAXONOMY-NORMALIZATION/📓️wgpu-source-phase-metadata/📜️contractscript.ts\" test",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
@@ -3528,7 +3528,7 @@
       "name": "🧹clean🧩️taxonomy🧪️plugin-live-restore-admission",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun ./node_modules/nx/bin/nx.js exec --projects=workspace --skipNxCache -- bun \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/END-TO-END-TAXONOMY-NORMALIZATION/📓️plugin-live-restore-path-admission/🧪️joined-acceptance/📜️script.ts\" test",
+      "command": "bun ./node_modules/nx/bin/nx.js exec --projects=workspace --skipNxCache -- bun \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/END-TO-END-TAXONOMY-NORMALIZATION/📓️plugin-live-restore-path-admission/📜️joined-acceptancescript.ts\" test",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
@@ -3605,7 +3605,7 @@
       "name": "⚖️gate📚️admission🔗️gitlink-no-descent",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun ./node_modules/nx/bin/nx.js exec --projects=workspace --skipNxCache -- bun \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/🧪️gitlink-no-descent-55/📜️script.ts\" check",
+      "command": "bun ./node_modules/nx/bin/nx.js exec --projects=workspace --skipNxCache -- bun \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/📜️gitlink-no-descent-55script.ts\" check",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
@@ -3616,7 +3616,7 @@
       "name": "⚖️gate📚️admission🔗️gitlink-inventory-refusal",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun ./node_modules/nx/bin/nx.js exec --projects=workspace --skipNxCache -- bun \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/🧪️gitlink-inventory-refusal-59/📜️script.ts\" check",
+      "command": "bun ./node_modules/nx/bin/nx.js exec --projects=workspace --skipNxCache -- bun \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/📜️gitlink-inventory-refusal-59script.ts\" check",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
@@ -3627,7 +3627,7 @@
       "name": "⚖️gate🕹️interaction🔁️restore-fixture-reference",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun ./node_modules/nx/bin/nx.js exec --projects=workspace --skipNxCache -- bun \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/🧪️local-interaction-restore-fixture-60/📜️script.ts\" check",
+      "command": "bun ./node_modules/nx/bin/nx.js exec --projects=workspace --skipNxCache -- bun \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/📜️local-interaction-restore-fixture-60script.ts\" check",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
@@ -3638,7 +3638,7 @@
       "name": "⚖️gate📚️admission🔗️gitlink-canonical-reference",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun ./node_modules/nx/bin/nx.js exec --projects=workspace --skipNxCache -- bun \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/📓️admission-gitlink-boundary-58/🧪️canonical-mount/📜️script.ts\"",
+      "command": "bun ./node_modules/nx/bin/nx.js exec --projects=workspace --skipNxCache -- bun \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/📓️admission-gitlink-boundary-58/📜️canonical-mountscript.ts\"",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
@@ -3693,7 +3693,7 @@
       "name": "⚖️gate📚️declarations🟦️captured-reference",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun ./node_modules/nx/bin/nx.js exec --projects=workspace --skipNxCache -- bun \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/🧪️off-facet-typescript-declaration-census-57/📜️script.ts\" reference",
+      "command": "bun ./node_modules/nx/bin/nx.js exec --projects=workspace --skipNxCache -- bun \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/📜️off-facet-typescript-declaration-census-57script.ts\" reference",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
@@ -3704,7 +3704,7 @@
       "name": "⚖️gate📚️declarations🟦️captured-subject",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun ./node_modules/nx/bin/nx.js exec --projects=workspace --skipNxCache -- bun \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/🧪️off-facet-typescript-declaration-census-57/📜️script.ts\" subject",
+      "command": "bun ./node_modules/nx/bin/nx.js exec --projects=workspace --skipNxCache -- bun \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/📜️off-facet-typescript-declaration-census-57script.ts\" subject",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
@@ -3715,7 +3715,7 @@
       "name": "⚖️gate📚️declarations🟦️boundaries-reference",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun ./node_modules/nx/bin/nx.js exec --projects=workspace --skipNxCache -- bun \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/🧪️typescript-declaration-boundaries-62/📜️script.ts\" reference",
+      "command": "bun ./node_modules/nx/bin/nx.js exec --projects=workspace --skipNxCache -- bun \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/📜️typescript-declaration-boundaries-62script.ts\" reference",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
@@ -3726,7 +3726,7 @@
       "name": "⚖️gate📚️declarations🟦️boundaries-subject",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun ./node_modules/nx/bin/nx.js exec --projects=workspace --skipNxCache -- bun \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/🧪️typescript-declaration-boundaries-62/📜️script.ts\" subject",
+      "command": "bun ./node_modules/nx/bin/nx.js exec --projects=workspace --skipNxCache -- bun \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/📜️typescript-declaration-boundaries-62script.ts\" subject",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
@@ -3737,7 +3737,7 @@
       "name": "⚖️gate📚️declarations🟦️malformed-subject",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun ./node_modules/nx/bin/nx.js exec --projects=workspace --skipNxCache -- bun \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/🧪️typescript-declaration-malformed-63/📜️script.ts\" check",
+      "command": "bun ./node_modules/nx/bin/nx.js exec --projects=workspace --skipNxCache -- bun \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/📜️typescript-declaration-malformed-63script.ts\" check",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
@@ -3781,7 +3781,7 @@
       "name": "⚖️gate🏪️store🧬️rejected-page-close-reference",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun ./node_modules/nx/bin/nx.js exec --projects=workspace --skipNxCache -- bun \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/🧪️store-rejected-page-close-66/📜️script.ts\" reference",
+      "command": "bun ./node_modules/nx/bin/nx.js exec --projects=workspace --skipNxCache -- bun \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/📜️store-rejected-page-close-66script.ts\" reference",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
@@ -3792,7 +3792,7 @@
       "name": "⚖️gate🏪️store🧬️rejected-page-close-unmounted-preparation",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun ./node_modules/nx/bin/nx.js exec --projects=workspace --skipNxCache -- bun \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/🧪️store-rejected-page-close-66/📜️script.ts\" source",
+      "command": "bun ./node_modules/nx/bin/nx.js exec --projects=workspace --skipNxCache -- bun \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/📜️store-rejected-page-close-66script.ts\" source",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
@@ -3836,7 +3836,7 @@
       "name": "⚖️gate🧬️mutations🧾️source-index-pair",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun ./node_modules/nx/bin/nx.js exec --projects=workspace --skipNxCache -- bun \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/🧪️source-index-before-after-65/📜️script.ts\" run",
+      "command": "bun ./node_modules/nx/bin/nx.js exec --projects=workspace --skipNxCache -- bun \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/📜️source-index-before-after-65script.ts\" run",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
@@ -3847,7 +3847,7 @@
       "name": "⚖️gate🧬️mutations🧾️import-isolation",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun ./node_modules/nx/bin/nx.js exec --projects=workspace --skipNxCache -- bun \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/🧪️source-index-import-isolation-69/📜️script.ts\" run",
+      "command": "bun ./node_modules/nx/bin/nx.js exec --projects=workspace --skipNxCache -- bun \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/📜️source-index-import-isolation-69script.ts\" run",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
@@ -3858,7 +3858,7 @@
       "name": "⚖️gate🧬️mutations🧾️phase-isolation",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun ./node_modules/nx/bin/nx.js exec --projects=workspace --skipNxCache -- bun \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/🧪️source-index-phase-isolation-70/📜️script.ts\" run",
+      "command": "bun ./node_modules/nx/bin/nx.js exec --projects=workspace --skipNxCache -- bun \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/📜️source-index-phase-isolation-70script.ts\" run",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
@@ -3869,7 +3869,7 @@
       "name": "⚖️gate🧬️mutations🧾️structural-support",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun ./node_modules/nx/bin/nx.js exec --projects=workspace --skipNxCache -- bun \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/🧪️source-index-structural-directories-73/📜️script.ts\"",
+      "command": "bun ./node_modules/nx/bin/nx.js exec --projects=workspace --skipNxCache -- bun \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/📜️source-index-structural-directories-73script.ts\"",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
@@ -3880,7 +3880,7 @@
       "name": "⚖️gate🧬️mutations🧾️intercall-order",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun ./node_modules/nx/bin/nx.js exec --projects=workspace --skipNxCache -- bun \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/🧪️source-index-intercall-write-order-76/📜️script.ts\" check",
+      "command": "bun ./node_modules/nx/bin/nx.js exec --projects=workspace --skipNxCache -- bun \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/📜️source-index-intercall-write-order-76script.ts\" check",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
@@ -3891,7 +3891,7 @@
       "name": "⚖️gate🧬️mutations🧾️retained-pair-review",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun ./node_modules/nx/bin/nx.js exec --projects=workspace --skipNxCache -- bun \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/🧪️source-index-pair-artifact-review-77/📜️script.ts\" check",
+      "command": "bun ./node_modules/nx/bin/nx.js exec --projects=workspace --skipNxCache -- bun \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/📜️source-index-pair-artifact-review-77script.ts\" check",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
@@ -3902,7 +3902,7 @@
       "name": "⚖️gate🏪️store🔄️sync🧮️demo-candidate-reference",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun ./node_modules/nx/bin/nx.js exec --projects=workspace --skipNxCache -- bun \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/🧪️store-sync-demo-candidate-74/📜️script.ts\" reference",
+      "command": "bun ./node_modules/nx/bin/nx.js exec --projects=workspace --skipNxCache -- bun \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/📜️store-sync-demo-candidate-74script.ts\" reference",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
@@ -3913,7 +3913,7 @@
       "name": "⚖️gate🧬️mutations🧾️kind-postprocessing-reference",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun ./node_modules/nx/bin/nx.js exec --projects=workspace --skipNxCache -- bun \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/🧪️source-index-kind-postprocessing-79/📜️script.ts\" preflight",
+      "command": "bun ./node_modules/nx/bin/nx.js exec --projects=workspace --skipNxCache -- bun \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/📜️source-index-kind-postprocessing-79script.ts\" preflight",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
@@ -3924,7 +3924,7 @@
       "name": "⚖️gate🧬️mutations🧾️kind-postprocessing-retained",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun ./node_modules/nx/bin/nx.js exec --projects=workspace --skipNxCache -- bun \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/🧪️source-index-kind-postprocessing-79/📜️script.ts\" check",
+      "command": "bun ./node_modules/nx/bin/nx.js exec --projects=workspace --skipNxCache -- bun \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/📜️source-index-kind-postprocessing-79script.ts\" check",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
@@ -3935,7 +3935,7 @@
       "name": "⚖️gate🏪️store🔄️sync🧮️demo-structure-reference",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun ./node_modules/nx/bin/nx.js exec --projects=workspace --skipNxCache -- bun \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/🧪️store-sync-demo-source-structure-75/📜️script.ts\" reference",
+      "command": "bun ./node_modules/nx/bin/nx.js exec --projects=workspace --skipNxCache -- bun \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/📜️store-sync-demo-source-structure-75script.ts\" reference",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
@@ -3946,7 +3946,7 @@
       "name": "⚖️gate🏪️store🔄️sync🧮️demo-structure-source",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun ./node_modules/nx/bin/nx.js exec --projects=workspace --skipNxCache -- bun \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/🧪️store-sync-demo-source-structure-75/📜️script.ts\" source",
+      "command": "bun ./node_modules/nx/bin/nx.js exec --projects=workspace --skipNxCache -- bun \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/📜️store-sync-demo-source-structure-75script.ts\" source",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
@@ -4001,7 +4001,7 @@
       "name": "🧹clean🧩️taxonomy📋️plan📃️testing-readme",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun nx run workspace:clean-taxonomy-plan --skip-nx-cache -- --ticket 26/08/17/END-TO-END-TAXONOMY-NORMALIZATION --baseline 9f449b10659b95148c8bcb3f91ce583bf7446973 --scope \"🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/README.md\" --workers 1 --plan \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/END-TO-END-TAXONOMY-NORMALIZATION/📓️readme-current-plan-readiness/📓️production-plan/🧾️runs/🔖️f6c42abd-410c-42dc-a881-9ff9e7518c07/🧾️plan/🔣️.json\" --cancel-file \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/END-TO-END-TAXONOMY-NORMALIZATION/📓️readme-current-plan-readiness/📓️production-plan/🧾️runs/🔖️f6c42abd-410c-42dc-a881-9ff9e7518c07/📓️cancellation/🔣️.json\" --format human",
+      "command": "bun nx run workspace:clean-taxonomy-plan --skip-nx-cache -- --ticket 26/08/17/END-TO-END-TAXONOMY-NORMALIZATION --baseline 9f449b10659b95148c8bcb3f91ce583bf7446973 --scope \"🧰️framework/🛍️products/🦑️repo/🔨️modules/testREADME.md\" --workers 1 --plan \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/END-TO-END-TAXONOMY-NORMALIZATION/📓️readme-current-plan-readiness/📓️production-plan/🧾️runs/🔖️f6c42abd-410c-42dc-a881-9ff9e7518c07/🧾️plan/🔣️.json\" --cancel-file \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/END-TO-END-TAXONOMY-NORMALIZATION/📓️readme-current-plan-readiness/📓️production-plan/🧾️runs/🔖️f6c42abd-410c-42dc-a881-9ff9e7518c07/📓️cancellation/🔣️.json\" --format human",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
@@ -4917,7 +4917,7 @@
       "name": "⚖️gate🕸️dag🧬️payload-schema",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun ./node_modules/nx/bin/nx.js exec --projects=workspace --skipNxCache -- bun \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/🧪️dag-direct-35/📜️script.ts\"",
+      "command": "bun ./node_modules/nx/bin/nx.js exec --projects=workspace --skipNxCache -- bun \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/📜️dag-direct-35script.ts\"",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
@@ -4928,7 +4928,7 @@
       "name": "⚖️gate🕸️dag🧬️mounted-source",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun ./node_modules/nx/bin/nx.js exec --projects=workspace --skipNxCache -- bun \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/🧪️dag-mounted-38/📜️script.ts\"",
+      "command": "bun ./node_modules/nx/bin/nx.js exec --projects=workspace --skipNxCache -- bun \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/📜️dag-mounted-38script.ts\"",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
@@ -4939,7 +4939,7 @@
       "name": "⚖️gate🏪️store🧪️direct-fixtures",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun ./node_modules/nx/bin/nx.js exec --projects=workspace --skipNxCache -- bun \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/🧪️store-fixtures-39/📜️script.ts\"",
+      "command": "bun ./node_modules/nx/bin/nx.js exec --projects=workspace --skipNxCache -- bun \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/📜️store-fixtures-39script.ts\"",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
@@ -4950,7 +4950,7 @@
       "name": "⚖️gate📡️spr🧪️direct-fixtures",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun ./node_modules/nx/bin/nx.js exec --projects=workspace --skipNxCache -- bun \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/🧪️spr-testkit-direct-40/📜️script.ts\"",
+      "command": "bun ./node_modules/nx/bin/nx.js exec --projects=workspace --skipNxCache -- bun \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/📜️spr-testkit-direct-40script.ts\"",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
@@ -4961,7 +4961,7 @@
       "name": "⚖️gate⏱️mutation🧬️timestamp-source",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun ./node_modules/nx/bin/nx.js exec --projects=workspace --skipNxCache -- bun \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/🧪️mutation-timestamp-39/📜️script.ts\"",
+      "command": "bun ./node_modules/nx/bin/nx.js exec --projects=workspace --skipNxCache -- bun \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/📜️mutation-timestamp-39script.ts\"",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
@@ -4972,7 +4972,7 @@
       "name": "⚖️gate⏱️mutation🧬️timestamp-native",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun ./node_modules/nx/bin/nx.js exec --projects=workspace --skipNxCache -- bun \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/🧪️mutation-timestamp-39/🧪️native/📜️script.ts\"",
+      "command": "bun ./node_modules/nx/bin/nx.js exec --projects=workspace --skipNxCache -- bun \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/🧪️mutation-timestamp-39/📜️nativescript.ts\"",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
@@ -4983,7 +4983,7 @@
       "name": "⚖️gate📡️spr🎮️command🧪️direct-fixtures",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun ./node_modules/nx/bin/nx.js exec --projects=workspace --skipNxCache -- bun \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/🧪️command-fixtures-40/📜️script.ts\"",
+      "command": "bun ./node_modules/nx/bin/nx.js exec --projects=workspace --skipNxCache -- bun \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/📜️command-fixtures-40script.ts\"",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
@@ -4994,7 +4994,7 @@
       "name": "⚖️gate🧬️mutations🧪️os-kernel-fixtures",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun ./node_modules/nx/bin/nx.js exec --projects=workspace --skipNxCache -- bun \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/🧪️os-kernel-fixtures-41/📜️script.ts\"",
+      "command": "bun ./node_modules/nx/bin/nx.js exec --projects=workspace --skipNxCache -- bun \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/📜️os-kernel-fixtures-41script.ts\"",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
@@ -5005,7 +5005,7 @@
       "name": "⚖️gate🌍️gis🎚️direct-fixtures",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun ./node_modules/nx/bin/nx.js exec --projects=workspace --skipNxCache -- bun \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/🧪️gis-config-direct-41/📜️script.ts\"",
+      "command": "bun ./node_modules/nx/bin/nx.js exec --projects=workspace --skipNxCache -- bun \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/📜️gis-config-direct-41script.ts\"",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
@@ -5027,7 +5027,7 @@
       "name": "⚖️gate🗣️dsl🔢️checked-integers-source",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun ./node_modules/nx/bin/nx.js exec --projects=workspace --skipNxCache -- bun \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/🧪️dsl-checked-integers-41/📜️script.ts\"",
+      "command": "bun ./node_modules/nx/bin/nx.js exec --projects=workspace --skipNxCache -- bun \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/📜️dsl-checked-integers-41script.ts\"",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
@@ -5038,7 +5038,7 @@
       "name": "⚖️gate🗣️dsl🔢️checked-integers-native",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun ./node_modules/nx/bin/nx.js exec --projects=workspace --skipNxCache -- bun \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/🧪️os-kernel-fixtures-41/📜️script.ts\" checked-integers",
+      "command": "bun ./node_modules/nx/bin/nx.js exec --projects=workspace --skipNxCache -- bun \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/📜️os-kernel-fixtures-41script.ts\" checked-integers",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
@@ -5049,7 +5049,7 @@
       "name": "⚖️gate🌊️flow🌿️vcs🧪️direct-leaves",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun ./node_modules/nx/bin/nx.js exec --projects=workspace --skipNxCache -- bun \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/🧪️flow-vcs-direct-41/📜️script.ts\"",
+      "command": "bun ./node_modules/nx/bin/nx.js exec --projects=workspace --skipNxCache -- bun \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/📜️flow-vcs-direct-41script.ts\"",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
@@ -5060,7 +5060,7 @@
       "name": "⚖️gate🔌️plugin🏗️builder🧪️dependency-fixture",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun ./node_modules/nx/bin/nx.js exec --projects=workspace --skipNxCache -- bun \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/🧪️plugin-builder-fixture-42/📜️script.ts\"",
+      "command": "bun ./node_modules/nx/bin/nx.js exec --projects=workspace --skipNxCache -- bun \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/📜️plugin-builder-fixture-42script.ts\"",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
@@ -5071,7 +5071,7 @@
       "name": "⚖️gate🔌️plugin📡️contributed-wire🧪️direct-fixture",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun ./node_modules/nx/bin/nx.js exec --projects=workspace --skipNxCache -- bun \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/🧪️plugin-contributed-wire-43/📜️script.ts\"",
+      "command": "bun ./node_modules/nx/bin/nx.js exec --projects=workspace --skipNxCache -- bun \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/📜️plugin-contributed-wire-43script.ts\"",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
@@ -5082,7 +5082,7 @@
       "name": "⚖️gate🔌️plugin🧬️declaration🧪️direct-fixtures",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun ./node_modules/nx/bin/nx.js exec --projects=workspace --skipNxCache -- bun \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/🧪️plugin-declaration-fixtures-43/📜️script.ts\"",
+      "command": "bun ./node_modules/nx/bin/nx.js exec --projects=workspace --skipNxCache -- bun \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/📜️plugin-declaration-fixtures-43script.ts\"",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
@@ -5093,7 +5093,7 @@
       "name": "⚖️gate🧬️mutations🧾️declaration-census",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun ./node_modules/nx/bin/nx.js exec --projects=workspace --skipNxCache -- bun \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/🧪️mutation-declarations-41/📜️script.ts\"",
+      "command": "bun ./node_modules/nx/bin/nx.js exec --projects=workspace --skipNxCache -- bun \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/📜️mutation-declarations-41script.ts\"",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
@@ -5104,7 +5104,7 @@
       "name": "⚖️gate🌊️flow🌿️vcs🧹️mutation-retirement",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun ./node_modules/nx/bin/nx.js exec --projects=workspace --skipNxCache -- bun \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/🧪️flow-mutation-retirement-44/📜️script.ts\"",
+      "command": "bun ./node_modules/nx/bin/nx.js exec --projects=workspace --skipNxCache -- bun \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/📜️flow-mutation-retirement-44script.ts\"",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
@@ -5115,7 +5115,7 @@
       "name": "⚖️gate🔌️plugin🧪️children-fixture",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun ./node_modules/nx/bin/nx.js exec --projects=workspace --skipNxCache -- bun \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/🧪️plugin-children-fixture-44/📜️script.ts\"",
+      "command": "bun ./node_modules/nx/bin/nx.js exec --projects=workspace --skipNxCache -- bun \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/📜️plugin-children-fixture-44script.ts\"",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
@@ -5126,7 +5126,7 @@
       "name": "⚖️gate🔌️plugin🧾️metadata-preflight",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun ./node_modules/nx/bin/nx.js exec --projects=workspace --skipNxCache -- bun \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/🧪️plugin-children-fixture-44/📜️script.ts\" --preflight",
+      "command": "bun ./node_modules/nx/bin/nx.js exec --projects=workspace --skipNxCache -- bun \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/📜️plugin-children-fixture-44script.ts\" --preflight",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
@@ -5137,7 +5137,7 @@
       "name": "⚖️gate🔌️plugin🧪️test-mutation-direct-leaves",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun ./node_modules/nx/bin/nx.js exec --projects=workspace --skipNxCache -- bun \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/🧪️test-mutation-direct-leaves/📜️script.ts\"",
+      "command": "bun ./node_modules/nx/bin/nx.js exec --projects=workspace --skipNxCache -- bun \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/🧪️test/📜️-mutation-direct-leavesscript.ts\"",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
@@ -5148,7 +5148,7 @@
       "name": "⚖️gate🔌️plugin💼️job🧪️direct-fixtures",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun ./node_modules/nx/bin/nx.js exec --projects=workspace --skipNxCache -- bun \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/🧪️plugin-reactor-job-mutation-plan-44/📜️script.ts\"",
+      "command": "bun ./node_modules/nx/bin/nx.js exec --projects=workspace --skipNxCache -- bun \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/📜️plugin-reactor-job-mutation-plan-44script.ts\"",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
@@ -5159,7 +5159,7 @@
       "name": "⚖️gate🌍️gis🏔️config🧪️direct-fixtures",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun ./node_modules/nx/bin/nx.js exec --projects=workspace --skipNxCache -- bun \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/🧪️gis3d-config-direct-45/📜️script.ts\"",
+      "command": "bun ./node_modules/nx/bin/nx.js exec --projects=workspace --skipNxCache -- bun \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/📜️gis3d-config-direct-45script.ts\"",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
@@ -5170,7 +5170,7 @@
       "name": "⚖️gate🏪️store🧬️owned-grammar-source",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun ./node_modules/nx/bin/nx.js exec --projects=workspace --skipNxCache -- bun \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/🧪️store-owned-decoder-grammar-48/📜️script.ts\"",
+      "command": "bun ./node_modules/nx/bin/nx.js exec --projects=workspace --skipNxCache -- bun \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/📜️store-owned-decoder-grammar-48script.ts\"",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
@@ -5181,7 +5181,7 @@
       "name": "⚖️gate🏪️store🧬️owned-grammar-native",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun ./node_modules/nx/bin/nx.js exec --projects=workspace --skipNxCache -- bun \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/🧪️os-kernel-fixtures-41/📜️script.ts\" owned-schema-grammar",
+      "command": "bun ./node_modules/nx/bin/nx.js exec --projects=workspace --skipNxCache -- bun \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/📜️os-kernel-fixtures-41script.ts\" owned-schema-grammar",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
@@ -5192,7 +5192,7 @@
       "name": "⚖️gate🌍️gis🗺️presence🧪️direct-fixtures",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun ./node_modules/nx/bin/nx.js exec --projects=workspace --skipNxCache -- bun \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/🧪️gis2d-presence-direct-47/📜️script.ts\"",
+      "command": "bun ./node_modules/nx/bin/nx.js exec --projects=workspace --skipNxCache -- bun \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/📜️gis2d-presence-direct-47script.ts\"",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
@@ -5247,7 +5247,7 @@
       "name": "⚖️gate🔀️txn📦️command-close-reference",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun ./node_modules/nx/bin/nx.js exec --projects=workspace --skipNxCache -- bun \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/🧪️txn-command-close-native-55/📜️script.ts\" validate",
+      "command": "bun ./node_modules/nx/bin/nx.js exec --projects=workspace --skipNxCache -- bun \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/📜️txn-command-close-native-55script.ts\" validate",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",

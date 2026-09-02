@@ -5,7 +5,7 @@
   "displayName": "Remove Viewpoint",
   "emoji": "🙈",
   "aggregateVariant": "RemoveViewpoint",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

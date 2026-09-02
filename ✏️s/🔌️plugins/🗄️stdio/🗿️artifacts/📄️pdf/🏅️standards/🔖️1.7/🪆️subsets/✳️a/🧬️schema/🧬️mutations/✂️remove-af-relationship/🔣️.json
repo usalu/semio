@@ -2,14 +2,14 @@
   "schemaVersion": 1,
   "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️a/🧬️schema/🧬️mutations/✂️remove-af-relationship",
   "semanticKind": "remove-af-relationship",
-  "displayName": "Remove Af Relationship",
+  "displayName": "Remove AF Relationship",
   "emoji": "✂️",
   "aggregateVariant": "RemoveAfRelationship",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
-  "invertibility": "non-invertible",
-  "diffParticipation": "detect",
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "apply-only",
   "outcomeClasses": [
     "applied"
   ],

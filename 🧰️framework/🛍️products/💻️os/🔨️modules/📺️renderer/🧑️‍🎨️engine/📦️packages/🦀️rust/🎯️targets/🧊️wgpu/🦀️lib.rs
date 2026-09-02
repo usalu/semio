@@ -15,7 +15,7 @@ macro_rules! action_args_json {
 }
 
 #[cfg(not(target_os = "wasi"))]
-include!("📦️glue.rs");
+include!("🦀️.rs");
 
 #[cfg(target_os = "wasi")]
 #[path = "🦀️runtime_mailbox_core.rs"]

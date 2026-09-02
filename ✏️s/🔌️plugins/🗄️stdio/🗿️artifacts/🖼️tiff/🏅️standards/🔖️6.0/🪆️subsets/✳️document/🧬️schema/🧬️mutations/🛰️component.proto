@@ -1,9 +1,0 @@
-syntax = "proto3";
-package stdio.tiff.mutation;
-import "🧭️change-byte-order/🛰️component.proto";
-import "📥️insert-ifd/🛰️component.proto";
-import "📤️remove-ifd/🛰️component.proto";
-import "🏷️replace-tag/🛰️component.proto";
-import "🗑️remove-tag/🛰️component.proto";
-import "🟪️replace-pixels/🛰️component.proto";
-message TiffMutation { oneof mutation { ChangeByteOrderMutation change_byte_order = 2; InsertIfdMutation insert_ifd = 3; RemoveIfdMutation remove_ifd = 4; ReplaceTagMutation replace_tag = 5; RemoveTagMutation remove_tag = 6; ReplacePixelsMutation replace_pixels = 7; } }

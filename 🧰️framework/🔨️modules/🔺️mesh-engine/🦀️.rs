@@ -618,7 +618,7 @@ fn glb_transform_normal(matrix: GlbMatrix, normal: [f32; 3]) -> [f32; 3] {
 /// `.gltf` JSON text (detected by a leading `{`) with no binary chunk. Replaces the `gltf` crate
 /// per ticket 26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS — mirrors the
 /// byte-for-byte semantics of the stdio gltf artifact's own `decode_glb`
-/// (`✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🚪️io/🦀️component.rs`),
+/// (`✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🚪️io/🦀️.rs`),
 /// re-expressed against `pack::json` instead of `serde_json` since this is the framework, not
 /// that artifact's own mutation-schema codec.
 fn gltf_split_container(bytes: &[u8]) -> Result<(Vec<u8>, Option<Vec<u8>>), String> {
@@ -1160,7 +1160,7 @@ impl std::error::Error for IoError {}
 
 //#region 🧪️Tests
 // 🧪 Relocated verbatim (ticket 26/08/12/DISSOLVE-KERNELS-AND-MODULES-INTO-EVENT-SOURCED-ARTIFACTS
-// G2) from `🧰️framework/🔨️modules/🔺️mesh/🦀️component.rs`'s own `#[cfg(test)] mod tests` — that
+// G2) from `🧰️framework/🔨️modules/🔺️mesh/🦀️.rs`'s own `#[cfg(test)] mod tests` — that
 // file's DOC COMMENT already said its mesh content "now dissolved into semio-framework-mesh-
 // engine" (i.e. HERE), but its 20 tests exercising exactly this crate's own public functions
 // (`mesh_box`/`mesh_from_obj`/`ObjExporter`/etc.) were left behind, orphaned, testing a module

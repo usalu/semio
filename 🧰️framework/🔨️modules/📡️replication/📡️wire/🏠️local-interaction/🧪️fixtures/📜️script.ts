@@ -76,8 +76,8 @@ console.log(`[DEBUG] Local-interaction source cases=${fixture.cases.length} host
 //#endregion 🧬️Contract
 
 //#region 🌳️RetainedRootContract
-const rootFixture = await Bun.file(new URL("../🌳️root/🧪️fixture/🔣️.json", import.meta.url)).json();
-const rootSchema = await Bun.file(new URL("../🌳️root/🧪️schema/🔣️.json", import.meta.url)).json();
+const rootFixture = await Bun.file(new URL("../🌳️root/🔣️fixture.json", import.meta.url)).json();
+const rootSchema = await Bun.file(new URL("../🌳️root/🔣️schema.json", import.meta.url)).json();
 const validateRoot = ajv.compile(rootSchema);
 assert(validateRoot(rootFixture), JSON.stringify(validateRoot.errors));
 for (const invalid of [
@@ -102,8 +102,8 @@ console.log(`[DEBUG] Local-interaction retained-root oracle=lodash+immer bytes=$
 //#endregion 🌳️RetainedRootContract
 
 //#region 🩹️RetainedUpdateContract
-const updateFixture = await Bun.file(new URL("../🌳️root/🩹️update/🧪️fixture/🔣️.json", import.meta.url)).json();
-const updateSchema = await Bun.file(new URL("../🌳️root/🩹️update/🧪️schema/🔣️.json", import.meta.url)).json();
+const updateFixture = await Bun.file(new URL("../🌳️root/🩹️update/🔣️fixture.json", import.meta.url)).json();
+const updateSchema = await Bun.file(new URL("../🌳️root/🩹️update/🔣️schema.json", import.meta.url)).json();
 const validateUpdate = ajv.compile(updateSchema);
 assert(validateUpdate(updateFixture), JSON.stringify(validateUpdate.errors));
 for (const field of ["partialCandidateReadable", "cancelPublishesCandidate", "comparisonBytesAreRetiredBytes", "zeroGrantMutates"]) assert(!validateUpdate({ ...updateFixture, [field]: true }));
@@ -212,8 +212,8 @@ console.log(`[DEBUG] Local-interaction topology input-authority source cases=${t
 //#endregion 🔐️TopologyInputAuthority
 
 //#region 📡️TransportCodec
-const transport = await Bun.file(new URL("../📡️transport/🧪️fixtures/🔣️.json", import.meta.url)).json();
-const transportFixtureSchema = await Bun.file(new URL("../📡️transport/🧪️schema/🔣️.json", import.meta.url)).json();
+const transport = await Bun.file(new URL("../📡️transport/🧪️fixture/🔣️s.json", import.meta.url)).json();
+const transportFixtureSchema = await Bun.file(new URL("../📡️transport/🔣️schema.json", import.meta.url)).json();
 const transportSchema = await Bun.file(new URL("../📡️transport/🧬️schema/🔣️.json", import.meta.url)).json();
 const validateTransportFixture = ajv.compile(transportFixtureSchema);
 const validateTransport = ajv.compile(transportSchema);

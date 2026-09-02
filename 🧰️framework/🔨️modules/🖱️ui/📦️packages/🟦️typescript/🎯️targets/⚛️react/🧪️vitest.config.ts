@@ -10,7 +10,7 @@ const root = dirname(fileURLToPath(import.meta.url));
 export default defineConfig({
   root,
   resolve: {
-    alias: [{ find: "@semio-tech/ui-react", replacement: resolve(root, "📦️index.tsx") }],
+    alias: [{ find: "@semio-tech/ui-react", replacement: resolve(root, "🟦️.tsx") }],
   },
   test: {
     name: "@semio-tech/ui-react",
@@ -34,8 +34,8 @@ export default defineConfig({
       "../../../../🔨️modules/⌨️control-keybinding-context/🧪️tests/🟦️.tsx",
       "../../../../🔨️modules/🏷️class-name-composition/🧪️slot.test.tsx",
     ],
-    includeSource: ["📦️index.tsx", resolve(root, "../../../../../../../.storybook/🟦️lint-tooling.ts")],
-    coverage: { include: ["📦️index.tsx"] },
+    includeSource: ["🟦️.tsx", resolve(root, "../../../../../../../.storybook/🟦️lint-tooling.ts")],
+    coverage: { include: ["🟦️.tsx"] },
     passWithNoTests: true,
     setupFiles: [resolve(root, "🟦️vitest.setup.ts")],
   },

@@ -1,0 +1,6 @@
+/** 🧪️ Mutation-law probe for unbind-node-mesh. */
+import type { GltfSnapshot } from '../../../📸️snapshot/🟦️.ts';
+import { applyGltfUnbindNodeMesh, type GltfUnbindNodeMeshPayload } from '../../unbind-node-mesh/🟦️.ts';
+import { deriveGltfUnbindNodeMeshDiff } from '../../unbind-node-mesh/🔺️diff/🟦️.ts';
+import { deriveGltfUnbindNodeMeshInverse } from '../../unbind-node-mesh/↩️inverse/🟦️.ts';
+export const assertGltfUnbindNodeMeshLaws = (base: GltfSnapshot, payload: GltfUnbindNodeMeshPayload) => { const first = applyGltfUnbindNodeMesh(base, payload); if (!first.accepted) return first; const replay = applyGltfUnbindNodeMesh(base, payload); if (!replay.accepted || JSON.stringify(first.snapshot) !== JSON.stringify(replay.snapshot) || JSON.stringify(first.diff) !== JSON.stringify(replay.diff)) throw new Error('unbind-node-mesh replay is non-deterministic'); const direct = deriveGltfUnbindNodeMeshDiff(base, payload); const inverse = deriveGltfUnbindNodeMeshInverse(base, payload); if (!direct.accepted || !inverse.accepted || JSON.stringify(direct.touchedPaths) !== JSON.stringify(first.touchedPaths) || JSON.stringify(inverse.touchedPaths) !== JSON.stringify(first.touchedPaths)) throw new Error('unbind-node-mesh diff or inverse law failed'); return { first, direct, inverse }; };

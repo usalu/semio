@@ -1,6 +1,6 @@
 //! 🏭️ Generates `report-strip.pdf`, a small, deliberately varied, fully deterministic PDF 1.7
 //! document — built entirely through the real `lopdf` 0.44 object-graph library (the same crate
-//! registered as `lopdf-pdf-1-7-mutate` in `../../🧪️oracle/🔣️.json`), never through this
+//! registered as `lopdf-pdf-1-7-mutate` in `../../🔣️oracle.json`), never through this
 //! repository's own `encode_pdf`. No wall-clock, no randomness: byte-for-byte reproducible on
 //! every run, which is what `test fixture reproduce` checks.
 //!

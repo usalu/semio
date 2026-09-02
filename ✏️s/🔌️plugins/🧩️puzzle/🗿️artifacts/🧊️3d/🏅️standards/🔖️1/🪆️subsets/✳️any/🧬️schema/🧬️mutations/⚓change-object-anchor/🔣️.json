@@ -5,7 +5,7 @@
   "displayName": "Change Object Anchor",
   "emoji": "⚓",
   "aggregateVariant": "ChangeObjectAnchor",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": "change-object-anchor",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

@@ -1,0 +1,62 @@
+dialect grammar
+grammar stdio.xlsx.mutations
+extension xlsx
+start document
+comment none
+
+# FG-wave: real one-line `OpText::print_op`/`parse_op` shape ALREADY emitted by
+# `../../🦀️.rs` (`print_xlsx_mutation`/`parse_xlsx_mutation`, `🔖️MutationCodec` region),
+# replacing the F6-era `*OCTET` hex-dump placeholder. Grammar: `keyword arg=value arg=value ...`
+# (space-separated), one alternative per `XlsxMutation` variant -- every keyword/arg-name token
+# below is copied verbatim from the real `format!(...)` call sites, not invented.
+#
+# `hex` (bare `hex`, referenced but deliberately NOT defined as a production) is the framework's
+# built-in `hex` MACRO -- `📖️grammar-recipe.md` §1.3(f)/§3 pitfall 2. `[0]`/`[1,x]` is
+# `encode_option`'s uniform tri-state shape (`📖️grammar-recipe.md` §1.4).
+document = set-snapshot | insert-sheet | remove-sheet | rename-sheet | set-cell | remove-cell | insert-shared-string | remove-shared-string | set-shared-string
+
+set-snapshot = "set-snapshot" "snapshot" "=" xlsx-snapshot
+insert-sheet = "insert-sheet" "sheet" "=" sheet
+remove-sheet = "remove-sheet" "name" "=" hex
+rename-sheet = "rename-sheet" "name" "=" hex "new-name" "=" hex
+set-cell = "set-cell" "sheet-name" "=" hex "row" "=" INT "col" "=" INT "value" "=" cell-value
+remove-cell = "remove-cell" "sheet-name" "=" hex "row" "=" INT "col" "=" INT
+insert-shared-string = "insert-shared-string" "value" "=" hex
+remove-shared-string = "remove-shared-string" "index" "=" INT
+set-shared-string = "set-shared-string" "index" "=" INT "value" "=" hex
+
+# ── `XlsxSnapshot` -- `[schema,opc-package,workbook]` (`enc_xlsx_snapshot`, `SetSnapshot`'s
+# whole-payload encoding only) ──────────────────────────────────────────────────────────────────
+xlsx-snapshot = "[" hex "," opc-package "," workbook "]"
+
+# ── `OpcPackage` -- `[[parts],content-types,rel-map]` (`enc_opc_package`) -- restated (not `use`d)
+# from this artifact's own `../🔺️diff/📝️text` sibling grammar's identical productions (both facets
+# share the SAME `OpcPart`/`OpcContentTypes`/`OpcRelationship`/`OpcTargetMode` full-value shapes,
+# per that facet's own file's citation to docx's identical `opc-diff` restatement precedent) ────
+opc-package = "[" "[" part-list? "]" "," content-types "," rel-map "]"
+part-list = opc-part {"," opc-part}*
+opc-part = "[" hex "," hex "," hex "]"
+content-types = "[" "[" ct-entry-list? "]" "," "[" ct-entry-list? "]" "]"
+ct-entry-list = ct-entry {"," ct-entry}*
+ct-entry = "[" hex "," hex "]"
+rel-map = "[" rel-owner-list? "]"
+rel-owner-list = rel-owner-entry {"," rel-owner-entry}*
+rel-owner-entry = "[" hex "," "[" rel-list? "]" "]"
+rel-list = rel {"," rel}*
+rel = "[" hex "," hex "," hex "," target-mode "]"
+target-mode = "0" | "1"
+
+# ── `XlsxWorkbook` -- `[[sheets],[shared_strings]]` (`enc_workbook`) ──────────────────────────
+workbook = "[" "[" sheet-list? "]" "," "[" strings-list? "]" "]"
+sheet-list = sheet {"," sheet}*
+sheet = "[" hex "," "[" cell-list? "]" "]"
+cell-list = cell {"," cell}*
+cell = "[" INT "," INT "," cell-value "]"
+strings-list = hex {"," hex}*
+
+# `XlsxCellValue` (data-carrying enum) -- identical tag convention to this artifact's own
+# `../🔺️diff/📝️text` sibling grammar's `cell-value` production, restated here per-facet.
+cell-value = "N" "[" number "]" | "S" "[" INT "]" | "I" "[" hex "]" | "B" "[" bool-lit "]" | "F" "[" hex "," opt-cell-value "]" | "E" "[" "]"
+opt-cell-value = "[" "0" "]" | "[" "1" "," cell-value "]"
+bool-lit = "0" | "1"
+number = INT | FLOAT

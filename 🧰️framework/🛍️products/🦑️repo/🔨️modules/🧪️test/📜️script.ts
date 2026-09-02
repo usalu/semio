@@ -14,7 +14,7 @@
 import { existsSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import { basename, delimiter, join, relative, sep } from "node:path";
-import { type BreachRecord, type TestLevel, Script, ScriptRouter, TEST_LEVELS, formatBreachReport, getRepoMetaDir, resolveTestLevel, runBundleScriptMain, runProbe, testLevelBudgetMs } from "../📚️library/📦️packages/🟦️typescript/📦️index.ts";
+import { type BreachRecord, type TestLevel, Script, ScriptRouter, TEST_LEVELS, formatBreachReport, getRepoMetaDir, resolveTestLevel, runBundleScriptMain, runProbe, testLevelBudgetMs } from "../📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import {
   type ClassifiedDependency,
   type CoverageMetrics,
@@ -95,7 +95,7 @@ import {
   testCacheDir,
   testTaxonomy,
   validateAllContracts,
-} from "./📦️packages/🟦️typescript/📦️index.ts";
+} from "./📦️packages/🟦️typescript/🟦️.ts";
 //#endregion 🔌️Adapters
 
 //#region 🗂️Paths
@@ -554,7 +554,7 @@ function materializePythonHost(repoRoot: string, discovered: DiscoveredCase, rol
   const localPaths = declared.filter((entry) => entry.path !== undefined).map((entry) => join(repoRoot, entry.path!));
   return {
     command: interpreter,
-    args: [join(repoRoot, PYTHON_PACKAGE_REL, "🐍️host.py"), "--plan", planPath, "--out", outPath, "--adapter", join(repoRoot, discovered.adapters.python!)],
+    args: [join(repoRoot, PYTHON_PACKAGE_REL, "🐍️.py"), "--plan", planPath, "--out", outPath, "--adapter", join(repoRoot, discovered.adapters.python!)],
     cwd: repoRoot,
     env: {
       ...process.env,
@@ -1280,7 +1280,7 @@ function payloadSchemaCommand(script: Script, registry: OracleRegistry, selector
         continue;
       }
       derived += 1;
-      const path = join(script.repoRoot, row.leaf, "🔣️payload.schema.json");
+      const path = join(script.repoRoot, row.leaf, "🔣️.schema.json");
       if (existsSync(path)) {
         present += 1;
         continue;
@@ -1524,7 +1524,7 @@ export function policy(): BreachRecord[] {
   return breaches;
 }
 
-export const policyFile = "📦️packages/🟦️typescript/📦️index.ts";
+export const policyFile = "📦️packages/🟦️typescript/🟦️.ts";
 //#endregion 🧹️Policy
 
 //#region 🚪️Entry

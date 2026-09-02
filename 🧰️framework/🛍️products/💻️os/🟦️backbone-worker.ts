@@ -108,7 +108,7 @@ const BLOB_FETCH_TIMEOUT_MS = 15_000;
 /** 🗃️ Bounded local outbound-mutation queue (finding 5) — see {@link rejectMutationQueueOverflow}
  * for the overflow contract: reject and report, never silently drop. */
 const PENDING_MUTATIONS_QUEUE_LIMIT = 2_000;
-// 🔁️ HUB_RECONNECT_MIN_MS/MAX_MS moved to `🟦️component.ts`'s `🔖️HubBinding` region (imported above)
+// 🔁️ HUB_RECONNECT_MIN_MS/MAX_MS moved to `🟦️.ts`'s `🔖️HubBinding` region (imported above)
 // — single source of truth shared with `DirectoryClient.stream`'s reconnect loop.
 /** ♻️ Coordinator follow-up (finding 4b): how long a hub OR SSE connection must stay open before a
  * SUBSEQUENT drop is allowed to reset that transport's backoff back near its floor, instead of
@@ -139,7 +139,7 @@ const SUSTAINED_HEALTHY_MS = 15_000;
  * `retryWithJitteredBackoff`'s own signature has no notion of "reset now" — it only stops
  * retrying on success or abort — so this reset cannot be expressed by calling it once; looping
  * fresh calls from here is the only way to get a real reset without editing
- * `🧰️framework/📦️packages/🟦️typescript/🟦️glue.ts` (outside this packet's owned path).
+ * `🧰️framework/📦️packages/🟦️typescript/🟦️.ts` (outside this packet's owned path).
  */
 async function reconnectForever(signal: AbortSignal, attempt: () => Promise<void>, minMs: number, maxMs: number): Promise<void> {
   while (!signal.aborted) {
@@ -280,7 +280,7 @@ export function identityActorConfig(actor: string, dataDir?: string): ArtifactAc
 
 /** 🧮️ Reduces one {@link ArtifactEvent} onto a materialized `Identity | null` — event-sourced,
  * mirrors {@link foldOpeningPreferencesEvent}: `applyIdentityConfigMutation`'s diff is whole-record
- * too (`🎚️config/🧬️schema/🧬️mutations/🪪️sign-in/🟦️component.ts`), so a `remoteMutations` envelope's
+ * too (`🎚️config/🧬️schema/🧬️mutations/🪪️sign-in/🟦️.ts`), so a `remoteMutations` envelope's
  * already-diffed `diff.payload` IS the next `Identity` (or `null` for a signed-out session) —
  * folding is "last envelope wins". `decodePayload` returning `undefined` means "not this facet's
  * payload", distinct from a legit `null` (signed out), so both must be distinguishable. */
@@ -768,7 +768,7 @@ function handleHubFrame(state: ArtifactState, frame: ServerFrame): void {
   }
   if ("Session" in frame) {
     // 🎨️ Flows through the SAME generic `{kind:"event",...}` wrapping every other `ArtifactEvent`
-    // gets — the real wasm host (`👷️worker/🦀️component.rs`) wraps every `ArtifactEvent` uniformly
+    // gets — the real wasm host (`👷️worker/🦀️.rs`) wraps every `ArtifactEvent` uniformly
     // with zero per-variant special-casing, so this fallback must match rather than post a
     // one-off top-level `BackboneWorkerResponse` shape the wasm path would never produce.
     state.sessionColor = frame.Session.color;
@@ -785,7 +785,7 @@ function handleHubFrame(state: ArtifactState, frame: ServerFrame): void {
 /** 📇️ Directory hub lane (contract §C6) — the shell's only path to the directory control plane;
  * plugin surfaces never talk to the network, and the shell never opens a directory socket on the UI
  * thread. Owns exactly one {@link DirectoryClient}/{@link DirectoryStream} at a time. Reuses that
- * client's own reconnect/backoff (`🔖️HubBinding` in `🟦️component.ts`) rather than a second loop
+ * client's own reconnect/backoff (`🔖️HubBinding` in `🟦️.ts`) rather than a second loop
  * here — this region's only extra responsibility is the offline command queue. */
 const DIRECTORY_COMMAND_QUEUE_LIMIT = 200;
 

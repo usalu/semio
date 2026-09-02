@@ -1,0 +1,10 @@
+syntax = "proto3";
+package semio.s.demonstrator.playground.mutation;
+
+import "✒️change-schema/🛰️.proto";
+
+message PlaygroundMutation {
+  oneof mutation {
+    ChangeSchema change_schema = 1;
+  }
+}

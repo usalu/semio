@@ -5,7 +5,7 @@
   "displayName": "Set Version Info",
   "emoji": "🏷",
   "aggregateVariant": "SetVersionInfo",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

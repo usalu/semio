@@ -1304,7 +1304,7 @@
       false
     ],
     [
-      "🧰️framework/📦️packages/🟦️typescript/🟦️glue.ts",
+      "🧰️framework/📦️packages/🟦️typescript/🟦️.ts",
       "830d49484401e6dc906f48f9b88d0ffc150e7bbe09671de507d0892c6926d1cb",
       "implementation",
       "unmarked:🧰️framework",
@@ -1312,7 +1312,7 @@
       "🧰️framework/📦️packages/🟦️typescript",
       "🧰️framework/📦️packages/🟦️typescript",
       "🟦️typescript",
-      "🟦️glue.ts",
+      "🟦️.ts",
       "move-domain-implementation",
       "🧰️framework/🧩️glue/🟦️.ts",
       39,

@@ -5,7 +5,7 @@
   "displayName": "Delete Cost Requirement",
   "emoji": "🗑️💰",
   "aggregateVariant": "DeleteCostRequirement",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

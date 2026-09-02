@@ -5,7 +5,7 @@
   "displayName": "Change Self Weight Thickness M",
   "emoji": "🧮",
   "aggregateVariant": "ChangeSelfWeightThicknessM",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

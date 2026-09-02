@@ -1,0 +1,71 @@
+dialect grammar
+grammar stdio.md.mutations
+extension md
+start document
+
+# P2-FG1: real one-line `OpText::print_op`/`parse_op` shape ALREADY emitted by
+# `../../🦀️.rs` (`print_md_mutation`/`parse_md_mutation`, F6's hand-rolled `keyword
+# arg=value ...` convention) -- replaces the pre-Phase-2 ABNF placeholder that described a
+# serde-JSON `MdMutation` wire struct the Rust codec never emits (F6 moved every stdio op codec to
+# this text shape, see that file's own `#region OpCodecs` doc comment). Every keyword/field-name
+# token below is copied verbatim from the real `format!(...)` call sites, not invented.
+#
+# `hex` (bare `hex`, deliberately NOT defined as a production here) is the framework's built-in
+# `hex` MACRO (`📖️grammar/🦀️.rs`'s `default_macros`/`macro_hex_ok`) -- see the recipe's §3
+# pitfall #2 / json's own sibling grammar for why this MUST be the macro and never a hand-rolled
+# `{INT|IDENT}*` production (no backtracking, and a `<digits>e<digits>` hex run lexes as one `FLOAT`
+# token instead of alternating `INT`/`IDENT`). `Symbol::Ref`'s production-then-macro fallback routes
+# a bare `hex` reference here automatically.
+#
+# `md-block`/`md-inline` mirror `enc_block`/`enc_inline`'s tag-prefixed shape 1:1
+# (`../../🔺️diff/🦀️.rs`'s `#region 🔖️BlockCodec`/`#region 🔖️InlineCodec` -- reused
+# `pub(crate)` by this artifact's mutations codec rather than duplicated, per that file's own doc
+# comment) and are genuinely, mutually recursive: `md-block`'s `L`(List)/`N`(BlockQuote) arms
+# reference `item-list`/`block-list` which reference `md-block` back; `md-inline`'s
+# `B`(Emphasis)/`C`(Strong)/`E`(Link) arms reference `inline-list` which references `md-inline`
+# back. Exercised end-to-end (both directions, multiple nesting depths) by this wave's own
+# `ops_grammar_conformance_law` against real `print_op` output for every `MdMutation` variant,
+# `⚙️engine/🦀️.rs`'s `demo_mutation_cases()`.
+document = set-snapshot | insert-block | remove-block | replace-block | set-inlines
+
+set-snapshot = "set-snapshot" "snapshot" "=" snapshot-lit
+insert-block = "insert-block" "path" "=" path "index" "=" INT "block" "=" md-block
+remove-block = "remove-block" "path" "=" path "index" "=" INT
+replace-block = "replace-block" "path" "=" path "index" "=" INT "block" "=" md-block
+set-inlines = "set-inlines" "path" "=" path "index" "=" INT "inlines" "=" inline-list
+
+# `enc_path`/`dec_path` (`../../🦀️.rs`) -- `[Y[hex(index)]|Z[index,item],...]`. Every
+# comma-joined list in this file (no trailing comma, per `Vec::join(",")`) is modeled as `item*`
+# where `item` swallows its own OPTIONAL trailing comma (recipe §1.4's own pattern) -- naturally
+# handles the empty-list case (`Star` matches zero occurrences) with no special-case production.
+path = "[" path-item* "]"
+path-item = path-step ","?
+path-step = "Y" "[" INT "]" | "Z" "[" INT "," INT "]"
+
+# `enc_md_snapshot`/`dec_md_snapshot` -- `[hex(schema),block-list]`.
+snapshot-lit = "[" hex "," block-list "]"
+
+# `enc_inline`/`dec_inline`, tag range A-I (declaration order, see `../../🔺️diff/🦀️.rs`'s
+# own file doc comment for the full tag-vocabulary table). ONE physical line per production (recipe
+# §3 pitfall #4 -- `parse_sequence` stops at the first `Newline` token, no line-continuation syntax).
+md-inline = "A" "[" hex "]" | "B" "[" inline-list "]" | "C" "[" inline-list "]" | "D" "[" hex "]" | "E" "[" inline-list "," hex "," opt-hex "]" | "F" "[" hex "," hex "," opt-hex "]" | "G" "[" "]" | "H" "[" "]" | "I" "[" hex "]"
+inline-list = "[" inline-item* "]"
+inline-item = md-inline ","?
+
+# `enc_block`/`dec_block`, tag range J-P (declaration order).
+md-block = "J" "[" INT "," inline-list "]" | "K" "[" inline-list "]" | "L" "[" bool-lit "," opt-int "," bool-lit "," item-list "]" | "M" "[" opt-hex "," hex "]" | "N" "[" block-list "]" | "O" "[" "]" | "P" "[" hex "]"
+block-list = "[" block-item* "]"
+block-item = md-block ","?
+item-list = "[" item-item* "]"
+item-item = block-list ","?
+
+# `enc_bool`/`dec_bool` -- bare `"0"`/`"1"` (NOT wrapped in `encode_option`'s `[0]`/`[1,x]` tagging,
+# unlike `opt-int`/`opt-hex` below -- `MdBlock::List.ordered`/`.tight` are plain `bool`, not
+# `Option<bool>`).
+bool-lit = "0" | "1"
+
+# `encode_option`/`decode_option` -- the uniform `[0]` (`None`)/`[1,x]` (`Some(x)`) tag (recipe
+# §1.4's tri-state pattern, single-level here -- `MdBlock::List.start: Option<u32>`,
+# `MdBlock::CodeBlock.info: Option<String>`).
+opt-int = "[" "0" "]" | "[" "1" "," INT "]"
+opt-hex = "[" "0" "]" | "[" "1" "," hex "]"

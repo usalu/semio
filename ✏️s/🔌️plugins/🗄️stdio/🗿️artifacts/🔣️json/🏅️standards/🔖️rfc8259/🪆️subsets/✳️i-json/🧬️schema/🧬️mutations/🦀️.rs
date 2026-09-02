@@ -3,7 +3,7 @@
 //! This is NOT a copy of the ✳️any sibling's `JsonMutation`. RFC 8259 defines a *syntax*; RFC 7493
 //! narrows the *value space* it may describe, and four of that narrowing's clauses are facts about a
 //! decoded `JsonSnapshot` rather than about its bytes — which is exactly why
-//! `../🦀️component.rs`'s `check_i_json_conformance` can check them at all. This vocabulary makes the
+//! `../🦀️.rs`'s `check_i_json_conformance` can check them at all. This vocabulary makes the
 //! same four clauses part of the EDITING ALGEBRA instead of only of the acceptance gate:
 //!
 //! | clause | ✳️any can express | ✳️i-json |
@@ -24,7 +24,7 @@
 //! I-JSON-level inverse, never a second diff semantics.
 //!
 //! @see <https://www.rfc-editor.org/rfc/rfc7493> (I-JSON Message Format)
-//! @see `../🦀️component.rs` `derived_analysis::check_i_json_conformance` — the same four clauses as an acceptance gate
+//! @see `../🦀️.rs` `derived_analysis::check_i_json_conformance` — the same four clauses as an acceptance gate
 
 use crate::artifacts::json::standards::v_rfc8259::subsets::base::schema::diff::JsonDiff;
 use crate::artifacts::json::standards::v_rfc8259::subsets::base::schema::mutations::{
@@ -121,7 +121,7 @@ pub enum JsonIJsonMutation {
 }
 
 /// 🧾️ Kebab-case spelling of every `JsonIJsonMutation` variant, in declaration order — the
-/// `json-rfc8259-i-json` catalog in `../../🧪️oracle/🔣️.json` is measured against this exact
+/// `json-rfc8259-i-json` catalog in `../../🔣️oracle.json` is measured against this exact
 /// list, and `kinds_match_the_enum_and_the_catalog` below proves it never drifts from either side.
 pub const KINDS: &[&str] = &["set-snapshot", "set-top-level", "upsert-member", "remove-member", "rename-member", "set-safe-number", "set-string", "insert-array-element", "remove-array-element"];
 //#endregion 🔖️Mutations

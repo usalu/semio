@@ -1,0 +1,36 @@
+# 🧬️ Block2d mutation schema — one type per mutation kind (26 kinds), not a snapshot mirror.
+
+union Block2dMutation = RenameNodeKind | ChangeNodeKindLabel | ChangeNodeKindVariant | ChangeNodeKindDescription | ChangeNodeKindIcon | ChangeNodeKindUnit | UpdatePresentation | CreateHandleKind | DeleteHandleKind | RenameHandleKind | ChangeHandleKindLabel | ChangeHandleKindColor | ChangeHandleKindDefaultWireKind | CreateHandle | DeleteHandle | MoveHandle | ChangeHandleHandleKind | AddCompatibilityRule | RemoveCompatibilityRule | AddAttribute | RemoveAttribute | AddAuthor | RemoveAuthor | MoveCamera2d | ScaleCamera2d | ChangeMetaDescription
+
+type RenameNodeKind { newName: String! } # kind "rename-node-kind"
+type ChangeNodeKindLabel { newLabel: String! } # kind "change-node-kind-label"
+type ChangeNodeKindVariant { newVariant: String } # kind "change-node-kind-variant"
+type ChangeNodeKindDescription { newDescription: String! } # kind "change-node-kind-description"
+type ChangeNodeKindIcon { newIcon: String } # kind "change-node-kind-icon"
+type ChangeNodeKindUnit { newUnit: String } # kind "change-node-kind-unit"
+type UpdatePresentation { newShape: String newRadius: Float newWidth: Float newHeight: Float newColor: String newIconKind: String } # kind "update-presentation"
+type CreateHandleKind { handleKind: Block2dHandleKind! } # kind "create-handle-kind"
+type DeleteHandleKind { id: String! } # kind "delete-handle-kind"
+type RenameHandleKind { id: String! newName: String! } # kind "rename-handle-kind"
+type ChangeHandleKindLabel { id: String! newLabel: String! } # kind "change-handle-kind-label"
+type ChangeHandleKindColor { id: String! newColor: String! } # kind "change-handle-kind-color"
+type ChangeHandleKindDefaultWireKind { id: String! newDefaultWireKind: String! } # kind "change-handle-kind-default-wire-kind"
+type CreateHandle { handle: Block2dHandleTemplate! } # kind "create-handle"
+type DeleteHandle { id: String! } # kind "delete-handle"
+type MoveHandle { id: String! newAngle: Float! newRadius: Float! } # kind "move-handle"
+type ChangeHandleHandleKind { id: String! newHandleKind: String! } # kind "change-handle-handle-kind"
+type AddCompatibilityRule { rule: BlockCompatibilityRule! } # kind "add-compatibility-rule"
+type RemoveCompatibilityRule { id: String! } # kind "remove-compatibility-rule"
+type AddAttribute { attribute: BlockAttribute! } # kind "add-attribute"
+type RemoveAttribute { key: String! } # kind "remove-attribute"
+type AddAuthor { author: BlockAuthor! } # kind "add-author"
+type RemoveAuthor { id: String! } # kind "remove-author"
+type MoveCamera2d { newX: Float! newY: Float! } # kind "move-camera2d"
+type ScaleCamera2d { newZoom: Float! } # kind "scale-camera2d"
+type ChangeMetaDescription { newDescription: String! } # kind "change-meta-description"
+
+type Block2dHandleKind { id: String! } # imported shape, see plugin root ✏️s/🔌️plugins/🧱️block/🦀️.rs
+type Block2dHandleTemplate { id: String! } # imported shape, see plugin root ✏️s/🔌️plugins/🧱️block/🦀️.rs
+type BlockCompatibilityRule { id: String! } # imported shape, see plugin root ✏️s/🔌️plugins/🧱️block/🦀️.rs
+type BlockAttribute { id: String! } # imported shape, see plugin root ✏️s/🔌️plugins/🧱️block/🦀️.rs
+type BlockAuthor { id: String! } # imported shape, see plugin root ✏️s/🔌️plugins/🧱️block/🦀️.rs

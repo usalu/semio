@@ -39,7 +39,7 @@ pub enum Ifc2x3Mutation {
 }
 
 /// 📇️ Kebab-case spelling of every `Ifc2x3Mutation` variant, in declaration order -- the
-/// exhaustive mutation catalog `../../🧪️oracle/🔣️.json`'s `kinds` array is required to
+/// exhaustive mutation catalog `../../🔣️oracle.json`'s `kinds` array is required to
 /// match verbatim (`kinds_const_matches_enum_variants_in_declaration_order` below is what keeps
 /// that honest; the framework never parses Rust to check it itself).
 pub const KINDS: &[&str] = &["set-snapshot", "upsert-instance", "remove-instance", "set-header"];
@@ -97,7 +97,7 @@ pub(crate) fn agg_inverse(this: &Ifc2x3Mutation, base: &Ifc2x3Snapshot) -> Vec<I
 /// cause `4`'s own `IfcMutation` doc comment documents for the isomorphic shape. Reuses the diff
 /// sibling's `pub(crate)` grammar primitives (`enc_str`/`enc_part21_header`/`enc_part21_instance`/
 /// `split_top_level`/...) rather than duplicating them a second time in this file — same
-/// intra-artifact-reuse split `4`'s own `🧬️mutations/🦀️component.rs` uses. Grammar: `keyword
+/// intra-artifact-reuse split `4`'s own `🧬️mutations/🦀️.rs` uses. Grammar: `keyword
 /// arg=value ...` (space-separated), one match arm per variant.
 fn enc_ifc2x3_snapshot_into(s: &Ifc2x3Snapshot, out: &mut String) {
     out.push('[');
@@ -191,7 +191,7 @@ fn dec_ifc2x3_snapshot_bin(reader: &mut store::ByteReader<'_>) -> Result<Ifc2x3S
 //#endregion 🔖️OpBinaryCodec
 
 /// 🧪️ REAL binary op frame (`format u8 | tag u8 | variant payload`), matching
-/// `../💾️binary/📡️component.protocol.semio`'s `header fixed 2` + `chain payload bytes` shape —
+/// `../💾️binary/📡️.protocol.semio`'s `header fixed 2` + `chain payload bytes` shape —
 /// upgraded from the literal-JSON shortcut above. `tag` is the `Ifc2x3Mutation` variant ordinal,
 /// same 0-4 order `parse_ifc2x3_mutation`'s own keyword match uses. Every field is real
 /// (`id` varints, `Part21Instance`/`Part21Header` field-by-field via the reused diff-sibling
@@ -508,7 +508,7 @@ mod tests {
     //#region 🔖️KindsGate
     /// 🧪️ Wave gate: `KINDS` must match the enum's own variants, in declaration order, and its
     /// spellings must match `print_op`'s own keyword for each -- the mutation catalog
-    /// (`../../🧪️oracle/🔣️.json`) and the feature file are checked against never drift
+    /// (`../../🔣️oracle.json`) and the feature file are checked against never drift
     /// apart from the enum itself.
     #[semio_framework_async_macros::async_test]
     async fn kinds_const_matches_enum_variants_in_declaration_order() {
@@ -531,14 +531,14 @@ mod tests {
 
 //#region 🧪️FixtureTests
 // 🧪️ Handcrafted mutation fixtures (contract D1, ticket 26/08/20/COMPOSE-TO-PUZZLE5D-MIGRATION),
-// one case per mutation leaf. Wired HERE and not in `📦️glue.rs`: that file is shared with the
+// one case per mutation leaf. Wired HERE and not in `🦀️.rs`: that file is shared with the
 // agents migrating the other stdio artifacts, so the production mounts there stay untouched while
 // this artifact owns its own test mount. `#[path = "."]` re-bases the children on this file's own
 // directory, which is what makes the leaf-relative path below resolve.
 #[cfg(test)]
 #[path = "."]
 mod fixture_tests {
-    #[path = "📄set-snapshot/🧪️tests/renames-the-ifcproject-instance/🦀️component.rs"]
+    #[path = "📄set-snapshot/🧪️tests/renames-the-ifcproject-instance/🦀️.rs"]
     mod tests_set_snapshot_renames_the_ifcproject_instance;
 }
 //#endregion 🧪️FixtureTests

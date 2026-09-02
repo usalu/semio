@@ -1,0 +1,6 @@
+# 🧬️ SemioVideoArtifact — full artifact state, mirrors SemioVideoSnapshot field for field (see
+# 📸️snapshot/🔗️.graphql for SemioVideoStream/SemioVideoSample/SemioRational).
+type SemioVideoArtifact {
+  schema: String! @state(class: ARTIFACT)
+  streams: [SemioVideoStream!]! @state(class: ARTIFACT)
+}

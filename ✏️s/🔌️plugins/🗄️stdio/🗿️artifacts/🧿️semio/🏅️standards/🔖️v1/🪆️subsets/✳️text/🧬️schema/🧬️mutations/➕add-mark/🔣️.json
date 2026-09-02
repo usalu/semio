@@ -5,7 +5,7 @@
   "displayName": "Add Mark",
   "emoji": "➕",
   "aggregateVariant": "AddMark",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

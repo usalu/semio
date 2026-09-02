@@ -5,7 +5,7 @@
   "displayName": "Set Design Conditions",
   "emoji": "🌡",
   "aggregateVariant": "SetDesignConditions",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

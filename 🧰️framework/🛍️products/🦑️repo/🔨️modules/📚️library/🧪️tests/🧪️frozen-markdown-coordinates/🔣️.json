@@ -15,178 +15,178 @@
   "cases": [
     {
       "id": "generic-code-sibling",
-      "content": "Recorded `🧪️tests/🧪️historical/🦀️component.rs` using `Codec<Model>` and `fields[0]`.\n",
+      "content": "Recorded `🧪️tests/🦀️historical.rs` using `Codec<Model>` and `fields[0]`.\n",
       "form": "inline-code",
       "accepted": true,
-      "value": "🧪️tests/🧪️historical/🦀️component.rs"
+      "value": "🧪️tests/🦀️historical.rs"
     },
     {
       "id": "html-block-before-blank",
-      "content": "<div>old note</div>\n\nRecorded `🧪️tests/🧪️historical/🦀️component.rs`.\n",
+      "content": "<div>old note</div>\n\nRecorded `🧪️tests/🦀️historical.rs`.\n",
       "form": "inline-code",
       "accepted": true,
-      "value": "🧪️tests/🧪️historical/🦀️component.rs"
+      "value": "🧪️tests/🦀️historical.rs"
     },
     {
       "id": "unclosed-code-before-blank",
-      "content": "Earlier unmatched ` notation.\n\nRecorded `🧪️tests/🧪️historical/🦀️component.rs`.\n",
+      "content": "Earlier unmatched ` notation.\n\nRecorded `🧪️tests/🦀️historical.rs`.\n",
       "form": "inline-code",
       "accepted": true,
-      "value": "🧪️tests/🧪️historical/🦀️component.rs"
+      "value": "🧪️tests/🦀️historical.rs"
     },
     {
       "id": "inline-code",
-      "content": "Recorded `🧪️tests/🧪️historical/🦀️component.rs` before the change.\n",
+      "content": "Recorded `🧪️tests/🦀️historical.rs` before the change.\n",
       "form": "inline-code",
       "accepted": true,
-      "value": "🧪️tests/🧪️historical/🦀️component.rs"
+      "value": "🧪️tests/🦀️historical.rs"
     },
     {
       "id": "list-inline-code",
-      "content": "- `🧪️tests/🧪️historical/🦀️component.rs` (recorded implementation)\n",
+      "content": "- `🧪️tests/🦀️historical.rs` (recorded implementation)\n",
       "form": "inline-code",
       "accepted": true,
-      "value": "🧪️tests/🧪️historical/🦀️component.rs"
+      "value": "🧪️tests/🦀️historical.rs"
     },
     {
       "id": "bare-list",
-      "content": "- 🧪️tests/🧪️historical/🦀️component.rs\n",
+      "content": "- 🧪️tests/🦀️historical.rs\n",
       "form": "path-list-item",
       "accepted": true,
-      "value": "🧪️tests/🧪️historical/🦀️component.rs"
+      "value": "🧪️tests/🦀️historical.rs"
     },
     {
       "id": "indented-list",
-      "content": "   * 🧪️tests/🧪️historical/🦀️component.rs\n",
+      "content": "   * 🧪️tests/🦀️historical.rs\n",
       "form": "path-list-item",
       "accepted": true,
-      "value": "🧪️tests/🧪️historical/🦀️component.rs"
+      "value": "🧪️tests/🦀️historical.rs"
     },
     {
       "id": "crlf-inline",
-      "content": "# Evidence\r\n\r\nEarlier `🧪️tests/🧪️historical/🦀️component.rs`.\r\n",
+      "content": "# Evidence\r\n\r\nEarlier `🧪️tests/🦀️historical.rs`.\r\n",
       "form": "inline-code",
       "accepted": true,
-      "value": "🧪️tests/🧪️historical/🦀️component.rs"
+      "value": "🧪️tests/🦀️historical.rs"
     },
     {
       "id": "ordinary-paragraph",
-      "content": "🧪️tests/🧪️historical/🦀️component.rs\n",
+      "content": "🧪️tests/🦀️historical.rs\n",
       "form": "path-list-item",
       "accepted": false,
-      "value": "🧪️tests/🧪️historical/🦀️component.rs"
+      "value": "🧪️tests/🦀️historical.rs"
     },
     {
       "id": "inline-prose-list",
-      "content": "- 🧪️tests/🧪️historical/🦀️component.rs with prose\n",
+      "content": "- 🧪️tests/🦀️historical.rs with prose\n",
       "form": "path-list-item",
       "accepted": false,
-      "value": "🧪️tests/🧪️historical/🦀️component.rs"
+      "value": "🧪️tests/🦀️historical.rs"
     },
     {
       "id": "fenced-backticks",
-      "content": "```text\n- 🧪️tests/🧪️historical/🦀️component.rs\n```\n",
+      "content": "```text\n- 🧪️tests/🦀️historical.rs\n```\n",
       "form": "path-list-item",
       "accepted": false,
-      "value": "🧪️tests/🧪️historical/🦀️component.rs"
+      "value": "🧪️tests/🦀️historical.rs"
     },
     {
       "id": "fenced-tildes",
-      "content": "~~~text\n`🧪️tests/🧪️historical/🦀️component.rs`\n~~~\n",
+      "content": "~~~text\n`🧪️tests/🦀️historical.rs`\n~~~\n",
       "form": "inline-code",
       "accepted": false,
-      "value": "🧪️tests/🧪️historical/🦀️component.rs"
+      "value": "🧪️tests/🦀️historical.rs"
     },
     {
       "id": "indented-code",
-      "content": "    `🧪️tests/🧪️historical/🦀️component.rs`\n",
+      "content": "    `🧪️tests/🦀️historical.rs`\n",
       "form": "inline-code",
       "accepted": false,
-      "value": "🧪️tests/🧪️historical/🦀️component.rs"
+      "value": "🧪️tests/🦀️historical.rs"
     },
     {
       "id": "tab-code",
-      "content": "\t- 🧪️tests/🧪️historical/🦀️component.rs\n",
+      "content": "\t- 🧪️tests/🦀️historical.rs\n",
       "form": "path-list-item",
       "accepted": false,
-      "value": "🧪️tests/🧪️historical/🦀️component.rs"
+      "value": "🧪️tests/🦀️historical.rs"
     },
     {
       "id": "multiple-backticks",
-      "content": "Recorded ``🧪️tests/🧪️historical/🦀️component.rs``.\n",
+      "content": "Recorded ``🧪️tests/🦀️historical.rs``.\n",
       "form": "inline-code",
       "accepted": false,
-      "value": "🧪️tests/🧪️historical/🦀️component.rs"
+      "value": "🧪️tests/🦀️historical.rs"
     },
     {
       "id": "escaped-backtick",
-      "content": "Recorded \\`🧪️tests/🧪️historical/🦀️component.rs`.\n",
+      "content": "Recorded \\`🧪️tests/🦀️historical.rs`.\n",
       "form": "inline-code",
       "accepted": false,
-      "value": "🧪️tests/🧪️historical/🦀️component.rs"
+      "value": "🧪️tests/🦀️historical.rs"
     },
     {
       "id": "link-label",
-      "content": "[`🧪️tests/🧪️historical/🦀️component.rs`](https://example.invalid)\n",
+      "content": "[`🧪️tests/🦀️historical.rs`](https://example.invalid)\n",
       "form": "inline-code",
       "accepted": false,
-      "value": "🧪️tests/🧪️historical/🦀️component.rs"
+      "value": "🧪️tests/🦀️historical.rs"
     },
     {
       "id": "link-target",
-      "content": "[source](`🧪️tests/🧪️historical/🦀️component.rs`)\n",
+      "content": "[source](`🧪️tests/🦀️historical.rs`)\n",
       "form": "inline-code",
       "accepted": false,
-      "value": "🧪️tests/🧪️historical/🦀️component.rs"
+      "value": "🧪️tests/🦀️historical.rs"
     },
     {
       "id": "html-comment",
-      "content": "<!--\n`🧪️tests/🧪️historical/🦀️component.rs`\n-->\n",
+      "content": "<!--\n`🧪️tests/🦀️historical.rs`\n-->\n",
       "form": "inline-code",
       "accepted": false,
-      "value": "🧪️tests/🧪️historical/🦀️component.rs"
+      "value": "🧪️tests/🦀️historical.rs"
     },
     {
       "id": "html-block",
-      "content": "<pre>\n`🧪️tests/🧪️historical/🦀️component.rs`\n</pre>\n",
+      "content": "<pre>\n`🧪️tests/🦀️historical.rs`\n</pre>\n",
       "form": "inline-code",
       "accepted": false,
-      "value": "🧪️tests/🧪️historical/🦀️component.rs"
+      "value": "🧪️tests/🦀️historical.rs"
     },
     {
       "id": "html-inline",
-      "content": "<span>`🧪️tests/🧪️historical/🦀️component.rs`</span>\n",
+      "content": "<span>`🧪️tests/🦀️historical.rs`</span>\n",
       "form": "inline-code",
       "accepted": false,
-      "value": "🧪️tests/🧪️historical/🦀️component.rs"
+      "value": "🧪️tests/🦀️historical.rs"
     },
     {
       "id": "block-quote",
-      "content": "> `🧪️tests/🧪️historical/🦀️component.rs`\n",
+      "content": "> `🧪️tests/🦀️historical.rs`\n",
       "form": "inline-code",
       "accepted": false,
-      "value": "🧪️tests/🧪️historical/🦀️component.rs"
+      "value": "🧪️tests/🦀️historical.rs"
     },
     {
       "id": "unclosed-fence",
-      "content": "```\n`🧪️tests/🧪️historical/🦀️component.rs`\n",
+      "content": "```\n`🧪️tests/🦀️historical.rs`\n",
       "form": "inline-code",
       "accepted": false,
-      "value": "🧪️tests/🧪️historical/🦀️component.rs"
+      "value": "🧪️tests/🦀️historical.rs"
     },
     {
       "id": "different-code-owner",
-      "content": "``earlier ` 🧪️tests/🧪️historical/🦀️component.rs ` code``\n",
+      "content": "``earlier ` 🧪️tests/🦀️historical.rs ` code``\n",
       "form": "inline-code",
       "accepted": false,
-      "value": "🧪️tests/🧪️historical/🦀️component.rs"
+      "value": "🧪️tests/🦀️historical.rs"
     },
     {
       "id": "closed-fence-before",
-      "content": "```txt\nnot a source\n```\n\nRecorded `🧪️tests/🧪️historical/🦀️component.rs`.\n",
+      "content": "```txt\nnot a source\n```\n\nRecorded `🧪️tests/🦀️historical.rs`.\n",
       "form": "inline-code",
       "accepted": true,
-      "value": "🧪️tests/🧪️historical/🦀️component.rs"
+      "value": "🧪️tests/🦀️historical.rs"
     },
     {
       "id": "opaque",

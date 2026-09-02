@@ -4,7 +4,7 @@
 //! generic ISO 10303-21 graph editing (`upsert-instance`, `remove-instance`, `set-header`) and knows
 //! nothing about model view definitions; an MVD is a conformance FILTER over that one schema, so
 //! its vocabulary is the set of edits that address the filter's own rules. Every kind below is one
-//! rule of `check_cv20_conformance` (`../🦀️component.rs`'s `derived_analysis`), which is what makes
+//! rule of `check_cv20_conformance` (`../🦀️.rs`'s `derived_analysis`), which is what makes
 //! this a real distinction rather than an invented one:
 //!
 //! | kind | rule |
@@ -25,8 +25,8 @@
 //! this subset's editor and viewer already import — keeps resolving now that this module shadows
 //! the glob re-export it used to arrive through.
 //!
-//! @see ../../../../🧬️mvd/🦀️component.rs — the Part-21 editing primitives the three MVD subsets share.
-//! @see ../../🧪️oracle/🔣️.json — the `ifc-2x3-cv20` catalog `KINDS` is checked against.
+//! @see ../../../../🧬️mvd/🦀️.rs — the Part-21 editing primitives the three MVD subsets share.
+//! @see ../../🔣️oracle.json — the `ifc-2x3-cv20` catalog `KINDS` is checked against.
 
 use crate::artifacts::ifc::standards::v2x3::mvd;
 use crate::artifacts::ifc::standards::v2x3::subsets::any::schema::diff::Ifc2x3Diff;
@@ -83,7 +83,7 @@ pub enum Ifc2x3Cv20Mutation {
 }
 
 /// 📇️ Kebab-case spelling of every `Ifc2x3Cv20Mutation` variant, in declaration order — the
-/// `ifc-2x3-cv20` catalog in `../../🧪️oracle/🔣️.json` is required to match verbatim, and
+/// `ifc-2x3-cv20` catalog in `../../🔣️oracle.json` is required to match verbatim, and
 /// `kinds_const_matches_enum_variants_in_declaration_order` below is what keeps that honest (the
 /// framework never parses Rust to check it itself).
 pub const KINDS: &[&str] = &["no-mutation", "set-snapshot", "set-view-definition", "set-structural-entity", "set-project-units", "set-product-placement"];

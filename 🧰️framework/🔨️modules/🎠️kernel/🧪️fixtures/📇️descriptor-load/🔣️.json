@@ -1,7 +1,7 @@
 {
   "pluginId": "fixture",
   "moduleUrl": "/plugin-modules/fixture/plugin.js",
-  "descriptorUrl": "/plugin-modules/fixture/🔣️descriptor.json",
+  "descriptorUrl": "/plugin-modules/fixture/🔣️.json",
   "descriptor": {
     "manifest": {
       "pluginId": "fixture",

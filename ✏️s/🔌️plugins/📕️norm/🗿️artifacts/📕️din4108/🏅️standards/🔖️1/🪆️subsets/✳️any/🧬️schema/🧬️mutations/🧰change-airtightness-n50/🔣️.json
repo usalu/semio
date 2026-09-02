@@ -5,7 +5,7 @@
   "displayName": "Change Airtightness N50",
   "emoji": "🧰",
   "aggregateVariant": "ChangeAirtightnessN50",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

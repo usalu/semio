@@ -15,7 +15,7 @@
 //
 //   bun 📜️script.ts list-mutations s.stdio.step ap214 cc6
 //
-// @see 🦀️component.rs — the binary that reads the dispatch enum
+// @see 🦀️.rs — the binary that reads the dispatch enum
 // @see 🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json — RuntimeMutationInventory
 
 //#endregion 🧲️Header

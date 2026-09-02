@@ -346,16 +346,16 @@
   },
   "oracle": {
     "manifestInput": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🧫️fixtures/🧪️rust-physical-reference-context/🧪️oracle/⚙️.toml",
-    "sourceInput": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧪️rust-physical-reference-context/🦀️.rs"
+    "sourceInput": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🦀️rust-physical-reference-context.rs"
   },
   "transaction": {
     "scope": "🧪️tests/🧪️target",
-    "source": "🦀️component.rs",
+    "source": "🦀️.rs",
     "destination": "🦀️.rs",
     "bytes": "pub const VALUE: &str = \"right\";\n",
     "manifest": "pkg/Cargo.toml",
     "consumer": "pkg/entry.rs",
-    "lookalike": "pkg/🦀️component.rs",
+    "lookalike": "pkg/🦀️.rs",
     "runtimeOutput": "READ:pub const VALUE: &str = \"right\";"
   },
   "referenceUniverse": {
@@ -364,8 +364,8 @@
     "unsafeUnrelatedManifest": "unrelated/Cargo.toml",
     "independentRoot": "🧪️transaction/🧪️independent",
     "cases": [
-      { "id": "independent-local", "base": "../🧪️tests/🧪️target", "physicalTarget": "🧪️transaction/🧪️independent/🧪️tests/🧪️target/🦀️component.rs", "affectsParent": false },
-      { "id": "independent-parent-escape", "base": "../../../🧪️tests/🧪️target", "physicalTarget": "🧪️tests/🧪️target/🦀️component.rs", "affectsParent": true }
+      { "id": "independent-local", "base": "../🧪️tests/🧪️target", "physicalTarget": "🧪️transaction/🧪️independent/🧪️tests/🦀️target.rs", "affectsParent": false },
+      { "id": "independent-parent-escape", "base": "../../../🧪️tests/🧪️target", "physicalTarget": "🧪️tests/🦀️target.rs", "affectsParent": true }
     ]
   },
   "manifestCandidates": {

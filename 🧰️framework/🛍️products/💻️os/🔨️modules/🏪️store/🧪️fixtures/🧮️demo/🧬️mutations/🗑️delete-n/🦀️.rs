@@ -1,6 +1,6 @@
-use super::{DemoSnapshot, DemoDiff, DemoMutation, RestoreN};
-use serde::{Deserialize, Serialize};
+use super::{DemoDiff, DemoMutation, DemoSnapshot, RestoreN};
 use semio_framework_value_derive::{FromValue, ToValue};
+use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, dsl::DslRecord, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
@@ -15,16 +15,24 @@ impl crate::os_spr::MutationKind<DemoSnapshot, DemoMutation> for DeleteN {
         crate::os_spr::MutationOutcome::new(base.n.map(|_| DemoDiff::value(None)).unwrap_or_default())
     }
     fn inverse(&self, base: &DemoSnapshot) -> Vec<DemoMutation> {
-        if base.n.is_none() { return Vec::new(); }
+        if base.n.is_none() {
+            return Vec::new();
+        }
         vec![DemoMutation::RestoreN(RestoreN { n: base.n })]
     }
-    fn label(&self) -> String { "Delete N".into() }
-    fn target(&self) -> Vec<String> { vec!["n".into()] }
+    fn label(&self) -> String {
+        "Delete N".into()
+    }
+    fn target(&self) -> Vec<String> {
+        vec!["n".into()]
+    }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
     #[test]
-    fn direct_fixture_leaf_contract() { super::super::assert_fixture_descriptor::<DeleteN>(include_str!("🔣️.json")); }
+    fn direct_fixture_leaf_contract() {
+        super::super::assert_fixture_descriptor::<DeleteN>(include_str!("🔣️.json"));
+    }
 }

@@ -2,7 +2,7 @@
 //!
 //! Every scenario copies the real, derived-once 8,448-point fixture into the case work directory
 //! first; the committed fixture is never written to. `oracle` drives the registered `las` 0.11
-//! reference implementation (`../../🏅️standards/🔖️1.0/🪆️subsets/✳️base/🧪️oracle/🦀️component.rs`),
+//! reference implementation (`../../🏅️standards/🔖️1.0/🪆️subsets/✳️base/🦀️oracle.rs`),
 //! `subject` drives this repository's own decode/apply/encode round trip, and both results are read
 //! back by the SAME independent `project_las` (built on `las::raw::{Header, Vlr, Point}`) before the
 //! `semantic-las-v1` profile compares them. The subject half is gated behind the generated host's
@@ -14,7 +14,7 @@ use semio_s_plugin_stdio_test_oracle::law::{inverse_restores_within, mutation_is
 
 //#region 🔖️Kinds
 /// 🧾️ Mirrors `LasMutation::KINDS`
-/// (`../../🏅️standards/🔖️1.0/🪆️subsets/✳️base/🧬️schema/🧬️mutations/🦀️component.rs`) — kept in sync by
+/// (`../../🏅️standards/🔖️1.0/🪆️subsets/✳️base/🧬️schema/🧬️mutations/🦀️.rs`) — kept in sync by
 /// the contract phase's `mutation-kind-uncovered`/`mutation-kind-undeclared` gates, which fail loudly
 /// if this list and the catalog ever drift apart.
 const KINDS: [&str; 15] = ["no-mutation", "set-snapshot", "set-version", "set-system-identifier", "set-software-info", "set-creation-date", "set-scale-and-offset", "set-bounds", "set-points-by-return", "insert-vlr", "remove-vlr", "set-vlr-data", "insert-point", "remove-point", "set-point"];
@@ -22,7 +22,7 @@ const KINDS: [&str; 15] = ["no-mutation", "set-snapshot", "set-version", "set-sy
 
 //#region 🔖️Profile
 /// 📏️ `semantic-las-v1`'s own declared tolerance (`../../🏅️standards/🔖️1.0/🪆️subsets/✳️base/
-/// 🧪️oracle/🔣️.json`) — the scale/offset quantization LAS 1.0 stores coordinates through.
+/// 🔣️oracle.json`) — the scale/offset quantization LAS 1.0 stores coordinates through.
 /// Mirrored here so an in-handler law check is exactly as strict as the profile the case is
 /// measured by, never stricter.
 const LAS_TOLERANCE: f64 = 1e-3;
@@ -247,7 +247,7 @@ mod subject {
     }
 
     /// ↩️ Mirrors `LasMutation::inverse()`
-    /// (`../../../🏅️standards/🔖️1.0/🪆️subsets/✳️base/🧬️schema/🧬️mutations/🦀️component.rs`)
+    /// (`../../../🏅️standards/🔖️1.0/🪆️subsets/✳️base/🧬️schema/🧬️mutations/🦀️.rs`)
     /// independently: the generated oracle-role host never links `protocol`, so the trait method
     /// itself is unreachable here, and this reconstructs the same index-aware inverse by hand
     /// against the pre-mutation `base`. `LasMutation::NoMutation` is gone, so an out-of-range index

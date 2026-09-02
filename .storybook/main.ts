@@ -11,7 +11,7 @@ import { fileURLToPath } from "node:url";
 import { dirname, join, resolve } from "node:path";
 
 import type { StorybookConfig } from "@storybook/react-vite";
-import { semioAssetsVitePlugin, createWorkspaceViteResolveConfig, findWorkspacePackages, playgroundAssetVitePlugins, playgroundFlowWasmDevStubPlugin } from "../🧰️framework/🔨️modules/🖱️ui/🎨️styling/🟦️vite-elements-assets.ts";
+import { semioAssetsVitePlugin, createWorkspaceViteResolveConfig, findWorkspacePackages, playgroundAssetVitePlugins, playgroundFlowWasmDevStubPlugin } from "../🧰️framework/🔨️modules/🖱️ui/🎨️styling/🟦️.ts";
 import { uiTailwindBuildPlugins } from "../🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/🟦️build-tooling.ts";
 import { resolveActiveScopes, buildScopeStoryGlobs, buildScopeAliases, buildScopeWatchIgnores, type StoryScope } from "./scopes.ts";
 
@@ -47,7 +47,7 @@ function buildStorybookAliases(): Record<string, string> {
   const baseline: Record<string, string> = {
     // 🧪️ More specific than the bare package alias, so it must come FIRST — Vite substitutes an
     // alias by prefix, and without this `@semio-tech/ui-react/test` resolves to a literal
-    // `<uiReactDir>/test` that does not exist. `Interpreter/🟦️component.tsx` reaches it through a
+    // `<uiReactDir>/test` that does not exist. `Interpreter/🟦️.tsx` reaches it through a
     // runtime `await import(...)`, which Vite still has to resolve at build time, so a plain
     // (non-test) storybook build fails on it. Mirrors the same pair in os/dev's `⚙️vite.config.ts`.
     "@semio-tech/ui-react/test": toVitePath(join(uiReactDir, "🧪️render.ts")),
@@ -99,10 +99,10 @@ const config: StorybookConfig = {
     const aliasRecord: Record<string, string> = {
       ...buildStorybookAliases(),
       "vite/internal": resolve(repoRootPath, "node_modules/vite/dist/node/index.js"),
-      "@semio-tech/framework-platform-core": resolve(repoRootPath, "🧰️framework/⚡️implementations/🟦️typescript/📦️index.ts"),
-      "@semio-tech/framework-playground-core": resolve(repoRootPath, "🧰️framework/⚡️implementations/🟦️typescript/📦️index.ts"),
-      "@semio-tech/framework-platform-renderer-react": resolve(repoRootPath, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx"),
-      "@semio-tech/framework-playground-renderer-react": resolve(repoRootPath, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx"),
+      "@semio-tech/framework-platform-core": resolve(repoRootPath, "🧰️framework/⚡️implementations/🟦️typescript/🟦️.ts"),
+      "@semio-tech/framework-playground-core": resolve(repoRootPath, "🧰️framework/⚡️implementations/🟦️typescript/🟦️.ts"),
+      "@semio-tech/framework-platform-renderer-react": resolve(repoRootPath, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🟦️typescript/🎯️targets/⚛️react/🟦️.tsx"),
+      "@semio-tech/framework-playground-renderer-react": resolve(repoRootPath, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🟦️typescript/🎯️targets/⚛️react/🟦️.tsx"),
     };
     for (const item of workspaceResolve.resolve?.alias ?? []) {
       if (typeof item === "object" && item && "find" in item && "replacement" in item && typeof item.find === "string") {

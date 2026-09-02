@@ -5,7 +5,7 @@
   "displayName": "Delete Asset",
   "emoji": "🗞️",
   "aggregateVariant": "DeleteAsset",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": "delete-asset",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

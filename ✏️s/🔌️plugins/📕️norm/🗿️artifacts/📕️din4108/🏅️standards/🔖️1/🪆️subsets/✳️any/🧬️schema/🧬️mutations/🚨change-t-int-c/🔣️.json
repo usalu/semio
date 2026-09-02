@@ -5,7 +5,7 @@
   "displayName": "Change T Int C",
   "emoji": "🚨",
   "aggregateVariant": "ChangeTIntC",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

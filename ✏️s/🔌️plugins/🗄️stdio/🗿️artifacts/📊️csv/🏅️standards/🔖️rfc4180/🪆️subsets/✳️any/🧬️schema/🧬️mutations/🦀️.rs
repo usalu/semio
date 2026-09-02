@@ -49,7 +49,7 @@ pub enum CsvMutation {
 }
 
 /// 🧾️ Kebab-case spelling of every `CsvMutation` variant, in declaration order — the exhaustive
-/// mutation catalog `csv-rfc4180-any` (`../../🧪️oracle/🔣️.json`) is measured against
+/// mutation catalog `csv-rfc4180-any` (`../../🔣️oracle.json`) is measured against
 /// this exact list. `kinds_match_enum_and_catalog` proves it never drifts from either side.
 pub const KINDS: &[&str] = &["set-snapshot", "set-has-header", "insert-record", "remove-record", "set-field"];
 //#endregion 🔖️Mutations
@@ -171,10 +171,10 @@ impl OpText for CsvMutation {
 /// `print_op().into_bytes()` text-as-binary shortcut. `tag u8` ordinal (hand-assigned, this
 /// enum cannot use `#[derive(dsl::DslOps)]`, see the doc comment above) + per-variant fields,
 /// via `dsl::ByteWriter`/`dsl::ByteReader` (the real framework LEB128-varint/length-prefixed
-/// primitives, `🧰️framework/…/🎒️pack/🧾️codec/🦀️component.rs`, reachable from stdio because
+/// primitives, `🧰️framework/…/🎒️pack/🧾️codec/🦀️.rs`, reachable from stdio because
 /// `extern crate self as pack;` is re-exported at the kernel crate root and `dsl`/`store`/
 /// `protocol` all alias that SAME crate root). Matches
-/// `../💾️binary/📡️component.protocol.semio`'s real `repeat`/`arm` shape exactly — see that
+/// `../💾️binary/📡️.protocol.semio`'s real `repeat`/`arm` shape exactly — see that
 /// file's own doc comment for why the deeply nested `CsvSnapshot`/`CsvRecord` payload inside
 /// arms 1/3 is one honest opaque tail blob rather than individually walked.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -589,7 +589,7 @@ mod tests {
         let from_enum: Vec<&'static str> = samples.iter().map(kind_of).collect();
         assert_eq!(from_enum, KINDS, "KINDS must list every CsvMutation variant, in declaration order");
 
-        let manifest = include_str!("../../🧪️oracle/🔣️.json");
+        let manifest = include_str!("../../🔣️oracle.json");
         let needle = "\"kinds\": [";
         let start = manifest.find(needle).expect("manifest declares a kinds array") + needle.len();
         let end = start + manifest[start..].find(']').expect("kinds array is closed");
@@ -602,14 +602,14 @@ mod tests {
 
 //#region 🧪️FixtureTests
 // 🧪️ Handcrafted mutation fixtures (contract D1, ticket 26/08/20/COMPOSE-TO-PUZZLE5D-MIGRATION),
-// one case per mutation leaf. Wired HERE and not in `📦️glue.rs`: that file is shared with the
+// one case per mutation leaf. Wired HERE and not in `🦀️.rs`: that file is shared with the
 // agents migrating the other stdio artifacts, so the production mounts there stay untouched while
 // this artifact owns its own test mount. `#[path = "."]` re-bases the children on this file's own
 // directory, which is what makes the leaf-relative path below resolve.
 #[cfg(test)]
 #[path = "."]
 mod fixture_tests {
-    #[path = "📄set-snapshot/🧪️tests/corrects-the-area-cell-and-quotes-it/🦀️component.rs"]
+    #[path = "📄set-snapshot/🧪️tests/corrects-the-area-cell-and-quotes-it/🦀️.rs"]
     mod tests_set_snapshot_corrects_the_area_cell_and_quotes_it;
 }
 //#endregion 🧪️FixtureTests

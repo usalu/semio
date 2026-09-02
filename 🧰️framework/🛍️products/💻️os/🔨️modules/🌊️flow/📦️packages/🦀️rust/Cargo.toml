@@ -15,7 +15,7 @@ workspace = true
 [lib]
 name = "semio_framework_os_flow"
 crate-type = ["cdylib", "rlib"]
-path = "📦️glue.rs"
+path = "🦀️.rs"
 
 [dependencies]
 semio-framework-os-kernel = { path = "../../../../📦️packages/🦀️rust", package = "semio-framework-os-kernel" }
@@ -52,17 +52,17 @@ semio-s-plugin-flow-extension-bim = { path = "../../../../../../../✏️s/🔌�
 # feature (the real `wgpu` crate and its `wasm-bindgen-futures`/`js-sys`/`wasm-bindgen` chain) is
 # narrowed away from `wasm32-wasip2` here — nothing this crate's own program logic needs
 # (`ui_wgpu::wgpu::{DrawList, ...}` and friends) requires it any more, see
-# `🖱️ui/🎯️targets/🧊️wgpu/📦️glue.rs`'s top docstring for the wgpu-tier split this depends on.
+# `🖱️ui/🎯️targets/🧊️wgpu/🦀️.rs`'s top docstring for the wgpu-tier split this depends on.
 [target.'cfg(not(all(target_arch = "wasm32", target_env = "p2")))'.dependencies]
 ui_wgpu = { path = "../../../../../../🔨️modules/🖱️ui/📦️packages/🦀️rust", package = "semio-framework-ui", features = ["wgpu-engine"] }
-# 🌉️ `ui_webgpu` backs only `wasm_session`'s browser wasm-pack SDK bridge (`📦️glue.rs`'s own
+# 🌉️ `ui_webgpu` backs only `wasm_session`'s browser wasm-pack SDK bridge (`🦀️.rs`'s own
 # gate docstring) — its `ui_render` dependency drags `taffy`/`parley`/`swash`/`fontique` (text
 # shaping/layout) unconditionally, none of which a WASI guest needs. Narrowed here rather than
 # deleted: native keeps it for this crate's own `#[cfg(test)]` suite over the bridge protocol.
 ui_webgpu = { path = "../../../../../../🔨️modules/🖱️ui/🖼️render/🎯️targets/🧊️webgpu/📦️packages/🦀️rust", package = "semio-framework-ui-backend-webgpu" }
 
 # 🌉️ Browser-only: `getrandom`'s `wasm_js` backend and the `wasm_bridge` JS-callable tessellation
-# exports (`📐️brep-geometry/🦀️component.rs`) both require an actual JS engine (the former backs
+# exports (`📐️brep-geometry/🦀️.rs`) both require an actual JS engine (the former backs
 # onto `Math.random`/`crypto.getRandomValues`, the wasm-pack-built `createFlowSession` bundle the
 # React renderer imports). Excluded from `wasm32-wasip2` because `target_arch = "wasm32"` is TRUE
 # for the WASI component target too, where neither applies.

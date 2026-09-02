@@ -5,7 +5,7 @@
   "displayName": "Add Entry",
   "emoji": "➕",
   "aggregateVariant": "AddEntry",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

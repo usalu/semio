@@ -2,7 +2,7 @@
   "$schema": "../../../../../node_modules/nx/schemas/project-schema.json",
   "name": "@semio-tech/framework-kernel",
   "version": "0.1.0",
-  "description": "framework-kernel · pooled actor/plugin runtime (ActivationRegistry, IoEntryGraph routing, runtime metrics) — see 🟦️glue.ts.",
+  "description": "framework-kernel · pooled actor/plugin runtime (ActivationRegistry, IoEntryGraph routing, runtime metrics) — see 🟦️.ts.",
   "type": "module",
   "private": true,
   "exports": {

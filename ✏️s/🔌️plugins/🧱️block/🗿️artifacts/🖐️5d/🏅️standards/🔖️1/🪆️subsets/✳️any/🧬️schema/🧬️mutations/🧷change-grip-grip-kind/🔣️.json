@@ -5,7 +5,7 @@
   "displayName": "Change Grip Grip Kind",
   "emoji": "🧷",
   "aggregateVariant": "ChangeGripGripKind",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": "change-grip-grip-kind",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

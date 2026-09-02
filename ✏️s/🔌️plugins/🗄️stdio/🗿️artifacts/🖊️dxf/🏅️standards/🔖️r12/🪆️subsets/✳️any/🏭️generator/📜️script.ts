@@ -10,7 +10,7 @@
 // Every recipe's bytes are written entirely by the real `dxf` 0.6 crate's own typed `Drawing`
 // model (`🦀️engine/src/main.rs`) — the SAME crate registered as `dxf-crate-r12-mutate`
 // (`cross-semio-implementation`, untouched) and now also as `dxf-crate-r12-mutate-reader`
-// (`third-party-library`) in `../🧪️oracle/🔣️.json` — never by this repository's own DXF codec.
+// (`third-party-library`) in `../🔣️oracle.json` — never by this repository's own DXF codec.
 // This script only marshals: it builds and invokes the Rust binary and reports what it wrote; it
 // computes no DXF bytes itself.
 //
@@ -67,7 +67,7 @@ const RECIPES: readonly Recipe[] = [
   { id: "no-mutation-no-op", kind: "pair", mutation: "no-mutation", outcome: "no-op", notes: "Identity — before and after are the same document, encoded independently." },
   { id: "set-snapshot-applied", kind: "pair", mutation: "set-snapshot", outcome: "applied", notes: "Whole-document replace: $INSBASE, a new LAYER, and the circle entity's radius (the subset's own declared 'widens-the-circle-entity-radius' scenario) all change together." },
   { id: "set-snapshot-no-op", kind: "pair", mutation: "set-snapshot", outcome: "no-op", notes: "Replacement snapshot equals the base — DxfDiff::between is empty." },
-  { id: "set-snapshot-rejected-duplicate-layer", kind: "pair", mutation: "set-snapshot", outcome: "rejected", notes: "Payload snapshot declares a layer name that collides with an existing base layer — invalid-add-target (🔺️diff/🦀️component.rs:1571)." },
+  { id: "set-snapshot-rejected-duplicate-layer", kind: "pair", mutation: "set-snapshot", outcome: "rejected", notes: "Payload snapshot declares a layer name that collides with an existing base layer — invalid-add-target (🔺️diff/🦀️.rs:1571)." },
   { id: "set-header-var-applied", kind: "pair", mutation: "set-header-var", outcome: "applied", notes: "$INSBASE changes value — the one generic $VAR dxf's Header persists unconditionally on an R12 save." },
   { id: "remove-header-var-applied", kind: "pair", mutation: "remove-header-var", outcome: "applied", notes: "$INSBASE resets to the origin." },
   { id: "remove-header-var-rejected-missing", kind: "pair", mutation: "remove-header-var", outcome: "rejected", notes: "Target name is genuinely absent from header_vars — invalid-remove-target, carrier-independent." },

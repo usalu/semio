@@ -1317,7 +1317,7 @@ pub struct MutationMeta {
     /// see `UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM/📓️wave1-reports/b1-spr-vcs-report.md` for the
     /// decision record. Callers holding a real `InvocationId` pass `.0`; this field round-trips
     /// through `Edit.mutation_meta` into the `.spr` history log (`HistoryOpMeta.group_id`,
-    /// `📡️spr/📜️history/🦀️component.rs`) so it survives persistence and sync.
+    /// `📡️spr/📜️history/🦀️.rs`) so it survives persistence and sync.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub group_id: Option<String>,
     /// @emoji 🔀️ Provenance of this operation: `Owner` (default, omitted from wire — the

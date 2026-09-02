@@ -48,24 +48,24 @@ Per artifact (54 of them, under `✏️s/🔌️plugins/<plugin>/🗿️artifact
 ```
 <artifact>/
   🧬️schema/                     NEW  — every field of the artifact, whatever its state class
-    🦀️component.rs  🟦️component.ts  🔗️component.graphql  🔣️component.json  🛰️component.proto
+    🦀️.rs  🟦️.ts  🔗️.graphql  🔣️component.json  🛰️.proto
   📸️snapshot/                   NEW facet
     🧬️schema/                   NEW  — only the persisted fields, no version history
-      🦀️component.rs  🟦️component.ts  🔗️component.graphql  🔣️component.json  🛰️component.proto
+      🦀️.rs  🟦️.ts  🔗️.graphql  🔣️component.json  🛰️.proto
     🎒️pack/                     MOVED here from the artifact root (it encodes exactly the snapshot)
   🔺️diff/                       KEPT (grammar + DiffCodec stay at its root)
     🧬️schema/                   NEW  — every change applicable to the artifact
-      🦀️component.rs  🟦️component.ts  🔗️component.graphql  🔣️component.json  🛰️component.proto
+      🦀️.rs  🟦️.ts  🔗️.graphql  🔣️component.json  🛰️.proto
   🧬️mutations/ 🔧️op/ 🗣️dsl/ 📡️spr/ ⚙️engine/ 📚️examples/   unchanged
 ```
 
 Type naming per artifact `X`: `XArtifact` (full), `XSnapshot` (persisted), `XDiff` (delta). `XSnapshot` replaces today's `XProjection`.
 
-Nothing is generated. All 810 leaves (54 × 3 × 5) are handcrafted; consistency is a **policy + runtime-test** property, not a codegen property. Within each facet the **JSON Schema leaf `🔣️component.json` is normative** and the other four are mirrors — the same spirit as the existing `artifactSpecFilenames` convention where `🗣️dsl`/`🔧️op`/`🔺️diff` carry `📖️component.grammar.semio` and `🎒️pack`/`📡️spr` carry `📡️component.protocol.semio`. It cannot literally reuse that map, though: `validateTaxonomy` asserts every `artifactSpecFilenames` value ends in `.semio`, so the schema leaves need their own key.
+Nothing is generated. All 810 leaves (54 × 3 × 5) are handcrafted; consistency is a **policy + runtime-test** property, not a codegen property. Within each facet the **JSON Schema leaf `🔣️component.json` is normative** and the other four are mirrors — the same spirit as the existing `artifactSpecFilenames` convention where `🗣️dsl`/`🔧️op`/`🔺️diff` carry `📖️.grammar.semio` and `🎒️pack`/`📡️spr` carry `📡️.protocol.semio`. It cannot literally reuse that map, though: `validateTaxonomy` asserts every `artifactSpecFilenames` value ends in `.semio`, so the schema leaves need their own key.
 
 ## Field state classes
 
-The artifact schema is the union of what is today spread across three places — the persisted projection, `DocumentApp::Config`, `DocumentApp::Draft` — plus engine-derived values. Each field carries the kernel's existing `StateClass` (`Persistent`, `SharedUi`, `LocalUi`, `Preview`, `Effect`, defined at [🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🧾️wire/🦀️component.rs](🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🧾️wire/🦀️component.rs) lines 166-198), expressed per format:
+The artifact schema is the union of what is today spread across three places — the persisted projection, `DocumentApp::Config`, `DocumentApp::Draft` — plus engine-derived values. Each field carries the kernel's existing `StateClass` (`Persistent`, `SharedUi`, `LocalUi`, `Preview`, `Effect`, defined at [🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🧾️wire/🦀️.rs](🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🧾️wire/🦀️.rs) lines 166-198), expressed per format:
 
 - JSON Schema (normative): `"x-semio-state": "persistent"` on each property.
 - Rust: new derive `schema::ArtifactSchema` (in the framework schema module's Rust package) accepting `#[state(persistent)]` field attributes and emitting `field_states()`.
@@ -73,7 +73,7 @@ The artifact schema is the union of what is today spread across three places —
 - GraphQL: `@state(class: PERSISTENT)` directive, declared once in a shared SDL preamble owned by the framework schema module.
 - Protobuf: `// @state persistent` leading comment per field.
 
-Lowpoly is the concrete illustration: [✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🦀️component.rs](✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🦀️component.rs) documents that "active object, selection, utilities, camera, brush live in the plugin's app config, never here" — those become `SharedUi`/`LocalUi` fields of `LowpolyArtifact`, while `objects` stays `Persistent` and appears in `LowpolySnapshot`.
+Lowpoly is the concrete illustration: [✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🦀️.rs](✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🦀️.rs) documents that "active object, selection, utilities, camera, brush live in the plugin's app config, never here" — those become `SharedUi`/`LocalUi` fields of `LowpolyArtifact`, while `objects` stays `Persistent` and appears in `LowpolySnapshot`.
 
 ## Mechanisms to change
 
@@ -86,9 +86,9 @@ Lowpoly is the concrete illustration: [✏️s/🔌️plugins/💠️lowpoly/�
 - `taxonomyLeafParentDirs`: add `🧬️schema`.
 - `artifactSpecFilenames`: rekey `🎒️pack` to `📸️snapshot/🎒️pack`. The `🧬️schema` normative leaf goes in a new `artifactSchemaSpecFilenames` key instead, because of the `.semio` invariant noted above.
 - New `validateTaxonomy` clauses for `schemaFormats`, `snapshotChildDirs`, `diffChildDirs` and the new spec map, mirroring the existing `mutationChildDirs` clause.
-- Emoji check (verified against every tracked path segment): `🛰` is unused repo-wide, so `🛰️component.proto` is free. `🔗` already means GraphQL (`🔗️schema.graphql`, `🔗️graphql`) and `🔣` already means JSON (`🔣️taxonomy.json`, `🔣️json`), so those two leaf names extend existing conventions. `🧬` and `📸` are each already in use elsewhere (`🧬️mutations` and the framework `🧬️schema` module; the `📸️remodel` plugin), but at different namespace levels — the taxonomy already tolerates that, exactly as `🔺️` serves both the `🔺️diff` facet and the diff example-asset prefix.
+- Emoji check (verified against every tracked path segment): `🛰` is unused repo-wide, so `🛰️.proto` is free. `🔗` already means GraphQL (`🔗️schema.graphql`, `🔗️graphql`) and `🔣` already means JSON (`🔣️taxonomy.json`, `🔣️json`), so those two leaf names extend existing conventions. `🧬` and `📸` are each already in use elsewhere (`🧬️mutations` and the framework `🧬️schema` module; the `📸️remodel` plugin), but at different namespace levels — the taxonomy already tolerates that, exactly as `🔺️` serves both the `🔺️diff` facet and the diff example-asset prefix.
 
-**Taxonomy consumers** (three twins must move together): `validateTaxonomy` (line ~163) in the discovery library `🟦️component.ts`, `validateTaxonomyTree` (line ~944) in [🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/📇️registry/📜️script.ts](🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/📇️registry/📜️script.ts), and `assert_taxonomy_components` (line ~1594) in [🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️component.rs](🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️component.rs). The Rust twin hardcodes its facet list and is **already stale** — its `EXAMPLE_KINDS` still names the plural dirs (`🗣️dsls`, `🎒️packs`, …) that `forbiddenExamplePluralDirs` now bans — so W1 makes it read the taxonomy JSON rather than adding a seventh hardcoded entry.
+**Taxonomy consumers** (three twins must move together): `validateTaxonomy` (line ~163) in the discovery library `🟦️.ts`, `validateTaxonomyTree` (line ~944) in [🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/📇️registry/📜️script.ts](🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/📇️registry/📜️script.ts), and `assert_taxonomy_components` (line ~1594) in [🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️.rs](🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️.rs). The Rust twin hardcodes its facet list and is **already stale** — its `EXAMPLE_KINDS` still names the plural dirs (`🗣️dsls`, `🎒️packs`, …) that `forbiddenExamplePluralDirs` now bans — so W1 makes it read the taxonomy JSON rather than adding a seventh hardcoded entry.
 
 Both `validateTaxonomyTree` and `policyTaxonomyDirsBreaches` (line 3948) walk artifact children **flat** today. `📸️snapshot/🎒️pack` and the three `🧬️schema` dirs are the first nested facets outside `🧬️mutations`, so both walkers need one more level, driven by `snapshotChildDirs`/`diffChildDirs`.
 
@@ -101,7 +101,7 @@ Both `validateTaxonomyTree` and `policyTaxonomyDirsBreaches` (line 3948) walk ar
 - type-name parity: `XArtifact`/`XSnapshot`/`XDiff` named identically across all five leaves.
 - pack relocation: no `🎒️pack` directly under an artifact root.
 
-**Framework schema module** — [🧰️framework/🔨️modules/🧬️schema/🦀️component.rs](🧰️framework/🔨️modules/🧬️schema/🦀️component.rs) already owns a `SchemaCatalog` over `schemars` + `jsonschema`. Extend it with an `ArtifactSchemaDescriptor` (artifact id plus `include_str!` handles for all five leaves at all three levels), a registry, the `ArtifactSchema` derive, the shared GraphQL `@state` directive preamble, and a TypeScript twin. Its existing test file gains one table-driven test that, for every registered artifact, serialises a default `XSnapshot`, validates it against the handcrafted `🔣️component.json`, and asserts `field_states()` matches `x-semio-state` — runtime proof rather than a static claim, and no new test file.
+**Framework schema module** — [🧰️framework/🔨️modules/🧬️schema/🦀️.rs](🧰️framework/🔨️modules/🧬️schema/🦀️.rs) already owns a `SchemaCatalog` over `schemars` + `jsonschema`. Extend it with an `ArtifactSchemaDescriptor` (artifact id plus `include_str!` handles for all five leaves at all three levels), a registry, the `ArtifactSchema` derive, the shared GraphQL `@state` directive preamble, and a TypeScript twin. Its existing test file gains one table-driven test that, for every registered artifact, serialises a default `XSnapshot`, validates it against the handcrafted `🔣️component.json`, and asserts `field_states()` matches `x-semio-state` — runtime proof rather than a static claim, and no new test file.
 
 **Kernel** — rename the document-state noun from `Projection` to `Snapshot` (544 files mention `Projection` today; the `🛢️db/📽️projection` read-model module keeps the word, so the rename actually disambiguates two concepts). Touches `DocumentApp::Projection`, `ArtifactEngine::Projection`, `DocumentStore<P, Mutation>`, `DocumentVcs.initial_projection`, `Mutation<P>`/`MutationDiff<P>` docs. `ArtifactEngine` additionally gains `type Artifact` plus `fn artifact(&self) -> &Self::Artifact`, so the engine owns the full artifact state and `snapshot()` is its persisted projection.
 

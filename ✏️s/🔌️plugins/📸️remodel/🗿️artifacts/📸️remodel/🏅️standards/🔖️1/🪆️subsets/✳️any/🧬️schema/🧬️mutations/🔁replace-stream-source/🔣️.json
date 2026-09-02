@@ -5,7 +5,7 @@
   "displayName": "Replace Stream Source",
   "emoji": "🔁",
   "aggregateVariant": "ReplaceStreamSource",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": "replace-stream-source",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

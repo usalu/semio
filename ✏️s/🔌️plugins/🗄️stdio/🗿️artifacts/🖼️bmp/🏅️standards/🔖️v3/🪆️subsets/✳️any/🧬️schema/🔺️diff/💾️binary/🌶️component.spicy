@@ -1,7 +1,0 @@
-module Stdio_bmp_diff;
-
-# The generic serde-derived binary encoding of BmpDiff (raw UTF-8 JSON bytes) — no `.semio`
-# envelope header (contrast with ../../📸️snapshot/💾️binary/, whose payload IS wrapped).
-type Document = unit {
-    payload: bytes &eod;   # UTF-8 JSON object — see ../📝️text/📖️component.grammar.semio for the real per-field shape
-};

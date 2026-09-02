@@ -2,7 +2,7 @@
 /** 🧭️ `@semio-tech/repo-client` bundle policy router: `bun ./📜️script.ts policy`. */
 import { existsSync } from "node:fs";
 import { join } from "node:path";
-import { defineLint, getWorkspaceRoot, runPolicyOnlyMain, type BundleLinter } from "../📚️library/📦️packages/🟦️typescript/📦️index.ts";
+import { defineLint, getWorkspaceRoot, runPolicyOnlyMain, type BundleLinter } from "../📚️library/📦️packages/🟦️typescript/🟦️.ts";
 
 export const policy = defineLint("repo-client-bundle", (l: BundleLinter) => {
   const root = getWorkspaceRoot();

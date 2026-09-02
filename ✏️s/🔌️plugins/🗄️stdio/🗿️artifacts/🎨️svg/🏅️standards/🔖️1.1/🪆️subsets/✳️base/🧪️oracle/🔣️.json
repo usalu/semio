@@ -17,7 +17,7 @@
       "license": "MIT",
       "testOnly": true,
       "homepage": "https://github.com/tafia/quick-xml",
-      "rationale": "🫥️ RECLASSIFIED by the `reimplementation-registered-as-third-party` gate. The crate named here does real work — it parses and writes this format — but what a MUTATION SHOULD PRODUCE is computed by this owner's own `🧪️oracle/🦀️component.rs`. Both halves of the comparison then descend from ONE reading of the specification, so a misreading of it yields two agreeing wrong answers: the single failure a differential test exists to prevent.\n\nThe honest split is that the crate discharges \"the result is a well-formed file of this format\" and NOT \"the mutation computed the right answer\". Only the second is what a mutation oracle is for, so this is a `cross-semio-implementation` — a required SUPPLEMENT, never a substitute, and a qualifying third-party reference is still owed.\n\nAny fixtures registered alongside are untouched and remain valuable: real bytes of the real format, byte-reproducible, and exactly what a qualifying reader gets pointed at the day one is registered.",
+      "rationale": "🫥️ RECLASSIFIED by the `reimplementation-registered-as-third-party` gate. The crate named here does real work — it parses and writes this format — but what a MUTATION SHOULD PRODUCE is computed by this owner's own `🦀️oracle.rs`. Both halves of the comparison then descend from ONE reading of the specification, so a misreading of it yields two agreeing wrong answers: the single failure a differential test exists to prevent.\n\nThe honest split is that the crate discharges \"the result is a well-formed file of this format\" and NOT \"the mutation computed the right answer\". Only the second is what a mutation oracle is for, so this is a `cross-semio-implementation` — a required SUPPLEMENT, never a substitute, and a qualifying third-party reference is still owed.\n\nAny fixtures registered alongside are untouched and remain valuable: real bytes of the real format, byte-reproducible, and exactly what a qualifying reader gets pointed at the day one is registered.",
       "hostPath": "✏️s/🔌️plugins/🗄️stdio/🧪️oracle/📦️packages/🦀️rust",
       "kind": "cross-semio-implementation",
       "engine": {
@@ -53,7 +53,7 @@
         "linux-arm64",
         "win32-x64"
       ],
-      "rationale": "📖️ A READER, and that is the whole point of registering it separately from the sibling `quick-xml-svg-1-1-mutate` entry above.\n\nThis subset also carries a `🧪️oracle/🦀️component.rs` that COMPUTES what each mutation should produce. That entry is registered `cross-semio-implementation` and does not discharge anything on its own, because both halves of such a comparison descend from one reading of the specification.\n\nThis entry is a different mechanism. The expected state is not computed at all — it is COMMITTED, as the `after` half of a byte-reproducible fixture built directly by the standalone `quick-xml-svg-codec` binary (`../🏭️generator/🦀️quick-xml-svg-codec`), never by executing this repository's own `SvgMutation`/`SvgDiff` dispatch and never by calling `component.rs`. `quick-xml` 0.42 then parses the element/text/cdata/comment/pi tree on BOTH sides and the comparison is over what it recovered. The probes say so in their own header: \"Everything here MARSHALS and READS; nothing here applies a mutation or predicts what one should.\"\n\nHONESTY SCOPING: `quick-xml` has no notion of SVG semantics — it has never parsed a `viewBox` or `transform` grammar. So unlike `component.rs`'s own decomposed numeric geometry projection (with a float tolerance for cross-implementation formatting noise), this reader's own `svg-1-1-quick-xml-reader-v1` comparisonProfile witnesses `viewBox`/`transform` as OPAQUE ATTRIBUTE STRINGS, exactly like every other attribute. That is still a witnessed, independent comparison — a `viewBox`/`transform` string that changed is caught — it is simply string-level, not semantic. All 9 declared kinds (`set-declaration`, `set-doctype`, `insert-element`, `remove-element`, `set-element-name`, `set-attribute`, `set-text`, `set-view-box`, `set-transform`) are witnessable this way, so none is scoped out with the `-uncarried` convention.\n\nSo the judge is a third-party implementation of generic XML, and nothing in this repository predicts the answer it is judging. That is what makes it qualifying where the sibling entry is not."
+      "rationale": "📖️ A READER, and that is the whole point of registering it separately from the sibling `quick-xml-svg-1-1-mutate` entry above.\n\nThis subset also carries a `🦀️oracle.rs` that COMPUTES what each mutation should produce. That entry is registered `cross-semio-implementation` and does not discharge anything on its own, because both halves of such a comparison descend from one reading of the specification.\n\nThis entry is a different mechanism. The expected state is not computed at all — it is COMMITTED, as the `after` half of a byte-reproducible fixture built directly by the standalone `quick-xml-svg-codec` binary (`../🏭️generator/🦀️quick-xml-svg-codec`), never by executing this repository's own `SvgMutation`/`SvgDiff` dispatch and never by calling `component.rs`. `quick-xml` 0.42 then parses the element/text/cdata/comment/pi tree on BOTH sides and the comparison is over what it recovered. The probes say so in their own header: \"Everything here MARSHALS and READS; nothing here applies a mutation or predicts what one should.\"\n\nHONESTY SCOPING: `quick-xml` has no notion of SVG semantics — it has never parsed a `viewBox` or `transform` grammar. So unlike `component.rs`'s own decomposed numeric geometry projection (with a float tolerance for cross-implementation formatting noise), this reader's own `svg-1-1-quick-xml-reader-v1` comparisonProfile witnesses `viewBox`/`transform` as OPAQUE ATTRIBUTE STRINGS, exactly like every other attribute. That is still a witnessed, independent comparison — a `viewBox`/`transform` string that changed is caught — it is simply string-level, not semantic. All 9 declared kinds (`set-declaration`, `set-doctype`, `insert-element`, `remove-element`, `set-element-name`, `set-attribute`, `set-text`, `set-view-box`, `set-transform`) are witnessable this way, so none is scoped out with the `-uncarried` convention.\n\nSo the judge is a third-party implementation of generic XML, and nothing in this repository predicts the answer it is judging. That is what makes it qualifying where the sibling entry is not."
     }
   ],
   "noOracleDecisions": [],
@@ -268,7 +268,7 @@
         {
           "id": "insert-element",
           "capability": "svg-1-1-mutate",
-          "payloadSchema": "🔣️payload.schema.json",
+          "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "applied"
           ],
@@ -288,7 +288,7 @@
         {
           "id": "remove-element",
           "capability": "svg-1-1-mutate",
-          "payloadSchema": "🔣️payload.schema.json",
+          "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "applied"
           ],
@@ -308,7 +308,7 @@
         {
           "id": "set-attribute",
           "capability": "svg-1-1-mutate",
-          "payloadSchema": "🔣️payload.schema.json",
+          "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "applied"
           ],
@@ -328,7 +328,7 @@
         {
           "id": "set-declaration",
           "capability": "svg-1-1-mutate",
-          "payloadSchema": "🔣️payload.schema.json",
+          "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "applied"
           ],
@@ -348,7 +348,7 @@
         {
           "id": "set-doctype",
           "capability": "svg-1-1-mutate",
-          "payloadSchema": "🔣️payload.schema.json",
+          "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "applied"
           ],
@@ -368,7 +368,7 @@
         {
           "id": "set-element-name",
           "capability": "svg-1-1-mutate",
-          "payloadSchema": "🔣️payload.schema.json",
+          "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "applied"
           ],
@@ -388,7 +388,7 @@
         {
           "id": "set-text",
           "capability": "svg-1-1-mutate",
-          "payloadSchema": "🔣️payload.schema.json",
+          "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "applied"
           ],
@@ -408,7 +408,7 @@
         {
           "id": "set-transform",
           "capability": "svg-1-1-mutate",
-          "payloadSchema": "🔣️payload.schema.json",
+          "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "applied"
           ],
@@ -428,7 +428,7 @@
         {
           "id": "set-view-box",
           "capability": "svg-1-1-mutate",
-          "payloadSchema": "🔣️payload.schema.json",
+          "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "applied"
           ],

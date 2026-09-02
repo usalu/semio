@@ -1,6 +1,0 @@
-/** 🧪️ Mutation-law probe for bind-node-camera. */
-import type { GltfSnapshot } from '../../../📸️snapshot/🟦️component.ts';
-import { applyGltfBindNodeCamera, type GltfBindNodeCameraPayload } from '../../bind-node-camera/🟦️component.ts';
-import { deriveGltfBindNodeCameraDiff } from '../../bind-node-camera/🔺️diff/🟦️component.ts';
-import { deriveGltfBindNodeCameraInverse } from '../../bind-node-camera/↩️inverse/🟦️component.ts';
-export const assertGltfBindNodeCameraLaws = (base: GltfSnapshot, payload: GltfBindNodeCameraPayload) => { const first = applyGltfBindNodeCamera(base, payload); if (!first.accepted) return first; const replay = applyGltfBindNodeCamera(base, payload); if (!replay.accepted || JSON.stringify(first.snapshot) !== JSON.stringify(replay.snapshot) || JSON.stringify(first.diff) !== JSON.stringify(replay.diff)) throw new Error('bind-node-camera replay is non-deterministic'); const direct = deriveGltfBindNodeCameraDiff(base, payload); const inverse = deriveGltfBindNodeCameraInverse(base, payload); if (!direct.accepted || !inverse.accepted || JSON.stringify(direct.touchedPaths) !== JSON.stringify(first.touchedPaths) || JSON.stringify(inverse.touchedPaths) !== JSON.stringify(first.touchedPaths)) throw new Error('bind-node-camera diff or inverse law failed'); return { first, direct, inverse }; };

@@ -2,20 +2,20 @@
  * `@modelcontextprotocol/sdk` is legacy-only (`LATEST_PROTOCOL_VERSION = '2025-11-25'`,
  * `📓️design-decisions.md` D1's own SDK survey), so it cannot send a per-request `_meta` modern
  * request or open a connection with no `initialize` at all. This suite drives the real binary with
- * the hand-rolled raw newline-delimited JSON-RPC client (`spawnRawMcp` in `../../🟦️component.ts`)
+ * the hand-rolled raw newline-delimited JSON-RPC client (`spawnRawMcp` in `../../🟦️.ts`)
  * to independently prove the `2026-07-28` half of D1's dual-era contract — the spec's own words,
  * fetched 2026-08-17: *"There is no negotiation handshake. Every request carries its protocol
  * version."*
  *
  * `server/discover`'s success response carries only the ONE negotiated `protocolVersion` plus
- * `capabilities`/`serverInfo` (`🧭️protocol/🦀️component.rs` `handle_server_discover`) — matching
+ * `capabilities`/`serverInfo` (`🧭️protocol/🦀️.rs` `handle_server_discover`) — matching
  * `📓️luna-mcpspec-audit.md`'s own audited response shape (`{resultType, protocolVersion,
  * capabilities, serverInfo, _meta?}`) exactly, NOT a bug. The full supported-version SET is exposed
  * authoritatively via the `-32022` error's `data.supported` array instead — asserted below. */
 import { existsSync } from "node:fs";
 import { beforeEach, describe, expect, it } from "vitest";
-import { resolveMcpBinaryPath, spawnRawMcp, type RawMcpProcess } from "../../🟦️component.ts";
-import { getWorkspaceRoot } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts";
+import { resolveMcpBinaryPath, spawnRawMcp, type RawMcpProcess } from "../../🟦️.ts";
+import { getWorkspaceRoot } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 
 const repoRoot = getWorkspaceRoot();
 const bin = resolveMcpBinaryPath(repoRoot);

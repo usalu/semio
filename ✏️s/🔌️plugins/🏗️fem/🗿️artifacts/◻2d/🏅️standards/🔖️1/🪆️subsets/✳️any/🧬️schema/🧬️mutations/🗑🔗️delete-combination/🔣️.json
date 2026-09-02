@@ -5,7 +5,7 @@
   "displayName": "Delete Combination",
   "emoji": "🗑🔗️",
   "aggregateVariant": "DeleteCombination",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": "delete-combination",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

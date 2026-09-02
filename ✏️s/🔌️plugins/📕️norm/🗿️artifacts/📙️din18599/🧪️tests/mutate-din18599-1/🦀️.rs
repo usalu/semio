@@ -1,7 +1,7 @@
 //! 🦀️ DIN V 18599 exhaustive mutation case — Rust adapter. Ticket
 //! 26/08/23/END-TO-END-TESTING-REFACTOR, wave 14 (the no-oracle conversion). The recorded
 //! no-oracle decision `din18599-1-mutation-semantics` is gone from
-//! `../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️oracle/🔣️.json`, because a reference now
+//! `../../🏅️standards/🔖️1/🪆️subsets/✳️any/🔣️oracle.json`, because a reference now
 //! exists to compare against: `s.norm.din18599` is a
 //! semio-native artifact with no third-party reader or writer, so its reference is a second
 //! IMPLEMENTATION: the independent Python `🐍️component.py` beside this file, registered as the
@@ -19,7 +19,7 @@
 //! `✏️s/🔌️plugins/🗄️stdio/🧪️oracle/⚖️law` module (`law::mutation_is_observable`,
 //! `law::inverse_restores`, `law::round_trip_preserves`, `law::carrier_is_exact`) that the
 //! stdio mutation cases use, reached through the `oracleHostPackages` entry this plugin
-//! declares in `✏️s/🔌️plugins/📕️norm/🧪️oracle/🔣️.json`. What `parity` adds on top is the
+//! declares in `✏️s/🔌️plugins/📕️norm/🔣️oracle.json`. What `parity` adds on top is the
 //! one thing a single implementation can never provide: that a second implementation, written in
 //! another language from the same written specification, reaches the same document.
 //!
@@ -29,9 +29,9 @@
 //! unreachable from here. The subset's own production code therefore exports the bridges
 //! (`decode_din18599_snapshot_json`/`encode_din18599_snapshot_json`,
 //! `decode_din18599_dsl`/`encode_din18599_dsl`, `decode_din18599_pack`/`encode_din18599_pack`
-//! in `../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️component.rs`;
+//! in `../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs`;
 //! `decode_din18599_mutation_json`, `apply_din18599_mutation`, `inverse_din18599_mutation` in
-//! `../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs`), whose
+//! `../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs`), whose
 //! signatures name only reachable types. This side reaches the committed vectors through
 //! `include_str!` and the Python side through the `asset://` URIs the feature declares, so both
 //! read the SAME committed bytes and neither holds a Rust or Python literal transcribed beside
@@ -50,7 +50,7 @@ use semio_repo_test_host::{digest, parse_json, Adapter, Context, Json, Outcome};
 use semio_s_plugin_stdio_test_oracle::law;
 
 //#region 🔖️Kinds
-/// 🏷️ Mirrors `Din18599Mutation::KINDS` (`../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs`) —
+/// 🏷️ Mirrors `Din18599Mutation::KINDS` (`../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs`) —
 /// duplicated, not imported, because the oracle-only build must not link the subject crate. The
 /// contract's mutation-coverage gate keeps this list honest against the catalog;
 /// `kinds_match_the_enum_and_the_catalog` in that production file keeps it honest against the enum.
@@ -73,7 +73,7 @@ const KINDS: &[&str] = &[
 
 /// 🗣️ The real committed DIN V 18599 document, read where the domain already keeps it.
 #[cfg(feature = "sut")]
-const DSL_ASSET: &str = "asset://🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio";
+const DSL_ASSET: &str = "asset://🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/🗣️.dsl.semio";
 //#endregion 🔖️Kinds
 
 //#region 🔖️Fixtures
@@ -85,82 +85,82 @@ const DSL_ASSET: &str = "asset://🏅️standards/🔖️1/🪆️subsets/✳️
 fn fixture_text(kind: &str) -> (&'static str, &'static str, &'static str, &'static str) {
     match kind {
         "change-use-class" => (
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦏change-use-class/🧪️tests/reclassifies-the-building-as-an-office/📸️snapshot/⬅️before/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦏change-use-class/🧪️tests/reclassifies-the-building-as-an-office/🦠️mutation/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦏change-use-class/🧪️tests/reclassifies-the-building-as-an-office/📸️snapshot/➡️after/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦏change-use-class/🧪️tests/reclassifies-the-building-as-an-office/🎯️outcome/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦏change-use-class/🧪️tests/reclassifies-the-building-as-an-office/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦏change-use-class/🧪️tests/reclassifies-the-building-as-an-office/🦠️mutation/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦏change-use-class/🧪️tests/reclassifies-the-building-as-an-office/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦏change-use-class/🧪️tests/reclassifies-the-building-as-an-office/🎯️outcome/🔣️.json"),
         ),
         "change-heated-area-m2" => (
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦛change-heated-area-m2/🧪️tests/extends-the-heated-area-to-160-m2/📸️snapshot/⬅️before/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦛change-heated-area-m2/🧪️tests/extends-the-heated-area-to-160-m2/🦠️mutation/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦛change-heated-area-m2/🧪️tests/extends-the-heated-area-to-160-m2/📸️snapshot/➡️after/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦛change-heated-area-m2/🧪️tests/extends-the-heated-area-to-160-m2/🎯️outcome/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦛change-heated-area-m2/🧪️tests/extends-the-heated-area-to-160-m2/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦛change-heated-area-m2/🧪️tests/extends-the-heated-area-to-160-m2/🦠️mutation/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦛change-heated-area-m2/🧪️tests/extends-the-heated-area-to-160-m2/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦛change-heated-area-m2/🧪️tests/extends-the-heated-area-to-160-m2/🎯️outcome/🔣️.json"),
         ),
         "change-occupants" => (
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐪change-occupants/🧪️tests/raises-the-occupancy-to-six-people/📸️snapshot/⬅️before/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐪change-occupants/🧪️tests/raises-the-occupancy-to-six-people/🦠️mutation/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐪change-occupants/🧪️tests/raises-the-occupancy-to-six-people/📸️snapshot/➡️after/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐪change-occupants/🧪️tests/raises-the-occupancy-to-six-people/🎯️outcome/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐪change-occupants/🧪️tests/raises-the-occupancy-to-six-people/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐪change-occupants/🧪️tests/raises-the-occupancy-to-six-people/🦠️mutation/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐪change-occupants/🧪️tests/raises-the-occupancy-to-six-people/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐪change-occupants/🧪️tests/raises-the-occupancy-to-six-people/🎯️outcome/🔣️.json"),
         ),
         "change-ht" => (
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐫change-ht/🧪️tests/raises-the-transmission-loss-coefficient-to-118-w-per-k/📸️snapshot/⬅️before/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐫change-ht/🧪️tests/raises-the-transmission-loss-coefficient-to-118-w-per-k/🦠️mutation/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐫change-ht/🧪️tests/raises-the-transmission-loss-coefficient-to-118-w-per-k/📸️snapshot/➡️after/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐫change-ht/🧪️tests/raises-the-transmission-loss-coefficient-to-118-w-per-k/🎯️outcome/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐫change-ht/🧪️tests/raises-the-transmission-loss-coefficient-to-118-w-per-k/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐫change-ht/🧪️tests/raises-the-transmission-loss-coefficient-to-118-w-per-k/🦠️mutation/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐫change-ht/🧪️tests/raises-the-transmission-loss-coefficient-to-118-w-per-k/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐫change-ht/🧪️tests/raises-the-transmission-loss-coefficient-to-118-w-per-k/🎯️outcome/🔣️.json"),
         ),
         "change-hv" => (
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦒change-hv/🧪️tests/raises-the-ventilation-loss-coefficient-to-52-25-w-per-k/📸️snapshot/⬅️before/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦒change-hv/🧪️tests/raises-the-ventilation-loss-coefficient-to-52-25-w-per-k/🦠️mutation/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦒change-hv/🧪️tests/raises-the-ventilation-loss-coefficient-to-52-25-w-per-k/📸️snapshot/➡️after/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦒change-hv/🧪️tests/raises-the-ventilation-loss-coefficient-to-52-25-w-per-k/🎯️outcome/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦒change-hv/🧪️tests/raises-the-ventilation-loss-coefficient-to-52-25-w-per-k/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦒change-hv/🧪️tests/raises-the-ventilation-loss-coefficient-to-52-25-w-per-k/🦠️mutation/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦒change-hv/🧪️tests/raises-the-ventilation-loss-coefficient-to-52-25-w-per-k/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦒change-hv/🧪️tests/raises-the-ventilation-loss-coefficient-to-52-25-w-per-k/🎯️outcome/🔣️.json"),
         ),
         "change-internal-gains-wm2" => (
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦘change-internal-gains-wm2/🧪️tests/raises-the-internal-gains-to-5-w-per-m2/📸️snapshot/⬅️before/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦘change-internal-gains-wm2/🧪️tests/raises-the-internal-gains-to-5-w-per-m2/🦠️mutation/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦘change-internal-gains-wm2/🧪️tests/raises-the-internal-gains-to-5-w-per-m2/📸️snapshot/➡️after/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦘change-internal-gains-wm2/🧪️tests/raises-the-internal-gains-to-5-w-per-m2/🎯️outcome/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦘change-internal-gains-wm2/🧪️tests/raises-the-internal-gains-to-5-w-per-m2/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦘change-internal-gains-wm2/🧪️tests/raises-the-internal-gains-to-5-w-per-m2/🦠️mutation/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦘change-internal-gains-wm2/🧪️tests/raises-the-internal-gains-to-5-w-per-m2/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦘change-internal-gains-wm2/🧪️tests/raises-the-internal-gains-to-5-w-per-m2/🎯️outcome/🔣️.json"),
         ),
         "change-solar-gains-kwh" => (
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦥change-solar-gains-kwh/🧪️tests/raises-the-annual-solar-gains-to-132-kwh/📸️snapshot/⬅️before/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦥change-solar-gains-kwh/🧪️tests/raises-the-annual-solar-gains-to-132-kwh/🦠️mutation/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦥change-solar-gains-kwh/🧪️tests/raises-the-annual-solar-gains-to-132-kwh/📸️snapshot/➡️after/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦥change-solar-gains-kwh/🧪️tests/raises-the-annual-solar-gains-to-132-kwh/🎯️outcome/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦥change-solar-gains-kwh/🧪️tests/raises-the-annual-solar-gains-to-132-kwh/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦥change-solar-gains-kwh/🧪️tests/raises-the-annual-solar-gains-to-132-kwh/🦠️mutation/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦥change-solar-gains-kwh/🧪️tests/raises-the-annual-solar-gains-to-132-kwh/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦥change-solar-gains-kwh/🧪️tests/raises-the-annual-solar-gains-to-132-kwh/🎯️outcome/🔣️.json"),
         ),
         "change-system-losses-kwh" => (
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦦change-system-losses-kwh/🧪️tests/cuts-the-system-losses-to-450-kwh/📸️snapshot/⬅️before/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦦change-system-losses-kwh/🧪️tests/cuts-the-system-losses-to-450-kwh/🦠️mutation/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦦change-system-losses-kwh/🧪️tests/cuts-the-system-losses-to-450-kwh/📸️snapshot/➡️after/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦦change-system-losses-kwh/🧪️tests/cuts-the-system-losses-to-450-kwh/🎯️outcome/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦦change-system-losses-kwh/🧪️tests/cuts-the-system-losses-to-450-kwh/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦦change-system-losses-kwh/🧪️tests/cuts-the-system-losses-to-450-kwh/🦠️mutation/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦦change-system-losses-kwh/🧪️tests/cuts-the-system-losses-to-450-kwh/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦦change-system-losses-kwh/🧪️tests/cuts-the-system-losses-to-450-kwh/🎯️outcome/🔣️.json"),
         ),
         "change-renewable-kwh" => (
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦨change-renewable-kwh/🧪️tests/raises-the-on-site-renewable-yield-to-2250-kwh/📸️snapshot/⬅️before/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦨change-renewable-kwh/🧪️tests/raises-the-on-site-renewable-yield-to-2250-kwh/🦠️mutation/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦨change-renewable-kwh/🧪️tests/raises-the-on-site-renewable-yield-to-2250-kwh/📸️snapshot/➡️after/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦨change-renewable-kwh/🧪️tests/raises-the-on-site-renewable-yield-to-2250-kwh/🎯️outcome/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦨change-renewable-kwh/🧪️tests/raises-the-on-site-renewable-yield-to-2250-kwh/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦨change-renewable-kwh/🧪️tests/raises-the-on-site-renewable-yield-to-2250-kwh/🦠️mutation/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦨change-renewable-kwh/🧪️tests/raises-the-on-site-renewable-yield-to-2250-kwh/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦨change-renewable-kwh/🧪️tests/raises-the-on-site-renewable-yield-to-2250-kwh/🎯️outcome/🔣️.json"),
         ),
         "change-annual-limit-kwh" => (
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦡change-annual-limit-kwh/🧪️tests/tightens-the-annual-primary-energy-limit-to-6000-kwh/📸️snapshot/⬅️before/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦡change-annual-limit-kwh/🧪️tests/tightens-the-annual-primary-energy-limit-to-6000-kwh/🦠️mutation/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦡change-annual-limit-kwh/🧪️tests/tightens-the-annual-primary-energy-limit-to-6000-kwh/📸️snapshot/➡️after/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦡change-annual-limit-kwh/🧪️tests/tightens-the-annual-primary-energy-limit-to-6000-kwh/🎯️outcome/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦡change-annual-limit-kwh/🧪️tests/tightens-the-annual-primary-energy-limit-to-6000-kwh/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦡change-annual-limit-kwh/🧪️tests/tightens-the-annual-primary-energy-limit-to-6000-kwh/🦠️mutation/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦡change-annual-limit-kwh/🧪️tests/tightens-the-annual-primary-energy-limit-to-6000-kwh/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦡change-annual-limit-kwh/🧪️tests/tightens-the-annual-primary-energy-limit-to-6000-kwh/🎯️outcome/🔣️.json"),
         ),
         "change-energy-carrier" => (
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐change-energy-carrier/🧪️tests/switches-the-energy-carrier-to-an-electric-heat-pump/📸️snapshot/⬅️before/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐change-energy-carrier/🧪️tests/switches-the-energy-carrier-to-an-electric-heat-pump/🦠️mutation/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐change-energy-carrier/🧪️tests/switches-the-energy-carrier-to-an-electric-heat-pump/📸️snapshot/➡️after/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐change-energy-carrier/🧪️tests/switches-the-energy-carrier-to-an-electric-heat-pump/🎯️outcome/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐change-energy-carrier/🧪️tests/switches-the-energy-carrier-to-an-electric-heat-pump/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐change-energy-carrier/🧪️tests/switches-the-energy-carrier-to-an-electric-heat-pump/🦠️mutation/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐change-energy-carrier/🧪️tests/switches-the-energy-carrier-to-an-electric-heat-pump/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐change-energy-carrier/🧪️tests/switches-the-energy-carrier-to-an-electric-heat-pump/🎯️outcome/🔣️.json"),
         ),
         "change-reference-qp-kwh" => (
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔽change-reference-qp-kwh/🧪️tests/lowers-the-reference-building-primary-energy-to-8750-kwh/📸️snapshot/⬅️before/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔽change-reference-qp-kwh/🧪️tests/lowers-the-reference-building-primary-energy-to-8750-kwh/🦠️mutation/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔽change-reference-qp-kwh/🧪️tests/lowers-the-reference-building-primary-energy-to-8750-kwh/📸️snapshot/➡️after/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔽change-reference-qp-kwh/🧪️tests/lowers-the-reference-building-primary-energy-to-8750-kwh/🎯️outcome/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔽change-reference-qp-kwh/🧪️tests/lowers-the-reference-building-primary-energy-to-8750-kwh/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔽change-reference-qp-kwh/🧪️tests/lowers-the-reference-building-primary-energy-to-8750-kwh/🦠️mutation/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔽change-reference-qp-kwh/🧪️tests/lowers-the-reference-building-primary-energy-to-8750-kwh/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔽change-reference-qp-kwh/🧪️tests/lowers-the-reference-building-primary-energy-to-8750-kwh/🎯️outcome/🔣️.json"),
         ),
         "update-climate" => (
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐘update-climate/🧪️tests/refuses-a-negative-january-irradiance/📸️snapshot/⬅️before/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐘update-climate/🧪️tests/refuses-a-negative-january-irradiance/🦠️mutation/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐘update-climate/🧪️tests/refuses-a-negative-january-irradiance/📸️snapshot/➡️after/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐘update-climate/🧪️tests/refuses-a-negative-january-irradiance/🎯️outcome/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐘update-climate/🧪️tests/refuses-a-negative-january-irradiance/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐘update-climate/🧪️tests/refuses-a-negative-january-irradiance/🦠️mutation/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐘update-climate/🧪️tests/refuses-a-negative-january-irradiance/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐘update-climate/🧪️tests/refuses-a-negative-january-irradiance/🎯️outcome/🔣️.json"),
         ),
         other => panic!("mutate-din18599-1: no committed fixture is registered for kind {other:?}"),
     }
@@ -172,7 +172,7 @@ fn canonical(text: &str) -> Json {
     parse_json(text).unwrap_or_else(|error| panic!("committed fixture JSON must parse: {error}"))
 }
 
-/// 🎯️ The status the committed `🎯️outcome/🔣️component.json` declares for one kind — `applied` or
+/// 🎯️ The status the committed `🎯️outcome/🔣️.json` declares for one kind — `applied` or
 /// `rejected` — read out of the committed file rather than transcribed beside it, so the contract a
 /// row is held to cannot drift away from the vector that states it.
 #[cfg(feature = "sut")]
@@ -185,7 +185,7 @@ fn committed_status(kind: &str) -> String {
 //#region 🔖️Carrier
 /// 🧵️ The canonical carrier bytes as a comparable projection: the envelope preamble, every body line
 /// as written, and the digest and length of what was emitted. `.dsl.semio` has no grammar document in
-/// this repository — the committed `📖️component.grammar.semio` is the repository-wide `payload = OCTET+`
+/// this repository — the committed `📖️.grammar.semio` is the repository-wide `payload = OCTET+`
 /// placeholder — so the identity scenario compares the two implementations at the carrier level rather
 /// than mapping carrier tokens onto the snapshot's enum spellings, a mapping nothing states. The
 /// independent Python implementation builds the identical shape from ITS re-emission, and `digest` is
@@ -213,7 +213,7 @@ mod subject {
     use semio_s_plugin_stdio_test_oracle::law;
 
     //#region 🔖️FixtureDecode
-    /// 🧫️ Decodes the SAME committed fixture text `../🦀️component.rs::fixture_text` embeds, through
+    /// 🧫️ Decodes the SAME committed fixture text `../🦀️.rs::fixture_text` embeds, through
     /// this subset's own production JSON bridge — real deserialization of the committed bytes, never
     /// a Rust literal transcribed beside them.
     fn snapshot_of(text: &str, label: &str, kind: &str) -> Result<Din18599Snapshot, String> {

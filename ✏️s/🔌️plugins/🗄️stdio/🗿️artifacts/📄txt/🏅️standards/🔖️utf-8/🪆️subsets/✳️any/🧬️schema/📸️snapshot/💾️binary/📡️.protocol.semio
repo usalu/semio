@@ -1,0 +1,25 @@
+dialect protocol
+protocol stdio.txt.snapshot
+version 1
+schema stdio.txt
+start payload
+
+# P2-P3: this artifact is TEXT-NATIVE -- there is no "binary txt" beyond the pack container. This
+# file describes the PACK CONTAINER: the SEMIO binary envelope's post-unwrap PAYLOAD only. The
+# envelope itself (8-byte magic `0x89 'S' 'E' 'M' 0x0D 0x0A 0x1A 0x0A` + u32le token length + the
+# UTF-8 token, `wrap_binary`/`BINARY_MAGIC`, 🧬️semio/🦀️.rs:120-134) is described ONCE,
+# framework-side, at 🧰️framework/🛍️products/💻️os/🔨️modules/🧬️semio/📡️protocol/📡️.protocol.semio
+# (P2-M3 deliverable 3). Cross-artifact `use` cannot yet resolve that file at walk time (confirmed
+# still non-functional both sides -- P2-M3 §5, P2-W0 §0), so this file does NOT declare
+# `use semio.envelope` and pretend it does anything -- it starts exactly where the envelope's own
+# `chain bytes` clause hands off, matching how `m5_handcrafted_protocol_conformance`'s own
+# `inner_payload_from_semio_example` already `unwrap_binary`s a `.pack.semio` fixture before
+# handing bytes to THIS protocol's `walk_protocol`.
+#
+# `TxtSnapshot::encode_pack_with` (../🦀️.rs) writes NO further binary structure of its
+# own beyond the envelope -- the entire payload IS `self.to_body().as_bytes()` verbatim, the exact
+# same UTF-8 text the sibling snapshot grammar (../📝️text/📖️.grammar.semio) already
+# models. `framing record` (not `framing magic ...`) since there is no magic prefix at THIS
+# facet's own boundary -- the magic already lives in the envelope file above.
+framing record
+chain utf8

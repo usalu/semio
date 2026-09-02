@@ -2,7 +2,7 @@
 /** 🧩️ `@semio-tech/puzzle-plugin` router: `bun ./📜️script.ts test`. */
 import { readFileSync, readdirSync, existsSync, statSync } from "node:fs";
 import { join } from "node:path";
-import { BundleScript, ScriptRouter, runBundleScriptMain, runCargoTestBudgeted, runWasmPackWebBuild } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts";
+import { BundleScript, ScriptRouter, runBundleScriptMain, runCargoTestBudgeted, runWasmPackWebBuild } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { describePluginComponent } from "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️describe/📦️packages/🦀️rust/📜️script.ts";
 
 //#region 🌉️BoardSessionPackage
@@ -22,8 +22,8 @@ class TestScript extends BundleScript {
   }
 }
 
-/** @emoji 🛂️ Builds this crate's `wasm32-wasip2` component and re-emits `🛂️descriptor.semio` +
- * `🔣️descriptor.json` at this plugin's own owner root (D0-descriptor-plumbing) — the command
+/** @emoji 🛂️ Builds this crate's `wasm32-wasip2` component and re-emits `🛂️.descriptor.semio` +
+ * `🔣️.json` at this plugin's own owner root (D0-descriptor-plumbing) — the command
  * `📇️registry:check`'s own descriptor-gate warning tells a developer to run. */
 class DescribeScript extends BundleScript {
   run(): void {
@@ -36,7 +36,7 @@ class DescribeScript extends BundleScript {
 type ArtifactTarget = { readonly label: string; readonly mutationsRoot: string };
 
 /** 🔎️ Discovers every mutation tree in the repository — any directory named `🧬️mutations` holding
- * at least one leaf with a `🦠️mutation/🦀️component.rs`. Never a hand-maintained list: a new
+ * at least one leaf with a `🦠️mutation/🦀️.rs`. Never a hand-maintained list: a new
  * artifact is in scope the moment it lands. */
 function discoverArtifacts(repoRoot: string): ArtifactTarget[] {
   const found: ArtifactTarget[] = [];
@@ -60,7 +60,7 @@ function discoverArtifacts(repoRoot: string): ArtifactTarget[] {
       }
       if (!isDir) continue;
       if (entry === "🧬️mutations") {
-        const leaves = dirsIn(child).filter((leaf) => existsSync(join(child, leaf, "🦠️mutation/🦀️component.rs")));
+        const leaves = dirsIn(child).filter((leaf) => existsSync(join(child, leaf, "🦠️mutation/🦀️.rs")));
         if (leaves.length > 0) found.push({ label: child.slice(repoRoot.length + 1), mutationsRoot: child });
         continue;
       }
@@ -75,9 +75,9 @@ function discoverArtifacts(repoRoot: string): ArtifactTarget[] {
 const NON_MUTATION_DIRS = new Set(["💾️binary", "📝️text"]);
 
 /** 📄️ The source-of-truth files every test case must carry. These are hand-authored and are what
- * the committed Rust test asserts against. `🔺️diff` is replaced by `🔺️diff/🚫️component.absent`
+ * the committed Rust test asserts against. `🔺️diff` is replaced by `🔺️diff/🚫️.absent`
  * when `🎯️outcome` declares `rejected` (contract D6). */
-const CORE_CASE_FILES = ["🦠️mutation/🔣️component.json", "🔺️diff/🔣️component.json", "🎯️outcome/🔣️component.json", "🦀️component.rs"] as const;
+const CORE_CASE_FILES = ["🦠️mutation/🔣️.json", "🔺️diff/🔣️.json", "🎯️outcome/🔣️.json", "🦀️.rs"] as const;
 
 /** 📄️ The derived encodings contract D1 targets. Produced from the core files by `fixtures
  * generate`, never hand-authored — a hand-forged binary would be a parallel implementation of the
@@ -91,7 +91,7 @@ const DERIVED_CASE_FILES = [
 
 /** 📸️ A snapshot side is either the hand-authored JSON plus its derived encodings, or exactly one
  * typed reference to a canonical example (contract §2.2). Never both. */
-const SNAPSHOT_CORE = "🔣️component.json";
+const SNAPSHOT_CORE = "🔣️.json";
 const SNAPSHOT_DERIVED = ["🗣️component.dsl.semio", "🎒️component.pack.semio"] as const;
 const SNAPSHOT_REF = "🔗️component.ref.json";
 
@@ -104,7 +104,7 @@ const dirsIn = (path: string): string[] =>
  * leaf's `#[dsl(keyword)]` — so coverage is checked against the schema, never against a hand list. */
 function declaredMutations(target: ArtifactTarget) {
   const mutationsRoot = target.mutationsRoot;
-  const aggregateFile = join(mutationsRoot, "🦀️component.rs");
+  const aggregateFile = join(mutationsRoot, "🦀️.rs");
   const aggregate = existsSync(aggregateFile) ? readFileSync(aggregateFile, "utf8") : "";
   // 🧺️ Some trees declare a SECOND mutation enum inside a leaf rather than in this aggregate
   // (`🛡️change-merge-policy` owns `MergePolicyConfigMutation`), so variants are collected from every
@@ -112,7 +112,7 @@ function declaredMutations(target: ArtifactTarget) {
   const enumSources = [aggregate, ...dirsIn(mutationsRoot).flatMap((entry) => {
     // a leaf may declare its own wrapper enum either in its `🦠️mutation` component or in a file
     // sitting directly in the leaf directory — read both.
-    const candidates = [join(mutationsRoot, entry, "🦠️mutation/🦀️component.rs"), join(mutationsRoot, entry, "🦀️component.rs")];
+    const candidates = [join(mutationsRoot, entry, "🦠️mutation/🦀️.rs"), join(mutationsRoot, entry, "🦀️.rs")];
     return candidates.filter((file) => existsSync(file)).map((file) => readFileSync(file, "utf8"));
   })];
   const enumBody = enumSources.map((source) => source.match(/pub enum \w*Mutation\w* \{([\s\S]*?)\n\}/)).find(Boolean) ?? null;
@@ -130,9 +130,9 @@ function declaredMutations(target: ArtifactTarget) {
 
   const leaves = dirsIn(mutationsRoot)
     .filter((entry) => !NON_MUTATION_DIRS.has(entry))
-    .filter((entry) => existsSync(join(mutationsRoot, entry, "🦠️mutation/🦀️component.rs")))
+    .filter((entry) => existsSync(join(mutationsRoot, entry, "🦠️mutation/🦀️.rs")))
     .map((entry) => {
-      const mutationFile = join(mutationsRoot, entry, "🦠️mutation/🦀️component.rs");
+      const mutationFile = join(mutationsRoot, entry, "🦠️mutation/🦀️.rs");
       const source = existsSync(mutationFile) ? readFileSync(mutationFile, "utf8") : "";
       return {
         dir: entry,
@@ -177,7 +177,7 @@ function lintArtifact(target: ArtifactTarget, full: boolean): Finding[] {
  * without it only the hand-authored source-of-truth set is required and derived gaps are warnings. */
 function lintCase(caseDir: string, label: string, full: boolean): Finding[] {
   const findings: Finding[] = [];
-  const outcomeFile = join(caseDir, "🎯️outcome/🔣️component.json");
+  const outcomeFile = join(caseDir, "🎯️outcome/🔣️.json");
   let rejected = false;
   if (existsSync(outcomeFile)) {
     try {
@@ -199,8 +199,8 @@ function lintCase(caseDir: string, label: string, full: boolean): Finding[] {
     if (existsSync(join(caseDir, relative))) continue;
     findings.push({ level: full ? "error" : "warn", where: label, what: `missing derived ${relative} — run \`fixtures generate\`` });
   }
-  if (rejected && !existsSync(join(caseDir, "🔺️diff/🚫️component.absent"))) {
-    findings.push({ level: "error", where: label, what: "rejected case must carry 🔺️diff/🚫️component.absent, not an invented empty patch" });
+  if (rejected && !existsSync(join(caseDir, "🔺️diff/🚫️.absent"))) {
+    findings.push({ level: "error", where: label, what: "rejected case must carry 🔺️diff/🚫️.absent, not an invented empty patch" });
   }
 
   for (const side of ["⬅️before", "➡️after"]) {

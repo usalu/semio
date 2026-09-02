@@ -1,0 +1,104 @@
+dialect grammar
+grammar stdio.xml.snapshot
+extension xml
+start document
+comment none
+string double raw
+string single raw
+
+# P2-FG1: real XML 1.0 grammar of `stdio.xml`'s wire text, matching this artifact's own real
+# character-level parser (../../🦀️.rs's `xml_document_from_text`/`parse_node`/
+# `parse_attrs`/`parse_attr_value`/`xml_unescape_text`/`skip_misc`/`parse_xml_declaration_prolog`)
+# -- replaces the pre-Phase-2 pseudo-ABNF placeholder (wrong header dialect, `/` alternation, `~`
+# negation, `%x` ranges -- all outside this dialect's real lexer alphabet).
+#
+# `comment none`: XML has no `#`-comment syntax, and this artifact's own numeric character
+# references (`&#65;`, `&#x1F600;`) use `#` as a literal sigil immediately after `&` -- the shared
+# lexer's DEFAULT `#`-to-EOL comment would otherwise swallow the rest of the line at every such
+# reference (the same STEP/DXF `#`-collision P2-M1's own report names).
+#
+# `string double raw` + `string single raw` (P2-M1 item 1, built specifically to unblock this
+# artifact per the W0 census row): XML attribute values are quoted with EITHER `"`/`'`
+# (`parse_attr_value` accepts whichever delimiter opens the value) and are captured VERBATIM --
+# entity decoding only ever runs over element CONTENT text (`xml_unescape_text`, called from
+# `parse_node`'s char-data branch), never over attribute values (a genuine quirk of this artifact's
+# own real parser, not a grammar simplification) -- so `raw` (no lexer-level escape interpretation)
+# is the honest mode for both delimiters, not `backslash`/`doubled`.
+#
+# `<`/`>`/`&`/`;` below are the P2-M1-promoted single-char terminals (LT/GT/AMP/SEMICOLON); every
+# other XML-specific punctuation (`/` `:` `=` `[` `]` `!` `?` `#` `--`) was ALREADY a real
+# lexer-alphabet single-char token (or, for `!`/`?`/`#`, falls through to a real, text-addressable
+# `Error` token once `comment none` stops `#` being swallowed) -- `Symbol::Literal` matches by TOKEN
+# TEXT alone, independent of token kind, so `"!"`/`"?"`/`"#"`/`"--"` below match those real tokens
+# exactly, the same trick the dialect's own STEP-shaped worked example (`#123=WALL;`) relies on.
+artifact-mark = "stdio.xml"
+document = artifact-mark declaration? doctype? element
+
+# `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>` -- `parse_xml_declaration_prolog`.
+declaration = LT "?" "xml" "version" "=" TEXT decl-encoding? decl-standalone? "?" GT
+decl-encoding = "encoding" "=" TEXT
+decl-standalone = "standalone" "=" TEXT
+
+# `<!DOCTYPE name>` -- the demo/fixture's own real shape. `skip_misc` keeps the WHOLE `<!DOCTYPE
+# ...>` text verbatim, including an optional PUBLIC/SYSTEM external ID and a bracket-depth-tracked
+# internal subset `[...]`; this grammar models only the simple `name`-only form this artifact's own
+# demo fixture actually emits -- the fuller external-ID/internal-subset shape is real Rust-side
+# (preserved byte-for-byte, never re-parsed into structured fields) but out of THIS grammar's
+# modeled scope, same "opaque unless the model round-trips it structurally" treatment
+# `📖️grammar-recipe.md` §6's PDF/DWG carve-out uses.
+doctype = LT "!" "DOCTYPE" name GT
+
+# `<name attr="v" ...>content</name>` / `<name attr="v" .../>` -- `parse_node`.
+element = empty-elem-tag | s-tag content e-tag
+empty-elem-tag = LT name attribute* "/" GT
+s-tag = LT name attribute* GT
+e-tag = LT "/" name GT
+attribute = name "=" TEXT
+
+# `:` as a name-start/name char (namespace prefixes, `is_name_start`/`is_name_char`) -- `:` is
+# already its own single-char lexer token (not `IDENT`-continue), so a prefixed name is two idents
+# joined by one `:` token, not one fused ident. The qualified alternative MUST come first: this
+# dialect's own production-alternation has no backtrack-across-a-successful-Ref (only a FAILED
+# alternative is retried, see `📖️grammar-recipe.md`'s own hex-macro pitfall for the sibling trap) --
+# `IDENT` alone would otherwise match just the prefix of `xmlns:c` and leave `:c` for the CALLER to
+# choke on.
+name = IDENT ":" IDENT | IDENT
+
+# `(element | reference | cdSect | pi | comment | charData)*` -- `parse_node`'s content loop. Every
+# alternative below starts on a mutually exclusive leading token (`LT` vs `AMP` vs a bare
+# word/number), so alternative order here is inert (no shared-prefix trap like `name`'s above).
+content = {element | reference | cdata | xml-comment | pi | text-run}*
+
+# Character data between tags, entity-decoded on read (`xml_unescape_text`) -- modeled as a run of
+# plain word/number tokens, matching this artifact's own demo content exactly; a fully general "any
+# byte up to the next `<`/`&`" primitive doesn't exist at this token-based dialect layer (filed as a
+# `mechanism_gaps` entry -- the SAME bounded-token-repetition treatment `cdata-body`/`comment-body`/
+# `pi-data` below share, and the same honest-boundary spirit as the consolidated
+# `csv-quoted-field-embedded-newline` gap: the artifact's own fixture deliberately avoids the
+# unrepresentable input shape rather than silently papering over it).
+text-run = {IDENT | INT | FLOAT}+
+
+# `&amp; &lt; &gt; &quot; &apos;` / `&#NNN;` / `&#xHHHH;` -- `xml_unescape_text`.
+reference = entity-ref | char-ref
+entity-ref = AMP IDENT SEMICOLON
+char-ref = AMP "#" INT SEMICOLON | AMP "#" IDENT SEMICOLON
+
+# `<![CDATA[...]]>` -- `parse_node`.
+cdata = LT "!" "[" "CDATA" "[" cdata-body "]" "]" GT
+cdata-body = {IDENT | INT | FLOAT}*
+
+# `<!--...-->` -- `parse_node`/`skip_misc`. `--` is the real (P2-M1-unchanged) `DashArrow` token
+# text, matched here by literal text like every other punctuation above. Named `xml-comment`, NOT
+# the bare `comment` this construct's own real name would suggest -- `comment` collides with the
+# five RESERVED header-directive keywords (`extension`/`use`/`start`/`comment`/`string`, see §3
+# pitfall 3 of `📖️grammar-recipe.md`); `parse_grammar`'s unified header/production loop parses ANY
+# leading ident matching one of those five words as a header directive, WHEREVER it appears in the
+# file (confirmed live: a `comment = ...` production line here originally broke recognition with a
+# confusing `expected Ident, found Equals` pointed at the UNRELATED real `comment none` header line).
+xml-comment = LT "!" "--" comment-body "--" GT
+comment-body = {IDENT | INT | FLOAT}*
+
+# `<?target data?>` -- `parse_node`/`parse_xml_declaration_prolog` (any target except a bare `xml`
+# followed by whitespace/`?` is an ordinary PI, not the reserved declaration).
+pi = LT "?" name pi-data? "?" GT
+pi-data = {IDENT | INT | FLOAT}+

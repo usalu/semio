@@ -5,7 +5,7 @@
   "displayName": "Change Renewable Kwh",
   "emoji": "🦨",
   "aggregateVariant": "ChangeRenewableKwh",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

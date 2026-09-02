@@ -62,7 +62,7 @@ def check_lod_bands(fixture: dict, failures: list[str]) -> None:
     """🌐️ Specification-vector check only — GIS_MAP_LOD_MAX_SPAN_DEG/TILE_Z are repository-owned,
     no third-party reference exists for them. This re-derives from the SAME constants recorded in
     `fixture["lodConstants"]`, which were transcribed by hand from
-    `🦀️component.rs:84,90` — a reviewer must re-check that transcription against the source, since
+    `🦀️.rs:84,90` — a reviewer must re-check that transcription against the source, since
     nothing here can independently verify it."""
     max_span = fixture["lodConstants"]["maxSpanDeg"]
     tile_z = fixture["lodConstants"]["tileZ"]

@@ -1,0 +1,6 @@
+syntax = "proto3";
+package semio.s_stdio_dwg.mutation;
+import "../📸️snapshot/🛰️.proto";
+message SetSnapshot { semio.s_stdio_dwg.snapshot.DwgSnapshot snapshot = 1; }
+message SetVersionInfo { string version = 1; uint32 maintenance_version = 2; uint32 codepage = 3; }
+message DwgMutation { oneof mutation { bool no_mutation = 1; SetSnapshot set_snapshot = 2; SetVersionInfo set_version_info = 3; } }

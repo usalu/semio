@@ -215,7 +215,7 @@ pub enum SemioDocumentMutation {
 /// 🏷️ The declared mutation vocabulary of `s.stdio.semio.document`, in `SemioDocumentMutation`'s own
 /// declaration order and kebab-case spelling — the single source of truth for the binary op frame's
 /// `tag` ordinal (see [`variant_ordinal`]), for `parse_document_mutation`'s keyword match, and for
-/// the `semio-v1-document` catalog in `../../🧪️oracle/🔣️.json`. The framework never parses
+/// the `semio-v1-document` catalog in `../../🔣️oracle.json`. The framework never parses
 /// Rust, so `kinds_match_the_enum_and_the_catalog` below is what keeps all three honest.
 pub const KINDS: &[&str] = &[
     "set-snapshot",
@@ -724,7 +724,7 @@ impl OpBinary for SemioDocumentMutation {
 //#region 🔖️Demo
 /// 🌱 Representative `SemioDocumentMutation` cases (one per variant) — single source of truth for
 /// this facet's own `op_text_binary_roundtrip_law` AND `ops_grammar_conformance_law`/
-/// `protocol_walk_law` in `🎹️composer/🦀️component.rs`.
+/// `protocol_walk_law` in `🎹️composer/🦀️.rs`.
 #[cfg(test)]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn demo_mutation_cases() -> Vec<SemioDocumentMutation> {
@@ -886,7 +886,7 @@ mod tests {
             seen[ordinal] = true;
         }
         assert!(seen.iter().all(|hit| *hit), "demo_mutation_cases must reach every KINDS entry, missing {:?}", KINDS.iter().zip(seen.iter()).filter(|(_, hit)| !**hit).map(|(kind, _)| *kind).collect::<Vec<_>>());
-        let manifest = include_str!("../../🧪️oracle/🔣️.json");
+        let manifest = include_str!("../../🔣️oracle.json");
         for kind in KINDS {
             assert!(manifest.contains(&format!("\"{kind}\"")), "KINDS entry {kind:?} must also appear in the committed oracle manifest's catalog");
         }
@@ -1213,9 +1213,9 @@ mod tests {
 
 //#region 🧪️FixtureCases
 /// 🧪️ Handcrafted `📄set-snapshot` fixture cases, wired from this tree's own mutations root so
-/// `📦️glue.rs` stays untouched (`#[path]` on a non-inline module resolves against this file's own
+/// `🦀️.rs` stays untouched (`#[path]` on a non-inline module resolves against this file's own
 /// directory).
 #[cfg(test)]
-#[path = "📄set-snapshot/🧪️tests/bolds-the-body-paragraph-and-finalizes-its-copy/🦀️component.rs"]
+#[path = "📄set-snapshot/🧪️tests/bolds-the-body-paragraph-and-finalizes-its-copy/🦀️.rs"]
 mod set_snapshot_bolds_the_body_paragraph_and_finalizes_its_copy;
 //#endregion 🧪️FixtureCases

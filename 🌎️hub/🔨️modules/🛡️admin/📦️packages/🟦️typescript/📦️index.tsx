@@ -8,10 +8,10 @@
 // #region 🔌️Adapters
 import { createRoot } from "react-dom/client";
 import { bootstrapElementsSurfaceChromeDocument } from "@semio-tech/ui-react";
-import { AdminLocaleProvider } from "../../🧱️elements/📚️I18n/🟦️component.tsx";
-import { AdminSessionProvider } from "../../🧱️elements/🔑️AdminSession/🟦️component.tsx";
-import { AdminApp } from "../../🧱️elements/🛡️AdminApp/🟦️component.tsx";
-import "./🎨️globals.css";
+import { AdminLocaleProvider } from "../../🧱️elements/📚️I18n/🟦️.tsx";
+import { AdminSessionProvider } from "../../🧱️elements/🔑️AdminSession/🟦️.tsx";
+import { AdminApp } from "../../🧱️elements/🛡️AdminApp/🟦️.tsx";
+import "./🎨️.css";
 // #endregion 🔌️Adapters
 
 bootstrapElementsSurfaceChromeDocument();

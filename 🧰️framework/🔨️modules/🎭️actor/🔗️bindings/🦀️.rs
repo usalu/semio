@@ -1,7 +1,7 @@
-//! 🌉️ wasm-bindgen bindings for the pooled actor kernel — see owner crate `📦️glue.rs` (`kernel_host`
+//! 🌉️ wasm-bindgen bindings for the pooled actor kernel — see owner crate `🦀️.rs` (`kernel_host`
 //! mod, `#[cfg(target_arch = "wasm32")]`). Split out so the crate's own generic "glue" file stays
 //! pure wiring (no `struct`/`impl`), which keeps its package role classified as thin delegation
-//! rather than implementation (see `📦️glue.rs`'s own docstring for why that distinction matters to
+//! rather than implementation (see `🦀️.rs`'s own docstring for why that distinction matters to
 //! the taxonomy's normalization engine).
 
 use wasm_bindgen::prelude::*;

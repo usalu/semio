@@ -1,0 +1,6 @@
+{
+  "$id": "https://semio.tech/schema/s.stdio.semio.cad/mutations/text.json",
+  "title": "SemioCadMutationText",
+  "description": "protocol::OpText::print_op/parse_op wire text -- no semio envelope; see ../🔣️.json for the decoded mutation's real schema.",
+  "type": "string"
+}

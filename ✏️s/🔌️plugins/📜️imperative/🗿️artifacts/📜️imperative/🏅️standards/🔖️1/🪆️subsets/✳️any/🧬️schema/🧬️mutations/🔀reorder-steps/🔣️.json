@@ -5,19 +5,22 @@
   "displayName": "Reorder Steps",
   "emoji": "🔀",
   "aggregateVariant": "ReorderSteps",
-  "payloadSchema": "🔣️payload.schema.json",
-  "textOpcode": null,
-  "binaryTag": null,
+  "payloadSchema": "🔣️.schema.json",
+  "textOpcode": "reorder-steps",
+  "binaryTag": 2,
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
   "outcomeClasses": [
-    "error",
-    "info",
-    "applied"
+    "applied",
+    "warning",
+    "error"
   ],
   "composition": "atomic",
   "requiredLanguageSurfaces": [
     "rust",
+    "typescript",
+    "graphql",
+    "protobuf",
     "json-schema",
     "text",
     "binary"

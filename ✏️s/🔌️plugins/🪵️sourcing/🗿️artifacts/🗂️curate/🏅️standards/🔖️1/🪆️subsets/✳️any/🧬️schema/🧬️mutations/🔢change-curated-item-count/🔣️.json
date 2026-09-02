@@ -5,7 +5,7 @@
   "displayName": "Change Curated Item Count",
   "emoji": "🔢",
   "aggregateVariant": "ChangeCuratedItemCount",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": "change-curated-item-count",
   "binaryTag": 2,
   "invertibility": "explicit-mutation",

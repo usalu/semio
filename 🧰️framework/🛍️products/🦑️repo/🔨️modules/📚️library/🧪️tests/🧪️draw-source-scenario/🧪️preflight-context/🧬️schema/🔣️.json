@@ -9,8 +9,8 @@
     "ticketDir": { "const": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️27/DRAW-SOURCE-SCENARIOS" },
     "transactionDirectory": { "const": "🧾️taxonomy-transaction" },
     "planPath": { "const": "📊️taxonomy-plan/🔣️.json" },
-    "sourcePath": { "const": "🧪️tests/🧪️fixture/🦀️.rs" },
-    "foreignPath": { "const": "🧪️link-target/📝️.md" },
+    "sourcePath": { "const": "🧪️tests/🦀️fixture.rs" },
+    "foreignPath": { "const": "📝️link-target.md" },
     "unrelatedPath": { "const": "📓️unrelated/📝️.md" },
     "cases": {
       "const": [

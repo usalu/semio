@@ -20,7 +20,7 @@ function evaluate(compiler: typeof compilers[number], row: any, forward: boolean
   const selected = tree.statements.filter((node) => ts.isFunctionDeclaration(node) && functionNames.includes(node.name?.text ?? "") || ts.isClassDeclaration(node) && classNames.includes(node.name?.text ?? ""));
   expect(selected).toHaveLength(functionNames.length + classNames.length);
   const state = { inputReads: 0, membershipReads: 0, outputReads: 0 };
-  const input = { path: "🧪️inputs/🔣️.json", nodeKind: "file", contentHash: "a".repeat(64), mode: 420, size: 2 };
+  const input = { path: "🔣️inputs.json", nodeKind: "file", contentHash: "a".repeat(64), mode: 420, size: 2 };
   const plan = { edits: [], moves: [], embeddedTicketRootRelocations: [], evidenceRemovals: [], embeddedTicketRoots: [], symlinkTargetEdits: [], regenerations: [{ id: "fixture", contractId: "fixture", inputs: [input], preOutputs: [], outputs: [], outputRoots: ["🧪️outputs"] }] };
   const journal = { stagingRoot: "stage", backupRoot: "backup", backups: {}, appliedEditPaths: [], startedRegenerationIds: [], completedRegenerationIds: [] };
   const adapters = {
@@ -39,7 +39,7 @@ function evaluate(compiler: typeof compilers[number], row: any, forward: boolean
       if (row.membership === "unreadable") throw new Error("exact membership unreadable");
       return row.membership === "added" ? [input.path, "🧪️inputs/🧪️added"] : row.membership === "missing" ? [] : [input.path];
     },
-    generatorTreeInventory: () => { state.outputReads++; return row.output === "foreign" ? [{ path: "🧪️outputs/🟦️.ts", nodeKind: "file", contentHash: "c".repeat(64), mode: 420, size: 1 }] : []; },
+    generatorTreeInventory: () => { state.outputReads++; return row.output === "foreign" ? [{ path: "🟦️outputs.ts", nodeKind: "file", contentHash: "c".repeat(64), mode: 420, size: 1 }] : []; },
   };
   const code = selected.map((node) => node.getText(tree)).join("\n");
   const api = new Function(...Object.keys(adapters), compiler.compile(code) + "\nreturn { owned: reconcileTransactionOwnedTuples, forward: validateResumeTuples, inputError: TaxonomyGeneratorInputDriftError };")(...Object.values(adapters));

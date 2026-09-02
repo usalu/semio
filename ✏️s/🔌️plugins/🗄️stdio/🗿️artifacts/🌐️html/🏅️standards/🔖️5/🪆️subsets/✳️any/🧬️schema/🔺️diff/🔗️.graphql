@@ -1,0 +1,64 @@
+# 🌳 `HtmlNode`/`RawTextKind` are NOT redefined here -- this facet relies on the sibling
+# `📸️snapshot/🔗️.graphql` types being present in the assembled schema; `HtmlDiff` diffs
+# that same node tree directly, declaring its own DIFF types below.
+
+""" 🔺️ Diff for `stdio.html`. `doctype` is tri-state: field absent = unchanged, null = cleared,
+present = set. """
+type HtmlDiff {
+  doctype: String
+  root: HtmlNodeDiff
+}
+
+enum HtmlNodeDiffKind {
+  ELEMENT
+  TEXT
+  COMMENT
+  RAW_TEXT
+  REPLACE
+}
+
+""" 🌳 Recursive per-node diff -- tagged union flattened like `HtmlNode`. """
+type HtmlNodeDiff {
+  kind: HtmlNodeDiffKind!
+  name: String
+  attributes: HtmlAttributesDiff
+  children: HtmlChildrenDiff
+  text: String
+  parentKind: RawTextKind
+  node: HtmlNode
+}
+
+type HtmlAttrModified {
+  name: String!
+  value: String
+}
+
+type HtmlAttrAdded {
+  index: Int!
+  name: String!
+  value: String
+}
+
+""" 🏷️ Name-keyed, order-preserving attribute triple. """
+type HtmlAttributesDiff {
+  removed: [String!]!
+  modified: [HtmlAttrModified!]!
+  added: [HtmlAttrAdded!]!
+}
+
+type HtmlChildModified {
+  index: Int!
+  diff: HtmlNodeDiff!
+}
+
+type HtmlChildAdded {
+  index: Int!
+  item: HtmlNode!
+}
+
+""" 🌳 Index-keyed, recursive children triple. """
+type HtmlChildrenDiff {
+  removed: [Int!]!
+  modified: [HtmlChildModified!]!
+  added: [HtmlChildAdded!]!
+}

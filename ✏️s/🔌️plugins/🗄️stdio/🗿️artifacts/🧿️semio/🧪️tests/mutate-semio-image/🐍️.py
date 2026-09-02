@@ -15,23 +15,23 @@ answer two different halves of the question:
   party speaks. It was written from the committed specification documents alone:
   - the envelope — `semio <schema>.dsl v<version>` preamble for text, and the
     `0x89 'S' 'E' 'M' 0D 0A 1A 0A` magic + little-endian u32 token length + token for binary — is
-    specified in `🧰️framework/🛍️products/💻️os/🔨️modules/🧬️semio/🦀️component.rs`'s envelope section,
+    specified in `🧰️framework/🛍️products/💻️os/🔨️modules/🧬️semio/🦀️.rs`'s envelope section,
     the carrier's normative description;
   - the DSL body is the committed grammar
-    `../../🏅️standards/🔖️v1/🪆️subsets/✳️image/🧬️schema/📸️snapshot/📝️text/📖️component.grammar.semio`
+    `../../🏅️standards/🔖️v1/🪆️subsets/✳️image/🧬️schema/📸️snapshot/📝️text/📖️.grammar.semio`
     (`document = artifact-mark schema-line width-line height-line colorspace-line bit-depth-line
     icc-line frames-line metadata-line`, `colorspace = r|a|g|y|i`, `option-hex`, hex-encoded
     scalars);
-  - the pack body is the committed protocol `…/📸️snapshot/💾️binary/📡️component.protocol.semio`
-    together with its Kaitai mirror `…/💾️binary/🥋️component.ksy`, which — unusually for this family
+  - the pack body is the committed protocol `…/📸️snapshot/💾️binary/📡️.protocol.semio`
+    together with its Kaitai mirror `…/💾️binary/🥋️.ksy`, which — unusually for this family
     — describes the trailing chain completely: *"icc (presence u8 + optional length-prefixed
     bytes), frames (varint count + per-frame delay_ms u32 LE + varint-length-prefixed rgba8 bytes),
     metadata (varint count + per-entry varint-length-prefixed key/value UTF-8)"*. Nothing had to be
     reverse-engineered from bytes here, and `pack_bytes` re-encoding the committed swatch file byte
     for byte is what proves the reading right;
   - the thirteen verbs, their argument lists and their JSON wire form are the committed grammar
-    `…/🧬️schema/🧬️mutations/📝️text/📖️component.grammar.semio`, the committed JSON schema
-    `…/🧬️mutations/🔣️component.json` and the committed per-kind specification vectors under
+    `…/🧬️schema/🧬️mutations/📝️text/📖️.grammar.semio`, the committed JSON schema
+    `…/🧬️mutations/🔣️.json` and the committed per-kind specification vectors under
     `…/🧬️mutations/<kind>/🧪️tests/<fixture>/`, which pin each verb's before/after semantics.
 
 Nothing here imports, links, wraps or transliterates the Rust subject. Every function was written
@@ -79,7 +79,7 @@ KINDS = (
     "remove-metadata-entry",
 )
 
-ARTIFACT_DSL = "local://🗣️artifact.dsl.semio"
+ARTIFACT_DSL = "local://🗣️.dsl.semio"
 ARTIFACT_PACK = "local://🎒️artifact.pack.semio"
 
 
@@ -347,7 +347,7 @@ def pack_bytes(document: dict) -> bytes:
 
 # region 🔖️Mutations
 #: 🏷️ The JSON wire form is serde's internally-tagged shape with camelCase VARIANT names, exactly as
-#: the committed vectors and `…/🧬️mutations/🔣️component.json` spell it. That renames variants and not
+#: the committed vectors and `…/🧬️mutations/🔣️.json` spell it. That renames variants and not
 #: their fields, so a struct-variant's own keys stay snake_case (`bit_depth`, `delay_ms`) while a
 #: NESTED snapshot or frame payload keeps its own camelCase (`bitDepth`, `delayMs`) — the committed
 #: vectors carry exactly that mixed shape.

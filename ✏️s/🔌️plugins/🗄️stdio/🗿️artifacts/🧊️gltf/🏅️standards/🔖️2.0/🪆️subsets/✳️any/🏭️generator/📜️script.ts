@@ -13,7 +13,7 @@
 // packing, hierarchy flattening, material serialization. Every recipe's `before`/`after` pair is then
 // derived from that ONE base document by a small, GENERIC, mechanically-uniform structural edit —
 // `applyOp` below — never a per-recipe hand-authored document. The edits are uniform because the
-// mutation surface itself is: every `🔣️payload.schema.json`'s own `x-semio.touchedPaths` describes the
+// mutation surface itself is: every `🔣️.schema.json`'s own `x-semio.touchedPaths` describes the
 // same handful of shapes repeated across 13 entity families (`create-X{position}`, `delete-X{index}`,
 // `move-X{index,position}`, `reorder-X{order[]}`, `bind/unbind-X-Y{parent,child,position}`), read
 // directly out of those schemas, never guessed.
@@ -23,7 +23,7 @@
 //   bun 📜️script.ts list                           # prints every recipe id this generator knows
 //
 // @see ../🔬️probes/📜️script.ts — the reader half; this file only WRITES, it never reads back semantics
-// @see ../🧪️oracle/🔣️.json — mutationManifests / fixtureManifests this generator's output is registered under
+// @see ../🔣️oracle.json — mutationManifests / fixtureManifests this generator's output is registered under
 // @see .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️27/SUBSET-SCOPED-EXTERNAL-ORACLE-MUTATION-TESTING/📓️pilot-playbook.md
 
 //#endregion 🧲️Header
@@ -147,7 +147,7 @@ async function buildBaseDoc(): Promise<Doc> {
 
 //#region ✂️Generic structural edit
 /** 🔧 Every `create/delete/move/reorder` mutation in this subset's manifest is one of these four
- *  ARRAY shapes — read directly off each mutation's own `🔣️payload.schema.json` `x-semio.touchedPaths`,
+ *  ARRAY shapes — read directly off each mutation's own `🔣️.schema.json` `x-semio.touchedPaths`,
  *  never guessed. Applying them generically is what lets one engine cover the ~90 kinds that share this
  *  shape instead of writing bespoke code per kind. */
 function arrayAt(doc: Doc, path: readonly (string | number)[]): unknown[] {

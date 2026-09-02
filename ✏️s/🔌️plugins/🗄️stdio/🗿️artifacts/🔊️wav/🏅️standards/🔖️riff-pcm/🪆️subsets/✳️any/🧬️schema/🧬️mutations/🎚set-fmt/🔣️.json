@@ -5,7 +5,7 @@
   "displayName": "Set Fmt",
   "emoji": "🎚",
   "aggregateVariant": "SetFmt",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

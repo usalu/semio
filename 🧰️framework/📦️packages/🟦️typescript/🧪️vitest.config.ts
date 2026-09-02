@@ -10,7 +10,7 @@ export default {
   root,
   resolve: {
     alias: {
-      "@semio-tech/framework": resolve(root, "🟦️glue.ts"),
+      "@semio-tech/framework": resolve(root, "🟦️.ts"),
     },
   },
   test: {
@@ -21,8 +21,8 @@ export default {
     // `includeSource`. Listing the same file in BOTH keys made vitest collect it twice and report
     // double the real test count. Add new in-source files to `includeSource`/`coverage.include` only.
     include: [],
-    coverage: { include: ["🟦️glue.ts"] },
-    includeSource: ["🟦️glue.ts"],
+    coverage: { include: ["🟦️.ts"] },
+    includeSource: ["🟦️.ts"],
     passWithNoTests: false,
   },
 };

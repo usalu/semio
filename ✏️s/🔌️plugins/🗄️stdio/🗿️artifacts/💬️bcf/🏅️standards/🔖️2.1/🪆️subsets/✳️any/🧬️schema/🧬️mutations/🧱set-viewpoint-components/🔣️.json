@@ -5,7 +5,7 @@
   "displayName": "Set Viewpoint Components",
   "emoji": "🧱",
   "aggregateVariant": "SetViewpointComponents",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

@@ -4,7 +4,7 @@
 // #endregion 🧲️Header
 
 // #region 🔌️Adapters
-import { defineTestAdapter, type AdapterContext } from "../../../../🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🟦️typescript/📦️index.ts";
+import { defineTestAdapter, type AdapterContext } from "../../../../🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🟦️typescript/🟦️.ts";
 import { versionSatisfies } from "../../🟦️.ts";
 // #endregion 🔌️Adapters
 

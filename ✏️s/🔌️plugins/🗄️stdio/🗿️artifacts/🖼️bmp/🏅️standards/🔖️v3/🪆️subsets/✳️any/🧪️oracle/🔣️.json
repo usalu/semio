@@ -1,7 +1,7 @@
 {
   "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json",
   "schemaVersion": 2,
-  "_comment": "🧩️ This subset's contribution to the repository test platform — the BMP v3 ✳️any mutation catalog and its dedicated mutate oracle. Discovered by convention (`testContributionDirName` in 🔣️taxonomy.json); the shared stdio manifest (`✏️s/🔌️plugins/🗄️stdio/🧪️oracle/🔣️.json`) already registers `image-bmp` under capability `bmp-raster` for plain create/round-trip coverage — mutation coverage needs its own capability so the two are never conflated, per the wave-7 fleet brief.",
+  "_comment": "🧩️ This subset's contribution to the repository test platform — the BMP v3 ✳️any mutation catalog and its dedicated mutate oracle. Discovered by convention (`testContributionDirName` in 🔣️taxonomy.json); the shared stdio manifest (`✏️s/🔌️plugins/🗄️stdio/🔣️oracle.json`) already registers `image-bmp` under capability `bmp-raster` for plain create/round-trip coverage — mutation coverage needs its own capability so the two are never conflated, per the wave-7 fleet brief.",
   "oracles": [
     {
       "id": "image-bmp-3-mutate",
@@ -17,12 +17,12 @@
       "license": "MIT OR Apache-2.0",
       "testOnly": true,
       "homepage": "https://github.com/image-rs/image",
-      "rationale": "🫥️ RECLASSIFIED. The third-party crate here does REAL codec work — it decodes the artifact and will reject a malformed one — but that is not what the mutation test turns on. What the OUTPUT OF A MUTATION SHOULD BE is computed by this owner's own `🧪️oracle/🦀️component.rs`, whose `apply_kind` dispatch is a second implementation of this subset's mutation semantics. Its own doc comment says so: it \"deliberately mirrors\" the production `diff` rather than diverging from it. Both halves of the comparison therefore read the same specification, and a misreading of it produces two agreeing wrong answers.\n\nThe honest split is that the crate discharges \"the result is a well-formed file of this format\", and NOT \"the mutation computed the right answer\". Only the second is what a mutation oracle is for, so this is a `cross-semio-implementation`: a required SUPPLEMENT, never a substitute. A qualifying third-party reference for the mutation semantics is still owed.",
+      "rationale": "🫥️ RECLASSIFIED. The third-party crate here does REAL codec work — it decodes the artifact and will reject a malformed one — but that is not what the mutation test turns on. What the OUTPUT OF A MUTATION SHOULD BE is computed by this owner's own `🦀️oracle.rs`, whose `apply_kind` dispatch is a second implementation of this subset's mutation semantics. Its own doc comment says so: it \"deliberately mirrors\" the production `diff` rather than diverging from it. Both halves of the comparison therefore read the same specification, and a misreading of it produces two agreeing wrong answers.\n\nThe honest split is that the crate discharges \"the result is a well-formed file of this format\", and NOT \"the mutation computed the right answer\". Only the second is what a mutation oracle is for, so this is a `cross-semio-implementation`: a required SUPPLEMENT, never a substitute. A qualifying third-party reference for the mutation semantics is still owed.",
       "hostPath": "✏️s/🔌️plugins/🗄️stdio/🧪️oracle/📦️packages/🦀️rust",
       "productionDebt": {
         "reachableFrom": [
-          "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️present/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🎥️video/🦀️component.rs",
-          "🧰️framework/🔨️modules/🗺️surface/🗺️tiled-map/🦀️component.rs"
+          "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️present/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🎥️video/🦀️.rs",
+          "🧰️framework/🔨️modules/🗺️surface/🗺️tiled-map/🦀️.rs"
         ],
         "owner": "🧰️framework/🔨️modules/🗺️surface",
         "plan": "The `image` crate is production-reachable TODAY from two places: the 🎞️animate plugin's video engine and 🧰️framework/🔨️modules/🗺️surface's tiled-map. Discovered by the oracle-purity gate the moment `image` was registered — the gate did its job. Phase 7 target: both call sites want raster decode/encode that ✏️s/🔌️plugins/🗄️stdio already implements, so routing them through decode_bmp / decode_tiff / decode_jpg retires the dependency and this record with it."
@@ -61,7 +61,7 @@
         "linux-arm64",
         "win32-x64"
       ],
-      "rationale": "📖️ A READER, and that is the whole point of registering it separately from `image-bmp-3-mutate` above.\n\nThat sibling entry is `cross-semio-implementation`: what a mutation SHOULD produce is computed by this owner's own `🧪️oracle/🦀️component.rs` (533 lines, whose own header states it 'deliberately mirrors' the production diff semantics), so both halves of that comparison descend from one reading of the format's specification.\n\nThis entry is a different mechanism. The expected state is not computed at all — it is COMMITTED, as the `after` half of a byte-reproducible fixture built directly by the standalone `image-bmp-codec` binary (`../🏭️generator/🦀️image-bmp-codec`, depends on nothing but `image` 0.25's own `bmp` feature). `image` then decodes BOTH sides through its own public `BmpDecoder`/`BmpEncoder` surface, and the comparison is over what it recovered — no BITMAPINFOHEADER byte-offset parsing of this module's own, unlike the sibling `component.rs`. The probes say so in their own header: 'Everything here MARSHALS and READS; nothing here applies a mutation or predicts what one should.'\n\nOnly 4 of this subset's 5 declared `bmp-3-mutate` kinds are registered against this oracle. `change-header-fields` is not: reading `image-0.25.10`'s own vendored decoder/encoder source (`src/codecs/bmp/{decoder,encoder}.rs`) shows `BmpDecoder`'s `top_down`, `bit_count` and `colors_used` fields are private with no public accessor, and `BmpEncoder::encode_with_palette` hard-codes horizontal/vertical pixels-per-metre to `0`, 'colours important' to `0`, colour planes to `1`, compression to 'none', and always stores rows bottom-up — none of `change-header-fields`' twelve payload fields (`rowOrder`, `xPixelsPerMeter`, `yPixelsPerMeter`, `compression`, `colorsUsed` as a value distinct from palette length, `colorsImportant`, `headerSize`, `imageSize`, an exact `bitsPerPixel`) round-trips through `image`'s public BMP API in either direction. Only `width`/`height` do (via `BmpDecoder::dimensions`), and this subset's own committed production test scenario for `change-header-fields` (`../🧬️schema/🧬️mutations/📐️change-header-fields/🧪️tests/direct-behavior/🦠️mutation/🔣️component.json`) exercises `width` paired with `xPixelsPerMeter`/`yPixelsPerMeter` together — exactly the fields this reader cannot see — so a width-only recipe would dodge the mutation's own real target fields rather than honestly witness it. See `oracleRequirements` below and the `bmp-3-mutate-uncarried` capability, and this subset's own `📓️bmp-v3-any-reader-oracle-retrofit.md` for the full source-level evidence trail.\n\n`productionReachable` is `false`: every non-test/non-scratch `Cargo.toml` in this repository that depends on `image` (`🎞️animate`, `🖍️draw`, `🧰️framework/🔨️modules/🗺️surface`, `🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite`, and the os renderer's wgpu target) enables only `png`/`jpeg`/`webp`/`gif` — none enables the `bmp` feature `image`'s BMP codec is gated behind. The only Cargo.toml in this repository enabling `image`'s `bmp` feature outside a scratch ticket directory is `✏️s/🔌️plugins/🗄️stdio/🧪️oracle/📦️packages/🦀️rust/Cargo.toml` itself, an `optional = true` dependency of the shared test-oracle host crate. `image`'s BMP support is therefore genuinely test-only in this repository today, which is a narrower claim than the sibling `image-bmp-3-mutate` entry's own `productionReachable: true` (with a `productionDebt` naming `🎞️animate`'s video engine and `🧰️framework/🔨️modules/🗺️surface`'s tiled-map as reachable-from sites) — that claim is about the `image` package as a whole being production-reachable for OTHER formats it does compile in for (png/jpeg/webp/gif), not about its BMP codec specifically, which is what this entry's capability is scoped to. Left as-is per this ticket's scope (leave `image-bmp-3-mutate` untouched); flagged here as a real, source-verified discrepancy rather than silently copied."
+      "rationale": "📖️ A READER, and that is the whole point of registering it separately from `image-bmp-3-mutate` above.\n\nThat sibling entry is `cross-semio-implementation`: what a mutation SHOULD produce is computed by this owner's own `🦀️oracle.rs` (533 lines, whose own header states it 'deliberately mirrors' the production diff semantics), so both halves of that comparison descend from one reading of the format's specification.\n\nThis entry is a different mechanism. The expected state is not computed at all — it is COMMITTED, as the `after` half of a byte-reproducible fixture built directly by the standalone `image-bmp-codec` binary (`../🏭️generator/🦀️image-bmp-codec`, depends on nothing but `image` 0.25's own `bmp` feature). `image` then decodes BOTH sides through its own public `BmpDecoder`/`BmpEncoder` surface, and the comparison is over what it recovered — no BITMAPINFOHEADER byte-offset parsing of this module's own, unlike the sibling `component.rs`. The probes say so in their own header: 'Everything here MARSHALS and READS; nothing here applies a mutation or predicts what one should.'\n\nOnly 4 of this subset's 5 declared `bmp-3-mutate` kinds are registered against this oracle. `change-header-fields` is not: reading `image-0.25.10`'s own vendored decoder/encoder source (`src/codecs/bmp/{decoder,encoder}.rs`) shows `BmpDecoder`'s `top_down`, `bit_count` and `colors_used` fields are private with no public accessor, and `BmpEncoder::encode_with_palette` hard-codes horizontal/vertical pixels-per-metre to `0`, 'colours important' to `0`, colour planes to `1`, compression to 'none', and always stores rows bottom-up — none of `change-header-fields`' twelve payload fields (`rowOrder`, `xPixelsPerMeter`, `yPixelsPerMeter`, `compression`, `colorsUsed` as a value distinct from palette length, `colorsImportant`, `headerSize`, `imageSize`, an exact `bitsPerPixel`) round-trips through `image`'s public BMP API in either direction. Only `width`/`height` do (via `BmpDecoder::dimensions`), and this subset's own committed production test scenario for `change-header-fields` (`../🧬️schema/🧬️mutations/📐️change-header-fields/🧪️tests/direct-behavior/🦠️mutation/🔣️.json`) exercises `width` paired with `xPixelsPerMeter`/`yPixelsPerMeter` together — exactly the fields this reader cannot see — so a width-only recipe would dodge the mutation's own real target fields rather than honestly witness it. See `oracleRequirements` below and the `bmp-3-mutate-uncarried` capability, and this subset's own `📓️bmp-v3-any-reader-oracle-retrofit.md` for the full source-level evidence trail.\n\n`productionReachable` is `false`: every non-test/non-scratch `Cargo.toml` in this repository that depends on `image` (`🎞️animate`, `🖍️draw`, `🧰️framework/🔨️modules/🗺️surface`, `🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite`, and the os renderer's wgpu target) enables only `png`/`jpeg`/`webp`/`gif` — none enables the `bmp` feature `image`'s BMP codec is gated behind. The only Cargo.toml in this repository enabling `image`'s `bmp` feature outside a scratch ticket directory is `✏️s/🔌️plugins/🗄️stdio/🧪️oracle/📦️packages/🦀️rust/Cargo.toml` itself, an `optional = true` dependency of the shared test-oracle host crate. `image`'s BMP support is therefore genuinely test-only in this repository today, which is a narrower claim than the sibling `image-bmp-3-mutate` entry's own `productionReachable: true` (with a `productionDebt` naming `🎞️animate`'s video engine and `🧰️framework/🔨️modules/🗺️surface`'s tiled-map as reachable-from sites) — that claim is about the `image` package as a whole being production-reachable for OTHER formats it does compile in for (png/jpeg/webp/gif), not about its BMP codec specifically, which is what this entry's capability is scoped to. Left as-is per this ticket's scope (leave `image-bmp-3-mutate` untouched); flagged here as a real, source-verified discrepancy rather than silently copied."
     },
     {
       "id": "pillow-bmp-v3-header-reader",
@@ -515,7 +515,7 @@
         {
           "id": "change-header-fields",
           "capability": "bmp-3-mutate",
-          "payloadSchema": "🔣️payload.schema.json",
+          "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "applied"
           ],
@@ -535,7 +535,7 @@
         {
           "id": "insert-palette-entry",
           "capability": "bmp-3-mutate",
-          "payloadSchema": "🔣️payload.schema.json",
+          "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "applied"
           ],
@@ -555,7 +555,7 @@
         {
           "id": "remove-palette-entry",
           "capability": "bmp-3-mutate",
-          "payloadSchema": "🔣️payload.schema.json",
+          "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "applied"
           ],
@@ -575,7 +575,7 @@
         {
           "id": "replace-palette-entry",
           "capability": "bmp-3-mutate",
-          "payloadSchema": "🔣️payload.schema.json",
+          "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "applied"
           ],
@@ -595,7 +595,7 @@
         {
           "id": "replace-pixel-data",
           "capability": "bmp-3-mutate",
-          "payloadSchema": "🔣️payload.schema.json",
+          "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "applied"
           ],

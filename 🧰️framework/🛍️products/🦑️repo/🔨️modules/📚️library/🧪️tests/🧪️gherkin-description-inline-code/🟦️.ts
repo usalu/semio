@@ -142,7 +142,7 @@ test("registers the gherkin description inline-code gate through Nx and both lau
   expect(project.targets["test-gherkin-description-inline-code"]?.options.command).toBe("bun ./📜️script.ts test gherkin-description-inline-code");
   const router = readFileSync(join(library, "📦️packages/🟦️typescript/📜️script.ts"), "utf8");
   expect(router.match(/segments\[0\] === "gherkin-description-inline-code"/gu)).toHaveLength(1);
-  expect(router).toContain("🧪️tests/🧪️gherkin-description-inline-code/🟦️.ts");
+  expect(router).toContain("🧪️tests/🟦️gherkin-description-inline-code.ts");
   for (const path of [".vscode/🧩️launch.seed.jsonc", ".vscode/launch.json"]) {
     const content = readFileSync(join(root, path), "utf8");
     expect(content, path).toContain("test-gherkin-description-inline-code");

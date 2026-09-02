@@ -9,16 +9,16 @@
 //! the wgpu↔React parity join this ticket's contract freeze §C0 asks for — with no new `UiNode`
 //! variant and no edit to the shared `component.rs`/`Interpreter` files (out of this lane's lease).
 //! Wired as a CRATE-ROOT sibling module of `crate::wgpu::widgets`, `#[path]`-mounted right before
-//! `pub mod widgets` in `📦️glue.rs`, mirroring how `button`/`key_value`/`ring` are mounted there.
+//! `pub mod widgets` in `🦀️.rs`, mirroring how `button`/`key_value`/`ring` are mounted there.
 //!
-//! React twin: `🟦️component.tsx` in this same folder — the `🔖️Palette` region's `presence_color` below
+//! React twin: `🟦️.tsx` in this same folder — the `🔖️Palette` region's `presence_color` below
 //! is byte-for-byte mirrored by its `presenceColor` (contract freeze §C7.5's hub-assigned-index formula)
 //! so both shells tint a given peer identically. Replaces the deleted FNV-hash `presence_hue_for_actor`.
 //!
 //! `data-ui-path` note (requested by the W0 scout): grepping `os/renderer/engine/elements/Table` and
 //! the React `📊️Table` element turned up no `data-ui-path` on table rows — only `data-row-id`. The
 //! scout's suspicion was correct; `data-ui-path` genuinely exists only on the generic `Interpreter`'s
-//! own rendered nodes (`os/renderer/engine/elements/Interpreter/🟦️component.tsx`), which is the
+//! own rendered nodes (`os/renderer/engine/elements/Interpreter/🟦️.tsx`), which is the
 //! mechanism this file's `UiStackNode` ids plug into.
 
 use crate::wgpu::{Label, Locale, LocalizedLabel, Terminology, UiNode, UiPresence, UiStackNode, UiTextNode};
@@ -70,7 +70,7 @@ pub enum PresenceAppearance {
 /// `index % 12` selects one of the 12 base hues (`ui_styling::presence::HUES`); `index / 12` (`k`)
 /// desaturates by `0.25` once the roster wraps past two full cycles and alternates lightness by
 /// `±0.14` every other cycle (lighter in `Light`, darker in `Dark`). Byte-identical to the TS twin
-/// `presenceColor` in `🟦️component.tsx`.
+/// `presenceColor` in `🟦️.tsx`.
 // 🚫️async: E1 pure accessor consumed by external-trait impls (Default) and sync render/paint call sites — see R9
 pub fn presence_color(index: u8, appearance: PresenceAppearance) -> PresenceHsl {
     use ui_styling::presence;

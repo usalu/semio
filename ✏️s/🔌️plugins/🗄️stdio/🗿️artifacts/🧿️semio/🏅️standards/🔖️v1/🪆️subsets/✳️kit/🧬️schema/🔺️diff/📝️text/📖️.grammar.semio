@@ -1,0 +1,29 @@
+dialect grammar
+grammar stdio.semio.kit.diff
+extension semio
+start diff
+
+# UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM kit wave (W2c). Real one-line `DiffCodec::print_diff`/
+# `parse_diff` shape ALREADY emitted by `../🦀️.rs` (`print_kit_diff`/`parse_kit_diff`) —
+# `;`-joined `tag=value` fields, one per touched field of `SemioKitSnapshot`.
+diff = field-list?
+field-list = field {";" field}*
+field = "t" "=" type-list | "d" "=" design-list | "o" "=" child-list | "m" "=" child-list | "p" "=" { "[" "]" | child } | "r" "=" link-list
+
+type-list = "[" {kit-type {"," kit-type}*}? "]"
+kit-type = "[" hex "," hex "," hex "]"
+
+design-list = "[" {design {"," design}*}? "]"
+design = "[" hex "," hex "," "[" {piece {"," piece}*}? "]" "," "[" {connection {"," connection}*}? "]" "]"
+piece = "[" hex "," hex "," transform "]"
+connection = "[" hex "," hex "," hex "," hex "," hex "]"
+transform = "[" number "," number "," number "," number "," number "," number "," number "," number "," number "," number "]"
+
+child-list = "[" {child {"," child}*}? "]"
+child = "[" hex "," hex "]"
+
+link-list = "[" {link {"," link}*}? "]"
+link = "[" hex "," pin "," hex "]"
+pin = "[" "h" "]" | "[" "c" "," hex "]" | "[" "s" "," hex "," INT "," hex "]"
+
+number = INT | FLOAT

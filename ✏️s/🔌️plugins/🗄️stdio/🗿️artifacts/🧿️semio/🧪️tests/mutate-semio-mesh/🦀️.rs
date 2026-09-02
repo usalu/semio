@@ -3,9 +3,9 @@
 //!
 //! **This file no longer serves the oracle role.** The reference for `semio-v1-mesh-mutate` is the
 //! registered oracle `semio-mesh-typescript-three-independent` (`../../🏅️standards/🔖️v1/🪆️subsets/
-//! ✳️mesh/🧪️oracle/🔣️.json`) — three.js for the geometry it genuinely speaks, plus an
+//! ✳️mesh/🔣️oracle.json`) — three.js for the geometry it genuinely speaks, plus an
 //! independent TypeScript implementation of the semio-native carrier and the seventeen verbs, living
-//! beside this file as `🟦️component.ts`. The runner dispatches the oracle role there and the subject
+//! beside this file as `🟦️.ts`. The runner dispatches the oracle role there and the subject
 //! role here, and compares the two projections under `@comparison-ordered-json-v1`. Registering
 //! oracle handlers here as well would put this repository's own answer on both sides of that
 //! comparison, which is the precise failure the platform exists to prevent.
@@ -36,7 +36,7 @@ use semio_repo_test_host::Adapter;
 
 //#region 🔖️Kinds
 /// 🏷️ Mirrors `SemioMeshMutation::KINDS` (`../../🏅️standards/🔖️v1/🪆️subsets/✳️mesh/🧬️schema/
-/// 🧬️mutations/🦀️component.rs`) — duplicated, not imported, because the generated host builds this
+/// 🧬️mutations/🦀️.rs`) — duplicated, not imported, because the generated host builds this
 /// file with and without the subject crate. The contract's mutation-coverage gate keeps this list
 /// honest against the catalog; `kinds_match_the_enum_and_the_catalog` in that production file keeps
 /// it honest against the enum.
@@ -74,7 +74,7 @@ mod subject {
     //#region 🔖️Input
     /// 🔺️ The real derived model — 271 meshes and 459 primitives read once out of the committed
     /// Metabolism `🧊️base.glb` and written out through the independent TypeScript implementation.
-    const ARTIFACT_DSL: &str = "local://🗣️artifact.dsl.semio";
+    const ARTIFACT_DSL: &str = "local://🗣️.dsl.semio";
     /// 🎒️ The same model in its binary envelope, written by a separate codec from the DSL text.
     const ARTIFACT_PACK: &str = "local://🎒️artifact.pack.semio";
 
@@ -313,7 +313,7 @@ mod subject {
 //#region 🔖️Registration
 /// 🧭️ Registration entry point the generated host calls. Registration is by FULL expanded scenario
 /// id, so the loop mirrors the feature's `Examples` tables exactly. Only subject handlers are
-/// registered: the oracle role belongs to `🟦️component.ts`.
+/// registered: the oracle role belongs to `🟦️.ts`.
 pub fn adapter() -> Adapter {
     #[allow(unused_mut)]
     let mut built = Adapter::new("rust");

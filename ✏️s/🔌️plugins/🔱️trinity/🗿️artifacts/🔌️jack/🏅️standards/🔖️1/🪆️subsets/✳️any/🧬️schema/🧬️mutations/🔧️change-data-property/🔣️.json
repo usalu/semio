@@ -5,19 +5,22 @@
   "displayName": "Change Data Property",
   "emoji": "🔧️",
   "aggregateVariant": "ChangeDataProperty",
-  "payloadSchema": "🔣️payload.schema.json",
-  "textOpcode": null,
-  "binaryTag": null,
+  "payloadSchema": "🔣️.schema.json",
+  "textOpcode": "change-data-property",
+  "binaryTag": 6,
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
   "outcomeClasses": [
-    "error",
-    "info",
-    "applied"
+    "applied",
+    "warning",
+    "error"
   ],
   "composition": "atomic",
   "requiredLanguageSurfaces": [
     "rust",
+    "typescript",
+    "graphql",
+    "protobuf",
     "json-schema",
     "text",
     "binary"

@@ -5,7 +5,7 @@
   "displayName": "Connect Handles",
   "emoji": "🔗",
   "aggregateVariant": "ConnectHandles",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": "connect-handles",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

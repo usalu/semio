@@ -5,7 +5,7 @@
   "displayName": "Change Annual Limit Kwh",
   "emoji": "🦡",
   "aggregateVariant": "ChangeAnnualLimitKwh",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

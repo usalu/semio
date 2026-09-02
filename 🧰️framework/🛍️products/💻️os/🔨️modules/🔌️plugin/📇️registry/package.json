@@ -7,7 +7,7 @@
   "private": true,
   "exports": {
     ".": "./📜️script.ts",
-    "./catalog": "./🟦️catalog.ts"
+    "./catalog": "./🟦️.ts"
   },
   "scripts": {
     "generate": "bun nx run @semio-tech/plugin-registry:generate",

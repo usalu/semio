@@ -9,20 +9,20 @@
     "target": "test-readme-current-source-revision",
     "command": "bun ./📜️script.ts test readme-current-source-revision",
     "route": "readme-current-source-revision",
-    "source": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧪️readme-current-source-revision/🟦️.ts",
+    "source": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🟦️readme-current-source-revision.ts",
     "launchName": "🧹clean🧩️taxonomy🧪️readme-current-source-revision",
     "launchCommand": "bun nx run @semio-tech/repo-lib:test-readme-current-source-revision --skip-nx-cache",
     "launchGroup": "4_gate",
     "launchOrder": 410.195
   },
   "revisionId": "testing-readme-protocol-v2-reviewed",
-  "catalogPath": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🧫️fixtures/🧪️readme-license-owner-authority/🔣️.json",
+  "catalogPath": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🧫️fixtures/🔣️readme-license-owner-authority.json",
   "catalogSha256": "051394741822e92d51f3bda15ce64d84c236582c6927335c9c5e0ac3c18a1da4",
   "expectedRevisionDigest": "caeba50b0dfd5e9ba64ed054789c36907be89579205257e4147bd264b5715ae3",
   "revisions": {
     "testing-readme-protocol-v2-reviewed": {
       "catalogCaseIndex": 31,
-      "sourcePath": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/README.md",
+      "sourcePath": "🧰️framework/🛍️products/🦑️repo/🔨️modules/testREADME.md",
       "baselineCommit": "9f449b10659b95148c8bcb3f91ce583bf7446973",
       "baselineBlob": "97c9cd961ac67eb875f714da1a17a8d2121446dc",
       "baselinePreimage": {
@@ -35,7 +35,7 @@
         "size": 12527,
         "mode": "0644"
       },
-      "expectationsPath": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧪️testing-readme-coordinates/🔣️.json",
+      "expectationsPath": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧪️test/🔣️ing-readme-coordinates.json",
       "expectationsSha256": "83a1c6b098f7fc5ad26d1f7d5b47e08447ec50a8016796f0eaa0b1db3ed575a6"
     }
   },
@@ -44,7 +44,7 @@
     { "id": "unrevised-source-without-revision-evidence", "catalogCaseIndex": 0, "coordinate": "sourcePath", "expectedDisposition": "catalog" },
     { "id": "revised-source-without-revision-evidence", "catalogCaseIndex": 31, "coordinate": "sourcePath", "expectedDisposition": "problem" },
     { "id": "canonical-destination-without-revision-evidence", "catalogCaseIndex": 31, "coordinate": "destinationPath", "expectedDisposition": "none" },
-    { "id": "unregistered-source-without-revision-evidence", "path": "🧪️tests/README.md", "expectedDisposition": "none" }
+    { "id": "unregistered-source-without-revision-evidence", "path": "testsREADME.md", "expectedDisposition": "none" }
   ],
   "cases": [
     { "id": "missing-source-coordinate", "phase": "grammar", "accepted": false, "changes": [], "special": "missing-source-coordinate" },
@@ -52,7 +52,7 @@
     { "id": "escaping-source-coordinate", "phase": "grammar", "accepted": false, "changes": [{ "target": "revisions", "pointer": "/testing-readme-protocol-v2-reviewed/sourcePath", "value": "../README.md" }] },
     { "id": "absolute-source-coordinate", "phase": "grammar", "accepted": false, "changes": [{ "target": "revisions", "pointer": "/testing-readme-protocol-v2-reviewed/sourcePath", "value": "/owner/README.md" }] },
     { "id": "non-readme-source-coordinate", "phase": "grammar", "accepted": false, "changes": [{ "target": "revisions", "pointer": "/testing-readme-protocol-v2-reviewed/sourcePath", "value": "owner/LICENSE.md" }] },
-    { "id": "source-coordinate-does-not-match-catalog-row", "phase": "authority", "accepted": false, "changes": [{ "target": "revisions", "pointer": "/testing-readme-protocol-v2-reviewed/sourcePath", "value": "🧪️tests/🧪️different-owner/README.md" }] },
+    { "id": "source-coordinate-does-not-match-catalog-row", "phase": "authority", "accepted": false, "changes": [{ "target": "revisions", "pointer": "/testing-readme-protocol-v2-reviewed/sourcePath", "value": "🧪️tests/different-ownerREADME.md" }] },
     {
       "id": "exact-approved-current-tuple",
       "phase": "authority",
@@ -81,7 +81,7 @@
           "pointer": "/duplicate",
           "value": {
             "catalogCaseIndex": 31,
-            "sourcePath": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/README.md",
+            "sourcePath": "🧰️framework/🛍️products/🦑️repo/🔨️modules/testREADME.md",
             "baselineCommit": "9f449b10659b95148c8bcb3f91ce583bf7446973",
             "baselineBlob": "97c9cd961ac67eb875f714da1a17a8d2121446dc",
             "baselinePreimage": {
@@ -94,7 +94,7 @@
               "size": 12527,
               "mode": "0644"
             },
-            "expectationsPath": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧪️testing-readme-coordinates/🔣️.json",
+            "expectationsPath": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧪️test/🔣️ing-readme-coordinates.json",
             "expectationsSha256": "83a1c6b098f7fc5ad26d1f7d5b47e08447ec50a8016796f0eaa0b1db3ed575a6"
           }
         }
@@ -394,7 +394,7 @@
         {
           "target": "contract",
           "pointer": "/authorityCatalogPath",
-          "value": "🧪️tests/🔣️.json"
+          "value": "🧪️test/🔣️s.json"
         }
       ]
     },
@@ -473,12 +473,12 @@
         {
           "target": "catalog",
           "pointer": "/cases/31/sourcePath",
-          "value": "🧪️tests/README.md"
+          "value": "testsREADME.md"
         },
         {
           "target": "facts",
           "pointer": "/path",
-          "value": "🧪️tests/README.md"
+          "value": "testsREADME.md"
         }
       ]
     },
@@ -675,7 +675,7 @@
         {
           "target": "expectationDocument",
           "pointer": "/documents/readme",
-          "value": "🧪️tests/README.md"
+          "value": "testsREADME.md"
         }
       ]
     },

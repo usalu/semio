@@ -1,0 +1,48 @@
+syntax = "proto3";
+package semio.s_stdio_dxf.mutation;
+
+import "snapshot.proto"; // DxfSnapshot, DxfHeaderVar, DxfLayer, DxfStyle, DxfLinetype, DxfEntity, DxfBlock
+
+// 🧬️ DxfMutation union — mirrors 🦀️.rs's #[serde(tag = "mutation")] enum. One
+// oneof entry per Rust variant.
+message DxfMutation {
+  oneof mutation {
+    SetSnapshot set_snapshot = 2;
+    SetHeaderVar set_header_var = 3;
+    RemoveHeaderVar remove_header_var = 4;
+    InsertLayer insert_layer = 5;
+    RemoveLayer remove_layer = 6;
+    SetLayer set_layer = 7;
+    InsertStyle insert_style = 8;
+    RemoveStyle remove_style = 9;
+    SetStyle set_style = 10;
+    InsertLinetype insert_linetype = 11;
+    RemoveLinetype remove_linetype = 12;
+    SetLinetype set_linetype = 13;
+    InsertEntity insert_entity = 14;
+    RemoveEntity remove_entity = 15;
+    SetEntity set_entity = 16;
+    InsertBlock insert_block = 17;
+    RemoveBlock remove_block = 18;
+    SetBlock set_block = 19;
+  }
+
+  message SetSnapshot { semio.s_stdio_dxf.snapshot.DxfSnapshot snapshot = 1; }
+  message SetHeaderVar { string name = 1; semio.s_stdio_dxf.snapshot.DxfHeaderVar header_var = 2; }
+  message RemoveHeaderVar { string name = 1; }
+  message InsertLayer { uint32 index = 1; semio.s_stdio_dxf.snapshot.DxfLayer layer = 2; }
+  message RemoveLayer { string name = 1; }
+  message SetLayer { string name = 1; semio.s_stdio_dxf.snapshot.DxfLayer layer = 2; }
+  message InsertStyle { uint32 index = 1; semio.s_stdio_dxf.snapshot.DxfStyle style = 2; }
+  message RemoveStyle { string name = 1; }
+  message SetStyle { string name = 1; semio.s_stdio_dxf.snapshot.DxfStyle style = 2; }
+  message InsertLinetype { uint32 index = 1; semio.s_stdio_dxf.snapshot.DxfLinetype linetype = 2; }
+  message RemoveLinetype { string name = 1; }
+  message SetLinetype { string name = 1; semio.s_stdio_dxf.snapshot.DxfLinetype linetype = 2; }
+  message InsertEntity { uint32 index = 1; semio.s_stdio_dxf.snapshot.DxfEntity entity = 2; }
+  message RemoveEntity { uint32 index = 1; }
+  message SetEntity { uint32 index = 1; semio.s_stdio_dxf.snapshot.DxfEntity entity = 2; }
+  message InsertBlock { uint32 index = 1; semio.s_stdio_dxf.snapshot.DxfBlock block = 2; }
+  message RemoveBlock { uint32 index = 1; }
+  message SetBlock { uint32 index = 1; semio.s_stdio_dxf.snapshot.DxfBlock block = 2; }
+}

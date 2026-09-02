@@ -5,7 +5,7 @@
   "displayName": "Create Load Case",
   "emoji": "🌱📋️",
   "aggregateVariant": "CreateLoadCase",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": "create-load-case",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

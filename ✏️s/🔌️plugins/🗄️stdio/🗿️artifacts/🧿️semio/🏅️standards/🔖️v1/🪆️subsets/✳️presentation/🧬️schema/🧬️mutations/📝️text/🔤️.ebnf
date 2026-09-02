@@ -1,0 +1,13 @@
+(* ISO-14977-style EBNF for `stdio.semio.presentation`'s real one-line `OpText` text form —
+   descriptive mirror of the authoritative `📖️.grammar.semio` (abridged: full per-keyword
+   argument detail lives there). *)
+op = keyword op ;
+keyword op = keyword, { arg } ;
+keyword = 'set-snapshot' | 'insert-slide' | 'remove-slide' | 'set-slide-layout' | 'set-slide-notes'
+        | 'insert-shape' | 'remove-shape' | 'set-shape-frame' | 'set-textbox-blocks' | 'insert-master'
+        | 'remove-master' | 'insert-layout' | 'remove-layout' | 'set-layout-master' ;
+arg = ident, '=', value ;
+value = '[', { ? any char ? }, ']' | hex | integer ;
+
+(* `ident` is a bare identifier token; `hex` is the framework's `hex` MACRO; `integer` is the
+   shared lexer's `INT` token. *)

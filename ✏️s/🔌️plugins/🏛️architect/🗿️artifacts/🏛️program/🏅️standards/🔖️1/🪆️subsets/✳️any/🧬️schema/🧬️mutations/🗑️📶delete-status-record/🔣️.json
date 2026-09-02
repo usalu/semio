@@ -5,7 +5,7 @@
   "displayName": "Delete Status Record",
   "emoji": "🗑️📶",
   "aggregateVariant": "DeleteStatusRecord",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

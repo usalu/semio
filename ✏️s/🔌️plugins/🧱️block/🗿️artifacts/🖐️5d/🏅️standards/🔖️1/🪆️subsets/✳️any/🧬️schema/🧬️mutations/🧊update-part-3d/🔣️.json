@@ -5,7 +5,7 @@
   "displayName": "Update Part 3d",
   "emoji": "🧊",
   "aggregateVariant": "UpdatePart3d",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": "update-part-3d",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

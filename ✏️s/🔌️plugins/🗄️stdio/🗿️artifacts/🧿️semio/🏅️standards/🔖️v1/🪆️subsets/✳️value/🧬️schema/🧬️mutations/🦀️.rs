@@ -109,7 +109,7 @@ pub enum SemioValueMutation {
 }
 
 /// 🏷️ Kebab-case spelling of every `SemioValueMutation` variant, in declaration order — the
-/// vocabulary the `semio-v1-value` mutation catalog (`../../🧪️oracle/🔣️.json`) declares and
+/// vocabulary the `semio-v1-value` mutation catalog (`../../🔣️oracle.json`) declares and
 /// `mutate-semio-value`'s exhaustive test case measures itself against.
 pub const KINDS: &[&str] = &["set-snapshot", "set-value", "set-map-entry", "remove-map-entry", "insert-list-item", "remove-list-item", "set-node", "remove-node"];
 //#endregion 🔖️Mutations
@@ -323,7 +323,7 @@ fn dec_path(s: &str) -> Result<SemioValuePath, String> {
     split_top_level(strip_brackets(s)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_path_segment).collect()
 }
 /// 🧭️ `enc_semio_snapshot`/`dec_semio_snapshot` — thin aliases for the single-source-of-truth
-/// `SemioValueSnapshot` text codec now owned by the sibling `📸️snapshot/🦀️component.rs` (also
+/// `SemioValueSnapshot` text codec now owned by the sibling `📸️snapshot/🦀️.rs` (also
 /// reused there by `ArtifactDsl`/`ArtifactPack`), rather than a second independent copy.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn enc_semio_snapshot(s: &SemioValueSnapshot) -> String {
@@ -416,7 +416,7 @@ fn dec_semio_path_bin(reader: &mut store::ByteReader<'_>) -> Result<SemioValuePa
 }
 
 /// 🧭️ Real recursive binary twin of [`enc_semio_snapshot`]/[`dec_semio_snapshot`] — used ONLY by
-/// `SetSnapshot`'s own `OpBinary` payload (the sibling `📸️snapshot/🦀️component.rs`'s own
+/// `SetSnapshot`'s own `OpBinary` payload (the sibling `📸️snapshot/🦀️.rs`'s own
 /// `ArtifactPack` stays text-native, matching `json`'s exact precedent — see that file's doc
 /// comment).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -442,7 +442,7 @@ fn dec_semio_value_snapshot_bin(reader: &mut store::ByteReader<'_>) -> Result<Se
 //#endregion 🔖️OpBinaryPrimitives
 
 /// 🧪️ Real binary op frame (`format u8 | tag u8 | variant payload`), matching
-/// `../💾️binary/📡️component.protocol.semio`'s `header fixed 2` + `chain payload bytes` shape —
+/// `../💾️binary/📡️.protocol.semio`'s `header fixed 2` + `chain payload bytes` shape —
 /// upgraded from the `print_op().into_bytes()` text-as-binary shortcut this facet started with.
 /// `tag` is the `SemioValueMutation` variant ordinal, in the same 0-7 order
 /// `print_value_mutation`'s own keyword match uses. Every variant's own path/key/value/id payload
@@ -552,7 +552,7 @@ impl protocol::OpBinary for SemioValueMutation {
 /// 🧪️ Representative `SemioValueMutation` values, one per variant, incl. nested/list/map payload
 /// values, a `Ref`/`Bytes` payload, and a multi-segment `SemioValuePath` mixing both segment
 /// kinds — the single source of truth reused by `op_text_binary_roundtrip_law` below AND by
-/// `🎹️composer/🦀️component.rs`'s `ops_grammar_conformance_law`/`protocol_walk_law` conformance
+/// `🎹️composer/🦀️.rs`'s `ops_grammar_conformance_law`/`protocol_walk_law` conformance
 /// tests, same convention json's own `demo_mutation_cases` uses.
 #[cfg(test)]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -790,7 +790,7 @@ mod tests {
         for (kind, mutation) in KINDS.iter().zip(one_per_variant.iter()) {
             assert_eq!(*kind, kind_of(mutation), "KINDS must follow the enum's own declaration order and kebab-case spelling");
         }
-        let manifest = include_str!("../../🧪️oracle/🔣️.json");
+        let manifest = include_str!("../../🔣️oracle.json");
         for kind in KINDS {
             assert!(manifest.contains(&format!("\"{kind}\"")), "KINDS entry {kind:?} must also appear in the committed oracle manifest's catalog");
         }
@@ -801,9 +801,9 @@ mod tests {
 
 //#region 🧪️FixtureCases
 /// 🧪️ Handcrafted `📄set-snapshot` fixture cases, wired from this tree's own mutations root so
-/// `📦️glue.rs` stays untouched (`#[path]` on a non-inline module resolves against this file's own
+/// `🦀️.rs` stays untouched (`#[path]` on a non-inline module resolves against this file's own
 /// directory).
 #[cfg(test)]
-#[path = "📄set-snapshot/🧪️tests/retypes-a-map-member-and-repoints-a-graph-node/🦀️component.rs"]
+#[path = "📄set-snapshot/🧪️tests/retypes-a-map-member-and-repoints-a-graph-node/🦀️.rs"]
 mod set_snapshot_retypes_a_map_member_and_repoints_a_graph_node;
 //#endregion 🧪️FixtureCases

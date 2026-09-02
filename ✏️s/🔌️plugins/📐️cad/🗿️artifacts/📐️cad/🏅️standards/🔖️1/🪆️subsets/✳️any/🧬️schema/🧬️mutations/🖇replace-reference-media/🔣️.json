@@ -5,7 +5,7 @@
   "displayName": "Replace Reference Media",
   "emoji": "🖇",
   "aggregateVariant": "ReplaceReferenceMedia",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": "replace-reference-media",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

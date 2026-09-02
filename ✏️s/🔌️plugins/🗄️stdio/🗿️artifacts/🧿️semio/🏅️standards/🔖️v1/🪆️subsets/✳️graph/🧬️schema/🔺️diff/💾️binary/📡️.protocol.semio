@@ -1,0 +1,18 @@
+dialect protocol
+protocol s.stdio.semio.graph.diff
+version 1
+schema s.stdio.semio.graph
+start body
+framing record
+
+# UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM graph wave: real binary diff frame. `format u8` + `presence
+# u8` (bit0=`nodes`, bit1=`edges`) are two REAL fixed fields; when present, each list follows as a
+# real varint count + per-record repeated data — modeled as one opaque trailing `payload` chain
+# (the `protocol-array-of-records` gap every sibling subset's own diff protocol uses at this
+# boundary). The real Rust `encode_diff`/`decode_diff` (`../../🦀️.rs`) stays genuinely,
+# fully structured — round-trip tested independently.
+header fixed 2
+field format u8
+field presence u8
+
+chain payload bytes

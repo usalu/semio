@@ -5,7 +5,7 @@
   "displayName": "Change Part Kind Label",
   "emoji": "🏷️",
   "aggregateVariant": "ChangePartKindLabel",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": "change-part-kind-label",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

@@ -5,7 +5,7 @@
   "displayName": "Create Reference",
   "emoji": "🖼",
   "aggregateVariant": "CreateReference",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": "create-reference",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

@@ -5,10 +5,10 @@
   "displayName": "Append Page Content",
   "emoji": "➕️",
   "aggregateVariant": "AppendPageContent",
-  "payloadSchema": "🔣️payload.schema.json",
-  "textOpcode": null,
-  "binaryTag": null,
-  "invertibility": "non-invertible",
+  "payloadSchema": "🔣️.schema.json",
+  "textOpcode": "append-page-content",
+  "binaryTag": 4,
+  "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
   "outcomeClasses": [
     "applied"
@@ -16,6 +16,9 @@
   "composition": "atomic",
   "requiredLanguageSurfaces": [
     "rust",
+    "typescript",
+    "graphql",
+    "protobuf",
     "json-schema",
     "text",
     "binary"

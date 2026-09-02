@@ -1,7 +1,7 @@
 {
   "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json",
   "schemaVersion": 2,
-  "_comment": "🧩️ This subset's own contribution. The mutation vocabulary belongs to ONE subset of ONE standard of ONE artifact, so the oracle registration and the catalog live here. `s.architect.program` is a semio-NATIVE artifact and no third party reads its carriers, so the reference is a SECOND IMPLEMENTATION in Python written from this subset's committed schemas, its derivation rules and its 266 specification vectors.",
+  "_comment": "🧩️ This subset's own contribution. The mutation vocabulary belongs to one subset of one standard of one artifact, so its oracle registrations and catalog live here. The Python implementation remains supplemental algebra evidence; the production ZIP register carrier now gives all 266 mutations a qualifying third-party reader.",
   "oracles": [
     {
       "id": "architect-program-python-independent",
@@ -16,7 +16,7 @@
       ],
       "license": "AGPL-3.0-only",
       "testOnly": true,
-      "rationale": "A second implementation of the `s.architect.program` architectural-brief document and all 266 typed mutations, in Python, at `../../../../../🧪️tests/mutate-program-1/🐍️component.py`. Written from `../🧬️schema/🧬️mutations/🔣️component.json` (the 266 payload shapes: 66 `{id}`, 64 `{id,newName}`, 66 whole-record and six facet payloads), from `../🧬️schema/📸️snapshot/🔣️component.json` (the register list and its order), from rules 1, 2 and 4 of `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/📓️derivation-rules.md`, and from the 266 committed `(before, mutation, after, outcome)` specification vectors — which are the only statement of three facts: that a `connect-` verb NORMALISES the edge it appends, that an absent id is `mutation.target-missing` with the id as its path rather than a no-op, and that the 47th register is serialized `artifacts` although the committed JSON Schema requires `documents`. It imports nothing from this repository and transliterates none of its Rust; no file under `../🧬️schema/🧬️mutations/<slug>/{🦠️mutation,↩️inverse,🔺️diff}/🦀️component.rs` was read. This registration SUPERSEDES the `architect-program-mutation-semantics` no-oracle decision, whose argument — that a vocabulary derived by `📓️derivation-rules.md` is a specification no external implementation could confirm or refute — was refuted by the fifteen `📕️norm` references, which were written from that same document. A third-party library was declined, not merely absent: IFC and its property sets carry a built model rather than the brief that precedes it, requirements-management schemas (ReqIF, SysML) carry requirement records but no 66-register brief and no closed 266-verb algebra over it, and none of them reads this carrier. The reference REFUSES three of the case's scenarios by clause rather than adjudicating them, and says so in role: `create-knowledge-record` and `create-benchmark-record`, whose whole observable effect is a content address of a composed `s.stdio.semio@v1/table` child that no document in this repository defines; and `identity-round-trip`, whose `.dsl.semio` carrier has only the repository-wide placeholder grammar `payload = OCTET+` while the notation flattens nested records into `key=key=value` and every record `$def` in the committed JSON Schema is an empty `{\"type\": \"object\", \"additionalProperties\": true}` stub. `package` is deliberately empty: the implementation needs no distribution, so this entry contributes nothing to `🔒️dependencies.json`.\n\nUNDER PROTOCOL V2 this registration is classified `cross-semio-implementation` — a required SUPPLEMENTAL oracle that does not discharge `program-1-mutate`'s external-oracle requirement for its 266-kind mutation vocabulary; a qualifying third-party reference (`third-party-library` / `third-party-cli` / `standards-reference-tool`) is still owed.",
+      "rationale": "A second implementation of the `s.architect.program` architectural-brief document and all 266 typed mutations, in Python, at `../../../../../🧪️tests/mutate-program-1/🐍️component.py`. Written from `../🧬️schema/🧬️mutations/🔣️.json` (the 266 payload shapes: 66 `{id}`, 64 `{id,newName}`, 66 whole-record and six facet payloads), from `../🧬️schema/📸️snapshot/🔣️.json` (the register list and its order), from rules 1, 2 and 4 of `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/📓️derivation-rules.md`, and from the 266 committed `(before, mutation, after, outcome)` specification vectors — which are the only statement of three facts: that a `connect-` verb NORMALISES the edge it appends, that an absent id is `mutation.target-missing` with the id as its path rather than a no-op, and that the 47th register is serialized `artifacts` although the committed JSON Schema requires `documents`. It imports nothing from this repository and transliterates none of its Rust; no file under `../🧬️schema/🧬️mutations/<slug>/{🦠️mutation,↩️inverse,🔺️diff}/🦀️.rs` was read. This registration SUPERSEDES the `architect-program-mutation-semantics` no-oracle decision, whose argument — that a vocabulary derived by `📓️derivation-rules.md` is a specification no external implementation could confirm or refute — was refuted by the fifteen `📕️norm` references, which were written from that same document. A third-party library was declined, not merely absent: IFC and its property sets carry a built model rather than the brief that precedes it, requirements-management schemas (ReqIF, SysML) carry requirement records but no 66-register brief and no closed 266-verb algebra over it, and none of them reads this carrier. The reference REFUSES three of the case's scenarios by clause rather than adjudicating them, and says so in role: `create-knowledge-record` and `create-benchmark-record`, whose whole observable effect is a content address of a composed `s.stdio.semio@v1/table` child that no document in this repository defines; and `identity-round-trip`, whose `.dsl.semio` carrier has only the repository-wide placeholder grammar `payload = OCTET+` while the notation flattens nested records into `key=key=value` and every record `$def` in the committed JSON Schema is an empty `{\"type\": \"object\", \"additionalProperties\": true}` stub. `package` is deliberately empty: the implementation needs no distribution, so this entry contributes nothing to `🔒️dependencies.json`.\n\nUNDER PROTOCOL V2 this registration is classified `cross-semio-implementation` — a required SUPPLEMENTAL oracle that does not discharge `program-1-mutate`'s external-oracle requirement for its 266-kind mutation vocabulary; a qualifying third-party reference (`third-party-library` / `third-party-cli` / `standards-reference-tool`) is still owed.",
       "kind": "cross-semio-implementation",
       "engine": {
         "family": "none",
@@ -25,9 +25,5330 @@
       },
       "productionReachable": false,
       "networkDuringExecution": false
+    },
+    {
+      "id": "architect-program-zip-reader",
+      "ecosystem": "rust",
+      "package": "zip",
+      "version": "6",
+      "capabilities": [
+        "program-1-mutate"
+      ],
+      "comparisonProfiles": [
+        "ordered-json-v1"
+      ],
+      "license": "MIT",
+      "testOnly": true,
+      "homepage": "https://github.com/zip-rs/zip2",
+      "rationale": "The production architect program exporter maps all 66 registers plus the program, meta, project and governance singleton blocks to seventy JSON members in a real ZIP archive. Each mutation subject first proves its typed result against the committed vector and proves that every non-guard mutation changes this carrier projection; the oracle then receives those exact subject bytes and independently decompresses every member with zip 6 before parsing and comparing its JSON. The reader never links architect, applies a mutation, predicts a row or trusts the repository ZIP decoder, so a silent empty archive, a missing register, corrupt compression or dropped content diverges externally.",
+      "hostPath": "✏️s/🔌️plugins/🗄️stdio/🧪️oracle/📦️packages/🦀️rust",
+      "kind": "third-party-library",
+      "engine": {
+        "family": "zip",
+        "implementation": "zip Rust ZIP reader",
+        "version": "6"
+      },
+      "productionReachable": false,
+      "networkDuringExecution": false
+    },
+    {
+      "id": "architect-program-xlsx-calamine",
+      "ecosystem": "rust",
+      "package": "calamine",
+      "version": "0.36",
+      "capabilities": [
+        "program-1-xlsx-export"
+      ],
+      "comparisonProfiles": [
+        "ordered-json-v1"
+      ],
+      "license": "MIT",
+      "testOnly": true,
+      "homepage": "https://github.com/tafia/calamine",
+      "rationale": "The architect subject emits the production ECMA-376 workbook for a populated committed program and the oracle receives those exact bytes. Calamine 0.36 independently opens every worksheet and resolves every non-empty cell into the same row, column and typed-value projection prepared from the logical XlsxSnapshot before encoding. It never imports architect or stdio's XLSX decoder, so an empty workbook, missing register sheet, dropped field, malformed package or incorrect cell encoding is an external divergence.",
+      "hostPath": "✏️s/🔌️plugins/🗄️stdio/🧪️oracle/📦️packages/🦀️rust",
+      "kind": "third-party-library",
+      "engine": {
+        "family": "calamine",
+        "implementation": "calamine Rust spreadsheet reader",
+        "version": "0.36"
+      },
+      "productionReachable": false,
+      "networkDuringExecution": false
+    }
+  ],
+  "mutationManifests": [
+    {
+      "schema": "semio.repository-test.mutation-manifest/v2",
+      "artifact": "s.architect.program",
+      "standard": "1",
+      "subset": "any",
+      "standardDirectoryName": "🔖️1",
+      "subsetDirectoryName": "✳️any",
+      "mutations": [
+        {
+          "id": "connect-adjacency",
+          "capability": "program-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "connect-adjacency",
+            "bridgeVersion": 1,
+            "variant": "ConnectAdjacency"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "program-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "connect-trace",
+          "capability": "program-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "connect-trace",
+            "bridgeVersion": 1,
+            "variant": "ConnectTrace"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "program-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "create-access-rule",
+          "capability": "program-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "create-access-rule",
+            "bridgeVersion": 1,
+            "variant": "CreateAccessRule"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "program-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "create-accessibility-requirement",
+          "capability": "program-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "create-accessibility-requirement",
+            "bridgeVersion": 1,
+            "variant": "CreateAccessibilityRequirement"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "program-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "create-activity",
+          "capability": "program-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "create-activity",
+            "bridgeVersion": 1,
+            "variant": "CreateActivity"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "program-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "create-analysis-record",
+          "capability": "program-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "create-analysis-record",
+            "bridgeVersion": 1,
+            "variant": "CreateAnalysisRecord"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "program-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "create-approval-record",
+          "capability": "program-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "create-approval-record",
+            "bridgeVersion": 1,
+            "variant": "CreateApprovalRecord"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "program-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "create-assumption",
+          "capability": "program-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "create-assumption",
+            "bridgeVersion": 1,
+            "variant": "CreateAssumption"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "program-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "create-audit-event",
+          "capability": "program-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "create-audit-event",
+            "bridgeVersion": 1,
+            "variant": "CreateAuditEvent"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "program-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "create-benchmark-record",
+          "capability": "program-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "create-benchmark-record",
+            "bridgeVersion": 1,
+            "variant": "CreateBenchmarkRecord"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "program-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "create-change-record",
+          "capability": "program-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "create-change-record",
+            "bridgeVersion": 1,
+            "variant": "CreateChangeRecord"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "program-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "create-collaboration-record",
+          "capability": "program-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "create-collaboration-record",
+            "bridgeVersion": 1,
+            "variant": "CreateCollaborationRecord"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "program-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "create-communication-requirement",
+          "capability": "program-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "create-communication-requirement",
+            "bridgeVersion": 1,
+            "variant": "CreateCommunicationRequirement"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "program-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "create-compliance-record",
+          "capability": "program-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "create-compliance-record",
+            "bridgeVersion": 1,
+            "variant": "CreateComplianceRecord"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "program-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "create-conflict",
+          "capability": "program-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "create-conflict",
+            "bridgeVersion": 1,
+            "variant": "CreateConflict"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "program-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "create-constraint-record",
+          "capability": "program-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "create-constraint-record",
+            "bridgeVersion": 1,
+            "variant": "CreateConstraintRecord"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "program-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "create-cost-requirement",
+          "capability": "program-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "create-cost-requirement",
+            "bridgeVersion": 1,
+            "variant": "CreateCostRequirement"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "program-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "create-decision",
+          "capability": "program-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "create-decision",
+            "bridgeVersion": 1,
+            "variant": "CreateDecision"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "program-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "create-delivery-constraint",
+          "capability": "program-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "create-delivery-constraint",
+            "bridgeVersion": 1,
+            "variant": "CreateDeliveryConstraint"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "program-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "create-document",
+          "capability": "program-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "create-document",
+            "bridgeVersion": 1,
+            "variant": "CreateDocument"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "program-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "create-environmental-requirement",
+          "capability": "program-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "create-environmental-requirement",
+            "bridgeVersion": 1,
+            "variant": "CreateEnvironmentalRequirement"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "program-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "create-equipment",
+          "capability": "program-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "create-equipment",
+            "bridgeVersion": 1,
+            "variant": "CreateEquipment"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "program-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "create-flexibility-requirement",
+          "capability": "program-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "create-flexibility-requirement",
+            "bridgeVersion": 1,
+            "variant": "CreateFlexibilityRequirement"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "program-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "create-flow-requirement",
+          "capability": "program-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "create-flow-requirement",
+            "bridgeVersion": 1,
+            "variant": "CreateFlowRequirement"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "program-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "create-function",
+          "capability": "program-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "create-function",
+            "bridgeVersion": 1,
+            "variant": "CreateFunction"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "program-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "create-growth-plan",
+          "capability": "program-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "create-growth-plan",
+            "bridgeVersion": 1,
+            "variant": "CreateGrowthPlan"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "program-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "create-human-factor-requirement",
+          "capability": "program-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "create-human-factor-requirement",
+            "bridgeVersion": 1,
+            "variant": "CreateHumanFactorRequirement"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "program-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "create-information-requirement",
+          "capability": "program-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "create-information-requirement",
+            "bridgeVersion": 1,
+            "variant": "CreateInformationRequirement"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "program-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "create-infrastructure-requirement",
+          "capability": "program-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "create-infrastructure-requirement",
+            "bridgeVersion": 1,
+            "variant": "CreateInfrastructureRequirement"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "program-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "create-issue",
+          "capability": "program-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "create-issue",
+            "bridgeVersion": 1,
+            "variant": "CreateIssue"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "program-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "create-knowledge-record",
+          "capability": "program-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "create-knowledge-record",
+            "bridgeVersion": 1,
+            "variant": "CreateKnowledgeRecord"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "program-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "create-meeting-record",
+          "capability": "program-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "create-meeting-record",
+            "bridgeVersion": 1,
+            "variant": "CreateMeetingRecord"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "program-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "create-operational-requirement",
+          "capability": "program-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "create-operational-requirement",
+            "bridgeVersion": 1,
+            "variant": "CreateOperationalRequirement"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "program-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "create-option-evaluation",
+          "capability": "program-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "create-option-evaluation",
+            "bridgeVersion": 1,
+            "variant": "CreateOptionEvaluation"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "program-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "create-organizational-requirement",
+          "capability": "program-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "create-organizational-requirement",
+            "bridgeVersion": 1,
+            "variant": "CreateOrganizationalRequirement"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "program-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "create-performance-criterion",
+          "capability": "program-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "create-performance-criterion",
+            "bridgeVersion": 1,
+            "variant": "CreatePerformanceCriterion"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "program-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "create-priority-record",
+          "capability": "program-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "create-priority-record",
+            "bridgeVersion": 1,
+            "variant": "CreatePriorityRecord"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "program-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "create-privacy-requirement",
+          "capability": "program-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "create-privacy-requirement",
+            "bridgeVersion": 1,
+            "variant": "CreatePrivacyRequirement"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "program-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "create-process",
+          "capability": "program-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "create-process",
+            "bridgeVersion": 1,
+            "variant": "CreateProcess"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "program-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "create-program-element",
+          "capability": "program-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "create-program-element",
+            "bridgeVersion": 1,
+            "variant": "CreateProgramElement"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "program-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "create-quality-record",
+          "capability": "program-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "create-quality-record",
+            "bridgeVersion": 1,
+            "variant": "CreateQualityRecord"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "program-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "create-quantity-requirement",
+          "capability": "program-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "create-quantity-requirement",
+            "bridgeVersion": 1,
+            "variant": "CreateQuantityRequirement"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "program-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "create-regulatory-requirement",
+          "capability": "program-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "create-regulatory-requirement",
+            "bridgeVersion": 1,
+            "variant": "CreateRegulatoryRequirement"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "program-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "create-relationship",
+          "capability": "program-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "create-relationship",
+            "bridgeVersion": 1,
+            "variant": "CreateRelationship"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "program-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "create-report-record",
+          "capability": "program-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "create-report-record",
+            "bridgeVersion": 1,
+            "variant": "CreateReportRecord"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "program-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "create-requirement",
+          "capability": "program-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "create-requirement",
+            "bridgeVersion": 1,
+            "variant": "CreateRequirement"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "program-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "create-resilience-requirement",
+          "capability": "program-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "create-resilience-requirement",
+            "bridgeVersion": 1,
+            "variant": "CreateResilienceRequirement"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "program-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "create-resource",
+          "capability": "program-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "create-resource",
+            "bridgeVersion": 1,
+            "variant": "CreateResource"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "program-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "create-risk",
+          "capability": "program-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "create-risk",
+            "bridgeVersion": 1,
+            "variant": "CreateRisk"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "program-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "create-safety-requirement",
+          "capability": "program-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "create-safety-requirement",
+            "bridgeVersion": 1,
+            "variant": "CreateSafetyRequirement"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "program-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "create-scenario",
+          "capability": "program-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "create-scenario",
+            "bridgeVersion": 1,
+            "variant": "CreateScenario"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "program-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "create-schedule-requirement",
+          "capability": "program-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "create-schedule-requirement",
+            "bridgeVersion": 1,
+            "variant": "CreateScheduleRequirement"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "program-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "create-search-filter",
+          "capability": "program-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "create-search-filter",
+            "bridgeVersion": 1,
+            "variant": "CreateSearchFilter"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "program-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "create-security-requirement",
+          "capability": "program-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "create-security-requirement",
+            "bridgeVersion": 1,
+            "variant": "CreateSecurityRequirement"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "program-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "create-service-requirement",
+          "capability": "program-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "create-service-requirement",
+            "bridgeVersion": 1,
+            "variant": "CreateServiceRequirement"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "program-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "create-site-context",
+          "capability": "program-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "create-site-context",
+            "bridgeVersion": 1,
+            "variant": "CreateSiteContext"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "program-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "create-stakeholder",
+          "capability": "program-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "create-stakeholder",
+            "bridgeVersion": 1,
+            "variant": "CreateStakeholder"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "program-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "create-status-record",
+          "capability": "program-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "create-status-record",
+            "bridgeVersion": 1,
+            "variant": "CreateStatusRecord"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "program-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "create-storage-requirement",
+          "capability": "program-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "create-storage-requirement",
+            "bridgeVersion": 1,
+            "variant": "CreateStorageRequirement"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "program-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "create-survey",
+          "capability": "program-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "create-survey",
+            "bridgeVersion": 1,
+            "variant": "CreateSurvey"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "program-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "create-sustainability-requirement",
+          "capability": "program-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "create-sustainability-requirement",
+            "bridgeVersion": 1,
+            "variant": "CreateSustainabilityRequirement"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "program-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "create-template-record",
+          "capability": "program-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "create-template-record",
+            "bridgeVersion": 1,
+            "variant": "CreateTemplateRecord"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "program-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "create-user-profile",
+          "capability": "program-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "create-user-profile",
+            "bridgeVersion": 1,
+            "variant": "CreateUserProfile"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "program-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "create-validation-record",
+          "capability": "program-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "create-validation-record",
+            "bridgeVersion": 1,
+            "variant": "CreateValidationRecord"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "program-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "create-wayfinding-requirement",
+          "capability": "program-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "create-wayfinding-requirement",
+            "bridgeVersion": 1,
+            "variant": "CreateWayfindingRequirement"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "program-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "create-workshop",
+          "capability": "program-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "create-workshop",
+            "bridgeVersion": 1,
+            "variant": "CreateWorkshop"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "program-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "delete-access-rule",
+          "capability": "program-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "delete-access-rule",
+            "bridgeVersion": 1,
+            "variant": "DeleteAccessRule"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "program-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "delete-accessibility-requirement",
+          "capability": "program-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "delete-accessibility-requirement",
+            "bridgeVersion": 1,
+            "variant": "DeleteAccessibilityRequirement"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "program-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "delete-activity",
+          "capability": "program-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "delete-activity",
+            "bridgeVersion": 1,
+            "variant": "DeleteActivity"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "program-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "delete-analysis-record",
+          "capability": "program-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "delete-analysis-record",
+            "bridgeVersion": 1,
+            "variant": "DeleteAnalysisRecord"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "program-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "delete-approval-record",
+          "capability": "program-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "delete-approval-record",
+            "bridgeVersion": 1,
+            "variant": "DeleteApprovalRecord"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "program-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "delete-assumption",
+          "capability": "program-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "delete-assumption",
+            "bridgeVersion": 1,
+            "variant": "DeleteAssumption"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "program-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "delete-audit-event",
+          "capability": "program-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "delete-audit-event",
+            "bridgeVersion": 1,
+            "variant": "DeleteAuditEvent"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "program-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "delete-benchmark-record",
+          "capability": "program-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "delete-benchmark-record",
+            "bridgeVersion": 1,
+            "variant": "DeleteBenchmarkRecord"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "program-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "delete-change-record",
+          "capability": "program-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "delete-change-record",
+            "bridgeVersion": 1,
+            "variant": "DeleteChangeRecord"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "program-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "delete-collaboration-record",
+          "capability": "program-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "delete-collaboration-record",
+            "bridgeVersion": 1,
+            "variant": "DeleteCollaborationRecord"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "program-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "delete-communication-requirement",
+          "capability": "program-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "delete-communication-requirement",
+            "bridgeVersion": 1,
+            "variant": "DeleteCommunicationRequirement"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "program-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "delete-compliance-record",
+          "capability": "program-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "delete-compliance-record",
+            "bridgeVersion": 1,
+            "variant": "DeleteComplianceRecord"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "program-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "delete-conflict",
+          "capability": "program-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "delete-conflict",
+            "bridgeVersion": 1,
+            "variant": "DeleteConflict"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "program-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "delete-constraint-record",
+          "capability": "program-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "delete-constraint-record",
+            "bridgeVersion": 1,
+            "variant": "DeleteConstraintRecord"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "program-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "delete-cost-requirement",
+          "capability": "program-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "delete-cost-requirement",
+            "bridgeVersion": 1,
+            "variant": "DeleteCostRequirement"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "program-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "delete-decision",
+          "capability": "program-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "delete-decision",
+            "bridgeVersion": 1,
+            "variant": "DeleteDecision"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "program-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "delete-delivery-constraint",
+          "capability": "program-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "delete-delivery-constraint",
+            "bridgeVersion": 1,
+            "variant": "DeleteDeliveryConstraint"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "program-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "delete-document",
+          "capability": "program-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "delete-document",
+            "bridgeVersion": 1,
+            "variant": "DeleteDocument"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "program-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "delete-environmental-requirement",
+          "capability": "program-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "delete-environmental-requirement",
+            "bridgeVersion": 1,
+            "variant": "DeleteEnvironmentalRequirement"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "program-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "delete-equipment",
+          "capability": "program-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "delete-equipment",
+            "bridgeVersion": 1,
+            "variant": "DeleteEquipment"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "program-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "delete-flexibility-requirement",
+          "capability": "program-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "delete-flexibility-requirement",
+            "bridgeVersion": 1,
+            "variant": "DeleteFlexibilityRequirement"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "program-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "delete-flow-requirement",
+          "capability": "program-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "delete-flow-requirement",
+            "bridgeVersion": 1,
+            "variant": "DeleteFlowRequirement"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "program-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "delete-function",
+          "capability": "program-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "delete-function",
+            "bridgeVersion": 1,
+            "variant": "DeleteFunction"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "program-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "delete-growth-plan",
+          "capability": "program-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "delete-growth-plan",
+            "bridgeVersion": 1,
+            "variant": "DeleteGrowthPlan"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "program-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "delete-human-factor-requirement",
+          "capability": "program-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "delete-human-factor-requirement",
+            "bridgeVersion": 1,
+            "variant": "DeleteHumanFactorRequirement"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "program-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "delete-information-requirement",
+          "capability": "program-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "delete-information-requirement",
+            "bridgeVersion": 1,
+            "variant": "DeleteInformationRequirement"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "program-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "delete-infrastructure-requirement",
+          "capability": "program-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "delete-infrastructure-requirement",
+            "bridgeVersion": 1,
+            "variant": "DeleteInfrastructureRequirement"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "program-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "delete-issue",
+          "capability": "program-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "delete-issue",
+            "bridgeVersion": 1,
+            "variant": "DeleteIssue"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "program-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "delete-knowledge-record",
+          "capability": "program-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "delete-knowledge-record",
+            "bridgeVersion": 1,
+            "variant": "DeleteKnowledgeRecord"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "program-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "delete-meeting-record",
+          "capability": "program-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "delete-meeting-record",
+            "bridgeVersion": 1,
+            "variant": "DeleteMeetingRecord"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "program-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "delete-operational-requirement",
+          "capability": "program-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "delete-operational-requirement",
+            "bridgeVersion": 1,
+            "variant": "DeleteOperationalRequirement"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "program-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "delete-option-evaluation",
+          "capability": "program-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "delete-option-evaluation",
+            "bridgeVersion": 1,
+            "variant": "DeleteOptionEvaluation"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "program-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "delete-organizational-requirement",
+          "capability": "program-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "delete-organizational-requirement",
+            "bridgeVersion": 1,
+            "variant": "DeleteOrganizationalRequirement"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "program-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "delete-performance-criterion",
+          "capability": "program-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "delete-performance-criterion",
+            "bridgeVersion": 1,
+            "variant": "DeletePerformanceCriterion"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "program-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "delete-priority-record",
+          "capability": "program-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "delete-priority-record",
+            "bridgeVersion": 1,
+            "variant": "DeletePriorityRecord"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "program-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "delete-privacy-requirement",
+          "capability": "program-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "delete-privacy-requirement",
+            "bridgeVersion": 1,
+            "variant": "DeletePrivacyRequirement"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "program-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "delete-process",
+          "capability": "program-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "delete-process",
+            "bridgeVersion": 1,
+            "variant": "DeleteProcess"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "program-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "delete-program-element",
+          "capability": "program-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "delete-program-element",
+            "bridgeVersion": 1,
+            "variant": "DeleteProgramElement"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "program-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "delete-quality-record",
+          "capability": "program-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "delete-quality-record",
+            "bridgeVersion": 1,
+            "variant": "DeleteQualityRecord"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "program-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "delete-quantity-requirement",
+          "capability": "program-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "delete-quantity-requirement",
+            "bridgeVersion": 1,
+            "variant": "DeleteQuantityRequirement"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "program-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "delete-regulatory-requirement",
+          "capability": "program-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "delete-regulatory-requirement",
+            "bridgeVersion": 1,
+            "variant": "DeleteRegulatoryRequirement"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "program-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "delete-relationship",
+          "capability": "program-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "delete-relationship",
+            "bridgeVersion": 1,
+            "variant": "DeleteRelationship"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "program-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "delete-report-record",
+          "capability": "program-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "delete-report-record",
+            "bridgeVersion": 1,
+            "variant": "DeleteReportRecord"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "program-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "delete-requirement",
+          "capability": "program-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "delete-requirement",
+            "bridgeVersion": 1,
+            "variant": "DeleteRequirement"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "program-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "delete-resilience-requirement",
+          "capability": "program-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "delete-resilience-requirement",
+            "bridgeVersion": 1,
+            "variant": "DeleteResilienceRequirement"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "program-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "delete-resource",
+          "capability": "program-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "delete-resource",
+            "bridgeVersion": 1,
+            "variant": "DeleteResource"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "program-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "delete-risk",
+          "capability": "program-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "delete-risk",
+            "bridgeVersion": 1,
+            "variant": "DeleteRisk"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "program-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "delete-safety-requirement",
+          "capability": "program-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "delete-safety-requirement",
+            "bridgeVersion": 1,
+            "variant": "DeleteSafetyRequirement"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "program-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "delete-scenario",
+          "capability": "program-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "delete-scenario",
+            "bridgeVersion": 1,
+            "variant": "DeleteScenario"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "program-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "delete-schedule-requirement",
+          "capability": "program-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "delete-schedule-requirement",
+            "bridgeVersion": 1,
+            "variant": "DeleteScheduleRequirement"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "program-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "delete-search-filter",
+          "capability": "program-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "delete-search-filter",
+            "bridgeVersion": 1,
+            "variant": "DeleteSearchFilter"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "program-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "delete-security-requirement",
+          "capability": "program-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "delete-security-requirement",
+            "bridgeVersion": 1,
+            "variant": "DeleteSecurityRequirement"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "program-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "delete-service-requirement",
+          "capability": "program-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "delete-service-requirement",
+            "bridgeVersion": 1,
+            "variant": "DeleteServiceRequirement"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "program-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "delete-site-context",
+          "capability": "program-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "delete-site-context",
+            "bridgeVersion": 1,
+            "variant": "DeleteSiteContext"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "program-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "delete-stakeholder",
+          "capability": "program-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "delete-stakeholder",
+            "bridgeVersion": 1,
+            "variant": "DeleteStakeholder"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "program-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "delete-status-record",
+          "capability": "program-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "delete-status-record",
+            "bridgeVersion": 1,
+            "variant": "DeleteStatusRecord"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "program-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "delete-storage-requirement",
+          "capability": "program-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "delete-storage-requirement",
+            "bridgeVersion": 1,
+            "variant": "DeleteStorageRequirement"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "program-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "delete-survey",
+          "capability": "program-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "delete-survey",
+            "bridgeVersion": 1,
+            "variant": "DeleteSurvey"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "program-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "delete-sustainability-requirement",
+          "capability": "program-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "delete-sustainability-requirement",
+            "bridgeVersion": 1,
+            "variant": "DeleteSustainabilityRequirement"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "program-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "delete-template-record",
+          "capability": "program-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "delete-template-record",
+            "bridgeVersion": 1,
+            "variant": "DeleteTemplateRecord"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "program-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "delete-user-profile",
+          "capability": "program-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "delete-user-profile",
+            "bridgeVersion": 1,
+            "variant": "DeleteUserProfile"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "program-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "delete-validation-record",
+          "capability": "program-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "delete-validation-record",
+            "bridgeVersion": 1,
+            "variant": "DeleteValidationRecord"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "program-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "delete-wayfinding-requirement",
+          "capability": "program-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "delete-wayfinding-requirement",
+            "bridgeVersion": 1,
+            "variant": "DeleteWayfindingRequirement"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "program-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "delete-workshop",
+          "capability": "program-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "delete-workshop",
+            "bridgeVersion": 1,
+            "variant": "DeleteWorkshop"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "program-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "disconnect-adjacency",
+          "capability": "program-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "disconnect-adjacency",
+            "bridgeVersion": 1,
+            "variant": "DisconnectAdjacency"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "program-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "disconnect-trace",
+          "capability": "program-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "disconnect-trace",
+            "bridgeVersion": 1,
+            "variant": "DisconnectTrace"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "program-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "rename-access-rule",
+          "capability": "program-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "rename-access-rule",
+            "bridgeVersion": 1,
+            "variant": "RenameAccessRule"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "program-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "rename-accessibility-requirement",
+          "capability": "program-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "rename-accessibility-requirement",
+            "bridgeVersion": 1,
+            "variant": "RenameAccessibilityRequirement"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "program-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "rename-activity",
+          "capability": "program-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "rename-activity",
+            "bridgeVersion": 1,
+            "variant": "RenameActivity"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "program-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "rename-analysis-record",
+          "capability": "program-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "rename-analysis-record",
+            "bridgeVersion": 1,
+            "variant": "RenameAnalysisRecord"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "program-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "rename-approval-record",
+          "capability": "program-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "rename-approval-record",
+            "bridgeVersion": 1,
+            "variant": "RenameApprovalRecord"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "program-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "rename-assumption",
+          "capability": "program-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "rename-assumption",
+            "bridgeVersion": 1,
+            "variant": "RenameAssumption"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "program-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "rename-audit-event",
+          "capability": "program-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "rename-audit-event",
+            "bridgeVersion": 1,
+            "variant": "RenameAuditEvent"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "program-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "rename-benchmark-record",
+          "capability": "program-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "rename-benchmark-record",
+            "bridgeVersion": 1,
+            "variant": "RenameBenchmarkRecord"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "program-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "rename-change-record",
+          "capability": "program-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "rename-change-record",
+            "bridgeVersion": 1,
+            "variant": "RenameChangeRecord"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "program-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "rename-collaboration-record",
+          "capability": "program-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "rename-collaboration-record",
+            "bridgeVersion": 1,
+            "variant": "RenameCollaborationRecord"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "program-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "rename-communication-requirement",
+          "capability": "program-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "rename-communication-requirement",
+            "bridgeVersion": 1,
+            "variant": "RenameCommunicationRequirement"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "program-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "rename-compliance-record",
+          "capability": "program-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "rename-compliance-record",
+            "bridgeVersion": 1,
+            "variant": "RenameComplianceRecord"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "program-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "rename-conflict",
+          "capability": "program-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "rename-conflict",
+            "bridgeVersion": 1,
+            "variant": "RenameConflict"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "program-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "rename-constraint-record",
+          "capability": "program-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "rename-constraint-record",
+            "bridgeVersion": 1,
+            "variant": "RenameConstraintRecord"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "program-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "rename-cost-requirement",
+          "capability": "program-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "rename-cost-requirement",
+            "bridgeVersion": 1,
+            "variant": "RenameCostRequirement"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "program-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "rename-decision",
+          "capability": "program-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "rename-decision",
+            "bridgeVersion": 1,
+            "variant": "RenameDecision"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "program-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "rename-delivery-constraint",
+          "capability": "program-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "rename-delivery-constraint",
+            "bridgeVersion": 1,
+            "variant": "RenameDeliveryConstraint"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "program-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "rename-document",
+          "capability": "program-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "rename-document",
+            "bridgeVersion": 1,
+            "variant": "RenameDocument"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "program-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "rename-environmental-requirement",
+          "capability": "program-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "rename-environmental-requirement",
+            "bridgeVersion": 1,
+            "variant": "RenameEnvironmentalRequirement"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "program-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "rename-equipment",
+          "capability": "program-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "rename-equipment",
+            "bridgeVersion": 1,
+            "variant": "RenameEquipment"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "program-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "rename-flexibility-requirement",
+          "capability": "program-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "rename-flexibility-requirement",
+            "bridgeVersion": 1,
+            "variant": "RenameFlexibilityRequirement"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "program-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "rename-flow-requirement",
+          "capability": "program-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "rename-flow-requirement",
+            "bridgeVersion": 1,
+            "variant": "RenameFlowRequirement"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "program-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "rename-function",
+          "capability": "program-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "rename-function",
+            "bridgeVersion": 1,
+            "variant": "RenameFunction"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "program-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "rename-governance",
+          "capability": "program-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "rename-governance",
+            "bridgeVersion": 1,
+            "variant": "RenameGovernance"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "program-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "rename-growth-plan",
+          "capability": "program-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "rename-growth-plan",
+            "bridgeVersion": 1,
+            "variant": "RenameGrowthPlan"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "program-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "rename-human-factor-requirement",
+          "capability": "program-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "rename-human-factor-requirement",
+            "bridgeVersion": 1,
+            "variant": "RenameHumanFactorRequirement"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "program-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "rename-information-requirement",
+          "capability": "program-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "rename-information-requirement",
+            "bridgeVersion": 1,
+            "variant": "RenameInformationRequirement"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "program-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "rename-infrastructure-requirement",
+          "capability": "program-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "rename-infrastructure-requirement",
+            "bridgeVersion": 1,
+            "variant": "RenameInfrastructureRequirement"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "program-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "rename-issue",
+          "capability": "program-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "rename-issue",
+            "bridgeVersion": 1,
+            "variant": "RenameIssue"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "program-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "rename-knowledge-record",
+          "capability": "program-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "rename-knowledge-record",
+            "bridgeVersion": 1,
+            "variant": "RenameKnowledgeRecord"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "program-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "rename-meeting-record",
+          "capability": "program-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "rename-meeting-record",
+            "bridgeVersion": 1,
+            "variant": "RenameMeetingRecord"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "program-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "rename-meta",
+          "capability": "program-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "rename-meta",
+            "bridgeVersion": 1,
+            "variant": "RenameMeta"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "program-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "rename-operational-requirement",
+          "capability": "program-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "rename-operational-requirement",
+            "bridgeVersion": 1,
+            "variant": "RenameOperationalRequirement"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "program-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "rename-option-evaluation",
+          "capability": "program-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "rename-option-evaluation",
+            "bridgeVersion": 1,
+            "variant": "RenameOptionEvaluation"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "program-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "rename-organizational-requirement",
+          "capability": "program-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "rename-organizational-requirement",
+            "bridgeVersion": 1,
+            "variant": "RenameOrganizationalRequirement"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "program-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "rename-performance-criterion",
+          "capability": "program-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "rename-performance-criterion",
+            "bridgeVersion": 1,
+            "variant": "RenamePerformanceCriterion"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "program-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "rename-priority-record",
+          "capability": "program-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "rename-priority-record",
+            "bridgeVersion": 1,
+            "variant": "RenamePriorityRecord"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "program-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "rename-privacy-requirement",
+          "capability": "program-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "rename-privacy-requirement",
+            "bridgeVersion": 1,
+            "variant": "RenamePrivacyRequirement"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "program-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "rename-process",
+          "capability": "program-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "rename-process",
+            "bridgeVersion": 1,
+            "variant": "RenameProcess"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "program-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "rename-program-element",
+          "capability": "program-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "rename-program-element",
+            "bridgeVersion": 1,
+            "variant": "RenameProgramElement"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "program-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "rename-project",
+          "capability": "program-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "rename-project",
+            "bridgeVersion": 1,
+            "variant": "RenameProject"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "program-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "rename-quality-record",
+          "capability": "program-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "rename-quality-record",
+            "bridgeVersion": 1,
+            "variant": "RenameQualityRecord"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "program-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "rename-quantity-requirement",
+          "capability": "program-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "rename-quantity-requirement",
+            "bridgeVersion": 1,
+            "variant": "RenameQuantityRequirement"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "program-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "rename-regulatory-requirement",
+          "capability": "program-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "rename-regulatory-requirement",
+            "bridgeVersion": 1,
+            "variant": "RenameRegulatoryRequirement"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "program-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "rename-relationship",
+          "capability": "program-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "rename-relationship",
+            "bridgeVersion": 1,
+            "variant": "RenameRelationship"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "program-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "rename-report-record",
+          "capability": "program-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "rename-report-record",
+            "bridgeVersion": 1,
+            "variant": "RenameReportRecord"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "program-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "rename-requirement",
+          "capability": "program-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "rename-requirement",
+            "bridgeVersion": 1,
+            "variant": "RenameRequirement"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "program-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "rename-resilience-requirement",
+          "capability": "program-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "rename-resilience-requirement",
+            "bridgeVersion": 1,
+            "variant": "RenameResilienceRequirement"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "program-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "rename-resource",
+          "capability": "program-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "rename-resource",
+            "bridgeVersion": 1,
+            "variant": "RenameResource"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "program-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "rename-risk",
+          "capability": "program-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "rename-risk",
+            "bridgeVersion": 1,
+            "variant": "RenameRisk"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "program-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "rename-safety-requirement",
+          "capability": "program-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "rename-safety-requirement",
+            "bridgeVersion": 1,
+            "variant": "RenameSafetyRequirement"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "program-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "rename-scenario",
+          "capability": "program-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "rename-scenario",
+            "bridgeVersion": 1,
+            "variant": "RenameScenario"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "program-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "rename-schedule-requirement",
+          "capability": "program-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "rename-schedule-requirement",
+            "bridgeVersion": 1,
+            "variant": "RenameScheduleRequirement"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "program-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "rename-search-filter",
+          "capability": "program-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "rename-search-filter",
+            "bridgeVersion": 1,
+            "variant": "RenameSearchFilter"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "program-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "rename-security-requirement",
+          "capability": "program-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "rename-security-requirement",
+            "bridgeVersion": 1,
+            "variant": "RenameSecurityRequirement"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "program-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "rename-service-requirement",
+          "capability": "program-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "rename-service-requirement",
+            "bridgeVersion": 1,
+            "variant": "RenameServiceRequirement"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "program-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "rename-site-context",
+          "capability": "program-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "rename-site-context",
+            "bridgeVersion": 1,
+            "variant": "RenameSiteContext"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "program-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "rename-stakeholder",
+          "capability": "program-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "rename-stakeholder",
+            "bridgeVersion": 1,
+            "variant": "RenameStakeholder"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "program-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "rename-status-record",
+          "capability": "program-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "rename-status-record",
+            "bridgeVersion": 1,
+            "variant": "RenameStatusRecord"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "program-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "rename-storage-requirement",
+          "capability": "program-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "rename-storage-requirement",
+            "bridgeVersion": 1,
+            "variant": "RenameStorageRequirement"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "program-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "rename-survey",
+          "capability": "program-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "rename-survey",
+            "bridgeVersion": 1,
+            "variant": "RenameSurvey"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "program-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "rename-sustainability-requirement",
+          "capability": "program-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "rename-sustainability-requirement",
+            "bridgeVersion": 1,
+            "variant": "RenameSustainabilityRequirement"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "program-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "rename-template-record",
+          "capability": "program-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "rename-template-record",
+            "bridgeVersion": 1,
+            "variant": "RenameTemplateRecord"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "program-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "rename-user-profile",
+          "capability": "program-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "rename-user-profile",
+            "bridgeVersion": 1,
+            "variant": "RenameUserProfile"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "program-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "rename-validation-record",
+          "capability": "program-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "rename-validation-record",
+            "bridgeVersion": 1,
+            "variant": "RenameValidationRecord"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "program-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "rename-wayfinding-requirement",
+          "capability": "program-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "rename-wayfinding-requirement",
+            "bridgeVersion": 1,
+            "variant": "RenameWayfindingRequirement"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "program-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "rename-workshop",
+          "capability": "program-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "rename-workshop",
+            "bridgeVersion": 1,
+            "variant": "RenameWorkshop"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "program-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "replace-access-rule",
+          "capability": "program-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "replace-access-rule",
+            "bridgeVersion": 1,
+            "variant": "ReplaceAccessRule"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "program-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "replace-accessibility-requirement",
+          "capability": "program-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "replace-accessibility-requirement",
+            "bridgeVersion": 1,
+            "variant": "ReplaceAccessibilityRequirement"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "program-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "replace-activity",
+          "capability": "program-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "replace-activity",
+            "bridgeVersion": 1,
+            "variant": "ReplaceActivity"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "program-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "replace-analysis-record",
+          "capability": "program-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "replace-analysis-record",
+            "bridgeVersion": 1,
+            "variant": "ReplaceAnalysisRecord"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "program-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "replace-approval-record",
+          "capability": "program-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "replace-approval-record",
+            "bridgeVersion": 1,
+            "variant": "ReplaceApprovalRecord"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "program-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "replace-assumption",
+          "capability": "program-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "replace-assumption",
+            "bridgeVersion": 1,
+            "variant": "ReplaceAssumption"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "program-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "replace-audit-event",
+          "capability": "program-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "replace-audit-event",
+            "bridgeVersion": 1,
+            "variant": "ReplaceAuditEvent"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "program-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "replace-benchmark-record",
+          "capability": "program-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "replace-benchmark-record",
+            "bridgeVersion": 1,
+            "variant": "ReplaceBenchmarkRecord"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "program-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "replace-change-record",
+          "capability": "program-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "replace-change-record",
+            "bridgeVersion": 1,
+            "variant": "ReplaceChangeRecord"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "program-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "replace-collaboration-record",
+          "capability": "program-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "replace-collaboration-record",
+            "bridgeVersion": 1,
+            "variant": "ReplaceCollaborationRecord"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "program-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "replace-communication-requirement",
+          "capability": "program-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "replace-communication-requirement",
+            "bridgeVersion": 1,
+            "variant": "ReplaceCommunicationRequirement"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "program-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "replace-compliance-record",
+          "capability": "program-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "replace-compliance-record",
+            "bridgeVersion": 1,
+            "variant": "ReplaceComplianceRecord"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "program-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "replace-conflict",
+          "capability": "program-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "replace-conflict",
+            "bridgeVersion": 1,
+            "variant": "ReplaceConflict"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "program-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "replace-constraint-record",
+          "capability": "program-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "replace-constraint-record",
+            "bridgeVersion": 1,
+            "variant": "ReplaceConstraintRecord"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "program-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "replace-cost-requirement",
+          "capability": "program-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "replace-cost-requirement",
+            "bridgeVersion": 1,
+            "variant": "ReplaceCostRequirement"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "program-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "replace-decision",
+          "capability": "program-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "replace-decision",
+            "bridgeVersion": 1,
+            "variant": "ReplaceDecision"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "program-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "replace-delivery-constraint",
+          "capability": "program-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "replace-delivery-constraint",
+            "bridgeVersion": 1,
+            "variant": "ReplaceDeliveryConstraint"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "program-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "replace-document",
+          "capability": "program-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "replace-document",
+            "bridgeVersion": 1,
+            "variant": "ReplaceDocument"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "program-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "replace-environmental-requirement",
+          "capability": "program-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "replace-environmental-requirement",
+            "bridgeVersion": 1,
+            "variant": "ReplaceEnvironmentalRequirement"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "program-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "replace-equipment",
+          "capability": "program-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "replace-equipment",
+            "bridgeVersion": 1,
+            "variant": "ReplaceEquipment"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "program-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "replace-flexibility-requirement",
+          "capability": "program-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "replace-flexibility-requirement",
+            "bridgeVersion": 1,
+            "variant": "ReplaceFlexibilityRequirement"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "program-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "replace-flow-requirement",
+          "capability": "program-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "replace-flow-requirement",
+            "bridgeVersion": 1,
+            "variant": "ReplaceFlowRequirement"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "program-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "replace-function",
+          "capability": "program-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "replace-function",
+            "bridgeVersion": 1,
+            "variant": "ReplaceFunction"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "program-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "replace-governance",
+          "capability": "program-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "replace-governance",
+            "bridgeVersion": 1,
+            "variant": "ReplaceGovernance"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "program-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "replace-growth-plan",
+          "capability": "program-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "replace-growth-plan",
+            "bridgeVersion": 1,
+            "variant": "ReplaceGrowthPlan"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "program-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "replace-human-factor-requirement",
+          "capability": "program-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "replace-human-factor-requirement",
+            "bridgeVersion": 1,
+            "variant": "ReplaceHumanFactorRequirement"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "program-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "replace-information-requirement",
+          "capability": "program-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "replace-information-requirement",
+            "bridgeVersion": 1,
+            "variant": "ReplaceInformationRequirement"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "program-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "replace-infrastructure-requirement",
+          "capability": "program-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "replace-infrastructure-requirement",
+            "bridgeVersion": 1,
+            "variant": "ReplaceInfrastructureRequirement"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "program-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "replace-issue",
+          "capability": "program-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "replace-issue",
+            "bridgeVersion": 1,
+            "variant": "ReplaceIssue"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "program-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "replace-knowledge-record",
+          "capability": "program-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "replace-knowledge-record",
+            "bridgeVersion": 1,
+            "variant": "ReplaceKnowledgeRecord"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "program-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "replace-meeting-record",
+          "capability": "program-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "replace-meeting-record",
+            "bridgeVersion": 1,
+            "variant": "ReplaceMeetingRecord"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "program-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "replace-meta",
+          "capability": "program-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "replace-meta",
+            "bridgeVersion": 1,
+            "variant": "ReplaceMeta"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "program-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "replace-operational-requirement",
+          "capability": "program-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "replace-operational-requirement",
+            "bridgeVersion": 1,
+            "variant": "ReplaceOperationalRequirement"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "program-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "replace-option-evaluation",
+          "capability": "program-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "replace-option-evaluation",
+            "bridgeVersion": 1,
+            "variant": "ReplaceOptionEvaluation"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "program-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "replace-organizational-requirement",
+          "capability": "program-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "replace-organizational-requirement",
+            "bridgeVersion": 1,
+            "variant": "ReplaceOrganizationalRequirement"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "program-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "replace-performance-criterion",
+          "capability": "program-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "replace-performance-criterion",
+            "bridgeVersion": 1,
+            "variant": "ReplacePerformanceCriterion"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "program-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "replace-priority-record",
+          "capability": "program-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "replace-priority-record",
+            "bridgeVersion": 1,
+            "variant": "ReplacePriorityRecord"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "program-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "replace-privacy-requirement",
+          "capability": "program-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "replace-privacy-requirement",
+            "bridgeVersion": 1,
+            "variant": "ReplacePrivacyRequirement"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "program-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "replace-process",
+          "capability": "program-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "replace-process",
+            "bridgeVersion": 1,
+            "variant": "ReplaceProcess"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "program-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "replace-program-element",
+          "capability": "program-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "replace-program-element",
+            "bridgeVersion": 1,
+            "variant": "ReplaceProgramElement"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "program-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "replace-project",
+          "capability": "program-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "replace-project",
+            "bridgeVersion": 1,
+            "variant": "ReplaceProject"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "program-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "replace-quality-record",
+          "capability": "program-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "replace-quality-record",
+            "bridgeVersion": 1,
+            "variant": "ReplaceQualityRecord"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "program-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "replace-quantity-requirement",
+          "capability": "program-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "replace-quantity-requirement",
+            "bridgeVersion": 1,
+            "variant": "ReplaceQuantityRequirement"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "program-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "replace-regulatory-requirement",
+          "capability": "program-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "replace-regulatory-requirement",
+            "bridgeVersion": 1,
+            "variant": "ReplaceRegulatoryRequirement"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "program-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "replace-relationship",
+          "capability": "program-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "replace-relationship",
+            "bridgeVersion": 1,
+            "variant": "ReplaceRelationship"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "program-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "replace-report-record",
+          "capability": "program-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "replace-report-record",
+            "bridgeVersion": 1,
+            "variant": "ReplaceReportRecord"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "program-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "replace-requirement",
+          "capability": "program-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "replace-requirement",
+            "bridgeVersion": 1,
+            "variant": "ReplaceRequirement"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "program-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "replace-resilience-requirement",
+          "capability": "program-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "replace-resilience-requirement",
+            "bridgeVersion": 1,
+            "variant": "ReplaceResilienceRequirement"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "program-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "replace-resource",
+          "capability": "program-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "replace-resource",
+            "bridgeVersion": 1,
+            "variant": "ReplaceResource"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "program-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "replace-risk",
+          "capability": "program-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "replace-risk",
+            "bridgeVersion": 1,
+            "variant": "ReplaceRisk"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "program-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "replace-safety-requirement",
+          "capability": "program-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "replace-safety-requirement",
+            "bridgeVersion": 1,
+            "variant": "ReplaceSafetyRequirement"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "program-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "replace-scenario",
+          "capability": "program-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "replace-scenario",
+            "bridgeVersion": 1,
+            "variant": "ReplaceScenario"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "program-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "replace-schedule-requirement",
+          "capability": "program-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "replace-schedule-requirement",
+            "bridgeVersion": 1,
+            "variant": "ReplaceScheduleRequirement"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "program-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "replace-search-filter",
+          "capability": "program-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "replace-search-filter",
+            "bridgeVersion": 1,
+            "variant": "ReplaceSearchFilter"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "program-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "replace-security-requirement",
+          "capability": "program-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "replace-security-requirement",
+            "bridgeVersion": 1,
+            "variant": "ReplaceSecurityRequirement"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "program-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "replace-service-requirement",
+          "capability": "program-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "replace-service-requirement",
+            "bridgeVersion": 1,
+            "variant": "ReplaceServiceRequirement"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "program-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "replace-site-context",
+          "capability": "program-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "replace-site-context",
+            "bridgeVersion": 1,
+            "variant": "ReplaceSiteContext"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "program-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "replace-stakeholder",
+          "capability": "program-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "replace-stakeholder",
+            "bridgeVersion": 1,
+            "variant": "ReplaceStakeholder"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "program-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "replace-status-record",
+          "capability": "program-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "replace-status-record",
+            "bridgeVersion": 1,
+            "variant": "ReplaceStatusRecord"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "program-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "replace-storage-requirement",
+          "capability": "program-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "replace-storage-requirement",
+            "bridgeVersion": 1,
+            "variant": "ReplaceStorageRequirement"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "program-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "replace-survey",
+          "capability": "program-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "replace-survey",
+            "bridgeVersion": 1,
+            "variant": "ReplaceSurvey"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "program-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "replace-sustainability-requirement",
+          "capability": "program-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "replace-sustainability-requirement",
+            "bridgeVersion": 1,
+            "variant": "ReplaceSustainabilityRequirement"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "program-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "replace-template-record",
+          "capability": "program-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "replace-template-record",
+            "bridgeVersion": 1,
+            "variant": "ReplaceTemplateRecord"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "program-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "replace-user-profile",
+          "capability": "program-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "replace-user-profile",
+            "bridgeVersion": 1,
+            "variant": "ReplaceUserProfile"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "program-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "replace-validation-record",
+          "capability": "program-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "replace-validation-record",
+            "bridgeVersion": 1,
+            "variant": "ReplaceValidationRecord"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "program-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "replace-wayfinding-requirement",
+          "capability": "program-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "replace-wayfinding-requirement",
+            "bridgeVersion": 1,
+            "variant": "ReplaceWayfindingRequirement"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "program-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "replace-workshop",
+          "capability": "program-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "replace-workshop",
+            "bridgeVersion": 1,
+            "variant": "ReplaceWorkshop"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "program-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        }
+      ]
     }
   ],
   "noOracleDecisions": [],
+  "oracleHostPackages": [
+    {
+      "implementation": "rust",
+      "package": "semio-s-plugin-stdio-test-oracle",
+      "path": "✏️s/🔌️plugins/🗄️stdio/🧪️oracle/📦️packages/🦀️rust",
+      "features": [
+        "oracles"
+      ]
+    }
+  ],
   "mutationCatalogs": [
     {
       "id": "program-1-any",

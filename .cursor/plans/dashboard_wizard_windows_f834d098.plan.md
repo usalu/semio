@@ -76,7 +76,7 @@ flowchart TD
 
 ## Framework changes (`🧰️framework/🔨️modules/🖱️ui`)
 
-All in [⌨️tui/🦀️component.rs](🧰️framework/🔨️modules/🖱️ui/⌨️tui/🦀️component.rs) plus element files.
+All in [⌨️tui/🦀️.rs](🧰️framework/🔨️modules/🖱️ui/⌨️tui/🦀️.rs) plus element files.
 
 1. `scene` mod: add `Scene::reparent(&mut self, id: NodeId, new_parent: NodeId)` (retarget the child vecs, set `parent`, mark both dirty). Needed so window nodes — and their retained `TerminalState` scrollback — survive layout remounts.
 2. `chrome` mod: replace `Shell::apply_layout` (which sets `Cells(w)`/`Cells(h)` on a flat child list and is wrong for nested tiling) with
@@ -97,7 +97,7 @@ pub fn mount_window_layout(scene: &mut Scene, canvas: NodeId, layout: &WindowLay
 
 `glue.rs` is already a ~1500-line godfile; the new logic goes into two new commands rather than growing it.
 
-1. New `🎮️commands/🧭️command-tree-discovery/🦀️component.rs`:
+1. New `🎮️commands/🧭️command-tree-discovery/🦀️.rs`:
 
 ```rust
 pub struct CommandSpec { pub cmd: String, pub args: Vec<String>, pub cwd: PathBuf, pub env: Vec<(String, String)> }
@@ -113,7 +113,7 @@ pub fn discover(root: &Path) -> CommandNode
 - The existing `catalog::load_playground_catalog` + `env_contract::build_dev_env` feed the `dev` branch with plugin, variant and renderer (`react` / `wgpu-wasm` / `wgpu-native`) levels, reusing today's `@semio-tech/framework-os-dev:dev` invocation.
 - Verb ordering is fixed at the first level: `dev`, `build`, `test`, `verify`, `gate`, `lint`, `format`, `generate`, `publish`, then the remainder alphabetically — this is what makes the first wizard question read "dev, build, test, publish, ...".
 
-1. New `🎮️commands/🎛️terminal-dashboard/🦀️component.rs`: the dashboard app itself.
+1. New `🎮️commands/🎛️terminal-dashboard/🦀️.rs`: the dashboard app itself.
   - `struct DashboardWindow { id: String, node: NodeId, body: WindowBody, title: String }` with `enum WindowBody { Wizard { node: NodeId, cursor: Vec<usize> }, Output { node: NodeId, session: Option<PtySession> } }`.
     - Boots `create_default_layout(&["w1".into()], "row", None, None)` — **one** window — whose body is a wizard at the tree root.
     - Leaf activation removes the wizard node and adds a `Terminal` node with `Dimension::Weight(1)` as the window's only child, then spawns the `CommandSpec` through `pty::Pty` sized to that window's inner rect; PTY bytes are fed into `TerminalState` and PTY resize follows window resize.
@@ -122,11 +122,11 @@ pub fn discover(root: &Path) -> CommandNode
     - Keys are scoped: `↑/↓/←/→` and `j/k/h/l` go to the focused window's body only; window management lives on the `Ctrl-Space` leader (`z` zoom, `-`/`|` split, `x` close, `t` terminal passthrough, `n` new tab) plus `Ctrl-w` close; `Alt+<n>`/`Tab` switch windows. Footer hints are rebuilt from the active window's mode.
     - On quit, all sessions are group-terminated and the terminal is restored via `term.leave()`.
 2. `glue.rs`: delete the `tui_dashboard` mod, add `#[path]` module declarations for the two new commands, and point `run()`'s no-args branch at `terminal_dashboard::run(&root)`. `terminal_dashboard_daemon`'s `attach` also routes there. Keep `ipc`, `daemon`, `catalog`, `env_contract` as-is.
-3. Add both new commands to [🎮️commands/🔣️component.json](🧰️framework/🛍️products/🦑️repo/🎮️commands/🔣️component.json) following the existing member shape, and extend [🧭️cli-usage-presentation](🧰️framework/🛍️products/🦑️repo/🎮️commands/🧭️cli-usage-presentation/🦀️component.rs) usage text.
+3. Add both new commands to [🎮️commands/🔣️component.json](🧰️framework/🛍️products/🦑️repo/🎮️commands/🔣️component.json) following the existing member shape, and extend [🧭️cli-usage-presentation](🧰️framework/🛍️products/🦑️repo/🎮️commands/🧭️cli-usage-presentation/🦀️.rs) usage text.
 
 ## Verification
 
-- Unit tests in `⌨️tui/🦀️component.rs` next to the existing `window_control_clicks_resolve_to_close_and_maximize_signals` (L4562): `+` and tab hit-testing, `mount_window_layout` nesting and reparent-preserves-widget-state, wizard key handling, and frame assertions via `Tui::frame()`.
+- Unit tests in `⌨️tui/🦀️.rs` next to the existing `window_control_clicks_resolve_to_close_and_maximize_signals` (L4562): `+` and tab hit-testing, `mount_window_layout` nesting and reparent-preserves-widget-state, wizard key handling, and frame assertions via `Tui::frame()`.
 - Tests for `discover` against a temporary fixture tree (taxonomy segment derivation, verb ordering, leaf `CommandSpec` shape).
 - Runtime check per AGENTS.md: run the real binary, drive the wizard to a `dev` leaf, confirm with `[DEBUG]` logs plus `ps` that the `bun nx` process group exists, then click `✕` and confirm the group is gone. Logs and captures go into the ticket folder.
 

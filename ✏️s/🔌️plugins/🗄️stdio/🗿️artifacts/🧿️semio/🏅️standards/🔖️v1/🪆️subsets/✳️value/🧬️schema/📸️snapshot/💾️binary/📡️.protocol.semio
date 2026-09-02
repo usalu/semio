@@ -1,0 +1,19 @@
+dialect protocol
+protocol semio.value.snapshot
+version 1
+schema stdio.semio.value
+start body
+
+# This subset is TEXT-NATIVE like `json`: there is no distinct "binary SemioValue" layout — the
+# pack container IS the semio envelope (magic `0x8953454D0D0A1A0A` + LE u32 token length + UTF-8
+# token, described once at
+# `🧰️framework/🛍️products/💻️os/🔨️modules/🧬️semio/📡️protocol/📡️.protocol.semio`, not
+# re-inlined here) wrapping this facet's OWN real recursive text encoding of `SemioValueSnapshot`
+# bytes verbatim (`ArtifactPack::encode_pack_with` in this subset's own `📸️snapshot/🦀️.rs`:
+# `enc_semio_value_snapshot(self).into_bytes()` passed straight to `store::semio_format::wrap_binary`
+# — NOT `serde_json::to_vec`, matching `json`'s own text-native precedent exactly). The payload
+# itself is opaque, unstructured UTF-8 bytes at the BINARY layer by construction — its real internal
+# grammar (the `SemioValue` tagged-union recursion) is `📝️text/📖️.grammar.semio`'s job, not
+# the protocol dialect's.
+framing record
+chain payload utf8

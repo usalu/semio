@@ -18,7 +18,7 @@
 // pixels-per-metre, compression, colorsUsed as a value distinct from palette length, nor
 // colorsImportant (see the codec's own header comment and this subset's own
 // `📓️bmp-v3-any-reader-oracle-retrofit.md` for the source-level evidence); that mutation is
-// registered `bmp-3-mutate-uncarried` in `../🧪️oracle/🔣️.json` instead of against this oracle.
+// registered `bmp-3-mutate-uncarried` in `../🔣️oracle.json` instead of against this oracle.
 //
 // Generation and execution are SEPARATE operations, same shape as the sibling `avi`/`bcf`/`mesh`/
 // `brep` generators this file's CLI is mirrored from: a normal test run must never be able to

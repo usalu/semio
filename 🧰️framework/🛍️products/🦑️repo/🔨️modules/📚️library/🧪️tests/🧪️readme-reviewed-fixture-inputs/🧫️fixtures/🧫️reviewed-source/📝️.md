@@ -87,7 +87,7 @@ selector.
 
 A runtime mutation is owned by the **smallest semantic subset**, never by an artifact-wide or `*`/`any`
 wildcard scope — a cross-subset operation declares an explicit typed `compound` instead of falling
-back to the whole artifact. The owner's `🧪️oracle/🔣️.json` carries a `MutationManifest` naming, per
+back to the whole artifact. The owner's `🔣️oracle.json` carries a `MutationManifest` naming, per
 mutation, the production dispatch variant it corresponds to and the outcome classes
 (`applied|no-op|empty|disjoint|rejected`) it can reach. `bun ./📜️script.ts inventory` runs the owner's
 **production mutation bridge** (`🏭️bridge/📜️script.ts`, discovered by walking up from the owner) and
@@ -121,7 +121,7 @@ into that route.
 
 An oracle runs in whichever implementation its registry `ecosystem` names, and the library it needs
 is declared by the OWNER, never by the framework. One field carries this, in the owner's
-`🧪️oracle/🔣️.json`:
+`🔣️oracle.json`:
 
 ```json
 "oracleHostPackages": [

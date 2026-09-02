@@ -148,7 +148,7 @@
         {
           "id": "insert-page",
           "capability": "pdf-1-4-mutate",
-          "payloadSchema": "🔣️payload.schema.json",
+          "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "applied"
           ],
@@ -168,7 +168,7 @@
         {
           "id": "move-page",
           "capability": "pdf-1-4-mutate",
-          "payloadSchema": "🔣️payload.schema.json",
+          "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "applied"
           ],
@@ -188,7 +188,7 @@
         {
           "id": "remove-page",
           "capability": "pdf-1-4-mutate",
-          "payloadSchema": "🔣️payload.schema.json",
+          "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "applied"
           ],
@@ -208,7 +208,7 @@
         {
           "id": "replace-page-text",
           "capability": "pdf-1-4-mutate",
-          "payloadSchema": "🔣️payload.schema.json",
+          "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "applied"
           ],
@@ -228,7 +228,7 @@
         {
           "id": "resize-page",
           "capability": "pdf-1-4-mutate",
-          "payloadSchema": "🔣️payload.schema.json",
+          "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "applied"
           ],

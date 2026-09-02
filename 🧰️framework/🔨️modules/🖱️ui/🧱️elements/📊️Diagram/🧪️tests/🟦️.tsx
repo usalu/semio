@@ -3,16 +3,16 @@ import * as React from "react";
 import { act, render } from "@testing-library/react";
 import { renderToString } from "react-dom/server";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { Diagram, createDiagramForceSimulation, useDiagramLayout, type DiagramForceConfig, type DiagramForceNode, type DiagramHandoffStatus } from "../🟦️component.tsx";
-import { DIAGRAM_LAYOUT_CODEC_KIND, DIAGRAM_LAYOUT_INGRESS_BYTES, DIAGRAM_LAYOUT_MAX_EDGE_BYTES, DIAGRAM_LAYOUT_MAX_NODE_BYTES, calculateDiagramLayoutForBatchTest, createDiagramLayoutBatchTestJob, createDiagramLayoutPublication, createDiagramLayoutWorkerJob, diagramLayoutCredits, diagramLayoutEdgeWireBytes, diagramLayoutNodeWireBytes, diagramLayoutUtf8Bytes, type DiagramLayoutDirection, type DiagramLayoutEdgeWire, type DiagramLayoutNodeWire } from "../🟦️layout.ts";
-import { setInteractiveJobPort, type InteractiveJobPort } from "../../🔌️Ports/🟦️interactive-job.ts";
+import { Diagram, createDiagramForceSimulation, useDiagramLayout, type DiagramForceConfig, type DiagramForceNode, type DiagramHandoffStatus } from "../🟦️.tsx";
+import { DIAGRAM_LAYOUT_CODEC_KIND, DIAGRAM_LAYOUT_INGRESS_BYTES, DIAGRAM_LAYOUT_MAX_EDGE_BYTES, DIAGRAM_LAYOUT_MAX_NODE_BYTES, calculateDiagramLayoutForBatchTest, createDiagramLayoutBatchTestJob, createDiagramLayoutPublication, createDiagramLayoutWorkerJob, diagramLayoutCredits, diagramLayoutEdgeWireBytes, diagramLayoutNodeWireBytes, diagramLayoutUtf8Bytes, type DiagramLayoutDirection, type DiagramLayoutEdgeWire, type DiagramLayoutNodeWire } from "../🟦️.ts";
+import { setInteractiveJobPort, type InteractiveJobPort } from "../../🔌️Ports/🟦️.ts";
 // #endregion 🔌️Adapters
 
 const flowCapture = vi.hoisted(() => ({ props: undefined as Record<string, any> | undefined }));
 let diagramFrameStack = false;
 
-vi.mock("../../🔌️Ports/🟦️component.tsx", async (importOriginal) => {
-  const actual = await importOriginal<typeof import("../../🔌️Ports/🟦️component.tsx")>();
+vi.mock("../../🔌️Ports/🟦️.tsx", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("../../🔌️Ports/🟦️.tsx")>();
   const mocked = {
     ...actual,
     HostReactFlow: (props: Record<string, any>) => {
@@ -859,7 +859,7 @@ describe("owned Diagram layout wire codec", () => {
   });
 
   it("keeps concrete jobs and batch adapters absent from the Diagram product barrel", async () => {
-    const product = await import("../🟦️component.tsx");
+    const product = await import("../🟦️.tsx");
     expect("DiagramLayoutJob" in product).toBe(false);
     expect("DiagramLayoutWireJob" in product).toBe(false);
     expect("createDiagramLayoutWorkerJob" in product).toBe(false);

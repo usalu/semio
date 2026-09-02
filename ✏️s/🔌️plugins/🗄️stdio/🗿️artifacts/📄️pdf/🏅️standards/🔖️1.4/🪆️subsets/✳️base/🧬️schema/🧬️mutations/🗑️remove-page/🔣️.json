@@ -5,17 +5,21 @@
   "displayName": "Remove Page",
   "emoji": "🗑️",
   "aggregateVariant": "RemovePage",
-  "payloadSchema": "🔣️payload.schema.json",
-  "textOpcode": null,
-  "binaryTag": null,
-  "invertibility": "non-invertible",
-  "diffParticipation": "none",
+  "payloadSchema": "🔣️.schema.json",
+  "textOpcode": "remove-page",
+  "binaryTag": 1,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "apply-only",
   "outcomeClasses": [
-    "applied"
+    "applied",
+    "error"
   ],
   "composition": "atomic",
   "requiredLanguageSurfaces": [
     "rust",
+    "typescript",
+    "graphql",
+    "protobuf",
     "json-schema",
     "text",
     "binary"

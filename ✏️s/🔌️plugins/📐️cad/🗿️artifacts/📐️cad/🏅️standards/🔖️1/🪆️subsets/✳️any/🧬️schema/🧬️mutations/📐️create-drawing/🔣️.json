@@ -5,7 +5,7 @@
   "displayName": "Create Drawing",
   "emoji": "📐️",
   "aggregateVariant": "CreateDrawing",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": "create-drawing",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

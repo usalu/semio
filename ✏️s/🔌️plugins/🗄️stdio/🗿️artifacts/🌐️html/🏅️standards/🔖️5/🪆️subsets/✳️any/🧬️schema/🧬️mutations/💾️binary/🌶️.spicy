@@ -1,0 +1,5 @@
+module Stdio_html_mutations;
+# UTF-8 bytes of print_op's output, verbatim -- see the sibling ../📝️text/📖️.grammar.semio.
+type Document = unit {
+    op_text: bytes &eod;
+};

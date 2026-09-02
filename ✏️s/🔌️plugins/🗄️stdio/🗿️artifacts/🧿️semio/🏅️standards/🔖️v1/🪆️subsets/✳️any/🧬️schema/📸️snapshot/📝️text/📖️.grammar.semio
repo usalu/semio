@@ -1,0 +1,18 @@
+dialect grammar
+grammar semio.any.snapshot
+extension semio
+start document
+
+# W-S closer (`any`): the envelope union over all 13 domain subsets. Real header — the mandatory
+# `artifact-mark` token (envelope_id, prepended by the fixture-honesty/conformance harness the same
+# way json.snapshot/flow.snapshot's own grammars expect it) plus a `subset=<tag>` line naming
+# which of the 13 subsets follows — then the OPAQUE remainder as REST (the raw-span terminal,
+# 📖️grammar-recipe.md §1.3(b)/§4). The WRAPPED subset's own real, already-conformance-tested
+# grammar (`✳️brep/…/📸️snapshot/📝️text/📖️.grammar.semio`, one per subset) is the sole
+# authority for everything past this point — re-describing all 13 full sub-grammars inline here
+# would be pure duplication of already-real, already-tested files; this envelope grammar's only
+# job is validating the tag + handing off.
+artifact-mark = "stdio.semio"
+subset-tag = "brep" | "mesh" | "model" | "value" | "document" | "cad" | "drawing" | "image" | "video" | "audio" | "animation" | "presentation" | "flow"
+subset-line = "subset" "=" subset-tag
+document = artifact-mark subset-line REST

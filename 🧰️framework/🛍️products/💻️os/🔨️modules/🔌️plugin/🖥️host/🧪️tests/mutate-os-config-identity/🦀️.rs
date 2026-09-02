@@ -1,5 +1,5 @@
 //! 🦀️ Identity exhaustive mutation case — Rust adapter. Recorded no-oracle decision
-//! `os-config-identity-mutation-semantics` (`../../../../../🎚️config/🧪️oracle/🔣️.json`):
+//! `os-config-identity-mutation-semantics` (`../../../../../🎚️config/🔣️oracle.json`):
 //! `os.config.identity` is this operating system's own session record with no third-party
 //! implementation, so `oracle` here reads the committed, independently handcrafted per-kind
 //! specification fixtures
@@ -9,7 +9,7 @@
 //! vocabulary.
 //!
 //! **Why the case sits here rather than beside the vocabulary.** `🎚️config` has no crate of its
-//! own; `📦️glue.rs` in `🖥️host/📦️packages/🦀️rust` is the ONE place `IdentityConfigMutation` is
+//! own; `🦀️.rs` in `🖥️host/📦️packages/🦀️rust` is the ONE place `IdentityConfigMutation` is
 //! mounted, and the generated test host resolves its subject crate by walking UP from the case
 //! owner. The feature says the same thing in prose so a reader is not left guessing.
 //!
@@ -33,16 +33,16 @@ const KINDS: &[&str] = &["sign-in", "sign-out"];
 fn fixture_text(kind: &str) -> (&'static str, &'static str, &'static str, &'static str) {
     match kind {
         "sign-in" => (
-            include_str!("../../../../../🎚️config/🧬️schema/🧬️mutations/🪪️sign-in/🧪️tests/replaces-the-active-session-with-a-second-account/📸️snapshot/⬅️before/🔣️component.json"),
-            include_str!("../../../../../🎚️config/🧬️schema/🧬️mutations/🪪️sign-in/🧪️tests/replaces-the-active-session-with-a-second-account/🦠️mutation/🔣️component.json"),
-            include_str!("../../../../../🎚️config/🧬️schema/🧬️mutations/🪪️sign-in/🧪️tests/replaces-the-active-session-with-a-second-account/📸️snapshot/➡️after/🔣️component.json"),
-            include_str!("../../../../../🎚️config/🧬️schema/🧬️mutations/🪪️sign-in/🧪️tests/replaces-the-active-session-with-a-second-account/🎯️outcome/🔣️component.json"),
+            include_str!("../../../../../🎚️config/🧬️schema/🧬️mutations/🪪️sign-in/🧪️tests/replaces-the-active-session-with-a-second-account/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../../../../🎚️config/🧬️schema/🧬️mutations/🪪️sign-in/🧪️tests/replaces-the-active-session-with-a-second-account/🦠️mutation/🔣️.json"),
+            include_str!("../../../../../🎚️config/🧬️schema/🧬️mutations/🪪️sign-in/🧪️tests/replaces-the-active-session-with-a-second-account/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../../../../🎚️config/🧬️schema/🧬️mutations/🪪️sign-in/🧪️tests/replaces-the-active-session-with-a-second-account/🎯️outcome/🔣️.json"),
         ),
         "sign-out" => (
-            include_str!("../../../../../🎚️config/🧬️schema/🧬️mutations/🚪️sign-out/🧪️tests/clears-the-active-session/📸️snapshot/⬅️before/🔣️component.json"),
-            include_str!("../../../../../🎚️config/🧬️schema/🧬️mutations/🚪️sign-out/🧪️tests/clears-the-active-session/🦠️mutation/🔣️component.json"),
-            include_str!("../../../../../🎚️config/🧬️schema/🧬️mutations/🚪️sign-out/🧪️tests/clears-the-active-session/📸️snapshot/➡️after/🔣️component.json"),
-            include_str!("../../../../../🎚️config/🧬️schema/🧬️mutations/🚪️sign-out/🧪️tests/clears-the-active-session/🎯️outcome/🔣️component.json"),
+            include_str!("../../../../../🎚️config/🧬️schema/🧬️mutations/🚪️sign-out/🧪️tests/clears-the-active-session/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../../../../🎚️config/🧬️schema/🧬️mutations/🚪️sign-out/🧪️tests/clears-the-active-session/🦠️mutation/🔣️.json"),
+            include_str!("../../../../../🎚️config/🧬️schema/🧬️mutations/🚪️sign-out/🧪️tests/clears-the-active-session/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../../../../🎚️config/🧬️schema/🧬️mutations/🚪️sign-out/🧪️tests/clears-the-active-session/🎯️outcome/🔣️.json"),
         ),
         other => panic!("mutate-os-config-identity: no specification vector registered for kind {other:?}"),
     }

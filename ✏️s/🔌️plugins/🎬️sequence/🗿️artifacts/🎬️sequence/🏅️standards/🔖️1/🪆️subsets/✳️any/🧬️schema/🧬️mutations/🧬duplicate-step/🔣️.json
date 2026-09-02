@@ -5,18 +5,22 @@
   "displayName": "Duplicate Step",
   "emoji": "🧬",
   "aggregateVariant": "DuplicateStep",
-  "payloadSchema": "🔣️payload.schema.json",
-  "textOpcode": "duplicate-step",
+  "payloadSchema": "🔣️.schema.json",
+  "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",
-  "diffParticipation": "detect",
+  "diffParticipation": "apply-only",
   "outcomeClasses": [
+    "applied",
     "error",
-    "applied"
+    "fatal"
   ],
   "composition": "atomic",
   "requiredLanguageSurfaces": [
     "rust",
+    "typescript",
+    "graphql",
+    "protobuf",
     "json-schema"
   ]
 }

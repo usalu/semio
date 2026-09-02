@@ -1,7 +1,7 @@
 //! 🦀️ JFIF 1.01 ✳️baseline conformance-class mutation case — Rust adapter. Ticket
 //! 26/08/23/END-TO-END-TESTING-REFACTOR. Recorded no-oracle decision
 //! `jpg-jfif-1-01-baseline-conformance-class-semantics`
-//! (`../../🏅️standards/🔖️jfif-1.01/🪆️subsets/✳️baseline/🧪️oracle/🔣️.json`).
+//! (`../../🏅️standards/🔖️jfif-1.01/🪆️subsets/✳️baseline/🔣️oracle.json`).
 //!
 //! **Why there is no oracle here when the sibling subset has one.** `image` 0.25 is registered by
 //! `✳️any` and is the right reference for a JPEG raster, but its public surface is pixels,
@@ -29,7 +29,7 @@ use semio_repo_test_host::Adapter;
 
 //#region 🔖️Kinds
 /// 🏷️ Mirrors `JpgBaselineMutation::KINDS` (`../../🏅️standards/🔖️jfif-1.01/🪆️subsets/✳️baseline/
-/// 🧬️schema/🧬️mutations/🦀️component.rs`) — duplicated, not imported, because the oracle-only build
+/// 🧬️schema/🧬️mutations/🦀️.rs`) — duplicated, not imported, because the oracle-only build
 /// must not link the subject crate. `kinds_match_enum_variants_in_declaration_order` and
 /// `kinds_match_the_committed_catalog` in that production file keep it honest at both ends.
 #[cfg(feature = "sut")]

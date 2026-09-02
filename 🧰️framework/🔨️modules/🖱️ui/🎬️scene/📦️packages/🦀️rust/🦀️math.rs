@@ -1,6 +1,6 @@
 //! 🌐️ Generic 3D scene math, orbit camera, mesh instances, screen picking, and draw descriptors —
 //! the `math` region of `semio-framework-ui-scene`. Relocated verbatim from the old
-//! `🖱️ui/🎬️scene/🦀️component.rs` (which `ui_wgpu` used to mount directly via a relative `#[path]`,
+//! `🖱️ui/🎬️scene/🦀️.rs` (which `ui_wgpu` used to mount directly via a relative `#[path]`,
 //! ticket 26/08/12/DISSOLVE-KERNELS-AND-MODULES-INTO-EVENT-SOURCED-ARTIFACTS wave MESH) into this
 //! standalone crate, per ticket 26/08/17/MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME packet
 //! `scene-surface`. `ui_wgpu` now re-exports this module instead of mounting the file.
@@ -15,7 +15,7 @@ pub use semio_framework_geometry::{Mat4, Vec3};
 //#region 🔖️SyncAlgebra
 // 🚫️async: E6 sync frame construction — `semio_framework_geometry::{Vec3, Mat4}`'s own inherent
 // methods are `pub async fn` (that crate's own design, correctly `.await`-chained internally, not a
-// blind-codemod bug — see its `⚙️engine/🦀️component.rs`). `📐️geometry` is outside this packet's path
+// blind-codemod bug — see its `⚙️engine/🦀️.rs`). `📐️geometry` is outside this packet's path
 // scope, so rather than either violate E6 by staying `async fn` here or editing a foreign crate, this
 // region ports the exact same formulas (verified against `📐️geometry`'s own algebra tests) as plain
 // sync functions/methods on the same public `{x,y,z}`/`{cols}` fields, suffixed `_m` so call sites

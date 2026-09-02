@@ -3,7 +3,7 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { BundleScript, ScriptRouter, runBundleScriptMain, resolveTestLevel, runBunx, runVitest } from "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts";
+import { BundleScript, ScriptRouter, runBundleScriptMain, resolveTestLevel, runBunx, runVitest } from "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 
 class TestScript extends BundleScript {
   run(segments: string[]): void {
@@ -19,7 +19,7 @@ class TypecheckScript extends BundleScript {
 }
 
 //#region 🔖️LintScript
-const REGION_BALANCE_FILES = ["📦️index.tsx"] as const;
+const REGION_BALANCE_FILES = ["🟦️.tsx"] as const;
 
 /** 🧭️Counts unmatched `//#region` / `//#endregion` markers per file — a typo'd region silently corrupts the file's canonical structure. */
 function collectRegionBalanceViolations(root: string): string[] {
@@ -35,10 +35,10 @@ function collectRegionBalanceViolations(root: string): string[] {
   return violations;
 }
 
-/** 🧭️Every host registered in `COMPONENT_SCENE_HOSTS` must have exactly one `export function XxxHost(...: ComponentSceneHostProps)` in `📦️index.tsx` — the contract the host registry table dispatches against. */
+/** 🧭️Every host registered in `COMPONENT_SCENE_HOSTS` must have exactly one `export function XxxHost(...: ComponentSceneHostProps)` in `🟦️.tsx` — the contract the host registry table dispatches against. */
 function collectHostSignatureViolations(root: string): string[] {
   const violations: string[] = [];
-  const text = readFileSync(join(root, "📦️index.tsx"), "utf8");
+  const text = readFileSync(join(root, "🟦️.tsx"), "utf8");
   const registryNames = [...text.matchAll(/lazyHost\(\(\) => Promise\.resolve\(\{ ([A-Z][A-Za-z0-9]*Host) \}\), "\1"\)/g)].map((m) => m[1]!);
   const hostExportCounts = new Map<string, number>();
   for (const m of text.matchAll(/^export function ([A-Z][A-Za-z0-9]*Host)\([^)]*: ComponentSceneHostProps\)/gm)) {
@@ -47,9 +47,9 @@ function collectHostSignatureViolations(root: string): string[] {
   for (const name of registryNames) {
     const count = hostExportCounts.get(name) ?? 0;
     if (count === 0) {
-      violations.push(`📦️index.tsx: no exported component matching ${name}(...: ComponentSceneHostProps)`);
+      violations.push(`🟦️.tsx: no exported component matching ${name}(...: ComponentSceneHostProps)`);
     } else if (count > 1) {
-      violations.push(`📦️index.tsx: multiple ${name} exports matching the host contract`);
+      violations.push(`🟦️.tsx: multiple ${name} exports matching the host contract`);
     }
   }
   return violations;

@@ -1126,12 +1126,12 @@
         "canonicalJson": true,
         "json": {
           "appliedEditPaths": [
-            "🧪️tests/🧪️fixture/🧪️consumer/🟦️.ts"
+            "🧪️tests/🧪️fixture/🟦️consumer.ts"
           ],
           "attemptOrdinal": "000001",
           "backupRoot": "🧪️tests/🧾️taxonomy-transaction/🔖️adcef58922459e21bd1e765e17f4ae859e410c90aa09c5cd2a7d7f249ff0e139/🔂️attempts/🔢️000001/💾️backup",
           "backups": {
-            "🧪️tests/🧪️fixture/🧪️consumer/🟦️.ts": {
+            "🧪️tests/🧪️fixture/🟦️consumer.ts": {
               "backupPath": "b487a450742f0dafa7bec620.backup",
               "contentHash": "8608c09d0984191a29c4a7bca3174fcc57f26ce688cd9ad51cf7791e94ff1aae",
               "kind": "file",
@@ -1212,7 +1212,7 @@
           "attemptOrdinal": "000001",
           "backupRoot": "🧪️tests/🧾️taxonomy-transaction/🔖️adcef58922459e21bd1e765e17f4ae859e410c90aa09c5cd2a7d7f249ff0e139/🔂️attempts/🔢️000001/💾️backup",
           "backups": {
-            "🧪️tests/🧪️fixture/🧪️consumer/🟦️.ts": {
+            "🧪️tests/🧪️fixture/🟦️consumer.ts": {
               "backupPath": "b487a450742f0dafa7bec620.backup",
               "contentHash": "8608c09d0984191a29c4a7bca3174fcc57f26ce688cd9ad51cf7791e94ff1aae",
               "kind": "file",
@@ -1279,7 +1279,7 @@
           "attemptOrdinal": "000001",
           "backupRoot": "🧪️tests/🧾️taxonomy-transaction/🔖️adcef58922459e21bd1e765e17f4ae859e410c90aa09c5cd2a7d7f249ff0e139/🔂️attempts/🔢️000001/💾️backup",
           "backups": {
-            "🧪️tests/🧪️fixture/🧪️consumer/🟦️.ts": {
+            "🧪️tests/🧪️fixture/🟦️consumer.ts": {
               "backupPath": "b487a450742f0dafa7bec620.backup",
               "contentHash": "8608c09d0984191a29c4a7bca3174fcc57f26ce688cd9ad51cf7791e94ff1aae",
               "kind": "file",
@@ -1445,7 +1445,7 @@
           "attemptOrdinal": "000001",
           "backupRoot": "🧪️tests/🧾️taxonomy-transaction/🔖️adcef58922459e21bd1e765e17f4ae859e410c90aa09c5cd2a7d7f249ff0e139/🔂️attempts/🔢️000001/💾️backup",
           "backups": {
-            "🧪️tests/🧪️fixture/🧪️consumer/🟦️.ts": {
+            "🧪️tests/🧪️fixture/🟦️consumer.ts": {
               "backupPath": "b487a450742f0dafa7bec620.backup",
               "contentHash": "8608c09d0984191a29c4a7bca3174fcc57f26ce688cd9ad51cf7791e94ff1aae",
               "kind": "file",
@@ -1765,7 +1765,7 @@
           "attemptOrdinal": "000001",
           "backupRoot": "🧪️tests/🧾️taxonomy-transaction/🔖️adcef58922459e21bd1e765e17f4ae859e410c90aa09c5cd2a7d7f249ff0e139/🔂️attempts/🔢️000001/💾️backup",
           "backups": {
-            "🧪️tests/🧪️fixture/🧪️consumer/🟦️.ts": {
+            "🧪️tests/🧪️fixture/🟦️consumer.ts": {
               "backupPath": "b487a450742f0dafa7bec620.backup",
               "contentHash": "8608c09d0984191a29c4a7bca3174fcc57f26ce688cd9ad51cf7791e94ff1aae",
               "kind": "file",
@@ -1974,7 +1974,7 @@
           "attemptOrdinal": "000001",
           "backupRoot": "🧪️tests/🧾️taxonomy-transaction/🔖️adcef58922459e21bd1e765e17f4ae859e410c90aa09c5cd2a7d7f249ff0e139/🔂️attempts/🔢️000001/💾️backup",
           "backups": {
-            "🧪️tests/🧪️fixture/🧪️consumer/🟦️.ts": {
+            "🧪️tests/🧪️fixture/🟦️consumer.ts": {
               "backupPath": "b487a450742f0dafa7bec620.backup",
               "contentHash": "8608c09d0984191a29c4a7bca3174fcc57f26ce688cd9ad51cf7791e94ff1aae",
               "kind": "file",
@@ -2419,12 +2419,12 @@
         "canonicalJson": true,
         "json": {
           "appliedEditPaths": [
-            "🧪️tests/🧪️fixture/🧪️consumer/🟦️.ts"
+            "🧪️tests/🧪️fixture/🟦️consumer.ts"
           ],
           "attemptOrdinal": "000001",
           "backupRoot": "🧪️tests/🧾️taxonomy-transaction/🔖️adcef58922459e21bd1e765e17f4ae859e410c90aa09c5cd2a7d7f249ff0e139/🔂️attempts/🔢️000001/💾️backup",
           "backups": {
-            "🧪️tests/🧪️fixture/🧪️consumer/🟦️.ts": {
+            "🧪️tests/🧪️fixture/🟦️consumer.ts": {
               "backupPath": "b487a450742f0dafa7bec620.backup",
               "contentHash": "8608c09d0984191a29c4a7bca3174fcc57f26ce688cd9ad51cf7791e94ff1aae",
               "kind": "file",
@@ -2573,12 +2573,12 @@
         "canonicalJson": true,
         "json": {
           "appliedEditPaths": [
-            "🧪️tests/🧪️fixture/🧪️consumer/🟦️.ts"
+            "🧪️tests/🧪️fixture/🟦️consumer.ts"
           ],
           "attemptOrdinal": "000001",
           "backupRoot": "🧪️tests/🧾️taxonomy-transaction/🔖️adcef58922459e21bd1e765e17f4ae859e410c90aa09c5cd2a7d7f249ff0e139/🔂️attempts/🔢️000001/💾️backup",
           "backups": {
-            "🧪️tests/🧪️fixture/🧪️consumer/🟦️.ts": {
+            "🧪️tests/🧪️fixture/🟦️consumer.ts": {
               "backupPath": "b487a450742f0dafa7bec620.backup",
               "contentHash": "8608c09d0984191a29c4a7bca3174fcc57f26ce688cd9ad51cf7791e94ff1aae",
               "kind": "file",
@@ -3045,12 +3045,12 @@
         "canonicalJson": true,
         "json": {
           "appliedEditPaths": [
-            "🧪️tests/🧪️fixture/🧪️consumer/🟦️.ts"
+            "🧪️tests/🧪️fixture/🟦️consumer.ts"
           ],
           "attemptOrdinal": "000001",
           "backupRoot": "🧪️tests/🧾️taxonomy-transaction/🔖️adcef58922459e21bd1e765e17f4ae859e410c90aa09c5cd2a7d7f249ff0e139/🔂️attempts/🔢️000001/💾️backup",
           "backups": {
-            "🧪️tests/🧪️fixture/🧪️consumer/🟦️.ts": {
+            "🧪️tests/🧪️fixture/🟦️consumer.ts": {
               "backupPath": "b487a450742f0dafa7bec620.backup",
               "contentHash": "8608c09d0984191a29c4a7bca3174fcc57f26ce688cd9ad51cf7791e94ff1aae",
               "kind": "file",
@@ -3346,7 +3346,7 @@
           "attemptOrdinal": "000001",
           "backupRoot": "🧪️tests/🧾️taxonomy-transaction/🔖️adcef58922459e21bd1e765e17f4ae859e410c90aa09c5cd2a7d7f249ff0e139/🔂️attempts/🔢️000001/💾️backup",
           "backups": {
-            "🧪️tests/🧪️fixture/🧪️consumer/🟦️.ts": {
+            "🧪️tests/🧪️fixture/🟦️consumer.ts": {
               "backupPath": "b487a450742f0dafa7bec620.backup",
               "contentHash": "8608c09d0984191a29c4a7bca3174fcc57f26ce688cd9ad51cf7791e94ff1aae",
               "kind": "file",
@@ -3613,7 +3613,7 @@
           "attemptOrdinal": "000001",
           "backupRoot": "🧪️tests/🧾️taxonomy-transaction/🔖️adcef58922459e21bd1e765e17f4ae859e410c90aa09c5cd2a7d7f249ff0e139/🔂️attempts/🔢️000001/💾️backup",
           "backups": {
-            "🧪️tests/🧪️fixture/🧪️consumer/🟦️.ts": {
+            "🧪️tests/🧪️fixture/🟦️consumer.ts": {
               "backupPath": "b487a450742f0dafa7bec620.backup",
               "contentHash": "8608c09d0984191a29c4a7bca3174fcc57f26ce688cd9ad51cf7791e94ff1aae",
               "kind": "file",
@@ -4629,7 +4629,7 @@
           "attemptOrdinal": "000001",
           "backupRoot": "🧪️tests/🧾️taxonomy-transaction/🔖️adcef58922459e21bd1e765e17f4ae859e410c90aa09c5cd2a7d7f249ff0e139/🔂️attempts/🔢️000001/💾️backup",
           "backups": {
-            "🧪️tests/🧪️fixture/🧪️consumer/🟦️.ts": {
+            "🧪️tests/🧪️fixture/🟦️consumer.ts": {
               "backupPath": "b487a450742f0dafa7bec620.backup",
               "contentHash": "8608c09d0984191a29c4a7bca3174fcc57f26ce688cd9ad51cf7791e94ff1aae",
               "kind": "file",
@@ -4840,7 +4840,7 @@
           "attemptOrdinal": "000001",
           "backupRoot": "🧪️tests/🧾️taxonomy-transaction/🔖️adcef58922459e21bd1e765e17f4ae859e410c90aa09c5cd2a7d7f249ff0e139/🔂️attempts/🔢️000001/💾️backup",
           "backups": {
-            "🧪️tests/🧪️fixture/🧪️consumer/🟦️.ts": {
+            "🧪️tests/🧪️fixture/🟦️consumer.ts": {
               "backupPath": "b487a450742f0dafa7bec620.backup",
               "contentHash": "8608c09d0984191a29c4a7bca3174fcc57f26ce688cd9ad51cf7791e94ff1aae",
               "kind": "file",
@@ -5240,7 +5240,7 @@
           "attemptOrdinal": "000001",
           "backupRoot": "🧪️tests/🧾️taxonomy-transaction/🔖️adcef58922459e21bd1e765e17f4ae859e410c90aa09c5cd2a7d7f249ff0e139/🔂️attempts/🔢️000001/💾️backup",
           "backups": {
-            "🧪️tests/🧪️fixture/🧪️consumer/🟦️.ts": {
+            "🧪️tests/🧪️fixture/🟦️consumer.ts": {
               "backupPath": "b487a450742f0dafa7bec620.backup",
               "contentHash": "8608c09d0984191a29c4a7bca3174fcc57f26ce688cd9ad51cf7791e94ff1aae",
               "kind": "file",
@@ -5426,7 +5426,7 @@
           "attemptOrdinal": "000001",
           "backupRoot": "🧪️tests/🧾️taxonomy-transaction/🔖️adcef58922459e21bd1e765e17f4ae859e410c90aa09c5cd2a7d7f249ff0e139/🔂️attempts/🔢️000001/💾️backup",
           "backups": {
-            "🧪️tests/🧪️fixture/🧪️consumer/🟦️.ts": {
+            "🧪️tests/🧪️fixture/🟦️consumer.ts": {
               "backupPath": "b487a450742f0dafa7bec620.backup",
               "contentHash": "8608c09d0984191a29c4a7bca3174fcc57f26ce688cd9ad51cf7791e94ff1aae",
               "kind": "file",
@@ -5568,12 +5568,12 @@
         "canonicalJson": true,
         "json": {
           "appliedEditPaths": [
-            "🧪️tests/🧪️fixture/🧪️consumer/🟦️.ts"
+            "🧪️tests/🧪️fixture/🟦️consumer.ts"
           ],
           "attemptOrdinal": "000001",
           "backupRoot": "🧪️tests/🧾️taxonomy-transaction/🔖️adcef58922459e21bd1e765e17f4ae859e410c90aa09c5cd2a7d7f249ff0e139/🔂️attempts/🔢️000001/💾️backup",
           "backups": {
-            "🧪️tests/🧪️fixture/🧪️consumer/🟦️.ts": {
+            "🧪️tests/🧪️fixture/🟦️consumer.ts": {
               "backupPath": "b487a450742f0dafa7bec620.backup",
               "contentHash": "8608c09d0984191a29c4a7bca3174fcc57f26ce688cd9ad51cf7791e94ff1aae",
               "kind": "file",
@@ -5688,7 +5688,7 @@
           "attemptOrdinal": "000001",
           "backupRoot": "🧪️tests/🧾️taxonomy-transaction/🔖️adcef58922459e21bd1e765e17f4ae859e410c90aa09c5cd2a7d7f249ff0e139/🔂️attempts/🔢️000001/💾️backup",
           "backups": {
-            "🧪️tests/🧪️fixture/🧪️consumer/🟦️.ts": {
+            "🧪️tests/🧪️fixture/🟦️consumer.ts": {
               "backupPath": "b487a450742f0dafa7bec620.backup",
               "contentHash": "8608c09d0984191a29c4a7bca3174fcc57f26ce688cd9ad51cf7791e94ff1aae",
               "kind": "file",
@@ -5783,12 +5783,12 @@
         "canonicalJson": true,
         "json": {
           "appliedEditPaths": [
-            "🧪️tests/🧪️fixture/🧪️consumer/🟦️.ts"
+            "🧪️tests/🧪️fixture/🟦️consumer.ts"
           ],
           "attemptOrdinal": "000001",
           "backupRoot": "🧪️tests/🧾️taxonomy-transaction/🔖️adcef58922459e21bd1e765e17f4ae859e410c90aa09c5cd2a7d7f249ff0e139/🔂️attempts/🔢️000001/💾️backup",
           "backups": {
-            "🧪️tests/🧪️fixture/🧪️consumer/🟦️.ts": {
+            "🧪️tests/🧪️fixture/🟦️consumer.ts": {
               "backupPath": "b487a450742f0dafa7bec620.backup",
               "contentHash": "8608c09d0984191a29c4a7bca3174fcc57f26ce688cd9ad51cf7791e94ff1aae",
               "kind": "file",
@@ -6017,7 +6017,7 @@
           "attemptOrdinal": "000001",
           "backupRoot": "🧪️tests/🧾️taxonomy-transaction/🔖️adcef58922459e21bd1e765e17f4ae859e410c90aa09c5cd2a7d7f249ff0e139/🔂️attempts/🔢️000001/💾️backup",
           "backups": {
-            "🧪️tests/🧪️fixture/🧪️consumer/🟦️.ts": {
+            "🧪️tests/🧪️fixture/🟦️consumer.ts": {
               "backupPath": "b487a450742f0dafa7bec620.backup",
               "contentHash": "8608c09d0984191a29c4a7bca3174fcc57f26ce688cd9ad51cf7791e94ff1aae",
               "kind": "file",
@@ -6221,7 +6221,7 @@
         "bytesBase64": "ZXhwb3J0IHsgdmFsdWUgfSBmcm9tICIuLi/wn6eq77iPc3ViamVjdC/wn5+m77iPY29tcG9uZW50LnRzIjsK",
         "kind": "file",
         "mode": "644",
-        "path": "🧪️consumer/🟦️.ts",
+        "path": "🟦️consumer.ts",
         "sha256": "8608c09d0984191a29c4a7bca3174fcc57f26ce688cd9ad51cf7791e94ff1aae",
         "size": 63
       },
@@ -6234,7 +6234,7 @@
         "bytesBase64": "ZXhwb3J0IGNvbnN0IHZhbHVlID0gMTsK",
         "kind": "file",
         "mode": "644",
-        "path": "🧪️subject/🟦️.ts",
+        "path": "🟦️subject.ts",
         "sha256": "5d8f65d2774e206bc9f7a7a4ad39ca2dc563b5c31e46ab57ef4874961237ce29",
         "size": 24
       }
@@ -6282,7 +6282,7 @@
         },
         "kind": "file",
         "mode": "644",
-        "path": "🧪️generator/📋️project.json",
+        "path": "📋️generatorproject.json",
         "sha256": "fd26e023a69632cbf9c764508cdbb5cb3d568e92c2e3d20f36d16c1bc2cea601",
         "size": 561
       },
@@ -6290,7 +6290,7 @@
         "bytesBase64": "aW1wb3J0IHsgZXhpc3RzU3luYywgbWtkaXJTeW5jLCByZWFkZGlyU3luYywgcm1TeW5jLCB3cml0ZUZpbGVTeW5jLCByZWFkRmlsZVN5bmMgfSBmcm9tICJub2RlOmZzIjsKaW1wb3J0IHsgam9pbiB9IGZyb20gIm5vZGU6cGF0aCI7CmNvbnN0IG91dHB1dFJvb3Q9am9pbihwcm9jZXNzLmN3ZCgpLCAi8J+klu+4j2dlbmVyYXRlZCIpOwpjb25zdCBvdXRwdXRSZWxhdGl2ZT0i8J+nqu+4j3Rlc3RzL/Cfp6rvuI9maXh0dXJlL/Cfp6rvuI9nZW5lcmF0b3Iv8J+klu+4j2dlbmVyYXRlZCI7CmNvbnN0IG91dHB1dEZpbGU9am9pbihvdXRwdXRSb290LCAi8J+UpO+4jy50eHQiKSwgYnl0ZXM9QnVmZmVyLmZyb20oImdlbmVyYXRlZFxuIik7CmNvbnN0IG5vZGVzPVt7Ynl0ZXNCYXNlNjQ6IiIsbW9kZTowbzc1NSxub2RlS2luZDoiZGlyZWN0b3J5IixwYXRoOm91dHB1dFJlbGF0aXZlfSx7Ynl0ZXNCYXNlNjQ6Ynl0ZXMudG9TdHJpbmcoImJhc2U2NCIpLG1vZGU6MG82NDQsbm9kZUtpbmQ6ImZpbGUiLHBhdGg6YCR7b3V0cHV0UmVsYXRpdmV9L/CflKTvuI8udHh0YH1dOwpjb25zdCBzdGFsZVJlbW92YWxzPShleGlzdHNTeW5jKG91dHB1dFJvb3QpP3JlYWRkaXJTeW5jKG91dHB1dFJvb3QpOltdKS5maWx0ZXIoKG5hbWUpPT5uYW1lIT09IvCflKTvuI8udHh0IikubWFwKChuYW1lKT0+YCR7b3V0cHV0UmVsYXRpdmV9LyR7bmFtZS5ub3JtYWxpemUoIk5GQyIpfWApLnNvcnQoKGEsYik9PkJ1ZmZlci5mcm9tKGEpLmNvbXBhcmUoQnVmZmVyLmZyb20oYikpKTsKY29uc3QgY29tbWFuZD1wcm9jZXNzLmFyZ3ZbMl07CmlmKGNvbW1hbmQ9PT0icHJldmlldy1nZW5lcmF0ZWQiKSBwcm9jZXNzLnN0ZG91dC53cml0ZShgJHtKU09OLnN0cmluZ2lmeSh7Y29udHJhY3RJZDoiZml4dHVyZS1nZW5lcmF0b3IiLG5vZGVzLHNjaGVtYVZlcnNpb246MSxzdGFsZVJlbW92YWxzfSl9XG5gKTsKZWxzZSBpZihjb21tYW5kPT09ImdlbmVyYXRlIil7cm1TeW5jKG91dHB1dFJvb3Qse3JlY3Vyc2l2ZTp0cnVlLGZvcmNlOnRydWV9KTtta2RpclN5bmMob3V0cHV0Um9vdCx7cmVjdXJzaXZlOnRydWUsbW9kZTowbzc1NX0pO3dyaXRlRmlsZVN5bmMob3V0cHV0RmlsZSxieXRlcyx7bW9kZTowbzY0NH0pO2lmKHByb2Nlc3MuZW52Lk1JWEVEX0dFTkVSQVRPUl9NQVJLRVIpe3dyaXRlRmlsZVN5bmMoam9pbihvdXRwdXRSb290LCJ1bmV4cGVjdGVkLnR4dCIpLCJtaXhlZFxuIik7d3JpdGVGaWxlU3luYyhwcm9jZXNzLmVudi5NSVhFRF9HRU5FUkFUT1JfTUFSS0VSLGAke0pTT04uc3RyaW5naWZ5KHtwaWQ6cHJvY2Vzcy5waWR9KX1cbmApO0F0b21pY3Mud2FpdChuZXcgSW50MzJBcnJheShuZXcgU2hhcmVkQXJyYXlCdWZmZXIoNCkpLDAsMCwzMDAwMCk7fX0KZWxzZSBpZihjb21tYW5kPT09ImNoZWNrIil7aWYoIWV4aXN0c1N5bmMob3V0cHV0RmlsZSl8fCFyZWFkRmlsZVN5bmMob3V0cHV0RmlsZSkuZXF1YWxzKGJ5dGVzKXx8cmVhZGRpclN5bmMob3V0cHV0Um9vdCkuam9pbigiXDAiKSE9PSLwn5Sk77iPLnR4dCIpdGhyb3cgbmV3IEVycm9yKCJnZW5lcmF0ZWQgb3V0cHV0IGlzIHN0YWxlIik7fQplbHNlIHRocm93IG5ldyBFcnJvcihgdW5rbm93biBjb21tYW5kICR7Y29tbWFuZH1gKTsK",
         "kind": "file",
         "mode": "644",
-        "path": "🧪️generator/📜️script.ts",
+        "path": "📜️generatorscript.ts",
         "sha256": "1bd1b08963c5597df99e8f3de5cb89679c1d59f17382de47ab56686c460ff062",
         "size": 1623
       },
@@ -6298,7 +6298,7 @@
         "bytesBase64": "ZXhwb3J0IGNvbnN0IGlucHV0ID0gdHJ1ZTsK",
         "kind": "file",
         "mode": "644",
-        "path": "🧪️generator/🟦️.ts",
+        "path": "🟦️generator.ts",
         "sha256": "260e815011731e0e34067c7d875d3643e817cf4bcc0a6f277543b679e3190040",
         "size": 27
       },
@@ -6371,7 +6371,7 @@
         "bytesBase64": "U2lnbmF0dXJlOiA4YTQ3N2Y1OTdkMjhkMTcyNzg5ZjA2ODg2ODA2YmM1NQo=",
         "kind": "file",
         "mode": "644",
-        "path": "pkg-a/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/PHASE-9-RUNTIME-DEPENDENCY-REMOVAL/🧪️target-os-errors/CACHEDIR.TAG",
+        "path": "pkg-a/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/PHASE-9-RUNTIME-DEPENDENCY-REMOVAL/target-os-errorsCACHEDIR.TAG",
         "sha256": "a6cadd53399872fa9aca8a92b2a96e111a30203e4e8a21f4068d0b960031b3af",
         "size": 44
       },
@@ -6384,7 +6384,7 @@
         "bytesBase64": "U2lnbmF0dXJlOiA4YTQ3N2Y1OTdkMjhkMTcyNzg5ZjA2ODg2ODA2YmM1NQo=",
         "kind": "file",
         "mode": "644",
-        "path": "pkg-a/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/PHASE-9-RUNTIME-DEPENDENCY-REMOVAL/🧪️unique-a/CACHEDIR.TAG",
+        "path": "pkg-a/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/PHASE-9-RUNTIME-DEPENDENCY-REMOVAL/unique-aCACHEDIR.TAG",
         "sha256": "a6cadd53399872fa9aca8a92b2a96e111a30203e4e8a21f4068d0b960031b3af",
         "size": 44
       },
@@ -6437,7 +6437,7 @@
         "bytesBase64": "U2lnbmF0dXJlOiA4YTQ3N2Y1OTdkMjhkMTcyNzg5ZjA2ODg2ODA2YmM1NQo=",
         "kind": "file",
         "mode": "644",
-        "path": "pkg-b/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/PHASE-9-RUNTIME-DEPENDENCY-REMOVAL/🧪️target-os-errors/CACHEDIR.TAG",
+        "path": "pkg-b/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/PHASE-9-RUNTIME-DEPENDENCY-REMOVAL/target-os-errorsCACHEDIR.TAG",
         "sha256": "a6cadd53399872fa9aca8a92b2a96e111a30203e4e8a21f4068d0b960031b3af",
         "size": 44
       },
@@ -6450,7 +6450,7 @@
         "bytesBase64": "U2lnbmF0dXJlOiA4YTQ3N2Y1OTdkMjhkMTcyNzg5ZjA2ODg2ODA2YmM1NQo=",
         "kind": "file",
         "mode": "644",
-        "path": "pkg-b/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/PHASE-9-RUNTIME-DEPENDENCY-REMOVAL/🧪️unique-b/CACHEDIR.TAG",
+        "path": "pkg-b/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/PHASE-9-RUNTIME-DEPENDENCY-REMOVAL/unique-bCACHEDIR.TAG",
         "sha256": "a6cadd53399872fa9aca8a92b2a96e111a30203e4e8a21f4068d0b960031b3af",
         "size": 44
       }
@@ -6475,7 +6475,7 @@
         "bytesBase64": "ZXhwb3J0IGNvbnN0IHZhbHVlID0gMTsK",
         "kind": "file",
         "mode": "644",
-        "path": "🧪️subject/🟦️.ts",
+        "path": "🟦️subject.ts",
         "sha256": "5d8f65d2774e206bc9f7a7a4ad39ca2dc563b5c31e46ab57ef4874961237ce29",
         "size": 24
       }
@@ -6494,8 +6494,8 @@
       {
         "kind": "symlink",
         "mode": "755",
-        "path": "🧪️link/🟦️component.ts",
-        "target": "../🧪️target/🟦️component.ts",
+        "path": "🟦️link.ts",
+        "target": "../🟦️target.ts",
         "targetHash": "7de8853540d0cadbb20bed28add0b9f739b2b7868183fcad33fca982073f5c5e"
       },
       {
@@ -6507,7 +6507,7 @@
         "bytesBase64": "ZXhwb3J0IGNvbnN0IHRhcmdldCA9IHRydWU7Cg==",
         "kind": "file",
         "mode": "644",
-        "path": "🧪️target/🟦️component.ts",
+        "path": "🟦️target.ts",
         "sha256": "5baacedd72ba7cfed8be23f58b6e7faa3c4a6e333dfcaeea5633317b6dc0d118",
         "size": 28
       }
@@ -6555,7 +6555,7 @@
         },
         "kind": "file",
         "mode": "644",
-        "path": "🧪️generator/📋️project.json",
+        "path": "📋️generatorproject.json",
         "sha256": "fd26e023a69632cbf9c764508cdbb5cb3d568e92c2e3d20f36d16c1bc2cea601",
         "size": 561
       },
@@ -6563,7 +6563,7 @@
         "bytesBase64": "aW1wb3J0IHsgZXhpc3RzU3luYywgbWtkaXJTeW5jLCByZWFkZGlyU3luYywgcm1TeW5jLCB3cml0ZUZpbGVTeW5jLCByZWFkRmlsZVN5bmMgfSBmcm9tICJub2RlOmZzIjsKaW1wb3J0IHsgam9pbiB9IGZyb20gIm5vZGU6cGF0aCI7CmNvbnN0IG91dHB1dFJvb3Q9am9pbihwcm9jZXNzLmN3ZCgpLCAi8J+klu+4j2dlbmVyYXRlZCIpOwpjb25zdCBvdXRwdXRSZWxhdGl2ZT0i8J+nqu+4j3Rlc3RzL/Cfp6rvuI9maXh0dXJlL/Cfp6rvuI9nZW5lcmF0b3Iv8J+klu+4j2dlbmVyYXRlZCI7CmNvbnN0IG91dHB1dEZpbGU9am9pbihvdXRwdXRSb290LCAi8J+UpO+4jy50eHQiKSwgYnl0ZXM9QnVmZmVyLmZyb20oImdlbmVyYXRlZFxuIik7CmNvbnN0IG5vZGVzPVt7Ynl0ZXNCYXNlNjQ6IiIsbW9kZTowbzc1NSxub2RlS2luZDoiZGlyZWN0b3J5IixwYXRoOm91dHB1dFJlbGF0aXZlfSx7Ynl0ZXNCYXNlNjQ6Ynl0ZXMudG9TdHJpbmcoImJhc2U2NCIpLG1vZGU6MG82NDQsbm9kZUtpbmQ6ImZpbGUiLHBhdGg6YCR7b3V0cHV0UmVsYXRpdmV9L/CflKTvuI8udHh0YH1dOwpjb25zdCBzdGFsZVJlbW92YWxzPShleGlzdHNTeW5jKG91dHB1dFJvb3QpP3JlYWRkaXJTeW5jKG91dHB1dFJvb3QpOltdKS5maWx0ZXIoKG5hbWUpPT5uYW1lIT09IvCflKTvuI8udHh0IikubWFwKChuYW1lKT0+YCR7b3V0cHV0UmVsYXRpdmV9LyR7bmFtZS5ub3JtYWxpemUoIk5GQyIpfWApLnNvcnQoKGEsYik9PkJ1ZmZlci5mcm9tKGEpLmNvbXBhcmUoQnVmZmVyLmZyb20oYikpKTsKY29uc3QgY29tbWFuZD1wcm9jZXNzLmFyZ3ZbMl07CmlmKGNvbW1hbmQ9PT0icHJldmlldy1nZW5lcmF0ZWQiKSBwcm9jZXNzLnN0ZG91dC53cml0ZShgJHtKU09OLnN0cmluZ2lmeSh7Y29udHJhY3RJZDoiZml4dHVyZS1nZW5lcmF0b3IiLG5vZGVzLHNjaGVtYVZlcnNpb246MSxzdGFsZVJlbW92YWxzfSl9XG5gKTsKZWxzZSBpZihjb21tYW5kPT09ImdlbmVyYXRlIil7cm1TeW5jKG91dHB1dFJvb3Qse3JlY3Vyc2l2ZTp0cnVlLGZvcmNlOnRydWV9KTtta2RpclN5bmMob3V0cHV0Um9vdCx7cmVjdXJzaXZlOnRydWUsbW9kZTowbzc1NX0pO3dyaXRlRmlsZVN5bmMob3V0cHV0RmlsZSxieXRlcyx7bW9kZTowbzY0NH0pO2lmKHByb2Nlc3MuZW52Lk1JWEVEX0dFTkVSQVRPUl9NQVJLRVIpe3dyaXRlRmlsZVN5bmMoam9pbihvdXRwdXRSb290LCJ1bmV4cGVjdGVkLnR4dCIpLCJtaXhlZFxuIik7d3JpdGVGaWxlU3luYyhwcm9jZXNzLmVudi5NSVhFRF9HRU5FUkFUT1JfTUFSS0VSLGAke0pTT04uc3RyaW5naWZ5KHtwaWQ6cHJvY2Vzcy5waWR9KX1cbmApO0F0b21pY3Mud2FpdChuZXcgSW50MzJBcnJheShuZXcgU2hhcmVkQXJyYXlCdWZmZXIoNCkpLDAsMCwzMDAwMCk7fX0KZWxzZSBpZihjb21tYW5kPT09ImNoZWNrIil7aWYoIWV4aXN0c1N5bmMob3V0cHV0RmlsZSl8fCFyZWFkRmlsZVN5bmMob3V0cHV0RmlsZSkuZXF1YWxzKGJ5dGVzKXx8cmVhZGRpclN5bmMob3V0cHV0Um9vdCkuam9pbigiXDAiKSE9PSLwn5Sk77iPLnR4dCIpdGhyb3cgbmV3IEVycm9yKCJnZW5lcmF0ZWQgb3V0cHV0IGlzIHN0YWxlIik7fQplbHNlIHRocm93IG5ldyBFcnJvcihgdW5rbm93biBjb21tYW5kICR7Y29tbWFuZH1gKTsK",
         "kind": "file",
         "mode": "644",
-        "path": "🧪️generator/📜️script.ts",
+        "path": "📜️generatorscript.ts",
         "sha256": "1bd1b08963c5597df99e8f3de5cb89679c1d59f17382de47ab56686c460ff062",
         "size": 1623
       },
@@ -6571,7 +6571,7 @@
         "bytesBase64": "ZXhwb3J0IGNvbnN0IGlucHV0ID0gdHJ1ZTsK",
         "kind": "file",
         "mode": "644",
-        "path": "🧪️generator/🟦️.ts",
+        "path": "🟦️generator.ts",
         "sha256": "260e815011731e0e34067c7d875d3643e817cf4bcc0a6f277543b679e3190040",
         "size": 27
       },
@@ -6640,7 +6640,7 @@
         },
         "kind": "file",
         "mode": "644",
-        "path": "🧪️generator/📋️project.json",
+        "path": "📋️generatorproject.json",
         "sha256": "fd26e023a69632cbf9c764508cdbb5cb3d568e92c2e3d20f36d16c1bc2cea601",
         "size": 561
       },
@@ -6648,7 +6648,7 @@
         "bytesBase64": "aW1wb3J0IHsgZXhpc3RzU3luYywgbWtkaXJTeW5jLCByZWFkZGlyU3luYywgcm1TeW5jLCB3cml0ZUZpbGVTeW5jLCByZWFkRmlsZVN5bmMgfSBmcm9tICJub2RlOmZzIjsKaW1wb3J0IHsgam9pbiB9IGZyb20gIm5vZGU6cGF0aCI7CmNvbnN0IG91dHB1dFJvb3Q9am9pbihwcm9jZXNzLmN3ZCgpLCAi8J+klu+4j2dlbmVyYXRlZCIpOwpjb25zdCBvdXRwdXRSZWxhdGl2ZT0i8J+nqu+4j3Rlc3RzL/Cfp6rvuI9maXh0dXJlL/Cfp6rvuI9nZW5lcmF0b3Iv8J+klu+4j2dlbmVyYXRlZCI7CmNvbnN0IG91dHB1dEZpbGU9am9pbihvdXRwdXRSb290LCAi8J+UpO+4jy50eHQiKSwgYnl0ZXM9QnVmZmVyLmZyb20oImdlbmVyYXRlZFxuIik7CmNvbnN0IG5vZGVzPVt7Ynl0ZXNCYXNlNjQ6IiIsbW9kZTowbzc1NSxub2RlS2luZDoiZGlyZWN0b3J5IixwYXRoOm91dHB1dFJlbGF0aXZlfSx7Ynl0ZXNCYXNlNjQ6Ynl0ZXMudG9TdHJpbmcoImJhc2U2NCIpLG1vZGU6MG82NDQsbm9kZUtpbmQ6ImZpbGUiLHBhdGg6YCR7b3V0cHV0UmVsYXRpdmV9L/CflKTvuI8udHh0YH1dOwpjb25zdCBzdGFsZVJlbW92YWxzPShleGlzdHNTeW5jKG91dHB1dFJvb3QpP3JlYWRkaXJTeW5jKG91dHB1dFJvb3QpOltdKS5maWx0ZXIoKG5hbWUpPT5uYW1lIT09IvCflKTvuI8udHh0IikubWFwKChuYW1lKT0+YCR7b3V0cHV0UmVsYXRpdmV9LyR7bmFtZS5ub3JtYWxpemUoIk5GQyIpfWApLnNvcnQoKGEsYik9PkJ1ZmZlci5mcm9tKGEpLmNvbXBhcmUoQnVmZmVyLmZyb20oYikpKTsKY29uc3QgY29tbWFuZD1wcm9jZXNzLmFyZ3ZbMl07CmlmKGNvbW1hbmQ9PT0icHJldmlldy1nZW5lcmF0ZWQiKSBwcm9jZXNzLnN0ZG91dC53cml0ZShgJHtKU09OLnN0cmluZ2lmeSh7Y29udHJhY3RJZDoiZml4dHVyZS1nZW5lcmF0b3IiLG5vZGVzLHNjaGVtYVZlcnNpb246MSxzdGFsZVJlbW92YWxzfSl9XG5gKTsKZWxzZSBpZihjb21tYW5kPT09ImdlbmVyYXRlIil7cm1TeW5jKG91dHB1dFJvb3Qse3JlY3Vyc2l2ZTp0cnVlLGZvcmNlOnRydWV9KTtta2RpclN5bmMob3V0cHV0Um9vdCx7cmVjdXJzaXZlOnRydWUsbW9kZTowbzc1NX0pO3dyaXRlRmlsZVN5bmMob3V0cHV0RmlsZSxieXRlcyx7bW9kZTowbzY0NH0pO2lmKHByb2Nlc3MuZW52Lk1JWEVEX0dFTkVSQVRPUl9NQVJLRVIpe3dyaXRlRmlsZVN5bmMoam9pbihvdXRwdXRSb290LCJ1bmV4cGVjdGVkLnR4dCIpLCJtaXhlZFxuIik7d3JpdGVGaWxlU3luYyhwcm9jZXNzLmVudi5NSVhFRF9HRU5FUkFUT1JfTUFSS0VSLGAke0pTT04uc3RyaW5naWZ5KHtwaWQ6cHJvY2Vzcy5waWR9KX1cbmApO0F0b21pY3Mud2FpdChuZXcgSW50MzJBcnJheShuZXcgU2hhcmVkQXJyYXlCdWZmZXIoNCkpLDAsMCwzMDAwMCk7fX0KZWxzZSBpZihjb21tYW5kPT09ImNoZWNrIil7aWYoIWV4aXN0c1N5bmMob3V0cHV0RmlsZSl8fCFyZWFkRmlsZVN5bmMob3V0cHV0RmlsZSkuZXF1YWxzKGJ5dGVzKXx8cmVhZGRpclN5bmMob3V0cHV0Um9vdCkuam9pbigiXDAiKSE9PSLwn5Sk77iPLnR4dCIpdGhyb3cgbmV3IEVycm9yKCJnZW5lcmF0ZWQgb3V0cHV0IGlzIHN0YWxlIik7fQplbHNlIHRocm93IG5ldyBFcnJvcihgdW5rbm93biBjb21tYW5kICR7Y29tbWFuZH1gKTsK",
         "kind": "file",
         "mode": "644",
-        "path": "🧪️generator/📜️script.ts",
+        "path": "📜️generatorscript.ts",
         "sha256": "1bd1b08963c5597df99e8f3de5cb89679c1d59f17382de47ab56686c460ff062",
         "size": 1623
       },
@@ -6656,7 +6656,7 @@
         "bytesBase64": "ZXhwb3J0IGNvbnN0IGlucHV0ID0gdHJ1ZTsK",
         "kind": "file",
         "mode": "644",
-        "path": "🧪️generator/🟦️.ts",
+        "path": "🟦️generator.ts",
         "sha256": "260e815011731e0e34067c7d875d3643e817cf4bcc0a6f277543b679e3190040",
         "size": 27
       },
@@ -6689,7 +6689,7 @@
         "bytesBase64": "ZXhwb3J0IHsgdmFsdWUgfSBmcm9tICIuLi/wn6eq77iPc3ViamVjdC/wn5+m77iPLnRzIjsK",
         "kind": "file",
         "mode": "644",
-        "path": "🧪️consumer/🟦️.ts",
+        "path": "🟦️consumer.ts",
         "sha256": "4883c46905c875f753d9a0dfc97182c7adec4cb29d6dd758ab84e960af0d4670",
         "size": 54
       },
@@ -6702,7 +6702,7 @@
         "bytesBase64": "ZXhwb3J0IGNvbnN0IHZhbHVlID0gMTsK",
         "kind": "file",
         "mode": "644",
-        "path": "🧪️subject/🟦️.ts",
+        "path": "🟦️subject.ts",
         "sha256": "5d8f65d2774e206bc9f7a7a4ad39ca2dc563b5c31e46ab57ef4874961237ce29",
         "size": 24
       }
@@ -6722,7 +6722,7 @@
         "bytesBase64": "ZXhwb3J0IHsgdmFsdWUgfSBmcm9tICIuLi/wn6eq77iPc3ViamVjdC/wn5+m77iPY29tcG9uZW50LnRzIjsK",
         "kind": "file",
         "mode": "644",
-        "path": "🧪️consumer/🟦️component.ts",
+        "path": "🟦️consumer.ts",
         "sha256": "8608c09d0984191a29c4a7bca3174fcc57f26ce688cd9ad51cf7791e94ff1aae",
         "size": 63
       },
@@ -6735,7 +6735,7 @@
         "bytesBase64": "ZXhwb3J0IGNvbnN0IHZhbHVlID0gMTsK",
         "kind": "file",
         "mode": "644",
-        "path": "🧪️subject/🟦️component.ts",
+        "path": "🟦️subject.ts",
         "sha256": "5d8f65d2774e206bc9f7a7a4ad39ca2dc563b5c31e46ab57ef4874961237ce29",
         "size": 24
       }

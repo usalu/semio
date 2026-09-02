@@ -14,7 +14,7 @@ workspace = true
 
 [lib]
 name = "db"
-path = "📦️glue.rs"
+path = "🦀️.rs"
 
 [features]
 default = ["fs", "deflate", "vcs"]

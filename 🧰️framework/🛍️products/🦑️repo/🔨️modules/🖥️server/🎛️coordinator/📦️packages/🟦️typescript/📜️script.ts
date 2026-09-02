@@ -1,7 +1,7 @@
 #!/usr/bin/env bun
 /** 🧭️ Coordinator package router: `bun ./📜️script.ts build|test|policy`. */
-import type { BundleLinter } from "../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts";
-import { dependencyBoundaryBreachesForBundleDir, getWorkspaceRoot, BundleScript, ScriptRouter, runBundleScriptMain, runVitest, resolveTestLevel, runCmd, defineLint } from "../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts";
+import type { BundleLinter } from "../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { dependencyBoundaryBreachesForBundleDir, getWorkspaceRoot, BundleScript, ScriptRouter, runBundleScriptMain, runVitest, resolveTestLevel, runCmd, defineLint } from "../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { dirname, join } from "node:path";
 
 export const policy = defineLint("@repo/server/coordinator-bundle", (l: BundleLinter) => {

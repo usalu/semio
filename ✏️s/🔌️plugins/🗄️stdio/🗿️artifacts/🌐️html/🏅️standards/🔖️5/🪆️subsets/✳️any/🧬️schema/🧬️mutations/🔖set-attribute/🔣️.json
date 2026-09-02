@@ -5,7 +5,7 @@
   "displayName": "Set Attribute",
   "emoji": "🔖",
   "aggregateVariant": "SetAttribute",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

@@ -1,0 +1,21 @@
+(* ISO-14977-style EBNF for `stdio.semio.presentation`'s real one-line `DiffCodec` text form —
+   descriptive mirror of the authoritative `📖️.grammar.semio` (abridged: full per-field
+   diff detail lives there). *)
+document = [ masters line ], [ layouts line ], [ slides line ] ;
+
+masters line = 'masters', '=', triple ;
+layouts line = 'layouts', '=', triple ;
+slides line = 'slides', '=', triple ;
+
+triple = '[', [ items ], ']', ';', '[', [ modified items ], ']', ';', '[', [ added items ], ']' ;
+items = item, { ',', item } ;
+item = hex | integer ;
+modified items = modified item, { ',', modified item } ;
+modified item = ( hex | integer ), ':', diff body ;
+added items = added item, { ',', added item } ;
+added item = value | ( integer, ':', value ) ;
+
+diff body = '[', { ? any char ? }, ']' ;
+value = '[', { ? any char ? }, ']' ;
+
+(* `hex` is the framework's `hex` MACRO; `integer` is the shared lexer's `INT` token. *)

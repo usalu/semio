@@ -1,7 +1,0 @@
-; ABNF-style descriptive mirror of `stdio.semio.cad`'s real `OpBinary` binary frame -- see the
-; authoritative `📡️component.protocol.semio` for the conformance-tested version.
-document       = format tag payload
-format         = %x01                  ; OP_BINARY_FORMAT
-tag            = OCTET                 ; SemioCadMutation variant ordinal (0-15, OP_KEYWORDS)
-payload        = *OCTET                ; the variant's "key=value ..." argument text, see
-                                        ; component.rs's OpBinary::encode_op

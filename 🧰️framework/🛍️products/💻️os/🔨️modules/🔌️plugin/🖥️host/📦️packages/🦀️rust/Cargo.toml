@@ -12,14 +12,14 @@ id = "os-plugin-host"
 workspace = true
 
 [lib]
-path = "📦️glue.rs"
+path = "🦀️.rs"
 
 # 👶️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (P1-process-shards, `design-runtime.md` §2: "the
 # `semio-shard` `[[bin]]` runs over stdio"). Hosts one `ShardLoop` over `process_transport::
-# StdioTransport` — see `🧵️shard/👶️child/🦀️main.rs`'s own module doc for the CLI contract.
+# StdioTransport` — see `🧵️shard/👶️child/🦀️.rs`'s own module doc for the CLI contract.
 [[bin]]
 name = "semio-shard"
-path = "../../🧵️shard/👶️child/🦀️main.rs"
+path = "../../🧵️shard/👶️child/🦀️.rs"
 
 [dependencies]
 semio-framework = { path = "../../../../../../../📦️packages/🦀️rust", package = "semio-framework" }
@@ -30,7 +30,7 @@ semio-framework-value-derive = { path = "../../../../../../../🔨️modules/�
 # `PackageId`/`PackageHash` vocabulary (design-runtime.md §2) — packet A1's pure, domain-neutral
 # actor crate, already a `[workspace.dependencies]` entry.
 semio-framework-actor = { workspace = true }
-# ⚡️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (terra-effects-async): `⚡️effects/🦀️component.rs`'s
+# ⚡️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (terra-effects-async): `⚡️effects/🦀️.rs`'s
 # `AsyncEffectExecutor` derives `OperationContext`/`ScopeHandle`/`ChannelPolicy` (this crate's own
 # vocabulary is domain-neutral, zero tokio) and dispatches onto `HttpPool`/`StorageScheduler`/
 # `TimerWheel`/`ComputePool`/`EventRouter` (packet R2's tokio-backed services) — same dependency
@@ -67,13 +67,13 @@ serde = { version = "1.0.219", features = ["derive"] }
 serde_json = "1.0.140"
 # 🎯️ PLUGIN-DEPENDENCIES-ARTIFACT-CONTRIBUTIONS-AND-COMPOSITE-MUTATIONS (W2-A): `HostTransactionCoordinator`
 # hashes a `ForeignStep`'s payload into `protocol::PayloadHash` for `MutationOrigin::Contributed`, the
-# exact algorithm `📡️spr/🎮️command/🦀️component.rs`'s own `Planner` cycle-guard already uses.
+# exact algorithm `📡️spr/🎮️command/🦀️.rs`'s own `Planner` cycle-guard already uses.
 semio-framework-hash = { path = "../../../../../../../🔨️modules/🔢️hash/📦️packages/🦀️rust" }
 
 [dev-dependencies]
 semio-framework-async-macros = { path = "../../../../../../../🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust" }
 # 🧪️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (terra-effects-async): `testkit` (unions with the
 # plain dependency above for test builds only) brings in `semio-framework-async::testkit::
-# ManualRuntime`, this crate's own `#[cfg(test)]` double for `⚡️effects/🦀️component.rs`'s tests —
+# ManualRuntime`, this crate's own `#[cfg(test)]` double for `⚡️effects/🦀️.rs`'s tests —
 # same pattern `semio-framework-os-services`'s own Cargo.toml already establishes.
 semio-framework-async = { workspace = true, features = ["testkit"] }

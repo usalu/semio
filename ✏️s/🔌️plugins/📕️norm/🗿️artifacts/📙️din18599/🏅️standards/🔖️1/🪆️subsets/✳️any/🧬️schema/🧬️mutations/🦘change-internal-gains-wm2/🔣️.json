@@ -5,7 +5,7 @@
   "displayName": "Change Internal Gains Wm2",
   "emoji": "🦘",
   "aggregateVariant": "ChangeInternalGainsWM2",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

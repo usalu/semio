@@ -1,0 +1,12 @@
+syntax = "proto3";
+package semio.s.gis.gisterrain.mutation;
+
+import "🎚change-exaggeration/🛰️.proto";
+import "📥change-imported-features/🛰️.proto";
+
+message GisTerrainMutation {
+  oneof mutation {
+    ChangeExaggeration change_exaggeration = 1;
+    ChangeImportedFeatures change_imported_features = 2;
+  }
+}

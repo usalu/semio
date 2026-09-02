@@ -2,21 +2,25 @@
   "schemaVersion": 1,
   "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️h/🧬️schema/🧬️mutations/🚫️remove-javascript-action",
   "semanticKind": "remove-javascript-action",
-  "displayName": "Remove Javascript Action",
+  "displayName": "Remove JavaScript Action",
   "emoji": "🚫️",
   "aggregateVariant": "RemoveJavascriptAction",
-  "payloadSchema": "🔣️payload.schema.json",
-  "textOpcode": null,
-  "binaryTag": null,
-  "invertibility": "non-invertible",
-  "diffParticipation": "detect",
+  "payloadSchema": "🔣️.schema.json",
+  "textOpcode": "remove-javascript-action",
+  "binaryTag": 3,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "apply-only",
   "outcomeClasses": [
     "applied"
   ],
   "composition": "atomic",
   "requiredLanguageSurfaces": [
     "rust",
+    "typescript",
+    "graphql",
+    "protobuf",
     "json-schema",
-    "text"
+    "text",
+    "binary"
   ]
 }

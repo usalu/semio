@@ -34,7 +34,7 @@
         "win32-x64"
       ],
       "homepage": "https://docs.rs/csv",
-      "rationale": "📊️ A QUALIFYING CARRIER ORACLE FOR EXACTLY FIVE OF THIS SUBSET'S FIFTEEN KINDS, AND THE SCOPE IS THE WHOLE POINT OF THE REGISTRATION — the same shape the already-approved `csv-rfc4180-reader` registration on the `sequence` subset already established for this repository, repeated here for a different owner and a different row shape.\n\nWHAT MAKES IT QUALIFY AT ALL: this subset's own `MathematicalIntoCsv` serializer (`…➗️mathematical/…/📊️csv/🔖️rfc4180/✳️any/🦀️component.rs:22-33`) builds one real `CsvRecord` per graph node — `[id, label(quoted), x, y]` — through genuine row logic, and the second hop `stdio.csv`'s own `encode_csv` (`…🗄️stdio/…/📊️csv/🔖️rfc4180/✳️any/🧬️schema/📸️snapshot/🦀️component.rs:162-172`) emits real RFC 4180 text: comma-joined fields, `\\n` line endings, and RFC 4180 §2 rule-6 quoting (`escape_field` quotes whenever the source marked a field quoted OR the value itself contains a comma, quote or line break, doubling embedded quotes). This is not the `print_dsl`/pack-transmute/serde-coercion/never-reads-its-input shape that disqualifies 163 other serializers in this repository — confirmed independently by this session's own `contract` run, which flags this subset's ONLY the `md` sibling as a stub (`The md serializer emits the artifact's internal DSL text, not md`) and says nothing about the csv leg.\n\nWHAT IT DISCHARGES, and why exactly these five: `create-node`, `delete-node`, `delete-nodes`, `change-node-label` and `move-node` each touch only `id`/`label`/`x`/`y` — the four columns this row shape carries. For these the `csv` crate's reader is a genuinely independent producer of the row set: it re-derives `id,label,x,y` from bytes without consulting this repository's own `MathematicalSnapshot`/`MathematicalGraph` types, so a bug in the mutation surfaces as a row disagreement rather than as two halves of this repository agreeing with each other.\n\nWHAT IT CANNOT DISCHARGE, STATED AS A LIMIT AND NOT AS A GAP TO BE PAPERED OVER: `change-graph-directed`, `update-graph-algorithm` and `replace-graph` touch `directed`/`algorithm`/`seed`, none of which has a column; `connect-nodes`/`disconnect-nodes` touch `edges`, which this row shape has no column for at all (one row per NODE, none per edge); `replace-points`/`insert-point`/`remove-point`/`move-point` touch a point cloud this row shape never writes; `change-coefficient` touches the `equation` AST, likewise never written. A reader cannot witness a change to something the bytes never carried, so those ten kinds carry no `oracleRequirement` this entry discharges and instead keep the `mathematical-1-mutate-uncarried` capability recorded in `noOracleDecisions` below. Registering this oracle against all fifteen would have produced ten green results that prove nothing, which is the precise failure mode Protocol v2's per-mutation requirement exists to prevent — and the exact defect the `reimplementation-registered-as-third-party` gate polices from the other direction (this oracle reads bytes; it is never asked what a mutation should produce).\n\nMEASURED, via this subset's own probe (`🔬️probes/📜️script.ts csv-compare`, `semio-mathematical-oracle-probe` v0.1.0 wrapping `csv` 1.4.0): two rows carrying the SAME values with different but equally legal decimal formatting (`5` against `5.0`, `10` against `10.00`) compare `equal:true, maxCoordinateDeviation:0`; one relabelled row separates as `equal:false, labelsEqual:false`; one coordinate moved by exactly 0.05 separates as `equal:false, maxCoordinateDeviation:0.05000000000000071` — the gate accepts a legitimate re-encoding and names the exact defect in two different known-bad pairs."
+      "rationale": "📊️ A QUALIFYING CARRIER ORACLE FOR EXACTLY FIVE OF THIS SUBSET'S FIFTEEN KINDS, AND THE SCOPE IS THE WHOLE POINT OF THE REGISTRATION — the same shape the already-approved `csv-rfc4180-reader` registration on the `sequence` subset already established for this repository, repeated here for a different owner and a different row shape.\n\nWHAT MAKES IT QUALIFY AT ALL: this subset's own `MathematicalIntoCsv` serializer (`…➗️mathematical/…/📊️csv/🔖️rfc4180/✳️any/🦀️.rs:22-33`) builds one real `CsvRecord` per graph node — `[id, label(quoted), x, y]` — through genuine row logic, and the second hop `stdio.csv`'s own `encode_csv` (`…🗄️stdio/…/📊️csv/🔖️rfc4180/✳️any/🧬️schema/📸️snapshot/🦀️.rs:162-172`) emits real RFC 4180 text: comma-joined fields, `\\n` line endings, and RFC 4180 §2 rule-6 quoting (`escape_field` quotes whenever the source marked a field quoted OR the value itself contains a comma, quote or line break, doubling embedded quotes). This is not the `print_dsl`/pack-transmute/serde-coercion/never-reads-its-input shape that disqualifies 163 other serializers in this repository — confirmed independently by this session's own `contract` run, which flags this subset's ONLY the `md` sibling as a stub (`The md serializer emits the artifact's internal DSL text, not md`) and says nothing about the csv leg.\n\nWHAT IT DISCHARGES, and why exactly these five: `create-node`, `delete-node`, `delete-nodes`, `change-node-label` and `move-node` each touch only `id`/`label`/`x`/`y` — the four columns this row shape carries. For these the `csv` crate's reader is a genuinely independent producer of the row set: it re-derives `id,label,x,y` from bytes without consulting this repository's own `MathematicalSnapshot`/`MathematicalGraph` types, so a bug in the mutation surfaces as a row disagreement rather than as two halves of this repository agreeing with each other.\n\nWHAT IT CANNOT DISCHARGE, STATED AS A LIMIT AND NOT AS A GAP TO BE PAPERED OVER: `change-graph-directed`, `update-graph-algorithm` and `replace-graph` touch `directed`/`algorithm`/`seed`, none of which has a column; `connect-nodes`/`disconnect-nodes` touch `edges`, which this row shape has no column for at all (one row per NODE, none per edge); `replace-points`/`insert-point`/`remove-point`/`move-point` touch a point cloud this row shape never writes; `change-coefficient` touches the `equation` AST, likewise never written. A reader cannot witness a change to something the bytes never carried, so those ten kinds carry no `oracleRequirement` this entry discharges and instead keep the `mathematical-1-mutate-uncarried` capability recorded in `noOracleDecisions` below. Registering this oracle against all fifteen would have produced ten green results that prove nothing, which is the precise failure mode Protocol v2's per-mutation requirement exists to prevent — and the exact defect the `reimplementation-registered-as-third-party` gate polices from the other direction (this oracle reads bytes; it is never asked what a mutation should produce).\n\nMEASURED, via this subset's own probe (`🔬️probes/📜️script.ts csv-compare`, `semio-mathematical-oracle-probe` v0.1.0 wrapping `csv` 1.4.0): two rows carrying the SAME values with different but equally legal decimal formatting (`5` against `5.0`, `10` against `10.00`) compare `equal:true, maxCoordinateDeviation:0`; one relabelled row separates as `equal:false, labelsEqual:false`; one coordinate moved by exactly 0.05 separates as `equal:false, maxCoordinateDeviation:0.05000000000000071` — the gate accepts a legitimate re-encoding and names the exact defect in two different known-bad pairs."
     },
     {
       "id": "serde-json-mathematical-carrier-reader",
@@ -79,7 +79,7 @@
         "mathematical-1-mutate",
         "mathematical-1-mutate-uncarried"
       ],
-      "rationale": "PARTIALLY SUPERSEDED by the `csv-rfc4180-mathematical-1-mutate` registration, which discharges `create-node`, `delete-node`, `delete-nodes`, `change-node-label` and `move-node` through this subset's real RFC 4180 CSV export. This decision now stands only for the remaining ten kinds — `change-graph-directed`, `update-graph-algorithm`, `replace-graph`, `connect-nodes`, `disconnect-nodes`, `replace-points`, `insert-point`, `remove-point`, `move-point` and `change-coefficient` — whose written fields (`directed`/`algorithm`/`seed`, `edges`, point-cloud geometry, the `equation` AST) no exported carrier encodes; the `md` sibling remains a confirmed `print_dsl` stub (`…📝️md/🔖️commonmark/✳️any/🦀️component.rs`, this session's own `contract` run: \"The md serializer emits the artifact's internal DSL text, not md\").\n\nThe survey this decision already carries is kept: `petgraph` and the external CAS candidates were named and declined. THAT SURVEY STANDS, AND IT IS NOT WHAT THIS DECISION NOW RESTS ON. Surveying and declining a third-party LIBRARY is a different judgement from declining a SECOND IMPLEMENTATION, and until this re-examination that is the only judgement this decision had ever made. The sentence it used to lean on — that this subset's own shape IS its specification and so not a fact an external implementation could confirm or refute — is refuted inside this repository: `mutate-puzzle-2d-1` and `mutate-puzzle-3d-1`, whose documents carry ports inside nodes and cascade on delete, took Python second implementations over this same `.dsl.semio` carrier, from the same kind of committed material, and between them they surfaced findings no single-implementation case could produce. So THIS DECISION IS A DEBT, NOT A JUDGEMENT, and it is recorded as one here rather than left reading as a verdict.\n\nWHAT A SECOND IMPLEMENTATION HERE WOULD BE WRITTEN FROM: `../🧬️schema/📸️snapshot/🔣️component.json` for the document's members, the rules of `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/📓️derivation-rules.md` that this vocabulary was derived by, and the fifteen committed `(before, mutation, after, outcome)` specification vectors under `../🧬️schema/🧬️mutations/<kind>/🧪️tests/<fixture>/`. The nearest transferable recipe is `mutate-puzzle-2d-1`: an id-keyed node collection with a sibling edge collection and a metadata block.\n\nWHAT BLOCKS IT TODAY, precisely. This case's committed specification vectors are NOT declared as `asset://` fixtures. Its `Examples` table carries the payloads inline, and the Rust adapter reaches the committed `(before, mutation, after, outcome)` files through `include_str!` instead. Two consequences follow: the execution plan does not pin those files' digests, so a silently edited vector changes the result rather than the plan; and a Python reference cannot read them at all, because the Python host resolves a fixture only through the plan and raises on an undeclared URI. Declaring them — the shape `mutate-program-1`, `mutate-note-1` and `mutate-block-3d-1` already use — is the one edit that unblocks this case, and it strengthens the case whether or not a reference follows. AND, SEPARATELY, `identity-round-trip` WOULD STILL BE REFUSED. This subset's committed snapshot text grammar is the repository-wide PLACEHOLDER: its whole body is `payload = OCTET+` and its header production declares `\"schema\" SP \"stdio.json\"`, which the committed artifact contradicts on its own first line. A second reader cannot parse what no document describes — the finding `mutate-iso16757-1`, `mutate-vdi3805-1`, `mutate-program-1` and `mutate-writer-1` all report against their own subsets.\n\nWHAT IS ASSERTED IN THE MEANTIME is unchanged and is listed in `substitutes`: the committed specification vectors, replayed end to end through the platform, and the metamorphic laws the subject handler asserts in role. The ceiling on all of it is unchanged too and is worth restating: no second producer runs beside them, so a mistake shared by the handcrafted vector and the production code passes unseen.",
+      "rationale": "PARTIALLY SUPERSEDED by the `csv-rfc4180-mathematical-1-mutate` registration, which discharges `create-node`, `delete-node`, `delete-nodes`, `change-node-label` and `move-node` through this subset's real RFC 4180 CSV export. This decision now stands only for the remaining ten kinds — `change-graph-directed`, `update-graph-algorithm`, `replace-graph`, `connect-nodes`, `disconnect-nodes`, `replace-points`, `insert-point`, `remove-point`, `move-point` and `change-coefficient` — whose written fields (`directed`/`algorithm`/`seed`, `edges`, point-cloud geometry, the `equation` AST) no exported carrier encodes; the `md` sibling remains a confirmed `print_dsl` stub (`…📝️md/🔖️commonmark/✳️any/🦀️.rs`, this session's own `contract` run: \"The md serializer emits the artifact's internal DSL text, not md\").\n\nThe survey this decision already carries is kept: `petgraph` and the external CAS candidates were named and declined. THAT SURVEY STANDS, AND IT IS NOT WHAT THIS DECISION NOW RESTS ON. Surveying and declining a third-party LIBRARY is a different judgement from declining a SECOND IMPLEMENTATION, and until this re-examination that is the only judgement this decision had ever made. The sentence it used to lean on — that this subset's own shape IS its specification and so not a fact an external implementation could confirm or refute — is refuted inside this repository: `mutate-puzzle-2d-1` and `mutate-puzzle-3d-1`, whose documents carry ports inside nodes and cascade on delete, took Python second implementations over this same `.dsl.semio` carrier, from the same kind of committed material, and between them they surfaced findings no single-implementation case could produce. So THIS DECISION IS A DEBT, NOT A JUDGEMENT, and it is recorded as one here rather than left reading as a verdict.\n\nWHAT A SECOND IMPLEMENTATION HERE WOULD BE WRITTEN FROM: `../🧬️schema/📸️snapshot/🔣️.json` for the document's members, the rules of `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/📓️derivation-rules.md` that this vocabulary was derived by, and the fifteen committed `(before, mutation, after, outcome)` specification vectors under `../🧬️schema/🧬️mutations/<kind>/🧪️tests/<fixture>/`. The nearest transferable recipe is `mutate-puzzle-2d-1`: an id-keyed node collection with a sibling edge collection and a metadata block.\n\nWHAT BLOCKS IT TODAY, precisely. This case's committed specification vectors are NOT declared as `asset://` fixtures. Its `Examples` table carries the payloads inline, and the Rust adapter reaches the committed `(before, mutation, after, outcome)` files through `include_str!` instead. Two consequences follow: the execution plan does not pin those files' digests, so a silently edited vector changes the result rather than the plan; and a Python reference cannot read them at all, because the Python host resolves a fixture only through the plan and raises on an undeclared URI. Declaring them — the shape `mutate-program-1`, `mutate-note-1` and `mutate-block-3d-1` already use — is the one edit that unblocks this case, and it strengthens the case whether or not a reference follows. AND, SEPARATELY, `identity-round-trip` WOULD STILL BE REFUSED. This subset's committed snapshot text grammar is the repository-wide PLACEHOLDER: its whole body is `payload = OCTET+` and its header production declares `\"schema\" SP \"stdio.json\"`, which the committed artifact contradicts on its own first line. A second reader cannot parse what no document describes — the finding `mutate-iso16757-1`, `mutate-vdi3805-1`, `mutate-program-1` and `mutate-writer-1` all report against their own subsets.\n\nWHAT IS ASSERTED IN THE MEANTIME is unchanged and is listed in `substitutes`: the committed specification vectors, replayed end to end through the platform, and the metamorphic laws the subject handler asserts in role. The ceiling on all of it is unchanged too and is worth restating: no second producer runs beside them, so a mistake shared by the handcrafted vector and the production code passes unseen.",
       "substitutes": [
         "specification-vectors",
         "metamorphic-laws"
@@ -617,7 +617,7 @@
         {
           "id": "change-coefficient",
           "capability": "mathematical-1-mutate",
-          "payloadSchema": "🔣️payload.schema.json",
+          "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "rejected",
             "applied"
@@ -646,7 +646,7 @@
         {
           "id": "change-graph-directed",
           "capability": "mathematical-1-mutate",
-          "payloadSchema": "🔣️payload.schema.json",
+          "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "applied"
           ],
@@ -673,7 +673,7 @@
         {
           "id": "change-node-label",
           "capability": "mathematical-1-mutate",
-          "payloadSchema": "🔣️payload.schema.json",
+          "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "rejected",
             "applied"
@@ -705,7 +705,7 @@
         {
           "id": "connect-nodes",
           "capability": "mathematical-1-mutate",
-          "payloadSchema": "🔣️payload.schema.json",
+          "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "rejected",
             "applied"
@@ -733,7 +733,7 @@
         {
           "id": "create-node",
           "capability": "mathematical-1-mutate",
-          "payloadSchema": "🔣️payload.schema.json",
+          "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "applied"
           ],
@@ -764,7 +764,7 @@
         {
           "id": "delete-node",
           "capability": "mathematical-1-mutate",
-          "payloadSchema": "🔣️payload.schema.json",
+          "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "rejected",
             "applied"
@@ -796,7 +796,7 @@
         {
           "id": "delete-nodes",
           "capability": "mathematical-1-mutate",
-          "payloadSchema": "🔣️payload.schema.json",
+          "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "rejected",
             "applied"
@@ -828,7 +828,7 @@
         {
           "id": "disconnect-nodes",
           "capability": "mathematical-1-mutate",
-          "payloadSchema": "🔣️payload.schema.json",
+          "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "rejected",
             "applied"
@@ -856,7 +856,7 @@
         {
           "id": "insert-point",
           "capability": "mathematical-1-mutate",
-          "payloadSchema": "🔣️payload.schema.json",
+          "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "applied"
           ],
@@ -883,7 +883,7 @@
         {
           "id": "move-node",
           "capability": "mathematical-1-mutate",
-          "payloadSchema": "🔣️payload.schema.json",
+          "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "rejected",
             "applied"
@@ -915,7 +915,7 @@
         {
           "id": "move-point",
           "capability": "mathematical-1-mutate",
-          "payloadSchema": "🔣️payload.schema.json",
+          "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "rejected",
             "applied"
@@ -943,7 +943,7 @@
         {
           "id": "remove-point",
           "capability": "mathematical-1-mutate",
-          "payloadSchema": "🔣️payload.schema.json",
+          "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "rejected",
             "applied"
@@ -971,7 +971,7 @@
         {
           "id": "replace-graph",
           "capability": "mathematical-1-mutate",
-          "payloadSchema": "🔣️payload.schema.json",
+          "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "applied"
           ],
@@ -998,7 +998,7 @@
         {
           "id": "replace-points",
           "capability": "mathematical-1-mutate",
-          "payloadSchema": "🔣️payload.schema.json",
+          "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "applied"
           ],
@@ -1025,7 +1025,7 @@
         {
           "id": "update-graph-algorithm",
           "capability": "mathematical-1-mutate",
-          "payloadSchema": "🔣️payload.schema.json",
+          "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "applied"
           ],

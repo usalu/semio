@@ -33,11 +33,11 @@ to# Operations to Mutations: Per-Mutation Artifact Decomposition and Mandatory E
 
 ## Current state (verified)
 
-- Kernel contract lives in [🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🎮️command/🦀️component.rs](🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🎮️command/🦀️component.rs): `Operation<P>` (`diff`, `backwards`), `OperationDiff<P>`, `OpText`, `OpBinary`, `OperationMeta`, `Edit<Op>`, `OperationDescriptor`, `OperationUpcaster`, `OperationEvent`.
-- Wire/causal layer in [🔗️causal/🦀️component.rs](🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🔗️causal/🦀️component.rs): `OperationEnvelope`, `InverseOperation`, `OpDag`, `OperationTransform`.
-- Store in [🏪️store/🦀️component.rs](🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️component.rs): `DocumentStore::dispatch`, `DocumentCommand<Operation>`, `replay_operations` (sole `Operation::backwards` call site, line ~2578).
-- App transition surface is `DocumentApp::handle -> Emit<Operation, ConfigOperation, DraftOperation>` in [🔌️plugin/🦀️component.rs](🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️component.rs) (~3319), consumed by `dispatch_emit` (~4299).
-- `trait Engine` in [⚙️engine/🦀️component.rs](🧰️framework/🛍️products/💻️os/🔨️modules/⚙️engine/🦀️component.rs) is a content-addressed byte-in/byte-out compute cache, **not** a per-artifact state machine. Per-artifact `⚙️engine` folders are headless compute helpers (e.g. `LowpolyDocument`).
+- Kernel contract lives in [🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🎮️command/🦀️.rs](🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🎮️command/🦀️.rs): `Operation<P>` (`diff`, `backwards`), `OperationDiff<P>`, `OpText`, `OpBinary`, `OperationMeta`, `Edit<Op>`, `OperationDescriptor`, `OperationUpcaster`, `OperationEvent`.
+- Wire/causal layer in [🔗️causal/🦀️.rs](🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🔗️causal/🦀️.rs): `OperationEnvelope`, `InverseOperation`, `OpDag`, `OperationTransform`.
+- Store in [🏪️store/🦀️.rs](🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️.rs): `DocumentStore::dispatch`, `DocumentCommand<Operation>`, `replay_operations` (sole `Operation::backwards` call site, line ~2578).
+- App transition surface is `DocumentApp::handle -> Emit<Operation, ConfigOperation, DraftOperation>` in [🔌️plugin/🦀️.rs](🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️.rs) (~3319), consumed by `dispatch_emit` (~4299).
+- `trait Engine` in [⚙️engine/🦀️.rs](🧰️framework/🛍️products/💻️os/🔨️modules/⚙️engine/🦀️.rs) is a content-addressed byte-in/byte-out compute cache, **not** a per-artifact state machine. Per-artifact `⚙️engine` folders are headless compute helpers (e.g. `LowpolyDocument`).
 - Taxonomy is the single source of truth: [🔣️taxonomy.json](🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json) (`artifactComponentDirs`, `artifactChildDirs`, `artifactSpecFilenames`, `taxonomyLeafParentDirs`), mirrored by `validateTaxonomyTree` (registry), `assert_taxonomy_components` (Rust, ~1588), and the `PolicyRuleTaxonomy` region of [📜️script.ts](📜️script.ts) (~3889-4438).
 - Scale: 52 artifacts, 52 `🔧️op` grammars (all `grammar <x>.op` + `start operation`), ~450 operation variants, 38 protocol schemas ending `.operation`, 91 `*.op.semio` examples, 52 TS facades.
 
@@ -46,12 +46,12 @@ to# Operations to Mutations: Per-Mutation Artifact Decomposition and Mandatory E
 ```
 <plugin>/🗿️artifacts/<artifact>/
   🧬️mutations/                      # NEW facet, required
-    🦀️component.rs                  # <Artifact>Mutation dispatch enum + impl Mutation<P>
-    🟦️component.ts
+    🦀️.rs                  # <Artifact>Mutation dispatch enum + impl Mutation<P>
+    🟦️.ts
     ➕️objects-add/                  # one dir per mutation, unique emoji per specific
-      🦠️mutation/{🦀️component.rs,🟦️component.ts}   # struct + builder
-      🔺️diff/{🦀️component.rs,🟦️component.ts}       # diff this mutation yields for its args
-      ↩️inverse/{🦀️component.rs,🟦️component.ts}     # Vec<Mutation> that reverts it
+      🦠️mutation/{🦀️.rs,🟦️.ts}   # struct + builder
+      🔺️diff/{🦀️.rs,🟦️.ts}       # diff this mutation yields for its args
+      ↩️inverse/{🦀️.rs,🟦️.ts}     # Vec<Mutation> that reverts it
     ➖️objects-remove/ ...
   🔧️op/                             # KEPT: handcrafted grammar combining mutations compactly
   🔺️diff/                           # KEPT: general artifact diff definition
@@ -89,7 +89,7 @@ flowchart LR
 
 
 
-New kernel trait in [⚙️engine/🦀️component.rs](🧰️framework/🛍️products/💻️os/🔨️modules/⚙️engine/🦀️component.rs), separate from the existing byte-cache `Engine`:
+New kernel trait in [⚙️engine/🦀️.rs](🧰️framework/🛍️products/💻️os/🔨️modules/⚙️engine/🦀️.rs), separate from the existing byte-cache `Engine`:
 
 ```rust
 pub trait ArtifactEngine: Send + Sync {
@@ -127,17 +127,17 @@ Untouched (different concepts, different technologies): GraphQL `OperationDefini
 ## Mechanism changes
 
 - [🔣️taxonomy.json](🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json): add `🧬️mutations` and `⚙️engine` to `artifactComponentDirs`; add `mutationChildDirs: ["🦠️mutation","🔺️diff","↩️inverse"]`; add all three plus `🧬️mutations` to `taxonomyLeafParentDirs`.
-- [🔍️discovery/🟦️component.ts](🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🟦️component.ts): extend `Taxonomy` interface and `validateTaxonomy`.
+- [🔍️discovery/🟦️.ts](🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🟦️.ts): extend `Taxonomy` interface and `validateTaxonomy`.
 - Registry `validateTaxonomyTree` in [📇️registry/📜️script.ts](🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/📇️registry/📜️script.ts): add `CONSTITUTIONAL_SLOTS` entry, walk `🧬️mutations/<mutation>/<kind>` requiring both leaves.
-- Rust twin `assert_taxonomy_components` (~1588 of [🔌️plugin/🦀️component.rs](🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️component.rs)).
+- Rust twin `assert_taxonomy_components` (~1588 of [🔌️plugin/🦀️.rs](🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️.rs)).
 - [📜️script.ts](📜️script.ts) policy: rename `POLICY_PROTOCOL_MIGRATION_NAMES`, `POLICY_DSL_*`, `POLICY_DIFF_COMPLETENESS_ALLOWLIST`, `PolicyRuleCommandEnvelopeCompleteness`, `PolicyRuleDiffCompleteness`, `POLICY_HANDCRAFTED_FACETS`; **replace** the 52-entry `POLICY_TS_FACADE_ALLOWLIST` with a structural rule (an allowlist cannot scale to ~2700 leaves). Add new scanners: per-mutation triad completeness, `impl Mutation<P>` presence per mutation, `ArtifactEngine` presence per artifact, specific-emoji uniqueness within an artifact, grammar `start mutation` conformance, dispatch-enum-covers-all-mutation-dirs.
-- Grammar engine [📖️grammar/🦀️component.rs](🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/📖️grammar/🦀️component.rs): no structural change, only the start-symbol values in the 52 artifact grammars.
+- Grammar engine [📖️grammar/🦀️.rs](🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/📖️grammar/🦀️.rs): no structural change, only the start-symbol values in the 52 artifact grammars.
 - Pre-existing taxonomy breaches to clean while here: `📐️cad/🗿️artifacts/📐️cad/🎬️interaction-spec`, `🏛️architect/🗿️artifacts/🏛️program/{🗄️registers,🧱️kernel}`.
 - `.vscode/launch.json` is generated by the registry `generate` target; re-run rather than hand-edit.
 
 ## Agent workforce
 
-Models: `cursor-grok-4.5-high` for contract/kernel/complex artifacts, `composer-2.5` for mechanical fan-out. File-ownership isolation rule: only Wave 1/2/6 agents may touch kernel or root `📜️script.ts`; fan-out agents are scoped to exactly one plugin crate each (own `🦀️component.rs`, `📦️glue.rs`, `📦️index.ts`), so no two agents share a file.
+Models: `cursor-grok-4.5-high` for contract/kernel/complex artifacts, `composer-2.5` for mechanical fan-out. File-ownership isolation rule: only Wave 1/2/6 agents may touch kernel or root `📜️script.ts`; fan-out agents are scoped to exactly one plugin crate each (own `🦀️.rs`, `📦️glue.rs`, `📦️index.ts`), so no two agents share a file.
 
 - **Wave 0** (1 Grok, serial): write the normative spec into the ticket folder: emoji registry, folder layout, trait signatures, full old-to-new identifier table. Every later agent reads only this.
 - **Wave 1** (1 Grok, serial): kernel rename + `Mutation`/`MutationDiff`/`ArtifactEngine` traits across `📡️spr/🎮️command`, `📡️spr/🔗️causal`, `🏪️store`, `🌿️vcs`, `🔌️plugin`, `⚙️engine`, `🗣️dsl` + derive. Gate: `cargo check -p semio-framework-os-kernel`.
@@ -161,6 +161,6 @@ Note: macOS Rust link steps have historically failed with `cc` exit 69 (Xcode SD
 
 1. The `repo` MCP server is not loaded in this session, so I cannot `ticket_open` or read `repo://goals`. Enable it, or confirm I proceed without a ticket.
 2. `AGENTS.md` glossaries define `Operation`/`Op` ([💻️os/AGENTS.md:61-71](🧰️framework/🛍️products/💻️os/AGENTS.md), [🖥️host/AGENTS.md:61-71](🧰️framework/🛍️products/💻️os/🖥️host/AGENTS.md), plus `🌿️vcs`, `📖️playbook`, `🏛️architect`). Rules forbid me editing them — grant an exception or update them yourself.
-3. Your sketch showed `builder.rs`/`builder.ts` in the mutation folder; I plan `🦀️component.rs`/`🟦️component.ts` everywhere to stay taxonomy-conformant, holding the struct plus its builder. Say so if you want literal `builder.*` leaf names instead.
+3. Your sketch showed `builder.rs`/`builder.ts` in the mutation folder; I plan `🦀️.rs`/`🟦️.ts` everywhere to stay taxonomy-conformant, holding the struct plus its builder. Say so if you want literal `builder.*` leaf names instead.
 4. Per-mutation TS facades in all three kinds means roughly 2,700 new leaf files across the repo. Confirm, or restrict TS to one facade at the `🧬️mutations` root.
 

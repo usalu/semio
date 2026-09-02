@@ -5,7 +5,7 @@
   "displayName": "Change En Vbms",
   "emoji": "📈",
   "aggregateVariant": "ChangeEnVBMS",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

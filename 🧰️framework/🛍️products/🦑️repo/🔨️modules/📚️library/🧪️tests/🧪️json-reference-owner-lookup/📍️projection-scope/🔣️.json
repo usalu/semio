@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "contract": "mutation-reference-projection-scope-v1",
   "activeKeys": ["domains/🗿️artifacts/🧊️cube\u00001\u0000any"],
-  "movingTargets": ["domains/🗿️artifacts/🧊️cube/source/🔣️component.json"],
+  "movingTargets": ["domains/🗿️artifacts/🧊️cube/source/🔣️.json"],
   "semantics": {
     "physicalReferences": "existing-exact-destination-membership",
     "fallback": "exact-artifact-owner-and-active-profile",
@@ -47,7 +47,7 @@
     {"id": "owned-wildcard-partial-owner", "owner": "domains/🗿️artifacts/🧊️cube", "profile": "*", "scope": "domains/🗿️artifacts/🧊️cube/🏅️standards/🔖️1", "target": null, "hasTarget": false, "state": "unproven"},
     {"id": "ownerless-wildcard", "owner": "", "profile": "*", "scope": "", "target": null, "hasTarget": false, "state": "inactive"},
     {"id": "foreign-wildcard", "owner": "domains/🗿️artifacts/🌐️sphere", "profile": "*", "scope": "", "target": null, "hasTarget": false, "state": "inactive"},
-    {"id": "physical-moved-target-needs-no-fallback", "owner": "domains/🗿️artifacts/🧊️cube", "profile": "1\u0000any", "scope": "", "target": "domains/🗿️artifacts/🧊️cube/source/🔣️component.json", "hasTarget": true, "state": "inactive"},
-    {"id": "physical-unmoved-target-never-projects-by-profile", "owner": "domains/🗿️artifacts/🧊️cube", "profile": "1\u0000any", "scope": "", "target": "domains/🗿️artifacts/🧊️cube/unmoved/🔣️component.json", "hasTarget": true, "state": "inactive"}
+    {"id": "physical-moved-target-needs-no-fallback", "owner": "domains/🗿️artifacts/🧊️cube", "profile": "1\u0000any", "scope": "", "target": "domains/🗿️artifacts/🧊️cube/source/🔣️.json", "hasTarget": true, "state": "inactive"},
+    {"id": "physical-unmoved-target-never-projects-by-profile", "owner": "domains/🗿️artifacts/🧊️cube", "profile": "1\u0000any", "scope": "", "target": "domains/🗿️artifacts/🧊️cube/unmoved/🔣️.json", "hasTarget": true, "state": "inactive"}
   ]
 }

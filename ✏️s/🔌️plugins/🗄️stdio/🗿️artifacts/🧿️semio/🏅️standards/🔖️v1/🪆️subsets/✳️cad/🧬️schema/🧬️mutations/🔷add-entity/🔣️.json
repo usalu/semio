@@ -5,7 +5,7 @@
   "displayName": "Add Entity",
   "emoji": "🔷",
   "aggregateVariant": "AddEntity",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

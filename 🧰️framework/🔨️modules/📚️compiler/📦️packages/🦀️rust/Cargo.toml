@@ -14,7 +14,7 @@ workspace = true
 
 [lib]
 name = "compiler"
-path = "📦️glue.rs"
+path = "🦀️.rs"
 
 [dependencies]
 dsl_core = { package = "semio-framework-os-kernel", path = "../../../../🛍️products/💻️os/📦️packages/🦀️rust" }
@@ -27,7 +27,7 @@ dsl_core = { package = "semio-framework-os-kernel", path = "../../../../🛍️p
 # (`preview_media_natural_size`'s dimension query) only ever reads a resolved SVG's declared
 # `width`/`height` attributes, never real glyph geometry. `compile_{snippet,text,emoji,code}_to_svg`
 # therefore carry a `wasm32-wasip2` arm that estimates size from character count instead — see
-# `🦀️component.rs`'s `estimate_svg`. `📖️syntax`/`🌍️world` need neither crate and stay unconditional.
+# `🦀️.rs`'s `estimate_svg`. `📖️syntax`/`🌍️world` need neither crate and stay unconditional.
 # RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS (26/09/01).
 [target.'cfg(not(all(target_arch = "wasm32", target_env = "p2")))'.dependencies]
 rustybuzz = "0.20.1"

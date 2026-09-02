@@ -7,15 +7,15 @@ a second IMPLEMENTATION, written in another language from the format's own commi
 
 * the envelope — the `semio <envelope-id>.dsl v<version>` preamble for text and the
   `0x89 'S' 'E' 'M' 0D 0A 1A 0A` magic + little-endian u32 token length + token for binary — is
-  specified in `🧰️framework/🛍️products/💻️os/🔨️modules/🧬️semio/🦀️component.rs`'s envelope section;
+  specified in `🧰️framework/🛍️products/💻️os/🔨️modules/🧬️semio/🦀️.rs`'s envelope section;
 * the DSL body is the committed grammar
-  `../../🏅️standards/🔖️v1/🪆️subsets/✳️document/🧬️schema/📸️snapshot/📝️text/📖️component.grammar.semio`
+  `../../🏅️standards/🔖️v1/🪆️subsets/✳️document/🧬️schema/📸️snapshot/📝️text/📖️.grammar.semio`
   — `document = artifact-mark schema-line styles-line images-line blocks-line`, the eight
   single-letter-tagged `block` variants `P`/`H`/`L`/`T`/`C`/`Q`/`I`/`B` with the field lists it
   gives, `run`, `run-style`, `option-hex` and `option-f64`. That grammar also states the one thing a
   reader would otherwise get wrong: `enc_f64` prints `f64::to_bits()` as PLAIN DECIMAL DIGITS, not a
   float literal, so every `f64` leaf is a bare `INT` token;
-* the pack head is the committed protocol `…/📸️snapshot/💾️binary/📡️component.protocol.semio`
+* the pack head is the committed protocol `…/📸️snapshot/💾️binary/📡️.protocol.semio`
   (`format u8`, then varint-length-prefixed UTF-8 `schema`), whose description declares
   `styles`/`images`/`blocks` one opaque `payload` chain by its own admission — the repeated record
   layout below was therefore DERIVED from the committed `🎒️example.pack.semio` bytes, with field
@@ -23,9 +23,9 @@ a second IMPLEMENTATION, written in another language from the format's own commi
   variant order, and `pack_bytes` re-encodes that committed file byte for byte, which is what proves
   the derivation right;
 * the eighteen verbs and their named arguments are the committed grammar
-  `…/🧬️schema/🧬️mutations/📝️text/📖️component.grammar.semio`, their JSON wire form is this case's
+  `…/🧬️schema/🧬️mutations/📝️text/📖️.grammar.semio`, their JSON wire form is this case's
   committed per-kind specification vectors under `🧫️fixtures/`, and the three `DocBlockPath` segment
-  tags are declared by the committed schema mirror `…/🧬️mutations/🟦️component.ts`
+  tags are declared by the committed schema mirror `…/🧬️mutations/🟦️.ts`
   (`quote` / `listItem` / `tableCell`) with the snake-case member spelling the committed vectors use.
 
 Nothing here imports, links, wraps or transliterates the Rust subject. Every function was written
@@ -92,7 +92,7 @@ PACK_TOKEN = "s.stdio.semio.document.pack v1"
 PACK_FORMAT = 1
 BINARY_MAGIC = b"\x89SEM\x0d\x0a\x1a\x0a"
 
-MEMO_DSL = "asset://🏅️standards/🔖️v1/🪆️subsets/✳️any/📚️examples/📄️memo/🖼️assets/🗣️example.dsl.semio"
+MEMO_DSL = "asset://🏅️standards/🔖️v1/🪆️subsets/✳️any/📚️examples/📄️memo/🖼️assets/🗣️.dsl.semio"
 MEMO_PACK = "asset://🏅️standards/🔖️v1/🪆️subsets/✳️any/📚️examples/📄️memo/🖼️assets/🎒️example.pack.semio"
 
 # endregion 🔖️Vocabulary

@@ -5,7 +5,7 @@
   "displayName": "Change Sheet K Sigma",
   "emoji": "🐘",
   "aggregateVariant": "ChangeSheetKSigma",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

@@ -5,7 +5,7 @@ import { dirname, join, posix, resolve } from "node:path";
 import Ajv from "ajv";
 import { fromMarkdown } from "mdast-util-from-markdown";
 import ts from "typescript";
-import * as discovery from "../../🔍️discovery/🟦️component.ts";
+import * as discovery from "../../🔍️discovery/🟦️.ts";
 import * as normalization from "../../🧹️normalization/🟦️.ts";
 
 const vector = JSON.parse(readFileSync(join(import.meta.dir, "🔣️.json"), "utf8"));
@@ -19,7 +19,7 @@ const functions = () => {
   expect(typeof coordinates).toBe("function");
   return { validate, coordinates };
 };
-const contractFor = (row: any) => ({ path: "🧪️tests/🧪️history/📝️.md", grammar: vector.contract, sha256: sha(row.content), coordinates: [{ start: row.start ?? row.content.indexOf(row.value), end: row.end ?? row.content.indexOf(row.value) + row.value.length, kind: "source", form: row.form, valueSha256: sha(row.value) }] });
+const contractFor = (row: any) => ({ path: "🧪️tests/📝️history.md", grammar: vector.contract, sha256: sha(row.content), coordinates: [{ start: row.start ?? row.content.indexOf(row.value), end: row.end ?? row.content.indexOf(row.value) + row.value.length, kind: "source", form: row.form, valueSha256: sha(row.value) }] });
 
 /** 📦️ Reuses the executed Draw collector without importing or running its test suite. */
 function producerInputs(schema: discovery.Taxonomy) {
@@ -28,7 +28,7 @@ function producerInputs(schema: discovery.Taxonomy) {
   const declarations = tree.statements.filter((node) => ts.isFunctionDeclaration(node) && names.has(node.name?.text ?? ""));
   expect(declarations).toHaveLength(3);
   const source = declarations.map((node) => node.getText(tree)).join("\n"), compiled = new Bun.Transpiler({ loader: "ts" }).transformSync(source);
-  const scenario = JSON.parse(readFileSync(join(libraryRoot, "🧪️tests/🧪️draw-source-scenario/🔣️.json"), "utf8"));
+  const scenario = JSON.parse(readFileSync(join(libraryRoot, "🧪️tests/🔣️draw-source-scenario.json"), "utf8"));
   const build = new Function("getWorkspaceRoot", "lstatSync", "readFileSync", "createHash", "join", "posix", "registryCompilerInputDependencies", "DRAW_SOURCE_SCENARIO", compiled + "\nreturn { read: artifactProjectionProducerInput, collect: artifactProjectionProducerInputs };")(() => root, lstatSync, readFileSync, createHash, join, posix, discovery.registryCompilerInputDependencies, scenario);
   return { ...build.collect(schema), read: build.read, sourceSha256: sha(source) } as { files: Record<string, { content: string; mode: number; sha256: string; origin: string }>; modules: unknown[]; read: (path: string) => { sha256: string; mode: number }; sourceSha256: string };
 }
@@ -63,7 +63,7 @@ for (const row of vector.cases) test("frozen Markdown exact source span: " + row
 
 test("frozen Markdown authority rejects wrong document value and shifted overlapping or extra fields", () => {
   const actual = functions(), row = vector.cases[0], contract = contractFor(row), bytes = Buffer.from(row.content);
-  expect(actual.coordinates("🧪️tests/🧪️unowned/📝️.md", bytes, { history: contract })).toBeNull();
+  expect(actual.coordinates("🧪️tests/📝️unowned.md", bytes, { history: contract })).toBeNull();
   expect(() => actual.coordinates(contract.path, Buffer.concat([bytes, Buffer.from("\n")]), { history: contract })).toThrow(/digest/u);
   for (const alter of [
     (value: any) => { value.coordinates[0].start++; },
@@ -132,7 +132,7 @@ test("a scoped transaction preserves Markdown and escaped JSON history while rew
   mkdirSync(fixture);
   const put = (path: string, bytes: string) => { mkdirSync(dirname(join(fixture, path)), { recursive: true }); writeFileSync(join(fixture, path), bytes); };
   const git = (args: string[]) => { const run = Bun.spawnSync(["git", ...args], { cwd: fixture, stdout: "pipe", stderr: "pipe" }); expect(run.exitCode, run.stderr.toString()).toBe(0); return run.stdout.toString().trim(); };
-  const scope = ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️27/MARKDOWN-SOURCE/🧪️tests/🧪️fixture", source = scope + "/🦀️component.rs", final = scope + "/🦀️.rs", historyPath = ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️27/HISTORICAL-SOURCE/📝️.md", livePath = "🧪️tests/🧪️consumer/🔣️.json";
+  const scope = ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️27/MARKDOWN-SOURCE/🧪️tests/🧪️fixture", source = scope + "/🦀️.rs", final = scope + "/🦀️.rs", historyPath = ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️27/HISTORICAL-SOURCE/📝️.md", livePath = "🧪️tests/🔣️consumer.json";
   const history = "Recorded `" + source + "` before normalization.\n", live = JSON.stringify({ sourcePath: source }) + "\n";
   const encodedHistoryPath = ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️27/HISTORICAL-SOURCE/🔣️.json", escaped = JSON.stringify(source).replaceAll("/", "\\/"), encodedHistory = '[{"path":' + escaped + '}]\n';
   const schemaPath = "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json";

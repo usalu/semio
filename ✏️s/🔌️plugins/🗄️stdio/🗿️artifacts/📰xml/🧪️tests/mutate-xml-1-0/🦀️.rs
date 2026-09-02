@@ -4,7 +4,7 @@
 //! Every scenario copies the real, committed `📰️ooxml-word-document.xml` fixture (extracted once
 //! from the real ECMA-376 example DOCX — see the feature file's own header) into the case work
 //! directory first; the committed fixture is never written to. `oracle` drives the registered
-//! `quick-xml` reference implementation (`../../🏅️standards/🔖️1.0/🪆️subsets/✳️base/🧪️oracle/🦀️component.rs`'s
+//! `quick-xml` reference implementation (`../../🏅️standards/🔖️1.0/🪆️subsets/✳️base/🦀️oracle.rs`'s
 //! own `oracle_apply_mutation`/`oracle_apply_mutation_inverse`); `subject` drives this repository's
 //! own `XmlSnapshot::import_utf8`/`export_utf8`/`apply_xml_mutation` over the full 8-kind
 //! `XmlMutation` vocabulary. Both results are read back by the SAME independent `project_xml_1_0`
@@ -16,7 +16,7 @@ use semio_s_plugin_stdio_test_oracle::artifacts::xml::standards::v1_0::subsets::
 
 //#region 🔖️Kinds
 /// 📇️ Kebab-case spelling of every `XmlMutation` variant, mirrored from
-/// `../../🏅️standards/🔖️1.0/🪆️subsets/✳️base/🧬️schema/🧬️mutations/🦀️component.rs`'s own `KINDS` --
+/// `../../🏅️standards/🔖️1.0/🪆️subsets/✳️base/🧬️schema/🧬️mutations/🦀️.rs`'s own `KINDS` --
 /// duplicated rather than imported because the ORACLE-only build of this adapter must never link
 /// `semio-s-plugin-stdio` (see this file's own header); `kinds_const_matches_enum_variants_in_
 /// declaration_order` on the production side and the framework's own catalog-completeness gate on

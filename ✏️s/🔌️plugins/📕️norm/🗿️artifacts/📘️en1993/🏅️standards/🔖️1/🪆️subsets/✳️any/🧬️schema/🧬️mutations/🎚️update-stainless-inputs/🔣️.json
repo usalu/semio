@@ -5,7 +5,7 @@
   "displayName": "Update Stainless Inputs",
   "emoji": "🎚️",
   "aggregateVariant": "UpdateStainlessInputs",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

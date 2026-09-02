@@ -5,7 +5,7 @@
 //!
 //! `NoMutation` was dropped: `#[derive(dsl::Mutations)]` requires every variant to wrap exactly one
 //! leaf payload, and its sentinel verb `no` is not in `APPROVED_VERBS` — see
-//! `🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🎮️command/🦀️component.rs`. Every variant is now a
+//! `🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🎮️command/🦀️.rs`. Every variant is now a
 //! tuple variant wrapping its own mutation leaf (`./*/🦀️.rs`), and this file's `agg_diff`/
 //! `agg_inverse` carry the handcrafted semantics every leaf's `MutationKind` impl delegates back to.
 
@@ -69,7 +69,7 @@ pub enum SemioImageMutation {
 }
 
 /// 🏷️ Kebab-case spelling of every `SemioImageMutation` variant, in declaration order — the
-/// vocabulary the `semio-v1-image` mutation catalog (`../../🧪️oracle/🔣️.json`) declares and
+/// vocabulary the `semio-v1-image` mutation catalog (`../../🔣️oracle.json`) declares and
 /// `mutate-semio-image`'s exhaustive test case measures itself against.
 pub const KINDS: &[&str] = &["set-snapshot", "set-dimensions", "set-colorspace", "set-bit-depth", "set-icc", "insert-frame", "remove-frame", "move-frame", "set-frame-delay", "set-frame-pixels", "set-metadata-entry", "remove-metadata-entry"];
 
@@ -289,7 +289,7 @@ impl OpText for SemioImageMutation {
 /// 🧾️ Keyword table + variant ordinal, 0-indexed in enum declaration order — the binary frame's
 /// `tag` byte, `📖️grammar/component.grammar.semio`'s `op` alternatives, and this array must all
 /// agree (see `committed_facet_files_parse`/`ops_grammar_conformance_law` in
-/// `🎹️composer/🦀️component.rs`).
+/// `🎹️composer/🦀️.rs`).
 const OP_KEYWORDS: [&str; 12] = ["setSnapshot", "setDimensions", "setColorspace", "setBitDepth", "setIcc", "insertFrame", "removeFrame", "moveFrame", "setFrameDelay", "setFramePixels", "setMetadataEntry", "removeMetadataEntry"];
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn variant_ordinal(m: &SemioImageMutation) -> u8 {
@@ -350,7 +350,7 @@ impl protocol::OpBinary for SemioImageMutation {
 
 //#region 🔖️Demo
 /// 🌱 Representative `SemioImageMutation` cases, one per variant — single source of truth for
-/// `ops_grammar_conformance_law`/`protocol_walk_law` in `🎹️composer/🦀️component.rs` and this
+/// `ops_grammar_conformance_law`/`protocol_walk_law` in `🎹️composer/🦀️.rs` and this
 /// file's own `op_text_binary_roundtrip_law`.
 #[cfg(test)]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -420,7 +420,7 @@ mod tests {
     }
 
     /// 🌱 Reuses `demo_mutation_cases()` (single source of truth, also feeds
-    /// `ops_grammar_conformance_law`/`protocol_walk_law` in `🎹️composer/🦀️component.rs`) rather
+    /// `ops_grammar_conformance_law`/`protocol_walk_law` in `🎹️composer/🦀️.rs`) rather
     /// than an independent copy.
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn sample_mutations() -> Vec<SemioImageMutation> {
@@ -538,7 +538,7 @@ mod tests {
         for (kind, mutation) in KINDS.iter().zip(one_per_variant.iter()) {
             assert_eq!(*kind, kind_of(mutation), "KINDS must follow the enum's own declaration order and kebab-case spelling");
         }
-        let manifest = include_str!("../../🧪️oracle/🔣️.json");
+        let manifest = include_str!("../../🔣️oracle.json");
         for kind in KINDS {
             assert!(manifest.contains(&format!("\"{kind}\"")), "KINDS entry {kind:?} must also appear in the committed oracle manifest's catalog");
         }
@@ -549,7 +549,7 @@ mod tests {
 
 //#region 🧪️FixtureTests
 /// 🧪️ Handcrafted mutation fixtures (contract D1, ticket `26/08/20/COMPOSE-TO-PUZZLE5D-MIGRATION`)
-/// — one case per triad leaf, self-wired here rather than in `📦️glue.rs` so this subset owns its
+/// — one case per triad leaf, self-wired here rather than in `🦀️.rs` so this subset owns its
 /// own test surface. `#[path = "."]` re-roots the nested `#[path]`s at THIS file's directory (the
 /// `🧬️mutations` root) instead of the implicit `🦀️component/` child directory. Each case file
 /// additionally mounts its OWN leaf `🔺️diff` module, because the enum arms above carry no guard
@@ -557,29 +557,29 @@ mod tests {
 #[cfg(test)]
 #[path = "."]
 mod fixture_tests {
-    #[path = "➕️insert-frame/🧪️tests/appends-a-second-frame-at-the-end/🦀️component.rs"]
+    #[path = "➕️insert-frame/🧪️tests/appends-a-second-frame-at-the-end/🦀️.rs"]
     mod tests_insert_frame_appends_a_second_frame_at_the_end;
-    #[path = "🔀️move-frame/🧪️tests/moves-the-last-frame-to-the-front/🦀️component.rs"]
+    #[path = "🔀️move-frame/🧪️tests/moves-the-last-frame-to-the-front/🦀️.rs"]
     mod tests_move_frame_moves_the_last_frame_to_the_front;
-    #[path = "📄remove-frame/🧪️tests/removes-the-leading-frame/🦀️component.rs"]
+    #[path = "📄remove-frame/🧪️tests/removes-the-leading-frame/🦀️.rs"]
     mod tests_remove_frame_removes_the_leading_frame;
-    #[path = "🗑️remove-metadata-entry/🧪️tests/removes-the-comment-entry-and-keeps-the-author-entry/🦀️component.rs"]
+    #[path = "🗑️remove-metadata-entry/🧪️tests/removes-the-comment-entry-and-keeps-the-author-entry/🦀️.rs"]
     mod tests_remove_metadata_entry_removes_the_comment_entry_and_keeps_the_author_entry;
-    #[path = "🔢️set-bit-depth/🧪️tests/raises-the-source-bit-depth-to-sixteen/🦀️component.rs"]
+    #[path = "🔢️set-bit-depth/🧪️tests/raises-the-source-bit-depth-to-sixteen/🦀️.rs"]
     mod tests_set_bit_depth_raises_the_source_bit_depth_to_sixteen;
-    #[path = "🌈️set-colorspace/🧪️tests/records-the-source-colorspace-as-rgba/🦀️component.rs"]
+    #[path = "🌈️set-colorspace/🧪️tests/records-the-source-colorspace-as-rgba/🦀️.rs"]
     mod tests_set_colorspace_records_the_source_colorspace_as_rgba;
-    #[path = "📐️set-dimensions/🧪️tests/widens-the-frameless-canvas-to-four-by-two/🦀️component.rs"]
+    #[path = "📐️set-dimensions/🧪️tests/widens-the-frameless-canvas-to-four-by-two/🦀️.rs"]
     mod tests_set_dimensions_widens_the_frameless_canvas_to_four_by_two;
-    #[path = "⏱️set-frame-delay/🧪️tests/slows-the-second-frame-down/🦀️component.rs"]
+    #[path = "⏱️set-frame-delay/🧪️tests/slows-the-second-frame-down/🦀️.rs"]
     mod tests_set_frame_delay_slows_the_second_frame_down;
-    #[path = "🟪️set-frame-pixels/🧪️tests/repaints-the-only-frame-black/🦀️component.rs"]
+    #[path = "🟪️set-frame-pixels/🧪️tests/repaints-the-only-frame-black/🦀️.rs"]
     mod tests_set_frame_pixels_repaints_the_only_frame_black;
-    #[path = "🎨️set-icc/🧪️tests/attaches-an-icc-profile-where-there-was-none/🦀️component.rs"]
+    #[path = "🎨️set-icc/🧪️tests/attaches-an-icc-profile-where-there-was-none/🦀️.rs"]
     mod tests_set_icc_attaches_an_icc_profile_where_there_was_none;
-    #[path = "🏷️set-metadata-entry/🧪️tests/rewrites-the-existing-author-entry/🦀️component.rs"]
+    #[path = "🏷️set-metadata-entry/🧪️tests/rewrites-the-existing-author-entry/🦀️.rs"]
     mod tests_set_metadata_entry_rewrites_the_existing_author_entry;
-    #[path = "📸️set-snapshot/🧪️tests/retargets-the-document-onto-a-grayscale-sixteen-bit-variant/🦀️component.rs"]
+    #[path = "📸️set-snapshot/🧪️tests/retargets-the-document-onto-a-grayscale-sixteen-bit-variant/🦀️.rs"]
     mod tests_set_snapshot_retargets_the_document_onto_a_grayscale_sixteen_bit_variant;
 }
 //#endregion 🧪️FixtureTests

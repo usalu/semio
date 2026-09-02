@@ -5,7 +5,7 @@
   "displayName": "Change Retrofit Gamma El",
   "emoji": "🦋",
   "aggregateVariant": "ChangeRetrofitGammaEl",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

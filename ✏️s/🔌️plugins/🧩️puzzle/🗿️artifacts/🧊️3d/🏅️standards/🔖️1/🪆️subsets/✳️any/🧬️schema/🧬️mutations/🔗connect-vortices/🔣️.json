@@ -5,7 +5,7 @@
   "displayName": "Connect Vortices",
   "emoji": "🔗",
   "aggregateVariant": "ConnectVortices",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": "connect-vortices",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

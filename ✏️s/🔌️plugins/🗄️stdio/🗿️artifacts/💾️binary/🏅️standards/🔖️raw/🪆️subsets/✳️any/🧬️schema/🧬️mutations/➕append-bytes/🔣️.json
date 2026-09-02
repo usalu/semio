@@ -5,7 +5,7 @@
   "displayName": "Append Bytes",
   "emoji": "➕",
   "aggregateVariant": "AppendBytes",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

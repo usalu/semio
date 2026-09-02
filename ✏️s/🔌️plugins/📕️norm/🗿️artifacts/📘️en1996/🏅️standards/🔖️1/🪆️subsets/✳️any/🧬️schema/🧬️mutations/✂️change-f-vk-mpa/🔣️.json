@@ -5,7 +5,7 @@
   "displayName": "Change F Vk Mpa",
   "emoji": "✂️",
   "aggregateVariant": "ChangeFVkMpa",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

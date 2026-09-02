@@ -1,0 +1,33 @@
+{
+  "name": "@semio-tech/fixture-generator-fem-2d-1-any",
+  "targets": {
+    "🏭️generator": {
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts generate",
+        "forwardAllArgs": true
+      }
+    },
+    "🏭️generator-manifests": {
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts manifests",
+        "forwardAllArgs": true
+      }
+    },
+    "🏭️generator-carrier": {
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts carrier",
+        "forwardAllArgs": true
+      }
+    },
+    "🏭️generator-carrier-manifests": {
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts carrier-manifests",
+        "forwardAllArgs": true
+      }
+    }
+  }
+}

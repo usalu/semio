@@ -5,7 +5,7 @@
   "displayName": "Replace Reference Source",
   "emoji": "🖇",
   "aggregateVariant": "ReplaceReferenceSource",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": "replace-reference-source",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

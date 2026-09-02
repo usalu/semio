@@ -48,7 +48,7 @@ pub enum TsvMutation {
 }
 
 /// 🧾️ Kebab-case spelling of every `TsvMutation` variant, in declaration order — the exhaustive
-/// mutation catalog `tsv-iana-any` (`../../🧪️oracle/🔣️.json`) is measured against this
+/// mutation catalog `tsv-iana-any` (`../../🔣️oracle.json`) is measured against this
 /// exact list. `kinds_match_enum_and_catalog` proves it never drifts from either side.
 pub const KINDS: &[&str] = &["set-snapshot", "set-trailing-newline", "set-line-ending", "insert-row", "remove-row", "set-cell"];
 //#endregion 🔖️Mutations
@@ -452,14 +452,14 @@ mod tests {
 
 //#region 🧪️FixtureTests
 // 🧪️ Handcrafted mutation fixtures (contract D1, ticket 26/08/20/COMPOSE-TO-PUZZLE5D-MIGRATION),
-// one case per mutation leaf. Wired HERE and not in `📦️glue.rs`: that file is shared with the
+// one case per mutation leaf. Wired HERE and not in `🦀️.rs`: that file is shared with the
 // agents migrating the other stdio artifacts, so the production mounts there stay untouched while
 // this artifact owns its own test mount. `#[path = "."]` re-bases the children on this file's own
 // directory, which is what makes the leaf-relative path below resolve.
 #[cfg(test)]
 #[path = "."]
 mod fixture_tests {
-    #[path = "📄set-snapshot/🧪️tests/renames-the-alpha-row-and-switches-to-crlf/🦀️component.rs"]
+    #[path = "📄set-snapshot/🧪️tests/renames-the-alpha-row-and-switches-to-crlf/🦀️.rs"]
     mod tests_set_snapshot_renames_the_alpha_row_and_switches_to_crlf;
 }
 //#endregion 🧪️FixtureTests

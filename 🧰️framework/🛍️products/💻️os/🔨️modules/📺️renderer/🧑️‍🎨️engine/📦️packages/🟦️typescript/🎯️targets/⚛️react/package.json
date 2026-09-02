@@ -11,7 +11,7 @@
     "id": "renderer-react"
   },
   "exports": {
-    ".": "./📦️index.tsx"
+    ".": "./🟦️.tsx"
   },
   "scripts": {
     "test": "bun nx run @semio-tech/framework-renderer-react:test"

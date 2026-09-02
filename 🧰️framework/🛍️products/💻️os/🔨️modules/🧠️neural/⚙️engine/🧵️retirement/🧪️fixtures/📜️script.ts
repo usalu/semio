@@ -5,7 +5,7 @@ import stableStringify from "fast-json-stable-stringify";
 
 //#region 🔣️DomainFixture
 const fixture = await Bun.file(new URL("./🔣️value-retirement.json", import.meta.url)).json();
-const schema = await Bun.file(new URL("./🔣️value-retirement.schema.json", import.meta.url)).json();
+const schema = await Bun.file(new URL("./🔣️.schema.json", import.meta.url)).json();
 const validate = new Ajv({ strict: true, allErrors: true }).compile(schema);
 assert(validate(fixture), JSON.stringify(validate.errors));
 const bytes = (value: any): number => typeof value === "string" ? Buffer.byteLength(value) : value && typeof value === "object" ? Object.entries(value).reduce((sum, [key, child]) => sum + Buffer.byteLength(key) + bytes(child), 0) : 0;

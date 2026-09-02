@@ -5,7 +5,7 @@
   "displayName": "Delete Route",
   "emoji": "✂️",
   "aggregateVariant": "DeleteRoute",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": "delete-route",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

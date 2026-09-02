@@ -10,7 +10,7 @@ workspace = true
 
 [lib]
 proc-macro = true
-path = "📦️glue.rs"
+path = "🦀️.rs"
 
 [dependencies]
 syn = { version = "2.0", features = ["full", "extra-traits"] }

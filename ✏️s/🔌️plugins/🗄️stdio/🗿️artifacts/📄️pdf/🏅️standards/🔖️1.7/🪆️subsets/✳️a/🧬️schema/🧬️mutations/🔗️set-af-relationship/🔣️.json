@@ -2,14 +2,14 @@
   "schemaVersion": 1,
   "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️a/🧬️schema/🧬️mutations/🔗️set-af-relationship",
   "semanticKind": "set-af-relationship",
-  "displayName": "Set Af Relationship",
+  "displayName": "Set AF Relationship",
   "emoji": "🔗️",
   "aggregateVariant": "SetAfRelationship",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
-  "invertibility": "non-invertible",
-  "diffParticipation": "detect",
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "apply-only",
   "outcomeClasses": [
     "applied"
   ],

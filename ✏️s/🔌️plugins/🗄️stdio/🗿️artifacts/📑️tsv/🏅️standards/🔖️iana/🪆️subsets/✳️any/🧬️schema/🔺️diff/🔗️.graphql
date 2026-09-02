@@ -1,0 +1,14 @@
+# 🔺️ TsvDiff schema facet — sparse structural diff, mirrors 🦀️.rs.
+
+"Positional per-column patch list; null at a position means that column is unchanged."
+type TsvRowDiff { fields: [String] }
+
+type TsvRowModified { index: Int! diff: TsvRowDiff! }
+type TsvRowAdded { index: Int! row: [String!]! }
+type TsvRowsDiff { removed: [Int!] modified: [TsvRowModified!] added: [TsvRowAdded!] }
+
+type TsvDiff {
+  trailingNewline: Boolean
+  lineEnding: TsvLineEnding
+  records: TsvRowsDiff
+}

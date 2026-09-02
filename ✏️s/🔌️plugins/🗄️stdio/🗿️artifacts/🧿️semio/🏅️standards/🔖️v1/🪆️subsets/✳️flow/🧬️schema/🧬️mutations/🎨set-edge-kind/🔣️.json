@@ -5,7 +5,7 @@
   "displayName": "Set Edge Kind",
   "emoji": "🎨",
   "aggregateVariant": "SetEdgeKind",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

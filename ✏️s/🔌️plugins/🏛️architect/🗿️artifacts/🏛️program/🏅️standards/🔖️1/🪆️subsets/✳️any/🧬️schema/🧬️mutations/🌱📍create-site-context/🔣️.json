@@ -5,7 +5,7 @@
   "displayName": "Create Site Context",
   "emoji": "🌱📍",
   "aggregateVariant": "CreateSiteContext",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

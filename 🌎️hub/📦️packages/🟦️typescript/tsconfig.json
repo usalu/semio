@@ -18,7 +18,7 @@
     "types": ["node"],
     "baseUrl": ".",
     "paths": {
-      "@semio-tech/framework-os": ["../../../🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/🟦️glue.ts"]
+      "@semio-tech/framework-os": ["../../../🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/🟦️.ts"]
     }
   },
   "include": ["**/*.ts"],

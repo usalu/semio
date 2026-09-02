@@ -5,7 +5,7 @@
   "displayName": "Change Provided Axis Distance Mm",
   "emoji": "🦌",
   "aggregateVariant": "ChangeProvidedAxisDistanceMm",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

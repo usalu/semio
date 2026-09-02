@@ -1,9 +1,9 @@
 //! 🔧 `change-annex` payload — changes the Din16798 document's `annex` (national annex).
-//! Repurposes the pre-migration `📄set-snapshot/` triad directory in place: `📦️glue.rs`
+//! Repurposes the pre-migration `📄set-snapshot/` triad directory in place: `🦀️.rs`
 //! path-includes this exact directory outside this facet's writable boundary, so the
 //! directory name stays `📄set-snapshot` while its content becomes `ChangeAnnex` — see the
 //! migration report's `sharedFileRequests` for the rename once a later pass can touch
-//! `📦️glue.rs`.
+//! `🦀️.rs`.
 
 
 use crate::artifacts::din16798::Din16798Snapshot;

@@ -1,8 +1,0 @@
-syntax = "proto3";
-package semio.stdio_html.diff_text;
-
-// 📝️ Hand-rolled bracket-token text per the sibling ../📖️component.grammar.semio -- not JSON.
-message Artifact {
-  string schema = 1;
-  string diff_text = 2;
-}

@@ -1,6 +1,6 @@
 //! 🦀️ Semio ENVELOPE exhaustive mutation case — Rust adapter. Ticket 26/08/23/END-TO-END-TESTING-
 //! REFACTOR. Recorded no-oracle decision `semio-envelope-routing` (`../../🏅️standards/🔖️v1/
-//! 🪆️subsets/✳️any/🧪️oracle/🔣️.json`): `s.stdio.semio` is the ENVELOPE union over all
+//! 🪆️subsets/✳️any/🔣️oracle.json`): `s.stdio.semio` is the ENVELOPE union over all
 //! eighteen semio subsets and has no third-party reader or writer, so `oracle` here answers with the
 //! routing outcome the feature's own `Then` steps declare — envelope subset tag, fault codes and
 //! whether the resulting document still equals the one the scenario started from — while `subject`
@@ -36,7 +36,7 @@ use semio_repo_test_host::{Adapter, Context, Json, Outcome};
 
 //#region 🔖️Kinds
 /// 🏷️ Mirrors `SemioMutation::KINDS` (`../../🏅️standards/🔖️v1/🪆️subsets/✳️any/🧬️schema/
-/// 🧬️mutations/🦀️component.rs`) — duplicated, not imported, because the oracle-only build must not
+/// 🧬️mutations/🦀️.rs`) — duplicated, not imported, because the oracle-only build must not
 /// link the subject crate. The contract's mutation-coverage gate keeps this list honest against the
 /// catalog; `kinds_match_the_enum_and_the_catalog` in that production file keeps it honest against
 /// both the enum and the envelope's own runtime subset tag.
@@ -48,7 +48,7 @@ const ENVELOPE_SCHEMA: &str = "stdio.semio";
 
 /// 🌐️ The envelope's OWN committed real artifact, in both of its committed encodings — the byte
 /// carriers `identity-round-trip` measures alongside the typed full-replace routing law.
-const DSL_ASSET: &str = "asset://🏅️standards/🔖️v1/🪆️subsets/✳️any/📚️examples/🌐️envelope/🖼️assets/🗣️example.dsl.semio";
+const DSL_ASSET: &str = "asset://🏅️standards/🔖️v1/🪆️subsets/✳️any/📚️examples/🌐️envelope/🖼️assets/🗣️.dsl.semio";
 const PACK_ASSET: &str = "asset://🏅️standards/🔖️v1/🪆️subsets/✳️any/📚️examples/🌐️envelope/🖼️assets/🎒️example.pack.semio";
 
 /// 📄️ The committed `(before, mutation, after, diff)` specification vector for the two
@@ -57,10 +57,10 @@ const LEAF_DIR: &str = "🏅️standards/🔖️v1/🪆️subsets/✳️any/🧬
 const LEAF_SUBSET: &str = "value";
 
 fn leaf_before_uri() -> String {
-    format!("asset://{LEAF_DIR}/📸️snapshot/⬅️before/🔣️component.json")
+    format!("asset://{LEAF_DIR}/📸️snapshot/⬅️before/🔣️.json")
 }
 fn leaf_mutation_uri() -> String {
-    format!("asset://{LEAF_DIR}/🦠️mutation/🔣️component.json")
+    format!("asset://{LEAF_DIR}/🦠️mutation/🔣️.json")
 }
 //#endregion 🔖️Kinds
 
@@ -249,14 +249,14 @@ mod subject {
         match subset {
             "brep" => SemioMutation::ApplyBrep(any_brep::ApplyBrep { mutation: SemioBrepMutation::CreateVertex(create_vertex::mutation::CreateVertex { id: "v-probe".into(), point: SemioPoint3 { x: 1.0, y: 2.0, z: 3.0 } }) }),
             "mesh" => SemioMutation::ApplyMesh(any_mesh::ApplyMesh { mutation: SemioMeshMutation::CreateMesh(create_mesh::mutation::CreateMesh { mesh: SemioMesh { id: "m-probe".into(), ..Default::default() } }) }),
-            "model" => SemioMutation::ApplyModel(any_model::ApplyModel { mutation: SemioModelMutation::InsertSpatialNode { node: SpatialNode { id: "s-probe".into(), ..Default::default() } } }),
+            "model" => SemioMutation::ApplyModel(any_model::ApplyModel { mutation: SemioModelMutation::InsertSpatialNode(semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::model::schema::mutations::insert_spatial_node::InsertSpatialNode { node: SpatialNode { id: "s-probe".into(), ..Default::default() } }) }),
             "value" => SemioMutation::ApplyValue(any_value::ApplyValue { mutation: SemioValueMutation::SetNode(set_node::SetNode { id: ValueId::new("n-probe"), value: SemioValue::Str { value: "probe".into() } }) }),
-            "document" => SemioMutation::ApplyDocument(any_document::ApplyDocument { mutation: SemioDocumentMutation::InsertStyle { style: DocStyle { id: "st-probe".into(), ..Default::default() } } }),
-            "cad" => SemioMutation::ApplyCad(any_cad::ApplyCad { mutation: SemioCadMutation::AddLayer { layer: CadLayer { name: "L-PROBE".into(), ..Default::default() } } }),
+            "document" => SemioMutation::ApplyDocument(any_document::ApplyDocument { mutation: SemioDocumentMutation::InsertStyle(semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::document::schema::mutations::insert_style::InsertStyle { style: DocStyle { id: "st-probe".into(), ..Default::default() } }) }),
+            "cad" => SemioMutation::ApplyCad(any_cad::ApplyCad { mutation: SemioCadMutation::AddLayer(semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::cad::schema::mutations::add_layer::AddLayer { layer: CadLayer { name: "L-PROBE".into(), ..Default::default() } }) }),
             "drawing" => SemioMutation::ApplyDrawing(any_drawing::ApplyDrawing { mutation: SemioDrawingMutation::CreateLayer(create_layer::mutation::CreateLayer { index: 0, layer: DrawLayer { id: "dl-probe".into(), ..Default::default() } }) }),
-            "image" => SemioMutation::ApplyImage(any_image::ApplyImage { mutation: SemioImageMutation::SetDimensions { width: 4, height: 2 } }),
-            "video" => SemioMutation::ApplyVideo(any_video::ApplyVideo { mutation: SemioVideoMutation::InsertStream { index: 0, stream: SemioVideoStream { codec: "probe".into(), ..Default::default() } } }),
-            "audio" => SemioMutation::ApplyAudio(any_audio::ApplyAudio { mutation: SemioAudioMutation::SetSampleRate { sample_rate: 48_000 } }),
+            "image" => SemioMutation::ApplyImage(any_image::ApplyImage { mutation: SemioImageMutation::SetDimensions(semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::image::schema::mutations::set_dimensions::SetDimensions { width: 4, height: 2 }) }),
+            "video" => SemioMutation::ApplyVideo(any_video::ApplyVideo { mutation: SemioVideoMutation::InsertStream(semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::video::schema::mutations::insert_stream::InsertStream { index: 0, stream: SemioVideoStream { codec: "probe".into(), ..Default::default() } }) }),
+            "audio" => SemioMutation::ApplyAudio(any_audio::ApplyAudio { mutation: SemioAudioMutation::SetSampleRate(semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::audio::schema::mutations::set_sample_rate::SetSampleRate { sample_rate: 48_000 }) }),
             "animation" => SemioMutation::ApplyAnimation(any_animation::ApplyAnimation { mutation: SemioAnimationMutation::InsertTimeline(insert_timeline::InsertTimeline { index: 0, timeline: AnimTimeline { name: Some("probe".into()), ..Default::default() } }) }),
             "presentation" => SemioMutation::ApplyPresentation(any_presentation::ApplyPresentation { mutation: SemioPresentationMutation::InsertSlide(insert_slide::InsertSlide { index: 0, slide: Slide { id: "sl-probe".into(), ..Default::default() } }) }),
             "flow" => SemioMutation::ApplyFlow(any_flow::ApplyFlow { mutation: SemioFlowMutation::InsertNode(insert_node::InsertNode { node: FlowNode { id: "fn-probe".into(), ..Default::default() } }) }),
@@ -381,7 +381,7 @@ mod subject {
     }
 
     /// ⚖️ Measures the four envelope-level facts and checks them against the routing law
-    /// `../🦀️component.rs::expected_routing` states for this scenario, failing with both
+    /// `../🦀️.rs::expected_routing` states for this scenario, failing with both
     /// projections printed. Every handler below goes through here, so no scenario in this case can
     /// pass by producing a result nobody looked at.
     fn checked(scenario: &str, kind: &str, subset: &str, raised: &[String], matches: bool) -> Result<Outcome, String> {
@@ -426,7 +426,7 @@ mod subject {
     /// `mutation.target-missing`, leaving the document exactly as it stood.
     pub fn mismatch(ctx: &Context) -> Result<Outcome, String> {
         let base = leaf_document(ctx)?;
-        let (routed, raised) = apply(&base, &SemioMutation::ApplyImage(any_image::ApplyImage { mutation: SemioImageMutation::SetDimensions { width: 4, height: 2 } }));
+        let (routed, raised) = apply(&base, &SemioMutation::ApplyImage(any_image::ApplyImage { mutation: SemioImageMutation::SetDimensions(semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::image::schema::mutations::set_dimensions::SetDimensions { width: 4, height: 2 }) }));
         checked("rejects-a-mismatched-arm", "", semio_subset_tag(&routed), &raised, routed == base)
     }
 

@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
 /** layout TypeScript package */
-import { BundleScript, ScriptRouter, runBundleScriptMain } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts";
+import { BundleScript, ScriptRouter, runBundleScriptMain } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 class TestScript extends BundleScript {
   run(): void { console.log("[DEBUG] layout ts ok"); }
 }

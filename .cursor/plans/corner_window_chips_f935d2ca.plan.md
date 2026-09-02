@@ -65,10 +65,10 @@ Each chip becomes `icon + name + [focus] [new window] [close] + drag handle`. Ev
 
 Add an optional per-window corner, defaulting to `topLeft`, so the 350 plugin files that call `create_default_layout` / `.default_layout(...)` need no edits.
 
-- [🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️component.rs](🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️component.rs) — new `WindowStackCorner` serde enum (`camelCase`, `Default = TopLeft`, `ts_rs`) and `WindowLayoutWindowNode.corner: Option<WindowStackCorner>` with `#[serde(default, skip_serializing_if = "Option::is_none")]`; thread it through `create_window_layout`, `create_stack_layout`, `create_default_layout`, `create_tab_stack_layout`, `even_window_layout`.
-- [🧰️framework/🔨️modules/🛂️manifest/🟦️component.ts](🧰️framework/🔨️modules/🛂️manifest/🟦️component.ts) — mirror `WindowStackCorner` + `readonly corner?: WindowStackCorner` on the hand-refined `WindowLayoutWindowNode`.
+- [🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️.rs](🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️.rs) — new `WindowStackCorner` serde enum (`camelCase`, `Default = TopLeft`, `ts_rs`) and `WindowLayoutWindowNode.corner: Option<WindowStackCorner>` with `#[serde(default, skip_serializing_if = "Option::is_none")]`; thread it through `create_window_layout`, `create_stack_layout`, `create_default_layout`, `create_tab_stack_layout`, `even_window_layout`.
+- [🧰️framework/🔨️modules/🛂️manifest/🟦️.ts](🧰️framework/🔨️modules/🛂️manifest/🟦️.ts) — mirror `WindowStackCorner` + `readonly corner?: WindowStackCorner` on the hand-refined `WindowLayoutWindowNode`.
 - [🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx](🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx) — add `corner?: WindowStackCorner` to the runtime `WindowLayoutWindowNode`.
-- [ShellHelpers/🟦️component.tsx](🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellHelpers/🟦️component.tsx) — carry `corner` through `collectFrameworkLayoutWindowSeeds` and `convertFrameworkLayoutNodeToModeLayout`, and include it in `windowLayoutSkeleton` so `classifyWindowLayoutChange` reports a corner move as `"rearrange"`.
+- [ShellHelpers/🟦️.tsx](🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellHelpers/🟦️.tsx) — carry `corner` through `collectFrameworkLayoutWindowSeeds` and `convertFrameworkLayoutNodeToModeLayout`, and include it in `windowLayoutSkeleton` so `classifyWindowLayoutChange` reports a corner move as `"rearrange"`.
 
 ## React chrome: four corner chip cells
 
@@ -81,7 +81,7 @@ The footer already provides conditional bottom-left/bottom-right chip cells with
 
 ## React dock: chips, actions, corners, drag
 
-[🧰️framework/🔨️modules/🖱️ui/🧱️elements/🎨️Canvas/🟦️component.tsx](🧰️framework/🔨️modules/🖱️ui/🧱️elements/🎨️Canvas/🟦️component.tsx)
+[🧰️framework/🔨️modules/🖱️ui/🧱️elements/🎨️Canvas/🟦️.tsx](🧰️framework/🔨️modules/🖱️ui/🧱️elements/🎨️Canvas/🟦️.tsx)
 
 **Chip markup.** A chip can no longer be a `<button>` (nested buttons are invalid). Restructure to a wrapper `<div data-slot="mode-dock-tab">` holding an inner `role="tab"` activate button (icon + name), then icon-only action buttons `mode-dock-tab-focus` / `mode-dock-tab-new-window` / `mode-dock-tab-close`, then the existing `DragHandle`. `role="tablist"` moves to each corner group; arrow/Home/End keyboard nav walks the activate buttons. `listModeDockTabElements` keeps working because it still queries `[data-slot="mode-dock-tab"]`.
 
@@ -93,14 +93,14 @@ The footer already provides conditional bottom-left/bottom-right chip cells with
 
 ## Tooltips with hotkeys
 
-- [📚️I18n/🟦️component.tsx](🧰️framework/🔨️modules/🖱️ui/🧱️elements/📚️I18n/🟦️component.tsx) + the `de`/`en` `uiChromeTranslationBundles`: reuse `ui.common.close` / `focus` / `unfocus` / `newWindow`; add `ui.common.dockCorner*` labels only if the drop pads need visible names.
-- [⌨️control-keybinding-context/🟦️component.tsx](🧰️framework/🔨️modules/🖱️ui/🔨️modules/⌨️control-keybinding-context/🟦️component.tsx): add `"ui.window.close": "mod+shift+w"`, `"ui.window.focus": "mod+shift+enter"`, `"ui.window.newWindow": "mod+shift+n"` to `SHELL_KEYBINDINGS`, and make `useControlHotkey` also fall back to `SHELL_KEYBINDINGS[resolveControlLabelId(id)]` so hierarchical element ids resolve outside a provider.
-- [🚗️UiDriver/🟦️component.tsx](🧰️framework/🔨️modules/🖱️ui/🧱️elements/🚗️UiDriver/🟦️component.tsx): extend `resolveControlLabelId` with `framework.modeDock.*.close|focus|newWindow` → `ui.window.*`, following the existing `ui.ribbon.group.*` → `ui.ribbon.parent.*` pattern.
+- [📚️I18n/🟦️.tsx](🧰️framework/🔨️modules/🖱️ui/🧱️elements/📚️I18n/🟦️.tsx) + the `de`/`en` `uiChromeTranslationBundles`: reuse `ui.common.close` / `focus` / `unfocus` / `newWindow`; add `ui.common.dockCorner*` labels only if the drop pads need visible names.
+- [⌨️control-keybinding-context/🟦️.tsx](🧰️framework/🔨️modules/🖱️ui/🔨️modules/⌨️control-keybinding-context/🟦️.tsx): add `"ui.window.close": "mod+shift+w"`, `"ui.window.focus": "mod+shift+enter"`, `"ui.window.newWindow": "mod+shift+n"` to `SHELL_KEYBINDINGS`, and make `useControlHotkey` also fall back to `SHELL_KEYBINDINGS[resolveControlLabelId(id)]` so hierarchical element ids resolve outside a provider.
+- [🚗️UiDriver/🟦️.tsx](🧰️framework/🔨️modules/🖱️ui/🧱️elements/🚗️UiDriver/🟦️.tsx): extend `resolveControlLabelId` with `framework.modeDock.*.close|focus|newWindow` → `ui.window.*`, following the existing `ui.ribbon.group.*` → `ui.ribbon.parent.*` pattern.
 - Wrap each chip action button in `ChromeControlHint`, which yields `Close (⇧⌘W)` via `useControlTooltipText` → `formatControlTooltipText`. Bind the three chords in `Mode` with `useActionHotkey` against `activeWindowId` so an advertised hotkey actually works.
 
 ## Shell wiring
 
-[ShellHost/🟦️component.tsx](🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellHost/🟦️component.tsx) — pass `onWindowOpenInNewWindow`, implemented on the existing extra-instance machinery: mint a new `ExtraWindowInstance` for the window's kind via `SET_EXTRA_WINDOW_INSTANCES` / `extraWindowCounterRef`, split it into a new stack beside the source, and note a `shell.windowOpenInNewWindow` command. There is no native multi-window path in the shell today, so "New Window" means a second live instance of that window kind in its own stack.
+[ShellHost/🟦️.tsx](🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellHost/🟦️.tsx) — pass `onWindowOpenInNewWindow`, implemented on the existing extra-instance machinery: mint a new `ExtraWindowInstance` for the window's kind via `SET_EXTRA_WINDOW_INSTANCES` / `extraWindowCounterRef`, split it into a new stack beside the source, and note a `shell.windowOpenInNewWindow` command. There is no native multi-window path in the shell today, so "New Window" means a second live instance of that window kind in its own stack.
 
 ## wgpu renderer
 
@@ -108,7 +108,7 @@ The footer already provides conditional bottom-left/bottom-right chip cells with
 
 ## TUI renderer
 
-[⌨️tui/🦀️component.rs](🧰️framework/🔨️modules/🖱️ui/⌨️tui/🦀️component.rs) + [🪟️Window/⌨️component.rs](🧰️framework/🔨️modules/🖱️ui/🧱️elements/🪟️Window/⌨️component.rs) — `WindowState.stack_tabs` becomes corner-aware; `WindowChipLayout` returns four corner chip groups (each a `WindowTab` box with per-tab glyph offsets `⤢ ⧉ ✕`) instead of `title` + `controls` + a flat tab strip. `paint_window` paints two top and two bottom corner tab boxes bending into the body edges; `window_hit` resolves per-tab glyph offsets per corner. `window_chip_layout` must stay the single source of truth for both paint and hit-test, and `window_control_at` folds into `window_hit`.
+[⌨️tui/🦀️.rs](🧰️framework/🔨️modules/🖱️ui/⌨️tui/🦀️.rs) + [🪟️Window/⌨️component.rs](🧰️framework/🔨️modules/🖱️ui/🧱️elements/🪟️Window/⌨️component.rs) — `WindowState.stack_tabs` becomes corner-aware; `WindowChipLayout` returns four corner chip groups (each a `WindowTab` box with per-tab glyph offsets `⤢ ⧉ ✕`) instead of `title` + `controls` + a flat tab strip. `paint_window` paints two top and two bottom corner tab boxes bending into the body edges; `window_hit` resolves per-tab glyph offsets per corner. `window_chip_layout` must stay the single source of truth for both paint and hit-test, and `window_control_at` folds into `window_hit`.
 
 ## Validation
 

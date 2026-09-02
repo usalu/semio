@@ -1,0 +1,7 @@
+/** 🦠️ create-mesh executable structural glTF command. */
+import type { GltfOrthographic, GltfPerspective, GltfSnapshot } from '../../📸️snapshot/🟦️.ts';
+import { clone, insert, order, position, reject, remove, relocate, reorder, repair, type GltfMutationRejection, type GltfStructuralResult } from '../../🔨️modules/🧬️mutation-support/🗂️top-level-collections/🟦️.ts';
+export const GltfCreateMeshDescriptor = { id: 's.stdio.gltf.mutation.create-mesh.v1', version: 1, touchedPathPattern: 'document/meshes', referencePolicy: 'all typed mesh references are remapped, repaired, or rejected' } as const;
+export interface GltfCreateMeshPayload { position: number }
+export const validateGltfCreateMesh = (payload: GltfCreateMeshPayload, base: GltfSnapshot): GltfMutationRejection | undefined => { const index = position(payload.position, base.document.meshes.length, 'document/meshes', true); if (index) return index;    return undefined; };
+export const applyGltfCreateMesh = (base: GltfSnapshot, payload: GltfCreateMeshPayload): GltfStructuralResult => { const rejection = validateGltfCreateMesh(payload, base); if (rejection) return { accepted: false, rejection }; try { const next = clone(base); insert(next, 'meshes', payload.position, { primitives: [], weights: [] }); return { accepted: true, snapshot: clone(next) }; } catch (error) { return { accepted: false, rejection: typeof error === 'object' && error && 'code' in error ? error as GltfMutationRejection : reject('gltf.mutation.apply-failed', 'document/meshes', String(error)) }; } };

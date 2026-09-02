@@ -1,6 +1,0 @@
-syntax = "proto3";
-// 📝️ Text-wire representation: one line of compact mutation-tagged JSON. Real shape: 🅰️component.g4.
-package semio.stdio_semio_drawing_mutations.text;
-message SemioDrawingMutationText {
-  string line = 1;
-}

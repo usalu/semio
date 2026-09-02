@@ -14,7 +14,7 @@
 // failure mode from a silently-invalid accepted result, and a comparison harness has to handle both.
 //
 // @see ../📜️script.ts — the generator that runs these
-// @see ../🧪️topology-build/📜️script.ts — the `create-*` counterpart these recipes invert
+// @see ../📜️topology-buildscript.ts — the `create-*` counterpart these recipes invert
 
 //#endregion 🧲️Header
 

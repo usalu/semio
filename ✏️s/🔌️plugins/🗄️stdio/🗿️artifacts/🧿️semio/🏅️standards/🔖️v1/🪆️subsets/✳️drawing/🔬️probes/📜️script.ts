@@ -35,7 +35,7 @@
 //   bun 📜️script.ts pdf-compare    --input <expected.pdf> --input <actual.pdf>
 //   bun 📜️script.ts gate-inputs    --out <dir>
 //
-// @see 🦀️oracle-probe/🦀️component.rs — the readers themselves
+// @see 🦀️oracle-probe/🦀️.rs — the readers themselves
 // @see 🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json — ProbeReport
 // @see ../../../../../../📐️step/🏅️standards/🔖️ap214/🪆️subsets/✳️cc6/🏭️bridge/📜️script.ts — the
 //      spawn/offline/agent-scoped-target pattern this file mirrors

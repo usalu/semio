@@ -1,0 +1,6 @@
+{
+  "$id": "https://semio.tech/schema/stdio.html/diff/text.json",
+  "title": "HtmlDiffText",
+  "description": "Hand-rolled bracket-token grammar per the sibling ../📖️.grammar.semio -- not JSON.",
+  "type": "string"
+}

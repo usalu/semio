@@ -5,7 +5,7 @@
   "displayName": "Rename Safety Requirement",
   "emoji": "✏️🦺",
   "aggregateVariant": "RenameSafetyRequirement",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

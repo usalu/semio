@@ -715,34 +715,43 @@ pub struct UndoGroup {
 // would otherwise serialize as snake_case (`window_bodies`) and silently desync from the TS
 // `UiDirtyScope` type's camelCase `windowBodies`. `rename_all_fields` is the attribute that renames
 // fields *within* variants; both are needed together.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase", rename_all_fields = "camelCase", tag = "kind")]
+#[value(rename_all = "camelCase", rename_all_fields = "camelCase", tag = "kind")]
 pub enum UiDirtyScope {
     #[default]
     Full,
     None,
     Partial {
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
+        #[value(default, skip_serializing_if = "Vec::is_empty")]
         window_bodies: Vec<String>,
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
+        #[value(default, skip_serializing_if = "Vec::is_empty")]
         panel_bodies: Vec<String>,
         #[serde(default)]
+        #[value(default)]
         utilities: bool,
         #[serde(default)]
+        #[value(default)]
         tools: bool,
         #[serde(default)]
+        #[value(default)]
         engagements: bool,
         #[serde(default)]
+        #[value(default)]
         measures: bool,
         #[serde(default)]
+        #[value(default)]
         labels: bool,
     },
 }
 
 /// 🧾️ One host-projectable row in the session command timeline. The payload is deliberately
 /// presentation-neutral: the host owns windowing and retains entries beyond any visible range.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct HistoryEntry {
     pub seq: u64,
     pub action_id: String,
@@ -750,12 +759,16 @@ pub struct HistoryEntry {
     pub kind: String,
     pub timestamp: String,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[value(default, skip_serializing_if = "Vec::is_empty")]
     pub op_lines: Vec<String>,
     #[serde(default)]
+    #[value(default)]
     pub applied: bool,
     #[serde(default)]
+    #[value(default)]
     pub revertible: bool,
     #[serde(default = "history_entry_count")]
+    #[value(default = "history_entry_count")]
     pub count: u32,
 }
 
@@ -765,23 +778,30 @@ fn history_entry_count() -> u32 {
 }
 
 /// 🧾️ Ordered history delta returned in the same response as an accepted interaction.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct HistoryPatch {
     /// Monotonic command-log cursor after applying this patch.
     pub cursor: u64,
     /// Upserts, ordered newest-first to match the logical history projection.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[value(default, skip_serializing_if = "Vec::is_empty")]
     pub upserts: Vec<HistoryEntry>,
     #[serde(default)]
+    #[value(default)]
     pub can_undo: bool,
     #[serde(default)]
+    #[value(default)]
     pub can_redo: bool,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub active_alternative_id: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub current_checkpoint_id: Option<String>,
     #[serde(default)]
+    #[value(default)]
     pub command_filter: String,
 }
 
@@ -938,7 +958,7 @@ pub enum RequestOutcome {
 /// 26/08/23/END-TO-END-TESTING-REFACTOR): this file cannot depend on
 /// `semio-framework-os-kernel` without a cycle (`semio_framework_os_kernel::{decode_presence_peer,
 /// PresencePeer, ...}` above already depends on it), yet the ONE real functional consumer of this
-/// paged-command-ingress machinery — `📡️spr/🧵️channel/🦀️component.rs` — lives entirely inside
+/// paged-command-ingress machinery — `📡️spr/🧵️channel/🦀️.rs` — lives entirely inside
 /// that crate and could not reach these types at all. Re-exported here, unchanged, so every
 /// existing `semio_framework::kernel::X` / `manifest::kernel::X` call site (and this file's own
 /// `#[cfg(test)] mod extension_activation_tests` below, via its `use super::*`) keeps resolving —
@@ -2148,7 +2168,7 @@ pub struct CapabilityId(pub String);
 /// for the plugin/extension actor runtime. The kernel-level `CapabilityRequirement`/`Rights`/
 /// `Scope` action-dispatch model (above, `🔖️Capability` region) stays as-is: it has live
 /// consumers outside this packet's owned paths (`🔌️plugin/🏗️builder`, `🔌️plugin/🖥️host`,
-/// `🔌️plugin/🦀️component.rs`) — see this packet's report for the full consumer list.
+/// `🔌️plugin/🦀️.rs`) — see this packet's report for the full consumer list.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
@@ -2165,7 +2185,7 @@ pub struct CapabilityRequest {
 /// Named `BrokerCapabilityGrant`, not the design prose's bare `CapabilityGrant`: this file
 /// already has a `CapabilityGrant` (above, `🔖️Capability` region) for the unrelated kernel-level
 /// action/window capability model (`ActionContext.granted_capabilities`), with live consumers
-/// outside this packet's owned paths (`📦️packages/🦀️rust/📦️glue.rs`'s re-export list) — see the
+/// outside this packet's owned paths (`📦️packages/🦀️rust/🦀️.rs`'s re-export list) — see the
 /// report's naming-collision note.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -2302,7 +2322,7 @@ pub trait BrokerHooks {
 /// different crate's mount set than this file's) and of the guest-side `ExtensionManifest`
 /// (`semio-framework-plugin`) — this shape uses only vocabulary this very file already owns
 /// (`CapabilityId`/`CapabilityRequest`), so `extensions_extending` stays callable from every crate
-/// this file reaches: it is `#[path]`-mounted (as `pub mod kernel`) into `🛂️manifest/🦀️component.rs`
+/// this file reaches: it is `#[path]`-mounted (as `pub mod kernel`) into `🛂️manifest/🦀️.rs`
 /// alone, which is itself `#[path]`-mounted into THREE crates — `semio-framework` (root),
 /// `semio-framework-graph`, and `semio-s-plugin-stdio` (verified: `grep -rn '#\[path.*🎠️kernel'`
 /// and `grep -rn '#\[path.*🛂️manifest/🦀️component'`, both over absolute paths) — without pulling in

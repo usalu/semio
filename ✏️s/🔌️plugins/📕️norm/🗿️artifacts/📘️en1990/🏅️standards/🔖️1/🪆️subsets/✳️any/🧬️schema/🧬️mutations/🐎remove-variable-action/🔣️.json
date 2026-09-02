@@ -5,7 +5,7 @@
   "displayName": "Remove Variable Action",
   "emoji": "🐎",
   "aggregateVariant": "RemoveVariableAction",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

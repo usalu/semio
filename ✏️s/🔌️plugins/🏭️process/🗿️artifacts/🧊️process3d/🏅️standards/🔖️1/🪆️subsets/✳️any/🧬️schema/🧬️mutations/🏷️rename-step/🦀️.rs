@@ -2,7 +2,6 @@
 //! field — the step's `id` itself is immutable).
 
 use crate::artifacts::process3d::diff::Process3dDiff;
-use crate::artifacts::process3d::mutations::rename_step::RenameStep;
 use crate::artifacts::process3d::mutations::Process3dMutation;
 use crate::artifacts::process3d::Process3dSnapshot;
 use semio_framework_value_derive::{FromValue, ToValue};

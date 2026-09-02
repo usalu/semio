@@ -1,0 +1,62 @@
+(* ISO-14977-style EBNF for `stdio.semio.drawing`'s real one-line `OpText::print_op` shape —
+   descriptive mirror of the authoritative `📖️.grammar.semio` (same production names).
+   Seventeen keywords, one per SMO-approved verb this facet registers (📌️important.md's binding
+   vocabulary ruling) — no `noMutation`/`setSnapshot`/`set*` (banned/superseded vocabulary). *)
+op = create layer | delete layer | create node | delete node | move node | drag nodes | rotate
+   | scale | reorder nodes | group | ungroup | flatten | unflatten | replace path | replace fill
+   | change stroke color | change stroke width ;
+
+create layer = 'createLayer', ':', int, ',', layer ;
+delete layer = 'deleteLayer', ':', hex ;
+create node = 'createNode', ':', node path, ',', int, ',', node ;
+delete node = 'deleteNode', ':', node path ;
+move node = 'moveNode', ':', node path, ',', point2 ;
+drag nodes = 'dragNodes', ':', '[', [ node path, { ',', node path } ], ']', ',', point2 ;
+rotate = 'rotate', ':', node path, ',', quaternion ;
+scale = 'scale', ':', node path, ',', point3 ;
+reorder nodes = 'reorderNodes', ':', node path, ',', int, ',', int ;
+group = 'group', ':', node path, ',', '[', [ int, { ',', int } ], ']', ',', transform ;
+ungroup = 'ungroup', ':', node path ;
+flatten = 'flatten', ':', node path ;
+unflatten = 'unflatten', ':', node path, ',', node ;
+replace path = 'replacePath', ':', node path, ',', segment list ;
+replace fill = 'replaceFill', ':', hex, ',', option rgba ;
+change stroke color = 'changeStrokeColor', ':', hex, ',', option rgba ;
+change stroke width = 'changeStrokeWidth', ':', hex, ',', option number ;
+
+node path = '[', number, ',', '[', [ number, { ',', number } ], ']', ']' ;
+
+(* Same full-VALUE codecs `📸️snapshot/📝️text/🔤️.ebnf` declares (restated here so this
+   leaf grammar is self-contained, matching the repo's existing per-facet convention). *)
+layer = '[', hex, ',', hex, ',', bool, ',', node, ']' ;
+
+node = ( 'P', '[', segment list, ',', option hex, ']' )
+     | ( 'T', '[', hex, ',', point2, ',', option hex, ']' )
+     | ( 'G', '[', transform, ',', node list, ']' )
+     | ( 'I', '[', point2, ',', number, ',', number, ',', hex, ',', hex, ']' ) ;
+node list = '[', [ node, { ',', node } ], ']' ;
+
+segment = ( 'M', '[', point2, ']' )
+        | ( 'L', '[', point2, ']' )
+        | ( 'C', '[', point2, ',', point2, ',', point2, ']' )
+        | ( 'Q', '[', point2, ',', point2, ']' )
+        | ( 'A', '[', number, ',', number, ',', number, ',', bool, ',', bool, ',', point2, ']' )
+        | 'Z' ;
+segment list = '[', [ segment, { ',', segment } ], ']' ;
+
+transform = '[', point3, ',', quaternion, ',', point3, ']' ;
+point2 = '[', number, ',', number, ']' ;
+point3 = '[', number, ',', number, ',', number, ']' ;
+quaternion = '[', number, ',', number, ',', number, ',', number, ']' ;
+rgba = '[', number, ',', number, ',', number, ',', number, ']' ;
+bool = '0' | '1' ;
+
+number = int | float ;
+int = [ '-' ], digit, { digit } ;
+float = [ '-' ], digit, { digit }, '.', digit, { digit } ;
+digit = '0' | '1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9' ;
+hex = { digit | 'a' | 'b' | 'c' | 'd' | 'e' | 'f' } ;
+
+option rgba = ( '[', '0', ']' ) | ( '[', '1', ',', rgba, ']' ) ;
+option number = ( '[', '0', ']' ) | ( '[', '1', ',', number, ']' ) ;
+option hex = ( '[', '0', ']' ) | ( '[', '1', ',', hex, ']' ) ;

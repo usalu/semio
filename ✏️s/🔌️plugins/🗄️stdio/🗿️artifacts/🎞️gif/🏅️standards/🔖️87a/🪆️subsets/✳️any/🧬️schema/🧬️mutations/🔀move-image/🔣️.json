@@ -5,7 +5,7 @@
   "displayName": "Move Image",
   "emoji": "🔀",
   "aggregateVariant": "MoveImage",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

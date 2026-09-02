@@ -5,7 +5,7 @@
   "displayName": "Replace Qc",
   "emoji": "🧾",
   "aggregateVariant": "ReplaceQc",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": "replace-qc",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

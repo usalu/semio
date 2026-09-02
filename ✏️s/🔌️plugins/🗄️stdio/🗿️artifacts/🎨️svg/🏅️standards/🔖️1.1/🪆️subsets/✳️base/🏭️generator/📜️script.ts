@@ -10,7 +10,7 @@
 // Every recipe's BEFORE and AFTER `.svg` bytes are built DIRECTLY by the sibling standalone
 // `🦀️quick-xml-svg-codec` binary, which depends on nothing but `quick-xml` 0.42 — never by
 // "applying" this repository's own `SvgMutation`/`SvgDiff` dispatch, and never by this subset's
-// own `🧪️oracle/🦀️component.rs` (that module COMPUTES what a mutation should produce; it is a
+// own `🦀️oracle.rs` (that module COMPUTES what a mutation should produce; it is a
 // SEPARATE, untouched `cross-semio-implementation` oracle). This file only shells out per recipe
 // and turns the bytes the codec wrote into a fixture bundle + manifest entry; it computes no SVG
 // semantics of its own.
@@ -47,7 +47,7 @@ type Recipe = Readonly<{ id: string; mutation: string; notes: string }>;
 
 /** 🍳️ Mirrors `RECIPE_IDS`/`recipe()` in `🦀️quick-xml-svg-codec/src/main.rs` verbatim — one
  *  `-applied` entry per declared `SvgMutation` kind. Every one of the 9 kinds is registered
- *  `outcomes: ["applied"]` only in `../🧪️oracle/🔣️.json`: every `SvgMutation` leaf's own `diff()`
+ *  `outcomes: ["applied"]` only in `../🔣️oracle.json`: every `SvgMutation` leaf's own `diff()`
  *  (`../🧬️schema/🧬️mutations/✏️<kind>/🦀️.rs`) unconditionally returns `MutationOutcome::new(..)`,
  *  never `empty`/`error`/`fatal` — so there is no `-rejected-*` recipe to build here. */
 const RECIPES: readonly Recipe[] = [

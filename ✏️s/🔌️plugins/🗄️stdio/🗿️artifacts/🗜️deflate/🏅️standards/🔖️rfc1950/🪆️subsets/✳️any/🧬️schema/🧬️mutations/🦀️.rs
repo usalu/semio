@@ -25,7 +25,7 @@ pub mod set_payload;
 ///
 /// 🧪️ `#[derive(dsl::DslOps)]` is kept ALONGSIDE `#[derive(dsl::Mutations)]`: every variant below
 /// is a single-field newtype wrapping its own mutation leaf, and `dsl_variants_codegen`'s
-/// "single-field tuple variant" branch (`✨️derive/🦀️component.rs`) delegates `DslVariants`
+/// "single-field tuple variant" branch (`✨️derive/🦀️.rs`) delegates `DslVariants`
 /// straight through to that leaf's own `#[derive(dsl::DslRecord)]`-provided `DslField` impl — the
 /// SAME `record_codegen` output the fields produced when they lived inline in the enum, so the
 /// committed `mutations::text::COMPONENT_GRAMMAR_SEMIO`/`mutations::binary::COMPONENT_PROTOCOL_SEMIO`
@@ -47,7 +47,7 @@ pub enum DeflateMutation {
 
 //#region 🔖️Kinds
 /// 🗂️ Kebab-case spelling of every `DeflateMutation` variant, declaration order, mirrored by this
-/// subset's `🧪️oracle/🔣️.json` mutation catalog (`deflate-rfc1950-any`). The completeness
+/// subset's `🔣️oracle.json` mutation catalog (`deflate-rfc1950-any`). The completeness
 /// gate reads that JSON catalog, never this enum, so `kinds_match_enum_variants_and_catalog` below
 /// is what keeps the two lists honest.
 pub const KINDS: &[&str] = &["set-snapshot", "set-compression-params", "set-preset-dictionary", "set-payload"];
@@ -131,7 +131,7 @@ impl OpBinary for DeflateMutation {
 //#region 🔖️DemoCases
 /// 🧪️ P2-FG2: representative `DeflateMutation` values (every variant, incl. both
 /// `SetPresetDictionary` arms and both `SetPayload` empty/non-empty arms) — the single source of
-/// truth reused by `op_text_binary_roundtrip_law` below AND by `⚙️engine/🦀️component.rs`'s
+/// truth reused by `op_text_binary_roundtrip_law` below AND by `⚙️engine/🦀️.rs`'s
 /// `ops_grammar_conformance_law`/`protocol_walk_law` conformance tests.
 #[cfg(test)]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -210,7 +210,7 @@ mod tests {
         let declared_kinds: std::collections::BTreeSet<&str> = KINDS.iter().copied().collect();
         assert_eq!(variant_kinds, declared_kinds, "KINDS must list every DeflateMutation variant exactly once");
 
-        let manifest = include_str!("../../🧪️oracle/🔣️.json");
+        let manifest = include_str!("../../🔣️oracle.json");
         for kind in KINDS {
             assert!(manifest.contains(&format!("\"{kind}\"")), "KINDS entry {kind:?} must also appear in the committed oracle manifest's catalog");
         }
@@ -220,9 +220,9 @@ mod tests {
 
 //#region 🧪️FixtureCases
 /// 🧪️ Handcrafted `📄set-snapshot` fixture cases, wired from this tree's own mutations root so
-/// `📦️glue.rs` stays untouched (`#[path]` on a non-inline module resolves against this file's own
+/// `🦀️.rs` stays untouched (`#[path]` on a non-inline module resolves against this file's own
 /// directory).
 #[cfg(test)]
-#[path = "📄set-snapshot/🧪️tests/raises-the-flevel-hint-and-extends-the-payload/🦀️component.rs"]
+#[path = "📄set-snapshot/🧪️tests/raises-the-flevel-hint-and-extends-the-payload/🦀️.rs"]
 mod set_snapshot_raises_the_flevel_hint_and_extends_the_payload;
 //#endregion 🧪️FixtureCases

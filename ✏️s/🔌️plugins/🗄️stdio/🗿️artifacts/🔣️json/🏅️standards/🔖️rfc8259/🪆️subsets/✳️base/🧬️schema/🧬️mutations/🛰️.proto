@@ -1,0 +1,8 @@
+syntax = "proto3";
+package stdio.json.mutation;
+import "✏️set-member/🛰️.proto";
+import "🗑️remove-member/🛰️.proto";
+import "📥️insert-array-element/🛰️.proto";
+import "🗑️remove-array-element/🛰️.proto";
+import "✏️set-scalar/🛰️.proto";
+message JsonMutation { oneof mutation { SetMemberPayload set_member = 1; RemoveMemberPayload remove_member = 2; InsertArrayElementPayload insert_array_element = 3; RemoveArrayElementPayload remove_array_element = 4; SetScalarPayload set_scalar = 5; } }

@@ -5,7 +5,7 @@
   "displayName": "Create Knowledge Record",
   "emoji": "🌱📚",
   "aggregateVariant": "CreateKnowledgeRecord",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

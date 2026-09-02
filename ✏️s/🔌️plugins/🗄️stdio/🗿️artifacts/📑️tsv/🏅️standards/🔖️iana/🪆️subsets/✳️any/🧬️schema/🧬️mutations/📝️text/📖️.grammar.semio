@@ -1,0 +1,15 @@
+dialect grammar stdio.tsv.mutations
+root = mutation
+; wire text is the hand-rolled `keyword arg=value ...` token line `protocol::OpText` prints
+; (see 🦀️.rs `print_tsv_mutation`/`parse_tsv_mutation`) — not JSON.
+mutation = "set-snapshot" SP "snapshot=" hexsnapshot
+         / "set-trailing-newline" SP "trailing-newline=" BIT
+         / "set-line-ending" SP "line-ending=" ("lf" / "crlf")
+         / "insert-row" SP "index=" INT SP "row=" hexrow
+         / "remove-row" SP "index=" INT
+         / "set-cell" SP "row-index=" INT SP "field-index=" INT SP "value=" hexstr
+SP = " "
+BIT = "0" / "1"
+hexstr = *HEXDIG
+hexrow = "[" *(hexstr ",") "]"
+hexsnapshot = "[" hexstr "," BIT "," ("lf" / "crlf") ",[" *(hexrow ",") "]]"

@@ -1,0 +1,22 @@
+dialect grammar
+grammar playbook.playbook.diff
+extension playbook
+use family-scene
+start diff
+
+# HONEST BOUNDARY: no text (or binary) codec exists for `PlaybookDiff` — there is no real syntax
+# to transcribe, so this grammar intentionally defines no body production beyond this notice (per
+# the STUBS-AND-PLACEHOLDERS-COMPLETION ticket's brief: "do NOT invent a grammar" when the Rust
+# genuinely has no parser). This REPLACES the stale, cross-plugin copy-pasted "canvas layer"
+# template (`add-layer`/`remove-layer`/`move id=... dx=... dy=...`) this file previously carried,
+# which was equally fictional.
+#
+# Evidence: `PlaybookDiff` (🧬️schema/🔺️diff/🦀️.rs:16-18) derives only `ArtifactSchema` —
+# never `dsl::DslDiff`. Compare the two derive expansions: `expand_dsl_diff`
+# (🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/🦀️.rs:1419-1473) generates a real
+# `print_diff`/`parse_diff`/`encode_diff`/`decode_diff` (`DiffCodec`) impl; `expand_artifact_schema`
+# (🧰️framework/🔨️modules/🧬️schema/✨️derive/🦀️.rs:201-260) generates only `field_states()`
+# — schema introspection, no serialization at all. This facet's own `🔺️diff/📝️text/🦀️.rs`
+# (125 lines) has no `impl store::ArtifactDsl`/`OpText`/`DiffText for PlaybookDiff` anywhere.
+diff = unimplemented-notice
+unimplemented-notice = "NO-TEXT-CODEC-EXISTS-FOR-THIS-FACET"

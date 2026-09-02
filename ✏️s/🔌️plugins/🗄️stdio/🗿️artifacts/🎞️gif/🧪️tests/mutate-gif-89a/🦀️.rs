@@ -1,5 +1,5 @@
 //! 🦀️ Exhaustive GIF 89a mutation case — Rust adapter. Every one of the 21 declared `GifMutation`
-//! kinds, applied to a real 4.4 MB / 800x800 / 54-frame animated GIF (`💃️dancing/🖼️assets/🖼️dancing.gif`,
+//! kinds, applied to a real 4.4 MB / 800x800 / 54-frame animated GIF (`💃️dancing/🖼️assets/🧪️dancing/🖼️.gif`,
 //! committed under the 87a subset's own example directory and read here via `asset://`). The oracle
 //! drives the registered `gif` reference implementation; the subject fully parses the artifact into
 //! its typed snapshot and re-serializes from it alone — never splicing source bytes. The subject half
@@ -12,7 +12,7 @@ use semio_s_plugin_stdio_test_oracle::artifacts::gif::standards::v89a::subsets::
 use semio_s_plugin_stdio_test_oracle::law;
 
 //#region 🔖️Kinds
-/// 🏷️ Mirrors `GifMutation::KINDS` (`.../🧬️schema/🧬️mutations/🦀️component.rs`) as an adapter-local
+/// 🏷️ Mirrors `GifMutation::KINDS` (`.../🧬️schema/🧬️mutations/🦀️.rs`) as an adapter-local
 /// list rather than importing the subject crate at the top level: the oracle-only host does not link
 /// the subject crate at all (`sut` is off), so registration must not name it.
 const KINDS: [&str; 21] = [
@@ -41,7 +41,7 @@ const KINDS: [&str; 21] = [
 //#endregion 🔖️Kinds
 
 //#region 🔖️Input
-const INPUT: &str = "asset://🏅️standards/🔖️87a/🪆️subsets/✳️any/📚️examples/💃️dancing/🖼️assets/🖼️dancing.gif";
+const INPUT: &str = "asset://🏅️standards/🔖️87a/🪆️subsets/✳️any/📚️examples/💃️dancing/🖼️assets/🧪️dancing/🖼️.gif";
 
 /// 🧫️ Copies the immutable real-world asset into the work directory and returns the mutable copy's
 /// bytes. The committed asset itself is never written to.

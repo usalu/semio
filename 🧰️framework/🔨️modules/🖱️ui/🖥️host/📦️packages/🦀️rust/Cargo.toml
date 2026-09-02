@@ -13,7 +13,7 @@ id = "ui-host"
 workspace = true
 
 [lib]
-path = "📦️glue.rs"
+path = "🦀️.rs"
 
 [dependencies]
 ui_render = { path = "../../../🖼️render/📦️packages/🦀️rust", package = "semio-framework-ui-render" }

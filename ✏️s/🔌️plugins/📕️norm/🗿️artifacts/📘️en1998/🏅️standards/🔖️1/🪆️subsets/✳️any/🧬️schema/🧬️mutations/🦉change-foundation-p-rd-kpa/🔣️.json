@@ -5,7 +5,7 @@
   "displayName": "Change Foundation P Rd Kpa",
   "emoji": "🦉",
   "aggregateVariant": "ChangeFoundationPRdKpa",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

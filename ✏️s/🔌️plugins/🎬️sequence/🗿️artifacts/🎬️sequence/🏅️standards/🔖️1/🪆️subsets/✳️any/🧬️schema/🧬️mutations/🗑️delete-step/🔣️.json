@@ -5,18 +5,22 @@
   "displayName": "Delete Step",
   "emoji": "🗑️",
   "aggregateVariant": "DeleteStep",
-  "payloadSchema": "🔣️payload.schema.json",
-  "textOpcode": "delete-step",
+  "payloadSchema": "🔣️.schema.json",
+  "textOpcode": null,
   "binaryTag": null,
-  "invertibility": "explicit-mutation",
+  "invertibility": "plan",
   "diffParticipation": "detect",
   "outcomeClasses": [
-    "error",
-    "applied"
+    "applied",
+    "info",
+    "error"
   ],
   "composition": "atomic",
   "requiredLanguageSurfaces": [
     "rust",
+    "typescript",
+    "graphql",
+    "protobuf",
     "json-schema"
   ]
 }

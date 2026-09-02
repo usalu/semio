@@ -39,7 +39,7 @@ impl protocol::MutationKind<SemioDrawingSnapshot, SemioDrawingMutation> for Grou
 
 //#region 🔖️ContiguousCheck
 /// ✅️️ `true` iff `indices` is non-empty, strictly ascending, and every consecutive pair differs by
-/// exactly 1 (a contiguous run) -- shared by this triad's `diff` and `↩️inverse/🦀️component.rs`'s
+/// exactly 1 (a contiguous run) -- shared by this triad's `diff` and `↩️inverse/🦀️.rs`'s
 /// own reverse construction (via `ungroup`, which always emits a genuinely contiguous run).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn is_contiguous_ascending(indices: &[usize]) -> bool {

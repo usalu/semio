@@ -1,8 +1,0 @@
-; ABNF mirror (descriptive, not test-parsed — the real byte-level walker is
-; ../📡️component.protocol.semio, walked by dsl::walk_protocol) for s.stdio.semio.mesh mutation
-; (binary) — REAL `OpBinary::encode_op`/`decode_op` frame, replacing the old
-; `print_op().into_bytes()` text-as-binary shortcut.
-document = format tag payload
-format   = OCTET     ; OP_BINARY_FORMAT, currently 1
-tag      = OCTET     ; SemioMeshMutation variant ordinal — see OP_KEYWORDS in ../../🦀️component.rs
-payload  = *OCTET    ; UTF-8 "key=value ..." argument text (never empty — all 17 mesh keywords carry >=1 argument)

@@ -5,7 +5,7 @@
   "displayName": "Set Product Identity",
   "emoji": "🪪",
   "aggregateVariant": "SetProductIdentity",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

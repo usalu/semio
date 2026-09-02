@@ -1,7 +1,7 @@
 //! 🎨️ SVG carrier — writer AND reader, both `quick-xml` 0.42, matching
-//! `quick-xml-note-drawing-reader` in `../../🧪️oracle/🔣️.json`. Reproduces the structural shape
+//! `quick-xml-note-drawing-reader` in `../../🔣️oracle.json`. Reproduces the structural shape
 //! `note_document_to_drawing_snapshot` + `draw_node_from_note_block` + `write_svg_xml` build (see
-//! `../../🚪️io/🦀️component.rs`): every VISIBLE block, flattened, wrapped in
+//! `../../🚪️io/🦀️.rs`): every VISIBLE block, flattened, wrapped in
 //! `<g transform="matrix(a,b,c,d,e,f)">` (the block's own x/y/rotation), then kind-specific content —
 //! Ink -> `<path d="…" stroke-width="…"/>`, Text -> `<text x="0" y="{font_size}">…</text>` (font-size
 //! wired to the Y COORDINATE, never a size attribute — the real subject bug this carrier surfaces,
@@ -23,7 +23,7 @@ fn fmt(v: f64) -> String {
 
 /// ✖️ `[a,b,c,d,e,f]`, the SVG `matrix(a,b,c,d,e,f)` layout — a plain Z-axis rotation composed with
 /// translation, matching `note_block_transform`'s quaternion-around-Z construction (see
-/// `../../🚪️io/🦀️component.rs`; a 0° rotation reduces to the pure-translate `matrix(1,0,0,1,x,y)`
+/// `../../🚪️io/🦀️.rs`; a 0° rotation reduces to the pure-translate `matrix(1,0,0,1,x,y)`
 /// shape the ticket's scratch crate already proved `quick-xml` reads back verbatim).
 fn matrix_for(x: f64, y: f64, rotation_degrees: f64) -> [f64; 6] {
     let theta = rotation_degrees.to_radians();

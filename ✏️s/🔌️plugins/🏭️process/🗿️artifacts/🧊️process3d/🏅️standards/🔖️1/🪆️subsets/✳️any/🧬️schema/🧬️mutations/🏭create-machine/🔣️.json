@@ -5,7 +5,7 @@
   "displayName": "Create Machine",
   "emoji": "🏭",
   "aggregateVariant": "CreateMachine",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

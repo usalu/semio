@@ -17,9 +17,9 @@ specification, in another language.
 
 **What it was written from.**
 
-* ``🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🔣️component.json`` — the ten members of
+* ``🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🔣️.json`` — the ten members of
   `Block2dSnapshot`.
-* ``…/🧬️schema/🧬️mutations/🔣️component.json`` and ``…/🧬️schema/🧬️mutations/📝️text/📖️component.grammar.semio``
+* ``…/🧬️schema/🧬️mutations/🔣️.json`` and ``…/🧬️schema/🧬️mutations/📝️text/📖️.grammar.semio``
   — the twenty-six verbs and their argument lists.
 * the twenty-six committed `(before, mutation, after, outcome)` specification vectors, which give the
   internally tagged wire form of each verb and the two things only they state: that
@@ -28,7 +28,7 @@ specification, in another language.
   `{shape, width, height, color}` rectangle), and that an `author` keeps only the members it was
   given (`email` is optional).
 
-**No Rust was read to write this.** `🦀️component.rs` beside this file registers the SUBJECT half
+**No Rust was read to write this.** `🦀️.rs` beside this file registers the SUBJECT half
 only.
 """
 

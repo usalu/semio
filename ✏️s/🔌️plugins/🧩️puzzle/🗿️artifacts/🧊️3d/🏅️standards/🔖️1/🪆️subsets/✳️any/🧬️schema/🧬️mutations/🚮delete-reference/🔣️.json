@@ -5,7 +5,7 @@
   "displayName": "Delete Reference",
   "emoji": "🚮",
   "aggregateVariant": "DeleteReference",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": "delete-reference",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

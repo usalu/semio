@@ -26,7 +26,7 @@
  * @see .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME/📓️terra-bench-web-rows-report.md
  */
 import { ShardClient, type ShardBudget, type ShardWorkerLike } from "../../../../../../../🧰️framework/🔨️modules/🎭️actor/📦️packages/🟦️typescript/🧵️shard-client.ts";
-import { OwnedResidentLedger } from "../../../../../../../🧰️framework/🔨️modules/🌱️value/💾️resident/🟦️component.ts";
+import { OwnedResidentLedger } from "../../../../../../../🧰️framework/🔨️modules/🌱️value/💾️resident/🟦️.ts";
 
 //#region 🟨️StubWorker
 /** 🟨️ Protocol-faithful stand-in for the real, generated `🟨️shard-worker.js` (`shardWorkerSource()`).

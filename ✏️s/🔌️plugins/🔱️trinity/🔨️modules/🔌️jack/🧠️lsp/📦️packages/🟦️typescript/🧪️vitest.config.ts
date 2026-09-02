@@ -4,7 +4,7 @@ export default defineConfig({
   test: {
     name: "@semio-tech/trinity-jack-lsp-worker",
     environment: "node",
-    include: ["📦️index.ts", "../../🟦️component.ts"],
-    coverage: { include: ["📦️index.ts", "../../🟦️component.ts"] },
+    include: ["🟦️.ts", "../../🟦️.ts"],
+    coverage: { include: ["🟦️.ts", "../../🟦️.ts"] },
   },
 });

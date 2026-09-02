@@ -5,7 +5,7 @@
   "displayName": "Change Fastener Kind",
   "emoji": "🎯",
   "aggregateVariant": "ChangeFastenerKind",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": "change-fastener-kind",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

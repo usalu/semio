@@ -1,14 +1,14 @@
 //! 🦀️ Playbook document exhaustive mutation case — Rust adapter. Ticket `26/08/23/END-TO-END-TESTING-REFACTOR`.
 //!
 //! Recorded no-oracle decision `playbook-document-mutation-semantics`
-//! (`../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️oracle/🔣️.json`): `s.playbook.playbook` is a
+//! (`../../🏅️standards/🔖️1/🪆️subsets/✳️any/🔣️oracle.json`): `s.playbook.playbook` is a
 //! semio-NATIVE artifact with no third-party reader or writer, so this case registers SUBJECT
 //! handlers only. That is not an omission — the runner resolves an oracle implementation from the
 //! feature's `@oracle-` tag, this feature carries `@no-oracle-` instead, and the oracle role is
 //! therefore never dispatched for it. Registering an oracle handler here would be dead code that
 //! reads as coverage in every listing, so there is none; every law this case claims is asserted
 //! inside the subject handlers, through the shared
-//! `✏️s/🔌️plugins/🗄️stdio/🧪️oracle/⚖️law/🦀️component.rs` module.
+//! `✏️s/🔌️plugins/🗄️stdio/🧪️oracle/⚖️law/🦀️.rs` module.
 //!
 //! ⚠️ Eight of the nine committed vectors pin a rejection or a no-op branch, because
 //! `PlaybookSnapshot` keeps its step flow behind a content-addressed `s.stdio.semio.flow` child
@@ -18,7 +18,7 @@
 //!
 //! This subset shares `PlaybookStep`/`PlaybookBlock` with `📋️forms`, which aliases them as
 //! `FormStep`/`FormQuestion` — the RECORD types are one definition in
-//! `🧰️framework/🛍️products/💻️os/🔨️modules/📖️playbook/🦀️component.rs`. The VOCABULARIES are not:
+//! `🧰️framework/🛍️products/💻️os/🔨️modules/📖️playbook/🦀️.rs`. The VOCABULARIES are not:
 //! playbook has `update-step` where forms has `change-step-description`, and playbook's
 //! `move-block` carries both a source and a target step. That is why these are two catalogs and two
 //! cases rather than one shared module, and why neither case's `Examples` table is a copy of the
@@ -29,7 +29,7 @@ use semio_repo_test_host::Adapter;
 //#region 🔖️Kinds
 #[cfg(feature = "sut")]
 /// 🏷️ Mirrors `PlaybookMutation::KINDS`
-/// (`../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs`) — duplicated, not
+/// (`../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs`) — duplicated, not
 /// imported, because the oracle-only build must not link the subject crate. The production module's
 /// own `kinds_match_the_enum_and_the_catalog` keeps that list honest against the enum and the
 /// catalog; the contract gate keeps this case honest against the catalog.
@@ -52,7 +52,7 @@ const VECTORS: &str = "asset://🏅️standards/🔖️1/🪆️subsets/✳️an
 
 #[cfg(feature = "sut")]
 /// 📄️ The real committed example document, in this subset's own `.dsl.semio` text envelope.
-const EXAMPLE_ASSET: &str = "asset://🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio";
+const EXAMPLE_ASSET: &str = "asset://🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/🗣️.dsl.semio";
 //#endregion 🔖️Kinds
 
 //#region 🔖️Subject
@@ -89,7 +89,7 @@ mod subject {
     }
 
     fn mutation_at(ctx: &Context, vector: &str, kind: &str) -> Result<PlaybookMutation, String> {
-        decode_playbook_mutation_json(&text_at(ctx, vector, "🦠️mutation/🔣️component.json")?).map_err(|error| format!("the committed mutation payload for {kind:?} must decode: {error}"))
+        decode_playbook_mutation_json(&text_at(ctx, vector, "🦠️mutation/🔣️.json")?).map_err(|error| format!("the committed mutation payload for {kind:?} must decode: {error}"))
     }
 
     fn projection(snapshot: &PlaybookSnapshot) -> Result<Json, String> {
@@ -134,10 +134,10 @@ mod subject {
     /// the mutation actually moved the compared projection.
     pub fn mutate(ctx: &Context) -> Result<Outcome, String> {
         let (kind, vector, spec) = addressed(ctx)?;
-        let mut base = snapshot_at(ctx, &vector, "📸️snapshot/⬅️before/🔣️component.json", &kind)?;
-        let expected = snapshot_at(ctx, &vector, "📸️snapshot/➡️after/🔣️component.json", &kind)?;
+        let mut base = snapshot_at(ctx, &vector, "📸️snapshot/⬅️before/🔣️.json", &kind)?;
+        let expected = snapshot_at(ctx, &vector, "📸️snapshot/➡️after/🔣️.json", &kind)?;
         let mutation = mutation_at(ctx, &vector, &kind)?;
-        let declared = parse_json(&text_at(ctx, &vector, "🎯️outcome/🔣️component.json")?)?;
+        let declared = parse_json(&text_at(ctx, &vector, "🎯️outcome/🔣️.json")?)?;
         seed(&mut base, &spec)?;
         let mut current = base.clone();
         let outcome = apply_playbook_mutation_outcome(&mut current, &mutation);
@@ -158,7 +158,7 @@ mod subject {
     /// tolerance and no ignored key.
     pub fn inverse(ctx: &Context) -> Result<Outcome, String> {
         let (kind, vector, spec) = addressed(ctx)?;
-        let mut base = snapshot_at(ctx, &vector, "📸️snapshot/⬅️before/🔣️component.json", &kind)?;
+        let mut base = snapshot_at(ctx, &vector, "📸️snapshot/⬅️before/🔣️.json", &kind)?;
         let mutation = mutation_at(ctx, &vector, &kind)?;
         seed(&mut base, &spec)?;
         let original = projection(&base)?;
@@ -175,7 +175,7 @@ mod subject {
     /// 🔁️ The real committed artifact, parsed and printed back. Two laws, both in role: the
     /// reparsed document must carry the same projection, and the printed text must reproduce the
     /// committed bytes EXACTLY. The exact-bytes half is `carrier_is_exact` rather than the wave's
-    /// usual no-byte-pass-through tripwire because the committed `🗣️example.dsl.semio` is this
+    /// usual no-byte-pass-through tripwire because the committed `🗣️.dsl.semio` is this
     /// subset's OWN printer's output — the repository generated it from this very codec — so
     /// reproducing it is the correct answer and any drift between the committed artifact and the
     /// printer is the defect this scenario exists to catch.

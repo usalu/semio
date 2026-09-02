@@ -12,14 +12,14 @@ That a semio-native mutation algebra IS adjudicable was settled in this same wav
 
 **What it was written from.**
 
-* ``🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🔣️component.json`` — the snapshot's members.
+* ``🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🔣️.json`` — the snapshot's members.
 * rules 1, 2 and 3 of
   `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/📓️derivation-rules.md`.
 * the ten committed `(before, mutation, after, outcome)` vectors AND the `scene` array each scenario
   carries in its own doc string — which is what makes this case adjudicable at all: the scene is the
   child's content, and without it no reader could tell whether `step-outro` exists.
 
-**No Rust was read to write this.** `🦀️component.rs` beside this file registers the SUBJECT half
+**No Rust was read to write this.** `🦀️.rs` beside this file registers the SUBJECT half
 only.
 
 **WHAT THIS CASE'S EVIDENCE ACTUALLY COVERS, stated plainly rather than implied.** NINE of the ten
@@ -336,7 +336,7 @@ def inverse_handler(kind):
 def refuse_carrier(ctx):
     """🚧️ `identity-round-trip` reads this subset's own `.forms.dsl.semio` text carrier, and this
     implementation refuses it by clause rather than by absence. The committed grammar
-    `🧬️schema/📸️snapshot/📝️text/📖️component.grammar.semio` describes a DIFFERENT DOCUMENT: it is the
+    `🧬️schema/📸️snapshot/📝️text/📖️.grammar.semio` describes a DIFFERENT DOCUMENT: it is the
     generic `family-scene` canvas grammar — `doc-body = schema-line layers-block`,
     `layer = shape-layer | path-layer | text-layer`, `canvas-field = "id" | "x" | "y" | "fill" |
     "stroke" | "opacity"` — and the committed artifact contains no `layers` block, no layer and no
@@ -345,7 +345,7 @@ def refuse_carrier(ctx):
     which the grammar mentions. Four more subsets — `📖️playbook`, `📏️layout`, `🖍️draw` and
     `🖨️raster` — carry the same canvas grammar over four equally unrelated documents, differing from
     this one only in the `grammar`, `extension` and `artifact-mark` lines."""
-    committed = ctx.fixture_bytes(uri_in(ctx, "🗣️example.dsl.semio"))
+    committed = ctx.fixture_bytes(uri_in(ctx, "🗣️.dsl.semio"))
     raise AssertionError(
         "identity-round-trip: this subset's `.dsl.semio` carrier cannot be read by a second implementation. Its committed grammar describes a "
         "DIFFERENT document — the generic `family-scene` canvas grammar, `doc-body = schema-line layers-block` with shape/path/text layers and "

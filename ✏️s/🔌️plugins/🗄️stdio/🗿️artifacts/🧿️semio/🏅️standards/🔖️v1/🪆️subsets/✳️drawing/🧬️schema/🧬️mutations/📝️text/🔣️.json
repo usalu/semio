@@ -1,0 +1,6 @@
+{
+  "$id": "https://semio.tech/schema/stdio.semio.drawing.mutations/text.json",
+  "title": "SemioDrawingMutationText",
+  "description": "One line of compact mutation-tagged JSON. Real per-variant field union: ../🔣️.json.",
+  "type": "string"
+}

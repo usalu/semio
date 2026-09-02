@@ -2,8 +2,8 @@
 import * as React from "react";
 import { fireEvent, render, waitFor } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
-import { CommandDialog } from "../../⌨️Command/🟦️component.tsx";
-import { Dialog, DialogClose, DialogContent, DialogDescription, DialogOverlay, DialogPortal, DialogTitle, DialogTrigger } from "../🟦️component.tsx";
+import { CommandDialog } from "../../⌨️Command/🟦️.tsx";
+import { Dialog, DialogClose, DialogContent, DialogDescription, DialogOverlay, DialogPortal, DialogTitle, DialogTrigger } from "../🟦️.tsx";
 // #endregion 🔌️Adapters
 
 // #region 💬️DialogMatrix

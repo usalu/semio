@@ -1,7 +1,7 @@
 {
   "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json",
   "schemaVersion": 2,
-  "_comment": "🧩️ This subset's own contribution to the repository test platform, discovered by the same `testContributionDirName` convention as the shared ✏️s/🔌️plugins/🗄️stdio/🧪️oracle/🔣️.json — a mutation vocabulary belongs to one subset of one standard of one artifact, so its oracle registration lives here rather than in the shared, format-spanning manifest.",
+  "_comment": "🧩️ This subset's own contribution to the repository test platform, discovered by the same `testContributionDirName` convention as the shared ✏️s/🔌️plugins/🗄️stdio/🔣️oracle.json — a mutation vocabulary belongs to one subset of one standard of one artifact, so its oracle registration lives here rather than in the shared, format-spanning manifest.",
   "oracles": [
     {
       "id": "gif-89a-any-mutate",
@@ -17,7 +17,7 @@
       "license": "MIT OR Apache-2.0",
       "testOnly": true,
       "homepage": "https://github.com/image-rs/image-gif",
-      "rationale": "🫥️ RECLASSIFIED by the `reimplementation-registered-as-third-party` gate. The crate named here does real work — it parses and writes this format — but what a MUTATION SHOULD PRODUCE is computed by this owner's own `🧪️oracle/🦀️component.rs`. Both halves of the comparison then descend from ONE reading of the specification, so a misreading of it yields two agreeing wrong answers: the single failure a differential test exists to prevent.\n\nThe honest split is that the crate discharges \"the result is a well-formed file of this format\" and NOT \"the mutation computed the right answer\". Only the second is what a mutation oracle is for, so this is a `cross-semio-implementation` — a required SUPPLEMENT, never a substitute, and a qualifying third-party reference is still owed.\n\nAny fixtures registered alongside are untouched and remain valuable: real bytes of the real format, byte-reproducible, and exactly what a qualifying reader gets pointed at the day one is registered.",
+      "rationale": "🫥️ RECLASSIFIED by the `reimplementation-registered-as-third-party` gate. The crate named here does real work — it parses and writes this format — but what a MUTATION SHOULD PRODUCE is computed by this owner's own `🦀️oracle.rs`. Both halves of the comparison then descend from ONE reading of the specification, so a misreading of it yields two agreeing wrong answers: the single failure a differential test exists to prevent.\n\nThe honest split is that the crate discharges \"the result is a well-formed file of this format\" and NOT \"the mutation computed the right answer\". Only the second is what a mutation oracle is for, so this is a `cross-semio-implementation` — a required SUPPLEMENT, never a substitute, and a qualifying third-party reference is still owed.\n\nAny fixtures registered alongside are untouched and remain valuable: real bytes of the real format, byte-reproducible, and exactly what a qualifying reader gets pointed at the day one is registered.",
       "hostPath": "✏️s/🔌️plugins/🗄️stdio/🧪️oracle/📦️packages/🦀️rust",
       "kind": "cross-semio-implementation",
       "engine": {
@@ -53,7 +53,7 @@
         "linux-arm64",
         "win32-x64"
       ],
-      "rationale": "📖️ A READER, and that is the whole point of registering it separately.\n\nThis subset also carries a `🧪️oracle/🦀️component.rs` that COMPUTES what each mutation should produce, using an owned model that mirrors the `gif` crate's own surface plus hand-rolled fixed-grammar block walking to fill two gaps the crate's high-level API leaves (comment/application extensions; the background-colour-index/pixel-aspect-ratio header scalars). That entry is registered `cross-semio-implementation` and does not discharge anything, because both halves of such a comparison descend from one reading of the specification.\n\nThis entry is a different mechanism. The expected state is not computed at all — it is COMMITTED, as the `after` half of a byte-reproducible fixture built directly with `gif::Encoder`. `gif` 0.13 then decodes BOTH sides through `gif::Decoder`'s own PUBLIC API — `width`/`height`/`global_palette`/`bg_color`/`repeat`, and per frame `next_frame_info`+`read_into_buffer` — and the comparison is over what it recovered. The probes say so in their own header: \"Everything here MARSHALS and READS; nothing here applies a mutation or predicts what one should.\"\n\nThis reader deliberately does NOT reach for the raw-block-scan technique `component.rs` uses: doing so would just be a second hand-rolled GIF parser wearing a reader's name. Where the crate's public surface genuinely cannot answer — the pixel-aspect-ratio byte, comment extension text, application extension payloads — the corresponding kind is registered `<capability>-uncarried` in this file's own `mutationManifests`, not routed around. One real, source-verified finding this reader recovers that `component.rs`'s own broader claim overstates: the per-frame interlace flag IS publicly readable, via `Decoder::next_frame_info` before pixel decoding — see `🏭️generator/🦀️engine/src/reader_main.rs`'s own header docstring.\n\nSo the judge is a third-party implementation of the format, and nothing in this repository predicts the answer it is judging. That is what makes it qualifying where the sibling entry is not."
+      "rationale": "📖️ A READER, and that is the whole point of registering it separately.\n\nThis subset also carries a `🦀️oracle.rs` that COMPUTES what each mutation should produce, using an owned model that mirrors the `gif` crate's own surface plus hand-rolled fixed-grammar block walking to fill two gaps the crate's high-level API leaves (comment/application extensions; the background-colour-index/pixel-aspect-ratio header scalars). That entry is registered `cross-semio-implementation` and does not discharge anything, because both halves of such a comparison descend from one reading of the specification.\n\nThis entry is a different mechanism. The expected state is not computed at all — it is COMMITTED, as the `after` half of a byte-reproducible fixture built directly with `gif::Encoder`. `gif` 0.13 then decodes BOTH sides through `gif::Decoder`'s own PUBLIC API — `width`/`height`/`global_palette`/`bg_color`/`repeat`, and per frame `next_frame_info`+`read_into_buffer` — and the comparison is over what it recovered. The probes say so in their own header: \"Everything here MARSHALS and READS; nothing here applies a mutation or predicts what one should.\"\n\nThis reader deliberately does NOT reach for the raw-block-scan technique `component.rs` uses: doing so would just be a second hand-rolled GIF parser wearing a reader's name. Where the crate's public surface genuinely cannot answer — the pixel-aspect-ratio byte, comment extension text, application extension payloads — the corresponding kind is registered `<capability>-uncarried` in this file's own `mutationManifests`, not routed around. One real, source-verified finding this reader recovers that `component.rs`'s own broader claim overstates: the per-frame interlace flag IS publicly readable, via `Decoder::next_frame_info` before pixel decoding — see `🏭️generator/🦀️engine/src/reader_main.rs`'s own header docstring.\n\nSo the judge is a third-party implementation of the format, and nothing in this repository predicts the answer it is judging. That is what makes it qualifying where the sibling entry is not."
     },
     {
       "id": "gif-89a-extension-reader",
@@ -182,7 +182,7 @@
         {
           "id": "no-mutation",
           "capability": "gif-89a-mutate",
-          "payloadSchema": "../🧬️schema/🧬️mutations/🦀️component.rs#NoMutation",
+          "payloadSchema": "../🧬️schema/🧬️mutations/🦀️.rs#NoMutation",
           "outcomes": [
             "no-op"
           ],
@@ -213,7 +213,7 @@
         {
           "id": "set-snapshot",
           "capability": "gif-89a-mutate",
-          "payloadSchema": "../🧬️schema/🧬️mutations/🦀️component.rs#SetSnapshot",
+          "payloadSchema": "../🧬️schema/🧬️mutations/🦀️.rs#SetSnapshot",
           "outcomes": [
             "applied",
             "no-op"
@@ -245,7 +245,7 @@
         {
           "id": "set-screen-size",
           "capability": "gif-89a-mutate",
-          "payloadSchema": "../🧬️schema/🧬️mutations/🦀️component.rs#SetScreenSize",
+          "payloadSchema": "../🧬️schema/🧬️mutations/🦀️.rs#SetScreenSize",
           "outcomes": [
             "applied"
           ],
@@ -276,7 +276,7 @@
         {
           "id": "set-global-color-table",
           "capability": "gif-89a-mutate",
-          "payloadSchema": "../🧬️schema/🧬️mutations/🦀️component.rs#SetGlobalColorTable",
+          "payloadSchema": "../🧬️schema/🧬️mutations/🦀️.rs#SetGlobalColorTable",
           "outcomes": [
             "applied"
           ],
@@ -307,7 +307,7 @@
         {
           "id": "set-background-color-index",
           "capability": "gif-89a-mutate",
-          "payloadSchema": "../🧬️schema/🧬️mutations/🦀️component.rs#SetBackgroundColorIndex",
+          "payloadSchema": "../🧬️schema/🧬️mutations/🦀️.rs#SetBackgroundColorIndex",
           "outcomes": [
             "applied"
           ],
@@ -338,7 +338,7 @@
         {
           "id": "set-pixel-aspect-ratio",
           "capability": "gif-89a-mutate",
-          "payloadSchema": "../🧬️schema/🧬️mutations/🦀️component.rs#SetPixelAspectRatio",
+          "payloadSchema": "../🧬️schema/🧬️mutations/🦀️.rs#SetPixelAspectRatio",
           "outcomes": [
             "applied"
           ],
@@ -369,7 +369,7 @@
         {
           "id": "set-loop-count",
           "capability": "gif-89a-mutate",
-          "payloadSchema": "../🧬️schema/🧬️mutations/🦀️component.rs#SetLoopCount",
+          "payloadSchema": "../🧬️schema/🧬️mutations/🦀️.rs#SetLoopCount",
           "outcomes": [
             "applied"
           ],
@@ -400,7 +400,7 @@
         {
           "id": "insert-frame",
           "capability": "gif-89a-mutate",
-          "payloadSchema": "../🧬️schema/🧬️mutations/🦀️component.rs#InsertFrame",
+          "payloadSchema": "../🧬️schema/🧬️mutations/🦀️.rs#InsertFrame",
           "outcomes": [
             "applied"
           ],
@@ -431,7 +431,7 @@
         {
           "id": "remove-frame",
           "capability": "gif-89a-mutate",
-          "payloadSchema": "../🧬️schema/🧬️mutations/🦀️component.rs#RemoveFrame",
+          "payloadSchema": "../🧬️schema/🧬️mutations/🦀️.rs#RemoveFrame",
           "outcomes": [
             "applied"
           ],
@@ -462,7 +462,7 @@
         {
           "id": "move-frame",
           "capability": "gif-89a-mutate",
-          "payloadSchema": "../🧬️schema/🧬️mutations/🦀️component.rs#MoveFrame",
+          "payloadSchema": "../🧬️schema/🧬️mutations/🦀️.rs#MoveFrame",
           "outcomes": [
             "applied"
           ],
@@ -493,7 +493,7 @@
         {
           "id": "set-frame-geometry",
           "capability": "gif-89a-mutate",
-          "payloadSchema": "../🧬️schema/🧬️mutations/🦀️component.rs#SetFrameGeometry",
+          "payloadSchema": "../🧬️schema/🧬️mutations/🦀️.rs#SetFrameGeometry",
           "outcomes": [
             "applied"
           ],
@@ -524,7 +524,7 @@
         {
           "id": "set-frame-pixels",
           "capability": "gif-89a-mutate",
-          "payloadSchema": "../🧬️schema/🧬️mutations/🦀️component.rs#SetFramePixels",
+          "payloadSchema": "../🧬️schema/🧬️mutations/🦀️.rs#SetFramePixels",
           "outcomes": [
             "applied"
           ],
@@ -555,7 +555,7 @@
         {
           "id": "set-frame-interlace",
           "capability": "gif-89a-mutate",
-          "payloadSchema": "../🧬️schema/🧬️mutations/🦀️component.rs#SetFrameInterlace",
+          "payloadSchema": "../🧬️schema/🧬️mutations/🦀️.rs#SetFrameInterlace",
           "outcomes": [
             "applied"
           ],
@@ -586,7 +586,7 @@
         {
           "id": "set-frame-delay",
           "capability": "gif-89a-mutate",
-          "payloadSchema": "../🧬️schema/🧬️mutations/🦀️component.rs#SetFrameDelay",
+          "payloadSchema": "../🧬️schema/🧬️mutations/🦀️.rs#SetFrameDelay",
           "outcomes": [
             "applied"
           ],
@@ -617,7 +617,7 @@
         {
           "id": "set-frame-disposal",
           "capability": "gif-89a-mutate",
-          "payloadSchema": "../🧬️schema/🧬️mutations/🦀️component.rs#SetFrameDisposal",
+          "payloadSchema": "../🧬️schema/🧬️mutations/🦀️.rs#SetFrameDisposal",
           "outcomes": [
             "applied"
           ],
@@ -648,7 +648,7 @@
         {
           "id": "set-frame-transparency",
           "capability": "gif-89a-mutate",
-          "payloadSchema": "../🧬️schema/🧬️mutations/🦀️component.rs#SetFrameTransparency",
+          "payloadSchema": "../🧬️schema/🧬️mutations/🦀️.rs#SetFrameTransparency",
           "outcomes": [
             "applied"
           ],
@@ -679,7 +679,7 @@
         {
           "id": "set-frame-user-input",
           "capability": "gif-89a-mutate",
-          "payloadSchema": "../🧬️schema/🧬️mutations/🦀️component.rs#SetFrameUserInput",
+          "payloadSchema": "../🧬️schema/🧬️mutations/🦀️.rs#SetFrameUserInput",
           "outcomes": [
             "applied"
           ],
@@ -710,7 +710,7 @@
         {
           "id": "insert-comment",
           "capability": "gif-89a-mutate",
-          "payloadSchema": "../🧬️schema/🧬️mutations/🦀️component.rs#InsertComment",
+          "payloadSchema": "../🧬️schema/🧬️mutations/🦀️.rs#InsertComment",
           "outcomes": [
             "applied"
           ],
@@ -741,7 +741,7 @@
         {
           "id": "remove-comment",
           "capability": "gif-89a-mutate",
-          "payloadSchema": "../🧬️schema/🧬️mutations/🦀️component.rs#RemoveComment",
+          "payloadSchema": "../🧬️schema/🧬️mutations/🦀️.rs#RemoveComment",
           "outcomes": [
             "applied"
           ],
@@ -772,7 +772,7 @@
         {
           "id": "add-app-extension",
           "capability": "gif-89a-mutate",
-          "payloadSchema": "../🧬️schema/🧬️mutations/🦀️component.rs#AddAppExtension",
+          "payloadSchema": "../🧬️schema/🧬️mutations/🦀️.rs#AddAppExtension",
           "outcomes": [
             "applied"
           ],
@@ -803,7 +803,7 @@
         {
           "id": "remove-app-extension",
           "capability": "gif-89a-mutate",
-          "payloadSchema": "../🧬️schema/🧬️mutations/🦀️component.rs#RemoveAppExtension",
+          "payloadSchema": "../🧬️schema/🧬️mutations/🦀️.rs#RemoveAppExtension",
           "outcomes": [
             "applied"
           ],

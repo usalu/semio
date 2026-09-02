@@ -12,7 +12,7 @@
 //! privately inside `kernel_runtime::KernelThreadState` on the kernel thread, unreachable from here.
 //! Building the real router means either exposing that map (a `kernel_runtime` change, in scope) or
 //! routing through `ProgramBridge`'s own dispatch (`🧱️elements/ProgramBridge/`, **forbidden** — this
-//! packet's OWNS list is new sibling files plus surgical `📦️glue.rs` edits only, never a co-location
+//! packet's OWNS list is new sibling files plus surgical `🦀️.rs` edits only, never a co-location
 //! element dir). [`default_intent_exchange`] is therefore an explicit stub — see its own docstring —
 //! and real routing is deferred to whichever packet lands `Event::UiIntent` on the wire (master plan
 //! §3, "protocol flip"). `AppKernelSeam` itself is fully wired and tested independent of that stub —

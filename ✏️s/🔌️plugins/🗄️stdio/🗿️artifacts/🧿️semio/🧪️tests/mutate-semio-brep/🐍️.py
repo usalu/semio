@@ -7,23 +7,23 @@ IMPLEMENTATION, written in another language from the format's own committed spec
 
 * the envelope — `semio <plugin>.<artifact>.<component> v<version>` for text, and the
   `0x89 'S' 'E' 'M' 0D 0A 1A 0A` magic + little-endian u32 token length + token for binary — is
-  specified in `🧰️framework/🛍️products/💻️os/🔨️modules/🧬️semio/🦀️component.rs`'s `🔖️Envelope`/
+  specified in `🧰️framework/🛍️products/💻️os/🔨️modules/🧬️semio/🦀️.rs`'s `🔖️Envelope`/
   `🔖️Binary`/`🔖️Text` regions, the carrier's normative description;
 * the DSL body is the committed grammar
-  `../../🏅️standards/🔖️v1/🪆️subsets/✳️brep/🧬️schema/📸️snapshot/📝️text/📖️component.grammar.semio`
+  `../../🏅️standards/🔖️v1/🪆️subsets/✳️brep/🧬️schema/📸️snapshot/📝️text/📖️.grammar.semio`
   (`document = artifact-mark schema-line vertices-line edges-line loops-line faces-line shells-line
   solids-line`, the tagged `curve = L|C|E|N` and `surface = P|C|O|S|T|N` value productions with
   their exact field lists, and `bool = "0" | "1"`);
-* the JSON projection is the committed schema `…/📸️snapshot/🔣️component.json`, which names every
+* the JSON projection is the committed schema `…/📸️snapshot/🔣️.json`, which names every
   member of every curve and surface arm (`origin`/`direction`, `center`/`axis`/`radius`,
   `radiusMajor`/`radiusMinor`, `controlPoints`/`weights`/`degree`/`knots`, `normal`, `halfAngle`,
   `majorRadius`/`minorRadius`, `uCount`/`vCount`/`degreeU`/`degreeV`/`knotsU`/`knotsV`) and the
   topology records' `startVertex`/`endVertex`/`outerLoop`/`innerLoops`/`isVoid`;
 * the thirteen verbs and their argument lists are the committed grammar
-  `…/🧬️schema/🧬️mutations/📝️text/📖️component.grammar.semio`, and their JSON wire form is the
+  `…/🧬️schema/🧬️mutations/📝️text/📖️.grammar.semio`, and their JSON wire form is the
   committed per-kind specification vectors under `…/🧬️mutations/<kind>/🧪️tests/<fixture>/`;
 * the pack body's `format u8` + varint-length-prefixed `schema` is the committed protocol
-  `…/📸️snapshot/💾️binary/📡️component.protocol.semio`, whose prose then names — but declines to
+  `…/📸️snapshot/💾️binary/📡️.protocol.semio`, whose prose then names — but declines to
   frame — "vertices/edges/loops/faces/shells/solids … varint counts, per-field length-prefixes,
   real `f64` LE coordinates, a real per-variant tag byte for `curve`/`surface`". That
   named-but-unframed layout was written out here from the protocol's own sentence, with the field
@@ -91,7 +91,7 @@ FOREST_PACK = "local://🎒️hexagonal-cut-concrete-forest-left.pack.semio"
 #: 🧊️ The tiny committed `✳️any` solid, kept for the BYTE half of the identity law: its two files
 #: were written by the RUST codec, so this implementation reproducing them is a cross-language byte
 #: agreement the forest pair — written by this implementation — cannot restate.
-SOLID_DSL = "asset://🏅️standards/🔖️v1/🪆️subsets/✳️any/📚️examples/🧊️solid/🖼️assets/🗣️example.dsl.semio"
+SOLID_DSL = "asset://🏅️standards/🔖️v1/🪆️subsets/✳️any/📚️examples/🧊️solid/🖼️assets/🗣️.dsl.semio"
 SOLID_PACK = "asset://🏅️standards/🔖️v1/🪆️subsets/✳️any/📚️examples/🧊️solid/🖼️assets/🎒️example.pack.semio"
 
 

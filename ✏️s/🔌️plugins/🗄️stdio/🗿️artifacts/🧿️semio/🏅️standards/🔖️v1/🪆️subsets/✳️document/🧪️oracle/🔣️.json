@@ -67,7 +67,7 @@
         "win32-x64"
       ],
       "homepage": "https://stuk.github.io/jszip",
-      "rationale": "📜️ THE WORDPROCESSINGML CARRIER, AND THE SCOPE IS THE POINT OF THE REGISTRATION.\n\nWhat makes it qualify at all is that this subset's docx export is REAL, established by reading the serializer body rather than the directory tree: `🚪️io/📤️export/🧵️serializers/🗿️artifacts/📜️docx/🔖️ecma-376/✳️any/🦀️component.rs` builds a genuine `DocxDocument { body, styles }` through `map_semio_block` and hands the container to docx's own `engine::encode_docx`. It is none of the three stub shapes the `stub-serializer` gate exists to catch.\n\nWRITER AND READER ARE DIFFERENT LIBRARIES ON PURPOSE, AND THEY ARE REGISTERED SEPARATELY. This entry is the WRITER: `jszip` builds the OPC container and `@xmldom/xmldom` serializes the WordprocessingML, and that is what `generator.oracle` on every docx fixture points at. The READER is the registered probe `semio-document-carrier-read`, which unzips with `fflate` and decodes with `fast-xml-parser`. A reading produced by the library that did the writing would confirm its own serializer rather than check the bytes. Neither half is this repository's code, and neither half is ever handed our snapshot type.\n\nTHIS ORACLE PREDICTS NOTHING. It reads a file and reports what WordprocessingML encodes: the paragraph sequence, each `w:pStyle` reference, each `w:r`'s `w:b`/`w:i`/`w:u`, and the `w:style`/`w:name`/`w:basedOn` table. The pipeline compares those readings; no expected mutation result is computed anywhere in this registration.\n\nWHAT IT CANNOT DISCHARGE, STATED AS A LIMIT. The serializer FLATTENS `List` and `Quote` into bare paragraphs, so `ordered` has no docx encoding and `set-list-ordered` is not registered here — the probe answers `unsupported` rather than an empty `ok`, because an empty reading reported as ok would let that mutation pass against evidence that was never there. `Code`'s language tag, an `Image`'s bytes/width/height, `PageBreak`, and `RunStyle`'s size/font/colour/link are likewise absent from the carrier and are not claimed.\n\nMEASURED, and this is what qualifies the registration rather than merely motivating it: over the 24 committed fixtures the reader witnesses its own mutation in 24 of 24 cases; on the gate recipe a one-character corruption of the after (`revised` → `rev1sed`) separates at differingEntries 1 against 0 for the correct pair, and the same corruption disagrees with the CommonMark reading at totalDisagreements 1 against 0. Regeneration is byte-identical on all 50 fixture files."
+      "rationale": "📜️ THE WORDPROCESSINGML CARRIER, AND THE SCOPE IS THE POINT OF THE REGISTRATION.\n\nWhat makes it qualify at all is that this subset's docx export is REAL, established by reading the serializer body rather than the directory tree: `🚪️io/📤️export/🧵️serializers/🗿️artifacts/📜️docx/🔖️ecma-376/✳️any/🦀️.rs` builds a genuine `DocxDocument { body, styles }` through `map_semio_block` and hands the container to docx's own `engine::encode_docx`. It is none of the three stub shapes the `stub-serializer` gate exists to catch.\n\nWRITER AND READER ARE DIFFERENT LIBRARIES ON PURPOSE, AND THEY ARE REGISTERED SEPARATELY. This entry is the WRITER: `jszip` builds the OPC container and `@xmldom/xmldom` serializes the WordprocessingML, and that is what `generator.oracle` on every docx fixture points at. The READER is the registered probe `semio-document-carrier-read`, which unzips with `fflate` and decodes with `fast-xml-parser`. A reading produced by the library that did the writing would confirm its own serializer rather than check the bytes. Neither half is this repository's code, and neither half is ever handed our snapshot type.\n\nTHIS ORACLE PREDICTS NOTHING. It reads a file and reports what WordprocessingML encodes: the paragraph sequence, each `w:pStyle` reference, each `w:r`'s `w:b`/`w:i`/`w:u`, and the `w:style`/`w:name`/`w:basedOn` table. The pipeline compares those readings; no expected mutation result is computed anywhere in this registration.\n\nWHAT IT CANNOT DISCHARGE, STATED AS A LIMIT. The serializer FLATTENS `List` and `Quote` into bare paragraphs, so `ordered` has no docx encoding and `set-list-ordered` is not registered here — the probe answers `unsupported` rather than an empty `ok`, because an empty reading reported as ok would let that mutation pass against evidence that was never there. `Code`'s language tag, an `Image`'s bytes/width/height, `PageBreak`, and `RunStyle`'s size/font/colour/link are likewise absent from the carrier and are not claimed.\n\nMEASURED, and this is what qualifies the registration rather than merely motivating it: over the 24 committed fixtures the reader witnesses its own mutation in 24 of 24 cases; on the gate recipe a one-character corruption of the after (`revised` → `rev1sed`) separates at differingEntries 1 against 0 for the correct pair, and the same corruption disagrees with the CommonMark reading at totalDisagreements 1 against 0. Regeneration is byte-identical on all 50 fixture files."
     },
     {
       "id": "mdast-to-markdown-md-carrier",
@@ -103,7 +103,7 @@
         "win32-x64"
       ],
       "homepage": "https://github.com/syntax-tree/mdast-util-to-markdown",
-      "rationale": "📝️ THE COMMONMARK CARRIER, AND THE ONLY WITNESS THIS SUBSET HAS FOR `set-list-ordered`.\n\nThe md export is REAL: `🚪️io/📤️export/🧵️serializers/🗿️artifacts/📝️md/🔖️commonmark/✳️any/🦀️component.rs` maps every `DocBlock` onto a genuine `MdBlock`, preserving heading level, list `ordered`, code `info` and blockquote nesting.\n\nTWO DIFFERENT COMMONMARK IMPLEMENTATIONS, WHICH IS WHAT MAKES THIS LEG INDEPENDENT IN THE STRONGEST SENSE AVAILABLE HERE, AND THEY ARE REGISTERED SEPARATELY. This entry is the WRITER, `mdast-util-to-markdown` of the unified/mdast family, and it is what `generator.oracle` on every md fixture points at. The READER is the registered probe `semio-document-carrier-read`, which parses with `markdown-it` — an unrelated implementation with its own parser. That is the reader/judge separation the mesh pilot gets from `three` versus `manifold-3d`, and it means a serializer bug surfaces as a parse disagreement instead of being confirmed by its own author.\n\nTHIS ORACLE PREDICTS NOTHING. It parses a file and reports what CommonMark encodes: the block sequence, heading levels, list ordered-ness, code info strings, image alt and URL, and Strong/Emphasis/Link spans.\n\nWHAT IT CANNOT DISCHARGE, STATED AS A LIMIT AND NOT PAPERED OVER. The serializer's own header says `styles`/`DocStyle` are dropped entirely because CommonMark has no named-style concept, so `set-paragraph-style`, `insert-style`, `remove-style`, `set-style-name` and `set-style-based-on` are NOT registered against this oracle and the probe answers `unsupported` for them. `underline` has no CommonMark construct and is dropped, so md sees only two thirds of a `RunStyle` change. Registering it against all fifteen witnessed kinds would have produced five green results that prove nothing, which is the exact failure mode Protocol v2's per-mutation requirement exists to prevent.\n\nMEASURED: 10 of this oracle's 10 committed fixtures are witnessed by the reader; the gate recipe's corrupted after separates at differingEntries 1 against 0; regeneration is byte-identical."
+      "rationale": "📝️ THE COMMONMARK CARRIER, AND THE ONLY WITNESS THIS SUBSET HAS FOR `set-list-ordered`.\n\nThe md export is REAL: `🚪️io/📤️export/🧵️serializers/🗿️artifacts/📝️md/🔖️commonmark/✳️any/🦀️.rs` maps every `DocBlock` onto a genuine `MdBlock`, preserving heading level, list `ordered`, code `info` and blockquote nesting.\n\nTWO DIFFERENT COMMONMARK IMPLEMENTATIONS, WHICH IS WHAT MAKES THIS LEG INDEPENDENT IN THE STRONGEST SENSE AVAILABLE HERE, AND THEY ARE REGISTERED SEPARATELY. This entry is the WRITER, `mdast-util-to-markdown` of the unified/mdast family, and it is what `generator.oracle` on every md fixture points at. The READER is the registered probe `semio-document-carrier-read`, which parses with `markdown-it` — an unrelated implementation with its own parser. That is the reader/judge separation the mesh pilot gets from `three` versus `manifold-3d`, and it means a serializer bug surfaces as a parse disagreement instead of being confirmed by its own author.\n\nTHIS ORACLE PREDICTS NOTHING. It parses a file and reports what CommonMark encodes: the block sequence, heading levels, list ordered-ness, code info strings, image alt and URL, and Strong/Emphasis/Link spans.\n\nWHAT IT CANNOT DISCHARGE, STATED AS A LIMIT AND NOT PAPERED OVER. The serializer's own header says `styles`/`DocStyle` are dropped entirely because CommonMark has no named-style concept, so `set-paragraph-style`, `insert-style`, `remove-style`, `set-style-name` and `set-style-based-on` are NOT registered against this oracle and the probe answers `unsupported` for them. `underline` has no CommonMark construct and is dropped, so md sees only two thirds of a `RunStyle` change. Registering it against all fifteen witnessed kinds would have produced five green results that prove nothing, which is the exact failure mode Protocol v2's per-mutation requirement exists to prevent.\n\nMEASURED: 10 of this oracle's 10 committed fixtures are witnessed by the reader; the gate recipe's corrupted after separates at differingEntries 1 against 0; regeneration is byte-identical."
     },
     {
       "id": "serde-json-semio-document-carrier-reader",
@@ -231,7 +231,7 @@
         "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️document/🔬️probes/📜️script.ts",
         "document-read"
       ],
-      "rationale": "🔎️ Reports every document property the given carrier ENCODES, and — just as importantly — the list it does not. It computes nothing and predicts nothing. This is the READING half of both registered carrier oracles, deliberately built from libraries that wrote none of the bytes it reads: `fflate` + `fast-xml-parser` against docx written by `jszip` + `@xmldom/xmldom`, and `markdown-it` against CommonMark written by `mdast-util-to-markdown`. One import site of `markdown-it` exists outside a test-owned directory — 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧪️artifact-support-leaf-authority/🟦️.test.ts, a framework library test that parses its own README prose — recorded here rather than left unsaid.",
+      "rationale": "🔎️ Reports every document property the given carrier ENCODES, and — just as importantly — the list it does not. It computes nothing and predicts nothing. This is the READING half of both registered carrier oracles, deliberately built from libraries that wrote none of the bytes it reads: `fflate` + `fast-xml-parser` against docx written by `jszip` + `@xmldom/xmldom`, and `markdown-it` against CommonMark written by `mdast-util-to-markdown`. One import site of `markdown-it` exists outside a test-owned directory — 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🟦️artifact-support-leaf-authority.ts, a framework library test that parses its own README prose — recorded here rather than left unsaid.",
       "qualification": {
         "status": "qualified",
         "evidence": "Run over the 24 committed fixtures: the docx reader reports supportedProperties [block-text, block-count, paragraph-style, heading-level, run-emphasis, image-alt, style-table] and unsupportedProperties [list-ordered, image-store]; the md reader reports supportedProperties [block-text, block-count, heading-level, list-ordered, run-emphasis, image-alt] and unsupportedProperties [paragraph-style, style-table, image-store]. Both splits match the serializer bodies read in 📓️document-subset-oracle.md §1.",
@@ -476,7 +476,7 @@
         {
           "id": "no-mutation",
           "capability": "semio-v1-document-mutate",
-          "payloadSchema": "../🧬️schema/🧬️mutations/🦀️component.rs#NoMutation",
+          "payloadSchema": "../🧬️schema/🧬️mutations/🦀️.rs#NoMutation",
           "outcomes": [
             "no-op"
           ],
@@ -514,7 +514,7 @@
         {
           "id": "set-snapshot",
           "capability": "semio-v1-document-mutate",
-          "payloadSchema": "../🧬️schema/🧬️mutations/🦀️component.rs#SetSnapshot",
+          "payloadSchema": "../🧬️schema/🧬️mutations/🦀️.rs#SetSnapshot",
           "outcomes": [
             "applied",
             "no-op"
@@ -553,7 +553,7 @@
         {
           "id": "insert-block",
           "capability": "semio-v1-document-mutate",
-          "payloadSchema": "../🧬️schema/🧬️mutations/🦀️component.rs#InsertBlock",
+          "payloadSchema": "../🧬️schema/🧬️mutations/🦀️.rs#InsertBlock",
           "outcomes": [
             "applied"
           ],
@@ -591,7 +591,7 @@
         {
           "id": "remove-block",
           "capability": "semio-v1-document-mutate",
-          "payloadSchema": "../🧬️schema/🧬️mutations/🦀️component.rs#RemoveBlock",
+          "payloadSchema": "../🧬️schema/🧬️mutations/🦀️.rs#RemoveBlock",
           "outcomes": [
             "applied"
           ],
@@ -629,7 +629,7 @@
         {
           "id": "set-block-content",
           "capability": "semio-v1-document-mutate",
-          "payloadSchema": "../🧬️schema/🧬️mutations/🦀️component.rs#SetBlockContent",
+          "payloadSchema": "../🧬️schema/🧬️mutations/🦀️.rs#SetBlockContent",
           "outcomes": [
             "applied",
             "no-op"
@@ -668,7 +668,7 @@
         {
           "id": "set-paragraph-style",
           "capability": "semio-v1-document-mutate",
-          "payloadSchema": "../🧬️schema/🧬️mutations/🦀️component.rs#SetParagraphStyle",
+          "payloadSchema": "../🧬️schema/🧬️mutations/🦀️.rs#SetParagraphStyle",
           "outcomes": [
             "applied",
             "no-op"
@@ -701,7 +701,7 @@
         {
           "id": "set-heading-level",
           "capability": "semio-v1-document-mutate",
-          "payloadSchema": "../🧬️schema/🧬️mutations/🦀️component.rs#SetHeadingLevel",
+          "payloadSchema": "../🧬️schema/🧬️mutations/🦀️.rs#SetHeadingLevel",
           "outcomes": [
             "applied",
             "no-op"
@@ -740,7 +740,7 @@
         {
           "id": "set-list-ordered",
           "capability": "semio-v1-document-mutate",
-          "payloadSchema": "../🧬️schema/🧬️mutations/🦀️component.rs#SetListOrdered",
+          "payloadSchema": "../🧬️schema/🧬️mutations/🦀️.rs#SetListOrdered",
           "outcomes": [
             "applied",
             "no-op"
@@ -773,7 +773,7 @@
         {
           "id": "set-run-text",
           "capability": "semio-v1-document-mutate",
-          "payloadSchema": "../🧬️schema/🧬️mutations/🦀️component.rs#SetRunText",
+          "payloadSchema": "../🧬️schema/🧬️mutations/🦀️.rs#SetRunText",
           "outcomes": [
             "applied",
             "no-op"
@@ -812,7 +812,7 @@
         {
           "id": "set-run-style",
           "capability": "semio-v1-document-mutate",
-          "payloadSchema": "../🧬️schema/🧬️mutations/🦀️component.rs#SetRunStyle",
+          "payloadSchema": "../🧬️schema/🧬️mutations/🦀️.rs#SetRunStyle",
           "outcomes": [
             "applied",
             "no-op"
@@ -851,7 +851,7 @@
         {
           "id": "set-image-block",
           "capability": "semio-v1-document-mutate",
-          "payloadSchema": "../🧬️schema/🧬️mutations/🦀️component.rs#SetImageBlock",
+          "payloadSchema": "../🧬️schema/🧬️mutations/🦀️.rs#SetImageBlock",
           "outcomes": [
             "applied",
             "no-op"
@@ -890,7 +890,7 @@
         {
           "id": "insert-style",
           "capability": "semio-v1-document-mutate",
-          "payloadSchema": "../🧬️schema/🧬️mutations/🦀️component.rs#InsertStyle",
+          "payloadSchema": "../🧬️schema/🧬️mutations/🦀️.rs#InsertStyle",
           "outcomes": [
             "applied"
           ],
@@ -922,7 +922,7 @@
         {
           "id": "remove-style",
           "capability": "semio-v1-document-mutate",
-          "payloadSchema": "../🧬️schema/🧬️mutations/🦀️component.rs#RemoveStyle",
+          "payloadSchema": "../🧬️schema/🧬️mutations/🦀️.rs#RemoveStyle",
           "outcomes": [
             "applied"
           ],
@@ -954,7 +954,7 @@
         {
           "id": "set-style-name",
           "capability": "semio-v1-document-mutate",
-          "payloadSchema": "../🧬️schema/🧬️mutations/🦀️component.rs#SetStyleName",
+          "payloadSchema": "../🧬️schema/🧬️mutations/🦀️.rs#SetStyleName",
           "outcomes": [
             "applied",
             "no-op"
@@ -987,7 +987,7 @@
         {
           "id": "set-style-based-on",
           "capability": "semio-v1-document-mutate",
-          "payloadSchema": "../🧬️schema/🧬️mutations/🦀️component.rs#SetStyleBasedOn",
+          "payloadSchema": "../🧬️schema/🧬️mutations/🦀️.rs#SetStyleBasedOn",
           "outcomes": [
             "applied",
             "no-op"
@@ -1020,7 +1020,7 @@
         {
           "id": "insert-image",
           "capability": "semio-v1-document-mutate",
-          "payloadSchema": "../🧬️schema/🧬️mutations/🦀️component.rs#InsertImage",
+          "payloadSchema": "../🧬️schema/🧬️mutations/🦀️.rs#InsertImage",
           "outcomes": [
             "applied"
           ],
@@ -1050,7 +1050,7 @@
         {
           "id": "remove-image",
           "capability": "semio-v1-document-mutate",
-          "payloadSchema": "../🧬️schema/🧬️mutations/🦀️component.rs#RemoveImage",
+          "payloadSchema": "../🧬️schema/🧬️mutations/🦀️.rs#RemoveImage",
           "outcomes": [
             "applied"
           ],
@@ -1080,7 +1080,7 @@
         {
           "id": "set-image-bytes",
           "capability": "semio-v1-document-mutate",
-          "payloadSchema": "../🧬️schema/🧬️mutations/🦀️component.rs#SetImageBytes",
+          "payloadSchema": "../🧬️schema/🧬️mutations/🦀️.rs#SetImageBytes",
           "outcomes": [
             "applied",
             "no-op"

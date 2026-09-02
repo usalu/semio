@@ -18,7 +18,7 @@
 //! `PlyElement`/`PlyRow` are ALL also `DslField`-unsatisfied transitively (`SetSnapshot`,
 //! `AddElement`, `InsertRow` respectively) — every one of those ultimately bottoms out at
 //! `PlyProperty`/`PlyValue`, the same two data-carrying enums that block the Diff side (see
-//! `../🔺️diff/🦀️component.rs`'s module doc comment). `OpText`/`OpBinary` hand-rolled below,
+//! `../🔺️diff/🦀️.rs`'s module doc comment). `OpText`/`OpBinary` hand-rolled below,
 //! reusing the diff file's `pub(crate)` grammar primitives (`hex_encode`/`enc_element`/
 //! `split_top_level`/`encode_option`/...) rather than duplicating them a second time in this file.
 
@@ -73,7 +73,7 @@ pub enum PlyMutation {
 }
 
 /// 🏷️ Kebab-case spelling of every `PlyMutation` variant, in declaration order — the vocabulary the
-/// `ply-1-0-any` mutation catalog (`../../🧪️oracle/🔣️.json`) declares and the exhaustive
+/// `ply-1-0-any` mutation catalog (`../../🔣️oracle.json`) declares and the exhaustive
 /// mutate/inverse test case measures itself against. `kinds_cover_every_variant` below is what keeps
 /// this list honest against the enum it names, since the framework never parses Rust.
 pub const KINDS: &[&str] = &["set-snapshot", "set-format", "insert-comment", "remove-comment", "add-element", "remove-element", "insert-row", "remove-row", "set-row-property"];
@@ -241,7 +241,7 @@ impl OpText for PlyMutation {
 
 //#region 🔖️RealBinaryOpFrame
 /// 🧪️ P2-FG3: real binary op frame — upgraded from the F6-era `print_op().into_bytes()`
-/// text-as-binary shortcut. Matches `../💾️binary/📡️component.protocol.semio`'s `header fixed 2 |
+/// text-as-binary shortcut. Matches `../💾️binary/📡️.protocol.semio`'s `header fixed 2 |
 /// field format u8 | field tag u8 | chain payload bytes` shape exactly — `format` is
 /// `store::pack_rt::OP_BINARY_FORMAT`, `tag` is the `PlyMutation` variant ordinal in the SAME
 /// 0-8 order `print_ply_mutation`'s own match uses, then each variant's own payload real binary
@@ -353,7 +353,7 @@ impl OpBinary for PlyMutation {
 //#region 🔖️DemoMutationCases
 /// ✅️ Every `PlyMutation` variant built off a small `base()` snapshot — the single case list
 /// `op_text_binary_roundtrip_law` (this file) AND `ops_grammar_conformance_law`/
-/// `protocol_walk_law` (`⚙️engine/🦀️component.rs`) all exercise. Covers `SetSnapshot`'s whole
+/// `protocol_walk_law` (`⚙️engine/🦀️.rs`) all exercise. Covers `SetSnapshot`'s whole
 /// nested snapshot, `AddElement`'s bare `PlyElement` payload (itself containing `PlyProperty`),
 /// `InsertRow`'s `PlyRow` payload, and `SetRowProperty`'s bare `PlyValue` payload (incl. the
 /// recursive `List` variant).
@@ -422,7 +422,7 @@ mod codec_tests {
     /// 🏷️ `KINDS` must name exactly the enum's variants (kebab-case), one entry each — an
     /// exhaustive `match` so the compiler itself fails the moment a variant is added, renamed or
     /// removed without this list being updated alongside it. The manifest side of the same claim
-    /// (`../../🧪️oracle/🔣️.json`'s `ply-1-0-any` catalog `kinds`) is checked by the
+    /// (`../../🔣️oracle.json`'s `ply-1-0-any` catalog `kinds`) is checked by the
     /// mutate/inverse test case's own contract gate, which fails if the two lists ever diverge.
     #[semio_framework_async_macros::async_test]
     async fn kinds_cover_every_variant() {
@@ -453,14 +453,14 @@ mod codec_tests {
 
 //#region 🧪️FixtureTests
 // 🧪️ Handcrafted mutation fixtures (contract D1, ticket 26/08/20/COMPOSE-TO-PUZZLE5D-MIGRATION),
-// one case per mutation leaf. Wired HERE and not in `📦️glue.rs`: that file is shared with the
+// one case per mutation leaf. Wired HERE and not in `🦀️.rs`: that file is shared with the
 // agents migrating the other stdio artifacts, so the production mounts there stay untouched while
 // this artifact owns its own test mount. `#[path = "."]` re-bases the children on this file's own
 // directory, which is what makes the leaf-relative path below resolve.
 #[cfg(test)]
 #[path = "."]
 mod fixture_tests {
-    #[path = "📄set-snapshot/🧪️tests/lifts-the-second-vertex-and-appends-a-comment/🦀️component.rs"]
+    #[path = "📄set-snapshot/🧪️tests/lifts-the-second-vertex-and-appends-a-comment/🦀️.rs"]
     mod tests_set_snapshot_lifts_the_second_vertex_and_appends_a_comment;
 }
 //#endregion 🧪️FixtureTests

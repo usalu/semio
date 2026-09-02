@@ -5,7 +5,7 @@
   "displayName": "Create Audit Event",
   "emoji": "🌱📒",
   "aggregateVariant": "CreateAuditEvent",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

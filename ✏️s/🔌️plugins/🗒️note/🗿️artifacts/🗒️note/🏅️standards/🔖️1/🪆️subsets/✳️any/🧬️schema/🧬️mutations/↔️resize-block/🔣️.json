@@ -5,7 +5,7 @@
   "displayName": "Resize Block",
   "emoji": "↔️",
   "aggregateVariant": "ResizeBlock",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": "resize-block",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

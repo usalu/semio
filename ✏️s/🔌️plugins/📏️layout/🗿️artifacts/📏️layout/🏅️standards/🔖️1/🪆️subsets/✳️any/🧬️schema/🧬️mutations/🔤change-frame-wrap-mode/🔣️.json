@@ -5,7 +5,7 @@
   "displayName": "Change Frame Wrap Mode",
   "emoji": "🔤",
   "aggregateVariant": "ChangeFrameWrapMode",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

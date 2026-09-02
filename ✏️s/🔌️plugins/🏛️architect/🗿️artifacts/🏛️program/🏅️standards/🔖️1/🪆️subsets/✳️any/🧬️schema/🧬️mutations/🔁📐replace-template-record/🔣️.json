@@ -5,7 +5,7 @@
   "displayName": "Replace Template Record",
   "emoji": "🔁📐",
   "aggregateVariant": "ReplaceTemplateRecord",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

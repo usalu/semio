@@ -13,7 +13,7 @@ over this same carrier.
 
 **What it was written from.**
 
-* ``🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🔣️component.json`` — the seven members of
+* ``🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🔣️.json`` — the seven members of
   `Puzzle5dSnapshot`. Note that `kindCompatibility` is a TOP-LEVEL member here, where both siblings
   file it inside `meta`.
 * rules 1, 2, 4 and 7 of
@@ -26,12 +26,12 @@ over this same carrier.
   leaving the 2d facet's placement and text alone; and that `replace-kind-catalogs` with a NULL
   argument is a NO-OP rather than a removal.
 
-The verbs were NOT read from ``…/🧬️schema/🧬️mutations/🔣️component.json``: like both siblings, that
+The verbs were NOT read from ``…/🧬️schema/🧬️mutations/🔣️.json``: like both siblings, that
 file is titled for the mutation but declares the SNAPSHOT's members — the pre-migration
 whole-snapshot-shaped generic schema `s.architect.program`'s own mutation schema records itself as
 superseding, never replaced here.
 
-**No Rust was read to write this.** `🦀️component.rs` beside this file registers the SUBJECT half
+**No Rust was read to write this.** `🦀️.rs` beside this file registers the SUBJECT half
 only.
 
 **All twenty-eight kinds are adjudicated and none is refused** — and this subset is the one that

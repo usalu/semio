@@ -1,12 +1,12 @@
 //! 🦀️ UTF-8 text-line exhaustive mutation round-trip case — Rust adapter.
 //!
 //! No differential oracle is registered for this subset (see `../../🏅️standards/🔖️utf-8/
-//! 🪆️subsets/✳️any/🧪️oracle/🔣️.json`'s `noOracleDecisions`), so the "oracle" role handlers
+//! 🪆️subsets/✳️any/🔣️oracle.json`'s `noOracleDecisions`), so the "oracle" role handlers
 //! below are never dispatched by the repository test platform for a `@no-oracle-` feature (it has
 //! no `@oracle-<id>` tag to resolve an implementation for). They are still registered, matching
 //! every other stdio case's shape, and they still compute a REAL, independently-derived answer
 //! (`oracle_apply_mutation`/`independent_split`/`independent_render` from this subset's own
-//! `🧪️oracle/🦀️component.rs`, which never calls this repository's production `TxtSnapshot`/
+//! `🦀️oracle.rs`, which never calls this repository's production `TxtSnapshot`/
 //! `TxtMutation` code) — genuinely useful once the subject phase compiles again, and exercised
 //! directly by that module's own `cargo test --features oracles --lib` unit tests today.
 //!
@@ -24,7 +24,7 @@ use semio_s_plugin_stdio_test_oracle::law::{carrier_is_exact, inverse_restores, 
 
 //#region 🔖️Kinds
 /// 🧾️ Test-case-local mirror of the `txt-utf-8-any` catalog. Duplicated, not imported, from
-/// `../../🏅️standards/🔖️utf-8/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs::KINDS` — that
+/// `../../🏅️standards/🔖️utf-8/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs::KINDS` — that
 /// module lives in the SUBJECT crate, and the oracle role must not link the subject crate at all
 /// (fleet brief §5.3). That other `KINDS` carries its own test proving it matches the enum AND the
 /// catalog manifest; a mismatch HERE against either one is caught structurally instead — the

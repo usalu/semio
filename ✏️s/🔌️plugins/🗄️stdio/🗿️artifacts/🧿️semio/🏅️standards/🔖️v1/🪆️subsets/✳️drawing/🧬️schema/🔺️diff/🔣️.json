@@ -1,0 +1,65 @@
+{
+  "$id": "https://semio.tech/schema/s.stdio.semio.drawing/diff.json",
+  "title": "SemioDrawingDiff",
+  "description": "Mirrors the real Rust 🔺️diff/🦀️.rs (handcrafted sparse diff). between(base, other) computes the schema delta against the base snapshot; Transform carries translation/rotation/scale; the DiffCodec's line is built from space-separated tokens; NodePath{layer, path} addresses a node.",
+  "type": "object",
+  "properties": {
+    "canvas": { "$ref": "#/$defs/DrawCanvasDiff" },
+    "styles": { "$ref": "#/$defs/NamedTripleDiff" },
+    "layers": { "$ref": "#/$defs/IndexedTripleDiff" }
+  },
+  "$defs": {
+    "IndexedTripleDiff": {
+      "type": "object",
+      "properties": {
+        "removed": { "type": "array", "items": { "type": "integer", "minimum": 0 } },
+        "modified": { "type": "array", "items": { "type": "object", "properties": { "index": { "type": "integer" }, "diff": {} } } },
+        "added": { "type": "array", "items": { "type": "object", "properties": { "index": { "type": "integer" }, "item": {} } } }
+      }
+    },
+    "NamedTripleDiff": {
+      "type": "object",
+      "properties": {
+        "removed": { "type": "array", "items": { "type": "string" } },
+        "modified": { "type": "array", "items": { "type": "object", "properties": { "key": { "type": "string" }, "diff": {} } } },
+        "added": { "type": "array", "items": {} }
+      }
+    },
+    "DrawCanvasDiff": {
+      "type": "object",
+      "description": "background is Option<Option<Rgba>> -- tri-state: absent=unchanged, null=cleared, value=set.",
+      "properties": { "width": { "type": "number" }, "height": { "type": "number" }, "background": { "$ref": "📸️snapshot/🔣️.json#/$defs/Rgba" } }
+    },
+    "DrawStyleDiff": {
+      "type": "object",
+      "properties": {
+        "fill": { "$ref": "📸️snapshot/🔣️.json#/$defs/Rgba" },
+        "stroke": { "$ref": "📸️snapshot/🔣️.json#/$defs/Rgba" },
+        "strokeWidth": { "type": ["number", "null"] },
+        "opacity": { "type": ["number", "null"] }
+      }
+    },
+    "DrawNodeDiff": {
+      "type": "object",
+      "required": ["kind"],
+      "properties": {
+        "kind": { "enum": ["path", "text", "group", "image", "replace"] },
+        "segments": { "type": "array", "items": { "$ref": "📸️snapshot/🔣️.json#/$defs/PathSegment" } },
+        "style": { "type": ["string", "null"] },
+        "value": { "type": "string" },
+        "at": { "$ref": "📸️snapshot/🔣️.json#/$defs/SemioPoint2" },
+        "transform": { "$ref": "📸️snapshot/🔣️.json#/$defs/Transform" },
+        "children": { "$ref": "#/$defs/IndexedTripleDiff" },
+        "width": { "type": "number" },
+        "height": { "type": "number" },
+        "mime": { "type": "string" },
+        "bytes": { "type": "string", "contentEncoding": "base64" },
+        "node": { "$ref": "📸️snapshot/🔣️.json#/$defs/DrawNode" }
+      }
+    },
+    "DrawLayerDiff": {
+      "type": "object",
+      "properties": { "id": { "type": "string" }, "name": { "type": "string" }, "visible": { "type": "boolean" }, "root": { "$ref": "#/$defs/DrawNodeDiff" } }
+    }
+  }
+}

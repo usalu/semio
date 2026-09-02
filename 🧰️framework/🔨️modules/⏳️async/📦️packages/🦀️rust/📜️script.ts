@@ -3,7 +3,7 @@
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { basename, dirname, join, relative } from "node:path";
-import { BundleScript, ScriptRouter, buildBudgetMs, runBundleScriptMain, runCargo, runCargoTestBudgeted, runCmdStatus, resolveTestLevel } from "../../../../🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts";
+import { BundleScript, ScriptRouter, buildBudgetMs, runBundleScriptMain, runCargo, runCargoTestBudgeted, runCmdStatus, resolveTestLevel } from "../../../../🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 
 //#region 🦀️Checks
 class CheckScript extends BundleScript {
@@ -21,7 +21,7 @@ class TestScript extends BundleScript {
 }
 
 //#region 🔖️Typegen
-/** 🧬️ Name of the versioned owned-schema export test in `🦀️component.rs`. */
+/** 🧬️ Name of the versioned owned-schema export test in `🦀️.rs`. */
 const TYPEGEN_TEST_FILTER = "exports_typescript_bindings";
 
 /** 🎯️ The mirror lives at `<owner>/🤖️generated/🟦️async.ts`, a sibling of `📦️packages`. */

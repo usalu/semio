@@ -1,4 +1,4 @@
-//! 📦️ Package glue — wiring only. Domain lives at owner 🦀️component.rs.
+//! 📦️ Package glue — wiring only. Domain lives at owner 🦀️.rs.
 
 // 🧬️ Crate declares async-fn-in-trait families (`Host`, `Inspector`, `Migration`, `Configuration`,
 // `StatechartEvent`, `Machine`, …). The lint's Send-erasure concern is answered structurally, not by

@@ -2,8 +2,8 @@
 /** @emoji 🏛️ Entwerfen mit Bestand Aggregator's shell-chrome partner/funding credits — brand-exclusive footer items, not part of the shared `@semio-tech/ui-react` component library. */
 // #endregion 🧲️Header
 
-import type { NavbarItem, UiLocale } from "../../🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx";
-import { cn } from "../../🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx";
+import type { NavbarItem, UiLocale } from "../../🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/🟦️.tsx";
+import { cn } from "../../🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/🟦️.tsx";
 
 type PartnerLogoStyle = Readonly<Record<string, string | number | undefined>>;
 

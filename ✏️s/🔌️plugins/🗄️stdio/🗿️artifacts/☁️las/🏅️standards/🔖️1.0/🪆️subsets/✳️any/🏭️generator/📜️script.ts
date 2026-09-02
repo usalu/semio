@@ -9,7 +9,7 @@
 //
 // The bytes this file produces are written entirely by the real `las` 0.11 crate's byte-exact
 // `las::raw::{Header, Vlr, Point}` types (`🦀️engine/src/main.rs`) — the SAME crate registered as
-// `las-1-0-any-mutate` in `../🧪️oracle/🔣️.json` — never by this repository's own `encode_las`. This
+// `las-1-0-any-mutate` in `../🔣️oracle.json` — never by this repository's own `encode_las`. This
 // script only marshals: it builds and invokes the Rust binary and reports what it wrote; it
 // computes no LAS bytes itself.
 //

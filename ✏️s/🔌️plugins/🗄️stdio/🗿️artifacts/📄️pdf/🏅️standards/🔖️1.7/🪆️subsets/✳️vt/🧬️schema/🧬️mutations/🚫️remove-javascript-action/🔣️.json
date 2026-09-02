@@ -5,18 +5,22 @@
   "displayName": "Remove Javascript Action",
   "emoji": "🚫️",
   "aggregateVariant": "RemoveJavascriptAction",
-  "payloadSchema": "🔣️payload.schema.json",
-  "textOpcode": null,
-  "binaryTag": null,
-  "invertibility": "non-invertible",
-  "diffParticipation": "detect",
+  "payloadSchema": "🔣️.schema.json",
+  "textOpcode": "remove-javascript-action",
+  "binaryTag": 9,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "apply-only",
   "outcomeClasses": [
     "applied"
   ],
   "composition": "atomic",
   "requiredLanguageSurfaces": [
     "rust",
+    "typescript",
+    "graphql",
+    "protobuf",
     "json-schema",
-    "text"
+    "text",
+    "binary"
   ]
 }

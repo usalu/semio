@@ -13,7 +13,7 @@ carrier.
 
 **What it was written from.**
 
-* ``🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🔣️component.json`` — the two members of
+* ``🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🔣️.json`` — the two members of
   `LowpolySnapshot` and the shape of an object.
 * rules 2, 3 and 7 of
   `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/📓️derivation-rules.md` — the
@@ -27,7 +27,7 @@ carrier.
   place and never resizing it; and that `create-mesh` carries a `meshWorkspace` argument the snapshot
   does not hold at all.
 
-**No Rust was read to write this.** `🦀️component.rs` beside this file registers the SUBJECT half
+**No Rust was read to write this.** `🦀️.rs` beside this file registers the SUBJECT half
 only. All seventeen kinds are adjudicated and none is refused: the mesh child handle carries the
 caller's own `childId`, so nothing here depends on a content-addressing function no specification
 states.

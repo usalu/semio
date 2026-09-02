@@ -4,10 +4,10 @@
  * smoke-tested wave by wave, ahead of the mit-bestand demonstrator rebuild that depends on it. */
 // #endregion 🧲️Header
 
-import "./🎨️globals.css";
+import "./🎨️.css";
 
 import { resolvePlaygroundBoot } from "@semio-tech/framework";
-import { PLUGIN_CATALOG } from "../🔌️plugin/📇️registry/🟦️catalog.ts";
+import { PLUGIN_CATALOG } from "../🔌️plugin/📇️registry/🟦️.ts";
 import { FrameworkOsShell } from "@semio-tech/framework-renderer-react";
 import { PUZZLE_BOARD_SESSION_FACTORIES } from "@semio-tech/puzzle-js/board-session";
 import * as React from "react";
@@ -24,7 +24,7 @@ const MULTI_HARNESS_PANES = [
 type MultiHarnessPane = (typeof MULTI_HARNESS_PANES)[number];
 
 /** @emoji 👁️✏️ Boot-time surface role (contract §5), shared by every harness pane — mirrors
- * `🟦️component.ts`'s own `VITE_SEMIO_APP_ROLE` resolution so both dev entry points agree on the same
+ * `🟦️.ts`'s own `VITE_SEMIO_APP_ROLE` resolution so both dev entry points agree on the same
  * default-editor, viewer-on-request rule. */
 const MULTI_HARNESS_APP_ROLE: "viewer" | "editor" = import.meta.env.VITE_SEMIO_APP_ROLE === "viewer" ? "viewer" : "editor";
 //#endregion 🐚️MultiShellHarnessPanes

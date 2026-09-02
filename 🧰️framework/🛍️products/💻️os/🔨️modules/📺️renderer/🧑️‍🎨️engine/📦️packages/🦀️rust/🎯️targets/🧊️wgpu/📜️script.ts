@@ -21,7 +21,7 @@ import {
   spawnDaemon,
   frameworkOsPlaygroundDefaultPort,
   loadFrameworkOsPlaygroundCatalog,
-} from "../../../../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts";
+} from "../../../../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { startAssetServer } from "../../../../../../../../../🔨️modules/🖱️ui/🎨️styling/🟦️vite-elements-assets.ts";
 import type { PlaygroundAssetSpec } from "../../../../../../🔌️plugin/📇️registry/🤖️generated/🟦️playgrounds.ts";
 
@@ -201,7 +201,7 @@ class TrunkServeScript extends BundleScript {
 //#endregion 🌐️ DevServer
 
 /** 🔖️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (V1b-bench): `--scale <registry.json>` selects the
- * headless scale-bench mode (`scale_bench::run` in `📦️glue.rs`) — no ShellState/GPU/winit, no plugin
+ * headless scale-bench mode (`scale_bench::run` in `🦀️.rs`) — no ShellState/GPU/winit, no plugin
  * catalog, so `NativeBuildScript`/`NativeRunScript` skip the plugin-wasm-program build and asset
  * server entirely in this mode and just build/run `semio-wgpu-native` itself with the scale flags
  * passed straight through, mirroring `--smoke`'s existing pass-through idiom. */
@@ -349,7 +349,7 @@ class CheckFrameWorkerScript extends BundleScript {
 //#region 🔖️LintScript
 /** 🎨️Raw color-construction calls (`Rgba::new`/`from_srgb8`) must live only inside `framework/ui/wgpu`'s theme module — the renderer takes every color via `ui_wgpu::Theme`. */
 function collectWgpuColorLiteralViolations(bundleRoot: string): string[] {
-  const libPath = join(bundleRoot, "📦️glue.rs");
+  const libPath = join(bundleRoot, "🦀️.rs");
   if (!existsSync(libPath)) return [];
   const text = readFileSync(libPath, "utf8");
   const violations: string[] = [];
@@ -357,7 +357,7 @@ function collectWgpuColorLiteralViolations(bundleRoot: string): string[] {
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i]!;
     if (/\bRgba::new\(|\bfrom_srgb8\(/.test(line)) {
-      violations.push(`📦️glue.rs:${i + 1}: ${line.trim()}`);
+      violations.push(`🦀️.rs:${i + 1}: ${line.trim()}`);
     }
   }
   return violations;

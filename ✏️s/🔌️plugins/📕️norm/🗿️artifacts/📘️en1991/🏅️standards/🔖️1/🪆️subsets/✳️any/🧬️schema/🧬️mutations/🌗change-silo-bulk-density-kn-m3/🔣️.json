@@ -5,7 +5,7 @@
   "displayName": "Change Silo Bulk Density Kn M3",
   "emoji": "🌗",
   "aggregateVariant": "ChangeSiloBulkDensityKnM3",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

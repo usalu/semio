@@ -5,7 +5,7 @@
   "displayName": "Update Match Params",
   "emoji": "🪢",
   "aggregateVariant": "UpdateMatchParams",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": "update-match-params",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

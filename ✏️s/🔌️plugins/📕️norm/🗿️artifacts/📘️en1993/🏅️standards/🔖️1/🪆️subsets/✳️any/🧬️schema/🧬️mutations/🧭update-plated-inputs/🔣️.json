@@ -5,7 +5,7 @@
   "displayName": "Update Plated Inputs",
   "emoji": "🧭",
   "aggregateVariant": "UpdatePlatedInputs",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

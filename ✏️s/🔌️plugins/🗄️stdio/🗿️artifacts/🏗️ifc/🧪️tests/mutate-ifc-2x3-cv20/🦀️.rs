@@ -2,7 +2,7 @@
 //! `Ifc2x3Cv20Mutation` kind (`ifc-2x3-cv20`, 6 kinds) gets a `mutate-<kind>` and an
 //! `inverse-<kind>` scenario, plus one identity round trip. `ruststep` 0.4 can only READ Part-21
 //! text, so the oracle dispatcher
-//! (`../../🏅️standards/🔖️2x3/🪆️subsets/✳️cv20/🧪️oracle/🦀️component.rs`) performs every kind against a
+//! (`../../🏅️standards/🔖️2x3/🪆️subsets/✳️cv20/🦀️oracle.rs`) performs every kind against a
 //! `ruststep`-parsed document and re-serializes through the standard-level from-scratch writer,
 //! independent of this repository's own `step::engine::part21` codec; the subject fully parses into
 //! `Ifc2x3Snapshot` and re-serializes from it alone (no byte pass-through). Both results are read
@@ -14,7 +14,7 @@ use semio_s_plugin_stdio_test_oracle::artifacts::ifc::standards::v2x3::subsets::
 
 //#region 🔖️Kinds
 /// 🏷️ Mirrors this subset's own `Ifc2x3Cv20Mutation::KINDS`
-/// (`../../🏅️standards/🔖️2x3/🪆️subsets/✳️cv20/🧬️schema/🧬️mutations/🦀️component.rs`). Kept as a plain
+/// (`../../🏅️standards/🔖️2x3/🪆️subsets/✳️cv20/🧬️schema/🧬️mutations/🦀️.rs`). Kept as a plain
 /// literal here because this adapter's oracle-only build never links the subject crate — the
 /// contract gate (mutation coverage against the `ifc-2x3-cv20` catalog) is what keeps the two
 /// lists honest against each other.

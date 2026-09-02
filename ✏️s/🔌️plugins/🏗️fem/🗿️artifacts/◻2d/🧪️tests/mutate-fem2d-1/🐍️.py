@@ -14,16 +14,16 @@ another language.
 
 **What it was written from.**
 
-* ``🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🔣️component.json`` — `Fem2dSnapshot` is
+* ``🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🔣️.json`` — `Fem2dSnapshot` is
   exactly those nine members, `additionalProperties: false`, with `FemAnalysisSettings` spelled out
   as `{modalCount, bucklingCount, deformationScale}`.
 * the twenty-five committed `(before, mutation, after, outcome)` specification vectors — which is
   where the RECORD shapes and the cascade rules are actually written down, and where each kind's
   internally tagged wire form is given.
-* ``…/🧬️schema/🧬️mutations/📝️text/📖️component.grammar.semio`` — the twenty-five verbs.
+* ``…/🧬️schema/🧬️mutations/📝️text/📖️.grammar.semio`` — the twenty-five verbs.
 
 **A defect in the specification, found while writing this and reported rather than worked around.**
-Two of the three schema files do not say what they claim. `…/🧬️schema/🧬️mutations/🔣️component.json`
+Two of the three schema files do not say what they claim. `…/🧬️schema/🧬️mutations/🔣️.json`
 is a verbatim copy of the SNAPSHOT schema with `title` changed to `Fem2dMutation`; and in the
 snapshot schema itself every one of `FemNode`, `FemElement`, `FemRegion`, `FemMaterial`,
 `FemSection`, `FemSupport`, `FemLoadCase` and `FemCombination` is an EMPTY
@@ -37,7 +37,7 @@ names are the statement: `removes-node-n3-without-cascading-to-its-support`,
 `removes-the-live-case-together-with-its-loads`. A delete removes exactly its own entity; only a load
 case takes its nested loads with it, because they are nested inside it.
 
-**No Rust was read to write this.** `🦀️component.rs` beside this file registers the SUBJECT half
+**No Rust was read to write this.** `🦀️.rs` beside this file registers the SUBJECT half
 only.
 """
 

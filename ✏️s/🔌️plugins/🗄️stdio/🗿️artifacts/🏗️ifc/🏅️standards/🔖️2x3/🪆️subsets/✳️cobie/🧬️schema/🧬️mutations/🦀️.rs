@@ -5,7 +5,7 @@
 //! generic ISO 10303-21 graph editing (`upsert-instance`, `remove-instance`, `set-header`) and knows
 //! nothing about model view definitions; an MVD is a conformance FILTER over that one schema, so its
 //! vocabulary is the set of edits that address the filter's own rules. Every kind below is one COBie
-//! handover sheet, taken from `check_cobie_conformance` (`../🦀️component.rs`'s `derived_analysis`):
+//! handover sheet, taken from `check_cobie_conformance` (`../🦀️.rs`'s `derived_analysis`):
 //!
 //! | kind | COBie sheet | rule |
 //! |---|---|---|
@@ -26,8 +26,8 @@
 //! this subset's editor and viewer already import — keeps resolving now that this module shadows the
 //! glob re-export it used to arrive through.
 //!
-//! @see ../../../../🧬️mvd/🦀️component.rs — the Part-21 editing primitives the three MVD subsets share.
-//! @see ../../🧪️oracle/🔣️.json — the `ifc-2x3-cobie` catalog `KINDS` is checked against.
+//! @see ../../../../🧬️mvd/🦀️.rs — the Part-21 editing primitives the three MVD subsets share.
+//! @see ../../🔣️oracle.json — the `ifc-2x3-cobie` catalog `KINDS` is checked against.
 
 use crate::artifacts::ifc::standards::v2x3::mvd;
 use crate::artifacts::ifc::standards::v2x3::subsets::any::schema::diff::Ifc2x3Diff;
@@ -115,7 +115,7 @@ pub enum Ifc2x3CobieMutation {
 }
 
 /// 📇️ Kebab-case spelling of every `Ifc2x3CobieMutation` variant, in declaration order — the
-/// `ifc-2x3-cobie` catalog in `../../🧪️oracle/🔣️.json` is required to match verbatim.
+/// `ifc-2x3-cobie` catalog in `../../🔣️oracle.json` is required to match verbatim.
 pub const KINDS: &[&str] = &["no-mutation", "set-snapshot", "set-view-definition", "set-facility-name", "set-floor-elevation", "set-space", "set-type-assignment"];
 
 impl Ifc2x3CobieMutation {

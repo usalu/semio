@@ -5,7 +5,7 @@
   "displayName": "Reorder Rows",
   "emoji": "🔃",
   "aggregateVariant": "ReorderRows",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

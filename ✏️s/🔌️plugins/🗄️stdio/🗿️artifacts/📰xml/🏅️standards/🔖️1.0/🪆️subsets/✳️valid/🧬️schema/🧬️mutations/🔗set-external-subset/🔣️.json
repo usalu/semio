@@ -5,7 +5,7 @@
   "displayName": "Set External Subset",
   "emoji": "🔗",
   "aggregateVariant": "SetExternalSubset",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

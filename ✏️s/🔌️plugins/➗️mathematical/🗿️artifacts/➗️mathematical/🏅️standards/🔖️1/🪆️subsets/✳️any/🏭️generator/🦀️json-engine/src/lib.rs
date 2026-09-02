@@ -1,37 +1,25 @@
-//! ➗️ The one `mathematical@1/any` kind that IS a fact about this subset's own carrier:
-//! `change-coefficient`.
-//!
-//! The other nine uncarried kinds are not a reader problem and cannot be fixed here. This subset's
-//! state splits three ways:
-//!
-//! * `equation: EquationSnapshot` is INLINE in `MathematicalSnapshot`, so it reaches the JSON export
-//!   (`serde_json::to_value(snapshot)`) intact. `change-coefficient` edits a labelled node of that
-//!   expression tree, so it is a carrier-level fact and this reader witnesses it.
-//! * The graph's NODES reach the CSV export — `id,label,x,y` per node, and nothing else. That is why
-//!   `csv-rfc4180-mathematical-1-mutate` covers exactly the five node kinds.
-//! * The graph's EDGES, its `directed` flag, its `algorithm`, and the geometry's POINTS reach NO
-//!   carrier at all. `MathematicalIntoCsv` is declared `IoFidelity::Lossy` and emits only nodes; the
-//!   JSON export carries `notation`/`results`/`computed` as `ArtifactChild` handles whose
-//!   `local_owner` is `#[serde(skip)]`, so the scene behind them is never serialised.
-//!
-//! So `connect-nodes`, `disconnect-nodes`, `change-graph-directed`, `update-graph-algorithm`,
-//! `replace-graph`, `insert-point`, `move-point`, `remove-point` and `replace-points` are blocked on
-//! EXPORT, not on oracles — the same category as `tiff::change-byte-order`. A reader cannot witness
-//! what no carrier records.
+//! ➗️ Independent `serde_json` producer/reader for the complete mathematical JSON carrier:
+//! `{graph, geometry, equation}`.
 
 use serde_json::{json, Map, Value};
 
-pub const KINDS: &[&str] = &["change-coefficient"];
+pub const KINDS: &[&str] = &["change-coefficient", "change-graph-directed", "connect-nodes", "disconnect-nodes", "insert-point", "move-point", "remove-point", "replace-graph", "replace-points", "update-graph-algorithm"];
 
-/// 🌱️ A deterministic snapshot whose equation is `3/4 * x + 2`, so a coefficient change is a single
-/// labelled node's edit against a tree that has more than one node. The composed children are carried
-/// as the handles they really are — `{childId, target}` — because that is exactly what
-/// `serde_json::to_value` emits for them.
+/// 🌱️ A deterministic complete carrier with non-trivial graph, geometry and equation state.
 pub fn build_seed() -> Value {
     json!({
-        "notation": {"childId": "mathematical-scene-seed", "target": {"artifactId": "mathematical-text", "dialect": {"artifactKind": "s.stdio.semio", "standard": "v1", "subset": "text"}}},
-        "results": {"childId": "mathematical-scene-seed", "target": {"artifactId": "mathematical-table", "dialect": {"artifactKind": "s.stdio.semio", "standard": "v1", "subset": "table"}}},
-        "computed": {"childId": "mathematical-scene-seed", "target": {"artifactId": "mathematical-value", "dialect": {"artifactKind": "s.stdio.semio", "standard": "v1", "subset": "value"}}},
+        "graph": {
+            "directed": true,
+            "nodes": [
+                {"id": "a", "label": "A", "x": 10.0, "y": 20.0},
+                {"id": "b", "label": "B", "x": 30.0, "y": 40.0},
+                {"id": "c", "label": "C", "x": 50.0, "y": 60.0}
+            ],
+            "edges": [{"id": "e1", "source": "a", "target": "b"}],
+            "algorithm": "topo",
+            "algorithmSeed": null
+        },
+        "geometry": {"points": [{"x": 1.0, "y": 2.0}, {"x": 3.0, "y": 4.0}, {"x": 5.0, "y": 6.0}]},
         "equation": {
             "expr": {
                 "label": 0,
@@ -53,8 +41,7 @@ pub fn arrange(_kind: &str, doc: &Value) -> Value {
     doc.clone()
 }
 
-/// ✍️ Rewrites the coefficient at label 2 from `3/4` to `7/5` — a `Rational` lexeme pair, never an
-/// `f64`, matching `EquationNodeKind::Rational`'s own round-trip-exact representation.
+/// ✍️ Applies one deterministic carrier-level edit without using the production mutation engine.
 pub fn apply(kind: &str, doc: &Value) -> Result<Value, String> {
     let mut doc = doc.clone();
     match kind {
@@ -72,6 +59,30 @@ pub fn apply(kind: &str, doc: &Value) -> Result<Value, String> {
                 .ok_or_else(|| "the seed carries a rational coefficient at expr.terms[0].factors[0]".to_string())?;
             node.insert("numer".to_string(), Value::String("7".to_string()));
             node.insert("denom".to_string(), Value::String("5".to_string()));
+        }
+        "change-graph-directed" => doc["graph"]["directed"] = Value::Bool(false),
+        "connect-nodes" => doc["graph"]["edges"].as_array_mut().ok_or("graph.edges must be an array")?.push(json!({"id": "e2", "source": "b", "target": "c"})),
+        "disconnect-nodes" => {
+            doc["graph"]["edges"].as_array_mut().ok_or("graph.edges must be an array")?.retain(|edge| edge["id"] != "e1");
+        }
+        "insert-point" => doc["geometry"]["points"].as_array_mut().ok_or("geometry.points must be an array")?.insert(1, json!({"x": 2.0, "y": 3.0})),
+        "move-point" => doc["geometry"]["points"][1] = json!({"x": 33.0, "y": 44.0}),
+        "remove-point" => {
+            doc["geometry"]["points"].as_array_mut().ok_or("geometry.points must be an array")?.remove(1);
+        }
+        "replace-graph" => {
+            doc["graph"] = json!({
+                "directed": false,
+                "nodes": [{"id": "z", "label": "Z", "x": 70.0, "y": 80.0}],
+                "edges": [],
+                "algorithm": "bfs",
+                "algorithmSeed": "z"
+            });
+        }
+        "replace-points" => doc["geometry"]["points"] = json!([{"x": -1.0, "y": -2.0}, {"x": 8.0, "y": 13.0}]),
+        "update-graph-algorithm" => {
+            doc["graph"]["algorithm"] = Value::String("dijkstra".into());
+            doc["graph"]["algorithmSeed"] = Value::String("a".into());
         }
         other => return Err(format!("unknown kind {other}")),
     }
@@ -94,13 +105,11 @@ fn canonical(value: &Value) -> Value {
     }
 }
 
-/// 📄️ The projection: the inline equation tree, plus the composed-child HANDLES as they actually
-/// serialise. The handles are projected deliberately — not to witness the scene behind them, which
-/// they do not carry, but so that a change in which child a snapshot points at is still a difference.
+/// 📄️ Canonical semantic projection of the complete foreign carrier.
 pub fn project(bytes: &[u8]) -> Result<Value, String> {
     let parsed: Value = serde_json::from_slice(bytes).map_err(|error| error.to_string())?;
     let mut out = Map::new();
-    for key in ["equation", "notation", "results", "computed"] {
+    for key in ["graph", "geometry", "equation"] {
         out.insert(key.to_string(), canonical(parsed.get(key).unwrap_or(&Value::Null)));
     }
     Ok(Value::Object(out))

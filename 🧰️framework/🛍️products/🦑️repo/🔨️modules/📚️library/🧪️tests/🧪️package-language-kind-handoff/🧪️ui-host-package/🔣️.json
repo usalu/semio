@@ -11,7 +11,7 @@
     "name": "semio-framework-ui-host",
     "role": "framework",
     "id": "ui-host",
-    "libPath": "📦️glue.rs"
+    "libPath": "🦀️.rs"
   },
   "members": [
     {
@@ -39,14 +39,14 @@
     "scriptPath": "🧰️framework/🔨️modules/🖱️ui/🖥️host/📥️input/🎟️admission/📜️script.ts",
     "importSpecifier": "../../📥️input/🎟️admission/📜️script.ts",
     "functionName": "testInputAdmissionFixture",
-    "fixturePath": "🧰️framework/🔨️modules/🖱️ui/🖥️host/📥️input/🎟️admission/🧪️tests/🔣️.json",
+    "fixturePath": "🧰️framework/🔨️modules/🖱️ui/🖥️host/📥️input/🎟️admission/🧪️test/🔣️s.json",
     "schemaPath": "🧰️framework/🔨️modules/🖱️ui/🖥️host/📥️input/🎟️admission/🧬️schema/🔣️.json",
     "arguments": [],
     "callsPerCompiler": 1
   },
   "abi": {
-    "sourcePath": "🧰️framework/🔨️modules/🌉️abi/🦀️component.rs",
-    "libRelativePath": "../../../../🌉️abi/🦀️component.rs"
+    "sourcePath": "🧰️framework/🔨️modules/🌉️abi/🦀️.rs",
+    "libRelativePath": "../../../../🌉️abi/🦀️.rs"
   },
   "project": {
     "name": "@semio-tech/ui-host-rs",
@@ -56,9 +56,9 @@
     "namedInputs": {
       "default": [
         "{projectRoot}/**/*",
-        "{workspaceRoot}/🧰️framework/🔨️modules/🌉️abi/🦀️component.rs",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🌉️abi/🦀️.rs",
         "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🖥️host/📥️input/🎟️admission/📜️script.ts",
-        "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🖥️host/📥️input/🎟️admission/🧪️tests/🔣️.json",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🖥️host/📥️input/🎟️admission/🧪️test/🔣️s.json",
         "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🖥️host/📥️input/🎟️admission/🧬️schema/🔣️.json",
         "sharedGlobals"
       ]

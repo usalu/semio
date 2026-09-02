@@ -9,7 +9,7 @@
 //
 // Every BEFORE/AFTER byte pair is built by `../🦀️note-oracle-codec` — a standalone Rust binary that
 // links `dxf` 0.6, `quick-xml` 0.42 and `lopdf` 0.44 DIRECTLY (the SAME crates already registered as
-// this subset's oracle in `../🧪️oracle/🔣️.json`), never note's own (currently non-building)
+// this subset's oracle in `../🔣️oracle.json`), never note's own (currently non-building)
 // production serializers. This file only marshals: it shells out to `cargo run`, computes digests
 // over what the crate wrote, and emits/merges the `fixtureManifests` index — exactly the split
 // `…✳️mesh/🏭️generator/📜️script.ts` and `…✳️cad/🏭️generator/📜️script.ts` already use.
@@ -25,7 +25,7 @@
 //
 // @see ../🦀️note-oracle-codec/src/recipes.rs — the 16 recipes (one per witnessable mutation)
 // @see ../🔬️probes/📜️script.ts — the sibling that reads/compares what this file writes
-// @see ../🧪️oracle/🔣️.json — the fixtureManifests this file's `manifests` output is pasted into
+// @see ../🔣️oracle.json — the fixtureManifests this file's `manifests` output is pasted into
 // @see .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️27/SUBSET-SCOPED-EXTERNAL-ORACLE-MUTATION-TESTING/📓️note-1-any-fixture-corpus.md
 
 //#endregion 🧲️Header

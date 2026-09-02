@@ -1,6 +1,0 @@
-{
-  "$id": "https://semio.tech/schema/stdio.xml/mutations/text.xml",
-  "title": "XmlMutationText",
-  "description": "JSON text per the sibling ../🔣️component.json XmlMutation shape.",
-  "type": "string"
-}

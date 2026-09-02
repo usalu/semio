@@ -1,5 +1,5 @@
 //#region 🧬️ContentFramingContract
-import type { ActorUiPatchReceipt } from "../../../🎭️actor/🚪️lifetime/🩹️patch/🟦️component.ts";
+import type { ActorUiPatchReceipt } from "../../../🎭️actor/🚪️lifetime/🩹️patch/🟦️.ts";
 export type KernelReturnContentMetadata = {
   readonly status: "idle" | "moreWork" | "checkpointReady" | "faulted";
   readonly nextWake: bigint | null;

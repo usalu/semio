@@ -5,18 +5,22 @@
   "displayName": "Remove Struct Tree Root",
   "emoji": "🪓️",
   "aggregateVariant": "RemoveStructTreeRoot",
-  "payloadSchema": "🔣️payload.schema.json",
-  "textOpcode": null,
-  "binaryTag": null,
-  "invertibility": "non-invertible",
-  "diffParticipation": "detect",
+  "payloadSchema": "🔣️.schema.json",
+  "textOpcode": "remove-struct-tree-root",
+  "binaryTag": 3,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "apply-only",
   "outcomeClasses": [
     "applied"
   ],
   "composition": "atomic",
   "requiredLanguageSurfaces": [
     "rust",
+    "typescript",
+    "graphql",
+    "protobuf",
     "json-schema",
-    "text"
+    "text",
+    "binary"
   ]
 }

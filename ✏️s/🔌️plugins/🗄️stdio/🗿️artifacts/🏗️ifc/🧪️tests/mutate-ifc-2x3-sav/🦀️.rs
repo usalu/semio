@@ -1,7 +1,7 @@
 //! 🦀️ IFC2X3 / ✳️sav mutation case — Rust adapter. Exhaustive: every declared `Ifc2x3SavMutation`
 //! kind (`ifc-2x3-sav`, 6 kinds) gets a `mutate-<kind>` and an `inverse-<kind>` scenario, plus one
 //! identity round trip. `ruststep` 0.4 can only READ Part-21 text, so the oracle dispatcher
-//! (`../../🏅️standards/🔖️2x3/🪆️subsets/✳️sav/🧪️oracle/🦀️component.rs`) performs every kind against a
+//! (`../../🏅️standards/🔖️2x3/🪆️subsets/✳️sav/🦀️oracle.rs`) performs every kind against a
 //! `ruststep`-parsed document and re-serializes through the standard-level from-scratch writer,
 //! independent of this repository's own `step::engine::part21` codec; the subject fully parses into
 //! `Ifc2x3Snapshot` and re-serializes from it alone (no byte pass-through). Both results are read
@@ -13,7 +13,7 @@ use semio_s_plugin_stdio_test_oracle::artifacts::ifc::standards::v2x3::subsets::
 
 //#region 🔖️Kinds
 /// 🏷️ Mirrors this subset's own `Ifc2x3SavMutation::KINDS`
-/// (`../../🏅️standards/🔖️2x3/🪆️subsets/✳️sav/🧬️schema/🧬️mutations/🦀️component.rs`). The contract gate
+/// (`../../🏅️standards/🔖️2x3/🪆️subsets/✳️sav/🧬️schema/🧬️mutations/🦀️.rs`). The contract gate
 /// (mutation coverage against the `ifc-2x3-sav` catalog) keeps the two lists honest.
 const KINDS: &[&str] = &["no-mutation", "set-snapshot", "set-view-definition", "set-analysis-model", "set-load-group", "set-group-assignment"];
 //#endregion 🔖️Kinds

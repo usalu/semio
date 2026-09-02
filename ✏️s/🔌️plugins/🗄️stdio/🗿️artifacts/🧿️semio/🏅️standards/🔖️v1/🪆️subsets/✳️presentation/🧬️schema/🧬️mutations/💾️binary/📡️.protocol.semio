@@ -1,0 +1,25 @@
+dialect protocol
+protocol stdio.semio.presentation.mutations
+version 1
+schema stdio.semio.presentation
+start body
+framing record
+
+# ARTIFACT-SYSTEM-OVERHAUL-REAL-CODECS-RUNTIME-REUSE-EVOLUTION presentation wave: REAL binary op
+# frame, replacing the old `print_op().into_bytes()` text-as-binary shortcut
+# (`🧬️mutations/🦀️.rs`'s old `OpBinary::encode_op`). `SemioPresentationMutation` is a
+# genuine data-carrying enum whose variants embed a nested `SlideShape`/`document::DocBlock`/
+# `SemioPresentationSnapshot` payload — no `dsl::DslField` impl exists for the tagged `SlideShape`
+# enum (hand-rolled per this subset's own `🔺️diff`/`🧬️mutations` convention), so the generic
+# derive-based `format u8 | ordinal varint | record body` layout doesn't apply. Handcrafted instead:
+# `format u8` (`OP_BINARY_FORMAT` convention) + `tag u8` (the `SemioPresentationMutation` variant
+# ordinal, `🧬️mutations/🦀️.rs`'s `OP_KEYWORDS`/`variant_ordinal`, same 0-14 ordering as
+# `parse_presentation_mutation`'s keyword match) as two REAL fixed fields, then the variant's own
+# `key=value ...` argument payload as one opaque trailing `bytes` chain — the same honest boundary
+# the sibling `../../🔺️diff/💾️binary/📡️.protocol.semio` uses
+# (`protocol-array-of-records`/`protocol-prim-ref-recursion`, per the recipe's gap table).
+header fixed 2
+field format u8
+field tag u8
+
+chain payload bytes

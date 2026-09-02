@@ -214,7 +214,7 @@ async function contentDigest(bytes: Uint8Array | string): Promise<string> {
 }
 
 /** 📎️ Fixture file paths are resolved against the OWNER'S ORACLE directory — `verifyFixture` joins them
- *  onto the manifest's `manifestDir`, which the registry loader sets to where `🧪️oracle/🔣️.json` lives,
+ *  onto the manifest's `manifestDir`, which the registry loader sets to where `🔣️oracle.json` lives,
  *  NOT to this fixture directory. Emitting bare `<recipe>/<file>` paths therefore made every digest
  *  resolve to a non-existent `🧪️oracle/<recipe>/<file>` and read as 369 mismatches. The sibling BRep
  *  corpus already uses this prefix; matching it is what makes the two corpora verifiable the same way. */

@@ -5,7 +5,7 @@
   "displayName": "Change Moisture Mu Interior",
   "emoji": "🪝",
   "aggregateVariant": "ChangeMoistureMuInterior",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

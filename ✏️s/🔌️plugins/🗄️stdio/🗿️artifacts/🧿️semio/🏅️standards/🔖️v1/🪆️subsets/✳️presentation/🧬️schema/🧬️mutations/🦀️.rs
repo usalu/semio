@@ -96,7 +96,7 @@ pub enum SemioPresentationMutation {
 
 /// 🏷️ This subset's DECLARED mutation vocabulary, kebab-case, in enum declaration order — the one
 /// list the repository test platform's completeness gate measures `mutate-semio-presentation`
-/// against (catalog `semio-v1-presentation` in `../../🧪️oracle/🔣️.json`). It aliases
+/// against (catalog `semio-v1-presentation` in `../../🔣️oracle.json`). It aliases
 /// [`OP_KEYWORDS`], which the binary op frame's `tag` byte already indexes by [`variant_ordinal`],
 /// so the vocabulary is declared exactly once and `kinds_match_the_enum_and_the_catalog` keeps that
 /// declaration honest against both the enum and the manifest.
@@ -114,7 +114,7 @@ pub fn apply_semio_presentation_mutation(snapshot: &mut SemioPresentationSnapsho
 
 /// ↩️ `SemioPresentationMutation`'s own computed inverse, reachable from OUTSIDE this crate.
 /// `protocol` is a private `extern crate semio_framework_os_kernel as protocol` alias in
-/// `📦️glue.rs`, so an external caller — an owner-root test adapter is exactly that — cannot bring
+/// `🦀️.rs`, so an external caller — an owner-root test adapter is exactly that — cannot bring
 /// `protocol::Mutation` into scope and therefore cannot call the trait method at all. This
 /// wrapper's signature names only types this subset already exports (`kit`'s precedent for the same
 /// structural gap).
@@ -335,7 +335,7 @@ fn print_presentation_mutation_args(m: &SemioPresentationMutation) -> String {
 /// `print_presentation_mutation`/`parse_presentation_mutation` text codec rather than re-deriving a
 /// second independent encoding (`protocol-array-of-records`/`protocol-prim-ref-recursion`, per the
 /// grammar recipe's own gap table — same honest boundary the sibling `../../🔺️diff/💾️binary/
-/// 📡️component.protocol.semio` uses).
+/// 📡️.protocol.semio` uses).
 impl OpBinary for SemioPresentationMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         const OP_BINARY_FORMAT: u8 = 1;
@@ -363,7 +363,7 @@ impl OpBinary for SemioPresentationMutation {
 //#region 🔖️Demo
 /// 🌱 Representative `SemioPresentationMutation` cases (one per variant) — single source of truth
 /// for this facet's own `op_text_binary_roundtrip_law` AND `ops_grammar_conformance_law`/
-/// `protocol_walk_law` in `🎹️composer/🦀️component.rs`.
+/// `protocol_walk_law` in `🎹️composer/🦀️.rs`.
 #[cfg(test)]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn demo_mutation_cases() -> Vec<SemioPresentationMutation> {
@@ -423,7 +423,7 @@ mod tests {
         let uncovered: Vec<&&str> = KINDS.iter().zip(&covered).filter(|(_, hit)| !**hit).map(|(kind, _)| kind).collect();
         assert!(uncovered.is_empty(), "semio-presentation: demo_mutation_cases carries no instance of {uncovered:?}, so those kinds are declared but never exercised");
 
-        let manifest: serde_json::Value = serde_json::from_str(include_str!("../../🧪️oracle/🔣️.json")).expect("the subset's own oracle manifest decodes");
+        let manifest: serde_json::Value = serde_json::from_str(include_str!("../../🔣️oracle.json")).expect("the subset's own oracle manifest decodes");
         let catalog =
             manifest["mutationCatalogs"].as_array().expect("the manifest declares mutationCatalogs").iter().find(|entry| entry["id"] == "semio-v1-presentation").expect("the manifest declares the semio-v1-presentation catalog");
         let declared: Vec<&str> = catalog["kinds"].as_array().expect("the catalog declares kinds").iter().map(|kind| kind.as_str().expect("every declared kind is a string")).collect();
@@ -803,9 +803,9 @@ mod tests {
 
 //#region 🧪️FixtureCases
 /// 🧪️ Handcrafted `📄set-snapshot` fixture cases, wired from this tree's own mutations root so
-/// `📦️glue.rs` stays untouched (`#[path]` on a non-inline module resolves against this file's own
+/// `🦀️.rs` stays untouched (`#[path]` on a non-inline module resolves against this file's own
 /// directory).
 #[cfg(test)]
-#[path = "📄set-snapshot/🧪️tests/rewrites-the-second-slides-textbox-and-adds-a-speaker-note/🦀️component.rs"]
+#[path = "📄set-snapshot/🧪️tests/rewrites-the-second-slides-textbox-and-adds-a-speaker-note/🦀️.rs"]
 mod set_snapshot_rewrites_the_second_slides_textbox_and_adds_a_speaker_note;
 //#endregion 🧪️FixtureCases

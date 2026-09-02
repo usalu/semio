@@ -123,7 +123,7 @@ func TestG2ProductionOwnedRuntimePipe(t *testing.T) {
 }
 
 func TestG2ProductionComponentRejectsDirectDelegationMutation(t *testing.T) {
-	source, err := os.ReadFile("🐹️component.go")
+	source, err := os.ReadFile("🐹️.go")
 	if err != nil {
 		t.Fatal(err)
 	}

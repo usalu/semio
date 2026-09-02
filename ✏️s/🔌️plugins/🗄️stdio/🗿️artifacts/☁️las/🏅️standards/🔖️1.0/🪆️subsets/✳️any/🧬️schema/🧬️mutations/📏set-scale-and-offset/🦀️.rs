@@ -9,7 +9,7 @@
 //! is re-read under the new parameters (`coordinate = record * scale + offset`) rather
 //! than held fixed while the records are silently re-quantized. Lossless and exactly
 //! invertible in either direction; see
-//! `../../🔺️diff/🦀️component.rs::diff_set_scale_and_offset` for the reproduction that
+//! `../../🔺️diff/🦀️.rs::diff_set_scale_and_offset` for the reproduction that
 //! settled it.
 use super::*;
 

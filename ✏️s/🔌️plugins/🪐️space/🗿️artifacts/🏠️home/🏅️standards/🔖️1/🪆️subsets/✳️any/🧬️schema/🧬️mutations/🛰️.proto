@@ -1,0 +1,10 @@
+syntax = "proto3";
+package semio.s.space.home.mutation;
+
+import "🔢️change-catalog-generation/🛰️.proto";
+
+message SHomeMutation {
+  oneof mutation {
+    ChangeCatalogGeneration change_catalog_generation = 1;
+  }
+}

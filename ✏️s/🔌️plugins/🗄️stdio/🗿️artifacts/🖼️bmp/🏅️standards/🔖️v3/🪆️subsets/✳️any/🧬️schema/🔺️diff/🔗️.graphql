@@ -1,0 +1,36 @@
+# 🔺️ BmpDiff schema facet — sparse structural diff, mirrors 🦀️.rs. No full-replace
+# slot: every header field is a sparse patch scalar, palette is an index-keyed
+# removed/modified/added triple, pixels is a whole-buffer replace.
+
+type BmpPaletteModified {
+  index: Int!
+  entry: BmpPaletteEntry!
+}
+
+type BmpPaletteAdded {
+  index: Int!
+  entry: BmpPaletteEntry!
+}
+
+type BmpPaletteDiff {
+  removed: [Int!]
+  modified: [BmpPaletteModified!]
+  added: [BmpPaletteAdded!]
+}
+
+type BmpDiff {
+  headerSize: Int
+  width: Int
+  height: Int
+  rowOrder: BmpRowOrder
+  planes: Int
+  bitsPerPixel: Int
+  compression: Int
+  imageSize: Int
+  xPixelsPerMeter: Int
+  yPixelsPerMeter: Int
+  colorsUsed: Int
+  colorsImportant: Int
+  palette: BmpPaletteDiff
+  pixels: [Int!]
+}

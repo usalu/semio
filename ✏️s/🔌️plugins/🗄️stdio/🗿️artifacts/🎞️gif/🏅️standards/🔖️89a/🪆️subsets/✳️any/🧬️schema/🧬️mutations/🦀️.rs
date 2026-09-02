@@ -94,7 +94,7 @@ pub enum GifMutation {
 
 //#region 🔖️Kinds
 impl GifMutation {
-    /// 🏷️ Kebab-case kind spelling — the exact vocabulary `.../🧪️oracle/🔣️.json`'s
+    /// 🏷️ Kebab-case kind spelling — the exact vocabulary `.../🔣️oracle.json`'s
     /// `mutationCatalogs[].kinds` declares and the exhaustive mutation test case's Scenario Outline
     /// row ids equal. Hand-matched (never derived) so `kinds_matches_every_variant_and_manifest`
     /// below actually catches drift instead of restating the enum.
@@ -162,7 +162,7 @@ mod kinds_tests {
         let from_kinds: std::collections::BTreeSet<&str> = KINDS.iter().copied().collect();
         assert_eq!(from_variants, from_kinds, "KINDS must equal every GifMutation variant's kind()");
         assert_eq!(KINDS.len(), 20, "KINDS must list exactly the declared 20 kinds");
-        let manifest = include_str!("../../🧪️oracle/🔣️.json");
+        let manifest = include_str!("../../🔣️oracle.json");
         for kind in KINDS {
             assert!(manifest.contains(&format!("\"{kind}\"")), "oracle catalog manifest must declare kind {kind:?}");
         }
@@ -171,7 +171,7 @@ mod kinds_tests {
 //#endregion 🔖️Kinds
 
 /// 🧪️ P2-FG2: representative `GifMutation` (89a) cases for `ops_grammar_conformance_law`/
-/// `protocol_walk_law` (`../../../../⚙️engine/🦀️component.rs`'s `conformance_laws` module) —
+/// `protocol_walk_law` (`../../../../⚙️engine/🦀️.rs`'s `conformance_laws` module) —
 /// every one of the 21 real variants, incl. `Some`/`None` shapes of every `Option<T>` field
 /// (`gct`, `loop_count`, `transparent_index`) — mirrors 87a's own `demo_mutation_cases()`.
 #[cfg(test)]
@@ -253,7 +253,7 @@ pub fn apply_gif_mutation(snapshot: &mut GifSnapshot, mutation: &GifMutation) ->
 
 /// ↩️ This subset's own inverse algebra as a free function, so a caller driving the vocabulary from
 /// outside the crate reaches it without naming `protocol::Mutation` — `protocol` is an
-/// `extern crate` ALIAS private to this plugin's glue (`📦️glue.rs`), so that trait's name simply
+/// `extern crate` ALIAS private to this plugin's glue (`🦀️.rs`), so that trait's name simply
 /// does not exist for a dependent. Same shape and same reason as `inverse_png_mutation`.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn inverse_gif_mutation(mutation: &GifMutation, base: &GifSnapshot) -> Vec<GifMutation> {
@@ -590,14 +590,14 @@ mod tests {
 
 //#region 🧪️FixtureTests
 // 🧪️ Handcrafted mutation fixtures (contract D1, ticket 26/08/20/COMPOSE-TO-PUZZLE5D-MIGRATION),
-// one case per mutation leaf. Wired HERE and not in `📦️glue.rs`: that file is shared with the
+// one case per mutation leaf. Wired HERE and not in `🦀️.rs`: that file is shared with the
 // agents migrating the other stdio artifacts, so the production mounts there stay untouched while
 // this artifact owns its own test mount. `#[path = "."]` re-bases the children on this file's own
 // directory, which is what makes the leaf-relative path below resolve.
 #[cfg(test)]
 #[path = "."]
 mod fixture_tests {
-    #[path = "📄set-snapshot/🧪️tests/slows-the-second-frame-and-marks-it-do-not-dispose/🦀️component.rs"]
+    #[path = "📄set-snapshot/🧪️tests/slows-the-second-frame-and-marks-it-do-not-dispose/🦀️.rs"]
     mod tests_set_snapshot_slows_the_second_frame_and_marks_it_do_not_dispose;
 }
 //#endregion 🧪️FixtureTests

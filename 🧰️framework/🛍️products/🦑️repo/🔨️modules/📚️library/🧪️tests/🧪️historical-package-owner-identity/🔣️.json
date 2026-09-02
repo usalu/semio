@@ -12,7 +12,7 @@
     "order": 410.07
   },
   "historicalDocument": {
-    "libraryRelativePath": "📦️packages/🟦️typescript/🧫️fixtures/🧪️remaining-package-purity-authority/🔣️.json",
+    "libraryRelativePath": "📦️packages/🟦️typescript/🧫️fixtures/🔣️remaining-package-purity-authority.json",
     "sha256": "49087f2dee618c3c8392ce3bc25c348af87d5380fe16523ed61ee6c02448f577",
     "size": 241861,
     "mappingIndex": 29
@@ -107,10 +107,10 @@
     }
   ],
   "fixture": {
-    "source": "🧰️framework/🧪️owner/📦️packages/🦀️rust/📦️glue.rs",
-    "relocated": "🧰️framework/🧪️relocated/📦️packages/🦀️rust/📦️glue.rs",
+    "source": "🧰️framework/🧪️owner/📦️packages/🦀️rust/🦀️.rs",
+    "relocated": "🧰️framework/🧪️relocated/📦️packages/🦀️rust/🦀️.rs",
     "added": "🧰️framework/🧪️relocated/📦️packages/🦀️rust/📚️library/🦀️.rs",
-    "manifest": "[package]\nname = \"purity-census-fixture\"\nversion = \"0.1.0\"\nedition = \"2021\"\n\n[lib]\npath = \"📦️glue.rs\"\n\n[package.metadata.semio]\nrole = \"s-module\"\nid = \"purity-census-fixture\"\n",
+    "manifest": "[package]\nname = \"purity-census-fixture\"\nversion = \"0.1.0\"\nedition = \"2021\"\n\n[lib]\npath = \"🦀️.rs\"\n\n[package.metadata.semio]\nrole = \"s-module\"\nid = \"purity-census-fixture\"\n",
     "extraSource": "pub fn newly_added() -> usize { 7 }\n"
   }
 }

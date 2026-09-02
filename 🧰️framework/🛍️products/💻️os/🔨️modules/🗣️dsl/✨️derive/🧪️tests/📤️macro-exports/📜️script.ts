@@ -4,13 +4,13 @@ import { strict as assert } from "node:assert";
 
 //#region 🧬️ExportRoster
 const fixture = await Bun.file(new URL("./🔣️fixture.json", import.meta.url)).json();
-const schema = await Bun.file(new URL("./🔣️fixture.schema.json", import.meta.url)).json();
+const schema = await Bun.file(new URL("./🔣️.schema.json", import.meta.url)).json();
 const validate = new Ajv({ strict: true, allErrors: true }).compile(schema);
 assert(validate(fixture), JSON.stringify(validate.errors));
-const facade = await Bun.file(new URL("../../../🦀️component.rs", import.meta.url)).text();
+const facade = await Bun.file(new URL("../../../🦀️.rs", import.meta.url)).text();
 const exports = /pub use dsl_derive::\{([^}]+)\};/.exec(facade)?.[1].split(",").map((name) => name.trim()).filter(Boolean).sort();
 assert.deepEqual(exports, fixture.facadeExports);
-for (const path of ["../../🦀️component.rs", "../../📦️packages/🦀️rust/📦️glue.rs"]) {
+for (const path of ["../../🦀️.rs", "../../📦️packages/🦀️rust/🦀️.rs"]) {
   const source = await Bun.file(new URL(path, import.meta.url)).text();
   const names = [...source.matchAll(/#\[proc_macro_derive\((\w+)/g)].map((match) => match[1]).sort();
   assert.deepEqual(names, fixture.registeredDerives);

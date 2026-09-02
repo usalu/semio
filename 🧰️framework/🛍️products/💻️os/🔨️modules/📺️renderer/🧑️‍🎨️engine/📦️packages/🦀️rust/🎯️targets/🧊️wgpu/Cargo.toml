@@ -79,11 +79,11 @@ required-features = ["native-bin"]
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 semio-framework-plugin-host = { path = "../../../../../../🔌️plugin/🖥️host/📦️packages/🦀️rust", package = "semio-framework-plugin-host" }
 # 🎭️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (H3-wgpu-native): the `Kernel`/`ActorId`/`ThreadTransport`
-# vocabulary the native kernel thread (`📦️glue.rs`'s `kernel_runtime` module) drives directly — see
+# vocabulary the native kernel thread (`🦀️.rs`'s `kernel_runtime` module) drives directly — see
 # `📓️terra-H3-wgpu-native-report.md`.
 semio-framework-actor = { workspace = true }
 # 🧵️ P1e (INTERACTIVE-JOB-RUNTIME-REFACTOR, one-pool-worker-runtime): `WorkerPool`/`worker_count_for`
-# — `📦️glue.rs::renderer_worker_pool()` is the ONE process-wide pool this crate injects into both
+# — `🦀️.rs::renderer_worker_pool()` is the ONE process-wide pool this crate injects into both
 # `🎠️runtime.rs`'s `ParallelRuntime` (shard-turn scheduling) and `Shell/🧊️component.rs`'s
 # `TokioHostRuntime` (directory-client HTTP work) — "the global thread budget exists so no component
 # sizes itself per-CPU" (that fn's own doc), now literally one pool object rather than a per-caller

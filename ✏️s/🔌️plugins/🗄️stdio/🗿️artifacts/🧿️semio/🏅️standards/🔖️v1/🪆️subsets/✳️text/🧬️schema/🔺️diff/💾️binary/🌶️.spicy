@@ -1,0 +1,9 @@
+# Zeek Spicy mirror (descriptive, not test-parsed — the real byte-level walker is
+# ../📡️.protocol.semio, walked by dsl::walk_protocol) for the SemioTextDiff binary frame.
+module StdioSemioTextDiff;
+
+public type DiffFrame = unit {
+    format: uint8;
+    presence: uint8;
+    payload: bytes &eod;
+};

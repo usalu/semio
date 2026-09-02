@@ -1,11 +1,11 @@
 [build]
-target = "🌐️index.html"
+target = "🌐️.html"
 dist = "../../../../../../../../../../.🦑️repo/⚡️cache/📺️renderer-modules/🧊️wgpu"
 public_url = "/"
 filehash = false
 
 [watch]
-watch = ["📦️glue.rs", "🟦️typescript", "🌐️index.html", "../../../../../../🧑️‍💻️dev/🔌️plugin-modules"]
+watch = ["🦀️.rs", "🟦️typescript", "🌐️.html", "../../../../../../🧑️‍💻️dev/🔌️plugin-modules"]
 
 [serve]
 addresses = ["127.0.0.1"]

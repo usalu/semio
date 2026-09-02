@@ -5,7 +5,7 @@
   "displayName": "Change Grip Kind Color",
   "emoji": "🎨",
   "aggregateVariant": "ChangeGripKindColor",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": "change-grip-kind-color",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

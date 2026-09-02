@@ -4,7 +4,7 @@
   "private": true,
   "type": "module",
   "exports": {
-    ".": "./📦️index.ts",
+    ".": "./🟦️.ts",
     "./host": "./🏃️host.ts"
   },
   "scripts": {
@@ -18,5 +18,5 @@
     "semver": "7.8.5",
     "typescript": "^5.9.3"
   },
-  "_comment": "🔮️ Every dependency here is test-only by construction: this package is the repository test platform, never a production target. `clsx` is a REGISTERED ORACLE (📇️registry/🔣️component.json) — `bun ./📜️script.ts dependency` fails if it ever becomes production-reachable."
+  "_comment": "🔮️ Every dependency here is test-only by construction: this package is the repository test platform, never a production target. `clsx` is a REGISTERED ORACLE (📇️registry/🔣️.json) — `bun ./📜️script.ts dependency` fails if it ever becomes production-reachable."
 }

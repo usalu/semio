@@ -1,3 +1,0 @@
-# stdio.semio.cad mutations text (OpText) representation -- no semio envelope; see
-# ../🔗️component.graphql for the decoded mutation's real schema.
-type Document { payload: String! }

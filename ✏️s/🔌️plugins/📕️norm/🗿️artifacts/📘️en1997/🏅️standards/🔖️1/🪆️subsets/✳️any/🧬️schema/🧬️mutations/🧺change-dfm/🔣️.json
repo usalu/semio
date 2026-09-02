@@ -5,7 +5,7 @@
   "displayName": "Change Dfm",
   "emoji": "🧺",
   "aggregateVariant": "ChangeDFM",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

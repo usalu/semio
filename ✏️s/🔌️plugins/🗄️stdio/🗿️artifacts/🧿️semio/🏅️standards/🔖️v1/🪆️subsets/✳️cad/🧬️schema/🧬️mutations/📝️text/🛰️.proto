@@ -1,0 +1,7 @@
+syntax = "proto3";
+// stdio.semio.cad mutations text (OpText) representation -- no semio envelope; see
+// ../🛰️.proto for the decoded mutation's real schema.
+package semio.s_stdio_semio_cad.mutations.text;
+message Document {
+  string payload = 1;
+}

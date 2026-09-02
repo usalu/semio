@@ -105,7 +105,7 @@ impl BoundedAction {
         match node.value {
             FlatValue::Null => Ok(DslValue::Null),
             FlatValue::Bool(value) => Ok(DslValue::Bool(value)),
-            FlatValue::Number(value) => Ok(DslValue::Number(value)),
+            FlatValue::Number(value) => Ok(DslValue::float(value)),
             FlatValue::String(span) => Ok(DslValue::String(self.text(span)?.to_owned())),
             FlatValue::Array => {
                 let mut values = Vec::with_capacity(self.child_count(node)?);
@@ -281,7 +281,7 @@ impl BoundedActionBuilder {
         match value {
             DslValue::Null => self.null(key),
             DslValue::Bool(value) => self.boolean(key, *value),
-            DslValue::Number(value) => self.number(key, *value),
+            DslValue::Number(value) => self.number(key, value.as_f64()),
             DslValue::String(value) => self.string(key, value),
             DslValue::Array(values) => {
                 self.begin_array(key)?;

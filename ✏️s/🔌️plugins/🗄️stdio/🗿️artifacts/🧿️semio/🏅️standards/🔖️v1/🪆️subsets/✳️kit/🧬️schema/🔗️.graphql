@@ -1,0 +1,10 @@
+# 🧬️ SemioKitArtifact schema — real facet mirror of the Rust `🦀️.rs` sibling.
+type SemioKitArtifact {
+  schema: String! @state(class: ARTIFACT)
+  typesWire: String! @state(class: ARTIFACT)
+  designsWire: String! @state(class: ARTIFACT)
+  objects: [ArtifactLink!]! @state(class: ARTIFACT) @child(kind: "s.stdio.semio.object")
+  models: [ArtifactLink!]! @state(class: ARTIFACT) @child(kind: "s.stdio.semio.model")
+  properties: ArtifactLink @state(class: ARTIFACT) @child(kind: "s.stdio.semio.value")
+  representations: [ArtifactLink!]! @state(class: ARTIFACT) @link(roles: ["representation"])
+}

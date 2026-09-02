@@ -5,7 +5,7 @@
   "displayName": "Change N50 H Inv",
   "emoji": "🌲",
   "aggregateVariant": "ChangeN50HInv",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

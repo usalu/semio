@@ -56,7 +56,7 @@
         "loadOwners": ["inventoryTaxonomyWithSourceParentPruning", "planTaxonomy", "applyTaxonomyPlan"],
         "fixedContractCallCount": 6,
         "changedInput": { "pointer": "/fixedFilenameContracts/cargo-manifest/reason", "suffix": " - fresh invocation" },
-        "freshProbe": { "path": "🧪️fresh-session/🔣️.json", "pattern": "🧪️fresh-session/*.json" }
+        "freshProbe": { "path": "🔣️fresh-session.json", "pattern": "fresh-session*.json" }
       }
     },
     "oracle": {

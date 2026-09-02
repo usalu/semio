@@ -12,10 +12,10 @@ is what this file implements, from the specification, in another language.
 
 **What it was written from.**
 
-* ``🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🔣️component.json`` — the document is
+* ``🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🔣️.json`` — the document is
   `{"exaggeration": double, "importedFeaturesJson": string}`, `additionalProperties: false`, both
   `x-semio-state: artifact`.
-* ``…/🧬️schema/🧬️mutations/📝️text/📖️component.grammar.semio`` — the two verbs:
+* ``…/🧬️schema/🧬️mutations/📝️text/📖️.grammar.semio`` — the two verbs:
   `change-exaggeration <number>` and `change-imported-features`.
 * the two committed specification vectors, which give the externally tagged wire form
   (``{"ChangeExaggeration": {"newExaggeration": …}}`` and
@@ -33,7 +33,7 @@ committed real content (see the feature description for its full provenance), an
 laws stay where they can honestly be asserted: in role, on the Rust side, against the committed
 example.
 
-**No Rust was read to write this.** `🦀️component.rs` beside this file registers the SUBJECT half
+**No Rust was read to write this.** `🦀️.rs` beside this file registers the SUBJECT half
 only.
 """
 

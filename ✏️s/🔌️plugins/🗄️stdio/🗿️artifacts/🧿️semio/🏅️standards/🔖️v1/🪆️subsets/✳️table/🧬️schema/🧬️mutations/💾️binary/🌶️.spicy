@@ -1,0 +1,10 @@
+# Zeek Spicy mirror (descriptive, not test-parsed — the real byte-level walker is
+# ../📡️.protocol.semio, walked by dsl::walk_protocol) for the SemioTableMutation binary
+# op frame.
+module StdioSemioTableMutations;
+
+public type OpFrame = unit {
+    format: uint8;
+    tag: uint8;
+    payload: bytes &eod;
+};

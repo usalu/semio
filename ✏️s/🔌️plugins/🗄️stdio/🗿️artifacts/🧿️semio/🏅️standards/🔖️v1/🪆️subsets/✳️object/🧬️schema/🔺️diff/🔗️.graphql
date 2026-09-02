@@ -1,0 +1,7 @@
+# 🔺️ SemioObjectDiff schema — real facet mirror of the Rust `🦀️.rs` sibling.
+type SemioObjectDiff {
+  transformTouched: Boolean!
+  brepTouched: Boolean!
+  meshTouched: Boolean!
+  propertiesTouched: Boolean!
+}

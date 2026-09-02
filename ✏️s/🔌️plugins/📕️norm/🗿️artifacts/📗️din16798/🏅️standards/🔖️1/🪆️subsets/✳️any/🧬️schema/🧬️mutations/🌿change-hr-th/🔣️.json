@@ -5,7 +5,7 @@
   "displayName": "Change Hr Th",
   "emoji": "🌿",
   "aggregateVariant": "ChangeHrTH",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

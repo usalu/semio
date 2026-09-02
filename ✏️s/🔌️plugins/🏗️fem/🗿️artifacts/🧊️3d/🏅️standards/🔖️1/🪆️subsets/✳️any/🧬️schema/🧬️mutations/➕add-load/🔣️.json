@@ -5,7 +5,7 @@
   "displayName": "Add Load",
   "emoji": "➕",
   "aggregateVariant": "AddLoad",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": "add-load",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

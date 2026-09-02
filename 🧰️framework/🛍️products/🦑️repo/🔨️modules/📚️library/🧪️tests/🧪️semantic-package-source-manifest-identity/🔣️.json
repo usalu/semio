@@ -16,7 +16,7 @@
   },
   "facts": {
     "cargoManifestContent": "[package]\nname = \"semio-framework-os-renderer-wgpu\"\nversion = \"0.1.0\"\nbuild = \"build.rs\"\n\n[package.metadata.semio]\nrole = \"framework\"\nid = \"renderer-wgpu\"\n\n[lib]\npath = \"🦀️lib.rs\"\ncrate-type = [\"cdylib\", \"rlib\"]\n\n[[bin]]\nname = \"semio-wgpu-native\"\npath = \"📦️bin.rs\"\nrequired-features = [\"native-bin\"]\n",
-    "nodeManifestContent": "{\"name\":\"@fixture/wgpu\",\"exports\":{\".\":\"./📦️index.ts\"}}",
+    "nodeManifestContent": "{\"name\":\"@fixture/wgpu\",\"exports\":{\".\":\"./🟦️.ts\"}}",
     "projectManifestContent": "{\"name\":\"@fixture/wgpu\",\"sourceRoot\":\"🧪️fixture/🧊️source-wgpu\",\"targets\":{\"test\":{\"options\":{\"cwd\":\"🧪️fixture/🧊️source-wgpu\",\"command\":\"bun ./📜️script.ts test\"}}}}"
   },
   "cases": [
@@ -184,8 +184,8 @@
       "changes": [
         {
           "field": "nodeManifestContent",
-          "oldValue": "{\"name\":\"@fixture/wgpu\",\"exports\":{\".\":\"./📦️index.ts\"}}",
-          "newValue": "{\n  \"name\": \"@fixture/wgpu\",\n  \"exports\": {\n    \".\": \"./📦️index.ts\"\n  },\n  \"description\": \"metadata only\"\n}"
+          "oldValue": "{\"name\":\"@fixture/wgpu\",\"exports\":{\".\":\"./🟦️.ts\"}}",
+          "newValue": "{\n  \"name\": \"@fixture/wgpu\",\n  \"exports\": {\n    \".\": \"./🟦️.ts\"\n  },\n  \"description\": \"metadata only\"\n}"
         }
       ],
       "expected": true
@@ -382,7 +382,7 @@
       "changes": [
         {
           "field": "nodeManifestContent",
-          "oldValue": "\"./📦️index.ts\"",
+          "oldValue": "\"./🟦️.ts\"",
           "newValue": "\"./wrong.ts\""
         }
       ],
@@ -404,7 +404,7 @@
       "changes": [
         {
           "field": "nodeManifestContent",
-          "oldValue": "{\"name\":\"@fixture/wgpu\",\"exports\":{\".\":\"./📦️index.ts\"}}",
+          "oldValue": "{\"name\":\"@fixture/wgpu\",\"exports\":{\".\":\"./🟦️.ts\"}}",
           "newValue": "[]"
         }
       ],
@@ -415,8 +415,8 @@
       "changes": [
         {
           "field": "nodeManifestContent",
-          "oldValue": "{\"name\":\"@fixture/wgpu\",\"exports\":{\".\":\"./📦️index.ts\"}}",
-          "newValue": "{\"name\":\"@fixture/wgpu\",\"exports\":{\".\":\"./📦️index.ts\"},}"
+          "oldValue": "{\"name\":\"@fixture/wgpu\",\"exports\":{\".\":\"./🟦️.ts\"}}",
+          "newValue": "{\"name\":\"@fixture/wgpu\",\"exports\":{\".\":\"./🟦️.ts\"},}"
         }
       ],
       "expected": false

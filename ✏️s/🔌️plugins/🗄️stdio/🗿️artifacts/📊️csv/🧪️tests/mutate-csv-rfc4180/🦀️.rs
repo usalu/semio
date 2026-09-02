@@ -2,7 +2,7 @@
 //!
 //! Every scenario copies the immutable real fixture into the case work directory first; the
 //! committed file is never written to. `oracle` handlers drive the registered `csv` reference
-//! implementation (via this subset's own `🧪️oracle/🦀️component.rs`), `subject` handlers drive this
+//! implementation (via this subset's own `🦀️oracle.rs`), `subject` handlers drive this
 //! repository's own decode/mutate/encode round trip, and both results are read back by the SAME
 //! independent reader (`project_csv_grid`) before the `semantic-tabular-v1` profile compares them.
 //! The subject half is gated behind the generated host's `sut` feature so the oracle-only run never
@@ -14,7 +14,7 @@ use semio_s_plugin_stdio_test_oracle::law::{inverse_restores, mutation_is_observ
 
 //#region 🔖️Kinds
 /// 🧾️ Test-case-local mirror of the `csv-rfc4180-any` catalog. Duplicated, not imported, from
-/// `../../🏅️standards/🔖️rfc4180/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs::KINDS` — that
+/// `../../🏅️standards/🔖️rfc4180/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs::KINDS` — that
 /// module lives in the SUBJECT crate, and the oracle role must not link the subject crate at all
 /// (fleet brief §5.3), while this loop registers handlers for both roles from one list. That other
 /// `KINDS` carries its own test proving it matches the enum AND the catalog manifest; a mismatch
@@ -38,7 +38,7 @@ fn mutable_input(ctx: &Context) -> Result<Vec<u8>, String> {
 
 //#region 🔖️SpecHelpers
 /// 📑️ RFC 4180 carries no header/data distinction on the wire (see `../../🏅️standards/🔖️rfc4180/
-/// 🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️component.rs`'s own doc comment) — `has_header` is metadata
+/// 🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs`'s own doc comment) — `has_header` is metadata
 /// this case tracks alongside the bytes, not something a projection can recover from them alone.
 fn resulting_has_header(spec: &Json, baseline: bool) -> bool {
     match spec.str("kind").as_str() {

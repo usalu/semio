@@ -2,7 +2,7 @@
 import * as React from "react";
 import { fireEvent, render } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
-import { TableAvatar } from "../🟦️component.tsx";
+import { TableAvatar } from "../🟦️.tsx";
 // #endregion 🔌️Adapters
 
 // #region 📻️TableAvatarMatrix

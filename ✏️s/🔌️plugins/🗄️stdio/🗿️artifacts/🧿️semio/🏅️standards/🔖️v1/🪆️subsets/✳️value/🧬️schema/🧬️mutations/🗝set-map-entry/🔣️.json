@@ -5,7 +5,7 @@
   "displayName": "Set Map Entry",
   "emoji": "🗝",
   "aggregateVariant": "SetMapEntry",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

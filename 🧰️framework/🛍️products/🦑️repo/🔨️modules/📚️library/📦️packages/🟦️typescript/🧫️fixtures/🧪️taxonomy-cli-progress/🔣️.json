@@ -4,7 +4,7 @@
   "cases": [
     { "id": "start", "event": { "operation": "plan", "phase": "incoming-candidates", "current": 0, "total": 201 }, "visible": true },
     { "id": "intermediate", "event": { "operation": "plan", "phase": "incoming-candidates", "current": 99, "total": 201 }, "visible": false },
-    { "id": "checkpoint", "event": { "operation": "plan", "phase": "incoming-candidates", "current": 100, "total": 201, "path": "🧪️fixture/📝️.md" }, "visible": true },
+    { "id": "checkpoint", "event": { "operation": "plan", "phase": "incoming-candidates", "current": 100, "total": 201, "path": "📝️fixture.md" }, "visible": true },
     { "id": "completion", "event": { "operation": "plan", "phase": "incoming-candidates", "current": 201, "total": 201 }, "visible": true },
     { "id": "empty-scan", "event": { "operation": "plan", "phase": "incoming-candidates", "current": 0, "total": 0 }, "visible": true },
     { "id": "internal-wal-boundary", "event": { "operation": "apply", "phase": "transaction-wal-prepared", "current": 0, "total": 0 }, "visible": false },

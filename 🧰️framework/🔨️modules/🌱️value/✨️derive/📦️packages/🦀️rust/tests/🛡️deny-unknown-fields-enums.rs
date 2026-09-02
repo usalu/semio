@@ -1,5 +1,5 @@
 //! 🛡️ `#[value(deny_unknown_fields)]` enforcement on every `Data::Enum` representation the derive
-//! supports (see `🦀️component.rs`'s module docs for the semantics chosen per representation) — a
+//! supports (see `🦀️.rs`'s module docs for the semantics chosen per representation) — a
 //! genuine `tests/*.rs` integration crate, so `#[derive(ToValue, FromValue)]` runs exactly as any
 //! downstream consumer's derive invocation would (a proc-macro crate cannot exercise its own
 //! derives from inside its own `src`). Ticket
@@ -7,7 +7,7 @@
 
 // 🌿️ `semio_framework_os_kernel`'s crate root re-exports BOTH the `ToValue`/`FromValue` TRAITS
 // (from its own `os_dsl::schema`) AND the `#[derive(ToValue, FromValue)]` proc-macros themselves
-// under the same two names — see its `📦️glue.rs`'s `🌱️`/`🌿️` docstrings — so importing them from
+// under the same two names — see its `🦀️.rs`'s `🌱️`/`🌿️` docstrings — so importing them from
 // here alone brings in everything this file's `#[derive(...)]` lines and trait calls need. A
 // separate `use semio_framework_value_derive::{FromValue, ToValue};` would collide with the
 // re-exported macro names (`E0252`, "defined multiple times ... macro namespace").
@@ -64,7 +64,7 @@ fn externally_tagged_denies_unknown_payload_key() {
         "detailed".to_string(),
         DslValue::object([
             ("name".to_string(), DslValue::String("a".to_string())),
-            ("count".to_string(), DslValue::Number(3.0)),
+            ("count".to_string(), DslValue::int(3)),
             ("extra".to_string(), DslValue::Bool(true)),
         ]),
     )]);
@@ -116,7 +116,7 @@ fn adjacently_tagged_denies_unknown_content_key() {
             "data".to_string(),
             DslValue::object([
                 ("name".to_string(), DslValue::String("a".to_string())),
-                ("count".to_string(), DslValue::Number(3.0)),
+                ("count".to_string(), DslValue::int(3)),
                 ("extra".to_string(), DslValue::Bool(true)),
             ]),
         ),
@@ -172,7 +172,7 @@ fn internally_tagged_denies_unknown_key_on_named_variant() {
     let bad = DslValue::object([
         ("kind".to_string(), DslValue::String("detailed".to_string())),
         ("name".to_string(), DslValue::String("a".to_string())),
-        ("count".to_string(), DslValue::Number(3.0)),
+        ("count".to_string(), DslValue::int(3)),
         ("extra".to_string(), DslValue::Bool(true)),
     ]);
     assert!(InternallyTagged::from_value(bad).is_err());
@@ -182,7 +182,7 @@ fn internally_tagged_denies_unknown_key_on_named_variant() {
 fn internally_tagged_newtype_variant_strips_tag_before_reaching_payloads_own_deny_check() {
     let good = DslValue::object([
         ("kind".to_string(), DslValue::String("wrapped".to_string())),
-        ("value".to_string(), DslValue::Number(5.0)),
+        ("value".to_string(), DslValue::int(5)),
     ]);
     assert_eq!(InternallyTagged::from_value(good), Ok(InternallyTagged::Wrapped(InnerPayload { value: 5 })));
 }
@@ -191,7 +191,7 @@ fn internally_tagged_newtype_variant_strips_tag_before_reaching_payloads_own_den
 fn internally_tagged_newtype_variant_payloads_own_deny_check_still_applies() {
     let bad = DslValue::object([
         ("kind".to_string(), DslValue::String("wrapped".to_string())),
-        ("value".to_string(), DslValue::Number(5.0)),
+        ("value".to_string(), DslValue::int(5)),
         ("extra".to_string(), DslValue::Bool(true)),
     ]);
     assert!(InternallyTagged::from_value(bad).is_err());

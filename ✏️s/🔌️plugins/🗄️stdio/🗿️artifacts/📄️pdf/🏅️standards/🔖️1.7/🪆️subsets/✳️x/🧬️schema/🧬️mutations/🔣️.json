@@ -1,0 +1,49 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s.stdio.pdf.1.7.x/mutation.json",
+  "title": "PdfXMutation",
+  "oneOf": [
+    {
+      "$ref": "./🔒️insert-encryption-dictionary/🔣️.schema.json"
+    },
+    {
+      "$ref": "./🔓️remove-encryption-dictionary/🔣️.schema.json"
+    },
+    {
+      "$ref": "./🏳️set-output-intent/🔣️.schema.json"
+    },
+    {
+      "$ref": "./🧽️remove-output-intent/🔣️.schema.json"
+    },
+    {
+      "$ref": "./📐️set-trim-box/🔣️.schema.json"
+    },
+    {
+      "$ref": "./🧽️remove-trim-box/🔣️.schema.json"
+    },
+    {
+      "$ref": "./🔤️embed-font-file/🔣️.schema.json"
+    },
+    {
+      "$ref": "./🧺️remove-font-file/🔣️.schema.json"
+    },
+    {
+      "$ref": "./📜️insert-javascript-action/🔣️.schema.json"
+    },
+    {
+      "$ref": "./🚫️remove-javascript-action/🔣️.schema.json"
+    },
+    {
+      "$ref": "./🚀️insert-launch-action/🔣️.schema.json"
+    },
+    {
+      "$ref": "./🛬️remove-launch-action/🔣️.schema.json"
+    },
+    {
+      "$ref": "./🎬️insert-media-annotation/🔣️.schema.json"
+    },
+    {
+      "$ref": "./⏹️remove-media-annotation/🔣️.schema.json"
+    }
+  ]
+}

@@ -13,7 +13,7 @@ id = "ui-runtime"
 workspace = true
 
 [lib]
-path = "📦️glue.rs"
+path = "🦀️.rs"
 
 [dependencies]
 # 🧬️ The builder-side tree is plain data; serializing it lets a guest ship a fixture or a whole tree

@@ -5,7 +5,7 @@
   "displayName": "Remove Gcp Observation",
   "emoji": "🚷",
   "aggregateVariant": "RemoveGcpObservation",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": "remove-gcp-observation",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

@@ -53,13 +53,13 @@ isProject: false
 
 ## What is actually broken
 
-The OS already has the right algebra. [store/component.rs](🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️component.rs) has `DocumentEnvelope`/`DocumentCommand`/`DocumentStore::dispatch`, [vcs/component.rs](🧰️framework/🛍️products/💻️os/🔨️modules/🌿️vcs/🦀️component.rs) has `DocumentVcs`/`Change`/`Checkpoint`/`Alternative`, and [spr/command/component.rs](🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🎮️command/🦀️component.rs) has `Operation`/`OperationDiff`/`Edit`. The `DocumentApp::handle` at [plugin/component.rs:3282](🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️component.rs) is already a pure `&self` function returning an `Emit`.
+The OS already has the right algebra. [store/component.rs](🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️.rs) has `DocumentEnvelope`/`DocumentCommand`/`DocumentStore::dispatch`, [vcs/component.rs](🧰️framework/🛍️products/💻️os/🔨️modules/🌿️vcs/🦀️.rs) has `DocumentVcs`/`Change`/`Checkpoint`/`Alternative`, and [spr/command/component.rs](🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🎮️command/🦀️.rs) has `Operation`/`OperationDiff`/`Edit`. The `DocumentApp::handle` at [plugin/component.rs:3282](🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️.rs) is already a pure `&self` function returning an `Emit`.
 
 Five concrete holes let plugins reimplement state anyway:
 
-- The store lives **inside the WASM guest**. `VcsDocumentApp` at [plugin/component.rs:3876](🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️component.rs) owns `store: DocumentStore<..>`, guest linear memory survives across `exchange`, and `PluginBundle::register_document_app` takes an `impl Fn() -> A` factory, so any app struct can carry fields. `&self` plus `Mutex`/`RefCell` is all it takes: `FlowPlayApp` holds `Mutex<FlowEvalSession>`, and there is a guest TLS `HashMap` of `ViewState` in `set_instance_view_state`.
+- The store lives **inside the WASM guest**. `VcsDocumentApp` at [plugin/component.rs:3876](🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️.rs) owns `store: DocumentStore<..>`, guest linear memory survives across `exchange`, and `PluginBundle::register_document_app` takes an `impl Fn() -> A` factory, so any app struct can carry fields. `&self` plus `Mutex`/`RefCell` is all it takes: `FlowPlayApp` holds `Mutex<FlowEvalSession>`, and there is a guest TLS `HashMap` of `ViewState` in `set_instance_view_state`.
 - The store has **public write escape hatches**: `set_envelope` (line 1984), `set_state` (1990) and `ingest_remote` (2364) sit beside `dispatch` (2063), and `DocumentEnvelope` fields are all `pub`.
-- **Computational kernels own their own registries and mint their own ids.** `DrawingStore { seq: u32, registry: HashMap<..> }` in [◻2d/🗄️store](✏️s/🔨️modules/◻2d/🗄️store/🦀️component.rs), `BrepkitKernel`, the `Store<T, Id>` arena and `Body`/`LabelSource` in 🧊3d, `HalfedgeMesh`, plus process globals `CAD_BREP_KERNEL`, `PROCESS_BREP_KERNEL`, layout `ENGINE`, `PUZZLE3D_MESH_REGISTRY`, `FLOW_PLAY_NEURAL_CACHE`, `PRESENCE_PEERS`, `STUDIO_PORTS`.
+- **Computational kernels own their own registries and mint their own ids.** `DrawingStore { seq: u32, registry: HashMap<..> }` in [◻2d/🗄️store](✏️s/🔨️modules/◻2d/🗄️store/🦀️.rs), `BrepkitKernel`, the `Store<T, Id>` arena and `Body`/`LabelSource` in 🧊3d, `HalfedgeMesh`, plus process globals `CAD_BREP_KERNEL`, `PROCESS_BREP_KERNEL`, layout `ENGINE`, `PUZZLE3D_MESH_REGISTRY`, `FLOW_PLAY_NEURAL_CACHE`, `PRESENCE_PEERS`, `STUDIO_PORTS`.
 - **A whole parallel host architecture bypasses the plugin path**: `EditorHost`, `MapHost`, `RasterHost`, `GraphHost`, `TerrainSessionState`, `ActionBus`, `Platform` in non-OS framework, and `ImperativeHost`, `SequenceHost`, `TrinityHost`, `NormHost`, `Puzzle3dEngine` in plugins, all `&mut self` and reached from wasm-bindgen `Rc<RefCell<..>>` sessions.
 - **No enforcement exists.** There is a rich policy convention in [📜️script.ts](📜️script.ts) (`policyDbServerOnlyBreaches` at 3306, `policyAllRustFiles`, `policyDocumentAppUsages`, `policyTestModSpans`) and a boundary matrix in [.dependency-cruiser.cjs](.dependency-cruiser.cjs), but nothing about state ownership.
 
@@ -100,7 +100,7 @@ Computational kernels become the `Engine` concept from the same AGENTS.md ("a st
 
 ### M1: seal the store, one write gate
 
-In [store/component.rs](🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️component.rs):
+In [store/component.rs](🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️.rs):
 
 - Make every `DocumentEnvelope` field `pub(crate)`; expose a read-only `DocumentEnvelopeView`. `envelope()` returns the view.
 - Delete `set_envelope` and `set_state`. Fold them into `DocumentCommand::Reset { envelope, applied_edit_ids, redo_edit_ids }`.
@@ -108,14 +108,14 @@ In [store/component.rs](🧰️framework/🛍️products/💻️os/🔨️module
 - `dispatch` becomes the sole `&mut self` entry point and returns a `CommandReceipt { edit_ids, diff, generation }`.
 - Subordinate `SpaceHost::commit_space_checkpoint` and the db `CommandBatch::submit` path in [db/📄️document](🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db) to `dispatch`, so the hub and the client share one algebra.
 
-In [vcs/component.rs](🧰️framework/🛍️products/💻️os/🔨️modules/🌿️vcs/🦀️component.rs):
+In [vcs/component.rs](🧰️framework/🛍️products/💻️os/🔨️modules/🌿️vcs/🦀️.rs):
 
 - Replace the `ID_COUNTER` global in `create_document_vcs_id` with `edit_scoped_id(edit_id, ordinal)` so ids are deterministic and merge-safe. This is what lets kernel `seq: u32` counters go away.
 - Delete the duplicate `CollectionOperation` and `ItemPatch` twins; spr is the single home.
 
 ### M2: new OS module `⚙️engine`
 
-New `🧰️framework/🛍️products/💻️os/🔨️modules/⚙️engine/🦀️component.rs`, registered in [os glue.rs](🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs) and the os kernel `Cargo.toml`:
+New `🧰️framework/🛍️products/💻️os/🔨️modules/⚙️engine/🦀️.rs`, registered in [os glue.rs](🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs) and the os kernel `Cargo.toml`:
 
 ```rust
 pub struct EngineKey([u8; 32]);
@@ -141,7 +141,7 @@ pub trait EngineHost {
 
 ### M3: receiverless `DocumentApp` and host-authoritative store
 
-In [plugin/component.rs](🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️component.rs):
+In [plugin/component.rs](🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️.rs):
 
 - Every `DocumentApp` method loses its receiver and becomes an associated function; `app_id`/`document_schema`/`config_schema` become associated consts. An app type is then a ZST with nowhere to put state:
 
@@ -168,9 +168,9 @@ pub trait DocumentApp: 'static {
 
 - `Emit` gains `draft_operations`.
 - `PluginBundle::register_document_app::<A>()` becomes turbofish-only, dropping the `impl Fn() -> A` factory. There is no instance to construct, so a stateful app is unrepresentable.
-- Move `VcsDocumentApp`'s `store`, `config_store`, `command_log`, `cache` and `history_filter` out of the guest into [plugin/🖥️host](🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🦀️component.rs). The host owns a `DocumentSession { store, config_store, draft_store, command_log }` per instance.
+- Move `VcsDocumentApp`'s `store`, `config_store`, `command_log`, `cache` and `history_filter` out of the guest into [plugin/🖥️host](🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🦀️.rs). The host owns a `DocumentSession { store, config_store, draft_store, command_log }` per instance.
 - Delete the guest TLS `INSTANCES` vector and `set_instance_view_state`; `ViewState` folds into `Draft`.
-- Rewrite `exchange` in [world.wit](🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/📜️wit/📜️world.wit) and the `AppCommand`/`AppFrame` codec in [spr/🧵️channel](🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🧵️channel/🦀️component.rs): host sends `(command bytes, doc pack, cfg pack, draft pack)`, guest returns `Emit` bytes plus `UiNode`. Bump `CHANNEL_VERSION` from 4 to 5. The host then calls `store.dispatch(Apply { operations })` itself.
+- Rewrite `exchange` in [world.wit](🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/📜️wit/📜️world.wit) and the `AppCommand`/`AppFrame` codec in [spr/🧵️channel](🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🧵️channel/🦀️.rs): host sends `(command bytes, doc pack, cfg pack, draft pack)`, guest returns `Emit` bytes plus `UiNode`. Bump `CHANNEL_VERSION` from 4 to 5. The host then calls `store.dispatch(Apply { operations })` itself.
 - With no durable guest state, hot reload stops needing `LoadDocument` replay.
 
 ### M4: draft lane and chrome
@@ -206,7 +206,7 @@ Ticket first: read `repo://goals` over the repo MCP, then `ticket_open` slug `OS
 - New `⚙️engine` module (M2) — greenfield, owns `⚙️engine/**` plus its glue and Cargo entries via the integrator.
 - Draft lane types and chrome config schema (M4 Rust side) — owns the new draft types inside `🏪️store` regions coordinated with the first agent by region, or serialized after it if regions collide.
 
-**Wave 1b, serial, 1 agent (Grok).** The plugin/host/WIT flip (M3). `🔌️plugin/🦀️component.rs` is ~9000 lines and `🖥️host`, `world.wit` and `spr/🧵️channel` are tightly coupled to it, so one writer only. Gate: os kernel and plugin-host crates compile, os examples and fixtures pass.
+**Wave 1b, serial, 1 agent (Grok).** The plugin/host/WIT flip (M3). `🔌️plugin/🦀️.rs` is ~9000 lines and `🖥️host`, `world.wit` and `spr/🧵️channel` are tightly coupled to it, so one writer only. Gate: os kernel and plugin-host crates compile, os examples and fixtures pass.
 
 **Wave 2, parallel, ~26 agents (Composer), one owner per crate.**
 

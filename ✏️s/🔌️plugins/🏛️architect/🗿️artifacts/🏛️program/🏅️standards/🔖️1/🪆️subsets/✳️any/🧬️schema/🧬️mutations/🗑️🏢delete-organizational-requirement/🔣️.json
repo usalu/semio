@@ -5,7 +5,7 @@
   "displayName": "Delete Organizational Requirement",
   "emoji": "🗑️🏢",
   "aggregateVariant": "DeleteOrganizationalRequirement",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

@@ -1,0 +1,8 @@
+; ABNF mirror (descriptive, not test-parsed — the real byte-level walker is
+; ../📡️.protocol.semio, walked by dsl::walk_protocol) for stdio.semio.audio.diff (binary)
+; — the REAL binary `SemioAudioDiff::encode_diff`/`decode_diff` frame, NOT the old
+; `print_diff().into_bytes()` text-as-binary shortcut.
+document  = format presence payload
+format    = OCTET                ; DIFF_BINARY_FORMAT, currently 1
+presence  = OCTET                ; bit0=sample_rate bit1=format bit2=channels bit3=tags
+payload   = *OCTET                ; see ../../🦀️.rs's DiffCodec::encode_diff; opaque here (protocol-cond-cannot-chain gap)

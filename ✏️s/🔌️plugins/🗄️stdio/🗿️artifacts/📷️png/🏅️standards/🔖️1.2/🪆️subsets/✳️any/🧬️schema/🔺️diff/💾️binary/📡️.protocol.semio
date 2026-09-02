@@ -1,0 +1,106 @@
+dialect protocol
+protocol stdio.png.diff
+version 1
+schema stdio.png.diff
+start diff
+
+# Real binary diff-frame `protocol::DiffCodec::encode_diff`/`decode_diff` NOW emit for
+# `PngDiff` — upgraded, this program, from the F6-era `print_diff().into_bytes()` text-as-
+# binary shortcut (see this artifact's report). `PngDiff` is a STRUCT (not an enum) with a mix
+# of PLAIN `Option<T>` fields (`width`/`height`/`bit_depth`/`color_type`/`interlace`/
+# `text_chunks`/`pixels`/`chunk_order`/`unknown_chunks`) and TRI-STATE `Option<Option<T>>`
+# fields (`plte`/`trns`/`gama`/`chrm`/`srgb`/`phys`/`time`/`bkgd`) — so every field gets its
+# own presence-FLAG byte, directly modeling M2's real conditional-field-presence mechanism
+# (item 4): a plain field uses a 2-way flag (`0`=unchanged, `1`=changed); a tri-state field
+# uses a 3-way flag (`0`=unchanged, `1`=cleared-to-None, `2`=set-to-Some(value)) rather than
+# TWO chained `if`-guarded fields — chaining would need a second field's `if` guard to
+# reference a field that was ITSELF only conditionally decoded (the outer flag), and
+# `eval_cond` unconditionally errors ("condition references unknown field") when its guarded
+# field was never read (confirmed by reading `eval_cond`/`walk_fields`,
+# `📖️grammar/🦀️.rs`) — a real, concrete instance of this artifact's report
+# `mechanism_gaps` entry "protocol-cond-cannot-chain". The single-flat-flag-per-field design
+# below sidesteps it entirely (every `if` guard here references a field that is ALWAYS
+# unconditionally read, one line above).
+#
+# Fixed-width nested values (`gama`/`chrm`/`srgb`/`phys`/`time`) are modeled as REAL,
+# individually-walked structured fields (every one of `PngChromaticities`'/`PngPhysicalDims`'/
+# `PngTimestamp`'s own sub-fields gets its own conditional `field`, gated on the SAME
+# always-read outer flag — the same "no chaining" rule applies transitively, so these are
+# siblings of the flag, not nested under a further conditional). Genuinely variable-length
+# payloads (`plte`/`trns`/`bkgd`/`text_chunks`/`pixels`/`chunk_order`/`unknown_chunks`) are
+# length-prefixed opaque byte blobs (`<name>_len varint` + `Array(u8, Field(<name>_len))`) —
+# `Prim::Ref` to a struct/enum still unconditionally errors at walk time (confirmed unchanged
+# since P2-M2), so their own internal collection-triple/tagged-enum shape isn't further
+# protocol-walkable; the Rust `encode_diff`/`decode_diff` side IS genuinely, fully structured
+# real binary (see 🔺️diff/🦀️.rs's `RealBinaryDiffFrame` region) — this is purely a
+# limit on how deep the PROTOCOL DESCRIPTION itself can validate structurally, same documented
+# limitation as every other stdio pilot's own nested-payload field.
+framing record
+
+field width_flag u8
+field width_value u32 if width_flag eq 1
+field height_flag u8
+field height_value u32 if height_flag eq 1
+field bit_depth_flag u8
+field bit_depth_value u8 if bit_depth_flag eq 1
+field color_type_flag u8
+field color_type_value u8 if color_type_flag eq 1
+field interlace_flag u8
+field interlace_value u8 if interlace_flag eq 1
+
+field plte_flag u8
+field plte_len varint if plte_flag eq 2
+field plte_value Array(u8, Field(plte_len)) if plte_flag eq 2
+
+field trns_flag u8
+field trns_len varint if trns_flag eq 2
+field trns_value Array(u8, Field(trns_len)) if trns_flag eq 2
+
+field gama_flag u8
+field gama_value u32 if gama_flag eq 2
+
+field chrm_flag u8
+field chrm_white_x u32 if chrm_flag eq 2
+field chrm_white_y u32 if chrm_flag eq 2
+field chrm_red_x u32 if chrm_flag eq 2
+field chrm_red_y u32 if chrm_flag eq 2
+field chrm_green_x u32 if chrm_flag eq 2
+field chrm_green_y u32 if chrm_flag eq 2
+field chrm_blue_x u32 if chrm_flag eq 2
+field chrm_blue_y u32 if chrm_flag eq 2
+
+field srgb_flag u8
+field srgb_value u8 if srgb_flag eq 2
+
+field phys_flag u8
+field phys_ppu_x u32 if phys_flag eq 2
+field phys_ppu_y u32 if phys_flag eq 2
+field phys_unit u8 if phys_flag eq 2
+
+field time_flag u8
+field time_year u16 if time_flag eq 2
+field time_month u8 if time_flag eq 2
+field time_day u8 if time_flag eq 2
+field time_hour u8 if time_flag eq 2
+field time_minute u8 if time_flag eq 2
+field time_second u8 if time_flag eq 2
+
+field bkgd_flag u8
+field bkgd_len varint if bkgd_flag eq 2
+field bkgd_value Array(u8, Field(bkgd_len)) if bkgd_flag eq 2
+
+field text_chunks_flag u8
+field text_chunks_len varint if text_chunks_flag eq 1
+field text_chunks_value Array(u8, Field(text_chunks_len)) if text_chunks_flag eq 1
+
+field pixels_flag u8
+field pixels_len varint if pixels_flag eq 1
+field pixels_value Array(u8, Field(pixels_len)) if pixels_flag eq 1
+
+field chunk_order_flag u8
+field chunk_order_len varint if chunk_order_flag eq 1
+field chunk_order_value Array(u8, Field(chunk_order_len)) if chunk_order_flag eq 1
+
+field unknown_chunks_flag u8
+field unknown_chunks_len varint if unknown_chunks_flag eq 1
+field unknown_chunks_value Array(u8, Field(unknown_chunks_len)) if unknown_chunks_flag eq 1

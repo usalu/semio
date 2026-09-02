@@ -5,18 +5,21 @@
   "displayName": "Remove Tag",
   "emoji": "🗑️",
   "aggregateVariant": "RemoveTag",
-  "payloadSchema": "🔣️payload.schema.json",
-  "textOpcode": "remove-tag",
+  "payloadSchema": "🔣️.schema.json",
+  "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
   "outcomeClasses": [
-    "error",
-    "applied"
+    "applied",
+    "error"
   ],
   "composition": "atomic",
   "requiredLanguageSurfaces": [
     "rust",
+    "typescript",
+    "graphql",
+    "protobuf",
     "json-schema"
   ]
 }

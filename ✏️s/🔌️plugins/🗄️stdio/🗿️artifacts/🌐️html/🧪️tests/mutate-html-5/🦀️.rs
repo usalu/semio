@@ -5,7 +5,7 @@
 //! the feature file's own header for the derivation note) into the case work directory first; the
 //! committed fixture is never written to. `oracle` drives the registered `html5ever`/
 //! `markup5ever_rcdom` reference implementation
-//! (`../../🏅️standards/🔖️5/🪆️subsets/✳️any/🧪️oracle/🦀️component.rs`'s own
+//! (`../../🏅️standards/🔖️5/🪆️subsets/✳️any/🦀️oracle.rs`'s own
 //! `oracle_apply_mutation`/`oracle_apply_mutation_inverse`); `subject` drives this repository's own
 //! `parse_html_document`/`write_html_document`/`apply_html_mutation` over the full 10-kind
 //! `HtmlMutation` vocabulary. Both results are read back by the SAME independent `project_html_5`
@@ -18,7 +18,7 @@ use semio_s_plugin_stdio_test_oracle::artifacts::html::standards::v5::subsets::a
 
 //#region 🔖️Kinds
 /// 📇️ Kebab-case spelling of every `HtmlMutation` variant, mirrored from
-/// `../../🏅️standards/🔖️5/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs`'s own `KINDS` --
+/// `../../🏅️standards/🔖️5/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs`'s own `KINDS` --
 /// duplicated rather than imported because the ORACLE-only build of this adapter must never link
 /// `semio-s-plugin-stdio` (see this file's own header); `kinds_const_matches_enum_variants_in_
 /// declaration_order` on the production side and the framework's own catalog-completeness gate on
@@ -199,7 +199,7 @@ mod subject {
 
     //#region 🔖️Inverse
     /// ↩️ `HtmlMutation::inverse` in closed form -- every variant's own `Mutation::inverse` arm
-    /// (`../../🏅️standards/🔖️5/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs`), transplanted
+    /// (`../../🏅️standards/🔖️5/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs`), transplanted
     /// rather than called through the trait, same precedent `mutate-xml-1-0`'s own `inverse_of` gives:
     /// written in closed form so this adapter needs no extra crate dependency beyond
     /// `semio-s-plugin-stdio` itself, and reads `base`'s PRIOR state through the same `node_at`/

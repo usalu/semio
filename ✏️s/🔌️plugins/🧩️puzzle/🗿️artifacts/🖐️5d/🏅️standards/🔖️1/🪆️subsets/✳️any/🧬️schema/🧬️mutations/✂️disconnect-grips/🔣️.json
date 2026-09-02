@@ -5,7 +5,7 @@
   "displayName": "Disconnect Grips",
   "emoji": "✂️",
   "aggregateVariant": "DisconnectGrips",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": "disconnect-grips",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

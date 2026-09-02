@@ -17,7 +17,7 @@
       "license": "MIT",
       "testOnly": true,
       "homepage": "https://github.com/J-F-Liu/lopdf",
-      "rationale": "🫥️ RECLASSIFIED, on the same ground as `gltf`, `png`, `jpg`, `bmp`, `tiff` and `avi`. `lopdf` is a real PDF codec and does real work — but what a MUTATION SHOULD PRODUCE is computed by this owner's own `🧪️oracle/🦀️component.rs`, whose doc comments say it plainly: the forward and undo results are \"read out of the BYTES by the INDEPENDENT IMPLEMENTATION\". The fixtures registered alongside are generated through that same second implementation (`apply_conformance_mutation` in `semio-s-plugin-stdio-test-oracle`), so both halves of the comparison descend from one reading of the specification, and a misreading of it yields two agreeing wrong answers.\n\n`lopdf` discharges \"the result is a well-formed PDF\", NOT \"the mutation computed the right answer\". Only the second is what a mutation oracle is for. A required SUPPLEMENT, never a substitute.\n\nThe fixtures stay and are valuable: real PDF bytes, byte-reproducible, covering every declared kind of this conformance profile — exactly what a qualifying third-party reference gets pointed at when one exists.",
+      "rationale": "🫥️ RECLASSIFIED, on the same ground as `gltf`, `png`, `jpg`, `bmp`, `tiff` and `avi`. `lopdf` is a real PDF codec and does real work — but what a MUTATION SHOULD PRODUCE is computed by this owner's own `🦀️oracle.rs`, whose doc comments say it plainly: the forward and undo results are \"read out of the BYTES by the INDEPENDENT IMPLEMENTATION\". The fixtures registered alongside are generated through that same second implementation (`apply_conformance_mutation` in `semio-s-plugin-stdio-test-oracle`), so both halves of the comparison descend from one reading of the specification, and a misreading of it yields two agreeing wrong answers.\n\n`lopdf` discharges \"the result is a well-formed PDF\", NOT \"the mutation computed the right answer\". Only the second is what a mutation oracle is for. A required SUPPLEMENT, never a substitute.\n\nThe fixtures stay and are valuable: real PDF bytes, byte-reproducible, covering every declared kind of this conformance profile — exactly what a qualifying third-party reference gets pointed at when one exists.",
       "hostPath": "✏️s/🔌️plugins/🗄️stdio/🧪️oracle/📦️packages/🦀️rust",
       "kind": "cross-semio-implementation",
       "engine": {
@@ -153,7 +153,7 @@
         {
           "id": "embed-font-file",
           "capability": "pdf-1-7-vt-mutate",
-          "payloadSchema": "🔣️payload.schema.json",
+          "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "applied"
           ],
@@ -173,7 +173,7 @@
         {
           "id": "insert-encryption-dictionary",
           "capability": "pdf-1-7-vt-mutate",
-          "payloadSchema": "🔣️payload.schema.json",
+          "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "applied"
           ],
@@ -193,7 +193,7 @@
         {
           "id": "insert-javascript-action",
           "capability": "pdf-1-7-vt-mutate",
-          "payloadSchema": "🔣️payload.schema.json",
+          "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "applied"
           ],
@@ -213,7 +213,7 @@
         {
           "id": "insert-launch-action",
           "capability": "pdf-1-7-vt-mutate",
-          "payloadSchema": "🔣️payload.schema.json",
+          "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "applied"
           ],
@@ -233,7 +233,7 @@
         {
           "id": "insert-media-annotation",
           "capability": "pdf-1-7-vt-mutate",
-          "payloadSchema": "🔣️payload.schema.json",
+          "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "applied"
           ],
@@ -253,7 +253,7 @@
         {
           "id": "remove-dpart-metadata",
           "capability": "pdf-1-7-vt-mutate",
-          "payloadSchema": "🔣️payload.schema.json",
+          "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "applied"
           ],
@@ -273,7 +273,7 @@
         {
           "id": "remove-dpart-root",
           "capability": "pdf-1-7-vt-mutate",
-          "payloadSchema": "🔣️payload.schema.json",
+          "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "applied"
           ],
@@ -293,7 +293,7 @@
         {
           "id": "remove-encryption-dictionary",
           "capability": "pdf-1-7-vt-mutate",
-          "payloadSchema": "🔣️payload.schema.json",
+          "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "applied"
           ],
@@ -313,7 +313,7 @@
         {
           "id": "remove-font-file",
           "capability": "pdf-1-7-vt-mutate",
-          "payloadSchema": "🔣️payload.schema.json",
+          "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "applied"
           ],
@@ -333,7 +333,7 @@
         {
           "id": "remove-javascript-action",
           "capability": "pdf-1-7-vt-mutate",
-          "payloadSchema": "🔣️payload.schema.json",
+          "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "applied"
           ],
@@ -353,7 +353,7 @@
         {
           "id": "remove-launch-action",
           "capability": "pdf-1-7-vt-mutate",
-          "payloadSchema": "🔣️payload.schema.json",
+          "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "applied"
           ],
@@ -373,7 +373,7 @@
         {
           "id": "remove-media-annotation",
           "capability": "pdf-1-7-vt-mutate",
-          "payloadSchema": "🔣️payload.schema.json",
+          "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "applied"
           ],
@@ -393,7 +393,7 @@
         {
           "id": "remove-output-intent",
           "capability": "pdf-1-7-vt-mutate",
-          "payloadSchema": "🔣️payload.schema.json",
+          "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "applied"
           ],
@@ -413,7 +413,7 @@
         {
           "id": "remove-trim-box",
           "capability": "pdf-1-7-vt-mutate",
-          "payloadSchema": "🔣️payload.schema.json",
+          "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "applied"
           ],
@@ -433,7 +433,7 @@
         {
           "id": "set-dpart-metadata",
           "capability": "pdf-1-7-vt-mutate",
-          "payloadSchema": "🔣️payload.schema.json",
+          "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "applied"
           ],
@@ -453,7 +453,7 @@
         {
           "id": "set-dpart-root",
           "capability": "pdf-1-7-vt-mutate",
-          "payloadSchema": "🔣️payload.schema.json",
+          "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "applied"
           ],
@@ -473,7 +473,7 @@
         {
           "id": "set-output-intent",
           "capability": "pdf-1-7-vt-mutate",
-          "payloadSchema": "🔣️payload.schema.json",
+          "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "applied"
           ],
@@ -493,7 +493,7 @@
         {
           "id": "set-trim-box",
           "capability": "pdf-1-7-vt-mutate",
-          "payloadSchema": "🔣️payload.schema.json",
+          "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "applied"
           ],

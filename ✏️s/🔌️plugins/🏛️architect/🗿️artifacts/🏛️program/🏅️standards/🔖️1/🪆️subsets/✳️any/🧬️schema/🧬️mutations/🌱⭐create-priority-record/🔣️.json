@@ -5,7 +5,7 @@
   "displayName": "Create Priority Record",
   "emoji": "🌱⭐",
   "aggregateVariant": "CreatePriorityRecord",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

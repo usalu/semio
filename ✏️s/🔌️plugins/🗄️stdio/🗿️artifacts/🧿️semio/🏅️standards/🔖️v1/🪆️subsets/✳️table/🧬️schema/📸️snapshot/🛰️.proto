@@ -1,0 +1,29 @@
+syntax = "proto3";
+// 🧬️ SemioTableSnapshot schema — real facet mirror of the Rust `🦀️.rs` sibling.
+package semio.s_stdio_semio_table.snapshot;
+
+import "../../../✳️value/🧬️schema/📸️snapshot/🛰️.proto";
+
+enum SemioTableCellKind {
+  NULL = 0;
+  BOOL = 1;
+  INT = 2;
+  FLOAT = 3;
+  STR = 4;
+  BYTES = 5;
+}
+
+message SemioTableColumn {
+  string name = 1;
+  SemioTableCellKind kind = 2;
+}
+
+message SemioTableRow {
+  repeated semio.s_stdio_semio_value.snapshot.SemioValue cells = 1;
+}
+
+message SemioTableSnapshot {
+  string schema = 1;
+  repeated SemioTableColumn columns = 2;
+  repeated SemioTableRow rows = 3;
+}

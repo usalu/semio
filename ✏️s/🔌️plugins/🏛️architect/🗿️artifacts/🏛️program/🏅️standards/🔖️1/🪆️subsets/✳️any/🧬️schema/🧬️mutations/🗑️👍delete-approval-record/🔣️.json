@@ -5,7 +5,7 @@
   "displayName": "Delete Approval Record",
   "emoji": "🗑️👍",
   "aggregateVariant": "DeleteApprovalRecord",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

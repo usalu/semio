@@ -7,13 +7,13 @@ a second IMPLEMENTATION, written in another language from the format's own commi
 
 * the envelope — `semio <plugin>.<artifact>.<component> v<version>` preamble for text, and the
   `0x89 'S' 'E' 'M' 0D 0A 1A 0A` magic + little-endian u32 token length + token for binary — is
-  specified in `🧰️framework/🛍️products/💻️os/🔨️modules/🧬️semio/🦀️component.rs`'s envelope region;
+  specified in `🧰️framework/🛍️products/💻️os/🔨️modules/🧬️semio/🦀️.rs`'s envelope region;
 * the DSL body is the committed grammar
-  `../../🏅️standards/🔖️v1/🪆️subsets/✳️value/🧬️schema/📸️snapshot/📝️text/📖️component.grammar.semio`:
+  `../../🏅️standards/🔖️v1/🪆️subsets/✳️value/🧬️schema/📸️snapshot/📝️text/📖️.grammar.semio`:
   `document = artifact-mark "[" hex "," value "," "[" value-node* "]" "]"`,
   `value-node = hex ":" value ","?`, and the tag-prefixed `SemioValue` production
   `Z | B[bit] | I[hex] | F[hex] | S[hex] | Y[hex] | L[…] | M[hexkey:value,…] | R[hex]`;
-* the pack body is the committed protocol `…/📸️snapshot/💾️binary/📡️component.protocol.semio`, which
+* the pack body is the committed protocol `…/📸️snapshot/💾️binary/📡️.protocol.semio`, which
   for THIS subset declares no separate binary layout at all — the pack payload is the same DSL body
   wrapped in the binary envelope. `pack_bytes` re-encodes the committed `🎒️example.pack.semio` byte
   for byte, which is what pins that reading;
@@ -21,7 +21,7 @@ a second IMPLEMENTATION, written in another language from the format's own commi
   `{"kind":"index","index":…}` segments) and their JSON wire form are the committed
   `(before, mutation, after)` specification vectors — this case's own `🧫️fixtures/` for eight of
   them and `…/🧬️mutations/📄set-snapshot/🧪️tests/…/` for `set-snapshot` — plus the committed JSON
-  schema `…/🧬️schema/🧬️mutations/🔣️component.json`. They settle the two facts a name alone does not:
+  schema `…/🧬️schema/🧬️mutations/🔣️.json`. They settle the two facts a name alone does not:
   `set-map-entry` and `set-node` overwrite an existing key or id IN PLACE and APPEND an absent one,
   and `remove-map-entry`/`remove-list-item`/`remove-node` do not renumber anything else.
 
@@ -553,7 +553,7 @@ def derive_document_from_json(raw: bytes) -> dict:
 
 
 # region 🔖️Scenario input
-GRAPH_DSL = "asset://🏅️standards/🔖️v1/🪆️subsets/✳️any/📚️examples/🕸️graph/🖼️assets/🗣️example.dsl.semio"
+GRAPH_DSL = "asset://🏅️standards/🔖️v1/🪆️subsets/✳️any/📚️examples/🕸️graph/🖼️assets/🗣️.dsl.semio"
 GRAPH_PACK = "asset://🏅️standards/🔖️v1/🪆️subsets/✳️any/📚️examples/🕸️graph/🖼️assets/🎒️example.pack.semio"
 FOREST_JSON = "local://🌲️hexagonal-cut-concrete-forest-left.model.json"
 FOREST_DSL = "local://🌲️hexagonal-cut-concrete-forest.dsl.semio"

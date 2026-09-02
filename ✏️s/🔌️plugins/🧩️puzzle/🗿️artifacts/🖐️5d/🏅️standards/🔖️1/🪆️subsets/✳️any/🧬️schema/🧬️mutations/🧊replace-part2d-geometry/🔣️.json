@@ -5,7 +5,7 @@
   "displayName": "Replace Part2d Geometry",
   "emoji": "🧊",
   "aggregateVariant": "ReplacePart2dGeometry",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": "replace-part2d-geometry",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

@@ -1,7 +1,0 @@
-; ABNF mirror (descriptive, not test-parsed — the real byte-level walker is
-; ../📡️component.protocol.semio, walked by dsl::walk_protocol) for `SemioImageDiff`'s real binary
-; diff frame (NOT print_diff().into_bytes()).
-document = format presence payload
-format   = OCTET                ; DIFF_BINARY_FORMAT, currently 1
-presence = OCTET                ; bit0=width bit1=height bit2=colorspace bit3=bitDepth bit4=icc bit5=frames bit6=metadata
-payload  = *OCTET                ; 0-7 varint-length-prefixed UTF-8 text blobs, one per set presence bit

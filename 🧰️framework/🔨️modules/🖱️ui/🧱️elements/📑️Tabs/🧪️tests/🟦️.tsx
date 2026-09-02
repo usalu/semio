@@ -3,7 +3,7 @@ import * as React from "react";
 import { renderToString } from "react-dom/server";
 import { fireEvent, render } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "../🟦️component.tsx";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "../🟦️.tsx";
 // #endregion 🔌️Adapters
 
 // #region 📑️Fixture

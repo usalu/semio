@@ -1,0 +1,20 @@
+{
+  "$id": "https://semio.tech/schema/s.stdio.semio.text.snapshot/text.json",
+  "title": "SemioTextSnapshotDsl",
+  "description": "Text-encoding mirror of the snapshot facet — see ../🔣️.json for the canonical facet schema.",
+  "type": "object",
+  "properties": {
+    "schema": { "type": "string" },
+    "runs": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "language": { "type": "string" },
+          "content": { "type": "string" },
+          "marks": { "type": "array", "items": { "type": "object" } }
+        }
+      }
+    }
+  }
+}

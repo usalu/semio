@@ -6,7 +6,7 @@
 //! mirror of `mutate-docx-ecma-376-strict` over the same bytes: six kinds move the package OUT of
 //! the ISO/IEC 29500-4 class and back in. `oracle` handlers drive the registered `quick-xml` 0.42 +
 //! `zip` 6 pair through this subset's own
-//! `../../🏅️standards/🔖️ecma-376/🪆️subsets/✳️transitional/🧪️oracle/🦀️component.rs`; `subject`
+//! `../../🏅️standards/🔖️ecma-376/🪆️subsets/✳️transitional/🦀️oracle.rs`; `subject`
 //! handlers drive `decode_docx`/`apply_docx_transitional_mutation`/`encode_docx`; both results are
 //! read back by the SAME independent `project_package` before
 //! `semantic-ooxml-docx-transitional-v1` compares them. The subject half is `sut`-gated so the

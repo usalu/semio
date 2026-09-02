@@ -5,7 +5,7 @@
 //! this repository's own real `README.md` — see the feature file's own header for the full
 //! provenance) into the case work directory first; the committed fixture is never written to.
 //! `oracle` drives the registered `zip`+`quick-xml` composition
-//! (`../../🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/🧪️oracle/🦀️component.rs`'s own
+//! (`../../🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/🦀️oracle.rs`'s own
 //! `oracle_apply_mutation`/`oracle_apply_mutation_inverse`); `subject` drives this repository's own
 //! `decode_docx`/`encode_docx`/`apply_docx_mutation` over the full 12-kind `DocxMutation`
 //! vocabulary. Both results are read back by the SAME independent `project_docx_ecma_376` (the

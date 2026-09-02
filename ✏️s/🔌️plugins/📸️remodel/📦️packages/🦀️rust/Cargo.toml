@@ -20,7 +20,7 @@ ports = { react = 6063, wgpu = 6163 }
 
 [lib]
 crate-type = ["cdylib", "rlib"]
-path = "📦️glue.rs"
+path = "🦀️.rs"
 
 [dependencies]
 semio-s-plugin-stdio = { path = "../../../🗄️stdio/📦️packages/🦀️rust", package = "semio-s-plugin-stdio", default-features = false }
@@ -52,5 +52,5 @@ semio-framework-pixels = { path = "../../../../../🧰️framework/🔨️module
 [dev-dependencies]
 semio-framework-async-macros = { path = "../../../../../🧰️framework/🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust" }
 # 🔬️ Test oracle only (never `[dependencies]`): validates that our own encoded/decoded PNG bytes
-# are readable by/match the reference decoder/encoder — see 🖼️images/🦀️component.rs's test module.
+# are readable by/match the reference decoder/encoder — see 🖼️images/🦀️.rs's test module.
 png = "0.17.16"

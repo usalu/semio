@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
 /** 🛡️ `@semio-tech/hub-admin` (nx `os-hub-admin`) router: `bun ./📜️script.ts <dev|build|test> [args…]`. */
-import { BundleScript, ScriptRouter, runBundleScriptMain, runViteBuild, runViteBunxDev, runVitest } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts";
+import { BundleScript, ScriptRouter, runBundleScriptMain, runViteBuild, runViteBunxDev, runVitest } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 
 /** @emoji 🩺️ Preflight: this dev server is a pure vite proxy shell — every `/admin/api`, `/directory`
  * and `/auth` call it serves is forwarded to a separately-running hub. With no hub behind it the page

@@ -1,0 +1,18 @@
+dialect protocol
+protocol s.stdio.semio.table.diff
+version 1
+schema s.stdio.semio.table
+start body
+framing record
+
+# UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM table wave: real binary diff frame. `format u8` + `presence
+# u8` (bit0=`columns`, bit1=`rows`) are two REAL fixed fields; when present, each section follows
+# as a real varint count + per-item repeated record — modeled as one opaque trailing `payload`
+# chain (the `protocol-array-of-records` gap every sibling subset's own diff protocol uses at this
+# boundary). The real Rust `encode_diff`/`decode_diff` (`../../🦀️.rs`) stays genuinely,
+# fully structured — round-trip tested independently.
+header fixed 2
+field format u8
+field presence u8
+
+chain payload bytes

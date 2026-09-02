@@ -1,7 +1,7 @@
 //! 🦀️ PLY 1.0 mutation case — Rust adapter. Exhaustive: every declared `PlyMutation` kind
 //! (`ply-1-0-any`, 10 kinds) gets a `mutate-<kind>` and an `inverse-<kind>` scenario, plus one
 //! identity round trip. The oracle performs every kind by direct manipulation of `ply-rs`'s own
-//! `Ply<DefaultElement>` model (`../../🏅️standards/🔖️1.0/🪆️subsets/✳️base/🧪️oracle/🦀️component.rs`,
+//! `Ply<DefaultElement>` model (`../../🏅️standards/🔖️1.0/🪆️subsets/✳️base/🦀️oracle.rs`,
 //! independent of this subset's own decode/encode/mutation code); the subject fully parses into
 //! `PlySnapshot` and re-serializes from it alone (no byte pass-through). Both results are read back
 //! by the INDEPENDENT `ply-rs` reader before the `semantic-ply-v1` profile compares them.
@@ -12,7 +12,7 @@ use semio_s_plugin_stdio_test_oracle::law::{inverse_restores_within, mutation_is
 
 //#region 🔖️Kinds
 /// 🏷️ Mirrors this subset's own `PlyMutation::KINDS` (`../../🏅️standards/🔖️1.0/🪆️subsets/✳️base/
-/// 🧬️schema/🧬️mutations/🦀️component.rs`). Kept as a plain literal here rather than imported since
+/// 🧬️schema/🧬️mutations/🦀️.rs`). Kept as a plain literal here rather than imported since
 /// this adapter's oracle-only build never links the subject crate — the contract gate (mutation
 /// coverage against the `ply-1-0-any` catalog) is what keeps the two lists honest against each other.
 const KINDS: &[&str] = &["no-mutation", "set-snapshot", "set-format", "insert-comment", "remove-comment", "add-element", "remove-element", "insert-row", "remove-row", "set-row-property"];
@@ -20,7 +20,7 @@ const KINDS: &[&str] = &["no-mutation", "set-snapshot", "set-format", "insert-co
 
 //#region 🔖️Profile
 /// 📏️ `semantic-ply-v1`'s own declared tolerance (`../../🏅️standards/🔖️1.0/🪆️subsets/✳️base/
-/// 🧪️oracle/🔣️.json`), mirrored here so an in-handler law check is exactly as strict as
+/// 🔣️oracle.json`), mirrored here so an in-handler law check is exactly as strict as
 /// the profile the case is measured by — never stricter.
 const PLY_TOLERANCE: f64 = 1e-5;
 //#endregion 🔖️Profile
@@ -85,7 +85,7 @@ const VERTEX_0_ROW: [f64; 8] = [0.0, -1.0, 0.0, 0.0, -1.0, 0.0, 0.00390625, 0.0]
 /// ↩️ The semantically correct inverse spec for one forward `(kind, params)` pair against the
 /// pristine fixture's own known real values — index/name-aware, mirroring the same per-variant
 /// `PlyMutation::inverse()` semantics `../../🏅️standards/🔖️1.0/🪆️subsets/✳️base/🧬️schema/🧬️mutations/
-/// 🦀️component.rs` documents, computed independently here since neither the oracle nor this adapter
+/// 🦀️.rs` documents, computed independently here since neither the oracle nor this adapter
 /// can reach that subject-side method. `set-snapshot`'s inverse is a REAL `set-snapshot` carrying
 /// the original document's own independent projection — which is exactly the payload shape this
 /// subset's oracle consumes (`ply_from_json` reads the `{format, comments, elements}` object
@@ -345,7 +345,7 @@ mod subject {
     /// `set-format` → `binaryLittleEndian` moved the typed model and then wrote plain ascii with
     /// an `format ascii 1.0` header: the mutation was unobservable in the document and the
     /// reference's real binary output had nothing on our side to be compared against. The
-    /// production pack path already reads it this way — `🧬️schema/📸️snapshot/🦀️component.rs`
+    /// production pack path already reads it this way — `🧬️schema/📸️snapshot/🦀️.rs`
     /// calls `encode_ply_with_format(self, self.format)` and names the ascii-forcing call as the
     /// hazard — and this adapter now mirrors it (ticket `26/08/23/END-TO-END-TESTING-REFACTOR`,
     /// subject scenario `inverse-set-format`).
@@ -366,7 +366,7 @@ mod subject {
     /// applied to the step that reads the REAL COMMITTED FIXTURE — a foreign writer's bytes, which
     /// this codec's normal form cannot reproduce, so bit-identical output there means the input was
     /// smuggled rather than parsed. It is deliberately NOT applied to the undo step: that step
-    /// re-encodes THIS codec's own first-generation output, and `🚪️io/🦀️component.rs` documents
+    /// re-encodes THIS codec's own first-generation output, and `🚪️io/🦀️.rs` documents
     /// decode/encode as a true fixed point from the second generation onward, so an undo that
     /// restores the same model is REQUIRED to reproduce those bytes. Asserting the tripwire there
     /// failed `inverse-no-mutation` for the codec behaving exactly as its own retention law says it

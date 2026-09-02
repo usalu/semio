@@ -22,7 +22,7 @@
 //! moved to its own mutation-leaf folder beside this file (`../🖼️tiff/…/✳️baseline/🧬️schema/🧬️mutations/`
 //! is the reference shape). `NoMutation` was dropped: the derive requires every variant to wrap
 //! exactly one leaf payload (a unit variant wraps none), and `"no"` is not an `APPROVED_VERB`
-//! (`🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🎮️command/🦀️component.rs`) a derived `SEMANTICS.verb`
+//! (`🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🎮️command/🦀️.rs`) a derived `SEMANTICS.verb`
 //! could hold anyway.
 
 use crate::artifacts::stl::schema::diff::{self, StlDiff};
@@ -65,7 +65,7 @@ pub enum StlMutation {
 
 //#region 🔖️Kinds
 /// 🧾️ Kebab-case spelling of every `StlMutation` variant, in declaration order — the vocabulary
-/// `../🧪️oracle/🔣️.json`'s `stl-ascii-any` catalog is measured against. Kept honest by
+/// `../🔣️oracle.json`'s `stl-ascii-any` catalog is measured against. Kept honest by
 /// `kinds_match_enum_and_catalog` below (the framework never parses Rust to learn this list).
 pub const KINDS: &[&str] = &["set-snapshot", "set-solid-name", "insert-triangle", "remove-triangle", "set-triangle-normal", "set-triangle-vertices"];
 //#endregion 🔖️Kinds
@@ -217,7 +217,7 @@ fn dec_snapshot_bin(reader: &mut store::ByteReader<'_>) -> Result<StlSnapshot, S
 }
 
 /// 🧪️ P2-FG1-FIX: REAL binary op frame (`format u8 | tag u8 | variant payload`), matching
-/// `../💾️binary/📡️component.protocol.semio`'s `header fixed 2` + `chain payload bytes` shape —
+/// `../💾️binary/📡️.protocol.semio`'s `header fixed 2` + `chain payload bytes` shape —
 /// upgraded from the prior `print_stl_op(self).into_bytes()` text-as-binary shortcut. `tag` is
 /// the `StlMutation` variant's declaration-order ordinal (1=`SetSnapshot` .. 6=
 /// `SetTriangleVertices`, same order `enum StlMutation` declares them; `0` is retired along with
@@ -697,7 +697,7 @@ mod tests {
         let from_enum: Vec<&'static str> = samples.iter().map(kind_of).collect();
         assert_eq!(from_enum, KINDS, "KINDS must list every StlMutation variant, in declaration order");
 
-        let manifest = include_str!("../../🧪️oracle/🔣️.json");
+        let manifest = include_str!("../../🔣️oracle.json");
         let needle = "\"kinds\": [";
         let start = manifest.find(needle).expect("manifest declares a kinds array") + needle.len();
         let end = start + manifest[start..].find(']').expect("kinds array is closed");
@@ -710,9 +710,9 @@ mod tests {
 
 //#region 🧪️FixtureCases
 /// 🧪️ Handcrafted `📄set-snapshot` fixture cases, wired from this tree's own mutations root so
-/// `📦️glue.rs` stays untouched (`#[path]` on a non-inline module resolves against this file's own
+/// `🦀️.rs` stays untouched (`#[path]` on a non-inline module resolves against this file's own
 /// directory).
 #[cfg(test)]
-#[path = "📄set-snapshot/🧪️tests/renames-the-solid-and-closes-the-wedge-with-a-third-facet/🦀️component.rs"]
+#[path = "📄set-snapshot/🧪️tests/renames-the-solid-and-closes-the-wedge-with-a-third-facet/🦀️.rs"]
 mod set_snapshot_renames_the_solid_and_closes_the_wedge_with_a_third_facet;
 //#endregion 🧪️FixtureCases

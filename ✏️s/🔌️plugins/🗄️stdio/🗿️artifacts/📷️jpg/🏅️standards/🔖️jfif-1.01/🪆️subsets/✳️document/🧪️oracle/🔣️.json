@@ -17,15 +17,15 @@
       "license": "MIT OR Apache-2.0",
       "testOnly": true,
       "homepage": "https://github.com/image-rs/image",
-      "rationale": "🫥️ RECLASSIFIED. The third-party crate here does REAL codec work — it decodes the artifact and will reject a malformed one — but that is not what the mutation test turns on. What the OUTPUT OF A MUTATION SHOULD BE is computed by this owner's own `🧪️oracle/🦀️component.rs`, whose `apply_kind` dispatch is a second implementation of this subset's mutation semantics. Its own doc comment says so: it \"deliberately mirrors\" the production `diff` rather than diverging from it. Both halves of the comparison therefore read the same specification, and a misreading of it produces two agreeing wrong answers.\n\nThe honest split is that the crate discharges \"the result is a well-formed file of this format\", and NOT \"the mutation computed the right answer\". Only the second is what a mutation oracle is for, so this is a `cross-semio-implementation`: a required SUPPLEMENT, never a substitute. A qualifying third-party reference for the mutation semantics is still owed.",
+      "rationale": "🫥️ RECLASSIFIED. The third-party crate here does REAL codec work — it decodes the artifact and will reject a malformed one — but that is not what the mutation test turns on. What the OUTPUT OF A MUTATION SHOULD BE is computed by this owner's own `🦀️oracle.rs`, whose `apply_kind` dispatch is a second implementation of this subset's mutation semantics. Its own doc comment says so: it \"deliberately mirrors\" the production `diff` rather than diverging from it. Both halves of the comparison therefore read the same specification, and a misreading of it produces two agreeing wrong answers.\n\nThe honest split is that the crate discharges \"the result is a well-formed file of this format\", and NOT \"the mutation computed the right answer\". Only the second is what a mutation oracle is for, so this is a `cross-semio-implementation`: a required SUPPLEMENT, never a substitute. A qualifying third-party reference for the mutation semantics is still owed.",
       "hostPath": "✏️s/🔌️plugins/🗄️stdio/🧪️oracle/📦️packages/🦀️rust",
       "productionDebt": {
         "reachableFrom": [
-          "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️present/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🎥️video/🦀️component.rs",
-          "🧰️framework/🔨️modules/🗺️surface/🗺️tiled-map/🦀️component.rs"
+          "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️present/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🎥️video/🦀️.rs",
+          "🧰️framework/🔨️modules/🗺️surface/🗺️tiled-map/🦀️.rs"
         ],
         "owner": "🧰️framework/🔨️modules/🗺️surface",
-        "plan": "Same underlying `image` crate reachability already recorded against the shared `image-jpeg` entry (✏️s/🔌️plugins/🗄️stdio/🧪️oracle/🔣️.json) — repeated here because the dependency gate keys recorded debt by (path, oracle id) pair, not by package, so a second oracle id sharing the same package needs its own record. Phase 7 target: both call sites want raster decode/encode that ✏️s/🔌️plugins/🗄️stdio already implements, so routing them through decode_bmp / decode_tiff / decode_jpg retires the dependency and every entry recording it, this one included."
+        "plan": "Same underlying `image` crate reachability already recorded against the shared `image-jpeg` entry (✏️s/🔌️plugins/🗄️stdio/🔣️oracle.json) — repeated here because the dependency gate keys recorded debt by (path, oracle id) pair, not by package, so a second oracle id sharing the same package needs its own record. Phase 7 target: both call sites want raster decode/encode that ✏️s/🔌️plugins/🗄️stdio already implements, so routing them through decode_bmp / decode_tiff / decode_jpg retires the dependency and every entry recording it, this one included."
       },
       "kind": "cross-semio-implementation",
       "engine": {
@@ -66,13 +66,13 @@
       ],
       "productionDebt": {
         "reachableFrom": [
-          "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️present/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🎥️video/🦀️component.rs",
-          "🧰️framework/🔨️modules/🗺️surface/🗺️tiled-map/🦀️component.rs"
+          "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️present/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🎥️video/🦀️.rs",
+          "🧰️framework/🔨️modules/🗺️surface/🗺️tiled-map/🦀️.rs"
         ],
         "owner": "🧰️framework/🔨️modules/🗺️surface",
         "plan": "Same package, same reachability finding as the sibling `image-jpeg-jfif-1-01-mutate` entry immediately above — repeated here because the dependency gate keys recorded debt by (path, oracle id) pair. Independently re-verified this session by reading the source at both `reachableFrom` paths directly: `writer` module in the animate video component (`use image::{ImageBuffer, Rgba};`, a real non-test partial-movie-writer path) and `upload_tile` in the surface tiled-map component (`image::load_from_memory`, a real non-test production method) — both non-optional, non-dev `image` dependencies per their own Cargo.toml. The repository-wide `🔒️dependencies.json` registry entry for `image` currently still reads `productionReachable: false`, which this finding contradicts; that shared file is not edited here (out of this ticket's scope), only this oracle's own field is corrected to match the evidence."
       },
-      "rationale": "📖️ A READER, and that is the whole point of registering it separately from the `cross-semio-implementation` entry immediately above.\n\nThat sibling entry carries a `🧪️oracle/🦀️component.rs` that COMPUTES what each mutation should produce — registered `cross-semio-implementation` precisely because it shares one reading of the spec with production. This entry is a different mechanism entirely: the expected state is not computed at all, it is COMMITTED, as the `after` half of a byte-reproducible fixture built directly by `../🏭️generator/🦀️jpeg-jfif-codec` (depends on nothing but `image` 0.25.10). `image`'s own decoder then reads BOTH sides and the comparison is over what it recovered. The probes say so in their own header: \"Everything here MARSHALS and READS; nothing here applies a mutation or predicts what one should.\"\n\nCHECKED AGAINST THE VENDORED CRATE SOURCE, not assumed (`~/.cargo/registry/src/…/image-0.25.10` and `zune-jpeg-0.5.15`): `image::codecs::jpeg::JpegDecoder`'s public `ImageDecoder` surface exposes only `dimensions`, `color_type`, `icc_profile`, `exif_metadata`, `xmp_metadata`, `iptc_metadata`, `orientation` and the decoded raster — no DQT/DHT/DRI accessor exists anywhere in either crate, and `zune_jpeg::decoder::ImageInfo`'s `x_density`/`y_density` fields (documented \"Found in the APP(0) marker\") are dead: their setters are never called anywhere in the crate, so they always read back zero regardless of the file's real JFIF header. This governs the split registered on this subset's ten mutation kinds below: four are witnessable through this reader (`insert-other-segment`/`remove-other-segment`, built with an APP1 XMP payload specifically — the one generic-segment shape `xmp_metadata()` actually surfaces; `replace-pixels` and `change-re-encode-quality`, witnessed through the decoded raster digest) and six carry `jpg-jfif-1-01-mutate-uncarried` instead: five (`replace-quant-table`, `remove-quant-table`, `replace-huffman-table`, `remove-huffman-table`, `change-restart-interval`) because this subset's OWN production encoder (`../../🚪️io/🦀️component.rs::encode_jpg`) provably never carries them into the bytes at all — it regenerates fresh Annex K DQT/DHT tables from `re_encode_quality` on every write and never emits a DRI marker, independently confirmed by reading that file directly, not merely quoted from the sibling oracle's own docstring — and `change-jfif-header` because although `image`'s OWN encoder can write a genuine density difference (`set_pixel_density`, a real public API, used to build this kind's own fixture), this reader has no decode-side way to read it back.\n\nMEASURED, and this is what qualifies the registration rather than merely motivating it: `jpg-compare` on a byte-identical pair (`insert-other-segment-applied/before.jpg` against itself) returns `equal:true, diffCount:0`; on the real before/after pair for the same recipe (a genuine spliced APP1 XMP segment) it returns `equal:false, diffCount:3`, naming `$.xmp.present`, `$.xmp.size` and `$.xmp.digest` exactly."
+      "rationale": "📖️ A READER, and that is the whole point of registering it separately from the `cross-semio-implementation` entry immediately above.\n\nThat sibling entry carries a `🦀️oracle.rs` that COMPUTES what each mutation should produce — registered `cross-semio-implementation` precisely because it shares one reading of the spec with production. This entry is a different mechanism entirely: the expected state is not computed at all, it is COMMITTED, as the `after` half of a byte-reproducible fixture built directly by `../🏭️generator/🦀️jpeg-jfif-codec` (depends on nothing but `image` 0.25.10). `image`'s own decoder then reads BOTH sides and the comparison is over what it recovered. The probes say so in their own header: \"Everything here MARSHALS and READS; nothing here applies a mutation or predicts what one should.\"\n\nCHECKED AGAINST THE VENDORED CRATE SOURCE, not assumed (`~/.cargo/registry/src/…/image-0.25.10` and `zune-jpeg-0.5.15`): `image::codecs::jpeg::JpegDecoder`'s public `ImageDecoder` surface exposes only `dimensions`, `color_type`, `icc_profile`, `exif_metadata`, `xmp_metadata`, `iptc_metadata`, `orientation` and the decoded raster — no DQT/DHT/DRI accessor exists anywhere in either crate, and `zune_jpeg::decoder::ImageInfo`'s `x_density`/`y_density` fields (documented \"Found in the APP(0) marker\") are dead: their setters are never called anywhere in the crate, so they always read back zero regardless of the file's real JFIF header. This governs the split registered on this subset's ten mutation kinds below: four are witnessable through this reader (`insert-other-segment`/`remove-other-segment`, built with an APP1 XMP payload specifically — the one generic-segment shape `xmp_metadata()` actually surfaces; `replace-pixels` and `change-re-encode-quality`, witnessed through the decoded raster digest) and six carry `jpg-jfif-1-01-mutate-uncarried` instead: five (`replace-quant-table`, `remove-quant-table`, `replace-huffman-table`, `remove-huffman-table`, `change-restart-interval`) because this subset's OWN production encoder (`../../🚪️io/🦀️.rs::encode_jpg`) provably never carries them into the bytes at all — it regenerates fresh Annex K DQT/DHT tables from `re_encode_quality` on every write and never emits a DRI marker, independently confirmed by reading that file directly, not merely quoted from the sibling oracle's own docstring — and `change-jfif-header` because although `image`'s OWN encoder can write a genuine density difference (`set_pixel_density`, a real public API, used to build this kind's own fixture), this reader has no decode-side way to read it back.\n\nMEASURED, and this is what qualifies the registration rather than merely motivating it: `jpg-compare` on a byte-identical pair (`insert-other-segment-applied/before.jpg` against itself) returns `equal:true, diffCount:0`; on the real before/after pair for the same recipe (a genuine spliced APP1 XMP segment) it returns `equal:false, diffCount:3`, naming `$.xmp.present`, `$.xmp.size` and `$.xmp.digest` exactly."
     },
     {
       "id": "pillow-jpg-jfif-1-01-marker-reader",
@@ -816,7 +816,7 @@
         {
           "id": "change-jfif-header",
           "capability": "jpg-jfif-1-01-mutate",
-          "payloadSchema": "🔣️payload.schema.json",
+          "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "applied"
           ],
@@ -836,7 +836,7 @@
         {
           "id": "change-re-encode-quality",
           "capability": "jpg-jfif-1-01-mutate",
-          "payloadSchema": "🔣️payload.schema.json",
+          "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "applied"
           ],
@@ -856,7 +856,7 @@
         {
           "id": "change-restart-interval",
           "capability": "jpg-jfif-1-01-mutate",
-          "payloadSchema": "🔣️payload.schema.json",
+          "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "applied"
           ],
@@ -876,7 +876,7 @@
         {
           "id": "insert-other-segment",
           "capability": "jpg-jfif-1-01-mutate",
-          "payloadSchema": "🔣️payload.schema.json",
+          "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "applied"
           ],
@@ -896,7 +896,7 @@
         {
           "id": "remove-huffman-table",
           "capability": "jpg-jfif-1-01-mutate",
-          "payloadSchema": "🔣️payload.schema.json",
+          "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "applied"
           ],
@@ -916,7 +916,7 @@
         {
           "id": "remove-other-segment",
           "capability": "jpg-jfif-1-01-mutate",
-          "payloadSchema": "🔣️payload.schema.json",
+          "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "applied"
           ],
@@ -936,7 +936,7 @@
         {
           "id": "remove-quant-table",
           "capability": "jpg-jfif-1-01-mutate",
-          "payloadSchema": "🔣️payload.schema.json",
+          "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "applied"
           ],
@@ -956,7 +956,7 @@
         {
           "id": "replace-huffman-table",
           "capability": "jpg-jfif-1-01-mutate",
-          "payloadSchema": "🔣️payload.schema.json",
+          "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "applied"
           ],
@@ -976,7 +976,7 @@
         {
           "id": "replace-pixels",
           "capability": "jpg-jfif-1-01-mutate",
-          "payloadSchema": "🔣️payload.schema.json",
+          "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "applied"
           ],
@@ -996,7 +996,7 @@
         {
           "id": "replace-quant-table",
           "capability": "jpg-jfif-1-01-mutate",
-          "payloadSchema": "🔣️payload.schema.json",
+          "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "applied"
           ],

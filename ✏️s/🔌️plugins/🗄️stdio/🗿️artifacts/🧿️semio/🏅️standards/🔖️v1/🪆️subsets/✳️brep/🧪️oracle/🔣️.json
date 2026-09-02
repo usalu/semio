@@ -77,7 +77,7 @@
       ],
       "license": "AGPL-3.0-only",
       "testOnly": true,
-      "rationale": "SUPERSEDED AS THE PRIMARY REFERENCE by `brepjs-occt`, and RETAINED as the supplement it always said it was. This entry's own text already recorded that a qualifying third-party reference was still owed; that debt is now discharged by an OpenCASCADE kernel reading the STEP this subset exports. It is kept because a second implementation still catches a class of bug the carrier cannot show — anything the export documents as dropped (`BrepShellFace.orientation`, `ref_direction`, semio ids) is invisible to a STEP reader by construction, and this implementation sees it.\n\nNo third-party library reads or writes semio's own `.dsl.semio`/`.pack.semio` envelope, so a differential comparison's second PRODUCER cannot be a foreign package — it has to be a second implementation. `🧪️tests/mutate-semio-brep/🐍️component.py` is that implementation: the text envelope, the DSL grammar, the pack frame, both tagged geometry unions, the JSON projection and all thirteen verbs of `SemioBrepMutation`, written in Python from the committed specification documents alone — `../🧬️schema/📸️snapshot/📝️text/📖️component.grammar.semio` for the record grammar and its `L|C|E|N` curve and `P|C|O|S|T|N` surface tags with their exact field lists, `…/📸️snapshot/💾️binary/📡️component.protocol.semio` for the pack header and the sentence naming its per-collection payload, `…/📸️snapshot/🔣️component.json` for the projection's member names, `…/🧬️schema/🧬️mutations/📝️text/📖️component.grammar.semio` for the thirteen verbs and their argument lists, and `🧰️framework/🛍️products/💻️os/🔨️modules/🧬️semio/🦀️component.rs` for the semio envelope. It imports nothing from the Rust it judges and transliterates none of it. `package` is deliberately empty: the implementation is the adapter file, so this entry contributes no dependency to `🔒️dependencies.json` and nothing to the import-purity probe. The derivation of the pack layout past the header — which the protocol description names but declines to frame — is pinned by the Python re-encoding the committed `🧊️solid` `🎒️example.pack.semio` byte for byte, a file carrying a line, a circle, a NURBS curve and a NURBS surface, which a misreading could not do.\n\nUNDER PROTOCOL V2 this registration is classified `cross-semio-implementation` — a required SUPPLEMENTAL oracle that does not discharge `semio-v1-brep-mutate`'s external-oracle requirement for its 13-kind mutation vocabulary; a qualifying third-party reference (`third-party-library` / `third-party-cli` / `standards-reference-tool`) is still owed.",
+      "rationale": "SUPERSEDED AS THE PRIMARY REFERENCE by `brepjs-occt`, and RETAINED as the supplement it always said it was. This entry's own text already recorded that a qualifying third-party reference was still owed; that debt is now discharged by an OpenCASCADE kernel reading the STEP this subset exports. It is kept because a second implementation still catches a class of bug the carrier cannot show — anything the export documents as dropped (`BrepShellFace.orientation`, `ref_direction`, semio ids) is invisible to a STEP reader by construction, and this implementation sees it.\n\nNo third-party library reads or writes semio's own `.dsl.semio`/`.pack.semio` envelope, so a differential comparison's second PRODUCER cannot be a foreign package — it has to be a second implementation. `🧪️tests/mutate-semio-brep/🐍️component.py` is that implementation: the text envelope, the DSL grammar, the pack frame, both tagged geometry unions, the JSON projection and all thirteen verbs of `SemioBrepMutation`, written in Python from the committed specification documents alone — `../🧬️schema/📸️snapshot/📝️text/📖️.grammar.semio` for the record grammar and its `L|C|E|N` curve and `P|C|O|S|T|N` surface tags with their exact field lists, `…/📸️snapshot/💾️binary/📡️.protocol.semio` for the pack header and the sentence naming its per-collection payload, `…/📸️snapshot/🔣️.json` for the projection's member names, `…/🧬️schema/🧬️mutations/📝️text/📖️.grammar.semio` for the thirteen verbs and their argument lists, and `🧰️framework/🛍️products/💻️os/🔨️modules/🧬️semio/🦀️.rs` for the semio envelope. It imports nothing from the Rust it judges and transliterates none of it. `package` is deliberately empty: the implementation is the adapter file, so this entry contributes no dependency to `🔒️dependencies.json` and nothing to the import-purity probe. The derivation of the pack layout past the header — which the protocol description names but declines to frame — is pinned by the Python re-encoding the committed `🧊️solid` `🎒️example.pack.semio` byte for byte, a file carrying a line, a circle, a NURBS curve and a NURBS surface, which a misreading could not do.\n\nUNDER PROTOCOL V2 this registration is classified `cross-semio-implementation` — a required SUPPLEMENTAL oracle that does not discharge `semio-v1-brep-mutate`'s external-oracle requirement for its 13-kind mutation vocabulary; a qualifying third-party reference (`third-party-library` / `third-party-cli` / `standards-reference-tool`) is still owed.",
       "kind": "cross-semio-implementation",
       "engine": {
         "family": "none",
@@ -835,7 +835,7 @@
         {
           "id": "create-edge",
           "capability": "semio-v1-brep-mutate",
-          "payloadSchema": "🔣️payload.schema.json",
+          "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "applied"
           ],
@@ -864,7 +864,7 @@
         {
           "id": "create-face",
           "capability": "semio-v1-brep-mutate",
-          "payloadSchema": "🔣️payload.schema.json",
+          "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "applied"
           ],
@@ -893,7 +893,7 @@
         {
           "id": "create-shell",
           "capability": "semio-v1-brep-mutate",
-          "payloadSchema": "🔣️payload.schema.json",
+          "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "applied"
           ],
@@ -922,7 +922,7 @@
         {
           "id": "create-solid",
           "capability": "semio-v1-brep-mutate",
-          "payloadSchema": "🔣️payload.schema.json",
+          "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "applied"
           ],
@@ -951,7 +951,7 @@
         {
           "id": "create-vertex",
           "capability": "semio-v1-brep-mutate",
-          "payloadSchema": "🔣️payload.schema.json",
+          "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "applied"
           ],
@@ -980,7 +980,7 @@
         {
           "id": "delete-edge",
           "capability": "semio-v1-brep-mutate",
-          "payloadSchema": "🔣️payload.schema.json",
+          "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "rejected",
             "applied"
@@ -1010,7 +1010,7 @@
         {
           "id": "delete-face",
           "capability": "semio-v1-brep-mutate",
-          "payloadSchema": "🔣️payload.schema.json",
+          "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "rejected",
             "applied"
@@ -1040,7 +1040,7 @@
         {
           "id": "delete-shell",
           "capability": "semio-v1-brep-mutate",
-          "payloadSchema": "🔣️payload.schema.json",
+          "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "rejected",
             "applied"
@@ -1070,7 +1070,7 @@
         {
           "id": "delete-solid",
           "capability": "semio-v1-brep-mutate",
-          "payloadSchema": "🔣️payload.schema.json",
+          "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "rejected",
             "applied"
@@ -1100,7 +1100,7 @@
         {
           "id": "delete-vertex",
           "capability": "semio-v1-brep-mutate",
-          "payloadSchema": "🔣️payload.schema.json",
+          "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "rejected",
             "applied"
@@ -1130,7 +1130,7 @@
         {
           "id": "move-vertex",
           "capability": "semio-v1-brep-mutate",
-          "payloadSchema": "🔣️payload.schema.json",
+          "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "rejected",
             "applied"
@@ -1160,7 +1160,7 @@
         {
           "id": "replace-curve",
           "capability": "semio-v1-brep-mutate",
-          "payloadSchema": "🔣️payload.schema.json",
+          "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "rejected",
             "applied"
@@ -1190,7 +1190,7 @@
         {
           "id": "replace-surface",
           "capability": "semio-v1-brep-mutate",
-          "payloadSchema": "🔣️payload.schema.json",
+          "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "rejected",
             "applied"

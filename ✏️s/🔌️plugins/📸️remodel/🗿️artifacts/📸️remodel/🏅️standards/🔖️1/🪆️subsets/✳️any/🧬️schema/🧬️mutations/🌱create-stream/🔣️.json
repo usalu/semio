@@ -5,7 +5,7 @@
   "displayName": "Create Stream",
   "emoji": "🌱",
   "aggregateVariant": "CreateStream",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": "create-stream",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

@@ -5,17 +5,20 @@
   "displayName": "Replace Palette",
   "emoji": "🎨️",
   "aggregateVariant": "ReplacePalette",
-  "payloadSchema": "🔣️payload.schema.json",
-  "textOpcode": null,
-  "binaryTag": null,
-  "invertibility": "non-invertible",
-  "diffParticipation": "none",
+  "payloadSchema": "🔣️.schema.json",
+  "textOpcode": "replace-palette",
+  "binaryTag": 3,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "apply-only",
   "outcomeClasses": [
     "applied"
   ],
   "composition": "atomic",
   "requiredLanguageSurfaces": [
     "rust",
+    "typescript",
+    "graphql",
+    "protobuf",
     "json-schema",
     "text",
     "binary"

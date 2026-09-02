@@ -1065,20 +1065,13 @@ mod tests {
     /// needing `serde::Deserialize` (RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS,
     /// 26/09/01) — same small helper as `📡️wire/🏠️local-interaction/🦀️.rs`'s `json_to_dsl`.
     fn json_to_dsl(value: serde_json::Value) -> crate::value::DslValue {
-        match value {
-            serde_json::Value::Null => crate::value::DslValue::Null,
-            serde_json::Value::Bool(b) => crate::value::DslValue::Bool(b),
-            serde_json::Value::Number(n) => crate::value::DslValue::Number(n.as_f64().unwrap_or(0.0)),
-            serde_json::Value::String(s) => crate::value::DslValue::String(s),
-            serde_json::Value::Array(items) => crate::value::DslValue::Array(items.into_iter().map(json_to_dsl).collect()),
-            serde_json::Value::Object(map) => crate::value::DslValue::Object(map.into_iter().map(|(k, v)| (k, json_to_dsl(v))).collect()),
-        }
+        crate::value::DslValue::from(&value)
     }
 
     #[test]
     fn causal_add_fixture_has_exact_required_descriptor() {
         use crate::mutation::Mutation;
-        let expected: serde_json::Value = serde_json::from_str(include_str!("🧪️fixtures/🧬️mutations/➕️causal-add/🧪️descriptor/🔣️.json")).unwrap();
+        let expected: serde_json::Value = serde_json::from_str(include_str!("🧪️fixtures/🧬️mutations/➕️causal-add/🔣️descriptor.json")).unwrap();
         assert_eq!(CAUSAL_ADD_DESCRIPTOR.validate(), Ok(()));
         assert_eq!(CausalAddOp::DESCRIPTORS.len(), 1);
         assert_eq!(crate::value::ToValue::to_value(CausalAddOp { delta: -7 }.descriptor()), json_to_dsl(expected));

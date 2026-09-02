@@ -1,6 +1,0 @@
-# 💾️ SemioTableMutation binary frame — descriptive twin of 📡️component.protocol.semio.
-type SemioTableMutationFrame {
-  format: Int!
-  tag: Int!         # variant ordinal, 0-7
-  payload: String!  # opaque base64: the variant's own argument tail
-}

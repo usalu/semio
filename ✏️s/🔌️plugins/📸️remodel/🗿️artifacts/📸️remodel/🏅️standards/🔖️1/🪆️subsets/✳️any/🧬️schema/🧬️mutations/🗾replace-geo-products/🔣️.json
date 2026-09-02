@@ -5,7 +5,7 @@
   "displayName": "Replace Geo Products",
   "emoji": "🗾",
   "aggregateVariant": "ReplaceGeoProducts",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": "replace-geo-products",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

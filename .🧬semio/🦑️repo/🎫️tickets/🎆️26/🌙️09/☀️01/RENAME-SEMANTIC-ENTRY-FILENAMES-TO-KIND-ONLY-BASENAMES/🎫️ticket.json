@@ -1,0 +1,14 @@
+{
+  "title": "Rename Semantic Entry Filenames To Kind Only Basenames",
+  "emoji": "🏷️",
+  "status": "closed",
+  "description": "Repo-wide rename of 📦️glue.rs (~106) and 📦️index.ts (~52) under ✏️s, 🧰️framework, 🌎️hub to canonical kind-only basenames 🦀️.rs and 🟦️.ts per configurableEntryContracts in 🔣️taxonomy.json (rust-library-entry, rust-binary-entry, rust-build-entry, typescript-library-entry). Update all references: Cargo.toml [lib]/[[bin]]/package.build paths, package.json exports/main/types/bin, tsconfig.json paths, 📋️project.json, .vscode/launch.json, vite/vitest configs, Rust #[path]/include_str!/mod declarations, TS/JS imports. Repo-wide literal string search for 📦️glue.rs and 📦️index.ts excluding node_modules, target, .git, dist, storybook-static, target-engines, .🧬semio. Skip collisions where destination already exists, report them. Verify with bun 📜️script.ts verify taxonomy and cargo metadata --no-deps --offline.",
+  "summary": "Duplicate ticket created in error — an existing open ticket 26/09/01/KIND-ONLY-BASENAMES-ACROSS-THE-TAXONOMY-TREE already covers this exact scope (renaming 📦️glue.rs/📦️index.ts and other semantic filenames to kind-only basenames per configurableEntryContracts). No files were touched under this duplicate. Closing immediately; continuing the glue.rs/index.ts slice of work under the existing ticket instead.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2596"
+  },
+  "goal": "🎯taxonomy",
+  "sessions": [
+    "⚪2ea09374da974317a9a978498374c14c"
+  ]
+}

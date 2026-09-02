@@ -5,7 +5,7 @@
   "displayName": "Change Wall Thickness Mm",
   "emoji": "🎢",
   "aggregateVariant": "ChangeWallThicknessMm",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

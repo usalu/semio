@@ -5,7 +5,7 @@
   "displayName": "Delete Element",
   "emoji": "🗑🧩️",
   "aggregateVariant": "DeleteElement",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": "delete-element",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

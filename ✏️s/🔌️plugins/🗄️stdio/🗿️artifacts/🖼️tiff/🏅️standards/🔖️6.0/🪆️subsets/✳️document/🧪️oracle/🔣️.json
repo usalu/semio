@@ -15,12 +15,12 @@
       "license": "MIT OR Apache-2.0",
       "testOnly": true,
       "homepage": "https://github.com/image-rs/image",
-      "rationale": "🫥️ RECLASSIFIED. The third-party crate here does REAL codec work — it decodes the artifact and will reject a malformed one — but that is not what the mutation test turns on. What the OUTPUT OF A MUTATION SHOULD BE is computed by this owner's own `🧪️oracle/🦀️component.rs`, whose `apply_kind` dispatch is a second implementation of this subset's mutation semantics. Its own doc comment says so: it \"deliberately mirrors\" the production `diff` rather than diverging from it. Both halves of the comparison therefore read the same specification, and a misreading of it produces two agreeing wrong answers.\n\nThe honest split is that the crate discharges \"the result is a well-formed file of this format\", and NOT \"the mutation computed the right answer\". Only the second is what a mutation oracle is for, so this is a `cross-semio-implementation`: a required SUPPLEMENT, never a substitute. A qualifying third-party reference for the mutation semantics is still owed.",
+      "rationale": "🫥️ RECLASSIFIED. The third-party crate here does REAL codec work — it decodes the artifact and will reject a malformed one — but that is not what the mutation test turns on. What the OUTPUT OF A MUTATION SHOULD BE is computed by this owner's own `🦀️oracle.rs`, whose `apply_kind` dispatch is a second implementation of this subset's mutation semantics. Its own doc comment says so: it \"deliberately mirrors\" the production `diff` rather than diverging from it. Both halves of the comparison therefore read the same specification, and a misreading of it produces two agreeing wrong answers.\n\nThe honest split is that the crate discharges \"the result is a well-formed file of this format\", and NOT \"the mutation computed the right answer\". Only the second is what a mutation oracle is for, so this is a `cross-semio-implementation`: a required SUPPLEMENT, never a substitute. A qualifying third-party reference for the mutation semantics is still owed.",
       "hostPath": "✏️s/🔌️plugins/🗄️stdio/🧪️oracle/📦️packages/🦀️rust",
       "productionDebt": {
         "reachableFrom": [
-          "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️present/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🎥️video/🦀️component.rs",
-          "🧰️framework/🔨️modules/🗺️surface/🗺️tiled-map/🦀️component.rs"
+          "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️present/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🎥️video/🦀️.rs",
+          "🧰️framework/🔨️modules/🗺️surface/🗺️tiled-map/🦀️.rs"
         ],
         "owner": "🧰️framework/🔨️modules/🗺️surface",
         "plan": "The `image` crate is production-reachable TODAY from two places: the 🎞️animate plugin's video engine and 🧰️framework/🔨️modules/🗺️surface's tiled-map. Discovered by the oracle-purity gate the moment `image` was registered — the gate did its job. Phase 7 target: both call sites want raster decode/encode that ✏️s/🔌️plugins/🗄️stdio already implements, so routing them through decode_bmp / decode_tiff / decode_jpg retires the dependency and this record with it."
@@ -60,7 +60,7 @@
         "win32-x64"
       ],
       "homepage": "https://github.com/image-rs/image-tiff",
-      "rationale": "📖️ A READER, and that is the whole point of registering it separately.\n\nThis subset also carries a `🧪️oracle/🦀️component.rs` that COMPUTES what each mutation should produce (registered above as `image-tiff-6-0-mutate`, `cross-semio-implementation`). That entry does not discharge anything on its own, because both halves of such a comparison descend from one reading of the specification.\n\nThis entry is a different mechanism. The expected state is not computed at all — it is COMMITTED, as the `after` half of a byte-reproducible fixture (`../🧫️fixtures/`). `tiff` 0.11.3 then parses the whole IFD chain on BOTH sides — via its own `Decoder::{more_images,next_image,tag_iter,byte_order}` — and the comparison is over what it recovered. The probes say so in their own header: \"Everything here MARSHALS and READS; nothing here applies a mutation or predicts what one should.\"\n\nSo the judge is a third-party implementation of the format, and nothing in this repository predicts the answer it is judging. That is what makes it qualifying where the sibling entry is not.\n\n🔎️ `package`/`version` name the crate this session's own investigation determined actually carries the structural visibility this catalog needs: `image` 0.25's public TIFF surface (`image::codecs::tiff::{TiffEncoder,TiffDecoder}`, confirmed by reading the vendored crate source) is single-IFD-only with no tag/byte-order accessors — it cannot witness `insert-ifd`/`remove-ifd`/`replace-tag`/`remove-tag` at all. `tiff` 0.11.3 is the lower-level crate `image` itself uses for TIFF (same composition shape this repository's own `avi`/`bcf` oracles already use — a lower, more generic crate composed for real structural visibility), and its `Decoder`/`TiffEncoder` give full multi-IFD chain navigation, whole-IFD tag enumeration (including an `unknown(u16)` tag variant for non-baseline tags) and the file byte-order mark directly. `image` is therefore not a dependency of this oracle's codec at all — see `../🏭️generator/🦀️tiff-ifd-codec/src/main.rs`'s own header for the full investigation trail.\n\n⚠️ `change-byte-order` is EXCLUDED from this oracle's witnessed set for a different, sharper reason than the other kinds' generic reader-visibility question: `tiff` 0.11.3's ENCODER hardcodes the byte-order mark to the compiling target's native endianness at compile time (`#[cfg(target_endian=\"little\"|\"big\")]` in its own `src/encoder/writer.rs`), never runtime-selectable. Every platform this entry is registered for above is little-endian, so this library cannot WRITE a big-endian `after.tiff` fixture on any of them — not a reader-visibility gap but a writer-side platform lock discovered by trying. See `../🧪️oracle/🔣️.json`'s own `mutationManifests` entry for `change-byte-order` (capability renamed `tiff-6-0-mutate-uncarried`) and this ticket's own `📓️tiff-6-0-document-reader-oracle-retrofit.md` for the full reasoning and the refused build's own captured stderr.\n\n🧭️ `productionReachable: false` here is a DELIBERATE narrower claim than the sibling `image-tiff-6-0-mutate` entry's own `productionReachable: true` above (with its `productionDebt` block naming two real call sites). Both can be true at once: grepping every non-test, non-oracle `Cargo.toml` that declares `image` as a real dependency (`✏️s/🔌️plugins/🎞️animate`, `✏️s/🔌️plugins/🖍️draw`, `🧰️framework/🔨️modules/🗺️surface`, `🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite`, `.../📺️renderer/…/🎯️targets/🧊️wgpu`) shows every one of them enables only `[\"png\", \"jpeg\", \"webp\", \"gif\"]`-shaped feature sets — none enables `image`'s `tiff` feature, and none imports `image::codecs::tiff` or decodes TIFF bytes anywhere in their own source (confirmed by reading `✏️s/🔌️plugins/🎞️animate/…/🎥️video/🦀️component.rs` and `🧰️framework/🔨️modules/🗺️surface/🗺️tiled-map/🦀️component.rs` directly — both use `image` only for PNG/RGBA buffers). So `image` the crate is production-reachable for OTHER formats, but `image`'s TIFF support specifically is not — and this entry depends on `tiff` directly, not `image`, which is not production-reachable from anywhere in this repository at all."
+      "rationale": "📖️ A READER, and that is the whole point of registering it separately.\n\nThis subset also carries a `🦀️oracle.rs` that COMPUTES what each mutation should produce (registered above as `image-tiff-6-0-mutate`, `cross-semio-implementation`). That entry does not discharge anything on its own, because both halves of such a comparison descend from one reading of the specification.\n\nThis entry is a different mechanism. The expected state is not computed at all — it is COMMITTED, as the `after` half of a byte-reproducible fixture (`../🧫️fixtures/`). `tiff` 0.11.3 then parses the whole IFD chain on BOTH sides — via its own `Decoder::{more_images,next_image,tag_iter,byte_order}` — and the comparison is over what it recovered. The probes say so in their own header: \"Everything here MARSHALS and READS; nothing here applies a mutation or predicts what one should.\"\n\nSo the judge is a third-party implementation of the format, and nothing in this repository predicts the answer it is judging. That is what makes it qualifying where the sibling entry is not.\n\n🔎️ `package`/`version` name the crate this session's own investigation determined actually carries the structural visibility this catalog needs: `image` 0.25's public TIFF surface (`image::codecs::tiff::{TiffEncoder,TiffDecoder}`, confirmed by reading the vendored crate source) is single-IFD-only with no tag/byte-order accessors — it cannot witness `insert-ifd`/`remove-ifd`/`replace-tag`/`remove-tag` at all. `tiff` 0.11.3 is the lower-level crate `image` itself uses for TIFF (same composition shape this repository's own `avi`/`bcf` oracles already use — a lower, more generic crate composed for real structural visibility), and its `Decoder`/`TiffEncoder` give full multi-IFD chain navigation, whole-IFD tag enumeration (including an `unknown(u16)` tag variant for non-baseline tags) and the file byte-order mark directly. `image` is therefore not a dependency of this oracle's codec at all — see `../🏭️generator/🦀️tiff-ifd-codec/src/main.rs`'s own header for the full investigation trail.\n\n⚠️ `change-byte-order` is EXCLUDED from this oracle's witnessed set for a different, sharper reason than the other kinds' generic reader-visibility question: `tiff` 0.11.3's ENCODER hardcodes the byte-order mark to the compiling target's native endianness at compile time (`#[cfg(target_endian=\"little\"|\"big\")]` in its own `src/encoder/writer.rs`), never runtime-selectable. Every platform this entry is registered for above is little-endian, so this library cannot WRITE a big-endian `after.tiff` fixture on any of them — not a reader-visibility gap but a writer-side platform lock discovered by trying. See `../🔣️oracle.json`'s own `mutationManifests` entry for `change-byte-order` (capability renamed `tiff-6-0-mutate-uncarried`) and this ticket's own `📓️tiff-6-0-document-reader-oracle-retrofit.md` for the full reasoning and the refused build's own captured stderr.\n\n🧭️ `productionReachable: false` here is a DELIBERATE narrower claim than the sibling `image-tiff-6-0-mutate` entry's own `productionReachable: true` above (with its `productionDebt` block naming two real call sites). Both can be true at once: grepping every non-test, non-oracle `Cargo.toml` that declares `image` as a real dependency (`✏️s/🔌️plugins/🎞️animate`, `✏️s/🔌️plugins/🖍️draw`, `🧰️framework/🔨️modules/🗺️surface`, `🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite`, `.../📺️renderer/…/🎯️targets/🧊️wgpu`) shows every one of them enables only `[\"png\", \"jpeg\", \"webp\", \"gif\"]`-shaped feature sets — none enables `image`'s `tiff` feature, and none imports `image::codecs::tiff` or decodes TIFF bytes anywhere in their own source (confirmed by reading `✏️s/🔌️plugins/🎞️animate/…/🎥️video/🦀️.rs` and `🧰️framework/🔨️modules/🗺️surface/🗺️tiled-map/🦀️.rs` directly — both use `image` only for PNG/RGBA buffers). So `image` the crate is production-reachable for OTHER formats, but `image`'s TIFF support specifically is not — and this entry depends on `tiff` directly, not `image`, which is not production-reachable from anywhere in this repository at all."
     },
     {
       "id": "tiff-6-0-byte-order-reader",
@@ -360,7 +360,7 @@
   "comparisonPipelines": [
     {
       "id": "tiff-6-0-document-ifd-compare-v1",
-      "description": "Reads the subject's produced TIFF and the fixture's own expected TIFF with an independent tiff-ifd-codec projection, then compares their ordered projections against semantic-raster-v1 (defined once, globally, at ✏️s/🔌️plugins/🗄️stdio/🧪️oracle/🔣️.json). GATING.",
+      "description": "Reads the subject's produced TIFF and the fixture's own expected TIFF with an independent tiff-ifd-codec projection, then compares their ordered projections against semantic-raster-v1 (defined once, globally, at ✏️s/🔌️plugins/🗄️stdio/🔣️oracle.json). GATING.",
       "stages": [
         {
           "probe": "tiff-import",
@@ -511,7 +511,7 @@
         {
           "id": "change-byte-order",
           "capability": "tiff-6-0-mutate",
-          "payloadSchema": "🔣️payload.schema.json",
+          "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "applied"
           ],
@@ -531,7 +531,7 @@
         {
           "id": "insert-ifd",
           "capability": "tiff-6-0-mutate",
-          "payloadSchema": "🔣️payload.schema.json",
+          "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "applied"
           ],
@@ -551,7 +551,7 @@
         {
           "id": "remove-ifd",
           "capability": "tiff-6-0-mutate",
-          "payloadSchema": "🔣️payload.schema.json",
+          "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "applied"
           ],
@@ -571,7 +571,7 @@
         {
           "id": "remove-tag",
           "capability": "tiff-6-0-mutate",
-          "payloadSchema": "🔣️payload.schema.json",
+          "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "applied"
           ],
@@ -591,7 +591,7 @@
         {
           "id": "replace-pixels",
           "capability": "tiff-6-0-mutate",
-          "payloadSchema": "🔣️payload.schema.json",
+          "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "applied"
           ],
@@ -611,7 +611,7 @@
         {
           "id": "replace-tag",
           "capability": "tiff-6-0-mutate",
-          "payloadSchema": "🔣️payload.schema.json",
+          "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "applied"
           ],

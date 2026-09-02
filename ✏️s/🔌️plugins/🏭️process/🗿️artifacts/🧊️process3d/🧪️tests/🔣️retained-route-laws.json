@@ -1,6 +1,6 @@
 {
   "schema": "semio.process3d.retained-route-laws.v1",
-  "source": "🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+  "source": "🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
   "routeCount": 33,
   "migratedCount": 33,
   "limits": {

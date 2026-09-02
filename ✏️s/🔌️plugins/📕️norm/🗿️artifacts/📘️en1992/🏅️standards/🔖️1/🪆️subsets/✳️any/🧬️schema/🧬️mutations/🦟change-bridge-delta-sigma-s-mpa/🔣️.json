@@ -5,7 +5,7 @@
   "displayName": "Change Bridge Delta Sigma S Mpa",
   "emoji": "🦟",
   "aggregateVariant": "ChangeBridgeDeltaSigmaSMpa",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

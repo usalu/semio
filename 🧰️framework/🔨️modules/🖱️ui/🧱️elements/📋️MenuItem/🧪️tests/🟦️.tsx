@@ -2,7 +2,7 @@
 import * as React from "react";
 import { fireEvent, render } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
-import { MenuItem, menuItemClassName } from "../🟦️component.tsx";
+import { MenuItem, menuItemClassName } from "../🟦️.tsx";
 // #endregion 🔌️Adapters
 
 // #region 📋️MenuItemMatrix

@@ -1,7 +1,7 @@
 // #region 🧲️Header
 /** @emoji 🧪️ Component tests for `@semio-tech/hub-admin` — mocks at the transport boundary (`fetch`
  * for `AdminClient`, a fake `WebSocket` for `DirectoryClient.stream`), matching this repo's own
- * `DirectoryClient` test style (`🧰️framework/…/💻️os/🟦️component.ts`'s `FakeDirectoryWebSocket`)
+ * `DirectoryClient` test style (`🧰️framework/…/💻️os/🟦️.ts`'s `FakeDirectoryWebSocket`)
  * rather than reaching into React context internals. */
 // #endregion 🧲️Header
 
@@ -9,11 +9,11 @@
 import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import type { DirectoryStreamMessage } from "@semio-tech/framework-os";
-import { AdminLocaleProvider } from "../../🧱️elements/📚️I18n/🟦️component.tsx";
-import { AdminSessionProvider, AdminTokenForm } from "../../🧱️elements/🔑️AdminSession/🟦️component.tsx";
-import { SpacesPage } from "../../🧱️elements/🏛️SpacesPage/🟦️component.tsx";
-import { ConnectionsPage } from "../../🧱️elements/🔴️ConnectionsPage/🟦️component.tsx";
-import { AdminApp } from "../../🧱️elements/🛡️AdminApp/🟦️component.tsx";
+import { AdminLocaleProvider } from "../../🧱️elements/📚️I18n/🟦️.tsx";
+import { AdminSessionProvider, AdminTokenForm } from "../../🧱️elements/🔑️AdminSession/🟦️.tsx";
+import { SpacesPage } from "../../🧱️elements/🏛️SpacesPage/🟦️.tsx";
+import { ConnectionsPage } from "../../🧱️elements/🔴️ConnectionsPage/🟦️.tsx";
+import { AdminApp } from "../../🧱️elements/🛡️AdminApp/🟦️.tsx";
 // #endregion 🔌️Adapters
 
 afterEach(() => {
@@ -44,7 +44,7 @@ function requestCount(fetchMock: ReturnType<typeof vi.fn>, pathname: string): nu
 //#endregion 🔖️FetchRouter
 
 //#region 🔖️FakeWebSocket
-/** 🧵️ Mirrors `🧰️framework/…/💻️os/🟦️component.ts`'s own `FakeDirectoryWebSocket` test double — this
+/** 🧵️ Mirrors `🧰️framework/…/💻️os/🟦️.ts`'s own `FakeDirectoryWebSocket` test double — this
  * package cannot import that in-source test class, so it is duplicated here at the same shape. */
 class FakeDirectoryWebSocket {
   static instances: FakeDirectoryWebSocket[] = [];

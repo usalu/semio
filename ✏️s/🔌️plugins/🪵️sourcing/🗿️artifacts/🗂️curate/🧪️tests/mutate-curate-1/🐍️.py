@@ -12,14 +12,14 @@ one ordered list. What a reference can adjudicate is exactly that: membership, P
 
 **What it was written from.**
 
-* ``🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🔣️component.json`` — `CurateSnapshot` is
+* ``🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🔣️.json`` — `CurateSnapshot` is
   `catalog`, `stockExtra` and `curated`; a `CuratedItem` is `{objectId: string, count: uint32}` with
   `additionalProperties: false`; an `ObjectKindExtra` is `{id, name, moduleId, typologyPath,
   availability, geometry}` and a `GeometryRecipe` is one of `box | frame | slab | mesh`.
-* ``…/🧬️schema/🧬️mutations/🔣️component.json`` — the three variants and their INTERNALLY tagged wire
+* ``…/🧬️schema/🧬️mutations/🔣️.json`` — the three variants and their INTERNALLY tagged wire
   form: `{"mutation": "createCuratedItem", "item": …}`, `{"mutation": "deleteCuratedItem",
   "objectId": …}`, `{"mutation": "changeCuratedItemCount", "objectId": …, "newCount": …}`.
-* ``…/🧬️schema/🧬️mutations/📖️component.grammar.semio`` — the three verbs and their positional
+* ``…/🧬️schema/🧬️mutations/📖️.grammar.semio`` — the three verbs and their positional
   argument lists.
 * the three committed `(before, mutation, after, diff, outcome)` specification vectors.
 
@@ -32,7 +32,7 @@ therefore read a snapshot fixture derived once from that committed file, with it
 recorded in the feature description, and the carrier's own laws stay asserted in role on the Rust
 side.
 
-**No Rust was read to write this.** `🦀️component.rs` beside this file registers the SUBJECT half
+**No Rust was read to write this.** `🦀️.rs` beside this file registers the SUBJECT half
 only.
 """
 

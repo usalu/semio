@@ -1,0 +1,22 @@
+dialect grammar stdio.epw.mutations
+root = mutation
+; wire text is the hand-rolled `keyword arg=value ...` token line `protocol::OpText` prints
+; (see 🦀️.rs `print_epw_mutation`/`parse_epw_mutation`) — not JSON. String/struct
+; args are lowercase hex (see ../🔺️diff/📝️text/📖️.grammar.semio for the shared
+; `hexstr`/`record`/`location`/`data-periods` encodings).
+mutation = "set-snapshot" SP "snapshot=" hexsnapshot
+         / "set-location" SP "location=" hexbrackets
+         / "set-design-conditions" SP "value=" hexstr
+         / "set-typical-extreme-periods" SP "value=" hexstr
+         / "set-ground-temperatures" SP "value=" hexstr
+         / "set-holidays-dst" SP "value=" hexstr
+         / "set-comments-1" SP "value=" hexstr
+         / "set-comments-2" SP "value=" hexstr
+         / "set-data-periods" SP "data-periods=" hexbrackets
+         / "insert-record" SP "index=" INT SP "record=" hexbrackets
+         / "remove-record" SP "index=" INT
+         / "set-record-field" SP "record-index=" INT SP "field-index=" INT SP "value=" hexstr
+SP = " "
+hexstr = *HEXDIG
+hexbrackets = "[" *(hexstr ",") "]"
+hexsnapshot = "[" 9(hexpart ",") records "]"

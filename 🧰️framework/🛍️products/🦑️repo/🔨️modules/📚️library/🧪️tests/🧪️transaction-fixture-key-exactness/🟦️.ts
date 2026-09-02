@@ -41,7 +41,7 @@ test("the dead attemptLayout key was dropped, not smuggled into any split fixtur
 });
 
 test("sentinel case rows keep the exact shape the normalization engine requires", () => {
-  const value = JSON.parse(readFileSync(join(fixturesRoot, "🧪️transaction-sentinel-cases/🔣️.json"), "utf8")) as {
+  const value = JSON.parse(readFileSync(join(fixturesRoot, "🔣️transaction-sentinel-cases.json"), "utf8")) as {
     virtualPathPolicyCases: Record<string, unknown>[];
     symlinkFlavorCases: Record<string, unknown>[];
   };

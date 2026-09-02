@@ -1,0 +1,42 @@
+dialect grammar
+grammar stdio.semio.image.snapshot
+extension semio
+start document
+
+# ARTIFACT-SYSTEM-OVERHAUL-REAL-CODECS-RUNTIME-REUSE-EVOLUTION image wave. Real grammar for
+# `SemioImageSnapshot::print_dsl`/`parse_dsl` (📸️snapshot/🦀️.rs's `print_image_snapshot_body`/
+# `parse_image_snapshot_body`) — hand-rolled, NOT `#[derive(dsl::DslArtifact)]`: `icc: Option<Vec<u8>>`
+# is a bare `Option<T>` field directly on the snapshot, a shape `dsl`'s derive machinery cannot bind
+# (no blanket `Option<T>: DslField` impl — same wall this subset's own `🔺️diff`/`🧬️mutations` facet
+# grammars already document). Same hex/bracket-encoded value convention as those sibling facets.
+#
+# `document` matches the fixture-honesty harness's own reconstructed body shape (mandatory `semio
+# s.stdio.semio.image.dsl v1` preamble stripped and replaced with the bare `envelope_id()` token —
+# `artifact-mark` below — before recognition, same convention `json.snapshot`'s/`mesh.snapshot`'s
+# own grammars use).
+artifact-mark = "s.stdio.semio.image"
+document = artifact-mark schema-line width-line height-line colorspace-line bit-depth-line icc-line frames-line metadata-line
+
+schema-line = "schema" "=" hex
+width-line = "width" "=" INT
+height-line = "height" "=" INT
+colorspace-line = "colorspace" "=" colorspace
+bit-depth-line = "bitDepth" "=" INT
+icc-line = "icc" "=" option-hex
+
+frames-line = "frames" "=" "[" frame-list? "]"
+frame-list = frame {"," frame}*
+frame = "[" INT "," hex "]"
+
+metadata-line = "metadata" "=" "[" entry-list? "]"
+entry-list = entry {"," entry}*
+entry = "[" hex "," hex "]"
+
+colorspace = "r" | "a" | "g" | "y" | "i"
+option-hex = "[" "0" "]" | "[" "1" "," hex "]"
+
+# `hex` (bare `hex`, deliberately NOT defined as a production here) is the framework's built-in
+# `hex` MACRO (`📖️grammar/🦀️.rs`'s `default_macros`) — every hex-encoded `schema`/frame
+# `rgba8` buffer/metadata `key`/`value` leaf routes through it. `Symbol::Ref`'s production→macro
+# fallback resolves bare `hex` automatically, with real backtracking — a hand-rolled `{INT|IDENT}*`
+# production would be wrong here (recipe pitfall #2).

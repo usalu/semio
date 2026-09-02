@@ -1,0 +1,12 @@
+# 🧬️ TiffArtifact schema facet — full artifact state, mirrors TiffSnapshot field-for-field
+# (see ./📸️snapshot/🔗️.graphql for the supporting types).
+
+"""
+Full `stdio.tiff` artifact state.
+"""
+type TiffArtifact {
+  schema: String! @state(class: ARTIFACT)
+  byteOrder: TiffByteOrder! @state(class: ARTIFACT)
+  ifds: [TiffIfd!]! @state(class: ARTIFACT)
+  pixels: [Int!]! @state(class: ARTIFACT)
+}

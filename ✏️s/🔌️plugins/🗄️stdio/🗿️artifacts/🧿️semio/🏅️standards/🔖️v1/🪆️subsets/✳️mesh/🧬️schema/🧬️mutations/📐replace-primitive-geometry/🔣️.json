@@ -5,7 +5,7 @@
   "displayName": "Replace Primitive Geometry",
   "emoji": "📐",
   "aggregateVariant": "ReplacePrimitiveGeometry",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

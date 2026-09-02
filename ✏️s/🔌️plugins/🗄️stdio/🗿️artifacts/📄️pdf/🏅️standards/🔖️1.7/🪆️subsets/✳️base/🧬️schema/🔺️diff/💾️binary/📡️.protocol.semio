@@ -1,0 +1,32 @@
+dialect protocol
+protocol stdio.pdf.1.7.diff
+version 1
+schema stdio.pdf.1.7.diff
+start record
+
+# P2-FG3: REAL binary diff frame, replacing F6's `print_diff().into_bytes()` text-as-binary
+# shortcut (../../🦀️.rs's old `DiffCodec::encode_diff` -- per the P2-W0 census, 100% of
+# stdio's `DiffCodec` impls were still on this shortcut before this pilot ladder). `format u8` +
+# `flags u8` (bit0=`declared_version`, bit1=`info`, bit2=`pages`, bit3=`objects`, bit4=`trailer`,
+# `PdfDiff` has five independently-optional top-level fields, so this is a bitmask
+# rather than one `has_value` bool, same shape xml's own upgraded diff frame uses for its own
+# 3-field diff) as two REAL fixed fields, individually protocol-walked.
+#
+# Past that header, every SET field's own payload follows in that FIXED order (declared_version,
+# info, pages, objects, trailer -- matching `print_pdf_diff`'s own token emission order), bundled
+# into ONE opaque trailing `bytes` chain rather than five separately-declared conditional fields:
+# this dialect's `Cond` (`if flags eq N`) can only test a field's WHOLE value against a literal,
+# not an individual BIT of it (no bitwise-AND primitive exists, `📖️grammar-recipe.md` §2.2's own
+# `Cond` section), and `pages`/`objects`/`trailer`'s own payloads are genuinely recursive
+# (`PdfValueDiff`, hitting the same `protocol-prim-ref-recursion` gap every other stdio artifact's
+# diff payload hits) -- so once ANY field of this frame is structurally unwalkable, bundling the
+# simpler scalar fields (`declared_version`/`info`) into the SAME opaque tail, instead of partially
+# structuring only those two, is the honest, minimal-surface choice. The Rust `encode_diff`/
+# `decode_diff` side stays genuinely, fully structured (bit-tested, individually typed, LEB128-
+# varint/length-prefixed binary via `enc_value_diff_bin`/`enc_pages_diff_bin`/`enc_objects_diff_
+# bin`/`enc_dict_diff_bin`) and round-trip tested independently (`diff_codec_binary_roundtrip_law`).
+framing record
+header fixed 2
+field format u8
+field flags u8
+chain payload bytes

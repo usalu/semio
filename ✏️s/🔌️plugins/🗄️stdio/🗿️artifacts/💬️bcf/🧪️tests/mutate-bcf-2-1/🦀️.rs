@@ -5,7 +5,7 @@
 //! (derived once from a real IFC2X3 model plus a real committed floor plan PNG — see the feature
 //! file's own header) into the case work directory first; the committed fixture is never written
 //! to. `oracle` drives the registered independent `zip`+`quick-xml` composition
-//! (`../../🏅️standards/🔖️2.1/🪆️subsets/✳️any/🧪️oracle/🦀️component.rs`'s own
+//! (`../../🏅️standards/🔖️2.1/🪆️subsets/✳️any/🦀️oracle.rs`'s own
 //! `oracle_apply_mutation`/`oracle_apply_mutation_inverse`); `subject` drives this repository's own
 //! `decode_bcf`/`encode_bcf`/`apply_bcf_mutation` over the full 14-kind `BcfMutation` vocabulary.
 //! Both results are read back by the SAME independent `project_bcf_2_1` before the `semantic-bcf-v1`
@@ -17,7 +17,7 @@ use semio_s_plugin_stdio_test_oracle::artifacts::bcf::standards::v2_1::subsets::
 
 //#region 🔖️Kinds
 /// 📇️ Kebab-case spelling of every `BcfMutation` variant, mirrored from
-/// `../../🏅️standards/🔖️2.1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs`'s own `KINDS` --
+/// `../../🏅️standards/🔖️2.1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs`'s own `KINDS` --
 /// duplicated rather than imported because the ORACLE-only build of this adapter must never link
 /// `semio-s-plugin-stdio`.
 const KINDS: &[&str] = &[

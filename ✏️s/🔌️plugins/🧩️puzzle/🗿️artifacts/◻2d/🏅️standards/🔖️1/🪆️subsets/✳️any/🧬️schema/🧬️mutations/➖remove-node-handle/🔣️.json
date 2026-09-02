@@ -5,7 +5,7 @@
   "displayName": "Remove Node Handle",
   "emoji": "➖",
   "aggregateVariant": "RemoveNodeHandle",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": "remove-node-handle",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

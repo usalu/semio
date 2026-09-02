@@ -21,7 +21,7 @@ todos:
     content: "Build the general `.semio` OS processor surface: CLI (open/inspect/convert/verify), macOS UTType plist, Linux shared-mime-info XML + .desktop, Windows registry script, .gitattributes binary rules, plus 📜️script.ts verb and launch.json entries following existing order/grouping/naming."
     status: pending
   - id: migrate-plugins
-    content: "Fan out 32+ parallel agents over disjoint plugin subtrees (norm split into 3; demonstrator and energy get newly designed artifacts): relocate examples under their artifact, rename to 🧬️component.<plugin>.<artifact>.<component>.semio with preamble, author the missing pack/op/spr examples and app-engine cmd examples with their 🦀️component.rs leaves, rewire #[path] modules and include_str!/include_bytes!, and run each plugin's cargo test."
+    content: "Fan out 32+ parallel agents over disjoint plugin subtrees (norm split into 3; demonstrator and energy get newly designed artifacts): relocate examples under their artifact, rename to 🧬️component.<plugin>.<artifact>.<component>.semio with preamble, author the missing pack/op/spr examples and app-engine cmd examples with their 🦀️.rs leaves, rewire #[path] modules and include_str!/include_bytes!, and run each plugin's cargo test."
     status: pending
   - id: migrate-framework
     content: "Migrate the non-plugin corpora: 💻️os/📚️examples, the 🌊️flow/🪐️space/🕸️dag module examples, the 🔄️sync 🧫️fixtures (.dsl/.ops/.spk pairs), and the 📐️cad/🧩️puzzle fixtures."
@@ -52,15 +52,15 @@ Three independent defects, one root cause: format identity lives in the *filenam
 ```
 ✏️s/🔌️plugins/🌍️gis/
   🗿️artifacts/🗺️gismap/
-    🦀️component.rs                       # domain model, #[dsl(id = "gis.gismap")]
-    🗣️dsl/ 🎒️pack/ 🔧️op/ 📡️spr/ 🔺️diff/ ⚙️engine/   # each 🦀️component.rs (unchanged)
+    🦀️.rs                       # domain model, #[dsl(id = "gis.gismap")]
+    🗣️dsl/ 🎒️pack/ 🔧️op/ 📡️spr/ 🔺️diff/ ⚙️engine/   # each 🦀️.rs (unchanged)
     📚️examples/♻️reuse/
-      🗣️dsls/♻️reuse/  🦀️component.rs + 🧬️component.gis.gismap.dsl.semio
-      🎒️packs/♻️reuse/ 🦀️component.rs + 🧬️component.gis.gismap.pack.semio
-      🔧️ops/♻️reuse/   🦀️component.rs + 🧬️component.gis.gismap.op.semio
-      📡️sprs/♻️reuse/  🦀️component.rs + 🧬️component.gis.gismap.spr.semio
+      🗣️dsls/♻️reuse/  🦀️.rs + 🧬️component.gis.gismap.dsl.semio
+      🎒️packs/♻️reuse/ 🦀️.rs + 🧬️component.gis.gismap.pack.semio
+      🔧️ops/♻️reuse/   🦀️.rs + 🧬️component.gis.gismap.op.semio
+      📡️sprs/♻️reuse/  🦀️.rs + 🧬️component.gis.gismap.spr.semio
   🎛️apps/◻2d/⚙️engine/📚️examples/♻️reuse/
-      🦀️component.rs + 🧬️component.gis.gis2d.cmd.semio
+      🦀️.rs + 🧬️component.gis.gis2d.cmd.semio
 ```
 
 The filename hierarchy is decoration. Identity comes only from content:

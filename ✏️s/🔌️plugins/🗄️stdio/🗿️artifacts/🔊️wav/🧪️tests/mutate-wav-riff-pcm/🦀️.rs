@@ -2,7 +2,7 @@
 //!
 //! Every scenario copies the immutable real recording into the case work directory first; the
 //! committed fixture is never written to. `oracle` drives the registered owned PCM16 reference
-//! implementation (this subset's own `🧪️oracle/🦀️component.rs`), `subject` drives this repository's
+//! implementation (this subset's own `🦀️oracle.rs`), `subject` drives this repository's
 //! own decode → mutate → encode round trip, and both results are read back by the SAME independent
 //! independent projector before the `semantic-audio-v1` profile compares them. The subject half is
 //! gated behind the generated host's `sut` feature so the oracle-only run never compiles the local
@@ -15,7 +15,7 @@ use semio_s_plugin_stdio_test_oracle::law;
 //#region 🔖️Input
 const INPUT: &str = "shared://🔊️bauen-mit-bestand-ausschnitt.wav";
 
-/// 🦠️ The catalog's own kinds (`../../🏅️standards/🔖️riff-pcm/🪆️subsets/✳️any/🧪️oracle/🔣️.json`),
+/// 🦠️ The catalog's own kinds (`../../🏅️standards/🔖️riff-pcm/🪆️subsets/✳️any/🔣️oracle.json`),
 /// duplicated as a plain constant rather than reached through the subject crate — this loop drives
 /// oracle registration too, which must build and run with the subject crate absent entirely.
 const KINDS: &[&str] = &["set-snapshot", "set-fmt", "set-data", "set-other-chunks"];
@@ -97,7 +97,7 @@ mod subject {
 
     //#region 🔖️SpecReading
     /// 🔎️ A second, independently written reading of the SAME `params` JSON schema the oracle reads
-    /// in `../../../🏅️standards/🔖️riff-pcm/🪆️subsets/✳️any/🧪️oracle/🦀️component.rs` — deliberately not
+    /// in `../../../🏅️standards/🔖️riff-pcm/🪆️subsets/✳️any/🦀️oracle.rs` — deliberately not
     /// shared code, so a bug in one reading has nothing to hide behind in the other.
     fn number(value: &Json, key: &str, fallback: f64) -> f64 {
         match value.get(key) {

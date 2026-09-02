@@ -3,10 +3,10 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join, relative } from "node:path";
 import { fileURLToPath } from "node:url";
-import { BundleScript, getWorkspaceRoot, ScriptRouter, runBundleScriptMain } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts";
+import { BundleScript, getWorkspaceRoot, ScriptRouter, runBundleScriptMain } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 
 const packageRoot = import.meta.dir ?? dirname(fileURLToPath(import.meta.url));
-// 🌳️ Shape V2: data (`🔣️entity-kinds.json`/`🤖️generated/`/`🤖️generated.rs`) lives at the owner
+// 🌳️ Shape V2: data (`🔣️.json`/`🤖️generated/`/`🤖️generated.rs`) lives at the owner
 // root, a sibling of `📦️packages`, never inside it — see `🔣️taxonomy.json`'s `rootDataDirNames`.
 const ownerRoot = join(packageRoot, "..", "..");
 
@@ -20,7 +20,7 @@ export type EntityKindSpec = {
 };
 
 function readEntityKinds(): EntityKindSpec[] {
-  const path = join(ownerRoot, "🔣️entity-kinds.json");
+  const path = join(ownerRoot, "🔣️.json");
   return JSON.parse(readFileSync(path, "utf8")) as EntityKindSpec[];
 }
 //#endregion 🔖️EntityKindSpec

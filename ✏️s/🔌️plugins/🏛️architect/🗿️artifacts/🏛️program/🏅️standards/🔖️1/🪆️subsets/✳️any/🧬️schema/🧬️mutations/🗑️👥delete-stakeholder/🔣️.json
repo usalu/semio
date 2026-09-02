@@ -5,7 +5,7 @@
   "displayName": "Delete Stakeholder",
   "emoji": "🗑️👥",
   "aggregateVariant": "DeleteStakeholder",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

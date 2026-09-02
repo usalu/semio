@@ -1,0 +1,39 @@
+dialect protocol
+protocol stdio.md.snapshot
+version 1
+schema stdio.md
+start body
+
+# P2-FG1: `stdio.md` is TEXT-NATIVE (per the P2 plan's own classification, same category as
+# `stdio.json`/`stdio.csv`) -- replaces the pre-Phase-2 ABNF placeholder that hand-described the
+# SEMIO envelope's own magic/length/token fields a second time (wrong: the framework envelope is
+# described ONCE, framework-side, see below) using a dialect this repo's own `parse_protocol` can't
+# read (`envelope = magic version schema-id` ABNF productions, `%x` byte literals -- outside this
+# dialect's grammar entirely).
+#
+# There is no "binary markdown" -- the pack container IS the SEMIO envelope wrapping the artifact's
+# own rendered CommonMark text bytes verbatim
+# (`📸️snapshot/🦀️.rs`'s `ArtifactPack::encode_pack_with`:
+# `render_markdown_blocks(&self.blocks)` UTF-8 bytes, passed straight to
+# `store::semio_format::wrap_binary` -- no `pack_rt::encode_document` structured record, because
+# `MdBlock`/`MdInline` are data-carrying recursive enums with no `RecordSpec` to walk against, same
+# reason `#[derive(dsl::DslArtifact)]` is unusable here, see that file's own doc comment).
+#
+# The framework-level SEMIO envelope itself (magic `0x8953454D0D0A1A0A` + LE u32 token length +
+# UTF-8 token) is described ONCE, at
+# `🧰️framework/🛍️products/💻️os/🔨️modules/🧬️semio/📡️protocol/📡️.protocol.semio` (P2-M3
+# deliverable 3) -- this file does NOT re-describe that framing. Cross-artifact `use semio.envelope`
+# is not yet functional at walk time (confirmed unchanged through every FG-wave pilot, recipe §2.1),
+# so per that section's own worked example this file models the bytes as if the walk already starts
+# AT the payload, past the envelope -- the exact shape `m5_handcrafted_protocol_conformance`'s own
+# `inner_payload_from_semio_example` feeds `walk_protocol` (calls `unwrap_binary` first, hands
+# `walk_protocol` only the INNER bytes) and the identical shape this wave's own `protocol_walk_law`
+# exercises directly.
+#
+# The payload itself is opaque, unstructured UTF-8 bytes at the BINARY layer by construction (its
+# real internal structure -- block/inline recursion -- is the sibling
+# `../📝️text/📖️.grammar.semio`'s job, not the protocol dialect's; CommonMark block nesting
+# has no fixed byte width to declare here) -- `chain ... utf8` is the honest boundary, the same
+# treatment json's own text-native snapshot protocol gives its opaque RFC8259 payload.
+framing record
+chain payload utf8

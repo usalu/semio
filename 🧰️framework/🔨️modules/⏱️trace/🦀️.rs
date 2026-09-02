@@ -179,13 +179,13 @@ impl<T: Copy, const N: usize> BoundedRing<T, N> {
 
 //#region 📈️PercentileRing
 /// 📈️ Ring capacity for one site's [`PercentileRing`] — chosen to match
-/// `ActorMetrics::WALL_US_RING_CAPACITY` (`🧰️framework/🔨️modules/🎭️actor/🦀️component.rs`), the
+/// `ActorMetrics::WALL_US_RING_CAPACITY` (`🧰️framework/🔨️modules/🎭️actor/🦀️.rs`), the
 /// precedent this type mirrors.
 const SAMPLE_RING_CAPACITY: usize = 64;
 
 /// 📈️ Fixed-capacity ring of the last [`SAMPLE_RING_CAPACITY`] microsecond samples for one labelled
 /// site, with p50/p95/p99 accessors. Mirrors `ActorMetrics::wall_us_ring`/`wall_us_p95`
-/// (`🧰️framework/🔨️modules/🎭️actor/🦀️component.rs`) — array-of-`u32` plus sort-on-read, no
+/// (`🧰️framework/🔨️modules/🎭️actor/🦀️.rs`) — array-of-`u32` plus sort-on-read, no
 /// dependency on that crate — rather than inventing a different percentile strategy.
 #[derive(Clone, Debug)]
 pub struct PercentileRing {
@@ -306,7 +306,7 @@ impl StepTimer {
 
 impl Drop for StepTimer {
     // 🚫️async: E1 external-trait impl — `Drop::drop`'s signature is fixed by std, so this can never
-    // `.await`; same reasoning as `CancelToken`'s `Debug::fmt` impl in `⏳️async/🦀️component.rs`.
+    // `.await`; same reasoning as `CancelToken`'s `Debug::fmt` impl in `⏳️async/🦀️.rs`.
     fn drop(&mut self) {
         if let Some(elapsed) = self.start_us.zip(try_now_us()).and_then(|(start, end)| end.checked_sub(start)) { record_site_sample(self.site, elapsed); }
         else { OMITTED_SITE_SAMPLES.fetch_add(1, Ordering::Relaxed); }

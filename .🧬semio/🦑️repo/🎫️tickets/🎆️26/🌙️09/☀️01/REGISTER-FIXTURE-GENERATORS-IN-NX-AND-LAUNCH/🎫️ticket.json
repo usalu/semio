@@ -1,0 +1,11 @@
+{
+  "title": "Register Fixture Generators in Nx and Launch",
+  "emoji": "🏭️",
+  "status": "closed",
+  "description": "Register every subset fixture generator under ✏️s and 🧰️framework as an Nx project and expose every supported generator verb in .vscode/launch.json. Keep generation separate from tests and gates, preserve local 📜️script.ts command ownership, standardize unjustified verb inconsistencies, and verify all registrations without rewriting fixture expectations.",
+  "summary": "Registered all 38 subset fixture generators as colocated Nx projects with 108 non-cached mode targets and 108 matching 3_dev launch configurations. Standardized three plural manifest verbs, verified one-to-one script/Nx/launch coverage and native Nx resolution, exercised read-only and manifest modes through Nx, and added no test or gate wiring.",
+  "goal": "🎯aioptimizedrepo",
+  "sessions": [
+    "⚪28eb798e8823481abadaa56373f32d08"
+  ]
+}

@@ -12,7 +12,7 @@ and the fifteen `📕️norm` references, which took Python second implementatio
 
 **What it was written from.**
 
-* ``🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🔣️component.json`` — the document's members
+* ``🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🔣️.json`` — the document's members
   and the six block kinds.
 * rules 1, 2, 3, 5 and 7 of
   `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/📓️derivation-rules.md` — the
@@ -25,7 +25,7 @@ and the fifteen `📕️norm` references, which took Python second implementatio
   `insert-table-row`/`insert-table-column` append BLANK cells, which is what makes their inverses
   exact against the committed trailing-blank vectors; and how `duplicate-blocks` places its copies.
 
-**No Rust was read to write this.** `🦀️component.rs` beside this file registers the SUBJECT half
+**No Rust was read to write this.** `🦀️.rs` beside this file registers the SUBJECT half
 only.
 
 **TWO FINDINGS the reference made while it was being written, reported rather than absorbed.**
@@ -476,7 +476,7 @@ def refuse_carrier(ctx):
     """🚧️ `identity-round-trip` reads this subset's own `.note.dsl.semio` text carrier, and this
     implementation refuses it by clause rather than by absence.
 
-    This subset DOES commit a real grammar — `🚪️io/📸️snapshot/📝️text/📖️component.grammar.semio`, not
+    This subset DOES commit a real grammar — `🚪️io/📸️snapshot/📝️text/📖️.grammar.semio`, not
     the repository-wide `payload = OCTET+` placeholder its `✒️writer`, `🌿️vcs` and `🔌️wires` siblings
     carry — and that is exactly what makes the gap citable rather than vague. The committed grammar and
     the committed artifact disagree on three points:
@@ -497,7 +497,7 @@ def refuse_carrier(ctx):
     unaffected. What is missing here is a grammar that covers the six block kinds this vocabulary
     actually has.
     """
-    committed = ctx.fixture_bytes(uri_in(ctx, "🗣️example.dsl.semio"))
+    committed = ctx.fixture_bytes(uri_in(ctx, "🗣️.dsl.semio"))
     raise AssertionError(
         "identity-round-trip: this subset's `.dsl.semio` carrier cannot be read by a second implementation. Unlike its `✒️writer`, `🌿️vcs` and "
         "`🔌️wires` siblings this subset commits a REAL grammar rather than the `payload = OCTET+` placeholder, and the grammar and the artifact "

@@ -5,7 +5,7 @@
   "displayName": "Set Sample Data",
   "emoji": "📀",
   "aggregateVariant": "SetSampleData",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

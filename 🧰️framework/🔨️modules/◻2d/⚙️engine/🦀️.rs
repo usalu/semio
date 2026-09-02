@@ -5,7 +5,7 @@
 //! 🪦 The store-specific scene-graph vocabulary (`DrawingKernel`, `DrawingHandle`, `DrawingKind`,
 //! `DrawingNode`, `SceneNode`, `DrawingScene`, `FillStyle`, `StrokeStyle`, `GradientStop`,
 //! `LineCap`, `LineJoin`, `Affine2D`) relocated to the OS flow module's own drawing kernel
-//! (`💻️os/🔨️modules/🌊️flow/🖍️drawing/🦀️component.rs`, ticket
+//! (`💻️os/🔨️modules/🌊️flow/🖍️drawing/🦀️.rs`, ticket
 //! 26/08/12/DISSOLVE-KERNELS-AND-MODULES-INTO-EVENT-SOURCED-ARTIFACTS) — its only two real
 //! consumers are flow's own ephemeral node-evaluation kernel and the flow `draw` extension, neither
 //! of which is the persisted-artifact surface `✳️drawing`'s real `ArtifactStore` + 17 mutation

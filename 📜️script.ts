@@ -1,5 +1,5 @@
 #!/usr/bin/env bun
-import { microsecondsFromMilliseconds } from "./🧰️framework/🔨️modules/🧵️job/⏱️budget/🟨️component.js";
+import { microsecondsFromMilliseconds } from "./🧰️framework/🔨️modules/🧵️job/⏱️budget/🟨️.js";
 /**
  * 🧭️ Monorepo command router: `bun ./📜️script.ts <verb> [segments…]` (e.g. `📜️script.ts dev`, `📜️script.ts dev mcp`, `📜️script.ts generate neo4j elements`).
  */
@@ -71,7 +71,7 @@ import {
   type PackageRole,
   type LcovFileRecord,
   type TestLevel,
-} from "./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts";
+} from "./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import {
   buildSemanticCensus,
   fileKindIdForSourcePath,
@@ -108,7 +108,7 @@ import {
   type SemanticProjectionAuthorityNode,
   mutationPayloadSchemaRelativePath,
   mutationDirectoryNameIsValid,
-} from "./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🟦️component.ts";
+} from "./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🟦️.ts";
 import {
   applyTaxonomyPlan,
   canonicalJson,
@@ -574,10 +574,10 @@ export class DevScript extends Script {
         const filePath = await (async () => {
           try {
             const fileInfo = await stat(candidatePath);
-            if (fileInfo.isDirectory()) return resolve(candidatePath, "🌐️index.html");
+            if (fileInfo.isDirectory()) return resolve(candidatePath, "🌐️.html");
             return candidatePath;
           } catch {
-            if (extname(candidatePath) === "") return resolve(candidatePath, "🌐️index.html");
+            if (extname(candidatePath) === "") return resolve(candidatePath, "🌐️.html");
             return candidatePath;
           }
         })();
@@ -983,7 +983,7 @@ export class GenerateScript extends Script {
         lines.push(`// subset: ${sub}`);
         emitted += 1;
       }
-      const glue = join(pluginsRoot, plugin, "📦️packages/🦀️rust/📦️glue.rs");
+      const glue = join(pluginsRoot, plugin, "📦️packages/🦀️rust/🦀️.rs");
       if (!existsSync(glue)) {
         console.warn(`[generate plugin-glue] skip ${plugin}: missing glue.rs`);
         continue;
@@ -1604,7 +1604,7 @@ function toolJobFactoryModuleFile(files: ReadonlyMap<string, string>, ownerFile:
     }
   };
   for (const [file, source] of files) {
-    if (!file.endsWith("/📦️glue.rs")) continue;
+    if (!file.endsWith("/🦀️.rs")) continue;
     const packageBoundary = file.lastIndexOf("/📦️packages/");
     if (packageBoundary < 0 || !ownerFile.startsWith(`${file.slice(0, packageBoundary)}/`)) continue;
     visit(source, posix.dirname(file), "crate");
@@ -1711,7 +1711,7 @@ export function toolJobFactoryProofJoinSelfTests(): number {
     else if (law.change !== "none") candidate[field[law.change as keyof typeof field]] = "other-authority";
     if (oracle(candidate) !== law.accepted) throw new Error(`factory runtime oracle disagrees for ${law.id}`);
   }
-  const source = readFileSync(join(base, "🦀️component.rs"), "utf8");
+  const source = readFileSync(join(base, "🦀️.rs"), "utf8");
   if (!toolJobRuntimeProofQualified(source)) throw new Error("production runtime factory join is not exact");
   const hostile = [
     "A::register_tool_job_factories(&mut app_tool_registry)",
@@ -1826,7 +1826,7 @@ export function toolJobTelemetryContentionSelfTests(): number {
 export function toolJobMicrosecondBudgetSelfTests(): number {
   const base = join(WORKSPACE_ROOT, "🧰️framework/🔨️modules/🧵️job/⏱️budget");
   const fixture = JSON.parse(readFileSync(join(base, "🧪️fixture.json"), "utf8"));
-  const schema = JSON.parse(readFileSync(join(base, "🧬️schema/🔣️component.json"), "utf8"));
+  const schema = JSON.parse(readFileSync(join(base, "🧬️schema/🔣️.json"), "utf8"));
   const Ajv = createRequire(import.meta.url)("ajv");
   const validate = new Ajv({ strict: true, allErrors: true }).compile(schema);
   if (!validate(fixture)) throw new Error(`microsecond budget schema: ${JSON.stringify(validate.errors)}`);
@@ -1871,9 +1871,9 @@ export function toolJobMicrosecondBudgetSelfTests(): number {
   const binding = JSON.parse(readFileSync(join(base, "🧪️binding.json"), "utf8"));
   const validateBinding = new Ajv({ strict: true, allErrors: true }).compile(JSON.parse(readFileSync(join(base, "🧬️schema/🔣️binding.json"), "utf8")));
   if (!validateBinding(binding)) throw new Error(`microsecond binding schema: ${JSON.stringify(validateBinding.errors)}`);
-  const plugin = readFileSync(join(WORKSPACE_ROOT, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️component.rs"), "utf8");
-  const job = readFileSync(join(base, "../🦀️component.rs"), "utf8");
-  const trace = readFileSync(join(base, "../../⏱️trace/🦀️component.rs"), "utf8");
+  const plugin = readFileSync(join(WORKSPACE_ROOT, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️.rs"), "utf8");
+  const job = readFileSync(join(base, "../🦀️.rs"), "utf8");
+  const trace = readFileSync(join(base, "../../⏱️trace/🦀️.rs"), "utf8");
   const mutations: Record<string, [number, string, string]> = {
     none: [0, "", ""],
     "wrong-helper": [0, "self.start_typed_command_operation(command, admission, meta, operation_id, None).await", "self.wrong_operation(command, admission, meta, operation_id, None).await"],
@@ -1904,7 +1904,7 @@ export function toolJobMicrosecondBudgetSelfTests(): number {
 export function cadPresenceRetirementSelfTests(): number {
   const base = join(WORKSPACE_ROOT, "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence");
   const fixture = JSON.parse(readFileSync(join(base, "🧪️retirement.json"), "utf8"));
-  const schema = JSON.parse(readFileSync(join(base, "🧬️schema/🔣️retirement.schema.json"), "utf8"));
+  const schema = JSON.parse(readFileSync(join(base, "🧬️schema/🔣️.schema.json"), "utf8"));
   const Ajv = createRequire(import.meta.url)("ajv");
   const validate = new Ajv({ strict: true, allErrors: true }).compile(schema);
   if (!validate(fixture)) throw new Error(`CAD presence retirement schema: ${JSON.stringify(validate.errors)}`);
@@ -1924,7 +1924,7 @@ export function cadPresenceRetirementSelfTests(): number {
   }
   const storeBase = join(WORKSPACE_ROOT, "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👥️presence");
   const storeFixture = JSON.parse(readFileSync(join(storeBase, "🧪️retirement.json"), "utf8"));
-  const storeSchema = JSON.parse(readFileSync(join(storeBase, "🧬️schema/🔣️retirement.schema.json"), "utf8"));
+  const storeSchema = JSON.parse(readFileSync(join(storeBase, "🧬️schema/🔣️.schema.json"), "utf8"));
   const validateStore = new Ajv({ strict: true, allErrors: true }).compile(storeSchema);
   if (!validateStore(storeFixture)) throw new Error(`presence Store retirement schema: ${JSON.stringify(validateStore.errors)}`);
   for (const law of storeFixture.cases) {
@@ -1948,7 +1948,7 @@ export function cadPresenceRetirementSelfTests(): number {
     { ...storeFixture, readerReturn: { ...readerReturn, contendedTransferPreservesUnreturned: false } },
     { ...storeFixture, readerReturn: { ...readerReturn, transferPublishesReturn: true } },
   ]) if (validateStore(hostile)) throw new Error("presence read schema accepted premature return or lost transfer authority");
-  const storeSource = readFileSync(join(storeBase, "../🦀️component.rs"), "utf8");
+  const storeSource = readFileSync(join(storeBase, "../🦀️.rs"), "utf8");
   const exactReadReturn = (source: string): boolean => {
     const block = (needle: string): string => { const start = source.indexOf(needle); return start < 0 ? "" : toolJobRustBlock(source, source.indexOf("{", start))?.body ?? ""; };
     const release = block("fn return_snapshot_read<T:");
@@ -1989,8 +1989,8 @@ export function cadPresenceRetirementSelfTests(): number {
   const replacements = storeFixture.localReplacements;
   const localOracle = new Ajv({ strict: true }).compile({ const: { ...replacements, capturedValues: replacements.values.slice(0, -1), expectedRetiredWhileOpen: replacements.values.length - 1, expectedFinalSnapshots: replacements.values.length } });
   if (!localOracle(replacements) || storeFixture.localCapture.expectedValueWhileOpen !== storeFixture.localCapture.value || !storeFixture.localCapture.expectedWorkerTerminal) throw new Error("presence local capture/replacement independent owner ledger");
-  const retirementSource = readFileSync(join(storeBase, "♻️retirement/🦀️component.rs"), "utf8");
-  const cadSource = readFileSync(join(base, "♻️retirement/🦀️component.rs"), "utf8");
+  const retirementSource = readFileSync(join(storeBase, "♻️retirement/🦀️.rs"), "utf8");
+  const cadSource = readFileSync(join(base, "♻️retirement/🦀️.rs"), "utf8");
   const exactLocal = (store: string, retirement: string, cad: string): boolean =>
     toolJobImmutableOperationRootsExact(store)
     && store.includes("pub base: ArtifactEphemeralBaseRead<P>")
@@ -2073,8 +2073,8 @@ export function cadPresenceRetirementSelfTests(): number {
     if (bytes !== law.expectedActorBytes || law.accepted !== (law.state === "ready" && bytes > 0 && bytes <= 256) || law.actor.minimumCapacity <= peerFixture.maximumBytes) throw new Error(`peer actor admission independent byte oracle: ${law.name}`);
   }
   if (validatePeer({ ...peerFixture, requiresCapacitySizedByteGrant: true })) throw new Error("peer actor fixture admitted capacity-sized byte credit");
-  const rejectionSource = readFileSync(join(storeBase, "🚫️rejection/🦀️component.rs"), "utf8");
-  const pluginSource = readFileSync(join(storeBase, "../../🔌️plugin/🦀️component.rs"), "utf8");
+  const rejectionSource = readFileSync(join(storeBase, "🚫️rejection/🦀️.rs"), "utf8");
+  const pluginSource = readFileSync(join(storeBase, "../../🔌️plugin/🦀️.rs"), "utf8");
   const exactRejectedActor = (store: string, rejection: string, plugin: string): boolean => {
     const start = store.indexOf("pub fn adopt(&mut self, actor: String, presence: P");
     const adopt = start < 0 ? "" : toolJobRustBlock(store, store.indexOf("{", start))?.body ?? "";
@@ -2101,7 +2101,7 @@ export function cadPresenceRetirementSelfTests(): number {
   ];
   for (const [store, rejection, plugin] of rejectedHostiles) if (exactRejectedActor(store, rejection, plugin)) throw new Error("peer rejection guard accepted dropped identity, false byte credit or missing mounted owner");
   if (validatePeer({ ...peerFixture, factoryBinding: { ...peerFixture.factoryBinding, expectedForeignRetirements: 1 } })) throw new Error("peer rejection fixture accepted a foreign factory");
-  const channelSource = readFileSync(join(storeBase, "../../📡️spr/🧵️channel/🦀️component.rs"), "utf8");
+  const channelSource = readFileSync(join(storeBase, "../../📡️spr/🧵️channel/🦀️.rs"), "utf8");
   const captureProof = (plugin: string, store: string, channel: string, retirement: string): boolean => toolJobPeerInteractionRootsExact(plugin, store, channel, retirement);
   if (!captureProof(pluginSource, storeSource, channelSource, retirementSource)) throw new Error("peer capture census rejected its real exact helper/base/factory authority");
   const captureHostiles = [
@@ -2163,7 +2163,7 @@ export function toolJobLatestWinsSelfTests(): number {
     { ...integration, lostReservations: integration.lostReservations.map((law: object) => ({ ...law, rejectionAfterVacancy: false })) },
   ];
   for (const hostile of integrationHostiles) if (validateIntegration(hostile)) throw new Error("latest-wins integration schema accepted stale authority, collision, starvation, or a missing accepted target");
-  const source = readFileSync(join(base, "🦀️component.rs"), "utf8");
+  const source = readFileSync(join(base, "🦀️.rs"), "utf8");
   const body = (text: string, name: string): string => {
     const start = text.lastIndexOf(`fn ${name}(`);
     return start < 0 ? "" : toolJobRustBlock(text, text.indexOf("{", start))?.body ?? "";
@@ -2209,13 +2209,13 @@ export function toolJobLatestWinsSelfTests(): number {
     const oracle = Buffer.alloc(law.capacity).subarray(0, law.initializedBytes);
     if (oracle.byteLength !== law.expectedByteRelease || law.capacity <= rawFixture.maximumBytes) throw new Error(`retained raw allocation initialized-byte oracle: ${law.id}`);
   }
-  const rawSource = readFileSync(join(base, "🧵️retained-command/🦀️component.rs"), "utf8");
+  const rawSource = readFileSync(join(base, "🧵️retained-command/🦀️.rs"), "utf8");
   const rawClose = (text: string): boolean => text.includes("if self.raw.capacity() != 0 {\n            if maximum_items == 0 {")
     && !text.includes("maximum_bytes < self.raw.capacity()") && !text.includes("let released = self.raw.capacity()")
     && text.includes("fn test_raw_allocation_close<A: ArtifactApp>()");
   if (!rawClose(rawSource)) throw new Error("retained command raw capacity incorrectly consumes semantic byte credit");
   if (rawClose(rawSource.replace("if self.raw.capacity() != 0 {\n            if maximum_items == 0 {", "if self.raw.capacity() != 0 {\n            if maximum_items == 0 || maximum_bytes < self.raw.capacity() {"))) throw new Error("retained raw close accepts capacity-sized byte deadlock");
-  const storeSource = readFileSync(join(base, "../🏪️store/🦀️component.rs"), "utf8");
+  const storeSource = readFileSync(join(base, "../🏪️store/🦀️.rs"), "utf8");
   const publisherStart = source.lastIndexOf("fn publish_mounted_typed_operation_unit(");
   const mutatePublisher = (before: string, after: string): string => source.slice(0, publisherStart) + source.slice(publisherStart).replace(before, after);
   const mountedChecks: Array<[string, (text: string) => boolean, string]> = [
@@ -2335,8 +2335,8 @@ export function storeCanonicalEditSealerSelfTests(): { grants: number; schemaHos
   hash.update("semio.artifact.cursor.v2");
   for (const part of [utf8.encode("edit"), utf8.encode(fixture.edit.id), expected]) { hash.update(integer(part.length)); hash.update(part); }
   if (hash.digest("hex") !== fixture.expectedDigest) throw new Error("canonical edit third-party digest oracle mismatch");
-  const store = readFileSync(join(WORKSPACE_ROOT, storePath, "🦀️component.rs"), "utf8");
-  const source = readFileSync(join(base, "🦀️component.rs"), "utf8");
+  const store = readFileSync(join(WORKSPACE_ROOT, storePath, "🦀️.rs"), "utf8");
+  const source = readFileSync(join(base, "🦀️.rs"), "utf8");
   const method = (text: string, pattern: RegExp) => { const start = text.search(pattern); return start < 0 ? "" : toolJobRustBlock(text, text.indexOf("{", start))?.body ?? ""; };
   const exact = (storeText: string, sealerText: string) => {
     const validation = method(storeText, /fn validate_prepared</);
@@ -2391,7 +2391,7 @@ export function storeCanonicalEditSealerSelfTests(): { grants: number; schemaHos
   mapHash.update("semio.artifact.cursor.v2");
   for (const part of [utf8.encode("edit"), utf8.encode(mapFixture.edit.id), mapExpected]) { mapHash.update(integer(part.length)); mapHash.update(part); }
   if (mapHash.digest("hex") !== mapFixture.expectedDigest) throw new Error("borrowed map Node crypto digest oracle mismatch");
-  const borrowed = readFileSync(join(base, "🧵️borrowed/🦀️component.rs"), "utf8");
+  const borrowed = readFileSync(join(base, "🧵️borrowed/🦀️.rs"), "utf8");
   const borrowedExact = (parent: string, child: string) => {
     const close = method(parent, /pub fn close_step\(&mut self, grant: ArtifactStoreOneItemGrant/);
     const bind = method(child, /fn bind</);
@@ -2428,7 +2428,7 @@ export function storeCanonicalEditSealerSelfTests(): { grants: number; schemaHos
     while (!done) for (let index = 0; index < Math.min(maximum, 256); index += 1) { const next = iterator.next(); if (next.done) { done = true; break; } actual.push(next.value); }
     if (!Buffer.from(actual).equals(mapExpected)) throw new Error("canonical reader bounded byte oracle mismatch");
   }
-  const reader = readFileSync(join(base, "📖️reader/🦀️component.rs"), "utf8");
+  const reader = readFileSync(join(base, "📖️reader/🦀️.rs"), "utf8");
   const readerExact = (text: string) => {
     const close = method(text, /fn close_step\(&mut self, grant: ArtifactStoreOneItemGrant/);
     const transfer = method(text, /fn take_root\(&mut self\)/);
@@ -2473,9 +2473,9 @@ export function canonicalErrorProgressSelfTests(): number {
     if (written !== (grant === 0 ? 0 : fixture.expectedBytes)) throw new Error("canonical error-progress grant oracle changed initialized credit");
     checks += 1;
   }
-  const parent = readFileSync(join(base, "🦀️component.rs"), "utf8");
-  const borrowed = readFileSync(join(base, "🧵️borrowed/🦀️component.rs"), "utf8");
-  const reader = readFileSync(join(base, "📖️reader/🦀️component.rs"), "utf8");
+  const parent = readFileSync(join(base, "🦀️.rs"), "utf8");
+  const borrowed = readFileSync(join(base, "🧵️borrowed/🦀️.rs"), "utf8");
+  const reader = readFileSync(join(base, "📖️reader/🦀️.rs"), "utf8");
   const method = (text: string, pattern: RegExp) => { const start = text.search(pattern); return start < 0 ? "" : toolJobRustBlock(text, text.indexOf("{", start))?.body ?? ""; };
   const exact = (parent: string, borrowed: string, reader: string) => {
     const indexed = method(parent, /pub fn encode_chunk\(/);
@@ -2512,8 +2512,8 @@ export function canonicalErrorProgressSelfTests(): number {
 //#region 🧬️PlaybookGenerationRootLaws
 export function proceduralGenerationRootSelfTests(): number {
   const base = join(WORKSPACE_ROOT, "🧰️framework/🛍️products/💻️os/🔨️modules/📖️playbook");
-  const schema = JSON.parse(readFileSync(join(base, "🧬️generation/🧬️schema/🔣️generation-root.schema.json"), "utf8"));
-  const fixture = JSON.parse(readFileSync(join(base, "🧬️generation/🧪️fixtures/🔣️generation-root.json"), "utf8"));
+  const schema = JSON.parse(readFileSync(join(base, "🧬️generation/🧬️schema/🔣️.schema.json"), "utf8"));
+  const fixture = JSON.parse(readFileSync(join(base, "🧬️generation/🧪️fixture/🔣️s.json"), "utf8"));
   const Ajv = createRequire(import.meta.url)("ajv");
   const validate = new Ajv({ strict: true, allErrors: true }).compile(schema);
   if (!validate(fixture)) throw new Error("generation root fixture failed strict schema");
@@ -2521,8 +2521,8 @@ export function proceduralGenerationRootSelfTests(): number {
   for (const value of hostiles) if (validate(value)) throw new Error("generation root schema accepted hostile input");
   const wire = JSON.stringify(fixture.generation);
   if (Buffer.byteLength(wire) <= 16384 || JSON.stringify(JSON.parse(wire)) !== wire) throw new Error("generation root independent JSON oracle lost large nested content");
-  const source = readFileSync(join(base, "🧬️generation/🦀️component.rs"), "utf8");
-  const modelPath = "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️procedural3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️component.rs";
+  const source = readFileSync(join(base, "🧬️generation/🦀️.rs"), "utf8");
+  const modelPath = "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️procedural3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs";
   const snapshot = readFileSync(join(WORKSPACE_ROOT, modelPath), "utf8");
   const second = readFileSync(join(WORKSPACE_ROOT, modelPath.replace("🧊️procedural3d", "🌀️procedural2d")), "utf8");
   const exact = (root: string, model: string) => root.includes("struct GenerationPlayRoot(ManuallyDrop<Option<Arc<GenerationPlayState>>>)")
@@ -2550,8 +2550,8 @@ export function proceduralGenerationRootSelfTests(): number {
 //#region 🧹️FlowTypedRetirementLaws
 export function flowTypedRetirementSelfTests(): number {
   const base = join(WORKSPACE_ROOT, "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🧵️retained");
-  const schema = JSON.parse(readFileSync(join(base, "🧬️schema/🔣️retirement.schema.json"), "utf8"));
-  const fixture = JSON.parse(readFileSync(join(base, "🧪️fixtures/🔣️retirement.json"), "utf8"));
+  const schema = JSON.parse(readFileSync(join(base, "🧬️schema/🔣️.schema.json"), "utf8"));
+  const fixture = JSON.parse(readFileSync(join(base, "🧪️fixture/🔣️s.json"), "utf8"));
   const Ajv = createRequire(import.meta.url)("ajv");
   const validate = new Ajv({ strict: true, allErrors: true }).compile(schema);
   if (!validate(fixture)) throw new Error("Flow retirement strict fixture schema failed");
@@ -2564,7 +2564,7 @@ export function flowTypedRetirementSelfTests(): number {
     cluster.id, cluster.name, ...Object.keys(cluster.flow.nodes), ...Object.values(cluster.flow.nodes).map((value: any) => value.chrome.label),
     ...document.synapses.flatMap((value: any) => [value.id, value.from, value.to, value.fromPort, value.toPort]), ...Object.keys(document.layout)];
   if (text.reduce((total, value) => total + Buffer.byteLength(value), 0) !== fixture.expected.releasedBytes) throw new Error("Flow retirement independent JSON byte oracle disagrees");
-  const source = readFileSync(join(base, "🦀️component.rs"), "utf8");
+  const source = readFileSync(join(base, "🦀️.rs"), "utf8");
   const exact = (value: string) => value.includes("owners: ManuallyDrop<LinkedList<FlowOwner>>")
     && value.includes("maximum_bytes.min(bytes.len())") && value.includes("!std::thread::panicking()")
     && value.includes("FlowOwner::Fixture(value)") && !/\.clone\(|serde_json::to_|\.collect\(/.test(value);
@@ -2583,9 +2583,9 @@ export function flowTypedRetirementSelfTests(): number {
 //#region 📑️FlowSelectedCopyLaws
 export function flowSelectedCopySelfTests(): number {
   const base = join(WORKSPACE_ROOT, "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🧵️retained");
-  const schema = JSON.parse(readFileSync(join(base, "📑️copy/🧬️schema/🔣️typed-copy.schema.json"), "utf8"));
-  const fixture = JSON.parse(readFileSync(join(base, "📑️copy/🧪️fixtures/🔣️typed-copy.json"), "utf8"));
-  const document = JSON.parse(readFileSync(join(base, "🧪️fixtures/🔣️retirement.json"), "utf8")).fixture;
+  const schema = JSON.parse(readFileSync(join(base, "📑️copy/🧬️schema/🔣️.schema.json"), "utf8"));
+  const fixture = JSON.parse(readFileSync(join(base, "📑️copy/🧪️fixture/🔣️s.json"), "utf8"));
+  const document = JSON.parse(readFileSync(join(base, "🧪️fixture/🔣️s.json"), "utf8")).fixture;
   const requireTest = createRequire(import.meta.url);
   const Ajv = requireTest("ajv");
   const stable = requireTest("fast-json-stable-stringify");
@@ -2601,7 +2601,7 @@ export function flowSelectedCopySelfTests(): number {
     const pointer = test.pointer === "" ? document : test.pointer.slice(1).split("/").reduce((value: any, key: string) => value[key], document);
     if (stable(pointer) !== stable(copied)) throw new Error("Flow selected copy fixture pointer disagrees");
   }
-  const source = readFileSync(join(base, "📑️copy/🦀️component.rs"), "utf8");
+  const source = readFileSync(join(base, "📑️copy/🦀️.rs"), "utf8");
   const exact = (value: string) => value.includes("owned: ManuallyDrop<CopyState<R, T>>")
     && value.includes("root: Arc<dyn Any + Send + Sync>") && value.includes("unsafe impl<T: Sync> Send for Rooted<T>")
     && value.includes("maximum_bytes.min(source.len() - start)") && value.includes("if !state.started")
@@ -3442,11 +3442,11 @@ function toolJobArtifactEnvelopeOwnedCodecExact(store: string, rust: Map<string,
   const directEnvelopeSerde = [...rust.entries()].filter(
     ([file, source]) =>
       !file.includes("/🧪️tests/") &&
-      file !== "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️component.rs" &&
+      file !== "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️.rs" &&
       directEnvelopePattern.test(source),
   );
   const placeholderEnvelopeIngress = [...rust.entries()].filter(
-    ([file, source]) => file !== "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️component.rs" && source.includes("reject_whole_buffer_artifact_envelope_ingress"),
+    ([file, source]) => file !== "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️.rs" && source.includes("reject_whole_buffer_artifact_envelope_ingress"),
   );
   return (
     store.includes("pub struct OwnedSchemaDecodePages") &&
@@ -6479,7 +6479,7 @@ function toolJobFem2dMountedSessionExact(session: string, editor: string, model:
     mesh.includes("mesh_mounted_classification_indexes_admit_maximum_reject_plus_one_and_close_exactly") &&
     !!plugin &&
     plugin.body.indexOf("crate::editor::fem2d::session::initialize()") < plugin.body.indexOf('Plugin::<FemApps>::builder("fem")') &&
-    glue.includes("✏️editor/🧵️session/🦀️component.rs") &&
+    glue.includes("✏️editor/🧵️session/🦀️.rs") &&
     jobs.includes("pub trait BoundedJob") &&
     jobs.includes("JobBody::Bounded(owner)") &&
     jobs.includes("#[cfg(not(test))]") &&
@@ -7202,7 +7202,7 @@ fn hostile_owner() -> &'static Mutex<[Option<Vec<u8>>; 4]> {
   const femMountedModel = "pub struct Fem2dVisualJob {} Fem2dVisualJobStage::ReserveSnapshot; canvas2d_snapshot_begin(); self.output.admit_page(); canvas2d_snapshot_seal(token); Fem2dVisualJobStage::OrderRegionKey; Fem2dVisualJobStage::OrderElementKey; fn order_field_one(&mut self, visual: &Fem2dLiveVisual) {} Fem2dVisualJobStage::BuildRegion; fn close_step(&mut self, maximum_bytes: usize) -> (bool, usize, usize) {} fn mounted_visual_output_exact_maximum_plus_one_and_page_handback() {} fn fem2d_visual_job_maximum_plus_one_rejects_before_owner_transfer() {} fn fem2d_visual_job_stale_cancel_fault_and_device_close_preserve_last_valid() {} fn fem2d_visual_job_replay_accessibility_and_each_step_are_bounded() { assert!(packet_equal(&first, &second)); assert!(started.elapsed().as_micros() < 8_000); } pub fn render_with_progress() { progress.map(Fem2dMountedVisualLease::snapshot); }";
   const femMountedMesh = "MeshJobStage::ReservePreparation; MeshJobStage::ReserveEdgeAuthorities; fn advance_face_classification(&mut self) { triangulation.triangles.get(self.face_cursor); } MeshJobStage::Classify => { self.advance_face_classification(); } MeshJobStage::Finalize => {} fn mesh_mounted_classification_indexes_admit_maximum_reject_plus_one_and_close_exactly() {}";
   const femMountedRoot = 'pub fn plugin() { crate::editor::fem2d::session::initialize(); Plugin::<FemApps>::builder("fem"); }';
-  const femMountedGlue = "✏️editor/🧵️session/🦀️component.rs";
+  const femMountedGlue = "✏️editor/🧵️session/🦀️.rs";
   const femMountedJobs = "pub trait BoundedJob {} JobBody::Bounded(owner); #[cfg(not(test))]; JobBody::ExplicitStateMachineRequired;";
   const femMountedAnalyses = "pub struct AssemblyJobConstruction {} AssemblyConstructionStage::ValidateNodePairs; AssemblyConstructionStage::DiscoverDofs; AssemblyConstructionStage::CommitDofOwner; struct PendingElementBuild {} PendingElementBuildStage::ReserveIndices; PendingElementBuildStage::ReservePositions; PendingElementBuildStage::ReserveStiffnessCredit; PendingElementBuildStage::AllocateStiffness; PendingElementBuildStage::ObserveStiffnessBacking => {} PendingElementBuildStage::AdmitStiffnessBacking; fn advance_element_build(&mut self) {} fn reclaim_element_owner(&mut self) {} fn mounted_element_build_reserves_and_reclaims_one_exact_owner_per_turn() {} fn mounted_element_stiffness_observes_before_admit_and_retires_rejected_backing() {} pub struct AssemblyCsrBuild {}";
   const femMountedReactor = "Event::JobProgress { job, .. }; JOB_RENDER_BINDINGS.with; .try_surface(binding.instance, surface);";
@@ -9097,7 +9097,7 @@ function toolJobSharedFrameworkActionFixtureRun(root: string): { schema: string;
   const actualIds = fixture.routes.map((route) => route.id).sort();
   if (actualIds.join("\0") !== expectedIds.join("\0") || new Set(fixture.routes.map((route) => route.factory)).size !== 12 || new Set(fixture.routes.map((route) => route.routeIndex)).size !== 12)
     throw new Error("[verify interactivity tool-jobs shared-action-fixture] route identities are not an exact bijection.");
-  const source = policyReadFileSafe(root, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️component.rs");
+  const source = policyReadFileSafe(root, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️.rs");
   const production = new Map(toolJobReservedSpecs(source).map((route) => [route.id, route]));
   for (const route of fixture.routes) {
     const row = production.get(route.id);
@@ -10097,7 +10097,7 @@ function toolJobCoverageRun(root: string): ToolJobCoverageReport {
   const fixtureCommandRows: { file: string; id: string }[] = [];
   let macroInvocations = 0;
   let fixtureMacroInvocations = 0;
-  const fixtureHost = "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️component.rs";
+  const fixtureHost = "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️.rs";
   for (const file of policyAllRustFiles(root)) {
     const source = policyReadFileSafe(root, file);
     const invocation = /^\s*(?:[A-Za-z_][A-Za-z0-9_]*::)*app_commands!\s*\{/gm;
@@ -10134,81 +10134,81 @@ function toolJobCoverageRun(root: string): ToolJobCoverageReport {
   const forbiddenRows = commandRows.filter((row) => dispositions.get(`${row.file}\0${row.id}`) === "ForbiddenFromUi").length;
   const deletedRows = commandRows.filter((row) => dispositions.get(`${row.file}\0${row.id}`) === "Deleted").length;
   const actionBus = policyReadFileSafe(root, "🧰️framework/🔨️modules/🎯️action-bus/🦀️.rs");
-  const platform = policyReadFileSafe(root, "🧰️framework/🔨️modules/🖥️platform/🦀️component.rs");
-  const glue = policyReadFileSafe(root, "🧰️framework/📦️packages/🦀️rust/📦️glue.rs");
-  const plugin = policyReadFileSafe(root, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️component.rs");
-  const artifactRetainedCommand = policyReadFileSafe(root, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️retained-command/🦀️component.rs");
-  const store = policyReadFileSafe(root, "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️component.rs");
-  const presenceRetirement = policyReadFileSafe(root, "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👥️presence/♻️retirement/🦀️component.rs");
-  const vcs = policyReadFileSafe(root, "🧰️framework/🛍️products/💻️os/🔨️modules/🌿️vcs/🦀️component.rs");
+  const platform = policyReadFileSafe(root, "🧰️framework/🔨️modules/🖥️platform/🦀️.rs");
+  const glue = policyReadFileSafe(root, "🧰️framework/📦️packages/🦀️rust/🦀️.rs");
+  const plugin = policyReadFileSafe(root, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️.rs");
+  const artifactRetainedCommand = policyReadFileSafe(root, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️retained-command/🦀️.rs");
+  const store = policyReadFileSafe(root, "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️.rs");
+  const presenceRetirement = policyReadFileSafe(root, "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👥️presence/♻️retirement/🦀️.rs");
+  const vcs = policyReadFileSafe(root, "🧰️framework/🛍️products/💻️os/🔨️modules/🌿️vcs/🦀️.rs");
   const causal = policyReadFileSafe(root, "🧰️framework/🔨️modules/📡️replication/🔗️causal/🦀️.rs");
-  const channel = policyReadFileSafe(root, "🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🧵️channel/🦀️component.rs");
-  const actor = policyReadFileSafe(root, "🧰️framework/🔨️modules/🎭️actor/🦀️component.rs");
+  const channel = policyReadFileSafe(root, "🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🧵️channel/🦀️.rs");
+  const actor = policyReadFileSafe(root, "🧰️framework/🔨️modules/🎭️actor/🦀️.rs");
   const kernel = policyReadFileSafe(root, "🧰️framework/🔨️modules/🎠️kernel/🦀️.rs");
-  const pluginHost = policyReadFileSafe(root, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🦀️component.rs");
-  const mcpWorkspace = policyReadFileSafe(root, "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🏠️workspace/🦀️component.rs");
-  const runHost = policyReadFileSafe(root, "🧰️framework/🛍️products/💻️os/🔨️modules/🏃️run/🦀️component.rs");
-  const wgpuHost = policyReadFileSafe(root, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/📦️glue.rs");
+  const pluginHost = policyReadFileSafe(root, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🦀️.rs");
+  const mcpWorkspace = policyReadFileSafe(root, "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🏠️workspace/🦀️.rs");
+  const runHost = policyReadFileSafe(root, "🧰️framework/🛍️products/💻️os/🔨️modules/🏃️run/🦀️.rs");
+  const wgpuHost = policyReadFileSafe(root, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️.rs");
   const nativeIo = policyReadFileSafe(root, "🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/🦀️native_io.rs");
-  const shardHost = policyReadFileSafe(root, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🧵️shard/🦀️component.rs");
-  const jobRuntime = policyReadFileSafe(root, "🧰️framework/🔨️modules/🧵️job/🦀️component.rs");
-  const puzzle5d = policyReadFileSafe(root, "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs");
-  const semio = policyReadFileSafe(root, "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🦀️component.rs");
-  const manifest = policyReadFileSafe(root, "🧰️framework/🔨️modules/🛂️manifest/🦀️component.rs");
-  const componentWit = policyReadFileSafe(root, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧬️schema/📜️component.wit");
-  const reactor = policyReadFileSafe(root, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🦀️component.rs");
-  const reactorRequests = policyReadFileSafe(root, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/📮️requests/🦀️component.rs");
-  const reactorExecutor = policyReadFileSafe(root, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🧵️executor/🦀️component.rs");
-  const reactorJobs = policyReadFileSafe(root, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/💼️jobs/🦀️component.rs");
-  const fem2dSession = policyReadFileSafe(root, "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧵️session/🦀️component.rs");
-  const fem2dEditor = policyReadFileSafe(root, "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs");
-  const fem2dModel = policyReadFileSafe(root, "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🧱️model/🦀️component.rs");
-  const femPluginRoot = policyReadFileSafe(root, "✏️s/🔌️plugins/🏗️fem/🦀️component.rs");
-  const femGlue = policyReadFileSafe(root, "✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/📦️glue.rs");
-  const femAnalyses = policyReadFileSafe(root, "✏️s/🔨️modules/🏗️fem/⚙️engine/🧮️analyses/🦀️component.rs");
-  const femMesh = policyReadFileSafe(root, "✏️s/🔨️modules/🏗️fem/⚙️engine/🕸️mesh/🦀️component.rs");
-  const femSparse = policyReadFileSafe(root, "✏️s/🔨️modules/🏗️fem/⚙️engine/🔢️sparse/🦀️component.rs");
-  const femEngineModel = policyReadFileSafe(root, "✏️s/🔨️modules/🏗️fem/⚙️engine/🏗️model/🦀️component.rs");
-  const femElements2d = policyReadFileSafe(root, "✏️s/🔨️modules/🏗️fem/⚙️engine/📏️elements2d/🦀️component.rs");
-  const presentEnvelopeCodec = policyReadFileSafe(root, "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️present/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🧬️mutations/💾️binary/🦀️component.rs");
+  const shardHost = policyReadFileSafe(root, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🧵️shard/🦀️.rs");
+  const jobRuntime = policyReadFileSafe(root, "🧰️framework/🔨️modules/🧵️job/🦀️.rs");
+  const puzzle5d = policyReadFileSafe(root, "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs");
+  const semio = policyReadFileSafe(root, "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🦀️.rs");
+  const manifest = policyReadFileSafe(root, "🧰️framework/🔨️modules/🛂️manifest/🦀️.rs");
+  const componentWit = policyReadFileSafe(root, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧬️schema/📜️.wit");
+  const reactor = policyReadFileSafe(root, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🦀️.rs");
+  const reactorRequests = policyReadFileSafe(root, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/📮️requests/🦀️.rs");
+  const reactorExecutor = policyReadFileSafe(root, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🧵️executor/🦀️.rs");
+  const reactorJobs = policyReadFileSafe(root, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/💼️jobs/🦀️.rs");
+  const fem2dSession = policyReadFileSafe(root, "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧵️session/🦀️.rs");
+  const fem2dEditor = policyReadFileSafe(root, "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs");
+  const fem2dModel = policyReadFileSafe(root, "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🧱️model/🦀️.rs");
+  const femPluginRoot = policyReadFileSafe(root, "✏️s/🔌️plugins/🏗️fem/🦀️.rs");
+  const femGlue = policyReadFileSafe(root, "✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/🦀️.rs");
+  const femAnalyses = policyReadFileSafe(root, "✏️s/🔨️modules/🏗️fem/⚙️engine/🧮️analyses/🦀️.rs");
+  const femMesh = policyReadFileSafe(root, "✏️s/🔨️modules/🏗️fem/⚙️engine/🕸️mesh/🦀️.rs");
+  const femSparse = policyReadFileSafe(root, "✏️s/🔨️modules/🏗️fem/⚙️engine/🔢️sparse/🦀️.rs");
+  const femEngineModel = policyReadFileSafe(root, "✏️s/🔨️modules/🏗️fem/⚙️engine/🏗️model/🦀️.rs");
+  const femElements2d = policyReadFileSafe(root, "✏️s/🔨️modules/🏗️fem/⚙️engine/📏️elements2d/🦀️.rs");
+  const presentEnvelopeCodec = policyReadFileSafe(root, "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️present/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🧬️mutations/💾️binary/🦀️.rs");
   const presentWasm = policyReadFileSafe(root, "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️present/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🌉️wasm/🦀️component.rs");
-  const writerEnvelopeCodec = policyReadFileSafe(root, "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🧬️mutations/💾️binary/🦀️component.rs");
-  const writerEditor = policyReadFileSafe(root, "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs");
+  const writerEnvelopeCodec = policyReadFileSafe(root, "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🧬️mutations/💾️binary/🦀️.rs");
+  const writerEditor = policyReadFileSafe(root, "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs");
   const writerWasm = policyReadFileSafe(root, "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🌉️wasm/🦀️component.rs");
-  const jackEnvelopeCodec = policyReadFileSafe(root, "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💾️binary/🦀️component.rs");
-  const jackEditor = policyReadFileSafe(root, "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs");
+  const jackEnvelopeCodec = policyReadFileSafe(root, "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💾️binary/🦀️.rs");
+  const jackEditor = policyReadFileSafe(root, "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs");
   const jackWasm = policyReadFileSafe(root, "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🌉️wasm/🦀️component.rs");
-  const trinityRewrite = policyReadFileSafe(root, "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewrite/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🌍️world/🦀️component.rs");
-  const gisMapEnvelopeCodec = policyReadFileSafe(root, "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💾️binary/🦀️component.rs");
-  const gisMapEditor = policyReadFileSafe(root, "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs");
+  const trinityRewrite = policyReadFileSafe(root, "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewrite/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🌍️world/🦀️.rs");
+  const gisMapEnvelopeCodec = policyReadFileSafe(root, "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💾️binary/🦀️.rs");
+  const gisMapEditor = policyReadFileSafe(root, "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs");
   const gisMapWasm = policyReadFileSafe(root, "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🌉️wasm/🦀️component.rs");
   const rasterMountedOutputSerializers = [
-    "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/🎞️gif/🔖️87a/✳️any/🦀️component.rs",
-    "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/🖼️tiff/🔖️6.0/✳️any/🦀️component.rs",
-    "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/🎨️svg/🔖️1.1/✳️any/🦀️component.rs",
-    "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/🖼️bmp/🔖️v3/✳️any/🦀️component.rs",
-    "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/📄️pdf/🔖️1.4/✳️any/🦀️component.rs",
-    "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/📷️jpg/🔖️jfif-1.01/✳️any/🦀️component.rs",
-    "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/📷️png/🔖️1.2/✳️any/🦀️component.rs",
-    "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/🖊️dwg/🔖️ac1018/✳️any/🦀️component.rs",
+    "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/🎞️gif/🔖️87a/✳️any/🦀️.rs",
+    "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/🖼️tiff/🔖️6.0/✳️any/🦀️.rs",
+    "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/🎨️svg/🔖️1.1/✳️any/🦀️.rs",
+    "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/🖼️bmp/🔖️v3/✳️any/🦀️.rs",
+    "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/📄️pdf/🔖️1.4/✳️any/🦀️.rs",
+    "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/📷️jpg/🔖️jfif-1.01/✳️any/🦀️.rs",
+    "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/📷️png/🔖️1.2/✳️any/🦀️.rs",
+    "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/🖊️dwg/🔖️ac1018/✳️any/🦀️.rs",
   ]
     .map((file) => policyReadFileSafe(root, file))
     .join("\n");
-  const rasterEnvelopeCodec = `${policyReadFileSafe(root, "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💾️binary/🦀️component.rs")}\n${policyReadFileSafe(root, "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🦀️component.rs")}\n${policyReadFileSafe(root, "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️component.rs")}\n${policyReadFileSafe(root, "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️component.rs")}\n${rasterMountedOutputSerializers}`;
-  const rasterEditor = policyReadFileSafe(root, "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs");
+  const rasterEnvelopeCodec = `${policyReadFileSafe(root, "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💾️binary/🦀️.rs")}\n${policyReadFileSafe(root, "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🦀️.rs")}\n${policyReadFileSafe(root, "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️component.rs")}\n${policyReadFileSafe(root, "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs")}\n${rasterMountedOutputSerializers}`;
+  const rasterEditor = policyReadFileSafe(root, "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs");
   const rasterWasm = policyReadFileSafe(root, "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🌉️wasm/🦀️component.rs");
-  const drawEnvelopeCodec = policyReadFileSafe(root, "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️draw/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧰️owned/🦀️component.rs");
+  const drawEnvelopeCodec = policyReadFileSafe(root, "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️draw/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧰️owned/🦀️.rs");
   const drawEditorSources = [
-    "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️draw/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+    "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️draw/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
     "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️draw/✏️editor/🪆️1-any/🎮️commands/🖱️canvas-pointer-down/🦀️.rs",
-    "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️draw/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🖼️canvas/🦀️component.rs",
+    "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️draw/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🖼️canvas/🦀️.rs",
   ].map((file) => policyReadFileSafe(root, file));
   const drawEditorTestLaws = drawEditorSources[0] ?? "";
   const drawEditor = drawEditorSources
     .map(toolJobProductionSource)
     .join("\n");
-  const drawConfig = policyReadFileSafe(root, "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️draw/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🦀️component.rs");
-  const drawConfigProto = policyReadFileSafe(root, "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️draw/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🧬️schema/🛰️component.proto");
+  const drawConfig = policyReadFileSafe(root, "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️draw/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🦀️.rs");
+  const drawConfigProto = policyReadFileSafe(root, "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️draw/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🧬️schema/🛰️.proto");
   const allRustFiles = new Map(policyAllRustFiles(root).map((file) => [file, policyReadFileSafe(root, file)]));
   const proofs = toolJobProofs(productionFiles);
   const proofIdentities = new Set(proofs.map(toolJobProofIdentity));
@@ -10358,7 +10358,7 @@ function toolJobCoverageRun(root: string): ToolJobCoverageReport {
   const acceptedCommandRows = [
     ...staticRows.filter((row) => dispositions.get(`${row.file}\0${row.id}`) === "Migrated" && !remainingCommandKeys.has(`${row.file}\0${row.id}`)),
     ...(puzzleReservedExact ? TOOL_JOB_PLUGIN_RESERVED_IDS.map((id) => ({
-      file: "✏️s/🔌️plugins/🧩️puzzle/🗀️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+      file: "✏️s/🔌️plugins/🧩️puzzle/🗀️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
       id,
       source: "literal" as const,
     })) : []),
@@ -10740,11 +10740,11 @@ export class VerifyScript extends Script {
       policyReadFileSafe(this.root, INTERACTIVITY_AUDIT_WINIT_HOST_FILE),
       policyReadFileSafe(this.root, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️browser_worker.rs"),
       policyReadFileSafe(this.root, INTERACTIVITY_AUDIT_RENDERER_GLUE_FILE),
-      policyReadFileSafe(this.root, "🧰️framework/🔨️modules/🗺️surface/🕸️node-graph/🦀️component.rs"),
-      policyReadFileSafe(this.root, "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/🦀️component.rs"),
-      policyReadFileSafe(this.root, "🧰️framework/🔨️modules/🗺️surface/🗺️tiled-map/🦀️component.rs"),
-      policyReadFileSafe(this.root, "🧰️framework/🔨️modules/✍️editor/🦀️component.rs"),
-      policyReadFileSafe(this.root, "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🔌️ports/➡️directed/🕸️dag/🦀️component.rs"),
+      policyReadFileSafe(this.root, "🧰️framework/🔨️modules/🗺️surface/🕸️node-graph/🦀️.rs"),
+      policyReadFileSafe(this.root, "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/🦀️.rs"),
+      policyReadFileSafe(this.root, "🧰️framework/🔨️modules/🗺️surface/🗺️tiled-map/🦀️.rs"),
+      policyReadFileSafe(this.root, "🧰️framework/🔨️modules/✍️editor/🦀️.rs"),
+      policyReadFileSafe(this.root, "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🔌️ports/➡️directed/🕸️dag/🦀️.rs"),
     );
     if (failures.length > 0) throw new Error(`[verify interactivity p3mn] ${failures.join("; ")}`);
     console.log("[verify interactivity p3mn] live-source and hostile mutations clean.");
@@ -10765,13 +10765,13 @@ export class VerifyScript extends Script {
       return;
     }
     if (args.includes("--p2c-only")) {
-      const actor = policyReadFileSafe(this.root, "🧰️framework/🔨️modules/🎭️actor/🦀️component.rs");
-      const shard = policyReadFileSafe(this.root, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🧵️shard/🦀️component.rs");
+      const actor = policyReadFileSafe(this.root, "🧰️framework/🔨️modules/🎭️actor/🦀️.rs");
+      const shard = policyReadFileSafe(this.root, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🧵️shard/🦀️.rs");
       const executor = policyReadFileSafe(this.root, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🧵️shard/🏃️executor.rs");
-      const wgpu = policyReadFileSafe(this.root, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/📦️glue.rs");
+      const wgpu = policyReadFileSafe(this.root, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️.rs");
       const actionBus = policyReadFileSafe(this.root, "🧰️framework/🔨️modules/🎯️action-bus/🦀️.rs");
-      const pluginApp = policyReadFileSafe(this.root, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️component.rs");
-      const pluginHost = policyReadFileSafe(this.root, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🦀️component.rs");
+      const pluginApp = policyReadFileSafe(this.root, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️.rs");
+      const pluginHost = policyReadFileSafe(this.root, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🦀️.rs");
       const programBridge = policyReadFileSafe(this.root, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ProgramBridge/🧊️component.rs");
       const mutations = args.includes("--self-test") ? toolJobLiveFixedReplaySelfTests(actor, shard, executor, wgpu, actionBus, pluginApp, pluginHost, programBridge) : 0;
       if (!toolJobLiveFixedReplayExact(actor, shard, executor, wgpu, actionBus, pluginApp, pluginHost, programBridge)) throw new Error("[verify interactivity tool-jobs p2c] live fixed replay contract failed.");
@@ -10779,31 +10779,31 @@ export class VerifyScript extends Script {
       return;
     }
     if (args.includes("--p2a1-only")) {
-      const store = policyReadFileSafe(this.root, "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️component.rs");
+      const store = policyReadFileSafe(this.root, "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️.rs");
       const mutations = args.includes("--self-test") ? toolJobArtifactEnvelopeRejectionTransferSelfTests(store) : 0;
       if (!toolJobArtifactEnvelopeRejectionTransferExact(store)) throw new Error("[verify interactivity tool-jobs p2a1] Store rejection-transfer contract failed.");
       console.log(`[verify interactivity tool-jobs p2a1] live-source clean; hostile-mutations=${mutations}.`);
       return;
     }
     if (args.includes("--p6i-only")) {
-      const fem2dModel = policyReadFileSafe(this.root, "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🧱️model/🦀️component.rs");
-      const fem2dSession = policyReadFileSafe(this.root, "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧵️session/🦀️component.rs");
-      const fem3dSession = policyReadFileSafe(this.root, "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧵️session/🦀️component.rs");
-      const fem3dEditor = policyReadFileSafe(this.root, "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs");
-      const fem3dModel = policyReadFileSafe(this.root, "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🧱️model/🦀️component.rs");
-      const fem3dResults = policyReadFileSafe(this.root, "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/📊️results/🦀️component.rs");
-      const fem3dViewer = policyReadFileSafe(this.root, "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🦀️component.rs");
-      const fem3dViewerModel = policyReadFileSafe(this.root, "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🪟️windows/🧱️model/🦀️component.rs");
-      const femPluginRoot = policyReadFileSafe(this.root, "✏️s/🔌️plugins/🏗️fem/🦀️component.rs");
-      const femGlue = policyReadFileSafe(this.root, "✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/📦️glue.rs");
-      const femSparse = policyReadFileSafe(this.root, "✏️s/🔨️modules/🏗️fem/⚙️engine/🔢️sparse/🦀️component.rs");
-      const frameworkPlugin = policyReadFileSafe(this.root, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️component.rs");
-      const frameworkWorld = policyReadFileSafe(this.root, "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🦀️component.rs");
+      const fem2dModel = policyReadFileSafe(this.root, "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🧱️model/🦀️.rs");
+      const fem2dSession = policyReadFileSafe(this.root, "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧵️session/🦀️.rs");
+      const fem3dSession = policyReadFileSafe(this.root, "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧵️session/🦀️.rs");
+      const fem3dEditor = policyReadFileSafe(this.root, "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs");
+      const fem3dModel = policyReadFileSafe(this.root, "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🧱️model/🦀️.rs");
+      const fem3dResults = policyReadFileSafe(this.root, "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/📊️results/🦀️.rs");
+      const fem3dViewer = policyReadFileSafe(this.root, "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🦀️.rs");
+      const fem3dViewerModel = policyReadFileSafe(this.root, "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🪟️windows/🧱️model/🦀️.rs");
+      const femPluginRoot = policyReadFileSafe(this.root, "✏️s/🔌️plugins/🏗️fem/🦀️.rs");
+      const femGlue = policyReadFileSafe(this.root, "✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/🦀️.rs");
+      const femSparse = policyReadFileSafe(this.root, "✏️s/🔨️modules/🏗️fem/⚙️engine/🔢️sparse/🦀️.rs");
+      const frameworkPlugin = policyReadFileSafe(this.root, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️.rs");
+      const frameworkWorld = policyReadFileSafe(this.root, "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🦀️.rs");
       const worldSnapshot = policyReadFileSafe(this.root, "🧰️framework/🔨️modules/🖱️ui/🎬️scene/📦️packages/🦀️rust/🦀️world3d_snapshot.rs");
       const canvasSnapshot = policyReadFileSafe(this.root, "🧰️framework/🔨️modules/🖱️ui/🎬️scene/📦️packages/🦀️rust/🦀️canvas2d_snapshot.rs");
       const canvasRenderer = policyReadFileSafe(this.root, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/Scenes/🧊️component.rs");
-      const femAnalyses = policyReadFileSafe(this.root, "✏️s/🔨️modules/🏗️fem/⚙️engine/🧮️analyses/🦀️component.rs");
-      const femMesh = policyReadFileSafe(this.root, "✏️s/🔨️modules/🏗️fem/⚙️engine/🕸️mesh/🦀️component.rs");
+      const femAnalyses = policyReadFileSafe(this.root, "✏️s/🔨️modules/🏗️fem/⚙️engine/🧮️analyses/🦀️.rs");
+      const femMesh = policyReadFileSafe(this.root, "✏️s/🔨️modules/🏗️fem/⚙️engine/🕸️mesh/🦀️.rs");
       const mutations = args.includes("--self-test")
         ? toolJobFemLiveVisualPublicationSelfTests(fem2dModel, fem2dSession, fem3dSession, fem3dEditor, fem3dModel, fem3dResults, fem3dViewer, fem3dViewerModel, femPluginRoot, femGlue, femSparse, frameworkPlugin, frameworkWorld, worldSnapshot, canvasSnapshot, canvasRenderer, femAnalyses, femMesh)
         : 0;
@@ -10813,25 +10813,25 @@ export class VerifyScript extends Script {
       return;
     }
     if (args.includes("--p6h-only")) {
-      const session = policyReadFileSafe(this.root, "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧵️session/🦀️component.rs");
-      const sparse = policyReadFileSafe(this.root, "✏️s/🔨️modules/🏗️fem/⚙️engine/🔢️sparse/🦀️component.rs");
-      const mesh = policyReadFileSafe(this.root, "✏️s/🔨️modules/🏗️fem/⚙️engine/🕸️mesh/🦀️component.rs");
-      const analyses = policyReadFileSafe(this.root, "✏️s/🔨️modules/🏗️fem/⚙️engine/🧮️analyses/🦀️component.rs");
-      const model = policyReadFileSafe(this.root, "✏️s/🔨️modules/🏗️fem/⚙️engine/🏗️model/🦀️component.rs");
-      const elements = policyReadFileSafe(this.root, "✏️s/🔨️modules/🏗️fem/⚙️engine/📏️elements2d/🦀️component.rs");
-      const runtime = policyReadFileSafe(this.root, "🧰️framework/🔨️modules/🧵️job/🦀️component.rs");
+      const session = policyReadFileSafe(this.root, "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧵️session/🦀️.rs");
+      const sparse = policyReadFileSafe(this.root, "✏️s/🔨️modules/🏗️fem/⚙️engine/🔢️sparse/🦀️.rs");
+      const mesh = policyReadFileSafe(this.root, "✏️s/🔨️modules/🏗️fem/⚙️engine/🕸️mesh/🦀️.rs");
+      const analyses = policyReadFileSafe(this.root, "✏️s/🔨️modules/🏗️fem/⚙️engine/🧮️analyses/🦀️.rs");
+      const model = policyReadFileSafe(this.root, "✏️s/🔨️modules/🏗️fem/⚙️engine/🏗️model/🦀️.rs");
+      const elements = policyReadFileSafe(this.root, "✏️s/🔨️modules/🏗️fem/⚙️engine/📏️elements2d/🦀️.rs");
+      const runtime = policyReadFileSafe(this.root, "🧰️framework/🔨️modules/🧵️job/🦀️.rs");
       const mutations = args.includes("--self-test") ? toolJobFemNumericalMicrocursorSelfTests(sparse, mesh, analyses, model, elements, session, runtime) : 0;
       if (!toolJobFemNumericalMicrocursorExact(sparse, mesh, analyses, model, elements, session, runtime)) throw new Error("[verify interactivity tool-jobs p6h] live FEM numerical microcursor contract failed.");
       console.log(`[verify interactivity tool-jobs p6h] live-source clean; hostile-mutations=${mutations}.`);
       return;
     }
     if (args.includes("--self-test")) {
-      const jobRuntime = policyReadFileSafe(this.root, "🧰️framework/🔨️modules/🧵️job/🦀️component.rs");
-      const artifactRetainedCommand = policyReadFileSafe(this.root, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️retained-command/🦀️component.rs");
+      const jobRuntime = policyReadFileSafe(this.root, "🧰️framework/🔨️modules/🧵️job/🦀️.rs");
+      const artifactRetainedCommand = policyReadFileSafe(this.root, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️retained-command/🦀️.rs");
       const fixture = toolJobFixedOperationFixtureRun(this.root);
       const rustFixture = policyReadFileSafe(this.root, "🧰️framework/🔨️modules/🧵️job/🧪️fixtures/fixed-operation-registry-cases.rs");
       if (rustFixture !== toolJobFixedOperationRustFixtureSource(this.root)) throw new Error("[verify interactivity tool-jobs] generated fixed-operation Rust fixture is stale.");
-      const plugin = policyReadFileSafe(this.root, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️component.rs");
+      const plugin = policyReadFileSafe(this.root, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️.rs");
       const activation = toolJobFactoryProofActivationScan(this.root);
       if (activation.failures.length > 0) throw new Error(`[verify interactivity tool-jobs] app activation factory proof scan: ${JSON.stringify(activation)}`);
       console.log(`[verify interactivity tool-jobs] exact-factory-proof-owners=${activation.owners} custom-rows=${activation.customRows} generic-rows=${activation.genericRows} clean.`);
@@ -11097,7 +11097,7 @@ export class VerifyScript extends Script {
     // 🌐️ Cross-target compile coverage — the ONLY thing in this repo that compiles
     // `#[cfg(target_arch = "wasm32")]` code. Native `cargo check`/`cargo test` skip those blocks
     // entirely, so a signature change can leave the wasm bindings broken behind a fully green
-    // native build AND a green test suite; that is exactly how `🎭️actor`'s `📦️glue.rs` sat with an
+    // native build AND a green test suite; that is exactly how `🎭️actor`'s `🦀️.rs` sat with an
     // E0308 until MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME's Z1 ran clippy against the real triple.
     // Scoped to the actor kernel because it is small, fast, purity-critical, and the one crate whose
     // wasm glue every renderer depends on — the fleet-wide wasip2/native sweeps stay opt-in via
@@ -11147,13 +11147,13 @@ export class VerifyScript extends Script {
     }
   }
 
-  /** @emoji 🎨️ Discovers every app-level Tailwind entry (`globals.css` / `🎨️globals.css`), validates
+  /** @emoji 🎨️ Discovers every app-level Tailwind entry (`globals.css` / `🎨️.css`), validates
    * relative `@import`/`@source` literals resolve on disk, and asserts each entry's import chain reaches
    * the shared UI react stylesheet that owns the framework class sources. */
   private checkAppTailwindEntries(offenders: string[]): void {
     const uiGlobalsRel = this.findSharedUiGlobalsRel();
     if (!uiGlobalsRel) {
-      offenders.push("shared UI react 🎨️globals.css not found under 🧰️framework/🔨️modules/🖱️ui");
+      offenders.push("shared UI react 🎨️.css not found under 🧰️framework/🔨️modules/🖱️ui");
       return;
     }
     const uiGlobalsAbs = join(this.root, uiGlobalsRel);
@@ -11197,7 +11197,7 @@ export class VerifyScript extends Script {
           visit(full, depth + 1);
           continue;
         }
-        if (entry.name === "globals.css" || entry.name === "🎨️globals.css") found.push(full);
+        if (entry.name === "globals.css" || entry.name === "🎨️.css") found.push(full);
       }
     };
     for (const top of [".storybook", "♻️mit-bestand", "✏️s", "🧰️framework"]) {
@@ -11207,16 +11207,16 @@ export class VerifyScript extends Script {
     return found.filter((abs) => {
       const rel = relative(this.root, abs).replace(/\\/g, "/");
       // Shared module stylesheets are sources in the chain, not app entries that must import themselves.
-      if (rel.includes("/🎯️targets/⚛️react/🎨️globals.css")) return false;
+      if (rel.includes("/🎯️targets/⚛️react/🎨️.css")) return false;
       if (rel.includes("/🎨️styling/")) return false;
       return true;
     });
   }
 
-  /** @emoji 🎨️ Relative path of the shared UI react `🎨️globals.css` from the workspace root. */
+  /** @emoji 🎨️ Relative path of the shared UI react `🎨️.css` from the workspace root. */
   private findSharedUiGlobalsRel(): string | null {
     const candidates = [
-      "🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/🎨️globals.css",
+      "🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/🎨️.css",
     ];
     for (const rel of candidates) {
       if (existsSync(join(this.root, rel))) return rel;
@@ -11268,7 +11268,7 @@ const INTERACTIVITY_ALL_APP_DESCRIPTOR_CAPACITY = 256;
 const INTERACTIVITY_ALL_APP_APPS_PER_DESCRIPTOR_CAPACITY = 64;
 const INTERACTIVITY_ALL_APP_ACTIONS_PER_APP_CAPACITY = 512;
 const INTERACTIVITY_ALL_APP_LAUNCH_CAPACITY = 512;
-const INTERACTIVITY_ALL_APP_DESCRIPTOR_NAME = "🔣️descriptor.json";
+const INTERACTIVITY_ALL_APP_DESCRIPTOR_NAME = "🔣️.json";
 const INTERACTIVITY_ALL_APP_LAUNCH_FILE = ".vscode/launch.json";
 const INTERACTIVITY_ALL_APP_LAUNCH_SEED_FILE = ".vscode/🧩️launch.seed.jsonc";
 const INTERACTIVITY_ALL_APP_PLAYGROUND_FILE = "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🤖️generated/🟦️playgrounds.ts";
@@ -11525,7 +11525,7 @@ function interactivityAllAppDiscovery(repoRoot: string): InteractivityAllAppDisc
   const pluginOwners = new Map<string, string[]>();
   const appOwners = new Map<string, string[]>();
   for (const file of files.slice(0, INTERACTIVITY_ALL_APP_DESCRIPTOR_CAPACITY)) {
-    const extensionSource = file.includes("/🧩️extensions/") ? policyReadFileSafe(repoRoot, `${dirname(file)}/🦀️component.rs`) : "";
+    const extensionSource = file.includes("/🧩️extensions/") ? policyReadFileSafe(repoRoot, `${dirname(file)}/🦀️.rs`) : "";
     const parsed = interactivityAllAppDescriptorFromSource(file, policyReadFileSafe(repoRoot, file), extensionSource);
     failures.push(...parsed.failures);
     if (!parsed.row) continue;
@@ -11588,7 +11588,7 @@ async function interactivityAllAppDiscoverySelfTests(): Promise<number> {
   if (JSON.stringify(JSON.parse(single)) !== await interactivityAllAppOracleJson(single)) throw new Error("[verify interactivity apps] owned descriptor parse disagrees with the TypeScript oracle");
   if (!interactivityAllAppDescriptorFromSource("empty.json", descriptor([])).failures.some((failure) => failure.includes("manifest.apps is empty"))) throw new Error("[verify interactivity apps] empty descriptor self-test was falsely accepted");
   const extensionSource = `const EXTENSION_ID: &str = "fixture-extension"; fn bundle() { ExtensionBundle::new(EXTENSION_ID, "Fixture", "1.0.0").extends("fixture"); }`;
-  if (interactivityAllAppDescriptorFromSource("fixture/🧩️extensions/one/🔣️descriptor.json", descriptor([]), extensionSource).failures.length !== 0) throw new Error("[verify interactivity apps] parent-activated extension self-test was falsely rejected");
+  if (interactivityAllAppDescriptorFromSource("fixture/🧩️extensions/one/🔣️.json", descriptor([]), extensionSource).failures.length !== 0) throw new Error("[verify interactivity apps] parent-activated extension self-test was falsely rejected");
   const maximum = Array.from({ length: INTERACTIVITY_ALL_APP_APPS_PER_DESCRIPTOR_CAPACITY }, (_, index) => app(`s.fixture.${index}@1/*#editor`));
   if (interactivityAllAppDescriptorFromSource("maximum.json", descriptor(maximum)).failures.length !== 0) throw new Error("[verify interactivity apps] maximum descriptor self-test was falsely rejected");
   if (!interactivityAllAppDescriptorFromSource("plus-one.json", descriptor([...maximum, app("s.fixture.plus-one@1/*#editor")])).failures.some((failure) => failure.includes("exceed fixed capacity"))) throw new Error("[verify interactivity apps] maximum-plus-one descriptor self-test was falsely accepted");
@@ -11596,9 +11596,9 @@ async function interactivityAllAppDiscoverySelfTests(): Promise<number> {
   if (!interactivityAllAppDescriptorFromSource("missing-de.json", missingGerman).failures.some((failure) => failure.includes("lacks equivalent en/de labels"))) throw new Error("[verify interactivity apps] missing German label self-test was falsely accepted");
   const migratedAction = interactivityAllAppDescriptorFromSource("migrated-action.json", descriptor([app("s.fixture.fixture@1/*#editor", [action("run", "migrated")])])).row!;
   if (interactivityAllAppActionDispositionFailures([migratedAction]).length !== 0) throw new Error("[verify interactivity apps] migrated action self-test was falsely rejected");
-  const ownedMigratedAction = { ...migratedAction, file: "✏️s/🔌️plugins/fixture/🔣️descriptor.json" };
-  if (interactivityAllAppActionProductionFailures([ownedMigratedAction], [{ file: "✏️s/🔌️plugins/fixture/🦀️component.rs", id: "run", source: "literal" }], []).length !== 0) throw new Error("[verify interactivity apps] owner-local accepted production action self-test was falsely rejected");
-  if (!interactivityAllAppActionProductionFailures([ownedMigratedAction], [{ file: "✏️s/🔌️plugins/other/🦀️component.rs", id: "run", source: "literal" }], []).some((failure) => failure.includes("without an accepted owner-local production command"))) throw new Error("[verify interactivity apps] wrong-owner production action self-test was falsely accepted");
+  const ownedMigratedAction = { ...migratedAction, file: "✏️s/🔌️plugins/fixture/🔣️.json" };
+  if (interactivityAllAppActionProductionFailures([ownedMigratedAction], [{ file: "✏️s/🔌️plugins/fixture/🦀️.rs", id: "run", source: "literal" }], []).length !== 0) throw new Error("[verify interactivity apps] owner-local accepted production action self-test was falsely rejected");
+  if (!interactivityAllAppActionProductionFailures([ownedMigratedAction], [{ file: "✏️s/🔌️plugins/other/🦀️.rs", id: "run", source: "literal" }], []).some((failure) => failure.includes("without an accepted owner-local production command"))) throw new Error("[verify interactivity apps] wrong-owner production action self-test was falsely accepted");
   if (interactivityAllAppActionProductionFailures([ownedMigratedAction], [], ["run"]).length !== 0) throw new Error("[verify interactivity apps] accepted shared reserved action self-test was falsely rejected");
   const missingAction = interactivityAllAppDescriptorFromSource("missing-action.json", descriptor([app("s.fixture.fixture@1/*#editor", [action("run")])])).row!;
   if (!interactivityAllAppActionDispositionFailures([missingAction]).some((failure) => failure.includes("interactiveJob=\"missing\""))) throw new Error("[verify interactivity apps] missing action disposition self-test was falsely accepted");
@@ -11610,7 +11610,7 @@ async function interactivityAllAppDiscoverySelfTests(): Promise<number> {
   if (!interactivityAllAppLaunchesFromSource(launch([...gates.slice(1), { name: "🛠️dev fixture", command: "true", cwd: "${workspaceFolder}" }])).failures.some((failure) => failure.includes(INTERACTIVITY_ALL_APP_REQUIRED_GATES[0].name))) throw new Error("[verify interactivity apps] missing gate self-test was falsely accepted");
   const overCapacity = [...gates, ...Array.from({ length: INTERACTIVITY_ALL_APP_LAUNCH_CAPACITY + 1 - gates.length }, (_, index) => ({ name: `fixture-${index}`, command: "true", cwd: "${workspaceFolder}" }))];
   if (!interactivityAllAppLaunchesFromSource(launch(overCapacity)).failures.some((failure) => failure.includes("exceed fixed capacity"))) throw new Error("[verify interactivity apps] maximum-plus-one launch self-test was falsely accepted");
-  const fixtureDescriptor = { ...interactivityAllAppDescriptorFromSource("fixture.json", descriptor([app("s.fixture.fixture@1/*#editor")])).row!, file: "✏️s/🔌️plugins/fixture/🔣️descriptor.json" };
+  const fixtureDescriptor = { ...interactivityAllAppDescriptorFromSource("fixture.json", descriptor([app("s.fixture.fixture@1/*#editor")])).row!, file: "✏️s/🔌️plugins/fixture/🔣️.json" };
   const fixturePlayground = [{ variant: "fixture", pluginId: "fixture", appId: "s.fixture.fixture@1/*#editor" }];
   const fixtureSeed = JSON.stringify({ devLaunchers: { fixture: { namePrefix: "🧪️fixture" } } });
   const fixtureLaunches = [
@@ -11634,47 +11634,47 @@ async function interactivityAllAppDiscoverySelfTests(): Promise<number> {
 
 const INTERACTIVITY_AUDIT_EXACT_BLOCKING_BRIDGE_FILES = ["🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🧵️shard/🏃️executor.rs"] as const;
 
-const INTERACTIVITY_AUDIT_MCP_HTTP_TRANSPORT_FILE = "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🚚️transport/🦀️component.rs";
-const INTERACTIVITY_AUDIT_MCP_BRIDGE_FILE = "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🧵️bridge/🦀️component.rs";
-const INTERACTIVITY_AUDIT_MCP_ROOT_FILE = "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🦀️component.rs";
-const INTERACTIVITY_AUDIT_STORE_SYNC_FILE = "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔄️sync/🦀️component.rs";
-const INTERACTIVITY_AUDIT_DB_STORAGE_FILE = "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage/🦀️component.rs";
-const INTERACTIVITY_AUDIT_DB_SQLITE_FILE = "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage/🪶️sqlite/🦀️component.rs";
-const INTERACTIVITY_AUDIT_DB_POSTGRES_FILE = "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage/🐘️postgres/🦀️component.rs";
-const INTERACTIVITY_AUDIT_DB_NEO4J_FILE = "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage/🌐️neo4j/🦀️component.rs";
-const INTERACTIVITY_AUDIT_DB_ENGINE_FILE = "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/⚙️engine/🦀️component.rs";
+const INTERACTIVITY_AUDIT_MCP_HTTP_TRANSPORT_FILE = "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🚚️transport/🦀️.rs";
+const INTERACTIVITY_AUDIT_MCP_BRIDGE_FILE = "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🧵️bridge/🦀️.rs";
+const INTERACTIVITY_AUDIT_MCP_ROOT_FILE = "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🦀️.rs";
+const INTERACTIVITY_AUDIT_STORE_SYNC_FILE = "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔄️sync/🦀️.rs";
+const INTERACTIVITY_AUDIT_DB_STORAGE_FILE = "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage/🦀️.rs";
+const INTERACTIVITY_AUDIT_DB_SQLITE_FILE = "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage/🪶️sqlite/🦀️.rs";
+const INTERACTIVITY_AUDIT_DB_POSTGRES_FILE = "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage/🐘️postgres/🦀️.rs";
+const INTERACTIVITY_AUDIT_DB_NEO4J_FILE = "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage/🌐️neo4j/🦀️.rs";
+const INTERACTIVITY_AUDIT_DB_ENGINE_FILE = "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/⚙️engine/🦀️.rs";
 const INTERACTIVITY_AUDIT_ASYNC_FILE = "🧰️framework/🔨️modules/⏳️async/🦀️.rs";
 const INTERACTIVITY_P1X_CONTRACT_FILE = ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️20/INTERACTIVE-JOB-RUNTIME-REFACTOR/PHASE-1-ONE-POOL-WORKER-RUNTIME/📓️p1x-db-engine-create-document-catalog-cas-caller-census-2026-08-23.md";
 const INTERACTIVITY_P1Y_CONTRACT_FILE = ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️20/INTERACTIVE-JOB-RUNTIME-REFACTOR/PHASE-1-ONE-POOL-WORKER-RUNTIME/📓️p1y-db-compaction-retained-job-caller-census-2026-08-23.md";
 const INTERACTIVITY_P1Z_CONTRACT_FILE = ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️20/INTERACTIVE-JOB-RUNTIME-REFACTOR/PHASE-1-ONE-POOL-WORKER-RUNTIME/📓️p1z-db-sync-hello-retained-job-caller-census-2026-08-23.md";
-const INTERACTIVITY_AUDIT_DB_SYNC_FILE = "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🔄️sync/🦀️component.rs";
-const INTERACTIVITY_AUDIT_DB_ARTIFACT_FILE = "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📄️artifact/🦀️component.rs";
-const INTERACTIVITY_AUDIT_DB_WAL_FILE = "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📝️wal/🦀️component.rs";
+const INTERACTIVITY_AUDIT_DB_SYNC_FILE = "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🔄️sync/🦀️.rs";
+const INTERACTIVITY_AUDIT_DB_ARTIFACT_FILE = "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📄️artifact/🦀️.rs";
+const INTERACTIVITY_AUDIT_DB_WAL_FILE = "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📝️wal/🦀️.rs";
 const INTERACTIVITY_AUDIT_SPR_FORMAT_FILE = "🧰️framework/🔨️modules/📡️replication/📐️format/🦀️.rs";
-const INTERACTIVITY_AUDIT_PACK_FORMAT_FILE = "🧰️framework/🔨️modules/🎒️pack/📐️format/🦀️component.rs";
-const INTERACTIVITY_AUDIT_DB_SNAPSHOT_FILE = "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📸️snapshot/🦀️component.rs";
-const INTERACTIVITY_AUDIT_DB_INDEX_FILE = "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🔢️index/🦀️component.rs";
-const INTERACTIVITY_AUDIT_DB_COMPACT_FILE = "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗜️compact/🦀️component.rs";
-const INTERACTIVITY_AUDIT_DB_CLUSTER_FILE = "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🌐️cluster/🦀️component.rs";
-const INTERACTIVITY_AUDIT_DB_STATE_FILE = "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🔘️state/🦀️component.rs";
-const INTERACTIVITY_AUDIT_DB_QUERY_FILE = "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🔍️query/🦀️component.rs";
-const INTERACTIVITY_AUDIT_DB_PROJECTION_FILE = "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📽️projection/🦀️component.rs";
-const INTERACTIVITY_AUDIT_DB_ROOT_FILE = "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🦀️component.rs";
-const INTERACTIVITY_AUDIT_DB_CLI_FILE = "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/⌨️cli/🦀️component.rs";
-const INTERACTIVITY_AUDIT_DB_TESTKIT_FILE = "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🧪️testkit/🦀️component.rs";
+const INTERACTIVITY_AUDIT_PACK_FORMAT_FILE = "🧰️framework/🔨️modules/🎒️pack/📐️format/🦀️.rs";
+const INTERACTIVITY_AUDIT_DB_SNAPSHOT_FILE = "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📸️snapshot/🦀️.rs";
+const INTERACTIVITY_AUDIT_DB_INDEX_FILE = "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🔢️index/🦀️.rs";
+const INTERACTIVITY_AUDIT_DB_COMPACT_FILE = "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗜️compact/🦀️.rs";
+const INTERACTIVITY_AUDIT_DB_CLUSTER_FILE = "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🌐️cluster/🦀️.rs";
+const INTERACTIVITY_AUDIT_DB_STATE_FILE = "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🔘️state/🦀️.rs";
+const INTERACTIVITY_AUDIT_DB_QUERY_FILE = "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🔍️query/🦀️.rs";
+const INTERACTIVITY_AUDIT_DB_PROJECTION_FILE = "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📽️projection/🦀️.rs";
+const INTERACTIVITY_AUDIT_DB_ROOT_FILE = "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🦀️.rs";
+const INTERACTIVITY_AUDIT_DB_CLI_FILE = "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/⌨️cli/🦀️.rs";
+const INTERACTIVITY_AUDIT_DB_TESTKIT_FILE = "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🧪️test/🦀️kit.rs";
 const INTERACTIVITY_AUDIT_HUB_BIN_FILE = "🌎️hub/📦️packages/🦀️rust/📦️bin.rs";
 const INTERACTIVITY_AUDIT_PREPARED_RASTER_FILE = "🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️prepared.rs";
-const INTERACTIVITY_AUDIT_PUZZLE_FILL_ENVELOPE_FILE = "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⏳️precompute/🦀️component.rs";
-const INTERACTIVITY_AUDIT_PUZZLE_FILL_STATE_FILE = "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⏳️precompute/🪣️fill/🦀️component.rs";
-const INTERACTIVITY_AUDIT_PUZZLE_FILL_GEOMETRY_FILE = "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⏳️precompute/📐️geometry/🦀️component.rs";
-const INTERACTIVITY_AUDIT_PUZZLE_FILL_ACTION_FILE = "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🪣️fill-build-tick/🦀️component.rs";
+const INTERACTIVITY_AUDIT_PUZZLE_FILL_ENVELOPE_FILE = "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⏳️precompute/🦀️.rs";
+const INTERACTIVITY_AUDIT_PUZZLE_FILL_STATE_FILE = "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⏳️precompute/🪣️fill/🦀️.rs";
+const INTERACTIVITY_AUDIT_PUZZLE_FILL_GEOMETRY_FILE = "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⏳️precompute/📐️geometry/🦀️.rs";
+const INTERACTIVITY_AUDIT_PUZZLE_FILL_ACTION_FILE = "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🪣️fill-build-tick/🦀️.rs";
 const INTERACTIVITY_AUDIT_PUZZLE_FILL_SCHEMA_FILE = "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️component.rs";
-const INTERACTIVITY_AUDIT_PUZZLE_FILL_TRANSPORT_FILE = "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🧊️main/🦀️component.rs";
-const INTERACTIVITY_AUDIT_PUZZLE_FILL_RENDERER_FILE = "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/World3dHost/🟦️component.tsx";
-const INTERACTIVITY_AUDIT_PUZZLE5D_FILL_PRECOMPUTE_FILE = "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧠️precompute/🦀️component.rs";
-const INTERACTIVITY_AUDIT_PUZZLE5D_FILL_WINDOW_FILE = "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🧊️3d/🦀️component.rs";
-const INTERACTIVITY_AUDIT_PUZZLE3D_TERMINOLOGY_FILE = "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🗣️terminology/🦀️component.rs";
-const INTERACTIVITY_AUDIT_PUZZLE5D_TERMINOLOGY_FILE = "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🗣️terminology/🦀️component.rs";
+const INTERACTIVITY_AUDIT_PUZZLE_FILL_TRANSPORT_FILE = "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🧊️main/🦀️.rs";
+const INTERACTIVITY_AUDIT_PUZZLE_FILL_RENDERER_FILE = "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/World3dHost/🟦️.tsx";
+const INTERACTIVITY_AUDIT_PUZZLE5D_FILL_PRECOMPUTE_FILE = "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧠️precompute/🦀️.rs";
+const INTERACTIVITY_AUDIT_PUZZLE5D_FILL_WINDOW_FILE = "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🧊️3d/🦀️.rs";
+const INTERACTIVITY_AUDIT_PUZZLE3D_TERMINOLOGY_FILE = "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🗣️terminology/🦀️.rs";
+const INTERACTIVITY_AUDIT_PUZZLE5D_TERMINOLOGY_FILE = "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🗣️terminology/🦀️.rs";
 const INTERACTIVITY_AUDIT_PUZZLE_FILL_PREVIEW_FIXTURE_FILE = "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⏳️precompute/🪣️fill/🧪️fixtures/🔭️preview-json-law.json";
 const INTERACTIVITY_AUDIT_PUZZLE_FILL_RENDERER_TEST_FILE = "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🟦️typescript/🎯️targets/⚛️react/🧪️index.test.ts";
 const INTERACTIVITY_AUDIT_UI_RECONCILE_FILE = "🧰️framework/🔨️modules/🖱️ui/🧠️runtime/📦️packages/🦀️rust/🦀️reconcile.rs";
@@ -11687,19 +11687,19 @@ const INTERACTIVITY_AUDIT_UI_SURFACE_FILE = "🧰️framework/🔨️modules/�
 const INTERACTIVITY_AUDIT_UI_DOCUMENT_FILE = "🧰️framework/🔨️modules/🖱️ui/🧬️contract/📦️packages/🦀️rust/🦀️document.rs";
 const INTERACTIVITY_AUDIT_UI_LIMITS_FILE = "🧰️framework/🔨️modules/🖱️ui/🧬️contract/📦️packages/🦀️rust/🦀️limits.rs";
 const INTERACTIVITY_AUDIT_UI_PRESENT_FILE = "🧰️framework/🔨️modules/🖱️ui/🧠️runtime/📦️packages/🦀️rust/🦀️present.rs";
-const INTERACTIVITY_AUDIT_REACTOR_PATCHES_FILE = "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🩹️patches/🦀️component.rs";
-const INTERACTIVITY_AUDIT_REACTOR_FILE = "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🦀️component.rs";
+const INTERACTIVITY_AUDIT_REACTOR_PATCHES_FILE = "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🩹️patches/🦀️.rs";
+const INTERACTIVITY_AUDIT_REACTOR_FILE = "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🦀️.rs";
 const INTERACTIVITY_AUDIT_KERNEL_FILE = "🧰️framework/🔨️modules/🎠️kernel/🦀️.rs";
-const INTERACTIVITY_AUDIT_SHARD_FILE = "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🧵️shard/🦀️component.rs";
-const INTERACTIVITY_AUDIT_RUN_FILE = "🧰️framework/🛍️products/💻️os/🔨️modules/🏃️run/🦀️component.rs";
+const INTERACTIVITY_AUDIT_SHARD_FILE = "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🧵️shard/🦀️.rs";
+const INTERACTIVITY_AUDIT_RUN_FILE = "🧰️framework/🛍️products/💻️os/🔨️modules/🏃️run/🦀️.rs";
 const INTERACTIVITY_AUDIT_OS_ACTIVATION_FILE = "🧰️framework/🛍️products/💻️os/🖥️host/🎠️activation.rs";
 const INTERACTIVITY_AUDIT_RENDERER_RUNTIME_FILE = "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🎠️runtime.rs";
-const INTERACTIVITY_AUDIT_PLUGIN_CENTRAL_FILE = "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️component.rs";
+const INTERACTIVITY_AUDIT_PLUGIN_CENTRAL_FILE = "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️.rs";
 const INTERACTIVITY_AUDIT_PREPARED_RASTER_DRAW_FILE = "🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️draw.rs";
 const INTERACTIVITY_AUDIT_PREPARED_RASTER_GPU_FILE = "🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️gpu.rs";
 const INTERACTIVITY_AUDIT_CANVAS_RASTER_FILE = "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/Scenes/🧊️component.rs";
 const INTERACTIVITY_AUDIT_INTERPRETER_RASTER_FILE = "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/Interpreter/🧊️component.rs";
-const INTERACTIVITY_AUDIT_RENDERER_GLUE_FILE = "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/📦️glue.rs";
+const INTERACTIVITY_AUDIT_RENDERER_GLUE_FILE = "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️.rs";
 const INTERACTIVITY_AUDIT_RENDERER_HOST_FILE = "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️os_host.rs";
 const INTERACTIVITY_AUDIT_SURFACE_LANE_FILE = "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️surface_lane.rs";
 const INTERACTIVITY_AUDIT_WINIT_HOST_FILE = "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️winit_app.rs";
@@ -11708,7 +11708,7 @@ const INTERACTIVITY_AUDIT_WINDOW_MEASURE_FILE = "🧰️framework/🔨️modules
 const INTERACTIVITY_AUDIT_SHELL_FILE = "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/Shell/🧊️component.rs";
 const INTERACTIVITY_AUDIT_OS_SERVICES_FILE = "🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/🦀️component.rs";
 const INTERACTIVITY_AUDIT_ENGINE_CANVAS_FILE = "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/EngineCanvas/🧊️component.rs";
-const INTERACTIVITY_AUDIT_WORLD3D_FILE = "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🦀️component.rs";
+const INTERACTIVITY_AUDIT_WORLD3D_FILE = "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🦀️.rs";
 
 /**
  * ⏱️ The "single sanctioned runtime module" the thread/pool-construction rule (category
@@ -11787,7 +11787,7 @@ const INTERACTIVITY_AUDIT_ALLOWLIST: readonly InteractivityAllowlistEntry[] = [
     inScope: false, // 🏃️run/ is not under any INTERACTIVITY_AUDIT_UI_ROOTS prefix today; pre-declared for when scope widens.
   },
   {
-    file: "🧰️framework/🛍️products/💻️os/🖥️host/🦀️component.rs",
+    file: "🧰️framework/🛍️products/💻️os/🖥️host/🦀️.rs",
     lineHint: 1985,
     pattern: "block_on",
     reason: "CORRECTED: verified test-only, not production. All block_on calls at this anchor (1956-2055) sit inside `#[cfg(test)] mod tests` under `pub mod host` — a local hygienic block_on helper the R4-clause-5 test-entry-point precedent already sanctions. The audit's test-mod exclusion filters these out on its own; this entry is kept for the record the master ticket asked for, not because the scanner would otherwise flag it.",
@@ -11799,7 +11799,7 @@ const INTERACTIVITY_AUDIT_ALLOWLIST: readonly InteractivityAllowlistEntry[] = [
     file: "🧰️framework/🔨️modules/⏳️async/✨️macros/🦀️.rs",
     lineHint: 58,
     pattern: "block_on",
-    reason: "CORRECTED PATH: the master ticket's anchor (…/✨️macros/📦️packages/🦀️rust/🦀️component.rs) does not exist; the real file is …/✨️macros/🦀️component.rs (no 📦️packages/🦀️rust segment — 📦️glue.rs lives under that nested path instead). #[async_test] expansion generates a hygienically-named `__semio_async_test_block_on` helper via syn/quote! — the emitted identifier never appears as literal `block_on(` source text in THIS file or in any file that uses the attribute, so no static scan (this one included) can see it. Test-only, PERMANENT — kept for the record.",
+    reason: "CORRECTED PATH: the master ticket's anchor (…/✨️macros/📦️packages/🦀️rust/🦀️component.rs) does not exist; the real file is …/✨️macros/🦀️.rs (no 📦️packages/🦀️rust segment — 🦀️.rs lives under that nested path instead). #[async_test] expansion generates a hygienically-named `__semio_async_test_block_on` helper via syn/quote! — the emitted identifier never appears as literal `block_on(` source text in THIS file or in any file that uses the attribute, so no static scan (this one included) can see it. Test-only, PERMANENT — kept for the record.",
     phase: "PERMANENT (test-only)",
     inScope: false, // ⏳️async/ is not a UI-reachable root; also structurally invisible to any text-based scanner.
   },
@@ -11836,9 +11836,9 @@ function interactivityIsRuntimeSource(relPath: string): boolean {
 
 /** 🧪️Proves runtime discovery admits authored product roots and rejects repo-local scratch/archive roots. */
 function interactivityRuntimeSourceSelfTests(): void {
-  if (!interactivityIsRuntimeSource("🧰️framework/🔨️modules/runtime/🦀️component.rs")) throw new Error("[verify interactivity] authored framework runtime source was falsely excluded.");
-  if (!interactivityIsRuntimeSource("✏️s/🔌️plugins/example/🦀️component.rs")) throw new Error("[verify interactivity] authored plugin runtime source was falsely excluded.");
-  for (const relPath of ["temp/compose/hostile/🦀️component.rs", "compose/hostile/🦀️component.rs", "♻️mit-bestand/hostile/🦀️component.rs", ".🧬semio/hostile/🦀️component.rs"])
+  if (!interactivityIsRuntimeSource("🧰️framework/🔨️modules/runtime/🦀️.rs")) throw new Error("[verify interactivity] authored framework runtime source was falsely excluded.");
+  if (!interactivityIsRuntimeSource("✏️s/🔌️plugins/example/🦀️.rs")) throw new Error("[verify interactivity] authored plugin runtime source was falsely excluded.");
+  for (const relPath of ["temp/compose/hostile/🦀️.rs", "compose/hostile/🦀️.rs", "♻️mit-bestand/hostile/🦀️.rs", ".🧬semio/hostile/🦀️.rs"])
     if (interactivityIsRuntimeSource(relPath)) throw new Error(`[verify interactivity] non-production source ${relPath} was falsely admitted.`);
 }
 
@@ -11953,7 +11953,7 @@ function interactivityAuditRun(repoRoot: string): InteractivityAuditReport {
   const findings = interactivityAuditScan(repoRoot);
   interactivityShardExecutorSelfTests();
   const executor = policyReadFileSafe(repoRoot, INTERACTIVITY_AUDIT_EXACT_BLOCKING_BRIDGE_FILES[0]);
-  const shard = policyReadFileSafe(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🧵️shard/🦀️component.rs");
+  const shard = policyReadFileSafe(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🧵️shard/🦀️.rs");
   for (const failure of interactivityShardExecutorFailures(executor, shard)) findings.push({ category: "blocking-bridge", file: INTERACTIVITY_AUDIT_EXACT_BLOCKING_BRIDGE_FILES[0], line: 0, text: failure });
   interactivityMcpHttpTransportSelfTests();
   const mcpTransport = policyReadFileSafe(repoRoot, INTERACTIVITY_AUDIT_MCP_HTTP_TRANSPORT_FILE);
@@ -12086,7 +12086,7 @@ function interactivityAuditRun(repoRoot: string): InteractivityAuditReport {
   const mountedFrameJob = policyReadFileSafe(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️frame_job.rs");
   const mountedFrameHost = policyReadFileSafe(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️winit_app.rs");
   const mountedFrameSnapshot = policyReadFileSafe(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️render_snapshot.rs");
-  const headlessUiRuntimeGlue = policyReadFileSafe(repoRoot, "🧰️framework/🔨️modules/🖱️ui/🧠️runtime/📦️packages/🦀️rust/📦️glue.rs");
+  const headlessUiRuntimeGlue = policyReadFileSafe(repoRoot, "🧰️framework/🔨️modules/🖱️ui/🧠️runtime/📦️packages/🦀️rust/🦀️.rs");
   const mountedFrameShell = policyReadFileSafe(repoRoot, INTERACTIVITY_AUDIT_SHELL_FILE);
   const mountedFrameServices = policyReadFileSafe(repoRoot, INTERACTIVITY_AUDIT_OS_SERVICES_FILE);
   const mountedFrameEngineCanvas = policyReadFileSafe(repoRoot, INTERACTIVITY_AUDIT_ENGINE_CANVAS_FILE);
@@ -13566,7 +13566,7 @@ export function interactivityMountedLayoutTextSelfTests(repoRoot: string): void 
     "🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️events.rs",
     "🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️scene_slots.rs",
     "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/Interpreter/🧊️component.rs",
-    "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/📦️glue.rs",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️.rs",
   ] as const;
   const clean = paths.map((path) => policyReadFileSafe(repoRoot, path));
   const mutations: [string, number, string, string][] = [
@@ -14223,11 +14223,11 @@ export function interactivityMountedFrameTransactionFailures(
 
 export function interactivityMountedFrameTransactionSelfTests(repoRoot: string): void {
   const files = [
-    "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/📦️glue.rs",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️.rs",
     "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️frame_job.rs",
     "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️winit_app.rs",
     "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️render_snapshot.rs",
-    "🧰️framework/🔨️modules/🖱️ui/🧠️runtime/📦️packages/🦀️rust/📦️glue.rs",
+    "🧰️framework/🔨️modules/🖱️ui/🧠️runtime/📦️packages/🦀️rust/🦀️.rs",
     INTERACTIVITY_AUDIT_SHELL_FILE,
     INTERACTIVITY_AUDIT_ENGINE_CANVAS_FILE,
     INTERACTIVITY_AUDIT_WORLD3D_FILE,
@@ -14539,11 +14539,11 @@ export function interactivityMountedEngineSurfaceLifetimeSelfTests(repoRoot: str
     INTERACTIVITY_AUDIT_WINIT_HOST_FILE,
     "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️browser_worker.rs",
     INTERACTIVITY_AUDIT_RENDERER_GLUE_FILE,
-    "🧰️framework/🔨️modules/🗺️surface/🕸️node-graph/🦀️component.rs",
-    "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/🦀️component.rs",
-    "🧰️framework/🔨️modules/🗺️surface/🗺️tiled-map/🦀️component.rs",
-    "🧰️framework/🔨️modules/✍️editor/🦀️component.rs",
-    "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🔌️ports/➡️directed/🕸️dag/🦀️component.rs",
+    "🧰️framework/🔨️modules/🗺️surface/🕸️node-graph/🦀️.rs",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/🦀️.rs",
+    "🧰️framework/🔨️modules/🗺️surface/🗺️tiled-map/🦀️.rs",
+    "🧰️framework/🔨️modules/✍️editor/🦀️.rs",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🔌️ports/➡️directed/🕸️dag/🦀️.rs",
   ] as const;
   const clean = files.map((file) => policyReadFileSafe(repoRoot, file));
   const mutations: readonly [string, number, string, string][] = [
@@ -18607,7 +18607,7 @@ type DependencyTruthReport = {
 const DEPENDENCY_MANDATED_NX_PACKAGES = new Set(["nx", "@nx/devkit", "@nx/js"]);
 const DEPENDENCY_AUTHORIZED_TOOLCHAIN_MANIFESTS = new Set(["package.json"]);
 const DEPENDENCY_REPO_POLICY_ROOT = "🧰️framework/🛍️products/🦑️repo";
-const DEPENDENCY_REPO_POLICY_LIBRARY = `${DEPENDENCY_REPO_POLICY_ROOT}/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts`;
+const DEPENDENCY_REPO_POLICY_LIBRARY = `${DEPENDENCY_REPO_POLICY_ROOT}/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts`;
 const DEPENDENCY_REPO_POLICY_ROUTERS = [`${DEPENDENCY_REPO_POLICY_ROOT}/📜️script.ts`, `${DEPENDENCY_REPO_POLICY_ROOT}/🔨️modules/💻️client/📜️script.ts`, `${DEPENDENCY_REPO_POLICY_ROOT}/🔨️modules/📚️library/📜️script.ts`] as const;
 
 function dependencyRepoPolicyLibrarySpecifier(repoRoot: string, script: string): string {
@@ -18807,7 +18807,7 @@ function dependencyTruthSelfTests(): number {
   const oracleRuntime: DependencyBaselineEntry = { ecosystem: "rust", name: "runtime-oracle-name", version: "1", kinds: ["production-runtime"], users: ["product/Cargo.toml"], productionReachable: true };
   dependencyClassifyOracleEntry(oracleRuntime, ["claimed-oracle"]);
   if (!oracleRuntime.kinds.includes("production-runtime") || oracleRuntime.oracleConflictUsers?.[0] !== "product/Cargo.toml") throw new Error("[verify dependencies self-test] direct runtime manifest hid behind an oracle registry name.");
-  const oracleOnly: DependencyBaselineEntry = { ecosystem: "rust", name: "isolated-oracle", version: "1", kinds: ["test-runner"], users: ["unit/🧪️oracle/Cargo.toml"], productionReachable: false };
+  const oracleOnly: DependencyBaselineEntry = { ecosystem: "rust", name: "isolated-oracle", version: "1", kinds: ["test-runner"], users: ["unit/oracleCargo.toml"], productionReachable: false };
   dependencyClassifyOracleEntry(oracleOnly, ["isolated"]);
   if (oracleOnly.kinds.join() !== "test-oracle" || oracleOnly.oracleConflictUsers) throw new Error("[verify dependencies self-test] isolated test-only oracle was not classified as an oracle.");
   const entry = (ecosystem: DependencyEcosystem, name: string, kind: DependencyKind, user: string, version = "1"): DependencyBaselineEntry => ({ ecosystem, name, version, kinds: [kind], users: [user], productionReachable: kind === "production-runtime" || kind === "production-build", declarations: [{ user, version, kind }] });
@@ -19126,7 +19126,7 @@ export class TestScript extends Script {
       env: { ...process.env, STORYBOOK_PORT: storybookPort },
     });
     try {
-      await this.waitForUrl(new URL("🌐️index.html", baseUrl).href, 120000);
+      await this.waitForUrl(new URL("🌐️.html", baseUrl).href, 120000);
       runCmd("bunx", ["playwright", "test", "--config", ".storybook/playwright.config.ts"], {
         cwd: this.root,
         env: {
@@ -19250,8 +19250,8 @@ type StdioArtifactLedger = Readonly<{
 const STDIO_ROOT_REL = join("✏️s", "🔌️plugins", "🗄️stdio");
 const STDIO_ARTIFACTS_DIR = "🗿️artifacts";
 const STDIO_CATALOG_REL = join(STDIO_ROOT_REL, "📇️registry", "📇️catalog.json");
-const STDIO_COMPONENT_TS = "🟦️component.ts";
-const STDIO_COMPONENT_RS = "🦀️component.rs";
+const STDIO_COMPONENT_TS = "🟦️.ts";
+const STDIO_COMPONENT_RS = "🦀️.rs";
 
 function stdioRel(workspaceRoot: string, path: string): string {
   return relative(workspaceRoot, path).split("\\").join("/");
@@ -19646,7 +19646,7 @@ function stdioArtifactLedger(workspaceRoot: string): StdioArtifactLedger {
 
 /** 🗄️ Runs schema-derived stdio catalog, support-ledger, and runtime gates. */
 function stdioAssertTypeScriptExports(workspaceRoot: string, ledger: StdioArtifactLedger): void {
-  const barrel = readFileSync(join(workspaceRoot, STDIO_ROOT_REL, "📦️packages", "🟦️typescript", "📦️index.ts"), "utf8");
+  const barrel = readFileSync(join(workspaceRoot, STDIO_ROOT_REL, "📦️packages", "🟦️typescript", "🟦️.ts"), "utf8");
   const exports = [...barrel.matchAll(/^export \* as (\w+) from /gmu)].map((match) => match[1]!);
   stdioAssertUnique("TypeScript export", exports);
   const expected = ledger.artifacts.map((artifact) => artifact.id).sort();
@@ -19992,8 +19992,8 @@ const CLEAN_CANONICAL_REPO_DIR = REPO_META_DIR_NAME;
 const CLEAN_CANONICAL_TICKETS_DIR = "🎫️tickets";
 const CLEAN_BUILD_DIR_NAMES = new Set(["target", "dist", "build", "out"]);
 const CLEAN_CACHE_DIR_NAME = "⚡️cache";
-const CLEAN_TICKET_GENERATED_OUTPUT_DIRS = new Set(["🗑️generated", TICKET_GENERATED_OUTPUT_DIRECTORY, "🧾️runs", "🧾️taxonomy-transaction"]);
-const CLEAN_TICKET_GENERATED_PROBE_PREFIX = "🧪️purity-";
+const CLEAN_TICKET_GENERATED_OUTPUT_DIRS = new Set(["🗑️generated", TICKET_GENERATED_OUTPUT_DIRECTORY, "🧾️runs", "🧪️runs", "🧾️taxonomy-transaction"]);
+const CLEAN_TICKET_GENERATED_PROBE_PREFIXES = ["🧪️purity-", "🧪️cli-", "🧪️inventory-"];
 
 type CleanRemovalKind = "misplaced" | "gitignore" | "ticket-file" | "ticket-dir" | "build-artifact" | "ticket-generated";
 
@@ -21665,7 +21665,7 @@ function cleanTicketGeneratedOutputRemovals(root: string, ticketFolder: string, 
 }
 
 function cleanIsTicketGeneratedOutputDir(name: string): boolean {
-  return CLEAN_TICKET_GENERATED_OUTPUT_DIRS.has(name) || name.startsWith(CLEAN_TICKET_GENERATED_PROBE_PREFIX);
+  return CLEAN_TICKET_GENERATED_OUTPUT_DIRS.has(name) || CLEAN_TICKET_GENERATED_PROBE_PREFIXES.some((prefix) => name.startsWith(prefix));
 }
 
 function cleanTicketGeneratedOutputTicketRoot(root: string, abs: string): string | undefined {
@@ -22761,7 +22761,7 @@ function policyAppIdFromCrateDir(cratePath: string): string {
   return appsIdx >= 0 && segments.length > appsIdx + 1 ? policyStripEmoji(segments[appsIdx + 1]!) : "";
 }
 
-/** 🧵Non-default file inside a crate/component dir (e.g. `benches/protocol.rs`) stays distinguishable from its crate's default entry file (`📦️glue.rs` package glue, `🦀️component.rs` domain leaf) instead of collapsing onto the same key — dropped extension, emoji-stripped, dash-joined. */
+/** 🧵Non-default file inside a crate/component dir (e.g. `benches/protocol.rs`) stays distinguishable from its crate's default entry file (`🦀️.rs` package glue, `🦀️.rs` domain leaf) instead of collapsing onto the same key — dropped extension, emoji-stripped, dash-joined. */
 function policyFileSuffix(tailSegments: readonly string[], defaultFile: string): string {
   if (tailSegments.length === 1 && tailSegments[0] === defaultFile) return "";
   return `#${tailSegments.map((s) => policyStripEmoji(s.replace(/\.rs$/, ""))).join("-")}`;
@@ -22771,7 +22771,7 @@ function policyFileSuffix(tailSegments: readonly string[], defaultFile: string):
  * 🔑Canonical `<pluginId>/<component>` key for a *source file path* under `✏️s/🔌️plugins/` — collapses
  * both the legacy per-module-crate layout (`…/🔨️modules/<module>/⚡️implementations/🦀️rust/📦️lib.rs`,
  * `…/🛂️manifest/🗿️artifact/⚡️implementations/🦀️rust/📦️lib.rs`) and the future taxonomy layout
- * (`…/🗿️artifacts/<artifact>/<module>/🦀️component.rs`) onto the same string, so a completeness
+ * (`…/🗿️artifacts/<artifact>/<module>/🦀️.rs`) onto the same string, so a completeness
  * allowlist written today still matches the same logical component after a plugin migrates. Widens to
  * `<pluginId>/<appOrArtifact>/<component>` only when that disambiguator differs from the plugin id
  * itself (most plugins are single-app/single-artifact, where it doesn't — the 2-part key is the common
@@ -22789,7 +22789,7 @@ function policyNormalizeRelPath(relPath: string): string {
   const implIdx = segments.indexOf("⚡️implementations");
   if (implIdx > 1) {
     const moduleSeg = segments[implIdx - 1]!;
-    const suffix = policyFileSuffix(segments.slice(implIdx + 2), "📦️glue.rs");
+    const suffix = policyFileSuffix(segments.slice(implIdx + 2), "🦀️.rs");
     const ownerChain = segments.slice(0, implIdx - 1).filter((s) => s !== "🔨️modules" && s !== "🛂️manifest");
     const pluginsIdx = ownerChain.indexOf("🔌️plugins");
     if (pluginsIdx >= 0 && ownerChain.length > pluginsIdx + 1) {
@@ -22805,7 +22805,7 @@ function policyNormalizeRelPath(relPath: string): string {
     if (ownerId) return `${ownerId}/${policyCanonicalComponent(moduleSeg)}${suffix}`;
   }
 
-  // Future taxonomy shape: <owner>/🗿️artifacts/<artifact>/<module>/🦀️component.rs (+ sibling 🦀️<topic>.rs).
+  // Future taxonomy shape: <owner>/🗿️artifacts/<artifact>/<module>/🦀️.rs (+ sibling 🦀️<topic>.rs).
   const artifactsIdx = segments.indexOf("🗿️artifacts");
   if (artifactsIdx > 0 && segments.length > artifactsIdx + 2) {
     const pluginId = policyStripEmoji(segments[artifactsIdx - 1] ?? "");
@@ -22822,8 +22822,8 @@ function policyNormalizeRelPath(relPath: string): string {
  * 🏗️One discovered rust crate. `dir` is its `Cargo.toml`-containing directory (repo-relative),
  * `libRelPath` its crate-root source file as the manifest itself declares it (`[lib]`/`[[bin]]`
  * `path`) — never assumed, because the two shapes disagree: Shape V2 keeps the entry beside the
- * manifest (`📦️packages/🦀️rust/📦️glue.rs`) while the Shape V1 leftovers still point two levels up
- * (`path = "../../📦️glue.rs"`). `role`/`ownerRel` come straight from the shared discovery contract;
+ * manifest (`📦️packages/🦀️rust/🦀️.rs`) while the Shape V1 leftovers still point two levels up
+ * (`path = "../../🦀️.rs"`). `role`/`ownerRel` come straight from the shared discovery contract;
  * `pluginId` is `""` for every crate outside a plugin owner (framework/hub/s-modules).
  */
 type PolicyCrateRef = {
@@ -23251,7 +23251,7 @@ const POLICY_GRAMMAR_FILE_ALLOWLIST = new Set<string>([]);
 const POLICY_PROTOCOL_FILE_ALLOWLIST = new Set<string>([]);
 
 /**
- * ⚖️ Constitutional artifact facets whose `🟦️component.ts` may remain a WASM scaffold stub.
+ * ⚖️ Constitutional artifact facets whose `🟦️.ts` may remain a WASM scaffold stub.
  * Stubs under these non-mutation facets are accepted
  * structurally — never tracked in a per-file allowlist (Wave 2b / OPERATIONS-TO-MUTATIONS).
  */
@@ -23288,7 +23288,7 @@ const POLICY_GENERIC_SPEC_EXEMPTIONS = new Set<string>([]);
 const POLICY_DECLARED_USE_EXEMPTIONS = new Set<string>([]);
 
 /**
- * ⚖️P3/M4: facet 🦀️component.rs missing include_str! of sibling spec. Remove once wired.
+ * ⚖️P3/M4: facet 🦀️.rs missing include_str! of sibling spec. Remove once wired.
  * Seeded 220 paths at P3 — must shrink to empty by P6 (ticket HANDCRAFTED-GRAMMAR-FOR-EVERY-ARTIFACT).
  */
 const POLICY_SPEC_WIRING_INCLUDE_EXEMPTIONS = new Set<string>([]);
@@ -24617,7 +24617,7 @@ function policyNoPackFilesBreaches(repoRoot: string): BreachRecord[] {
 //#endregion 🔧️PolicyRuleNoPackFiles
 
 //#region 🔧️PolicyRuleNoRawSpawn
-const POLICY_RAW_SPAWN_EXEMPT = new Set(["./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts"]);
+const POLICY_RAW_SPAWN_EXEMPT = new Set(["./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts"]);
 const POLICY_RAW_SPAWN_RE = /\b(spawnSync|execSync|execFileSync|Bun\.spawn|spawn)\s*\(/g;
 
 /** 🔎️Strips TS/JS comments and string literals so policy regexes only see executable code. */
@@ -25997,7 +25997,7 @@ function policySprNamingBreaches(repoRoot: string, crates: readonly PolicyCrateR
 //#region 🔧️PolicyRuleArtifactsOnlyPluginArchitecture
 /**
  * 🏛️ APA (ticket 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE) — five report-mode census rules enforcing
- * the target plugin shape: a plugin is EXACTLY 🎛️apps + 🗿️artifacts + root 🦀️component.rs/AGENTS.md/
+ * the target plugin shape: a plugin is EXACTLY 🎛️apps + 🗿️artifacts + root 🦀️.rs/AGENTS.md/
  * README.md + 📦️packages wiring; all io, state changes, registration, and side effects belong to
  * artifacts — never apps, never a setup facet. REPORT MODE IS LOAD-BEARING: every breach below carries
  * `priority: "medium"`, never `"high"` — `VerifyScript.runGate`'s `dissolveBreaches` block (where these
@@ -26023,9 +26023,9 @@ const POLICY_PLUGIN_CLOSED_SHAPE_JUNK = new Set(["node_modules", ".DS_Store"]);
  */
 const POLICY_PLUGIN_CLOSED_SHAPE_DESTINATIONS: Readonly<Record<string, string>> = {
   "✏️s/🔌️plugins/🌀️procedural/🎮️play": "Fold into 🗿️artifacts/<kind>/📚️examples/ once confirmed non-placeholder (dir currently holds only AGENTS.md) — 📓️w0-b-plugin-shape.md §5.",
-  "✏️s/🔌️plugins/🌊️flow/🔨️modules": "Move 🔨️modules/🧮️compute/🟦️component.ts into 🗿️artifacts/<flowcompute-kind>/🏅️standards/🔖️1/⚙️engine/compute/ (artifact-kind name needs an owner decision) — 📓️w0-b-plugin-shape.md §5.",
+  "✏️s/🔌️plugins/🌊️flow/🔨️modules": "Move 🔨️modules/🧮️compute/🟦️.ts into 🗿️artifacts/<flowcompute-kind>/🏅️standards/🔖️1/⚙️engine/compute/ (artifact-kind name needs an owner decision) — 📓️w0-b-plugin-shape.md §5.",
   "✏️s/🔌️plugins/🌊️flow/🧩️extensions": "Extension-crate axis (role=extension, extends=flow, 9 crates) — sanctioned third axis pending the §6 ruling in 📓️w0-census.md; not auto-relocatable.",
-  "✏️s/🔌️plugins/🌍️gis/🔨️modules": "Move 🔨️modules/🏔️terrain/🦀️component.rs into 🗿️artifacts/gismap/🏅️standards/🔖️1/⚙️engine/terrain/ — 📓️w0-b-plugin-shape.md §5.",
+  "✏️s/🔌️plugins/🌍️gis/🔨️modules": "Move 🔨️modules/🏔️terrain/🦀️.rs into 🗿️artifacts/gismap/🏅️standards/🔖️1/⚙️engine/terrain/ — 📓️w0-b-plugin-shape.md §5.",
   "✏️s/🔌️plugins/🏗️fem/➗️formulation": "Fold into 🗿️artifacts/fem/🏅️standards/🔖️1/⚙️engine/formulation/ — 📓️w0-b-plugin-shape.md §5.",
   "✏️s/🔌️plugins/🏗️fem/🏗️model": "Fold into 🗿️artifacts/fem/🏅️standards/🔖️1/⚙️engine/model/ — 📓️w0-b-plugin-shape.md §5.",
   "✏️s/🔌️plugins/🏗️fem/📏️elements2d": "Fold into 🗿️artifacts/fem/🏅️standards/🔖️1/⚙️engine/elements2d/ — 📓️w0-b-plugin-shape.md §5.",
@@ -26050,7 +26050,7 @@ const POLICY_PLUGIN_CLOSED_SHAPE_DESTINATIONS: Readonly<Record<string, string>> 
   "✏️s/🔌️plugins/🔱️trinity/🗣️language-service": "Fold into 🗿️artifacts/<trinity-kind>/🏅️standards/🔖️1/⚙️engine/language-service/ — 📓️w0-b-plugin-shape.md §5.",
   "✏️s/🔌️plugins/🔱️trinity/🧮️executor": "Fold into 🗿️artifacts/<trinity-kind>/🏅️standards/🔖️1/⚙️engine/executor/ — 📓️w0-b-plugin-shape.md §5.",
   "✏️s/🔌️plugins/🖍️draw/🔄️fsm": "→ 🗿️artifacts/draw/🏅️standards/🔖️1/⚙️engine/fsm/; the nested ✨️macros sub-crate needs a crate-boundary specialist, not a plain directory move — 📓️w0-b-plugin-shape.md §5.",
-  "✏️s/🔌️plugins/🧩️puzzle/🔨️modules": "Move 🔨️modules/🎲️board-2d/🦀️component.rs into 🗿️artifacts/puzzle2d/🏅️standards/🔖️1/⚙️engine/board-2d/ — 📓️w0-b-plugin-shape.md §5.",
+  "✏️s/🔌️plugins/🧩️puzzle/🔨️modules": "Move 🔨️modules/🎲️board-2d/🦀️.rs into 🗿️artifacts/puzzle2d/🏅️standards/🔖️1/⚙️engine/board-2d/ — 📓️w0-b-plugin-shape.md §5.",
   "✏️s/🔌️plugins/🪵️sourcing/🧩️extensions": "Extension-crate axis (role=extension, extends=sourcing, 3 crates) — pending the §6 ruling in 📓️w0-census.md.",
   "✏️s/🔌️plugins/📐️cad/🔣️machine.json": "210KB root data file — CANNOT CLASSIFY without reading contents (likely a generated/vendored CAD-kernel data file) — 📓️w0-b-plugin-shape.md §5.",
 };
@@ -26078,7 +26078,7 @@ const POLICY_PLUGIN_CLOSED_SHAPE_LEGACY_FACETS: Readonly<Record<string, string>>
  * `loadTaxonomy()` rather than hardcoded, per the ticket's instruction — a dedicated `pluginRootAllowedEntries`
  * taxonomy key was deliberately NOT added: every field this rule needs already exists on `Taxonomy`
  * (`pluginChildDirs`/`artifactsDirName`/`packagesDirName`/`rootDocFileNames`/`rootDataDirNames`/
- * `rootDataFileNames`), and `🔣️taxonomy.json`/`🔍️discovery/🟦️component.ts`/`🧪️index.test.ts` are outside
+ * `rootDataFileNames`), and `🔣️taxonomy.json`/`🔍️discovery/🟦️.ts`/`🧪️index.test.ts` are outside
  * this session's single-writer boundary on `📜️script.ts` — adding a key there risks colliding with W1's
  * concurrent taxonomy work for no expressive gain.
  */
@@ -26208,7 +26208,7 @@ function policyPluginPurityTestFnSpans(lines: readonly string[]): PolicyModSpan[
   return spans;
 }
 
-/** 🔎️Every `.ts`/`.tsx` file under `rootRel`, excluding the repo's sole TS test convention (`🧪️tests/` dirs, `🟦️test.ts` files) — the same split 📓️w0-c-purity.md's scout used, confirmed a 100%-clean split there. */
+/** 🔎️Every `.ts`/`.tsx` file under `rootRel`, excluding the repo's sole TS test convention (`🧪️tests/` dirs, `🟦️.ts` files) — the same split 📓️w0-c-purity.md's scout used, confirmed a 100%-clean split there. */
 function policyPluginPurityTsFiles(repoRoot: string, rootRel: string): string[] {
   const found: string[] = [];
   const walk = (relDir: string): void => {
@@ -26226,7 +26226,7 @@ function policyPluginPurityTsFiles(repoRoot: string, rootRel: string): string[] 
         walk(childRel);
         continue;
       }
-      if (ent.name === "🟦️test.ts") continue;
+      if (ent.name === "🟦️.ts") continue;
       if (ent.name.endsWith(".ts") || ent.name.endsWith(".tsx")) found.push(childRel);
     }
   };
@@ -26268,7 +26268,7 @@ const POLICY_STATE_LANE_EPHEMERAL_BOX_RE = /\bephemeral(?:Box|Map|Set|WeakMap)\b
  *   `🖥️platform` adapter. Persisted local-only state IS the config lane; the medium is an adapter
  *   detail, so bypassing the lane is what is banned, never the API itself.
  * - `ephemeral-box`: the `ephemeralBox`/`ephemeralMap`/`ephemeralSet`/`ephemeralWeakMap` helpers in
- *   `🎠️kernel/🟦️component.ts`, whose own docstring calls them the "sole lane until the OS draft
+ *   `🎠️kernel/🟦️.ts`, whose own docstring calls them the "sole lane until the OS draft
  *   snapshot owns these keys". The Transient lane now owns them.
  */
 export function policyStateLaneExhaustivenessBreaches(repoRoot: string): BreachRecord[] {
@@ -26723,7 +26723,7 @@ const POLICY_EFFECT_CAPABILITY_ALLOWLIST = new Set<string>();
 
 /**
  * 📇️`HostEffect` variant → required capability `ArtifactKind`, machine-readable form of the effect→
- * capability contract (📓️w0-d-sdk-surface.md §5, `🎠️kernel/🦀️component.rs:247-387`). Rights/Scope are
+ * capability contract (📓️w0-d-sdk-surface.md §5, `🎠️kernel/🦀️.rs:247-387`). Rights/Scope are
  * noted per-line for provenance but the parity check below matches at `ArtifactKind` granularity only:
  * no plugin has ever called `.capability(...)` for real yet (0 hits repo-wide) to pin the exact
  * Rights/Scope argument shape the eventual `has_capability(ArtifactKind, Rights)` gate (M5) will take, so
@@ -26763,7 +26763,7 @@ const POLICY_BACKBONE_STORAGE_RE = /\.local_backbone_storage\s*\(/;
 /**
  * 📏️Effect/capability parity: for each plugin, collects every `HostEffect::<Variant>` constructed
  * anywhere in its tree (skipping `#[cfg(test)]` spans) and the capabilities it declares in its root
- * `🦀️component.rs` (`.capability(ArtifactKind::X, …)` and `.local_backbone_storage()`, which stands in
+ * `🦀️.rs` (`.capability(ArtifactKind::X, …)` and `.local_backbone_storage()`, which stands in
  * for `ArtifactKind::Backbone`) — flags every constructed variant whose required `ArtifactKind` isn't
  * declared. Expected to fire on nearly every effect-constructing plugin: today only 🪐️space declares any
  * capability at all, and its lone `.local_backbone_storage()` doesn't satisfy any of the `Window`/
@@ -26995,7 +26995,7 @@ export function policySubsetFacetTotalityBreaches(repoRoot: string): BreachRecor
  * Replaces the two rules that previously *mandated* the facet — `policySubsetEnginePresenceBreaches`
  * and `policyArtifactEnginePresenceBreaches` — the latter of which gated at `high` on a missing
  * folder. Both served `ArtifactEngine`, a trait that never shipped (`grep -rn "trait ArtifactEngine"`
- * → 0 hits; see `🏪️store/🦀️component.rs`'s own note that it "never existed as a live trait").
+ * → 0 hits; see `🏪️store/🦀️.rs`'s own note that it "never existed as a live trait").
  *
  * Lands at `low` while the 95 existing dirs burn down, then rises to `high` once the count is zero —
  * verified by counting directories on disk, never via the breach cache. Ticket
@@ -27139,11 +27139,11 @@ export function policyNoGlueShimBlocksBreaches(repoRoot: string): BreachRecord[]
   if (!existsSync(pluginsRoot)) return breaches;
   for (const plugin of readdirSync(pluginsRoot, { withFileTypes: true })) {
     if (!plugin.isDirectory()) continue;
-    const glue = join(pluginsRoot, plugin.name, "📦️packages/🦀️rust/📦️glue.rs");
+    const glue = join(pluginsRoot, plugin.name, "📦️packages/🦀️rust/🦀️.rs");
     if (!existsSync(glue)) continue;
     const content = readFileSync(glue, "utf8");
     if (/Shims:\s*keep pre-migration|pre-migration module paths/i.test(content)) {
-      const rel = join("✏️s/🔌️plugins", plugin.name, "📦️packages/🦀️rust/📦️glue.rs").replaceAll("\\", "/");
+      const rel = join("✏️s/🔌️plugins", plugin.name, "📦️packages/🦀️rust/🦀️.rs").replaceAll("\\", "/");
       breaches.push({
         id: `glue-shim-${rel}`,
         summary: `"${rel}" still contains pre-migration shim blocks`,
@@ -27654,7 +27654,7 @@ function policyArtifactHasRegisterLanguage(repoRoot: string, artRel: string): bo
 }
 
 /**
- * 📏️Facet `🦀️component.rs` must `include_str!` its sibling grammar/protocol spec; artifacts with any
+ * 📏️Facet `🦀️.rs` must `include_str!` its sibling grammar/protocol spec; artifacts with any
  * facet specs must call `register_language` somewhere under the artifact (engine preferred).
  */
 function policySpecWiringBreaches(repoRoot: string): BreachRecord[] {
@@ -27780,7 +27780,7 @@ function policyGenericCodecDeriveBreaches(repoRoot: string): BreachRecord[] {
   return breaches;
 }
 
-/** 🔗 Cumulative `#[path]` targets declared by one `📦️glue.rs` (absolute resolved paths). */
+/** 🔗 Cumulative `#[path]` targets declared by one `🦀️.rs` (absolute resolved paths). */
 function policyCollectGluePathTargets(glueAbs: string): Set<string> {
   const declared = new Set<string>();
   if (!existsSync(glueAbs)) return declared;
@@ -27828,7 +27828,7 @@ function policyCollectGluePathTargets(glueAbs: string): Set<string> {
 }
 
 /**
- * ☠️ Any `.rs` under `📚️examples` must be reachable via `#[path]` from a `📦️glue.rs` — dead definition
+ * ☠️ Any `.rs` under `📚️examples` must be reachable via `#[path]` from a `🦀️.rs` — dead definition
  * or test shims are forbidden.
  */
 function policyDeadExampleLeafBreaches(repoRoot: string, crates: readonly PolicyCrateRef[]): BreachRecord[] {
@@ -27840,7 +27840,7 @@ function policyDeadExampleLeafBreaches(repoRoot: string, crates: readonly Policy
     if (crate.shape !== "taxonomy") continue;
     for (const target of policyCollectGluePathTargets(join(repoRoot, crate.libRelPath))) reachable.add(target);
   }
-  for (const glueRel of policyWalkRelFiles(repoRoot, glueRoots, (_p, name) => name === "📦️glue.rs")) {
+  for (const glueRel of policyWalkRelFiles(repoRoot, glueRoots, (_p, name) => name === "🦀️.rs")) {
     for (const target of policyCollectGluePathTargets(join(repoRoot, glueRel))) reachable.add(target);
   }
   const fw = readdirSync(repoRoot).find((name) => name.endsWith("framework"));
@@ -27854,12 +27854,12 @@ function policyDeadExampleLeafBreaches(repoRoot: string, crates: readonly Policy
     if (reachable.has(abs)) continue;
     breaches.push({
       id: `dead-example-leaf-${relPath}`,
-      summary: `"${relPath}" is not reachable via #[path] from any 📦️glue.rs`,
+      summary: `"${relPath}" is not reachable via #[path] from any 🦀️.rs`,
       kind: "taxonomy/dead-example-leaf",
       scope: relPath,
       priority: "high",
-      reason: "Every .rs under 📚️examples must be wired from the plugin 📦️glue.rs (definition leaf or cfg(test) test leaf).",
-      solution: `Add a #[path] mod declaration for ${relPath} under //#region 📚️Examples in the owning 📦️glue.rs, or delete the dead file.`,
+      reason: "Every .rs under 📚️examples must be wired from the plugin 🦀️.rs (definition leaf or cfg(test) test leaf).",
+      solution: `Add a #[path] mod declaration for ${relPath} under //#region 📚️Examples in the owning 🦀️.rs, or delete the dead file.`,
     });
   }
   return breaches;
@@ -28081,7 +28081,7 @@ function policyCargoPluginDependencyIds(repoRoot: string, ownerRel: string): Set
 }
 
 /**
- * 📏️A runtime plugin dependency (`.depends_on("x", …)` in the owner's `🦀️component.rs` tree) must be
+ * 📏️A runtime plugin dependency (`.depends_on("x", …)` in the owner's `🦀️.rs` tree) must be
  * backed by a real Cargo dependency on `semio-s-plugin-x`, and vice versa — a contributor needs the
  * dependency crate's snapshot/mutation types to plan against, and the host refuses to load a plugin
  * whose declared dependency is absent. Both directions are checked so neither half can drift.
@@ -28291,7 +28291,7 @@ function policyArtifactRootOfMutationsDir(mutationsRel: string): string {
  * 📏️SEMANTIC-MUTATIONS-OVERHAUL rule 1: every repository-owned `.rs` file under a
  * `🧬️mutations/` facet or a `🎮️commands/` app-command dir must not reference the banned generic mutation
  * vocabulary the new `SemanticDescriptor`/`MutationKind`/`#[derive(dsl_derive::Mutations)]` mechanism
- * (see `🧰️framework/…/📡️spr/🎮️command/🦀️component.rs`'s `🔖️Semantics` region) replaces: `SetSnapshot`
+ * (see `🧰️framework/…/📡️spr/🎮️command/🦀️.rs`'s `🔖️Semantics` region) replaces: `SetSnapshot`
  * (the whole-document escape hatch), `NoMutation` (the sentinel sibling), and `CollectionMutation<`/`::`
  * (the generic collection wrapper, worst-offender count ~70 in one facet). `Set[A-Z]\w*` dispatch-enum
  * variant names are additionally flagged at `"medium"`; the generic escape hatches have no
@@ -28352,7 +28352,7 @@ function policySemanticVocabularyBreaches(repoRoot: string): BreachRecord[] {
 
 /**
  * 📏️SEMANTIC-MUTATIONS-OVERHAUL rule 2 (`policyMutationDispatchCoverageBreaches`, formerly a Wave-3
- * placeholder — this wave lands the real comparison): for every `🧬️mutations/🦀️component.rs` dispatch
+ * placeholder — this wave lands the real comparison): for every `🧬️mutations/🦀️.rs` dispatch
  * file, extracts its `pub enum \w*Mutation\w* { … }` variant names and compares them against the
  * concrete triad-dir stems (`policyListMutationDirs`, kebab-case minus emoji, PascalCased) sitting
  * beside it. Kept at `"medium"` (advisory) rather than `"high"` because zero facets have adopted the
@@ -28479,7 +28479,7 @@ type MutationLeafDescriptor = {
   readonly requiredLanguageSurfaces: readonly string[];
 };
 
-const MUTATION_DESCRIPTOR_SCHEMA_REL = "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️mutation-descriptor.schema.json";
+const MUTATION_DESCRIPTOR_SCHEMA_REL = "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️.schema.json";
 
 //#region 🔣️JsonSchemaSubset
 function jsonSchemaSubsetObject(value: unknown): Record<string, unknown> | undefined {
@@ -28726,7 +28726,7 @@ function policyMutationStructuralBreachesView(view: MutationTaxonomyStructuralSo
       return { ...surface, source, identities: surface.id === "text" || surface.id === "binary" ? new Set(inspectRustSourceIdentities(source)) : null };
     });
     const subsetRoot = mutationsRel.endsWith("/🧬️schema/🧬️mutations") ? mutationsRel.slice(0, -"/🧬️schema/🧬️mutations".length) : null;
-    const catalogRel = subsetRoot ? `${subsetRoot}/🧪️oracle/${canonicalPrimaryFilenameForKind(taxonomy.testContributionFileKindId, taxonomy)}` : null;
+    const catalogRel = subsetRoot ? `${subsetRoot}/oracle${canonicalPrimaryFilenameForKind(taxonomy.testContributionFileKindId, taxonomy)}` : null;
     const catalogSource = catalogRel ? policyStructuralSource(view, catalogRel) ?? "" : "";
     for (const leafName of leafNames) {
       const leafRel = `${mutationsRel}/${leafName}`;
@@ -28886,7 +28886,7 @@ function policyIsCompositeMutationDir(repoRoot: string, mutationRel: string): bo
 }
 
 /**
- * 📏️Rule 1: every `🧬️mutations/<slug>/🔺️diff/🦀️component.rs` must return `protocol::MutationOutcome<`
+ * 📏️Rule 1: every `🧬️mutations/<slug>/🔺️diff/🦀️.rs` must return `protocol::MutationOutcome<`
  * and reference at least one of the 7 frozen codes. Composite mutation dirs (own `🧩️plan`, not `🔺️diff`) are out of scope — their outcome folds from
  * the plan. A leaf whose `🔺️diff` doesn't exist yet is tracked by `policyMutationTriadCompletenessBreaches`
  * instead, not here.
@@ -29146,10 +29146,10 @@ const POLICY_MERGE_POLICY_VARIANT_SPELLINGS: Readonly<Record<(typeof POLICY_MERG
   Vigilant: ["Vigilant", "vigilant"],
 };
 const POLICY_MERGE_POLICY_SURFACES: readonly { label: string; relPath: string }[] = [
-  { label: "Rust spine (protocol::MergePolicy, 📡️spr/🧾️wire)", relPath: "🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🧾️wire/🦀️component.rs" },
-  { label: "TS host codec (💻️os/🟦️component.ts)", relPath: "🧰️framework/🛍️products/💻️os/🟦️component.ts" },
-  { label: "TS kernel types (🎠️kernel/🟦️component.ts)", relPath: "🧰️framework/🔨️modules/🎠️kernel/🟦️.ts" },
-  { label: "i18n bundles (de+en, 🖱️ui react index.tsx)", relPath: "🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx" },
+  { label: "Rust spine (protocol::MergePolicy, 📡️spr/🧾️wire)", relPath: "🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🧾️wire/🦀️.rs" },
+  { label: "TS host codec (💻️os/🟦️.ts)", relPath: "🧰️framework/🛍️products/💻️os/🟦️.ts" },
+  { label: "TS kernel types (🎠️kernel/🟦️.ts)", relPath: "🧰️framework/🔨️modules/🎠️kernel/🟦️.ts" },
+  { label: "i18n bundles (de+en, 🖱️ui react index.tsx)", relPath: "🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/🟦️.tsx" },
 ];
 
 /**
@@ -29177,8 +29177,8 @@ export function policyMergePolicyParityBreaches(repoRoot: string): BreachRecord[
   return breaches;
 }
 
-const POLICY_DERIVE_MIRROR_A = "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/🦀️component.rs";
-const POLICY_DERIVE_MIRROR_B = "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/📦️packages/🦀️rust/📦️glue.rs";
+const POLICY_DERIVE_MIRROR_A = "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/🦀️.rs";
+const POLICY_DERIVE_MIRROR_B = "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/📦️packages/🦀️rust/🦀️.rs";
 
 /** 📏️Rule 7: the dsl derive macro's two build-shape entry points must stay byte-identical — a drift means one shape silently runs stale derive logic. */
 export function policyDeriveMirrorBreaches(repoRoot: string): BreachRecord[] {
@@ -29296,8 +29296,8 @@ function policyInferenceFamilyRootCompletenessBreaches(repoRoot: string): Breach
 }
 
 /**
- * 📏️Slug-dir leaf presence: every concrete inference slug dir must carry a real `🦀️component.rs`, and a
- * `🟦️component.ts` that is present AND real — not a trivial `export {};`/empty stub (same bar
+ * 📏️Slug-dir leaf presence: every concrete inference slug dir must carry a real `🦀️.rs`, and a
+ * `🟦️.ts` that is present AND real — not a trivial `export {};`/empty stub (same bar
  * `policyMutationTsMirrorBreaches` holds triad `.ts` leaves to).
  */
 function policyInferenceSlugLeafPresenceBreaches(repoRoot: string): BreachRecord[] {
@@ -29353,7 +29353,7 @@ function policyInferenceSlugLeafPresenceBreaches(repoRoot: string): BreachRecord
 }
 
 /**
- * 📏️Impl presence: each slug's `🦀️component.rs` must carry a real derivation — either
+ * 📏️Impl presence: each slug's `🦀️.rs` must carry a real derivation — either
  * `impl …InferredField<` or a plain `pub fn` reading the snapshot. **Binding coordinator ruling: only
  * 4 of 112 families use `InferredField`; the other 108 are pure-fn folds and are correct** — a merkle
  * dep-chain over a flat whole-snapshot record costs more than the fold it caches, so `InferredField` is
@@ -29393,7 +29393,7 @@ function policyInferenceImplPresenceBreaches(repoRoot: string): BreachRecord[] {
  * across DIFFERENT families by design, e.g. `⏱duration` on animation/audio/mp3/wav/mp4/avi and
  * `🧭topology` on flow/graph/raster/jack; only a collision inside a single `💡️inferences/` tree is a
  * defect) and bare-emoji shape (no U+FE0F): inference slugs are bare by convention (see
- * `isEmojiPrefixedSlugDir`'s own docstring in 🔍️discovery/🟦️component.ts, which cites `📦bounds`,
+ * `isEmojiPrefixedSlugDir`'s own docstring in 🔍️discovery/🟦️.ts, which cites `📦bounds`,
  * `🧭topology`, `⏱duration`, `🧾outline` as bare exemplars) — unlike most taxonomy dirs, which
  * `requireEmojiPrefixWithVs16`.
  */
@@ -30422,7 +30422,7 @@ function policyAppPresenceTypeName(configType: string): string {
 }
 
 /**
- * 🗂️Walk every plugin's `👁️viewer`/`✏️editor` surface `🦀️component.rs`, parse `type Config = XConfig;`,
+ * 🗂️Walk every plugin's `👁️viewer`/`✏️editor` surface `🦀️.rs`, parse `type Config = XConfig;`,
  * and resolve the config owner dir (surface `🎚️config`, else legacy `🧮️config`, else plugin-level
  * `🎚️config` that declares `pub struct XConfig`). Presence owner is the sibling `👥️presence` under the
  * same parent.
@@ -30664,7 +30664,7 @@ function policyAppSchemaFieldParityBreaches(repoRoot: string): BreachRecord[] {
 
 /**
  * 📏️Config fidelity: the config facet's normative field set equals the fields of the owner's real
- * `XConfig` Rust struct in `🎚️config/🦀️component.rs` (or legacy `🧮️config`).
+ * `XConfig` Rust struct in `🎚️config/🦀️.rs` (or legacy `🧮️config`).
  */
 function policyAppSchemaConfigFidelityBreaches(repoRoot: string): BreachRecord[] {
   const breaches: BreachRecord[] = [];
@@ -31233,7 +31233,7 @@ type PolicyArtifactDialect = {
   subsetDirName: string;
   /** 🪆️ Logical subset id: `subsetDirName` with the `✳️` prefix stripped and "any" mapped to "*"
    * (ticket 26/08/11/ARTIFACT-STANDARD-SUBSETS-REAL-VOCABULARIES) — this is what a standard's
-   * `🪆️subsets/🔣️component.json` manifest and Rust `SubsetId` both speak. */
+   * `🪆️subsets/🔣️.json` manifest and Rust `SubsetId` both speak. */
   subsetId: string;
 };
 
@@ -31436,12 +31436,12 @@ function policyGroupDialectsByStandard(repoRoot: string): PolicyStandardManifest
 /**
  * ⚖️ Ticket 26/08/11/ARTIFACT-STANDARD-SUBSETS-REAL-VOCABULARIES: every migrated standard declares
  * its real industry subset vocabulary (or, for non-stdio/"domain" artifacts, explicitly declares
- * none) in `🪆️subsets/🔣️component.json`, and that declaration must always equal what's actually on
+ * none) in `🪆️subsets/🔣️.json`, and that declaration must always equal what's actually on
  * disk — in both directions, so a manifest can never silently drift ahead of or behind the real
  * dirs. Real (non-`*`) subsets on stdio artifacts additionally need a registered `SubsetValidator`
  * on their subset composer — the static half of "every real subset gets a real validator"; the
  * generic runtime half (`io.subset.validator-missing`) is `run_subset_validation` in
- * `🧰️framework/🔨️modules/🚪️io/🦀️component.rs`.
+ * `🧰️framework/🔨️modules/🚪️io/🦀️.rs`.
  */
 export function policyStandardSubsetVocabularyBreaches(repoRoot: string): BreachRecord[] {
   const breaches: BreachRecord[] = [];
@@ -31625,8 +31625,8 @@ function policyArtifactSchemaRoots(repoRoot: string, artRel: string, schemaFacet
     .map((d) => ({ scope: artRel, schemaRoot: `${d.subsetRel}/${schemaFacet}` }));
 }
 
-/** 🔎️True when `schemaRoot` is exactly the delegating re-export pair — `🦀️component.rs` (`pub use
- * …::any::schema::*;`) + `🟦️component.ts` (either a literal `export * from ".../✳️any/.../🟦️component"`
+/** 🔎️True when `schemaRoot` is exactly the delegating re-export pair — `🦀️.rs` (`pub use
+ * …::any::schema::*;`) + `🟦️.ts` (either a literal `export * from ".../✳️any/.../🟦️component"`
  * re-export, or a `meta` stamp with no own `interface`/`type`/`enum` — both shapes are attested on
  * disk, ifc ✳️cv20/✳️sav/✳️cobie use the former, pdf/step/zip's conformance subsets use the latter)
  * and NOTHING else. A subset in this shape is a validation-gated conformance STAMP on top of its
@@ -31747,7 +31747,7 @@ export function policySchemaRepresentationBreaches(repoRoot: string): BreachReco
   return breaches;
 }
 
-/** 🔎️True if any `🦀️component.rs` exists anywhere under `rootRel` (any depth) — used to check a
+/** 🔎️True if any `🦀️.rs` exists anywhere under `rootRel` (any depth) — used to check a
  * migrated io leaf exists without having to guess which of a stdio format's own (standard,
  * subset) pairs a given domain artifact happens to bridge to. */
 function policyHasComponentUnder(repoRoot: string, rootRel: string): boolean {
@@ -32095,7 +32095,7 @@ function policyDialectLiteralPathBreaches(repoRoot: string): BreachRecord[] {
 
 /**
  * 🎫 Ticket 26/08/11/SEMIO-ARTIFACT-UNIFIED-IMPORT-EXPORT-AND-MEDIA-FORMAT-RETIREMENT, W1 Task 4
- * blocking finding: `store::register_document_codec` (🧰️framework/…/🏪️store/🦀️component.rs) is a
+ * blocking finding: `store::register_document_codec` (🧰️framework/…/🏪️store/🦀️.rs) is a
  * plain `HashMap::insert` keyed by the codec's schema id string — registering two DIFFERENT codecs
  * under the SAME id does not panic, it silently overwrites (last-registered-wins), with zero
  * runtime diagnostic (empirically confirmed by W1's own regression test). This is a real risk once
@@ -32167,7 +32167,7 @@ function policyStdioCodecIdUniquenessBreaches(repoRoot: string): BreachRecord[] 
  * 🎫 Ticket 26/08/10/ARTIFACT-SYSTEM-OVERHAUL-REAL-CODECS-RUNTIME-REUSE-EVOLUTION, D6 rule 8:
  * replaces the old `policyCodecFidelityBreaches` (a 5-string banned-marker grep — "does this file
  * avoid saying SRAS/IFCCARTOONMESH", a purely negative signal) with a positive one: every
- * standard-level `⚙️engine/🦀️component.rs` must contain a real decode→encode→decode (or
+ * standard-level `⚙️engine/🦀️.rs` must contain a real decode→encode→decode (or
  * equivalent lossless) round-trip test. Detected via a deliberately generous name/body heuristic
  * (`round_trip`/`roundtrip`/`decode_encode`/`encode_decode`/`lossless`, case-insensitive) rather
  * than requiring one exact test name — every codec this session actually delivered uses one of
@@ -32228,11 +32228,11 @@ const POLICY_ROUND_TRIP_TEST_ALLOWLIST = new Set<string>([
   // already real+tested for all 7, this is specifically the missing decode→encode→decode test) and
   // as W2 adds semio v1's own round-trip test alongside geometry/triples' existing 9. Keys computed
   // via policyNormalizeRelPath.
-  // W3 closer removed epw/mp4/mp3/avi/wav — each `⚙️engine/🦀️component.rs` now has a real
+  // W3 closer removed epw/mp4/mp3/avi/wav — each `⚙️engine/🦀️.rs` now has a real
   // `#[cfg(test)]` round-trip test (grep-verified, policy re-run green after). html stays: its
-  // real codec_retention_law round-trip test lives in `📸️snapshot/🦀️component.rs`, not
-  // `⚙️engine/🦀️component.rs` — this rule is scoped to the engine file specifically, so html's
-  // `⚙️engine/🦀️component.rs` (just `sniff_real_bytes` + a small sniff test) genuinely still has
+  // real codec_retention_law round-trip test lives in `📸️snapshot/🦀️.rs`, not
+  // `⚙️engine/🦀️.rs` — this rule is scoped to the engine file specifically, so html's
+  // `⚙️engine/🦀️.rs` (just `sniff_real_bytes` + a small sniff test) genuinely still has
   // no round-trip signal under this rule's own detection method; a real architectural mismatch
   // between where html's parser lives and where this rule looks, not a fixed-and-forgotten entry
   // — documented here as a follow-up rather than moved, since relocating html's parser is a
@@ -32673,7 +32673,7 @@ function policyListStdioSchemaOwningEntries(repoRoot: string): PolicyStdioStanda
 }
 
 /**
- * 📏️S-8 rule 3 (`POLICY_DIFF_ALGEBRA`): every stdio artifact-standard's `🔺️diff/🦀️component.rs` must
+ * 📏️S-8 rule 3 (`POLICY_DIFF_ALGEBRA`): every stdio artifact-standard's `🔺️diff/🦀️.rs` must
  * carry a real `impl DiffAlgebra<...> for ...` block (S1 added the trait, deliberately implemented it
  * for nothing — see `s1-spine-report.md`). Seeded with all 31 current standards; F-wave agents shrink
  * this to zero as they land real diffs with handcrafted `inverse`/`between`/`is_empty`.
@@ -33560,11 +33560,11 @@ export function policySchemaOverhaulS2Breaches(repoRoot: string): BreachRecord[]
  * every other rule in this file, e.g. `policyGrammarHonestyBreaches`'s own placeholder-marker scan) —
  * the REAL enforcement for grammar/protocol conformance is each artifact's own
  * `committed_facet_files_parse`/`grammar_conformance_law`/`protocol_walk_law` tests plus the
- * framework's `STDIO_CONFORMANCE_GRADUATED` graduation list in `🧪️fixture-sweep/🦀️component.rs`.
+ * framework's `STDIO_CONFORMANCE_GRADUATED` graduation list in `🧪️fixture/🦀️-sweep.rs`.
  */
 
 /**
- * 📏️`POLICY_GRAMMAR_PARSEABILITY`: every stdio `📖️component.grammar.semio` file should look like the
+ * 📏️`POLICY_GRAMMAR_PARSEABILITY`: every stdio `📖️.grammar.semio` file should look like the
  * REAL M1/M2-era dialect (`dialect grammar` on its own header line, `grammar <id>`, `start <prod>`)
  * and not still carry an old-dialect/ABNF tell (a `;`-prefixed comment line, `%xHH` character-class
  * syntax, or a bare `*hexdig`/`*OCTET` prefix-repetition placeholder — none of which this dialect's
@@ -33669,7 +33669,7 @@ function policyGrammarParseabilityBreaches(repoRoot: string): BreachRecord[] {
   const breaches: BreachRecord[] = [];
   for (const entry of policyListStdioSchemaOwningEntries(repoRoot)) {
     for (const facet of POLICY_GRAMMAR_PARSEABILITY_FACETS) {
-      const rel = `${entry.subsetRel}/🧬️schema/${facet}/📝️text/📖️component.grammar.semio`;
+      const rel = `${entry.subsetRel}/🧬️schema/${facet}/📝️text/📖️.grammar.semio`;
       if (!existsSync(join(repoRoot, rel))) continue;
       const content = policyReadFileSafe(repoRoot, rel);
       const looksReal = policyLooksLikeRealGrammarOrProtocolDialect(content, "grammar");
@@ -33703,7 +33703,7 @@ function policyGrammarParseabilityBreaches(repoRoot: string): BreachRecord[] {
 }
 
 /**
- * 📏️`POLICY_PROTOCOL_PARSEABILITY`: same heuristic, for `📡️component.protocol.semio` files. Seeded
+ * 📏️`POLICY_PROTOCOL_PARSEABILITY`: same heuristic, for `📡️.protocol.semio` files. Seeded
  * with the current census: json/csv/zip/png/txt/binary OUT; every other stdio standard IN (same
  * `stdio/semio#v1/subsets#object` accidental-pass caveat as the grammar rule above applies here too).
  */
@@ -33809,7 +33809,7 @@ function policyProtocolParseabilityBreaches(repoRoot: string): BreachRecord[] {
 
 /**
  * 📏️`POLICY_FIXTURE_HONESTY`: every stdio ARTIFACT's (not per-standard — the demo fixture pair lives
- * once per artifact dir, shared across a multi-standard artifact like gif 87a/89a) `🗣️example.dsl.semio`
+ * once per artifact dir, shared across a multi-standard artifact like gif 87a/89a) `🗣️.dsl.semio`
  * must start with a genuine `semio stdio.<artifact>`-prefixed preamble line (not a Phase-1-era fake like
  * `{"hello":"stdio.xml","n":1}` with no preamble at all), AND a sibling `🎒️example.pack.semio` must
  * exist on disk. Seeded with the current census: the 6 piloted artifacts (binary/csv/json/png/txt/zip)
@@ -33839,7 +33839,7 @@ function policyFixtureHonestyBreaches(repoRoot: string): BreachRecord[] {
     if (!art.isDirectory) continue;
     const artRel = `${POLICY_STDIO_ARTIFACTS_REL}/${art.name}`;
     const artifactId = policyStripEmoji(art.name);
-    const dslRel = `${artRel}/📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio`;
+    const dslRel = `${artRel}/📚️examples/🎬️demo/🖼️assets/🗣️.dsl.semio`;
     const packRel = `${artRel}/📚️examples/🎬️demo/🖼️assets/🎒️example.pack.semio`;
     const dslAbs = join(repoRoot, dslRel);
     const dslOk = existsSync(dslAbs) && readFileSync(dslAbs, "utf8").split(/\r?\n/, 1)[0]!.trim().startsWith(`semio stdio.${artifactId}`);
@@ -33855,7 +33855,7 @@ function policyFixtureHonestyBreaches(repoRoot: string): BreachRecord[] {
         kind: "stdio-artifacts/fixture-honesty",
         scope: artRel,
         priority: "medium",
-        reason: "Phase 2's own mandate: 🗣️example.dsl.semio must be the genuine print_dsl output (with its mandatory `semio stdio.<artifact>...` preamble line, not a Phase-1-era fake) and a genuine 🎒️example.pack.semio (real encode_pack bytes) must exist alongside it (see 📖️phase2-design.md's per-standard deliverable list).",
+        reason: "Phase 2's own mandate: 🗣️.dsl.semio must be the genuine print_dsl output (with its mandatory `semio stdio.<artifact>...` preamble line, not a Phase-1-era fake) and a genuine 🎒️example.pack.semio (real encode_pack bytes) must exist alongside it (see 📖️phase2-design.md's per-standard deliverable list).",
         solution: `Regenerate ${dslRel}/${packRel} from the real print_dsl/encode_pack output, or if this artifact hasn't reached its FG-wave yet, add "${key}" to POLICY_FIXTURE_HONESTY_ALLOWLIST citing this ticket.`,
       });
     } else if (allowlisted) {
@@ -33877,7 +33877,7 @@ function policyFixtureHonestyBreaches(repoRoot: string): BreachRecord[] {
  * 📏️`POLICY_LANGUAGE_REGISTRATION`: every stdio (artifact, standard)'s `⚙️engine::register()` must call
  * `dsl::register_language` at least 5 times — the full 5-role `LanguageSpec` registration (Document/
  * Ops/Diff/Pack/Spr) every P1-P3 pilot landed, per note's exemplar pattern (see 📖️grammar-recipe.md).
- * Plain grep count on the standard's own `⚙️engine/🦀️component.rs`, matching this file's other
+ * Plain grep count on the standard's own `⚙️engine/🦀️.rs`, matching this file's other
  * grep-count-based rules. Seeded with the current census: the 6 piloted standards (5 calls each) are
  * OUT; every other stdio standard is still IN (0-1 calls — the pre-Phase-2 single-role registration,
  * or none at all).
@@ -34063,10 +34063,10 @@ const POLICY_DISSOLVED_ENGINE_CACHE_ALLOWED_DIRS = ["🧰️framework/🛍️pro
 
 /** 🧊️ Shrink-only. Every entry is a known tier-(d) escape awaiting its dissolution wave. */
 const POLICY_DISSOLVED_REP_ESCAPE_ALLOWLIST = new Set<string>([
-  "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/⚙️engine/🦀️component.rs",
-  "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/⚙️engine/🦀️component.rs",
-  "🧰️framework/🔨️modules/◻2d/🗄️store/🦀️component.rs",
-  "🧰️framework/🔨️modules/🧊️3d/📐️brep/⚙️engine/🖥️host/🦀️component.rs",
+  "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/⚙️engine/🦀️.rs",
+  "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/⚙️engine/🦀️.rs",
+  "🧰️framework/🔨️modules/◻2d/🗄️store/🦀️.rs",
+  "🧰️framework/🔨️modules/🧊️3d/📐️brep/⚙️engine/🖥️host/🦀️.rs",
 ]);
 
 /** 🧊️ A durable field or static holding an ephemeral representation — measures REACH, not mutability.
@@ -34159,7 +34159,7 @@ function policyDissolvedWholeDocumentReplaceBreaches(repoRoot: string): BreachRe
       priority: "medium",
       reason:
         "Whole-document replace is not an in-history mutation at all — it records what the document became, never what the user did, and has no meaningful inverse. It goes through ArtifactStore::reset (a non-undoable rebase used for file-open/import), entirely outside the mutation vocabulary.",
-      solution: `Delete ${dir}, its dispatch arm, and its 📦️glue.rs #[path] mount in the SAME change — a mount pointing at a removed directory aborts the build before compilation, for every crate in the workspace.`,
+      solution: `Delete ${dir}, its dispatch arm, and its 🦀️.rs #[path] mount in the SAME change — a mount pointing at a removed directory aborts the build before compilation, for every crate in the workspace.`,
     });
   }
   return Array.from(new Map(breaches.map((b) => [b.id, b])).values());
@@ -34177,7 +34177,7 @@ export function policyDissolvedKernelsBreaches(repoRoot: string): BreachRecord[]
 
 //#region 🔧️PolicyRuleComposition
 /** 🪪️ Canonical artifact-kind grammar mirror of `ArtifactKindId::parse`/`is_canonical_artifact_kind`
- * (🧰️framework/🔨️modules/🚪️io/🦀️component.rs:101-153, ticket 26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM
+ * (🧰️framework/🔨️modules/🚪️io/🦀️.rs:101-153, ticket 26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM
  * W1): exactly three dot-separated ASCII segments, the first literally `s`, the remaining two
  * lowercase-kebab (`[a-z0-9-]`, no leading/trailing/doubled hyphen). */
 function policyIsCanonicalArtifactKind(kind: string): boolean {
@@ -34231,7 +34231,7 @@ export function policyCanonicalArtifactKindBreaches(repoRoot: string): BreachRec
         line,
         priority: "medium",
         reason:
-          "Ticket 26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM's ArtifactKindId::parse (🚪️io/🦀️component.rs) is now the ONLY sanctioned artifact-kind grammar: three dot-separated ASCII segments, s.<plugin>.<artifact>, kebab-case. This is pre-migration legacy debt — renaming existing ids is a later/APA registration-macro wave, not this rule's job — flagged so nothing NEW regresses further from canonical grammar while that wave is pending.",
+          "Ticket 26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM's ArtifactKindId::parse (🚪️io/🦀️.rs) is now the ONLY sanctioned artifact-kind grammar: three dot-separated ASCII segments, s.<plugin>.<artifact>, kebab-case. This is pre-migration legacy debt — renaming existing ids is a later/APA registration-macro wave, not this rule's job — flagged so nothing NEW regresses further from canonical grammar while that wave is pending.",
         solution: `Rename this ArtifactKindSpec.id to s.<plugin>.<artifact> when ${relPath} migrates to the declarative registration macro (ticket ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE), or if this is a genuinely new declaration, use canonical grammar from the start.`,
       });
     }
@@ -34572,13 +34572,13 @@ function policyExistingLegalChildren(repoRoot: string, ownerRel: string, allowed
 }
 
 /**
- * 🦀️ For every artifact/standard/subset root that HAS its own `🦀️component.rs`, its own `#[path]`
+ * 🦀️ For every artifact/standard/subset root that HAS its own `🦀️.rs`, its own `#[path]`
  * mounts must cover its existing, legal child dirs (design.md §1: "each level one root component.rs
  * that mounts its own children"). Most owners have no root component yet — `missing-owner-root` is
  * the migration backlog counter design.md's recipe (§5 step 6) still has to work through; the ones
  * that DO exist today (confirmed: ~30 artifact roots, one full standard+subset chain under
- * `🗄️stdio/🧊️gltf`) carry zero self-mounts because mounting is still centralized in `📦️glue.rs` — the
- * exact shape this ticket dissolves. Plugin `📦️glue.rs` may only `#[path]`-mount artifact roots,
+ * `🗄️stdio/🧊️gltf`) carry zero self-mounts because mounting is still centralized in `🦀️.rs` — the
+ * exact shape this ticket dissolves. Plugin `🦀️.rs` may only `#[path]`-mount artifact roots,
  * plugin `🔨️modules`, `🎮️commands`, and its own plugin root; any deeper mount (a standard/subset/
  * schema/io leaf reached directly) is that old centralized-glue shape. `pub use …subsets::`/
  * `…standards::` lines in glue.rs are the sibling "shim" pattern — this scans for the pattern itself,
@@ -34614,8 +34614,8 @@ function policyOwnerMountsChildrenBreaches(repoRoot: string): BreachRecord[] {
         kind: `${POLICY_CLEAN_MECHANISM_KIND}/owner-mounts-children`,
         scope: rel,
         priority: "medium",
-        reason: "design.md §1: an owner root mounts its own children — mounting for this owner still lives centralized in the plugin's 📦️glue.rs.",
-        solution: `Add #[path = "…"] pub mod … mounts for ${existingChildren.join(", ")} directly in ${rootFile}, and remove the equivalent nested mounts from 📦️glue.rs.`,
+        reason: "design.md §1: an owner root mounts its own children — mounting for this owner still lives centralized in the plugin's 🦀️.rs.",
+        solution: `Add #[path = "…"] pub mod … mounts for ${existingChildren.join(", ")} directly in ${rootFile}, and remove the equivalent nested mounts from 🦀️.rs.`,
       });
     }
   };
@@ -34625,7 +34625,7 @@ function policyOwnerMountsChildrenBreaches(repoRoot: string): BreachRecord[] {
   for (const s of splits) checkOwnerRoot(s.subsetRel, "subset", taxonomy.subsetChildDirs);
 
   for (const pluginRel of policyListPluginRels(splits)) {
-    const glueRel = `${pluginRel}/📦️packages/🦀️rust/📦️glue.rs`;
+    const glueRel = `${pluginRel}/📦️packages/🦀️rust/🦀️.rs`;
     if (!existsSync(join(repoRoot, glueRel))) continue;
     const content = readFileSync(join(repoRoot, glueRel), "utf8");
     const targets = policyExtractPathMountTargets(content);
@@ -34643,7 +34643,7 @@ function policyOwnerMountsChildrenBreaches(repoRoot: string): BreachRecord[] {
         kind: `${POLICY_CLEAN_MECHANISM_KIND}/owner-mounts-children`,
         scope: pluginRel,
         priority: "medium",
-        reason: "design.md §1: a plugin's 📦️glue.rs mounts ONLY artifact roots, plugin modules, commands, and the plugin root — everything below an artifact root is that artifact's own job to mount.",
+        reason: "design.md §1: a plugin's 🦀️.rs mounts ONLY artifact roots, plugin modules, commands, and the plugin root — everything below an artifact root is that artifact's own job to mount.",
         solution: `Move each deep mount (first example: "${outOfScope[0]}") down into its owning artifact/standard/subset root's own #[path] list.`,
       });
     }
@@ -34655,7 +34655,7 @@ function policyOwnerMountsChildrenBreaches(repoRoot: string): BreachRecord[] {
         kind: `${POLICY_CLEAN_MECHANISM_KIND}/owner-mounts-children`,
         scope: pluginRel,
         priority: "medium",
-        reason: "design.md §5 step 9: delete every 📦️glue.rs shim that re-exports a sibling subset/standard path — the owning root should export it directly.",
+        reason: "design.md §5 step 9: delete every 🦀️.rs shim that re-exports a sibling subset/standard path — the owning root should export it directly.",
         solution: `Delete the shim re-export(s) (first example: "${shimHits[0]![0]}") once the owning root exports the symbol directly.`,
       });
     }
@@ -34872,8 +34872,8 @@ function policyIoExclusivityBreaches(repoRoot: string): BreachRecord[] {
 
 //#region 🔖️Policy5-IoDeclaration
 /**
- * 🚪️ Every `🚪️io` codec leaf dir (one carrying its own `🦀️component.rs`) must be referenced BY NAME
- * from its subset's `🚪️io/🦀️component.rs` root, and carry a `🟦️component.ts` twin (design.md §1:
+ * 🚪️ Every `🚪️io` codec leaf dir (one carrying its own `🦀️.rs`) must be referenced BY NAME
+ * from its subset's `🚪️io/🦀️.rs` root, and carry a `🟦️.ts` twin (design.md §1:
  * "io() -> IoDeclaration / IoEntryDescriptor[] mirror").
  */
 function policyIoDeclarationBreaches(repoRoot: string): BreachRecord[] {
@@ -34965,9 +34965,9 @@ function policySubsetStandaloneBreaches(repoRoot: string): BreachRecord[] {
  * 🌳️ Where the NEW-shape declaration functions exist (design.md §1: `pub fn artifact() ->
  * ArtifactDeclaration`, `pub fn standard() -> StandardDeclaration`, `pub fn subset() ->
  * SubsetDeclaration`), the parent level must register every child that owns one, matching
- * `🪆️subsets/🔣️component.json`. Dormant on today's tree — a repo-wide grep confirmed these exact
+ * `🪆️subsets/🔣️.json`. Dormant on today's tree — a repo-wide grep confirmed these exact
  * zero-arg signatures do not exist anywhere yet (the SDK's `ArtifactDeclaration` today is still the
- * OLD `ArtifactDeclarationBuilder` shape, per `🔌️plugin/🦀️component.rs`) — verified structurally sound
+ * OLD `ArtifactDeclarationBuilder` shape, per `🔌️plugin/🦀️.rs`) — verified structurally sound
  * so it fires correctly once a W2+ packet lands the first real declaration tree, the same precedent
  * `policyContributedSurfaceTargetBreaches` already set for a dormant-but-ready rule.
  */
@@ -35005,7 +35005,7 @@ function policyDeclarationTreeBreaches(repoRoot: string): BreachRecord[] {
     }
   }
   for (const pluginRel of policyListPluginRels(splits)) {
-    const glueRel = `${pluginRel}/📦️packages/🦀️rust/📦️glue.rs`;
+    const glueRel = `${pluginRel}/📦️packages/🦀️rust/🦀️.rs`;
     const glueContent = policyReadFileSafe(repoRoot, glueRel);
     if (!glueContent) continue;
     for (const artRel of policyListArtifactRels(splits.filter((s) => s.pluginRel === pluginRel))) {

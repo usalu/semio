@@ -17,7 +17,7 @@ workspace = true
 default = ["render"]
 typegen = []
 render = ["dep:typst-assets"]
-# 🌉️ Declared (but never enabled) so `🗺️surface/🏔️terrain/🦀️component.rs`'s path-mounted
+# 🌉️ Declared (but never enabled) so `🗺️surface/🏔️terrain/🦀️.rs`'s path-mounted
 # `#[cfg(feature = "session-bindgen")]` wasm bridge doesn't trip `unexpected_cfgs` here — this
 # crate path-mounts that file without the surface crate's own `session-bindgen` default, by design
 # (avoids duplicate `TerrainSession` symbols linking surface+infinite into one cdylib).
@@ -31,7 +31,7 @@ required-features = ["render"]
 [lib]
 name = "semio_framework_os_infinite"
 crate-type = ["rlib"]
-path = "📦️glue.rs"
+path = "🦀️.rs"
 
 [dependencies]
 semio-framework-os-kernel = { path = "../../../../📦️packages/🦀️rust", package = "semio-framework-os-kernel" }
@@ -48,24 +48,28 @@ serde = { version = "1.0.219", features = ["derive"] }
 serde_json = "1.0.140"
 # 🔤️ First-party RFC 4648 codec — replaces the third-party `base64` crate for `icon_codec`'s
 # `data:...;base64,...` decode (target-neutral: guest-reachable via `board_resolve_icon_kind`, see
-# `🖼️canvas/🦀️component.rs`). RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS (26/09/01).
+# `🖼️canvas/🦀️.rs`). RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS (26/09/01).
 base64_codec = { path = "../../../../../../🔨️modules/🚪️io/🔤️base64/📦️packages/🦀️rust", package = "semio-framework-io-base64" }
-# 🏔️ Required by the path-mounted `🗺️surface/🏔️terrain/🦀️component.rs` above, which decodes
-# Terrarium RGB-encoded elevation PNGs. That file is compiled into BOTH this crate and
-# `semio-framework-surface` (mounted here by `#[path]` because surface depends on infinite, so a
-# real dependency edge would be a cycle) — a shared source file needs the same dependency
-# declared in every crate that mounts it. Version and features mirror surface's own declaration.
-image = { version = "0.25", default-features = false, features = ["png"] }
+# 🏔️ Required by the path-mounted `🗺️surface/🏔️terrain/🦀️.rs` above, which decodes
+# Terrarium RGB-encoded elevation PNGs via the first-party `semio-framework-pixels` codec (no
+# third-party runtime dependency) instead of `image`/`png`. That file is compiled into BOTH this
+# crate and `semio-framework-surface` (mounted here by `#[path]` because surface depends on
+# infinite, so a real dependency edge would be a cycle) — a shared source file needs the same
+# dependency declared in every crate that mounts it. This removes `image`/`png`/`flate2`/
+# `miniz_oxide`/`fdeflate`/`crc32fast`/`adler2`/`simd-adler32`/`byteorder-lite` from EVERY target's
+# graph here, including `wasm32-wasip2` — this was the last unconditional `image` dependency in
+# this manifest. RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS (26/09/01).
+semio-framework-pixels = { path = "../../../../../../🔨️modules/🖼️pixels/📦️packages/🦀️rust", package = "semio-framework-pixels" }
 
 # ⚠️ RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS (26/09/01): a prior attempt to move
 # `vello`/`vello_svg`'s `wgpu` feature and `ui_wgpu`'s `wgpu-engine` feature behind a
-# `not(target_env = "p2")` target table was REVERTED here because `🌍️world/🦀️component.rs` named
+# `not(target_env = "p2")` target table was REVERTED here because `🌍️world/🦀️.rs` named
 # ~26 `ui_wgpu::wgpu` symbols (`Mesh3dFault`, `BoundedActionFault`, …) unconditionally, forcing
 # `wgpu-engine` to stay on for every target including wasip2. That root cause is now fixed: those
 # symbols were split into the target-neutral `ui_wgpu::draw_types`/`ui_wgpu::gizmo`/`action`/`input`
-# tier (see `🖱️ui/🎯️targets/🧊️wgpu/📦️glue.rs`'s top docstring), so `wgpu-engine` — and with it the
+# tier (see `🖱️ui/🎯️targets/🧊️wgpu/🦀️.rs`'s top docstring), so `wgpu-engine` — and with it the
 # real `wgpu` crate and its `wasm-bindgen-futures`/`js-sys`/`wasm-bindgen` chain — can finally be
-# narrowed away from `wasm32-wasip2` here too. `gpu_session` (`🖼️canvas/🦀️component.rs`, the only
+# narrowed away from `wasm32-wasip2` here too. `gpu_session` (`🖼️canvas/🦀️.rs`, the only
 # consumer of `vello::Renderer`/`util::RenderContext`/`vello::wgpu` in this crate) is already
 # `#[cfg(all(target_arch = "wasm32", not(target_env = "p2")))]`-gated, so no wasip2 capability is
 # lost — `vello::Scene`/`peniko`/`kurbo` (the target-neutral drawing-command/geometry types this
@@ -89,7 +93,7 @@ vello_svg = { version = "0.9.0", default-features = true, features = ["wgpu"] }
 typst-assets = { version = "0.14.2", features = ["fonts"], optional = true }
 # 🖼️ Real pixel decode for `icon_codec::decode_raster_icon_bytes`'s host/browser arm and
 # `IconPaintCache::get_or_build`'s icon-painting path — both host-only on `wasm32-wasip2` (see
-# `🖼️canvas/🦀️component.rs`'s `raster_icon_bytes_to_rgba` and `➡️directed/🦀️component.rs`'s
+# `🖼️canvas/🦀️.rs`'s `raster_icon_bytes_to_rgba` and `➡️directed/🦀️.rs`'s
 # `get_or_build` docstrings). RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS (26/09/01).
 image = { version = "0.25", default-features = false, features = ["png", "jpeg", "webp", "gif"] }
 
@@ -99,7 +103,7 @@ vello = { version = "0.7.0", default-features = false }
 # 🚫️ `vello_svg` (and with it `usvg`/`rustybuzz`(via usvg)/`fontdb`/…) deliberately absent here:
 # `svg_icon`/`SvgDocument` (icon *painting*) and `mod text`'s `usvg`-shaped label shaper/painter
 # (`append_label`/`append_label_tspans`/`label_byte_world_x`'s native arm) are both gated
-# `not(all(wasm32, p2))` in `🖼️canvas/🦀️component.rs` — every real caller traced this session is
+# `not(all(wasm32, p2))` in `🖼️canvas/🦀️.rs` — every real caller traced this session is
 # host/browser-only or unreachable on this target. `label_byte_world_x`'s `wasm32-wasip2` arm uses
 # the character-width heuristic (`label_extent`/`label_advance`/`label_text_inset`) instead; icon
 # painting's arm is `IconPaintCache::get_or_build`'s existing `None`. RUNTIME-DEPENDENCY-

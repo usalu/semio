@@ -1,7 +1,0 @@
-syntax = "proto3";
-// stdio.semio.cad diff text (DiffCodec) representation -- no semio envelope; see
-// ../🛰️component.proto for the decoded diff's real schema.
-package semio.s_stdio_semio_cad.diff.text;
-message Document {
-  string payload = 1;
-}

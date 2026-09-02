@@ -4,7 +4,7 @@
 //! This file is the subject half only. The oracle is `🐍️component.py` beside it: an independent
 //! Python implementation of the same carrier and the same thirteen-verb vocabulary, written from the
 //! committed grammar, protocol and JSON schema, registered as `semio-brep-python-independent` in
-//! `../../🏅️standards/🔖️v1/🪆️subsets/✳️brep/🧪️oracle/🔣️.json`. Registering oracle handlers
+//! `../../🏅️standards/🔖️v1/🪆️subsets/✳️brep/🔣️oracle.json`. Registering oracle handlers
 //! here as well would put this repository's answer on both sides of the comparison, which is the
 //! exact failure the platform exists to prevent — so it registers none.
 //!
@@ -26,7 +26,7 @@ use semio_repo_test_host::{Context, Json};
 
 //#region 🔖️Kinds
 /// 🏷️ Mirrors `SemioBrepMutation::KINDS` (`../../🏅️standards/🔖️v1/🪆️subsets/✳️brep/🧬️schema/
-/// 🧬️mutations/🦀️component.rs`) — duplicated, not imported, because registration happens before the
+/// 🧬️mutations/🦀️.rs`) — duplicated, not imported, because registration happens before the
 /// subject crate is necessarily linked. `kinds_match_the_enum_and_the_catalog` in that production
 /// file keeps the list honest against the enum, and the contract's mutation-coverage gate keeps it
 /// honest against the catalog and this feature.
@@ -50,7 +50,7 @@ const FOREST_PACK: &str = "local://🎒️hexagonal-cut-concrete-forest-left.pac
 /// written by THIS codec, so the Python side reproducing them is the other direction of the same
 /// cross-language agreement.
 #[cfg(feature = "sut")]
-const SOLID_DSL: &str = "asset://🏅️standards/🔖️v1/🪆️subsets/✳️any/📚️examples/🧊️solid/🖼️assets/🗣️example.dsl.semio";
+const SOLID_DSL: &str = "asset://🏅️standards/🔖️v1/🪆️subsets/✳️any/📚️examples/🧊️solid/🖼️assets/🗣️.dsl.semio";
 /// 🎒️ The same solid in its binary envelope, written by a separate codec from the DSL text.
 #[cfg(feature = "sut")]
 const SOLID_PACK: &str = "asset://🏅️standards/🔖️v1/🪆️subsets/✳️any/📚️examples/🧊️solid/🖼️assets/🎒️example.pack.semio";

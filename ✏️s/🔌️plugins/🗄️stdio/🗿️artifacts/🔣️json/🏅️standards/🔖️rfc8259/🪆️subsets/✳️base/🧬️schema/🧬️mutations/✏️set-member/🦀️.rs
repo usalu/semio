@@ -4,9 +4,9 @@ use crate::artifacts::json::schema::mutation_support::{diff_at_path, resolve, Js
 use crate::artifacts::json::schema::snapshot::JsonValue;
 use crate::artifacts::json::JsonSnapshot;
 
-#[path = "📝️text/🦀️component.rs"]
+#[path = "📝️text/🦀️.rs"]
 pub mod text;
-#[path = "💾️binary/🦀️component.rs"]
+#[path = "💾️binary/🦀️.rs"]
 pub mod binary;
 
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]

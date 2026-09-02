@@ -1,0 +1,186 @@
+{
+  "schemaVersion": 1,
+  "root": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/✳️document/🧬️schema/🧬️mutations",
+  "mutations": [
+    {
+      "kind": "change-jfif-header",
+      "variant": "ChangeJfifHeader",
+      "directory": "📐️change-jfif-header",
+      "textOpcode": "change-jfif-header",
+      "binaryTag": 2,
+      "requiredFiles": [
+        "🦀️.rs",
+        "🔣️.json",
+        "🔣️.schema.json",
+        "🟦️.ts",
+        "🔗️.graphql",
+        "🛰️.proto",
+        "📝️text/🦀️.rs",
+        "💾️binary/🦀️.rs",
+        "🧪️test/🔣️s.json"
+      ]
+    },
+    {
+      "kind": "replace-quant-table",
+      "variant": "ReplaceQuantTable",
+      "directory": "📊️replace-quant-table",
+      "textOpcode": "replace-quant-table",
+      "binaryTag": 3,
+      "requiredFiles": [
+        "🦀️.rs",
+        "🔣️.json",
+        "🔣️.schema.json",
+        "🟦️.ts",
+        "🔗️.graphql",
+        "🛰️.proto",
+        "📝️text/🦀️.rs",
+        "💾️binary/🦀️.rs",
+        "🧪️test/🔣️s.json"
+      ]
+    },
+    {
+      "kind": "remove-quant-table",
+      "variant": "RemoveQuantTable",
+      "directory": "📤️remove-quant-table",
+      "textOpcode": "remove-quant-table",
+      "binaryTag": 4,
+      "requiredFiles": [
+        "🦀️.rs",
+        "🔣️.json",
+        "🔣️.schema.json",
+        "🟦️.ts",
+        "🔗️.graphql",
+        "🛰️.proto",
+        "📝️text/🦀️.rs",
+        "💾️binary/🦀️.rs",
+        "🧪️test/🔣️s.json"
+      ]
+    },
+    {
+      "kind": "replace-huffman-table",
+      "variant": "ReplaceHuffmanTable",
+      "directory": "🌳️replace-huffman-table",
+      "textOpcode": "replace-huffman-table",
+      "binaryTag": 5,
+      "requiredFiles": [
+        "🦀️.rs",
+        "🔣️.json",
+        "🔣️.schema.json",
+        "🟦️.ts",
+        "🔗️.graphql",
+        "🛰️.proto",
+        "📝️text/🦀️.rs",
+        "💾️binary/🦀️.rs",
+        "🧪️test/🔣️s.json"
+      ]
+    },
+    {
+      "kind": "remove-huffman-table",
+      "variant": "RemoveHuffmanTable",
+      "directory": "🪓️remove-huffman-table",
+      "textOpcode": "remove-huffman-table",
+      "binaryTag": 6,
+      "requiredFiles": [
+        "🦀️.rs",
+        "🔣️.json",
+        "🔣️.schema.json",
+        "🟦️.ts",
+        "🔗️.graphql",
+        "🛰️.proto",
+        "📝️text/🦀️.rs",
+        "💾️binary/🦀️.rs",
+        "🧪️test/🔣️s.json"
+      ]
+    },
+    {
+      "kind": "change-restart-interval",
+      "variant": "ChangeRestartInterval",
+      "directory": "🔁️change-restart-interval",
+      "textOpcode": "change-restart-interval",
+      "binaryTag": 7,
+      "requiredFiles": [
+        "🦀️.rs",
+        "🔣️.json",
+        "🔣️.schema.json",
+        "🟦️.ts",
+        "🔗️.graphql",
+        "🛰️.proto",
+        "📝️text/🦀️.rs",
+        "💾️binary/🦀️.rs",
+        "🧪️test/🔣️s.json"
+      ]
+    },
+    {
+      "kind": "insert-other-segment",
+      "variant": "InsertOtherSegment",
+      "directory": "📥️insert-other-segment",
+      "textOpcode": "insert-other-segment",
+      "binaryTag": 8,
+      "requiredFiles": [
+        "🦀️.rs",
+        "🔣️.json",
+        "🔣️.schema.json",
+        "🟦️.ts",
+        "🔗️.graphql",
+        "🛰️.proto",
+        "📝️text/🦀️.rs",
+        "💾️binary/🦀️.rs",
+        "🧪️test/🔣️s.json"
+      ]
+    },
+    {
+      "kind": "remove-other-segment",
+      "variant": "RemoveOtherSegment",
+      "directory": "🗑️remove-other-segment",
+      "textOpcode": "remove-other-segment",
+      "binaryTag": 9,
+      "requiredFiles": [
+        "🦀️.rs",
+        "🔣️.json",
+        "🔣️.schema.json",
+        "🟦️.ts",
+        "🔗️.graphql",
+        "🛰️.proto",
+        "📝️text/🦀️.rs",
+        "💾️binary/🦀️.rs",
+        "🧪️test/🔣️s.json"
+      ]
+    },
+    {
+      "kind": "replace-pixels",
+      "variant": "ReplacePixels",
+      "directory": "🟪️replace-pixels",
+      "textOpcode": "replace-pixels",
+      "binaryTag": 10,
+      "requiredFiles": [
+        "🦀️.rs",
+        "🔣️.json",
+        "🔣️.schema.json",
+        "🟦️.ts",
+        "🔗️.graphql",
+        "🛰️.proto",
+        "📝️text/🦀️.rs",
+        "💾️binary/🦀️.rs",
+        "🧪️test/🔣️s.json"
+      ]
+    },
+    {
+      "kind": "change-re-encode-quality",
+      "variant": "ChangeReEncodeQuality",
+      "directory": "🎚️change-re-encode-quality",
+      "textOpcode": "change-re-encode-quality",
+      "binaryTag": 11,
+      "requiredFiles": [
+        "🦀️.rs",
+        "🔣️.json",
+        "🔣️.schema.json",
+        "🟦️.ts",
+        "🔗️.graphql",
+        "🛰️.proto",
+        "📝️text/🦀️.rs",
+        "💾️binary/🦀️.rs",
+        "🧪️test/🔣️s.json"
+      ]
+    }
+  ]
+}

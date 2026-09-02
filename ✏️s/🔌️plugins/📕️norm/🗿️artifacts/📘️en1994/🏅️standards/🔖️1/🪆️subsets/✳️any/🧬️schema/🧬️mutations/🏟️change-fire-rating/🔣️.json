@@ -5,7 +5,7 @@
   "displayName": "Change Fire Rating",
   "emoji": "🏟️",
   "aggregateVariant": "ChangeFireRating",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

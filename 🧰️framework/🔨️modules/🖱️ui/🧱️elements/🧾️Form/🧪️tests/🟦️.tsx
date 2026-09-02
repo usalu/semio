@@ -2,7 +2,7 @@
 import * as React from "react";
 import { fireEvent, render } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
-import { Form } from "../🟦️component.tsx";
+import { Form } from "../🟦️.tsx";
 // #endregion 🔌️Adapters
 
 // #region 🧾️FormMatrix

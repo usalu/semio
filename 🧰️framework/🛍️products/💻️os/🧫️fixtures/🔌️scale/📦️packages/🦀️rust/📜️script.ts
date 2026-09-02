@@ -3,7 +3,7 @@
  * (26/08/17/MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME). `check` is the native `--all-targets` proof
  * (unit tests included); `check-wasm` is the real wasm32-wasip2 component-guest build this ticket's
  * whole claim rests on. */
-import { BundleScript, ScriptRouter, runBundleScriptMain, runCargo } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts";
+import { BundleScript, ScriptRouter, runBundleScriptMain, runCargo } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 
 class CheckScript extends BundleScript {
   run(): void {

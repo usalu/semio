@@ -1,0 +1,17 @@
+//! 🔗️ 🔗️ S Studio app command — `disconnect-media-edge`.
+
+use crate::engine::space::config::{SpaceConfig, SpaceConfigMutation};
+use semio_framework_os::workflow::DisconnectEdge;
+use semio_framework_os::{WorkflowMutation, WorkflowSnapshot};
+use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
+
+
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[dsl(keyword = "disconnect-media-edge")]
+pub struct DisconnectMediaEdge {
+    pub edge_id: String,
+}
+
+pub fn handle(payload: &DisconnectMediaEdge, _doc: &ArtifactView<'_, WorkflowSnapshot>, _cfg: &ConfigView<'_, SpaceConfig>) -> Result<Emit<WorkflowMutation, SpaceConfigMutation>, Fault> {
+    Ok(Emit::mutations(vec![WorkflowMutation::DisconnectEdge(DisconnectEdge { edge_id: payload.edge_id.clone() })]))
+}

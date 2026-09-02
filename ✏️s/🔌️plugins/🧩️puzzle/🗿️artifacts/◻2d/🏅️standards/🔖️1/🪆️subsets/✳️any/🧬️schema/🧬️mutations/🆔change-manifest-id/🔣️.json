@@ -5,7 +5,7 @@
   "displayName": "Change Manifest Id",
   "emoji": "🆔",
   "aggregateVariant": "ChangeManifestId",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": "change-manifest-id",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

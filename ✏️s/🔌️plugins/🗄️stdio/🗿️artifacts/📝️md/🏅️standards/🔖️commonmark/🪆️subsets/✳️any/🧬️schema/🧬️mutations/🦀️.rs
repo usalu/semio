@@ -71,9 +71,9 @@ pub enum MdMutation {
 
 //#region 🔖️Kinds
 /// 🗂️ Kebab-case spelling of every `MdMutation` variant, declaration order. Every entry also
-/// appears in this subset's `🧪️oracle/🔣️.json` mutation catalog (`md-commonmark-any`);
+/// appears in this subset's `🔣️oracle.json` mutation catalog (`md-commonmark-any`);
 /// `kinds_match_enum_variants_and_catalog` below is what keeps the two lists honest. The
-/// standalone `🧪️tests/mutate-md-commonmark/🦀️component.rs` test adapter carries its OWN,
+/// standalone `🧪️tests/mutate-md-commonmark/🦀️.rs` test adapter carries its OWN,
 /// separately-declared `no-mutation` identity-probe scenario on top of these five real kinds — it
 /// names no `MdMutation` variant (dropped by the `26/08/29/S-END-TO-END` mutation-leaf migration:
 /// `no` is not an approved semantic verb) and is handled directly by that adapter's `mutate`/
@@ -237,7 +237,7 @@ impl OpText for MdMutation {
 //#region 🔖️OpBinaryCodec
 /// 🧪️ P2-FG1: mutation-specific real binary primitives backing the upgraded `OpBinary` impl below
 /// — reuses `MdDiff`'s `pub(crate)` recursive `enc_block_bin`/`enc_inline_list_bin`/`write_str_bin`/
-/// `write_option_bin` primitives (`../../🔺️diff/🦀️component.rs`, imported above) for the SHARED
+/// `write_option_bin` primitives (`../../🔺️diff/🦀️.rs`, imported above) for the SHARED
 /// `MdBlock`/`MdInline` shape (same intra-artifact-reuse split the TEXT codec above already uses),
 /// only `MdSnapshot`/`MdPathStep`'s own binary shape is genuinely new here.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -294,7 +294,7 @@ fn dec_path_bin(reader: &mut store::ByteReader<'_>) -> Result<Vec<MdPathStep>, S
 //#endregion 🔖️OpBinaryCodec
 
 /// 🧪️ P2-FG1: REAL binary op frame (`format u8 | tag u8 | variant payload`), matching
-/// `../💾️binary/📡️component.protocol.semio`'s `header fixed 2` + `chain payload bytes` shape —
+/// `../💾️binary/📡️.protocol.semio`'s `header fixed 2` + `chain payload bytes` shape —
 /// upgraded from F6's `print_op().into_bytes()` text-as-binary shortcut. `tag` is the `MdMutation`
 /// variant ordinal, same 1-5 order `print_md_mutation`'s own keyword match uses (0 was
 /// `NoMutation`'s, dropped by the `26/08/29/S-END-TO-END` mutation-leaf migration; the remaining
@@ -379,7 +379,7 @@ impl protocol::OpBinary for MdMutation {
 /// `items: Vec<Vec<MdBlock>>` field gets exercised too — `SetInlines`'s `Vec<MdInline>` payload
 /// (multiple inline kinds incl. nested `Emphasis`), and both `MdPathStep` variants incl. a
 /// multi-step nested path) — the single source of truth reused by `op_text_binary_roundtrip_law`
-/// below AND by `⚙️engine/🦀️component.rs`'s `ops_grammar_conformance_law`/`protocol_walk_law`
+/// below AND by `⚙️engine/🦀️.rs`'s `ops_grammar_conformance_law`/`protocol_walk_law`
 /// conformance tests, so a new variant only needs adding here once.
 #[cfg(test)]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -433,7 +433,7 @@ mod op_codec_tests {
 
     /// 🧪️ `kinds_match_enum_variants_and_catalog`: `KINDS` lists every `MdMutation` variant
     /// exactly once (the `match` below has no wildcard arm, so a new variant fails to compile
-    /// here first) AND matches the mutation catalog this subset's `🧪️oracle/🔣️.json`
+    /// here first) AND matches the mutation catalog this subset's `🔣️oracle.json`
     /// declares, in the same order — the framework's completeness gate reads that JSON, never this
     /// enum, so this test is the only thing tying the two declarations together.
     #[semio_framework_async_macros::async_test]
@@ -453,12 +453,12 @@ mod op_codec_tests {
         assert_eq!(variant_kinds, declared_kinds, "KINDS must list every MdMutation variant exactly once");
 
         // 🧭️ Containment, not equality: the manifest's `kinds` ALSO carries `no-mutation`, the
-        // identity-probe row `🧪️tests/mutate-md-commonmark/🦀️component.rs` registers directly
+        // identity-probe row `🧪️tests/mutate-md-commonmark/🦀️.rs` registers directly
         // (real `mutate-no-mutation`/`inverse-no-mutation` scenario rows in that case's own feature
         // file) — it names no `MdMutation` variant (dropped by the `26/08/29/S-END-TO-END`
         // mutation-leaf migration: `no` is not an approved semantic verb) and so cannot appear in
         // `KINDS`, which is exhaustively derived from the enum's own variants above.
-        let manifest: serde_json::Value = serde_json::from_str(include_str!("../../🧪️oracle/🔣️.json")).expect("valid catalog JSON");
+        let manifest: serde_json::Value = serde_json::from_str(include_str!("../../🔣️oracle.json")).expect("valid catalog JSON");
         let catalog_kinds: Vec<&str> = manifest["mutationCatalogs"][0]["kinds"].as_array().expect("mutationCatalogs[0].kinds array").iter().map(|value| value.as_str().expect("kind is a string")).collect();
         for kind in KINDS {
             assert!(catalog_kinds.contains(kind), "KINDS entry {kind:?} must also appear in the committed oracle manifest's catalog");
@@ -469,14 +469,14 @@ mod op_codec_tests {
 
 //#region 🧪️FixtureTests
 // 🧪️ Handcrafted mutation fixtures (contract D1, ticket 26/08/20/COMPOSE-TO-PUZZLE5D-MIGRATION),
-// one case per mutation leaf. Wired HERE and not in `📦️glue.rs`: that file is shared with the
+// one case per mutation leaf. Wired HERE and not in `🦀️.rs`: that file is shared with the
 // agents migrating the other stdio artifacts, so the production mounts there stay untouched while
 // this artifact owns its own test mount. `#[path = "."]` re-bases the children on this file's own
 // directory, which is what makes the leaf-relative path below resolve.
 #[cfg(test)]
 #[path = "."]
 mod fixture_tests {
-    #[path = "📄set-snapshot/🧪️tests/demotes-the-tower-heading-to-level-3/🦀️component.rs"]
+    #[path = "📄set-snapshot/🧪️tests/demotes-the-tower-heading-to-level-3/🦀️.rs"]
     mod tests_set_snapshot_demotes_the_tower_heading_to_level_3;
 }
 //#endregion 🧪️FixtureTests

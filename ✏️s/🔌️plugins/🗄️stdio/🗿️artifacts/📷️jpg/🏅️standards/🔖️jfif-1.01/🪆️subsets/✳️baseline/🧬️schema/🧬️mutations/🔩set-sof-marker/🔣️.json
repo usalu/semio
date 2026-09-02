@@ -5,7 +5,7 @@
   "displayName": "Set Sof Marker",
   "emoji": "🔩",
   "aggregateVariant": "SetSofMarker",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

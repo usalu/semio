@@ -23,12 +23,7 @@ fn main() {
         let base_bytes = format!("{}\n", serde_json::to_string_pretty(&base).expect("seed serialises"));
         let mutated_bytes = format!("{}\n", serde_json::to_string_pretty(&mutated).expect("mutation serialises"));
         match (project(base_bytes.as_bytes()), project(mutated_bytes.as_bytes())) {
-            (Ok(before), Ok(after)) => {
-                if before == after {
-                    failures.push(format!("{kind}: not observable in the carrier projection"));
-                    continue;
-                }
-            }
+            (Ok(before), Ok(after)) => assert_ne!(before, after, "{kind}: every fixture pair must be observable in the carrier projection"),
             (Err(error), _) | (_, Err(error)) => {
                 failures.push(format!("{kind}: project: {error}"));
                 continue;

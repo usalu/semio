@@ -5,7 +5,7 @@
   "displayName": "Remove Layout",
   "emoji": "🪃",
   "aggregateVariant": "RemoveLayout",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

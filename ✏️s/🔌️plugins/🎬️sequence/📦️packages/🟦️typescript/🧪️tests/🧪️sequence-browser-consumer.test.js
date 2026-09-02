@@ -1,4 +1,4 @@
-import { createSequenceBrowserFeatures } from "../📦️index.ts";
+import { createSequenceBrowserFeatures } from "../🟦️.ts";
 
 //#region 🌐️ProductionConsumerLaw
 

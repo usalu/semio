@@ -1,0 +1,136 @@
+# 🧬️ FormsMutation — closed semantic mutation vocabulary for the forms document. Mirrors Rust
+# `FormMutation` (sibling `🦀️.rs`), same declaration order as the sibling `🟦️.ts`
+# this file matches field-for-field.
+
+scalar DslValue
+
+type FormQuestionOption {
+  value: String!
+  label: String!
+}
+
+type FormVectorField {
+  key: String!
+  label: String
+  value: Float
+}
+
+type FormExprConst {
+  value: DslValue!
+}
+
+type FormExprVar {
+  name: String!
+}
+
+type FormExprEq {
+  left: FormExpr!
+  right: FormExpr!
+}
+
+type FormExprAnd {
+  items: [FormExpr!]!
+}
+
+type FormExprOr {
+  items: [FormExpr!]!
+}
+
+type FormExprTruthy {
+  expr: FormExpr!
+}
+
+union FormExpr = FormExprConst | FormExprVar | FormExprEq | FormExprAnd | FormExprOr | FormExprTruthy
+
+type FormQuestion {
+  id: String!
+  label: String!
+  kind: String!
+  description: String
+  required: Boolean
+  placeholder: String
+  default: DslValue
+  min: Float
+  max: Float
+  step: Float
+  unit: String
+  text: String
+  options: [FormQuestionOption!]
+  fields: [FormVectorField!]
+  schema: String
+  src: String
+  accept: String
+  fixtureSlug: String
+  params: DslValue
+  condition: FormExpr
+}
+
+type FormStep {
+  id: String!
+  title: String!
+  description: String
+  blocks: [FormQuestion!]!
+}
+
+type CreateStep {
+  step: FormStep!
+  index: Int
+}
+
+type DeleteStep {
+  id: String!
+}
+
+type ReorderStep {
+  id: String!
+  toIndex: Int!
+}
+
+type RenameStep {
+  id: String!
+  newTitle: String!
+}
+
+type ChangeStepDescription {
+  id: String!
+  newDescription: String
+}
+
+type CreateBlock {
+  stepId: String!
+  block: FormQuestion!
+  index: Int
+}
+
+type DeleteBlock {
+  stepId: String!
+  id: String!
+}
+
+type MoveBlockToStep {
+  stepId: String!
+  blockId: String!
+  toStepId: String!
+  index: Int!
+}
+
+type ReplaceBlock {
+  stepId: String!
+  block: FormQuestion!
+}
+
+type ChangeFormTitle {
+  newTitle: String
+}
+
+union FormsMutation =
+    CreateStep
+  | DeleteStep
+  | ReorderStep
+  | RenameStep
+  | ChangeStepDescription
+  | CreateBlock
+  | DeleteBlock
+  | MoveBlockToStep
+  | ReplaceBlock
+  | ChangeFormTitle

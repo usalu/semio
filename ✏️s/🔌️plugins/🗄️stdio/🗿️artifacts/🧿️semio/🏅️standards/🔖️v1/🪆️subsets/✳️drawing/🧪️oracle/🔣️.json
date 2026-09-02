@@ -59,7 +59,7 @@
         "win32-x64"
       ],
       "homepage": "https://docs.rs/quick-xml",
-      "rationale": "🎨️ THE UNIVERSAL CARRIER READER FOR THIS SUBSET, AND THE ONLY ONE THAT SEES PAINT OR HIERARCHY.\n\nWhat makes it qualify at all is that this subset's svg export is REAL, established by reading the serializer body rather than the directory tree — and it had to be, because an earlier mechanical pass flagged it a STUB. That flag was wrong. The only `print_dsl`/`parse_dsl` calls in `🚪️io/📤️export/🧵️serializers/🗿️artifacts/🎨️svg/🔖️1.1/✳️any/🦀️component.rs` are at lines 196–197, inside the `#[cfg(test)] mod tests` block that opens at line 164 — that is the file PROVING its own round trip, not faking an export. The real export is lines 138–159 and builds a genuine SVG document: one `<g id=\"layer-<id>\">` per layer, `<path>` from a one-for-one `PathSegment`→command lowering (lines 27–38), `<text>` with a child text node, `<g transform=\"matrix(...)\">` from a real quaternion-to-matrix composition (lines 43–47), and a real base64 data-URI convention for embedded images (lines 114–124). Real bytes land on disk through `SvgSnapshot::export_utf8` → `write_svg_xml` → `xml_document_to_text`.\n\nWHAT IT DISCHARGES: all seventeen kinds. SVG is the only exported carrier of this subset that encodes a group's transform, a group's existence, and a style's fill/stroke/stroke-width. DXF and DWG walk THROUGH a group without applying its matrix and without recording that the group was there (`…🖊️dxf/🔖️r12/✳️any/🦀️component.rs:152,157–170`), so `rotate`, `scale`, `group`, `ungroup`, `flatten` and `unflatten` produce byte-identical DXF before and after — six kinds that only this reader can witness. Neither DXF nor PDF nor DWG has a colour or stroke-width field at all, which is the other three (`replace-fill`, `change-stroke-color`, `change-stroke-width`).\n\nWHAT IT IS NOT ASKED TO DO, and this is what keeps the registration on the right side of the `reimplementation-registered-as-third-party` gate: it is never asked what a mutation SHOULD produce. quick-xml parses two carriers and reports what each contains; the pipeline compares. No expected drawing state is computed anywhere in this subset's oracle path.\n\nMEASURED, and this is what qualifies the registration rather than merely motivating it: two byte-different encodings of the same drawing — attribute order swapped, `10` against `10.00`, `5` against `5.000` — compare `equal: true` with maxPathPointDeviation 0.000e+00 and maxColorChannelDeviation 0.000e+00, while one path endpoint moved from 10 to 10.05 separates at maxPathPointDeviation 5.000e-02 and one stroke channel changed from 0 to 5 separates at maxColorChannelDeviation 5.000e+00. The gate therefore accepts producer freedom in formatting and rejects a real difference, which is the both-ways proof the playbook requires."
+      "rationale": "🎨️ THE UNIVERSAL CARRIER READER FOR THIS SUBSET, AND THE ONLY ONE THAT SEES PAINT OR HIERARCHY.\n\nWhat makes it qualify at all is that this subset's svg export is REAL, established by reading the serializer body rather than the directory tree — and it had to be, because an earlier mechanical pass flagged it a STUB. That flag was wrong. The only `print_dsl`/`parse_dsl` calls in `🚪️io/📤️export/🧵️serializers/🗿️artifacts/🎨️svg/🔖️1.1/✳️any/🦀️.rs` are at lines 196–197, inside the `#[cfg(test)] mod tests` block that opens at line 164 — that is the file PROVING its own round trip, not faking an export. The real export is lines 138–159 and builds a genuine SVG document: one `<g id=\"layer-<id>\">` per layer, `<path>` from a one-for-one `PathSegment`→command lowering (lines 27–38), `<text>` with a child text node, `<g transform=\"matrix(...)\">` from a real quaternion-to-matrix composition (lines 43–47), and a real base64 data-URI convention for embedded images (lines 114–124). Real bytes land on disk through `SvgSnapshot::export_utf8` → `write_svg_xml` → `xml_document_to_text`.\n\nWHAT IT DISCHARGES: all seventeen kinds. SVG is the only exported carrier of this subset that encodes a group's transform, a group's existence, and a style's fill/stroke/stroke-width. DXF and DWG walk THROUGH a group without applying its matrix and without recording that the group was there (`…🖊️dxf/🔖️r12/✳️any/🦀️.rs:152,157–170`), so `rotate`, `scale`, `group`, `ungroup`, `flatten` and `unflatten` produce byte-identical DXF before and after — six kinds that only this reader can witness. Neither DXF nor PDF nor DWG has a colour or stroke-width field at all, which is the other three (`replace-fill`, `change-stroke-color`, `change-stroke-width`).\n\nWHAT IT IS NOT ASKED TO DO, and this is what keeps the registration on the right side of the `reimplementation-registered-as-third-party` gate: it is never asked what a mutation SHOULD produce. quick-xml parses two carriers and reports what each contains; the pipeline compares. No expected drawing state is computed anywhere in this subset's oracle path.\n\nMEASURED, and this is what qualifies the registration rather than merely motivating it: two byte-different encodings of the same drawing — attribute order swapped, `10` against `10.00`, `5` against `5.000` — compare `equal: true` with maxPathPointDeviation 0.000e+00 and maxColorChannelDeviation 0.000e+00, while one path endpoint moved from 10 to 10.05 separates at maxPathPointDeviation 5.000e-02 and one stroke channel changed from 0 to 5 separates at maxColorChannelDeviation 5.000e+00. The gate therefore accepts producer freedom in formatting and rejects a real difference, which is the both-ways proof the playbook requires."
     },
     {
       "id": "ixmilia-dxf-drawing-reader",
@@ -94,7 +94,7 @@
         "win32-x64"
       ],
       "homepage": "https://docs.rs/dxf",
-      "rationale": "🖊️ A SECOND, INDEPENDENT CARRIER READER FOR EIGHT OF THE SEVENTEEN KINDS, AND THE SCOPE IS THE WHOLE POINT OF THE REGISTRATION.\n\nThe dxf export is REAL: `…🖊️dxf/🔖️r12/✳️any/🦀️component.rs` recognizes the exact closed two-arc circle shape for an EXACT `CIRCLE` round trip (lines 31–40), flattens every other path into a real 32-sample `POLYLINE` (lines 47–117), and writes a real layer table keyed on `layer.id` (line 186). Its own test round-trips through the ASCII writer/reader (lines 240–258).\n\nWHAT IT DISCHARGES: `create-layer`, `delete-layer` (layer table rows), `create-node`, `delete-node`, `move-node` (TEXT entities and their positions), `reorder-nodes` (the DXF entity SEQUENCE), `replace-path` (POLYLINE vertices) and `drag-nodes`. It is a genuinely independent producer of those facts: the IxMilia parser re-derives the entity list from bytes without consulting our snapshot type, so a bug in our mutation surfaces as an entity disagreement rather than as two halves of this repository agreeing.\n\nWHAT IT CANNOT DISCHARGE, STATED AS A LIMIT AND NOT PAPERED OVER. `dxf_entity_from_node` returns `None` for a `Group` (line 152) and `collect_entities` recurses THROUGH a group emitting its leaves in DFS order with no matrix applied (lines 157–170). So `rotate`, `scale`, `group`, `ungroup`, `flatten` and `unflatten` leave the DXF byte stream IDENTICAL — a green dxf comparison on any of them would prove nothing, and none of the six carries a requirement discharged by this entry. `style` is bound and never read (line 140) and `DxfLayer.color` is the literal `7`, so `replace-fill`, `change-stroke-color` and `change-stroke-width` are invisible here too. `drag-nodes` is registered as a PARTIAL witness and documented as one: this reader sees the text node move and cannot see the sibling group's translation change, which is the other half of the same mutation.\n\nMEASURED: two independently written encodings of the same drawing compare `equal: true` at maxVertexDeviation 0.000e+00; one polyline vertex moved from 10 to 10.05 separates at maxVertexDeviation 5.000e-02, and a TEXT value changed from \"Hello\" to \"Hallo\" separates at textValuesEqual false."
+      "rationale": "🖊️ A SECOND, INDEPENDENT CARRIER READER FOR EIGHT OF THE SEVENTEEN KINDS, AND THE SCOPE IS THE WHOLE POINT OF THE REGISTRATION.\n\nThe dxf export is REAL: `…🖊️dxf/🔖️r12/✳️any/🦀️.rs` recognizes the exact closed two-arc circle shape for an EXACT `CIRCLE` round trip (lines 31–40), flattens every other path into a real 32-sample `POLYLINE` (lines 47–117), and writes a real layer table keyed on `layer.id` (line 186). Its own test round-trips through the ASCII writer/reader (lines 240–258).\n\nWHAT IT DISCHARGES: `create-layer`, `delete-layer` (layer table rows), `create-node`, `delete-node`, `move-node` (TEXT entities and their positions), `reorder-nodes` (the DXF entity SEQUENCE), `replace-path` (POLYLINE vertices) and `drag-nodes`. It is a genuinely independent producer of those facts: the IxMilia parser re-derives the entity list from bytes without consulting our snapshot type, so a bug in our mutation surfaces as an entity disagreement rather than as two halves of this repository agreeing.\n\nWHAT IT CANNOT DISCHARGE, STATED AS A LIMIT AND NOT PAPERED OVER. `dxf_entity_from_node` returns `None` for a `Group` (line 152) and `collect_entities` recurses THROUGH a group emitting its leaves in DFS order with no matrix applied (lines 157–170). So `rotate`, `scale`, `group`, `ungroup`, `flatten` and `unflatten` leave the DXF byte stream IDENTICAL — a green dxf comparison on any of them would prove nothing, and none of the six carries a requirement discharged by this entry. `style` is bound and never read (line 140) and `DxfLayer.color` is the literal `7`, so `replace-fill`, `change-stroke-color` and `change-stroke-width` are invisible here too. `drag-nodes` is registered as a PARTIAL witness and documented as one: this reader sees the text node move and cannot see the sibling group's translation change, which is the other half of the same mutation.\n\nMEASURED: two independently written encodings of the same drawing compare `equal: true` at maxVertexDeviation 0.000e+00; one polyline vertex moved from 10 to 10.05 separates at maxVertexDeviation 5.000e-02, and a TEXT value changed from \"Hello\" to \"Hallo\" separates at textValuesEqual false."
     },
     {
       "id": "lopdf-drawing-pdf-reader",
@@ -128,7 +128,7 @@
         "win32-x64"
       ],
       "homepage": "https://docs.rs/lopdf",
-      "rationale": "📄️ A THIRD READER, DELIBERATELY NARROW: FOUR OF THE SEVENTEEN KINDS.\n\nThe pdf export is REAL and its own module doc states its boundary honestly: one `PdfPage` per `DrawLayer`, `media_box` from the canvas, page text = every `DrawNode::Text.value` in that layer's tree joined by newlines (`…📄️pdf/🔖️1.7/✳️any/🦀️component.rs:17–32,43–57`); `Path`, `Group` and `Image` are explicitly dropped (line 30). Its own test proves real bytes through `encode_pdf`/`decode_pdf` (lines 99–102).\n\nWHAT IT DISCHARGES: `create-layer` and `delete-layer`, because a layer IS a page here and `lopdf` counts pages independently; `create-node` and `delete-node`, when the node is a `Text`, because the page's extracted text gains or loses a line.\n\nWHAT IT CANNOT DISCHARGE. PDF carries no geometry, no position and no colour for this subset, so `move-node`, `drag-nodes`, `rotate`, `scale`, `replace-path`, `replace-fill`, `change-stroke-color` and `change-stroke-width` are invisible in it by construction. `reorder-nodes`, `group`, `ungroup`, `flatten` and `unflatten` do not change the DFS order of the text values in this subset's committed scenarios, so the page text is byte-identical before and after. The `pdf-compare` probe returns `unsupported` rather than an empty `ok` when handed a carrier that cannot encode what is being asked about, because an empty result read as ok would let a mutation pass against evidence that was never in the file."
+      "rationale": "📄️ A THIRD READER, DELIBERATELY NARROW: FOUR OF THE SEVENTEEN KINDS.\n\nThe pdf export is REAL and its own module doc states its boundary honestly: one `PdfPage` per `DrawLayer`, `media_box` from the canvas, page text = every `DrawNode::Text.value` in that layer's tree joined by newlines (`…📄️pdf/🔖️1.7/✳️any/🦀️.rs:17–32,43–57`); `Path`, `Group` and `Image` are explicitly dropped (line 30). Its own test proves real bytes through `encode_pdf`/`decode_pdf` (lines 99–102).\n\nWHAT IT DISCHARGES: `create-layer` and `delete-layer`, because a layer IS a page here and `lopdf` counts pages independently; `create-node` and `delete-node`, when the node is a `Text`, because the page's extracted text gains or loses a line.\n\nWHAT IT CANNOT DISCHARGE. PDF carries no geometry, no position and no colour for this subset, so `move-node`, `drag-nodes`, `rotate`, `scale`, `replace-path`, `replace-fill`, `change-stroke-color` and `change-stroke-width` are invisible in it by construction. `reorder-nodes`, `group`, `ungroup`, `flatten` and `unflatten` do not change the DFS order of the text values in this subset's committed scenarios, so the page text is byte-identical before and after. The `pdf-compare` probe returns `unsupported` rather than an empty `ok` when handed a carrier that cannot encode what is being asked about, because an empty result read as ok would let a mutation pass against evidence that was never in the file."
     }
   ],
   "mutationCatalogs": [
@@ -886,7 +886,7 @@
         {
           "id": "change-stroke-color",
           "capability": "semio-v1-drawing-mutate",
-          "payloadSchema": "🔣️payload.schema.json",
+          "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "rejected",
             "applied"
@@ -919,7 +919,7 @@
         {
           "id": "change-stroke-width",
           "capability": "semio-v1-drawing-mutate",
-          "payloadSchema": "🔣️payload.schema.json",
+          "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "rejected",
             "applied"
@@ -952,7 +952,7 @@
         {
           "id": "create-layer",
           "capability": "semio-v1-drawing-mutate",
-          "payloadSchema": "🔣️payload.schema.json",
+          "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "applied"
           ],
@@ -998,7 +998,7 @@
         {
           "id": "create-node",
           "capability": "semio-v1-drawing-mutate",
-          "payloadSchema": "🔣️payload.schema.json",
+          "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "applied"
           ],
@@ -1044,7 +1044,7 @@
         {
           "id": "delete-layer",
           "capability": "semio-v1-drawing-mutate",
-          "payloadSchema": "🔣️payload.schema.json",
+          "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "applied",
             "rejected"
@@ -1091,7 +1091,7 @@
         {
           "id": "delete-node",
           "capability": "semio-v1-drawing-mutate",
-          "payloadSchema": "🔣️payload.schema.json",
+          "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "rejected",
             "applied"
@@ -1138,7 +1138,7 @@
         {
           "id": "drag-nodes",
           "capability": "semio-v1-drawing-mutate",
-          "payloadSchema": "🔣️payload.schema.json",
+          "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "applied",
             "rejected"
@@ -1178,7 +1178,7 @@
         {
           "id": "flatten-node",
           "capability": "semio-v1-drawing-mutate",
-          "payloadSchema": "🔣️payload.schema.json",
+          "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "rejected",
             "applied"
@@ -1211,7 +1211,7 @@
         {
           "id": "group-nodes",
           "capability": "semio-v1-drawing-mutate",
-          "payloadSchema": "🔣️payload.schema.json",
+          "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "rejected",
             "applied"
@@ -1244,7 +1244,7 @@
         {
           "id": "move-node",
           "capability": "semio-v1-drawing-mutate",
-          "payloadSchema": "🔣️payload.schema.json",
+          "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "rejected",
             "applied"
@@ -1284,7 +1284,7 @@
         {
           "id": "reorder-nodes",
           "capability": "semio-v1-drawing-mutate",
-          "payloadSchema": "🔣️payload.schema.json",
+          "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "applied",
             "rejected"
@@ -1324,7 +1324,7 @@
         {
           "id": "replace-fill",
           "capability": "semio-v1-drawing-mutate",
-          "payloadSchema": "🔣️payload.schema.json",
+          "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "rejected",
             "applied"
@@ -1357,7 +1357,7 @@
         {
           "id": "replace-path",
           "capability": "semio-v1-drawing-mutate",
-          "payloadSchema": "🔣️payload.schema.json",
+          "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "applied",
             "rejected"
@@ -1397,7 +1397,7 @@
         {
           "id": "rotate-node",
           "capability": "semio-v1-drawing-mutate",
-          "payloadSchema": "🔣️payload.schema.json",
+          "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "rejected",
             "applied"
@@ -1430,7 +1430,7 @@
         {
           "id": "scale-node",
           "capability": "semio-v1-drawing-mutate",
-          "payloadSchema": "🔣️payload.schema.json",
+          "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "rejected",
             "applied"
@@ -1463,7 +1463,7 @@
         {
           "id": "unflatten-node",
           "capability": "semio-v1-drawing-mutate",
-          "payloadSchema": "🔣️payload.schema.json",
+          "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "rejected",
             "applied"
@@ -1496,7 +1496,7 @@
         {
           "id": "ungroup-node",
           "capability": "semio-v1-drawing-mutate",
-          "payloadSchema": "🔣️payload.schema.json",
+          "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "rejected",
             "applied"

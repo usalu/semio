@@ -2,7 +2,7 @@
   "name": "@semio-tech/trinity-jack-lsp-worker",
   "$schema": "../../../../../../../../node_modules/nx/schemas/project-schema.json",
   "namedInputs": {
-    "default": ["{projectRoot}/**/*", "{workspaceRoot}/✏️s/🔌️plugins/🔱️trinity/🔨️modules/🔌️jack/🧠️lsp/🟦️component.ts"]
+    "default": ["{projectRoot}/**/*", "{workspaceRoot}/✏️s/🔌️plugins/🔱️trinity/🔨️modules/🔌️jack/🧠️lsp/🟦️.ts"]
   },
   "targets": {
     "test": {

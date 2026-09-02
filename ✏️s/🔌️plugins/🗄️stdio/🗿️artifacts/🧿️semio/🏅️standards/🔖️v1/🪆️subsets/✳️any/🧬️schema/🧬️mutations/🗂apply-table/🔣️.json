@@ -5,7 +5,7 @@
   "displayName": "Apply Table",
   "emoji": "🗂",
   "aggregateVariant": "ApplyTable",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

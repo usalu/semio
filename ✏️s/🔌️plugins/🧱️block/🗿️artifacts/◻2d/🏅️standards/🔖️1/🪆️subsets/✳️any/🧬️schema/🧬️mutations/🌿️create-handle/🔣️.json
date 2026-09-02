@@ -5,7 +5,7 @@
   "displayName": "Create Handle",
   "emoji": "🌿️",
   "aggregateVariant": "CreateHandle",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": "create-handle",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

@@ -5,7 +5,7 @@
   "displayName": "Replace Asset Payload",
   "emoji": "🔁️",
   "aggregateVariant": "ReplaceAssetPayload",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": "replace-asset-payload",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

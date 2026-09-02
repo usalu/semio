@@ -5,7 +5,7 @@
   "displayName": "Insert Variable Action",
   "emoji": "🐴",
   "aggregateVariant": "InsertVariableAction",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

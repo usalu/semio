@@ -18,7 +18,7 @@ export default defineConfig({
   plugins: [
     ...semioHostHtmlVitePlugin(repoRoot, {
       title: "33. Projektetage",
-      entry: "./📦️index.ts",
+      entry: "./🟦️.ts",
       bodyClass: "h-screen w-screen overflow-hidden",
     }),
     semioEmojiIndexHtmlVitePlugin(bundleRoot),
@@ -32,13 +32,13 @@ export default defineConfig({
   },
   resolve: {
     alias: [
-      { find: "@semio-tech/ui-react", replacement: resolve(repoRoot, "./🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx") },
-      { find: "@semio-tech/animate-present-core", replacement: resolve(repoRoot, "./✏️s/🔌️plugins/🎞️animate/🎛️apps/🎬️present/⚡️implementations/🟦️typescript/📦️index.ts") },
-      { find: "@semio-tech/animate-js", replacement: resolve(repoRoot, "./✏️s/🔌️plugins/🎞️animate/📦️packages/🟦️typescript/📦️index.ts") },
+      { find: "@semio-tech/ui-react", replacement: resolve(repoRoot, "./🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/🟦️.tsx") },
+      { find: "@semio-tech/animate-present-core", replacement: resolve(repoRoot, "./✏️s/🔌️plugins/🎞️animate/🎛️apps/🎬️present/⚡️implementations/🟦️typescript/🟦️.ts") },
+      { find: "@semio-tech/animate-js", replacement: resolve(repoRoot, "./✏️s/🔌️plugins/🎞️animate/📦️packages/🟦️typescript/🟦️.ts") },
       { find: "@semio-tech/framework", replacement: resolve(repoRoot, "./🧰️framework/📦️packages/🟦️typescript/🟦️glue.ts") },
       {
         find: "@semio-tech/mit-bestand-praesentation-projektetage-spec",
-        replacement: resolve(dir, "📦️index.ts"),
+        replacement: resolve(dir, "🟦️.ts"),
       },
     ],
   },

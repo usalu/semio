@@ -18,7 +18,7 @@
 //! the feature file; they keep their `ruststep`-backed scenarios next door.
 //!
 //! @see component.feature — the differential claim and the four measurements that bound it.
-//! @see ../mutate-ifc-4/🦀️component.rs — the exhaustive eleven-kind case this one does not replace.
+//! @see ../mutate-ifc-4/🦀️.rs — the exhaustive eleven-kind case this one does not replace.
 
 use semio_repo_test_host::{Adapter, Context, Json, Outcome};
 

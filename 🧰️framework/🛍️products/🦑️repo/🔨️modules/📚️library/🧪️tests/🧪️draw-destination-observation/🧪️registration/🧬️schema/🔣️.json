@@ -29,7 +29,7 @@
       "const": "test-draw-destination-observation"
     },
     "source": {
-      "const": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧪️draw-destination-observation/🟦️.ts"
+      "const": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🟦️draw-destination-observation.ts"
     },
     "runner": {
       "const": "runTestBudgeted"

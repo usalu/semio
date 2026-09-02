@@ -2,7 +2,6 @@
 //! [`Stock`](crate::artifacts::process3d::Stock) workpiece's `label`.
 
 use crate::artifacts::process3d::diff::Process3dDiff;
-use crate::artifacts::process3d::mutations::change_stock_label::ChangeStockLabel;
 use crate::artifacts::process3d::mutations::Process3dMutation;
 use crate::artifacts::process3d::Process3dSnapshot;
 use semio_framework_value_derive::{FromValue, ToValue};

@@ -23,7 +23,7 @@
 //! in the repo uses (`GifMutation`, `FlowMutationDsl`, `SpaceMutation`) — see `f6-recon-report.md`
 //! §2. `#[derive(dsl::DslOps)]` is now kept ALONGSIDE `#[derive(dsl::Mutations)]`: every variant
 //! below is a single-field newtype wrapping its own mutation leaf, and `dsl_variants_codegen`'s
-//! "single-field tuple variant" branch (`✨️derive/🦀️component.rs`) delegates `DslVariants`
+//! "single-field tuple variant" branch (`✨️derive/🦀️.rs`) delegates `DslVariants`
 //! straight through to that leaf's own `#[derive(dsl::DslRecord)]`-provided `DslField` impl — the
 //! SAME `record_codegen` output the fields produced when they lived inline in the enum, so the
 //! committed `mutations::text::COMPONENT_GRAMMAR_SEMIO`/`mutations::binary::COMPONENT_PROTOCOL_SEMIO`
@@ -51,11 +51,11 @@ pub mod insert_vertex;
 pub mod remove_vertex;
 #[path = "📍set-vertex/🦀️.rs"]
 pub mod set_vertex;
-#[path = "🧷insert-tex-coord/🦀️.rs"]
+#[path = "🧷insert-texcoord/🦀️.rs"]
 pub mod insert_tex_coord;
-#[path = "🚮remove-tex-coord/🦀️.rs"]
+#[path = "🚮remove-texcoord/🦀️.rs"]
 pub mod remove_tex_coord;
-#[path = "🧭set-tex-coord/🦀️.rs"]
+#[path = "🧭set-texcoord/🦀️.rs"]
 pub mod set_tex_coord;
 #[path = "📐insert-normal/🦀️.rs"]
 pub mod insert_normal;
@@ -144,7 +144,7 @@ pub enum ObjMutation {
 }
 
 /// 🏷️ Kebab-case spelling of every `ObjMutation` variant, in declaration order — the vocabulary the
-/// `obj-3-0-any` mutation catalog (`../../🧪️oracle/🔣️.json`) declares and the exhaustive
+/// `obj-3-0-any` mutation catalog (`../../🔣️oracle.json`) declares and the exhaustive
 /// mutate/inverse test case measures itself against. `kinds_cover_every_variant` below is what keeps
 /// this list honest against the enum it names, since the framework never parses Rust.
 pub const KINDS: &[&str] = &[
@@ -386,7 +386,7 @@ impl OpBinary for ObjMutation {
 
 //#region 🔖️DemoCases
 /// 🧪️ P2-FG1: representative `ObjSnapshot`/`ObjMutation` fixtures — the single source of truth
-/// reused by `op_text_binary_roundtrip_law` below AND by `⚙️engine/🦀️component.rs`'s
+/// reused by `op_text_binary_roundtrip_law` below AND by `⚙️engine/🦀️.rs`'s
 /// `ops_grammar_conformance_law`/`protocol_walk_law` conformance tests (same convention P2-P1's
 /// json/zip pilots established: `mutations::demo_mutation_cases()`/`diff::demo_diff_cases()`).
 #[cfg(test)]
@@ -704,7 +704,7 @@ mod tests {
     /// 🏷️ `KINDS` must name exactly the enum's variants (kebab-case), one entry each — an
     /// exhaustive `match` so the compiler itself fails the moment a variant is added, renamed or
     /// removed without this list being updated alongside it. The manifest side of the same claim
-    /// (`../../🧪️oracle/🔣️.json`'s `obj-3-0-any` catalog `kinds`) is checked by the
+    /// (`../../🔣️oracle.json`'s `obj-3-0-any` catalog `kinds`) is checked by the
     /// mutate/inverse test case's own contract gate, which fails if the two lists ever diverge.
     #[semio_framework_async_macros::async_test]
     async fn kinds_cover_every_variant() {
@@ -828,9 +828,9 @@ mod tests {
 
 //#region 🧪️FixtureCases
 /// 🧪️ Handcrafted `📄set-snapshot` fixture cases, wired from this tree's own mutations root so
-/// `📦️glue.rs` stays untouched (`#[path]` on a non-inline module resolves against this file's own
+/// `🦀️.rs` stays untouched (`#[path]` on a non-inline module resolves against this file's own
 /// directory).
 #[cfg(test)]
-#[path = "📄set-snapshot/🧪️tests/lifts-the-third-vertex-and-gives-it-an-explicit-w/🦀️component.rs"]
+#[path = "📄set-snapshot/🧪️tests/lifts-the-third-vertex-and-gives-it-an-explicit-w/🦀️.rs"]
 mod set_snapshot_lifts_the_third_vertex_and_gives_it_an_explicit_w;
 //#endregion 🧪️FixtureCases

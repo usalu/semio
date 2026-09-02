@@ -1,0 +1,48 @@
+(* ebnf playbook.playbook.mutations *)
+(* Below: ISO-14977-style mirror of the normative 📖️.grammar.semio (same production
+   names, kebab-case -> "space case"). This facet's .semio defines no header/body/payload
+   envelope (`start line`); the two lines above are preserved verbatim from the prior
+   identity fix for traceability but are not referenced below. *)
+document = header, body ;
+header = 'schema', space, 'playbook.playbook.mutations', newline ;
+
+line = add step
+     | remove step
+     | move step
+     | add block
+     | remove block
+     | move block
+     | replace block
+     | update step
+     | change title ;
+add step = 'add-step', space, step block, [ space, 'index', '=', number ] ;
+remove step = 'remove-step', space, step id ;
+move step = 'move-step', space, step id, space, 'index', '=', number ;
+add block = 'add-block', space, step id, space, block block, [ space, 'index', '=', number ] ;
+remove block = 'remove-block', space, step id, space, block id ;
+move block = 'move-block', space, block id, space, from step id, space, to step id, space, 'index', '=', number ;
+replace block = 'replace-block', space, step id, space, block block ;
+update step = 'update-step', space, step id, space, 'title', '=', text, [ space, 'description', '=', text ] ;
+change title = 'change-title', [ space, 'new-title', '=', text ] ;
+step block = '{', newline, step fields, '}' ;
+block block = '{', newline, block fields, '}' ;
+step fields = octet, { octet } ;
+block fields = octet, { octet } ;
+step id = ident ;
+from step id = ident ;
+to step id = ident ;
+block id = ident ;
+number = octet, { octet } ;
+text = octet, { octet } ;
+
+(* Framework dialect-primitive terminals, given one concrete definition each for a
+   self-contained mirror (not defined in the .semio itself — ticket-reported deviation). *)
+ident = letter, { letter | digit | '_' } ;
+newline = [ '\r' ], '\n' ;
+octet = ? any single raw byte ? ;
+space = ' ' ;
+letter = 'a' | 'b' | 'c' | 'd' | 'e' | 'f' | 'g' | 'h' | 'i' | 'j' | 'k' | 'l' | 'm'
+       | 'n' | 'o' | 'p' | 'q' | 'r' | 's' | 't' | 'u' | 'v' | 'w' | 'x' | 'y' | 'z'
+       | 'A' | 'B' | 'C' | 'D' | 'E' | 'F' | 'G' | 'H' | 'I' | 'J' | 'K' | 'L' | 'M'
+       | 'N' | 'O' | 'P' | 'Q' | 'R' | 'S' | 'T' | 'U' | 'V' | 'W' | 'X' | 'Y' | 'Z' ;
+digit = '0' | '1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9' ;

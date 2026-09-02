@@ -5,7 +5,7 @@ use protocol::{Mutation, MutationDiff, MutationKind, MutationLeaf, OpBinary, OpT
 
 //#region 🧪️Fixture
 fn fixture() -> serde_json::Value {
-    serde_json::from_str(include_str!("../../../🧬️schema/🧪️tests/🔣️vectors.json")).expect("presence law fixture")
+    serde_json::from_str(include_str!("../../../🧬️schema/🧪️test/🔣️s.json")).expect("presence law fixture")
 }
 
 fn base() -> Gis2dPresence {

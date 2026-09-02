@@ -5,7 +5,7 @@
   "displayName": "Update Through Thickness Inputs",
   "emoji": "🌬️",
   "aggregateVariant": "UpdateThroughThicknessInputs",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

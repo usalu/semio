@@ -5,7 +5,7 @@
   "displayName": "Replace Workshop",
   "emoji": "🔁🎓",
   "aggregateVariant": "ReplaceWorkshop",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

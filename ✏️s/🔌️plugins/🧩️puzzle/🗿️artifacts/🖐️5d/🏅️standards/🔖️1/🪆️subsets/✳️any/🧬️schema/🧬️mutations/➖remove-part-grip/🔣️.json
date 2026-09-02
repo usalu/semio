@@ -5,7 +5,7 @@
   "displayName": "Remove Part Grip",
   "emoji": "➖",
   "aggregateVariant": "RemovePartGrip",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": "remove-part-grip",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

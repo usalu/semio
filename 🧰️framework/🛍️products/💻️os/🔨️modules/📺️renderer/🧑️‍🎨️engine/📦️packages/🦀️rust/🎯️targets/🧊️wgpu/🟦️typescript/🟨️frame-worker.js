@@ -28,7 +28,7 @@ var init__ui_axes = __esm(() => {
   SHELL_TERMINOLOGIES = ["native", "reuse"];
 });
 
-/* ../../../../../../../../../🔨️modules/🛂️manifest/🟦️component.ts */
+/* ../../../../../../../../../🔨️modules/🛂️manifest/🟦️.ts */
 function argControl(def) {
   const schema = def.schema;
   if (!schema)
@@ -239,7 +239,7 @@ var init__component = __esm(() => {
   }
 });
 
-/* ../../../../../../../../../🔨️modules/🎯️action-bus/🟦️component.ts */
+/* ../../../../../../../../../🔨️modules/🎯️action-bus/🟦️.ts */
 function deriveUtilityNodes(controllerId, utilities, activeUtilityId) {
   const toggle = (utility) => ({
     id: utility.id,
@@ -315,7 +315,7 @@ var init__component2 = __esm(() => {
   init__component();
 });
 
-/* ../../../../../../../../../🔨️modules/🧮️action-argument-resolution/🟦️component.ts */
+/* ../../../../../../../../../🔨️modules/🧮️action-argument-resolution/🟦️.ts */
 function effectiveActionArgs(defs, staged, seed) {
   if (defs.length === 0)
     return { ...seed, ...staged };
@@ -336,7 +336,7 @@ function missingRequiredArgs(defs, effective) {
   }).map((def) => def.id);
 }
 
-/* ../../../../../../../../../🔨️modules/🧬️schema/🟦️component.ts */
+/* ../../../../../../../../../🔨️modules/🧬️schema/🟦️.ts */
 class ArtifactSchemaRegistry {
   #byId = new Map;
   register(descriptor) {
@@ -395,7 +395,7 @@ var init__component3 = __esm(() => {
 ` + "directive @link(roles: [String!]) on FIELD_DEFINITION";
 });
 
-/* ../../../../../../../../../🔨️modules/🖥️platform/🟦️component.ts */
+/* ../../../../../../../../../🔨️modules/🖥️platform/🟦️.ts */
 function elementIdSegment(raw) {
   let segment = "";
   let capitalizeNext = false;
@@ -861,7 +861,7 @@ var init__component4 = __esm(() => {
   };
 });
 
-/* ../../../../../../../../../🔨️modules/🔺️mesh/🟦️component.ts */
+/* ../../../../../../../../../🔨️modules/🔺️mesh/🟦️.ts */
 function contextMenuIsBareSeparator(item) {
   return item.separator === true && item.label === undefined;
 }
@@ -2036,9 +2036,9 @@ var init__shard_client = __esm(() => {
       });
     });
     describe("ShardFrame parity with Rust component.rs", () => {
-      it("TS ShardFrame variant/field names match the live Rust enum in 🖥️host/🧵️shard/🦀️component.rs", async () => {
+      it("TS ShardFrame variant/field names match the live Rust enum in 🖥️host/🧵️shard/🦀️.rs", async () => {
         const { readFileSync } = await import("node:fs");
-        const rustUrl = new URL("../../../../🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🧵️shard/🦀️component.rs", import.meta.url);
+        const rustUrl = new URL("../../../../🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🧵️shard/🦀️.rs", import.meta.url);
         const source = readFileSync(rustUrl, "utf8");
         const enumMatch = source.match(/pub enum ShardFrame \{([\s\S]*?)\n\}\s*\n\s*impl ShardFrame/);
         expect(enumMatch).not.toBeNull();
@@ -2496,7 +2496,7 @@ var init__turn_scheduler = __esm(() => {
   }
 });
 
-/* ../../../../../../../../../🔨️modules/🎠️kernel/🟦️component.ts */
+/* ../../../../../../../../../🔨️modules/🎠️kernel/🟦️.ts */
 class OsTransient {
   boxes = new Map;
   maps = new Map;
@@ -4411,7 +4411,7 @@ var init__component6 = __esm(() => {
   }
 });
 
-/* ../../../../../../../../../🔨️modules/🔄️machine/🟦️component.ts */
+/* ../../../../../../../../../🔨️modules/🔄️machine/🟦️.ts */
 class BitSet {
   #bits;
   constructor(bits = []) {
@@ -5160,7 +5160,7 @@ var init__component7 = __esm(() => {
   ROOT = NodeId(0);
 });
 
-/* ../../../../../../../../../📦️packages/🟦️typescript/🟦️glue.ts */
+/* ../../../../../../../../../📦️packages/🟦️typescript/🟦️.ts */
 var exports__glue = {};
 __export(exports__glue, {
   windowMeasureChromeStatus: () => windowMeasureChromeStatus,
@@ -9541,10 +9541,10 @@ function admittedCount2(value) {
 /* 🟦️typescript/🐚️plugin-bridge.ts */
 init__glue();
 
-/* ../../../../../../../🟦️component.ts */
+/* ../../../../../../../🟦️.ts */
 init__glue();
 
-/* ../../../../../../../../../🔨️modules/📡️replication/🟦️component.ts */
+/* ../../../../../../../../../🔨️modules/📡️replication/🟦️.ts */
 //! 📡️ Replication contract — TypeScript twin of the Rust `protocol` crate.
 //!
 //! Byte-for-byte identical to `📦️packages/🦀️rust`'s encoders: the 20 frames in `🧫️fixtures/wire/`
@@ -10371,7 +10371,7 @@ if (import.meta.vitest) {
     });
   });
 }
-/* ../../../../../../📇️directory/🟦️component.ts */
+/* ../../../../../../📇️directory/🟦️.ts */
 function emptyDirectoryReadModel() {
   return { spaces: new Map, cursor: 0, users: new Map };
 }
@@ -10463,7 +10463,7 @@ function foldAll(model, events) {
   return events.reduce(fold, model);
 }
 
-/* ../../../../../../../🟦️component.ts */
+/* ../../../../../../../🟦️.ts */
 var replicationPackCodec = { encode: encodePackValue, decode: decodePackValue };
 var FRAMEWORK_SYNC_CONTROLLER_ID = "framework.sync";
 var BACKBONE_ENDPOINT_PATH = "/semio-backbone";
@@ -13356,7 +13356,7 @@ async function performInvocation(client, instanceId, invocation, viewState) {
   return { output, mutations: [], inverseGroup: { invocationId: "", mutations: [], inverseMutations: [] }, diagnostics, requestedEffects, events: [], uiScope, historyPatch };
 }
 async function fetchDescriptorManifest(pluginId, moduleUrl, signal) {
-  const descriptorUrl = moduleUrl.replace(/\/[^/]+$/, "/🔣️descriptor.json");
+  const descriptorUrl = moduleUrl.replace(/\/[^/]+$/, "/🔣️.json");
   try {
     const response = await fetch(descriptorUrl, signal ? { signal } : undefined);
     const contentType = response.headers?.get?.("content-type") ?? "";

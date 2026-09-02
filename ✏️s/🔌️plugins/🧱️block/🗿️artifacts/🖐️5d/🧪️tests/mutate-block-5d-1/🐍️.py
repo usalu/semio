@@ -13,9 +13,9 @@ the same carrier, and this file follows it.
 
 **What it was written from.**
 
-* ``🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🔣️component.json`` — the thirteen members of
+* ``🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🔣️.json`` — the thirteen members of
   `Block5dSnapshot`.
-* ``…/🧬️schema/🧬️mutations/🔣️component.json`` — the forty-one verbs and their argument lists.
+* ``…/🧬️schema/🧬️mutations/🔣️.json`` — the forty-one verbs and their argument lists.
 * rules 1, 2 and 7 of
   `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/📓️derivation-rules.md` — the
   part-kind scalars, the rule-1 `update-` exception for the two inseparable facets, the four id-keyed
@@ -26,7 +26,7 @@ the same carrier, and this file follows it.
   argument is `null` — its vector turns a `{shape, radius, color, iconKind}` circle into a
   `{shape, width, height, color}` rectangle, so the facet loses two members and gains two.
 
-**No Rust was read to write this.** `🦀️component.rs` beside this file registers the SUBJECT half
+**No Rust was read to write this.** `🦀️.rs` beside this file registers the SUBJECT half
 only. Unlike its `🧊️3d` sibling this subset holds its whole grip-kind vocabulary LOCALLY — there is
 no composed catalogue child — so all forty-one kinds are adjudicated and none is refused.
 """

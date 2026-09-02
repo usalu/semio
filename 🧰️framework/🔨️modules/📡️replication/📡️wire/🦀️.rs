@@ -1497,7 +1497,7 @@ mod presence_codec_tests {
 
 //#region 🔖️Interaction
 // 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: relocated here (from
-// `semio-framework`'s `🔨️modules/🕹️interaction/{🦀️component.rs,🧬️schema/🦀️component.rs}`) to
+// `semio-framework`'s `🔨️modules/🕹️interaction/{🦀️.rs,🧬️schema/🦀️component.rs}`) to
 // unblock naming `InteractionState`/`PresenceInteraction` from `store`/`sync` — `semio-framework`
 // depends on this crate, never the reverse, so nothing under `os_spr` could previously name a
 // framework-defined type. `InteractionDefinition`/`GranularityDefinition`/`InteractionRef` stay in
@@ -1920,7 +1920,7 @@ pub struct InteractionState {
 }
 
 /// 🌱️ Hand-written twin of the `SelectionMode` note above — this is the type
-/// `crate::app::InteractionConfigMutation` (`🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️component.rs`)
+/// `crate::app::InteractionConfigMutation` (`🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️.rs`)
 /// composes through `SetInteractionState`, so it must satisfy `Mutation`/`MutationDiff`'s
 /// `ToValue + FromValue` supertrait bound like every other mutation payload.
 impl crate::value::ToValue for InteractionState {
@@ -2155,7 +2155,7 @@ impl crate::value::FromValue for SelectionInput {
 }
 
 /// 🖱️ Computes the next `DomainSelection` for one domain — the generalization of Tree's
-/// `getTreeNextSelectionState` (`🖱️ui/🧱️elements/🪵️Tree/🟦️component.tsx:946-968`), preserving its
+/// `getTreeNextSelectionState` (`🖱️ui/🧱️elements/🪵️Tree/🟦️.tsx:946-968`), preserving its
 /// exact single/range/toggle semantics while adding batch targets, `Additive`/`Subtractive` as
 /// distinct merges, and transitive descendant-closure expansion.
 ///

@@ -3,7 +3,7 @@
 //!
 //! Every scenario copies the real, committed `🎓️bachelor-thesis` asset into the case work directory
 //! first; the committed asset is never written to. `oracle` drives the registered `lopdf` reference
-//! implementation (`../../🏅️standards/🔖️1.7/🪆️subsets/✳️base/🧪️oracle/🦀️component.rs`'s own
+//! implementation (`../../🏅️standards/🔖️1.7/🪆️subsets/✳️base/🦀️oracle.rs`'s own
 //! `oracle_apply_mutation`/`oracle_apply_mutation_inverse`); `subject` drives this repository's own
 //! `decode_pdf`/`encode_pdf`/`apply_pdf_mutation` over the full 18-kind `PdfMutation` vocabulary.
 //! Both results are read back by the SAME independent `project_pdf_1_7` (`lopdf`, augmented with
@@ -15,7 +15,7 @@
 //! ONE production defect behind ten of its thirteen failures: `encode_pdf` serialized the retained
 //! COS graph alone, so every mutation in the authored `pages`/`info` lane applied to the snapshot
 //! and then vanished on export. Fixed at the cause in
-//! `../../🏅️standards/🔖️1.7/🪆️subsets/✳️base/🚪️io/🦀️component.rs` (`reconcile_authored_lanes`),
+//! `../../🏅️standards/🔖️1.7/🪆️subsets/✳️base/🚪️io/🦀️.rs` (`reconcile_authored_lanes`),
 //! with no comparison profile touched, no `ignoreKeys` added and no fixture swapped.
 //!
 //! Three divergences are left RED on purpose: `inverse-remove-page`, `inverse-append-page-content`
@@ -53,7 +53,7 @@ fn mutable_input(ctx: &Context) -> Result<Vec<u8>, String> {
 
 //#region 🔖️Profile
 /// 📏️ `semantic-pdf-v1`'s own declared freedom list and tolerance (`../../../../🧪️oracle/
-/// 🔣️component.json`), mirrored here so an in-handler law check is exactly as strict as the profile
+/// 🔣️.json`), mirrored here so an in-handler law check is exactly as strict as the profile
 /// the case is measured by — never stricter, which would invent a failure the comparison itself
 /// would forgive, and never looser, which would let a real one through.
 const PDF_WRITER_FREEDOM: &[&str] = &["objectNumber", "xrefOffset", "producer", "creationDate", "modificationDate", "documentId", "fileSize", "byteLength", "generation", "streamFilter", "streamLength"];
@@ -224,7 +224,7 @@ mod subject {
     /// every one of these sixteen rows returned its projection uncompared, which is exactly how
     /// ten of them could report green while `encode_pdf` was dropping the whole authored page and
     /// metadata lane on the floor (@see the reconciler in
-    /// ../../🏅️standards/🔖️1.7/🪆️subsets/✳️base/🚪️io/🦀️component.rs). The one exemption is the
+    /// ../../🏅️standards/🔖️1.7/🪆️subsets/✳️base/🚪️io/🦀️.rs). The one exemption is the
     /// subset's own [`UNOBSERVABLE`], shared verbatim with the oracle half.
     pub fn mutate(ctx: &Context) -> Result<Outcome, String> {
         let input = mutable_input(ctx)?;

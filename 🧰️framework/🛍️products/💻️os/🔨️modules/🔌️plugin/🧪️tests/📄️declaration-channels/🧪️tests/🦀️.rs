@@ -3,7 +3,7 @@ use protocol::{Mutation, MutationDiff, MutationLeaf, OpBinary, OpText, SemanticM
 use serde::{de::DeserializeOwned, Serialize};
 use std::fmt::Debug;
 
-fn cases() -> serde_json::Value { serde_json::from_str(include_str!("../🔣️cases.json")).expect("declaration fixture cases") }
+fn cases() -> serde_json::Value { serde_json::from_str(include_str!("../🔣️.json")).expect("declaration fixture cases") }
 fn i32_value(value: &serde_json::Value) -> i32 { i32::try_from(value.as_i64().expect("integer")).expect("i32") }
 
 pub(super) fn assert_metadata<S, M, L>(descriptor: &str, operation: fn(i32) -> M)
@@ -27,7 +27,7 @@ where M: Mutation<S> + SemanticMutation<S>, L: MutationLeaf {
     let scope = protocol::MutationLeafSourceScope { workspace_token: provenance.workspace_token, mutation_root: provenance.mutation_root, taxonomy_path: provenance.taxonomy_path, source_filename: "🦀️.rs", descriptor_filename: "🔣️.json" };
     assert!(protocol::validate_mutation_leaf_source(&L::DESCRIPTOR, &provenance, &scope).is_ok());
     let mut wrong = provenance;
-    wrong.source_path = "macro-template/🦀️component.rs";
+    wrong.source_path = "macro-template/🦀️.rs";
     assert!(protocol::validate_mutation_leaf_source(&L::DESCRIPTOR, &wrong, &scope).is_err());
 }
 

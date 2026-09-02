@@ -1,7 +1,7 @@
 extern crate p9_a6_codec_abi_feature;
 
 #[cfg(not(any(hostile_inject_raw_bytes, hostile_inject_whole_slice)))]
-const SOURCE: &[u8] = include_bytes!("../🦀️component.rs");
+const SOURCE: &[u8] = include_bytes!("../🦀️.rs");
 #[cfg(hostile_inject_raw_bytes)]
 const SOURCE: &[u8] = b"enum Input { Bytes(Vec<u8>) }";
 #[cfg(hostile_inject_whole_slice)]

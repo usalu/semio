@@ -3,7 +3,7 @@
 //! this functionality only through `semio-framework-async` vocabulary (`OperationContext`,
 //! `ScopeHandle`, `ChannelPolicy`, `ThreadPlan`) or this crate's own domain types — never a tokio
 //! type — exactly as `wasmtime` is confined behind `GuestRuntime` in the plugin-host crate. Verify
-//! this holds with `grep -nE 'tokio' 🦀️component.rs | grep -v '^\s*[0-9]*://'` against every `pub
+//! this holds with `grep -nE 'tokio' 🦀️.rs | grep -v '^\s*[0-9]*://'` against every `pub
 //! fn`/`pub struct` signature (see the packet report's `## tokio-containment evidence`).
 //!
 //! 🚂️ [`TokioHostRuntime`] is the one `HostAsyncRuntime` implementation. Every other public type

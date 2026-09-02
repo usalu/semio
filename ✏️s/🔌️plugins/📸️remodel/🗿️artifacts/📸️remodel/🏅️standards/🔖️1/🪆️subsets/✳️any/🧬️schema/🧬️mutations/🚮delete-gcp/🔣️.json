@@ -5,7 +5,7 @@
   "displayName": "Delete Gcp",
   "emoji": "🚮",
   "aggregateVariant": "DeleteGcp",
-  "payloadSchema": "🔣️payload.schema.json",
+  "payloadSchema": "🔣️.schema.json",
   "textOpcode": "delete-gcp",
   "binaryTag": null,
   "invertibility": "explicit-mutation",
