@@ -577,7 +577,7 @@ impl GisMapSnapshotCloneAuthority {
     }
 
     fn clone_feature(source: &MapFeature) -> Result<MapFeature, &'static str> {
-        let encoded = serde_json::to_vec(source).map_err(|_| "gis-map-store.initializer-feature-encoding")?;
+        let encoded = dsl::os_pack::json::to_json_string(source).into_bytes();
         if encoded.len() > GIS_MAP_OWNED_FIELD_BYTES {
             return Err("gis-map-store.initializer-feature-too-large");
         }
@@ -624,7 +624,7 @@ impl GisMapSnapshotCloneAuthority {
                     target.try_reserve_exact(source.len()).map_err(|_| admission)?;
                 }
                 if let Some(feature) = source.get(self.index) {
-                    let encoded = serde_json::to_vec(feature).map_err(|_| "gis-map-store.initializer-feature-encoding")?;
+                    let encoded = dsl::os_pack::json::to_json_string(feature).into_bytes();
                     if encoded.len() > GIS_MAP_OWNED_FIELD_BYTES {
                         return Err("gis-map-store.initializer-feature-too-large");
                     }
@@ -1250,7 +1250,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn op_binary_round_trips_and_agrees_with_text() {
-        let operation = GisMapMutation::CreatePosition(create_position::mutation::CreatePosition { index: 0, item: sample_feature("p1") });
+        let operation = GisMapMutation::CreatePosition(create_position::CreatePosition { index: 0, item: sample_feature("p1") });
         store::os_store::test_support::assert_op_text_binary_equivalence(&operation);
         let bytes = encode_op(&operation).expect("encode");
         assert_eq!(decode_op(&bytes).expect("decode"), operation);
@@ -1258,22 +1258,22 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn gis_map_positions_op_lines_round_trip() {
-        store::os_store::test_support::assert_op_line_round_trip(&GisMapMutation::CreatePosition(create_position::mutation::CreatePosition { index: 0, item: sample_feature("p1") }));
-        store::os_store::test_support::assert_op_line_round_trip(&GisMapMutation::DeletePosition(delete_position::mutation::DeletePosition { id: "p1".into() }));
-        store::os_store::test_support::assert_op_line_round_trip(&GisMapMutation::ReorderPositions(reorder_positions::mutation::ReorderPositions { id: "p1".into(), to_index: 3 }));
-        store::os_store::test_support::assert_op_line_round_trip(&GisMapMutation::ReplacePositionData(replace_position_data::mutation::ReplacePositionData { id: "p1".into(), new_data: dsl_of(&json!({ "label": "Home" })) }));
+        store::os_store::test_support::assert_op_line_round_trip(&GisMapMutation::CreatePosition(create_position::CreatePosition { index: 0, item: sample_feature("p1") }));
+        store::os_store::test_support::assert_op_line_round_trip(&GisMapMutation::DeletePosition(delete_position::DeletePosition { id: "p1".into() }));
+        store::os_store::test_support::assert_op_line_round_trip(&GisMapMutation::ReorderPositions(reorder_positions::ReorderPositions { id: "p1".into(), to_index: 3 }));
+        store::os_store::test_support::assert_op_line_round_trip(&GisMapMutation::ReplacePositionData(replace_position_data::ReplacePositionData { id: "p1".into(), new_data: dsl_of(&json!({ "label": "Home" })) }));
     }
 
     #[semio_framework_async_macros::async_test]
     async fn gis_map_routes_op_lines_round_trip() {
-        store::os_store::test_support::assert_op_line_round_trip(&GisMapMutation::CreateRoute(create_route::mutation::CreateRoute { index: 0, item: sample_feature("p1") }));
-        store::os_store::test_support::assert_op_line_round_trip(&GisMapMutation::ReorderRoutes(reorder_routes::mutation::ReorderRoutes { id: "p1".into(), to_index: 1 }));
+        store::os_store::test_support::assert_op_line_round_trip(&GisMapMutation::CreateRoute(create_route::CreateRoute { index: 0, item: sample_feature("p1") }));
+        store::os_store::test_support::assert_op_line_round_trip(&GisMapMutation::ReorderRoutes(reorder_routes::ReorderRoutes { id: "p1".into(), to_index: 1 }));
     }
 
     #[semio_framework_async_macros::async_test]
     async fn gis_map_regions_op_lines_round_trip() {
-        store::os_store::test_support::assert_op_line_round_trip(&GisMapMutation::CreateRegion(create_region::mutation::CreateRegion { index: 0, item: sample_feature("p1") }));
-        store::os_store::test_support::assert_op_line_round_trip(&GisMapMutation::ReorderRegions(reorder_regions::mutation::ReorderRegions { id: "p1".into(), to_index: 2 }));
+        store::os_store::test_support::assert_op_line_round_trip(&GisMapMutation::CreateRegion(create_region::CreateRegion { index: 0, item: sample_feature("p1") }));
+        store::os_store::test_support::assert_op_line_round_trip(&GisMapMutation::ReorderRegions(reorder_regions::ReorderRegions { id: "p1".into(), to_index: 2 }));
     }
 
     #[semio_framework_async_macros::async_test]
@@ -1281,7 +1281,7 @@ mod tests {
         let initial = empty_gis_map_snapshot();
         let envelope = store::create_document_envelope(GIS_MAP_SCHEMA, "gis2d-demo", initial, None);
         let mut store = store::ArtifactStore::new(envelope).expect("valid artifact store fixture");
-        store.dispatch(store::ArtifactCommand::Apply { mutations: vec![GisMapMutation::CreatePosition(create_position::mutation::CreatePosition { index: 0, item: sample_feature("p1") })], description: None }).expect("apply");
+        store.dispatch(store::ArtifactCommand::Apply { mutations: vec![GisMapMutation::CreatePosition(create_position::CreatePosition { index: 0, item: sample_feature("p1") })], description: None }).expect("apply");
         store::os_store::test_support::assert_document_text_round_trip(&store);
         store::os_store::test_support::assert_document_pack_round_trip(&store);
     }
@@ -1384,7 +1384,7 @@ mod tests {
         snapshot.image = Some(store::ArtifactChild::new("image-child".into(), snapshot.drawing.target.clone()));
         drain(store::ArtifactOwnedValueRetirementFactory::retire_owned(&GisMapSnapshotRetirementFactory, snapshot));
 
-        let mutation = GisMapMutation::ReplacePositionData(replace_position_data::mutation::ReplacePositionData {
+        let mutation = GisMapMutation::ReplacePositionData(replace_position_data::ReplacePositionData {
             id: "position".repeat(32),
             new_data: dsl::DslValue::Object(vec![("nested".repeat(32), dsl::DslValue::Array(vec![dsl::DslValue::String("payload".repeat(128)), dsl::DslValue::String("tail".into())]))]),
         });
@@ -1395,18 +1395,18 @@ mod tests {
     fn gis_map_all_twelve_mutation_variants_preserve_catalog_order_and_zero_grant_ownership() {
         let feature = |id: &str| MapFeature { id: id.into(), data: dsl::DslValue::Null };
         let mutations = vec![
-            GisMapMutation::CreatePosition(create_position::mutation::CreatePosition { index: 0, item: feature("position") }),
-            GisMapMutation::DeletePosition(delete_position::mutation::DeletePosition { id: "position".into() }),
-            GisMapMutation::ReorderPositions(reorder_positions::mutation::ReorderPositions { id: "position".into(), to_index: 1 }),
-            GisMapMutation::ReplacePositionData(replace_position_data::mutation::ReplacePositionData { id: "position".into(), new_data: dsl::DslValue::Null }),
-            GisMapMutation::CreateRoute(create_route::mutation::CreateRoute { index: 0, item: feature("route") }),
-            GisMapMutation::DeleteRoute(delete_route::mutation::DeleteRoute { id: "route".into() }),
-            GisMapMutation::ReorderRoutes(reorder_routes::mutation::ReorderRoutes { id: "route".into(), to_index: 1 }),
-            GisMapMutation::ReplaceRouteData(replace_route_data::mutation::ReplaceRouteData { id: "route".into(), new_data: dsl::DslValue::Null }),
-            GisMapMutation::CreateRegion(create_region::mutation::CreateRegion { index: 0, item: feature("region") }),
-            GisMapMutation::DeleteRegion(delete_region::mutation::DeleteRegion { id: "region".into() }),
-            GisMapMutation::ReorderRegions(reorder_regions::mutation::ReorderRegions { id: "region".into(), to_index: 1 }),
-            GisMapMutation::ReplaceRegionData(replace_region_data::mutation::ReplaceRegionData { id: "region".into(), new_data: dsl::DslValue::Null }),
+            GisMapMutation::CreatePosition(create_position::CreatePosition { index: 0, item: feature("position") }),
+            GisMapMutation::DeletePosition(delete_position::DeletePosition { id: "position".into() }),
+            GisMapMutation::ReorderPositions(reorder_positions::ReorderPositions { id: "position".into(), to_index: 1 }),
+            GisMapMutation::ReplacePositionData(replace_position_data::ReplacePositionData { id: "position".into(), new_data: dsl::DslValue::Null }),
+            GisMapMutation::CreateRoute(create_route::CreateRoute { index: 0, item: feature("route") }),
+            GisMapMutation::DeleteRoute(delete_route::DeleteRoute { id: "route".into() }),
+            GisMapMutation::ReorderRoutes(reorder_routes::ReorderRoutes { id: "route".into(), to_index: 1 }),
+            GisMapMutation::ReplaceRouteData(replace_route_data::ReplaceRouteData { id: "route".into(), new_data: dsl::DslValue::Null }),
+            GisMapMutation::CreateRegion(create_region::CreateRegion { index: 0, item: feature("region") }),
+            GisMapMutation::DeleteRegion(delete_region::DeleteRegion { id: "region".into() }),
+            GisMapMutation::ReorderRegions(reorder_regions::ReorderRegions { id: "region".into(), to_index: 1 }),
+            GisMapMutation::ReplaceRegionData(replace_region_data::ReplaceRegionData { id: "region".into(), new_data: dsl::DslValue::Null }),
         ];
         for mutation in mutations {
             let mut retirement = store::ArtifactOwnedValueRetirementFactory::retire_owned(&GisMapMutationRetirementFactory, mutation);

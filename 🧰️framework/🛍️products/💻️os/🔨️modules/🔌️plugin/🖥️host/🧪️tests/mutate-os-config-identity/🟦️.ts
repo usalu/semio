@@ -81,7 +81,7 @@ function mutate(ctx: AdapterContext): AdapterOutcome {
   if (JSON.stringify(applied) !== JSON.stringify(after)) throw new Error(`mutate-${row.kind}: the TypeScript-applied record does not match the committed after-record\n     got: ${JSON.stringify(applied)}\nexpected: ${JSON.stringify(after)}`);
   if (JSON.stringify(applied) === JSON.stringify(before)) throw new Error(`mutate-${row.kind}: the mutation left the identity record unchanged — the scenario would report a pass for a mutation it never observed`);
   if (account(applied) !== row.account) throw new Error(`mutate-${row.kind}: the feature declares the record holds ${JSON.stringify(row.account)} afterwards, but it holds ${JSON.stringify(account(applied))}`);
-  if (row.account !== "none" && applied?.sessionToken === before?.sessionToken) throw new Error(`mutate-${row.kind}: a replaced session must carry its own token, but the prior session's token survived`);
+  if (row.account !== "none" && applied?.userId === before?.userId) throw new Error(`mutate-${row.kind}: a replaced identity must carry its own user id, but the prior identity survived`);
   if (outcome.status !== "applied") throw new Error(`mutate-${row.kind}: both committed identity vectors are clean applied vectors, but this one declares ${JSON.stringify(outcome.status)}`);
   return projectionOf(applied);
 }
@@ -96,7 +96,7 @@ function inverse(ctx: AdapterContext): AdapterOutcome {
   for (const step of inverseIdentityConfigMutation(mutation, before)) current = applyIdentityConfigMutation(current, step);
   if (JSON.stringify(current) !== JSON.stringify(before)) throw new Error(`inverse law violated: applying ${row.kind} and then its own inverse did not restore the original\n     got: ${JSON.stringify(current)}\nexpected: ${JSON.stringify(before)}`);
   if (account(current) !== row.wasAccount) throw new Error(`inverse-${row.kind}: the restored record must hold ${JSON.stringify(row.wasAccount)} once more, but it holds ${JSON.stringify(account(current))}`);
-  if (current?.sessionToken !== before?.sessionToken) throw new Error(`inverse-${row.kind}: the undo restored the account but fabricated a session token`);
+  if (current?.userId !== before?.userId) throw new Error(`inverse-${row.kind}: the undo restored the account but fabricated a user id`);
   return projectionOf(current);
 }
 
@@ -116,7 +116,7 @@ function signedOutGuard(_ctx: AdapterContext): AdapterOutcome {
  * TypeScript decode/re-encode round trip. Mirrors `../🦀️.rs::subject::round_trip`. */
 function identityRoundTrip(_ctx: AdapterContext): AdapterOutcome {
   const { before } = fixtures("sign-in");
-  if (account(before) !== "ada" || before?.sessionToken !== "session-ada-0001") throw new Error(`identity-round-trip: the committed record holds Ada's session, but the decoded value holds ${JSON.stringify(before)}`);
+  if (account(before) !== "ada" || before?.userId !== "user-ada") throw new Error(`identity-round-trip: the committed record holds Ada's identity, but the decoded value holds ${JSON.stringify(before)}`);
   const reencoded = JSON.parse(JSON.stringify(before)) as Identity;
   if (JSON.stringify(reencoded) !== JSON.stringify(before)) throw new Error("identity-round-trip: decoding the re-encoded record did not reproduce the typed value");
   return projectionOf(reencoded);

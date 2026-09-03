@@ -2,7 +2,7 @@
 //!
 //! Face trimming uses robust winding in surface `(u, v)`; solids use BVH-culled rays with
 //! interval-certified roots and a retry table of irrational directions (consensus consensus).
-//! Returns [`semio_framework_3d::engine::PointClassification`] for solid queries.
+//! Returns [`PointClassification`] for solid queries.
 //!
 //! Moved from `🧰️framework/🔨️modules/🧊️3d/📐️brep/🏷️classify` in ticket
 //! 26/08/12/DISSOLVE-KERNELS-AND-MODULES-INTO-EVENT-SOURCED-ARTIFACTS wave PEEL. `🔮️oracle`'s
@@ -14,28 +14,46 @@ use crate::artifacts::semio::standards::v1::subsets::brep::schema::inferences::b
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::inferences::mass_properties::closest_point_on_solid;
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::arena::{FaceId, LoopId, SolidId};
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::curve::Curve3;
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::error::KernelError;
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::surface::Surface;
+use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::error::{IntersectError, KernelError};
+use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::surface::{surface_ops, Surface};
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::tolerance::Iv;
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::topology::Body;
+use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::topology::{Body, Coedge};
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::vector::matrix::Frame3;
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::vector::predicates::{orient2d, Orient};
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::vector::{Pnt2, Pnt3, Vec3};
-use semio_framework_3d::engine::PointClassification;
+use crate::artifacts::semio::standards::v1::subsets::brep::schema::engine::PointClassification;
 
 // #region 🔖️Api
+
+/// 🏷️ Three-valued face-trim classification — `OnBoundary` is a first-class outcome (not merged
+/// into `Outside`) so ray-cast callers can detect a vertex/edge-exact hit and retry with another
+/// direction instead of silently under- or double-counting the crossing.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum UvStatus {
+    Inside,
+    Outside,
+    OnBoundary,
+}
 
 /// 🏷️ `true` when `uv` lies strictly inside the closed `loop_id` boundary on `face` (winding ≠ 0).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn point_in_loop(body: &Body, face: FaceId, loop_id: LoopId, uv: Pnt2, tol: f64) -> Result<bool, KernelError> {
     let surface = face_surface(body, face)?;
     let edge_samples = if matches!(surface, Surface::Plane { .. }) { 0 } else { 16 };
-    point_in_loop_sampled(body, face, loop_id, uv, tol, edge_samples)
+    Ok(point_in_loop_status(body, face, loop_id, uv, tol, edge_samples)? == UvStatus::Inside)
 }
 
 /// 🏷️ `true` when `uv` lies inside the face trim (`outer` minus `inner` loops).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn point_in_face_uv(body: &Body, face: FaceId, uv: Pnt2, tol: f64) -> Result<bool, KernelError> {
+    Ok(point_in_face_uv_status(body, face, uv, tol)? == UvStatus::Inside)
+}
+
+/// 🏷️ Trim status of `uv` against `face`'s outer-minus-inner loops — `OnBoundary` propagates from
+/// either the outer ring or any hole ring, since a point on a hole's rim is exactly as ambiguous
+/// as one on the outer rim.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn point_in_face_uv_status(body: &Body, face: FaceId, uv: Pnt2, tol: f64) -> Result<UvStatus, KernelError> {
     let face_ent = body.faces.get(face).ok_or_else(|| KernelError::MissingEntity("face".into()))?;
     let surface = face_surface(body, face)?;
     let samples = match surface {
@@ -43,33 +61,39 @@ pub fn point_in_face_uv(body: &Body, face: FaceId, uv: Pnt2, tol: f64) -> Result
         _ => 16,
     };
     let Some(outer) = face_ent.outer else {
-        return Ok(false);
+        return Ok(UvStatus::Outside);
     };
-    if !point_in_loop_sampled(body, face, outer, uv, tol, samples)? {
-        return Ok(false);
+    match point_in_loop_status(body, face, outer, uv, tol, samples)? {
+        UvStatus::Outside => return Ok(UvStatus::Outside),
+        UvStatus::OnBoundary => return Ok(UvStatus::OnBoundary),
+        UvStatus::Inside => {}
     }
     for &inner in &face_ent.inners {
-        if point_in_loop_sampled(body, face, inner, uv, tol, samples)? {
-            return Ok(false);
+        match point_in_loop_status(body, face, inner, uv, tol, samples)? {
+            UvStatus::Inside => return Ok(UvStatus::Outside),
+            UvStatus::OnBoundary => return Ok(UvStatus::OnBoundary),
+            UvStatus::Outside => {}
         }
     }
-    Ok(true)
+    Ok(UvStatus::Inside)
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn point_in_loop_sampled(body: &Body, face: FaceId, loop_id: LoopId, uv: Pnt2, tol: f64, edge_samples: usize) -> Result<bool, KernelError> {
+fn point_in_loop_status(body: &Body, face: FaceId, loop_id: LoopId, uv: Pnt2, tol: f64, edge_samples: usize) -> Result<UvStatus, KernelError> {
     let surface = face_surface(body, face)?;
     let poly = loop_uv_polygon_sampled(body, loop_id, surface, edge_samples)?;
     if poly.len() < 3 {
-        return Ok(false);
+        return Ok(UvStatus::Outside);
     }
     if point_on_uv_poly_edges(uv, &poly, tol) {
-        return Ok(false);
+        return Ok(UvStatus::OnBoundary);
     }
-    Ok(uv_winding_nonzero(uv, &poly))
+    Ok(if uv_winding_nonzero(uv, &poly) { UvStatus::Inside } else { UvStatus::Outside })
 }
 
-/// 🏷️ Classifies `point` against `solid` via multi-ray parity with certified intersections.
+/// 🏷️ Classifies `point` against `solid` via multi-ray parity with certified intersections, each
+/// ray restricted to its BVH-culled candidate faces (audit §6.10: the earlier version accepted a
+/// `FaceBvh` parameter it never dereferenced).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn point_in_solid(body: &Body, solid: SolidId, point: Pnt3, tol: f64) -> Result<PointClassification, KernelError> {
     if body.solids.get(solid).is_none() {
@@ -83,7 +107,7 @@ pub fn point_in_solid(body: &Body, solid: SolidId, point: Pnt3, tol: f64) -> Res
         return Ok(PointClassification::OnBoundary);
     }
     let bvh = build_face_bvh(body, solid)?;
-    classify_by_ray_consensus(body, solid, &bvh, point, tol)
+    classify_by_ray_consensus(body, &bvh, point, tol)
 }
 
 // #endregion 🔖️Api
@@ -161,40 +185,39 @@ fn loop_uv_polygon(body: &Body, loop_id: LoopId, surface: &Surface) -> Result<Ve
     loop_uv_polygon_sampled(body, loop_id, surface, 8)
 }
 
+/// 🏷️ Samples one coedge's boundary into surface `(u, v)` at fractional position `s ∈ [0, 1]`
+/// along its own traversal direction — the stored p-curve when the coedge has one (already
+/// oriented per-coedge, per `Coedge`'s own docstring), reprojecting the shared 3D edge curve
+/// (honoring `forward`, since the underlying curve is always parametrized `v0 → v1` regardless of
+/// this coedge's own direction) only when no p-curve has been produced yet.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn coedge_uv_sample(body: &Body, co: &Coedge, surface: &Surface, s: f64) -> Result<Pnt2, KernelError> {
+    if let Some(pcurve_id) = co.pcurve {
+        let pcurve = body.curves2.get(pcurve_id).ok_or_else(|| KernelError::MissingEntity("pcurve".into()))?;
+        let (p0, p1) = co.prange;
+        return Ok(pcurve.eval(p0 + (p1 - p0) * s));
+    }
+    let edge = body.edges.get(co.edge).ok_or_else(|| KernelError::MissingEntity("edge".into()))?;
+    let curve = body.curves3.get(edge.curve).ok_or_else(|| KernelError::MissingEntity("curve".into()))?;
+    let (t0, t1) = edge.range;
+    let t = if co.forward { t0 + (t1 - t0) * s } else { t1 - (t1 - t0) * s };
+    Ok(surface_uv(surface, curve.eval(t)))
+}
+
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn loop_uv_polygon_sampled(body: &Body, loop_id: LoopId, surface: &Surface, edge_samples: usize) -> Result<Vec<Pnt2>, KernelError> {
     let mut poly: Vec<Pnt2> = Vec::new();
     let coedges = body.loop_coedges(loop_id);
-    if edge_samples == 0 {
-        let mut prev_u: Option<f64> = None;
-        for coedge in coedges {
-            let (v0, _) = body.coedge_endpoints(coedge).ok_or_else(|| KernelError::InvalidInput("open coedge".into()))?;
-            let v = body.vertices.get(v0).ok_or_else(|| KernelError::MissingEntity("vertex".into()))?;
-            let mut uv = surface_uv(surface, v.position);
-            if surface.is_u_periodic() {
-                if let Some(pu) = prev_u {
-                    uv.x = unwrap_angle(pu, uv.x);
-                }
-                prev_u = Some(uv.x);
-            }
-            poly.push(uv);
-        }
-        return Ok(poly);
-    }
+    let n = if edge_samples == 0 { 1 } else { edge_samples.max(2) };
     let mut prev_u: Option<f64> = None;
-    for (ci, coedge) in coedges.iter().enumerate() {
-        let co = body.coedges.get(*coedge).ok_or_else(|| KernelError::MissingEntity("coedge".into()))?;
-        let edge = body.edges.get(co.edge).ok_or_else(|| KernelError::MissingEntity("edge".into()))?;
-        let curve = body.curves3.get(edge.curve).ok_or_else(|| KernelError::MissingEntity("curve".into()))?;
-        let (t0, t1) = edge.range;
-        let n = edge_samples.max(2);
+    for (ci, coedge_id) in coedges.iter().enumerate() {
+        let co = body.coedges.get(*coedge_id).ok_or_else(|| KernelError::MissingEntity("coedge".into()))?;
         for i in 0..n {
-            if i == n - 1 && ci + 1 != coedges.len() {
+            if edge_samples != 0 && i == n - 1 && ci + 1 != coedges.len() {
                 continue;
             }
-            let t = t0 + (t1 - t0) * (i as f64) / ((n - 1) as f64);
-            let p = curve.eval(t);
-            let mut uv = surface_uv(surface, p);
+            let s = if n <= 1 { 0.0 } else { i as f64 / (n - 1) as f64 };
+            let mut uv = coedge_uv_sample(body, co, surface, s)?;
             if surface.is_u_periodic() {
                 if let Some(pu) = prev_u {
                     uv.x = unwrap_angle(pu, uv.x);
@@ -250,8 +273,9 @@ fn surface_uv(surface: &Surface, p: Pnt3) -> Pnt2 {
             Pnt2::new(u, v)
         }
         Surface::Nurbs { .. } => {
-            let dom = surface.domain();
-            Pnt2::new(dom.0 .0, dom.1 .0)
+            let domain = surface.domain();
+            let closest = surface_ops::closest_uv(surface, domain, p, 1e-9);
+            Pnt2::new(closest.u, closest.v)
         }
     }
 }
@@ -266,115 +290,176 @@ fn face_surface<'a>(body: &'a Body, face: FaceId) -> Result<&'a Surface, KernelE
 
 // #region 🔖️RayCast
 
+/// 🏷️ One retry direction's crossing count against `solid`, or `Grazing` when the ray touches the
+/// solid degenerately (tangent to a face, or passing exactly through a shared edge/vertex within
+/// `tol`) — a degenerate ray tells the caller nothing about parity and must be discarded rather
+/// than voted, so the caller re-casts with the next irrational direction instead.
+enum RayCrossingOutcome {
+    Count(u32),
+    Grazing,
+}
+
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn classify_by_ray_consensus(body: &Body, solid: SolidId, _bvh: &FaceBvh, point: Pnt3, tol: f64) -> Result<PointClassification, KernelError> {
+fn classify_by_ray_consensus(body: &Body, bvh: &FaceBvh, point: Pnt3, tol: f64) -> Result<PointClassification, KernelError> {
     let mut inside_votes = 0u32;
     let mut outside_votes = 0u32;
     for i in 0..RAY_RETRY_DIRS.len() {
         let dir = retry_dir(i);
-        let crossings = count_ray_crossings(body, solid, point, dir, tol)?;
-        if crossings % 2 == 1 {
-            inside_votes += 1;
-        } else {
-            outside_votes += 1;
-        }
-        if inside_votes >= 2 {
-            return Ok(PointClassification::Inside);
-        }
-        if outside_votes >= 2 {
-            return Ok(PointClassification::Outside);
+        match count_ray_crossings(body, bvh, point, dir, tol)? {
+            RayCrossingOutcome::Grazing => continue,
+            RayCrossingOutcome::Count(crossings) => {
+                if crossings % 2 == 1 {
+                    inside_votes += 1;
+                } else {
+                    outside_votes += 1;
+                }
+                if inside_votes >= 2 {
+                    return Ok(PointClassification::Inside);
+                }
+                if outside_votes >= 2 {
+                    return Ok(PointClassification::Outside);
+                }
+            }
         }
     }
     if inside_votes > outside_votes {
         Ok(PointClassification::Inside)
-    } else {
+    } else if outside_votes > inside_votes {
         Ok(PointClassification::Outside)
+    } else {
+        Err(KernelError::Operation("point classification: every retry direction was grazing or degenerate".into()))
     }
 }
 
+/// 🏷️ Counts DISTINCT ray/face crossings across every BVH-culled candidate face (not one hit per
+/// face, and not one hit per solid — a single non-planar face's trim can be crossed by the same
+/// ray more than once, e.g. a torus's far and near lobes). Near-duplicate roots within `10 * tol`
+/// are merged into one crossing (the same physical event seen from two adjacent faces sharing a
+/// boundary), and any grazing/tangent/on-boundary hit aborts the whole ray as degenerate.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn count_ray_crossings(body: &Body, solid: SolidId, origin: Pnt3, dir: Vec3, tol: f64) -> Result<u32, KernelError> {
-    let d = dir.normalized().unwrap_or(Vec3::X);
-    let ray = Curve3::Line { origin, dir: d };
-    let mut hits = 0u32;
-    for face in body.solid_faces(solid) {
-        let added = face_ray_hits(body, face, &ray, origin, d, tol)?;
-        let Some(t) = added.into_iter().filter(|t| *t > RAY_T_MIN).min_by(|a, b| a.partial_cmp(b).unwrap()) else {
-            continue;
+fn count_ray_crossings(body: &Body, bvh: &FaceBvh, origin: Pnt3, dir: Vec3, tol: f64) -> Result<RayCrossingOutcome, KernelError> {
+    let ray = Curve3::Line { origin, dir };
+    let candidates = bvh.query_ray(origin.to_array(), dir.to_array());
+    let mut all_hits: Vec<f64> = Vec::new();
+    for face in candidates {
+        match face_ray_hits(body, face, &ray, origin, dir, tol)? {
+            None => return Ok(RayCrossingOutcome::Grazing),
+            Some(hits) => {
+                for t in hits {
+                    if t > RAY_T_MIN {
+                        all_hits.push(t);
+                    }
+                }
+            }
+        }
+    }
+    all_hits.sort_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
+    let merge_tol = tol * 10.0;
+    let mut crossings = 0u32;
+    let mut last: Option<f64> = None;
+    for t in all_hits {
+        let is_new = match last {
+            Some(l) => (t - l).abs() > merge_tol,
+            None => true,
         };
-        let _ = t;
-        hits += 1;
+        if is_new {
+            crossings += 1;
+            last = Some(t);
+        }
     }
-    Ok(hits)
+    Ok(RayCrossingOutcome::Count(crossings))
 }
 
+/// 🏷️ One face's ray-crossing candidates, or `None` when the ray is degenerate against this face
+/// (parallel to a plane, or `IntersectError::Tangent` against a curved surface — a true tangency
+/// contributes zero crossings by construction, but is treated as ray-level "grazing" instead so
+/// the caller distrusts the WHOLE ray rather than just this one face). Real solver failures
+/// (`Unresolved`/`Degenerate`) propagate as errors instead of silently defaulting to no hits
+/// (audit §6.10: "non-planar intersection can default to empty on error").
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn face_ray_hits(body: &Body, face: FaceId, ray: &Curve3, origin: Pnt3, dir: Vec3, tol: f64) -> Result<Vec<f64>, KernelError> {
+fn face_ray_hits(body: &Body, face: FaceId, ray: &Curve3, origin: Pnt3, dir: Vec3, tol: f64) -> Result<Option<Vec<f64>>, KernelError> {
     let surface = face_surface(body, face)?;
     let flipped = body.faces.get(face).map(|f| f.flipped).unwrap_or(false);
     match surface {
         Surface::Plane { frame } => plane_face_hits(body, face, frame, flipped, origin, dir, tol),
-        _ => general_face_hits(body, face, surface, ray, tol),
+        _ => general_face_hits(body, face, surface, ray, dir, tol),
     }
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn plane_face_hits(body: &Body, face: FaceId, frame: &Frame3, flipped: bool, origin: Pnt3, dir: Vec3, tol: f64) -> Result<Vec<f64>, KernelError> {
+fn plane_face_hits(body: &Body, face: FaceId, frame: &Frame3, flipped: bool, origin: Pnt3, dir: Vec3, tol: f64) -> Result<Option<Vec<f64>>, KernelError> {
     let mut normal = frame.z;
     if flipped {
         normal = -normal;
     }
     let denom_iv = Iv::exact(dir.dot(normal));
     if denom_iv.contains_zero() {
-        return Ok(vec![]);
+        return Ok(None);
     }
     let num = frame.origin - origin;
     let t = num.dot(normal) / dir.dot(normal);
     let t_iv = Iv::exact(t).widen(tol);
     if t_iv.lo <= RAY_T_MIN {
-        return Ok(vec![]);
+        return Ok(Some(vec![]));
     }
     let hit = origin + dir * t;
-    if point_in_face_trim(body, face, hit, tol)? {
-        Ok(vec![t])
-    } else {
-        Ok(vec![])
+    match point_in_face_trim_status(body, face, hit, tol)? {
+        UvStatus::Inside => Ok(Some(vec![t])),
+        UvStatus::Outside => Ok(Some(vec![])),
+        UvStatus::OnBoundary => Ok(None),
     }
 }
 
+/// 🏷️ Grazing dot-product threshold: `|normal · direction|` below this is treated as tangent even
+/// when the certified intersector itself did not raise `IntersectError::Tangent`.
+const GRAZE_DOT_TOL: f64 = 1e-6;
+
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn general_face_hits(body: &Body, face: FaceId, surface: &Surface, ray: &Curve3, tol: f64) -> Result<Vec<f64>, KernelError> {
-    let hits = intersect_curve_surface(ray, surface, tol).unwrap_or_default();
+fn general_face_hits(body: &Body, face: FaceId, surface: &Surface, ray: &Curve3, dir: Vec3, tol: f64) -> Result<Option<Vec<f64>>, KernelError> {
+    let hits = match intersect_curve_surface(ray, surface, tol) {
+        Ok(h) => h,
+        Err(IntersectError::Tangent) => return Ok(None),
+        Err(e) => return Err(KernelError::from(e)),
+    };
     let mut out = Vec::new();
     for h in hits {
         if h.t <= RAY_T_MIN {
             continue;
         }
-        if point_in_face_uv(body, face, Pnt2::new(h.u, h.v), tol)? {
-            out.push(h.t);
+        if let Some(n) = surface.normal(h.u, h.v) {
+            if let Some(nn) = n.normalized() {
+                if nn.dot(dir).abs() < GRAZE_DOT_TOL {
+                    return Ok(None);
+                }
+            }
+        }
+        match point_in_face_trim_status(body, face, h.point, tol)? {
+            UvStatus::Inside => out.push(h.t),
+            UvStatus::Outside => {}
+            UvStatus::OnBoundary => return Ok(None),
         }
     }
-    Ok(out)
+    Ok(Some(out))
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn point_in_face_trim(body: &Body, face: FaceId, hit: Pnt3, tol: f64) -> Result<bool, KernelError> {
+fn point_in_face_trim_status(body: &Body, face: FaceId, hit: Pnt3, tol: f64) -> Result<UvStatus, KernelError> {
     let surface = face_surface(body, face)?;
     match surface {
         Surface::Sphere { .. } => {
             let verts = face_boundary_points(body, face)?;
             if verts.len() < 3 {
-                return Ok(true);
+                return Ok(UvStatus::Inside);
             }
             let mut normal = polygon_normal(&verts);
             if body.faces.get(face).map(|f| f.flipped).unwrap_or(false) {
                 normal = -normal;
             }
-            Ok(point_in_polygon_3d(hit, &verts, normal, tol))
+            Ok(if point_in_polygon_3d(hit, &verts, normal, tol) { UvStatus::Inside } else { UvStatus::Outside })
         }
         _ => {
             let uv = surface_uv(surface, hit);
-            point_in_face_uv(body, face, uv, tol)
+            point_in_face_uv_status(body, face, uv, tol)
         }
     }
 }
@@ -434,7 +519,6 @@ mod tests {
     use super::*;
     use crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::primitives::{make_box, make_cylinder, make_sphere};
     use crate::artifacts::semio::standards::v1::subsets::brep::schema::inferences::mass_properties::oracle::{ClosedFormMass, Sdf};
-    use crate::artifacts::semio::standards::v1::subsets::brep::schema::inferences::mass_properties::{classify_point_on_solid, PointSolidClassification};
     use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::tolerance::Tol;
     use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::topology::history::OpRecorder;
     use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::vector::matrix::Trsf;
@@ -480,24 +564,28 @@ mod tests {
         assert_classify(&body, solid, Pnt3::new(0.0, 0.5, 0.5), PointClassification::OnBoundary);
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    fn measure_to_engine(m: PointSolidClassification) -> PointClassification {
-        match m {
-            PointSolidClassification::Inside => PointClassification::Inside,
-            PointSolidClassification::Outside => PointClassification::Outside,
-            PointSolidClassification::OnBoundary => PointClassification::OnBoundary,
-        }
-    }
-
     #[semio_framework_async_macros::async_test]
-    async fn box_matches_measure_ray_parity() {
+    async fn box_off_axis_point_matches_sdf_oracle() {
         let mut body = Body::new();
         let mut rec = OpRecorder::new();
         let solid = make_box(&mut body, 1.0, 1.0, 1.0, &mut rec).unwrap();
+        let sdf = Sdf::Box { half_extents: Pnt3::new(0.5, 0.5, 0.5), placement: Trsf::translation(Vec3::new(0.5, 0.5, 0.5)) };
         let p = Pnt3::new(0.25, 0.75, 0.5);
-        let c = point_in_solid(&body, solid, p, Tol::DEFAULT.value()).unwrap();
-        let m = classify_point_on_solid(&body, solid, p).unwrap();
-        assert_eq!(c, measure_to_engine(m));
+        let expected = if oracle_inside(&sdf, p) { PointClassification::Inside } else { PointClassification::Outside };
+        assert_classify(&body, solid, p, expected);
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn ray_crossings_are_actually_bvh_culled_not_scanning_every_face() {
+        let mut body = Body::new();
+        let mut rec = OpRecorder::new();
+        let solid = make_box(&mut body, 1.0, 1.0, 1.0, &mut rec).unwrap();
+        let bvh = build_face_bvh(&body, solid).unwrap();
+        let dir = retry_dir(0);
+        let candidates = bvh.query_ray(Pnt3::new(0.5, 0.5, 0.5).to_array(), dir.to_array());
+        assert!(candidates.len() < body.solid_faces(solid).len(), "a ray through the box interior should not need every one of the box's faces as a candidate");
+        let outcome = count_ray_crossings(&body, &bvh, Pnt3::new(0.5, 0.5, 0.5), dir, Tol::DEFAULT.value()).unwrap();
+        assert!(matches!(outcome, RayCrossingOutcome::Count(1)), "a ray from the box interior should cross the boundary exactly once");
     }
 
     #[semio_framework_async_macros::async_test]

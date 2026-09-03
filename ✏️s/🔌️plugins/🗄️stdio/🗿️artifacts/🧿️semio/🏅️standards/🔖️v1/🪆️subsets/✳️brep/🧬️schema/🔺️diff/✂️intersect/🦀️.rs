@@ -507,7 +507,7 @@ pub mod curve_surface {
 
     use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::curve::Curve3;
     use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::error::IntersectError;
-    use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::surface::surface_ops::closest_point;
+    use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::surface::surface_ops::closest_uv;
     use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::surface::Surface;
     use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::vector::matrix::Frame3;
     use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::vector::{Pnt3, Vec3};
@@ -648,7 +648,8 @@ pub mod curve_surface {
         for i in 0..=n_samples {
             let t = domain_t.0 + (domain_t.1 - domain_t.0) * (i as f64 / n_samples as f64);
             let pt = curve.eval(t);
-            let (u, v, dist) = closest_point(surface, surf_domain, pt, 8);
+            let closest = closest_uv(surface, surf_domain, pt, 1e-9);
+            let (u, v, dist) = (closest.u, closest.v, closest.distance);
             if dist <= tol * 50.0 {
                 if let Some(hit) = newton_refine(curve, surface, t, u, v, domain_t, surf_domain, tol) {
                     push_unique(&mut hits, hit, tol);

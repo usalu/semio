@@ -50,7 +50,7 @@ async fn the_undo_reorder_returns_the_column_to_its_base_index() {
     let undo = mutation.inverse(&base);
     assert_eq!(
         undo,
-        vec![SemioTableMutation::ReorderColumns(crate::artifacts::semio::standards::v1::subsets::table::schema::mutations::reorder_columns::mutation::ReorderColumns { name: "area".to_string(), to_index: 2 })],
+        vec![SemioTableMutation::ReorderColumns(crate::artifacts::semio::standards::v1::subsets::table::schema::mutations::reorder_columns::ReorderColumns { name: "area".to_string(), to_index: 2 })],
         "the undo must send the column back to the index it originally occupied in base"
     );
     let mut current = mutation.diff(&base).diff().apply(&base).expect("forward reorder-columns applies");

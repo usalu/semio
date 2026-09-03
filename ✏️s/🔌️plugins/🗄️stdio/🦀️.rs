@@ -188,6 +188,49 @@ dyn_enum_close! {
     }
 }
 
+/// 📦️ Reads the guest's canonical component identity from its Cargo component contract.
+pub(crate) fn component_package_id() -> Result<&'static str, PluginAssemblyError> {
+    let manifest = include_str!("📦️packages/🦀️rust/Cargo.toml");
+    if manifest.len() > 64 * 1024 {
+        return Err(PluginAssemblyError::new("plugin-assembly.package-id", "component Cargo contract exceeds 64 KiB"));
+    }
+    let mut component = false;
+    let mut component_seen = false;
+    let mut package_id = None;
+    for raw in manifest.lines() {
+        let line = raw.trim();
+        if line.starts_with('[') {
+            component = line == "[package.metadata.component]";
+            if component && std::mem::replace(&mut component_seen, true) {
+                return Err(PluginAssemblyError::new("plugin-assembly.package-id", "component Cargo contract repeats its component section"));
+            }
+        } else if component {
+            let Some((key, raw_value)) = line.split_once('=') else { continue };
+            if key.trim() != "package" {
+                continue;
+            }
+            if package_id.is_some() {
+                return Err(PluginAssemblyError::new("plugin-assembly.package-id", "component Cargo contract repeats its package key"));
+            }
+            package_id = raw_value.trim().strip_prefix('"').and_then(|value| value.strip_suffix('"'));
+        }
+    }
+    let package_id = package_id.ok_or_else(|| PluginAssemblyError::new("plugin-assembly.package-id", "component package identity is missing"))?;
+    let suffix = package_id.strip_prefix("semio:").ok_or_else(|| PluginAssemblyError::new("plugin-assembly.package-id", "component package identity must use the semio namespace"))?;
+    if suffix.is_empty() || suffix.starts_with('-') || suffix.ends_with('-') || suffix.contains("--") || !suffix.bytes().all(|byte| byte.is_ascii_lowercase() || byte.is_ascii_digit() || byte == b'-') {
+        return Err(PluginAssemblyError::new("plugin-assembly.package-id", "component package identity is not canonical semio:<lowercase-alnum-hyphen>"));
+    }
+    Ok(package_id)
+}
+
+#[cfg(test)]
+mod component_package_id_tests {
+    #[test]
+    fn component_package_identity_comes_from_the_canonical_cargo_contract() {
+        assert_eq!(super::component_package_id().expect("stdio component package identity"), "semio:stdio");
+    }
+}
+
 /// 🧾️ Builds all stdio definitions before the typed library assembly boundary. `.activation(…)`/
 /// `.execution(…)`/`.requests(…)` (ticket 26/08/17/MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME M0,
 /// `📓️design-abi.md` §3/§6, following the `✏️s/🔌️plugins/🗒️note` E2 proof migration's shape): stdio
@@ -198,12 +241,15 @@ dyn_enum_close! {
 /// of its ~90 registered editors persists mutations back to whichever of these formats is open.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn plugin() -> Result<Plugin<StdioApps>, PluginAssemblyError> {
-    let mut builder = Plugin::builder("stdio").label("Stdio").version("0.1.0");
+    let mut builder = Plugin::builder("stdio").label("Stdio").version("0.1.0").package_id(component_package_id()?);
     for assembly in crate::registry::artifact_assemblies()? {
         builder = match assembly {
             crate::registry::ArtifactAssembly::Definition(definition) => builder.artifact_definition(definition),
             crate::registry::ArtifactAssembly::Runtime(declaration) => builder.artifact(declaration),
         };
+    }
+    for artifact_kind in crate::registry::native_codec_artifact_kinds() {
+        builder = builder.artifact_kind(artifact_kind);
     }
     //#region 👁️✏️SurfacesP1StdioMedia
     // 🧵 W2 packet P1-stdio-media (ticket 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET):

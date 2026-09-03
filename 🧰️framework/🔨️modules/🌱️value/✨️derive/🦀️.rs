@@ -49,6 +49,16 @@
 //! (named or unnamed) — the whole struct forwards straight to/from that field's own
 //! `ToValue`/`FromValue`, no object wrapper.
 //!
+//! A single-field TUPLE struct (`struct Foo(pub u32);`, no `#[value(...)]` at all) derives as
+//! transparent AUTOMATICALLY, with no attribute needed — `ToValue` emits exactly what the inner
+//! field's own `ToValue::to_value` emits, `FromValue` decodes the inner type and wraps it back in
+//! `Self`. This is the newtype-wrapper idiom (`id_newtype!`-style `pub struct FooId(pub u32)`),
+//! distinct from `#[value(transparent)]` on a NAMED-field struct: the tuple case needs no
+//! attribute because a one-field tuple struct has no other sensible wire representation (there is
+//! no field name to key an object under). A tuple struct with more than one field, or a unit
+//! struct, still hits the `named-field structs … not tuple/unit structs` error below — only the
+//! exactly-one-field tuple shape gets this transparent treatment.
+//!
 //! A generic struct/enum gets an AUTOMATIC `Param: ToValue` (resp. `FromValue`) bound synthesized
 //! per own type parameter by default — mirrors `serde_derive`'s own auto-inference default, and
 //! is correct for every generic type this derive has been applied to so far (each parameter is
@@ -648,6 +658,11 @@ pub fn expand_to_value(input: &DeriveInput) -> syn::Result<proc_macro2::TokenStr
             Fields::Unnamed(unnamed) if unnamed.unnamed.len() == 1 => quote! { #value_crate::ToValue::to_value(&self.0) },
             other => return Err(syn::Error::new_spanned(other, "#[value(transparent)] requires exactly one field")),
         },
+        // 🆔 Single-field tuple struct (`struct Foo(pub u32);`): automatic transparent newtype —
+        // see the module docs' `#[value(transparent)]` entry for why this needs no attribute.
+        Data::Struct(data) if matches!(&data.fields, Fields::Unnamed(unnamed) if unnamed.unnamed.len() == 1) => {
+            quote! { #value_crate::ToValue::to_value(&self.0) }
+        }
         Data::Struct(data) => {
             let fields = named_fields(&data.fields, &container)?;
             let entries = to_value_object_entries(&fields, &value_crate);
@@ -818,6 +833,10 @@ pub fn expand_from_value(input: &DeriveInput) -> syn::Result<proc_macro2::TokenS
             Fields::Unnamed(unnamed) if unnamed.unnamed.len() == 1 => quote! { Ok(Self(#value_crate::FromValue::from_value(value)?)) },
             other => return Err(syn::Error::new_spanned(other, "#[value(transparent)] requires exactly one field")),
         },
+        // 🆔 Single-field tuple struct: sibling of `expand_to_value`'s identical guard above.
+        Data::Struct(data) if matches!(&data.fields, Fields::Unnamed(unnamed) if unnamed.unnamed.len() == 1) => {
+            quote! { Ok(Self(#value_crate::FromValue::from_value(value)?)) }
+        }
         Data::Struct(data) => {
             let fields = named_fields(&data.fields, &container)?;
             let reads = from_value_struct_fields(&fields, &container, &value_crate);

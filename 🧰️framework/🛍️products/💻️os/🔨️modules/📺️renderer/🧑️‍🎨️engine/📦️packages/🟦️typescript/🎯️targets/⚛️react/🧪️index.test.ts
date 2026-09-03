@@ -5232,7 +5232,7 @@ describe("s workflow flow routing", () => {
   // no existing pattern for; not added this lane — see `📓️w2-c-report.md`.
   it("shellActorId mints user:{userId}#{sessionId} once identity resolves, else client-{sessionId}", () => {
     expect(shellActorId("sess-1", null)).toBe("client-sess-1");
-    expect(shellActorId("sess-1", { userId: "u-1", email: "u1@semio.dev", displayName: "U1", hubBaseUrl: "http://127.0.0.1:8787", sessionToken: "tok", issuedAtMs: 0 })).toBe("user:u-1#sess-1");
+    expect(shellActorId("sess-1", { userId: "u-1", email: "u1@semio.dev", displayName: "U1", hubBaseUrl: "http://127.0.0.1:8787", issuedAtMs: 0 })).toBe("user:u-1#sess-1");
   });
 
   it("canonicalSurfaceId formats <kind>@<standard>/<subset>#<role>", () => {

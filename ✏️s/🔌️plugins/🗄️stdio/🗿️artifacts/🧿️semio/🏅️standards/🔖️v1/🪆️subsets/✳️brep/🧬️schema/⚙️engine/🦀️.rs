@@ -4,11 +4,17 @@
 //!
 //! Moved from `🧰️framework/🔨️modules/🧊️3d/📐️brep/{⚙️engine,🧰️kernel}` in ticket 26/08/12/
 //! DISSOLVE-KERNELS-AND-MODULES-INTO-EVENT-SOURCED-ARTIFACTS wave G5 ("the brep flip") — this is
-//! the temporary forward edge (`stdio → semio-framework-3d`) that lets the other 35 framework-3d
+//! the temporary forward edge (`stdio → semio-framework-3d`) that lets the other framework-3d
 //! brep subdirs (arena, topology, boolean, tessellate, euler, …) peel into `✳️brep`'s compute
-//! subdirs one at a time without ever touching a consumer. `MeshTransfer`/`Vec3`/`Aabb`/
-//! `ParamDomain` stayed behind in `semio_framework_3d::engine` — those algorithm modules
-//! still return/accept them directly, so this file imports them back across the new edge.
+//! subdirs one at a time without ever touching a consumer.
+//!
+//! 📐️ `🔖️contract` (below) moved IN ticket 26/09/03/BREP-KERNEL-DEPENDENCY-FREE-RUNTIME wave
+//! 1 (W1-A): `MeshTransfer`/`Vec3`/`Aabb`/`ParamDomain`/`FaceGroup`/`PointClassification` no
+//! longer live in `semio_framework_3d::engine` — they, plus the new `EdgeGroup`/`FaceInfo`/
+//! `EdgeInfo`/`SurfaceKind`/`CurveKind`/`OpQuality` types the CAD renderer bridge and the
+//! Phase 0/1 capability audit need, are this file's own neutral contract now. Every remaining
+//! `semio_framework_3d::engine::*` algorithm-module return/accept site across the repo was
+//! repointed at this module in the same wave.
 //!
 //! `📦️mesh-io` (below) moved IN wave DEDUP: it was brep↔mesh bridging/IO code whose only real
 //! consumer was already this file, and its DWG calls were the last framework-tier caller of the
@@ -33,6 +39,10 @@ mod mesh_io;
 #[path = "📄️step/🦀️.rs"]
 mod step;
 
+#[path = "🔖️contract/🦀️.rs"]
+pub mod contract;
+pub use contract::*;
+
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::blend::{chamfer_edges, fillet_edges, fillet_variable};
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::boolean::{boolean_solid, compound_cut, section_solid_by_plane, split_solid_by_plane, BooleanOp};
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::euler::make_vertex;
@@ -51,6 +61,7 @@ use crate::artifacts::semio::standards::v1::subsets::brep::schema::inferences::t
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::inferences::validation_report::validate_body;
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::arena::{ArenaId, EdgeId, FaceId, SolidId, VertexId};
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::curve::bspline::KnotVector;
+use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::curve::curve_ops::{approximate_curve_with_count, coons_patch_nurbs, interpolate_curve, interpolate_surface_grid, ParamMethod};
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::curve::Curve3;
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::error::KernelError;
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::surface::Surface;
@@ -60,7 +71,7 @@ use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::top
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::vector::matrix::Frame3;
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::vector::{Pnt3, Vec3 as NativeVec3};
 use mesh_io::{export_solid_dwg, export_solid_glb, export_solid_obj, export_solid_stl, import_dwg_to_body, import_glb_to_body, import_obj_to_body, import_stl_to_body, mesh_to_mesh_data, triangle_mesh_from_transfer};
-use semio_framework_3d::engine::{MeshTransfer, ParamDomain, PointClassification, Vec3, Vec3 as EVec3};
+use contract::Vec3 as EVec3;
 use step::{read_step, write_step};
 
 // #region 🔖️ContractTypes
@@ -98,6 +109,7 @@ pub struct BrepTopology {
     pub vertices: Vec<GeometryHandle>,
     pub edges: Vec<GeometryHandle>,
     pub faces: Vec<GeometryHandle>,
+    pub shells: Vec<GeometryHandle>,
 }
 
 /// 📏️ Closest-point / distance query result.
@@ -363,28 +375,55 @@ pub trait BrepKernel {
     /// 📊️ Number of geometry handles currently held by the kernel's registry.
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn registry_len(&self) -> usize;
+    /// 🧩️ Every shell of `solid` as its own first-class handle (see `GeometryKind::Shell`).
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn solid_shells(&mut self, solid: &GeometryHandle) -> Result<Vec<GeometryHandle>, BrepError>;
+    /// 🧩️ Bundles `solids` behind one `GeometryKind::Compound` handle — the collection identity
+    /// `import_step`/patterns/booleans return when the operation naturally yields more than one
+    /// solid, mirroring [`Self::explode`]'s inverse.
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn compound(&mut self, solids: &[GeometryHandle]) -> Result<GeometryHandle, BrepError>;
+    /// 🧩️ The inverse of [`Self::compound`]: the member solids' own handles.
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn explode(&mut self, compound: &GeometryHandle) -> Result<Vec<GeometryHandle>, BrepError>;
+    /// 🏷️ The document-scoped [`PersistentLabel`] a handle currently resolves to — stable across
+    /// a `dispose`d-and-regranted handle for the same entity, unlike the handle string itself.
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn label(&self, handle: &GeometryHandle) -> Option<u64>;
     // #endregion Core
 }
 // #endregion 🔖️Kernel
 
 // #region 🔖️Types
 
+use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::arena::ShellId;
+use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::topology::history::PersistentLabel;
+use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::topology::EntityRef;
+
+/// 🧠 One live registry entry. Vertex/Edge/Face/Shell/Solid wrap the arena id whose own
+/// [`crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::topology::history::PersistentLabel`]
+/// [`label_of_entity`] resolves through; Wire/Curve/Surface/Compound carry no arena identity of
+/// their own (a `Wire` bundles arena ids but isn't itself stored in `Body`; a bare `Curve3`/
+/// `Surface` constructed via `register_curve`/`register_surface` never enters `body.curves3`/
+/// `body.surfaces` either) so each instance is stamped with its own fresh label at registration
+/// time instead.
 #[derive(Clone)]
 enum Entity {
     Vertex(VertexId),
     Edge(EdgeId),
-    Wire(Wire),
+    Wire(Wire, PersistentLabel),
     Face(FaceId),
+    Shell(ShellId),
     Solid(SolidId),
-    Curve(Curve3),
-    Surface(Surface),
+    Compound(Vec<SolidId>, PersistentLabel),
+    Curve(Curve3, PersistentLabel),
+    Surface(Surface, PersistentLabel),
 }
 
 /// 🧠 Native B-Rep session.
 pub struct Brep {
     body: Body,
     live: HashMap<String, Entity>,
-    counter: u64,
 }
 
 impl Default for Brep {
@@ -397,7 +436,7 @@ impl Brep {
     /// 🏗️ Empty native kernel session.
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn new() -> Self {
-        Self { body: Body::new(), live: HashMap::new(), counter: 0 }
+        Self { body: Body::new(), live: HashMap::new() }
     }
 }
 
@@ -475,14 +514,35 @@ pub fn mesh_data_from_mesh_transfer(transfer: &MeshTransfer) -> semio_framework_
 
 // #region 🧮Registry
 
+/// 🏷️ The [`PersistentLabel`] a live [`Entity`] resolves to — the identity [`Brep::mint`] hashes a
+/// handle from. Vertex/Edge/Face/Shell/Solid read it back out of the `Body` arena entry they wrap
+/// (stable for the entity's whole lifetime, independent of when/how often it's registered); the
+/// other variants carry a label they were stamped with at registration time (see [`Entity`]'s own
+/// docstring for why).
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn label_of_entity(body: &Body, entity: &Entity) -> Option<PersistentLabel> {
+    match entity {
+        Entity::Vertex(id) => body.vertices.get(*id).map(|v| v.label),
+        Entity::Edge(id) => body.edges.get(*id).map(|e| e.label),
+        Entity::Face(id) => body.faces.get(*id).map(|f| f.label),
+        Entity::Shell(id) => body.shells.get(*id).map(|s| s.label),
+        Entity::Solid(id) => body.solids.get(*id).map(|s| s.label),
+        Entity::Wire(_, label) | Entity::Compound(_, label) | Entity::Curve(_, label) | Entity::Surface(_, label) => Some(*label),
+    }
+}
+
 impl Brep {
+    /// 🏗️ Mints a handle deterministic in `(kind, entity's PersistentLabel)` — never a counter —
+    /// so registering the *same* labelled entity again (e.g. two `deconstruct` calls on an
+    /// untouched shape) always yields byte-identical handles. Panics only if `entity` carries no
+    /// resolvable label, which would mean a caller minted against an id it never actually inserted
+    /// into `self.body` — a caller bug, not a runtime condition to recover from.
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn mint(&mut self, kind: GeometryKind, entity: Entity) -> GeometryHandle {
-        self.counter = self.counter.wrapping_add(1);
-        let payload = format!("{kind:?}:{}:{}", self.counter, entity_tag(&entity));
+        let label = label_of_entity(&self.body, &entity).expect("entity must carry a resolvable PersistentLabel");
+        let payload = format!("{kind:?}:{}", label.0);
         let handle = GeometryHandle(semio_framework_hash::hash_bytes(payload.as_bytes()));
         self.live.insert(handle.as_str().to_string(), entity);
-        let _ = kind;
         handle
     }
 
@@ -495,21 +555,75 @@ impl Brep {
         self.mint(GeometryKind::Face, Entity::Face(face))
     }
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    fn register_wire(&mut self, wire: Wire) -> GeometryHandle {
-        self.mint(GeometryKind::Wire, Entity::Wire(wire))
+    fn register_shell(&mut self, shell: ShellId) -> GeometryHandle {
+        self.mint(GeometryKind::Shell, Entity::Shell(shell))
     }
+    /// 🧩️ `solids` (already registered elsewhere) bundled behind one fresh-labelled compound
+    /// handle — the compound's label is its own, not shared with any member solid's.
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn register_compound(&mut self, solids: Vec<SolidId>) -> GeometryHandle {
+        let label = self.body.new_label();
+        self.mint(GeometryKind::Compound, Entity::Compound(solids, label))
+    }
+    /// 🧩️ A `Wire` bundles arena ids but has no [`Body`]-stored identity of its own, so it is
+    /// stamped with a fresh label at registration time (see [`Entity`]'s own docstring).
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn register_wire(&mut self, wire: Wire) -> GeometryHandle {
+        let label = self.body.new_label();
+        self.mint(GeometryKind::Wire, Entity::Wire(wire, label))
+    }
+    /// 🧩️ A bare `Curve3` built via one of the curve constructors never enters `body.curves3`
+    /// (only a curve reached through an `Edge` does), so it too is stamped with a fresh label.
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn register_curve(&mut self, curve: Curve3) -> GeometryHandle {
-        self.mint(GeometryKind::Curve, Entity::Curve(curve))
+        let label = self.body.new_label();
+        self.mint(GeometryKind::Curve, Entity::Curve(curve, label))
     }
+    /// 🧩️ Mirror of [`Self::register_curve`] for a bare `Surface`.
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn register_surface(&mut self, surface: Surface) -> GeometryHandle {
-        self.mint(GeometryKind::Surface, Entity::Surface(surface))
+        let label = self.body.new_label();
+        self.mint(GeometryKind::Surface, Entity::Surface(surface, label))
     }
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn entity(&self, handle: &GeometryHandle) -> Result<&Entity, BrepError> {
         self.live.get(handle.as_str()).ok_or_else(|| BrepError::MissingHandle(handle.as_str().to_string()))
+    }
+
+    /// ♻️ [`crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::topology::EntityRef`] roots for every entity currently kept alive by a live
+    /// handle — the protection set [`Body::reachable_from`] walks before [`Body::compact`] frees
+    /// anything, so `dispose`/`retain` never reclaim geometry a surviving handle still needs. A
+    /// `Wire`'s member edges/vertices are included even though the wire itself isn't a `Body` root,
+    /// since nothing else would otherwise keep them alive while the wire handle is live.
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn live_roots(&self) -> Vec<EntityRef> {
+        let mut roots = Vec::new();
+        for entity in self.live.values() {
+            match entity {
+                Entity::Vertex(id) => roots.push(EntityRef::Vertex(*id)),
+                Entity::Edge(id) => roots.push(EntityRef::Edge(*id)),
+                Entity::Face(id) => roots.push(EntityRef::Face(*id)),
+                Entity::Shell(id) => roots.push(EntityRef::Shell(*id)),
+                Entity::Solid(id) => roots.push(EntityRef::Solid(*id)),
+                Entity::Compound(solids, _) => roots.extend(solids.iter().map(|s| EntityRef::Solid(*s))),
+                Entity::Wire(wire, _) => {
+                    roots.extend(wire.members.iter().map(|(edge, _)| EntityRef::Edge(*edge)));
+                    roots.extend(wire.vertices.iter().map(|v| EntityRef::Vertex(*v)));
+                }
+                Entity::Curve(_, _) | Entity::Surface(_, _) => {}
+            }
+        }
+        roots
+    }
+
+    /// ♻️ Frees every arena entity no surviving live handle still reaches — the GC step `dispose`
+    /// and `retain` both run after touching `self.live`.
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn compact_unreachable(&mut self) {
+        let roots = self.live_roots();
+        let keep = self.body.reachable_from(&roots);
+        self.body.compact(&keep);
     }
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
@@ -529,21 +643,21 @@ impl Brep {
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn wire_ref(&self, handle: &GeometryHandle) -> Result<&Wire, BrepError> {
         match self.entity(handle)? {
-            Entity::Wire(w) => Ok(w),
+            Entity::Wire(w, _) => Ok(w),
             _ => Err(BrepError::InvalidInput(format!("{} is not a wire", handle.as_str()))),
         }
     }
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn curve_ref(&self, handle: &GeometryHandle) -> Result<&Curve3, BrepError> {
         match self.entity(handle)? {
-            Entity::Curve(c) => Ok(c),
+            Entity::Curve(c, _) => Ok(c),
             _ => Err(BrepError::InvalidInput(format!("{} is not a curve", handle.as_str()))),
         }
     }
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn surface_ref(&self, handle: &GeometryHandle) -> Result<&Surface, BrepError> {
         match self.entity(handle)? {
-            Entity::Surface(s) => Ok(s),
+            Entity::Surface(s, _) => Ok(s),
             _ => Err(BrepError::InvalidInput(format!("{} is not a surface", handle.as_str()))),
         }
     }
@@ -561,11 +675,13 @@ fn entity_tag(e: &Entity) -> String {
     match e {
         Entity::Vertex(id) => format!("v{id}"),
         Entity::Edge(id) => format!("e{id}"),
-        Entity::Wire(w) => format!("w{}", w.members.len()),
+        Entity::Wire(w, _) => format!("w{}", w.members.len()),
         Entity::Face(id) => format!("f{id}"),
+        Entity::Shell(id) => format!("sh{id}"),
         Entity::Solid(id) => format!("s{id}"),
-        Entity::Curve(_) => "c".into(),
-        Entity::Surface(_) => "S".into(),
+        Entity::Compound(solids, _) => format!("cp{}", solids.len()),
+        Entity::Curve(_, _) => "c".into(),
+        Entity::Surface(_, _) => "S".into(),
     }
 }
 
@@ -583,25 +699,25 @@ impl Brep {
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn sphere_prim_sync(&mut self, radius: f64) -> Result<GeometryHandle, BrepError> {
         let mut rec = OpRecorder::new();
-        let solid = make_sphere(&mut self.body, radius, 24, &mut rec).map_err(map_err)?;
+        let solid = make_sphere(&mut self.body, radius, &mut rec).map_err(map_err)?;
         Ok(self.register_solid(solid))
     }
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn cylinder_prim_sync(&mut self, radius: f64, height: f64) -> Result<GeometryHandle, BrepError> {
         let mut rec = OpRecorder::new();
-        let solid = make_cylinder(&mut self.body, radius, height, 32, &mut rec).map_err(map_err)?;
+        let solid = make_cylinder(&mut self.body, radius, height, &mut rec).map_err(map_err)?;
         Ok(self.register_solid(solid))
     }
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn cone_prim_sync(&mut self, radius: f64, height: f64) -> Result<GeometryHandle, BrepError> {
         let mut rec = OpRecorder::new();
-        let solid = make_cone(&mut self.body, radius, height, 32, &mut rec).map_err(map_err)?;
+        let solid = make_cone(&mut self.body, radius, height, &mut rec).map_err(map_err)?;
         Ok(self.register_solid(solid))
     }
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn torus_prim_sync(&mut self, major: f64, minor: f64) -> Result<GeometryHandle, BrepError> {
         let mut rec = OpRecorder::new();
-        let solid = make_torus(&mut self.body, major, minor, 24, &mut rec).map_err(map_err)?;
+        let solid = make_torus(&mut self.body, major, minor, &mut rec).map_err(map_err)?;
         Ok(self.register_solid(solid))
     }
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
@@ -666,27 +782,18 @@ impl Brep {
             return Err(BrepError::InvalidInput("interpolate_curve needs at least 2 points".into()));
         }
         let controls: Vec<Pnt3> = points.iter().copied().map(pnt).collect();
-        let deg = degree.clamp(1, controls.len().saturating_sub(1).max(1));
-        let knots = KnotVector::clamped_uniform(controls.len(), deg);
-        let weights = vec![1.0; controls.len()];
-        Ok(self.register_curve(Curve3::Nurbs { knots, controls, weights }))
+        let nurbs = interpolate_curve(&controls, degree, ParamMethod::Centripetal, None, false).ok_or_else(|| BrepError::InvalidInput("interpolate_curve: degenerate or coincident points".into()))?;
+        Ok(self.register_curve(Curve3::Nurbs { knots: nurbs.knots, controls: nurbs.controls, weights: nurbs.weights }))
     }
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn approximate_curve_sync(&mut self, points: &[EVec3], degree: usize, control_points: usize) -> Result<GeometryHandle, BrepError> {
         if points.len() < 2 {
             return Err(BrepError::InvalidInput("approximate_curve needs at least 2 points".into()));
         }
-        let target = control_points.clamp(2, points.len());
-        if target == points.len() {
-            return self.interpolate_curve_sync(points, degree);
-        }
-        let mut sampled = Vec::with_capacity(target);
-        for i in 0..target {
-            let t = i as f64 / (target - 1) as f64;
-            let idx = (t * (points.len() - 1) as f64).round() as usize;
-            sampled.push(points[idx.min(points.len() - 1)]);
-        }
-        self.interpolate_curve_sync(&sampled, degree)
+        let controls: Vec<Pnt3> = points.iter().copied().map(pnt).collect();
+        let target = control_points.clamp(2, controls.len());
+        let (nurbs, _err) = approximate_curve_with_count(&controls, degree, target).ok_or_else(|| BrepError::InvalidInput("approximate_curve: degenerate input or infeasible control-point count".into()))?;
+        Ok(self.register_curve(Curve3::Nurbs { knots: nurbs.knots, controls: nurbs.controls, weights: nurbs.weights }))
     }
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn helix_curve_sync(&mut self, origin: EVec3, axis: EVec3, radius: f64, pitch: f64, turns: f64) -> Result<GeometryHandle, BrepError> {
@@ -727,61 +834,28 @@ impl Brep {
         if points.is_empty() || points[0].is_empty() {
             return Err(BrepError::InvalidInput("nurbs grid requires a non-empty control net".into()));
         }
-        let nu = points.len();
-        let nv = points[0].len();
-        if points.iter().any(|row| row.len() != nv) {
-            return Err(BrepError::InvalidInput("nurbs grid rows must share a common length".into()));
-        }
-        let du = degree_u.clamp(1, nu.saturating_sub(1).max(1));
-        let dv = degree_v.clamp(1, nv.saturating_sub(1).max(1));
-        let u_knots = KnotVector::clamped_uniform(nu, du);
-        let v_knots = KnotVector::clamped_uniform(nv, dv);
-        let controls: Vec<Vec<Pnt3>> = points.iter().map(|row| row.iter().copied().map(pnt).collect()).collect();
-        let weights = vec![vec![1.0; nv]; nu];
-        Ok(self.register_surface(Surface::Nurbs { u_knots, v_knots, controls, weights }))
+        let grid: Vec<Vec<Pnt3>> = points.iter().map(|row| row.iter().copied().map(pnt).collect()).collect();
+        let surface = interpolate_surface_grid(&grid, degree_u, degree_v).ok_or_else(|| BrepError::InvalidInput("nurbs_surface_from_grid: ragged rows or degenerate net".into()))?;
+        Ok(self.register_surface(surface))
     }
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn coons_patch_sync(&mut self, curves: &[Vec<EVec3>]) -> Result<GeometryHandle, BrepError> {
         if curves.len() != 4 {
             return Err(BrepError::InvalidInput("coons_patch requires exactly 4 boundary polylines".into()));
         }
-        let samples = curves.iter().map(|c| c.len().max(2)).max().unwrap_or(2);
-        let sample_curve = |curve: &[EVec3], t: f64| -> Pnt3 {
-            if curve.len() == 1 {
-                return pnt(curve[0]);
+        let mut boundary_curves = Vec::with_capacity(4);
+        for (idx, curve) in curves.iter().enumerate() {
+            if curve.len() < 2 {
+                return Err(BrepError::InvalidInput(format!("coons_patch boundary {idx} needs at least 2 points")));
             }
-            let f = t * (curve.len() - 1) as f64;
-            let i = f.floor() as usize;
-            let i1 = (i + 1).min(curve.len() - 1);
-            let local = f - i as f64;
-            let a = pnt(curve[i]);
-            let b = pnt(curve[i1]);
-            a + (b - a) * local
-        };
-        let c0 = &curves[0];
-        let c1 = &curves[1];
-        let c2 = &curves[2];
-        let c3 = &curves[3];
-        let n = samples;
-        let mut grid = Vec::with_capacity(n);
-        for i in 0..n {
-            let u = i as f64 / (n - 1) as f64;
-            let mut row = Vec::with_capacity(n);
-            for j in 0..n {
-                let v = j as f64 / (n - 1) as f64;
-                let p00 = sample_curve(c0, 0.0);
-                let p10 = sample_curve(c0, 1.0);
-                let p01 = sample_curve(c2, 0.0);
-                let p11 = sample_curve(c2, 1.0);
-                let lc = sample_curve(c0, u).lerp(sample_curve(c2, u), v);
-                let ld = sample_curve(c3, v).lerp(sample_curve(c1, v), u);
-                let bil = p00.to_vec() * ((1.0 - u) * (1.0 - v)) + p10.to_vec() * (u * (1.0 - v)) + p01.to_vec() * ((1.0 - u) * v) + p11.to_vec() * (u * v);
-                let p = Pnt3::new(lc.x + ld.x - bil.x, lc.y + ld.y - bil.y, lc.z + ld.z - bil.z);
-                row.push(evec(p));
-            }
-            grid.push(row);
+            let pts: Vec<Pnt3> = curve.iter().copied().map(pnt).collect();
+            let degree = pts.len().saturating_sub(1).min(3);
+            let nurbs = interpolate_curve(&pts, degree, ParamMethod::Centripetal, None, false).ok_or_else(|| BrepError::InvalidInput(format!("coons_patch boundary {idx} is degenerate")))?;
+            boundary_curves.push(nurbs);
         }
-        self.nurbs_surface_from_grid_sync(&grid, 3.min(n.saturating_sub(1).max(1)), 3.min(n.saturating_sub(1).max(1)))
+        let [c0, d1, c1, d0] = [&boundary_curves[0], &boundary_curves[1], &boundary_curves[2], &boundary_curves[3]];
+        let surface = coons_patch_nurbs(c0, c1, d0, d1, 1e-6).ok_or_else(|| BrepError::InvalidInput("coons_patch: boundary corners do not match or bases are incompatible".into()))?;
+        Ok(self.register_surface(surface))
     }
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn offset_face_sync(&mut self, face: &GeometryHandle, distance: f64) -> Result<GeometryHandle, BrepError> {
@@ -1225,12 +1299,19 @@ impl Brep {
         let _ = convert_to_nurbs(&mut self.body, solid, &mut rec).map_err(map_err)?;
         Ok(shape.clone())
     }
+    /// 🏷️ Deterministic per (label, kind) minting (see [`Brep::mint`]) makes this idempotent: two
+    /// calls against the same untouched `shape` walk the same solid→shell/face→coedge structure
+    /// and mint against the same [`PersistentLabel`]s each time, so the returned handles are
+    /// byte-identical, not merely equal-cardinality.
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn deconstruct_sync(&mut self, shape: &GeometryHandle) -> Result<BrepTopology, BrepError> {
         let solid = self.solid_id(shape)?;
         let mut topo = BrepTopology::default();
         let mut seen_vertices = std::collections::BTreeSet::new();
         let mut seen_edges = std::collections::BTreeSet::new();
+        for shell in self.body.solid_shells(solid) {
+            topo.shells.push(self.register_shell(shell));
+        }
         for face in self.body.solid_faces(solid) {
             topo.faces.push(self.register_face(face));
             for cid in self.body.face_coedges(face) {
@@ -1281,12 +1362,15 @@ impl Brep {
         let solid = import_glb_to_body(&mut self.body, data, tolerance).map_err(map_err)?;
         Ok(self.register_solid(solid))
     }
+    /// 🧩️ Merges the imported body into `self.body` (see [`Body::merge`]) rather than replacing
+    /// it — handles minted before this call stay resolvable, since nothing already in `self.body`
+    /// is renumbered or dropped; only the freshly imported solids get new handles.
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn import_step_sync(&mut self, text: &str) -> Result<Vec<GeometryHandle>, BrepError> {
         let imported = read_step(text).map_err(map_step)?;
-        let solid_ids: Vec<_> = imported.solids.ids().collect();
-        self.body = imported;
-        Ok(solid_ids.into_iter().map(|id| self.register_solid(id)).collect())
+        let imported_solid_ids: Vec<_> = imported.solids.ids().collect();
+        let map = self.body.merge(&imported);
+        Ok(imported_solid_ids.into_iter().map(|id| self.register_solid(map.solids[&id])).collect())
     }
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn import_stl_sync(&mut self, data: &[u8], tolerance: f64) -> Result<GeometryHandle, BrepError> {
@@ -1313,11 +1397,13 @@ impl Brep {
         Ok(match self.entity(shape)? {
             Entity::Vertex(_) => GeometryKind::Vertex,
             Entity::Edge(_) => GeometryKind::Edge,
-            Entity::Wire(_) => GeometryKind::Wire,
+            Entity::Wire(_, _) => GeometryKind::Wire,
             Entity::Face(_) => GeometryKind::Face,
+            Entity::Shell(_) => GeometryKind::Shell,
             Entity::Solid(_) => GeometryKind::Solid,
-            Entity::Curve(_) => GeometryKind::Curve,
-            Entity::Surface(_) => GeometryKind::Surface,
+            Entity::Compound(_, _) => GeometryKind::Compound,
+            Entity::Curve(_, _) => GeometryKind::Curve,
+            Entity::Surface(_, _) => GeometryKind::Surface,
         })
     }
     /// 🧠 Face outer/hole loops as position indices into the returned vertex buffer.
@@ -1366,13 +1452,67 @@ impl Brep {
         match self.entity(shape)? {
             Entity::Solid(id) => tessellate_solid(&self.body, *id, deflection).map_err(map_err),
             Entity::Face(id) => tessellate_face(&self.body, *id, deflection).map_err(map_err),
-            Entity::Wire(wire) => tessellate_wire(&self.body, wire, deflection).map_err(map_err),
+            Entity::Wire(wire, _) => tessellate_wire(&self.body, wire, deflection).map_err(map_err),
             other => Err(BrepError::InvalidInput(format!("cannot tessellate {}", entity_tag(other)))),
         }
     }
+    /// ♻️ Reclaims the handle and, if no other live handle still reaches the underlying entity,
+    /// runs the arena GC (see [`Brep::compact_unreachable`]) — dispose is not merely a registry
+    /// removal, it is the operation that actually frees the topology.
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn dispose_sync(&mut self, shape: &GeometryHandle) -> usize {
-        usize::from(self.live.remove(shape.as_str()).is_some())
+        let removed = self.live.remove(shape.as_str()).is_some();
+        if removed {
+            self.compact_unreachable();
+        }
+        usize::from(removed)
+    }
+    /// 🏷️ The [`PersistentLabel`] `handle` currently resolves to, or `None` for an unknown handle.
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn label_of(&self, handle: &GeometryHandle) -> Option<PersistentLabel> {
+        self.live.get(handle.as_str()).and_then(|e| label_of_entity(&self.body, e))
+    }
+    /// 🏷️ The handle for `label`, searching every arena store in turn — `None` if no live entity
+    /// carries that label. Re-mints (deterministically, see [`Brep::mint`]) rather than requiring
+    /// the caller to have kept the original handle string around.
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn handle_for_label(&mut self, label: PersistentLabel) -> Option<GeometryHandle> {
+        if let Some((id, _)) = self.body.vertices.iter().find(|(_, v)| v.label == label) {
+            return Some(self.mint(GeometryKind::Vertex, Entity::Vertex(id)));
+        }
+        if let Some((id, _)) = self.body.edges.iter().find(|(_, e)| e.label == label) {
+            return Some(self.mint(GeometryKind::Edge, Entity::Edge(id)));
+        }
+        if let Some((id, _)) = self.body.faces.iter().find(|(_, f)| f.label == label) {
+            return Some(self.mint(GeometryKind::Face, Entity::Face(id)));
+        }
+        if let Some((id, _)) = self.body.shells.iter().find(|(_, s)| s.label == label) {
+            return Some(self.mint(GeometryKind::Shell, Entity::Shell(id)));
+        }
+        if let Some((id, _)) = self.body.solids.iter().find(|(_, s)| s.label == label) {
+            return Some(self.mint(GeometryKind::Solid, Entity::Solid(id)));
+        }
+        None
+    }
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn solid_shells_sync(&mut self, shape: &GeometryHandle) -> Result<Vec<GeometryHandle>, BrepError> {
+        let solid = self.solid_id(shape)?;
+        Ok(self.body.solid_shells(solid).into_iter().map(|s| self.register_shell(s)).collect())
+    }
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn compound_sync(&mut self, solids: &[GeometryHandle]) -> Result<GeometryHandle, BrepError> {
+        let mut ids = Vec::with_capacity(solids.len());
+        for s in solids {
+            ids.push(self.solid_id(s)?);
+        }
+        Ok(self.register_compound(ids))
+    }
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn explode_sync(&mut self, compound: &GeometryHandle) -> Result<Vec<GeometryHandle>, BrepError> {
+        match self.entity(compound)?.clone() {
+            Entity::Compound(solids, _) => Ok(solids.into_iter().map(|s| self.register_solid(s)).collect()),
+            _ => Err(BrepError::InvalidInput(format!("{} is not a compound", compound.as_str()))),
+        }
     }
 }
 
@@ -1754,13 +1894,32 @@ impl BrepKernel for Brep {
     fn dispose(&mut self, handle: &GeometryHandle) {
         let _ = self.dispose_sync(handle);
     }
+    /// ♻️ Equivalent to disposing every handle not in `live`, then compacting once — see
+    /// [`Brep::compact_unreachable`].
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn retain(&mut self, live: &std::collections::HashSet<String>) {
         self.live.retain(|k, _| live.contains(k));
+        self.compact_unreachable();
     }
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn registry_len(&self) -> usize {
         self.live.len()
+    }
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn solid_shells(&mut self, solid: &GeometryHandle) -> Result<Vec<GeometryHandle>, BrepError> {
+        self.solid_shells_sync(solid)
+    }
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn compound(&mut self, solids: &[GeometryHandle]) -> Result<GeometryHandle, BrepError> {
+        self.compound_sync(solids)
+    }
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn explode(&mut self, compound: &GeometryHandle) -> Result<Vec<GeometryHandle>, BrepError> {
+        self.explode_sync(compound)
+    }
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn label(&self, handle: &GeometryHandle) -> Option<u64> {
+        self.label_of(handle).map(|l| l.0)
     }
 }
 
@@ -1980,5 +2139,120 @@ mod tests {
         assert_eq!(topo.faces.len(), 6);
         assert_eq!(topo.edges.len(), 12);
         assert_eq!(topo.vertices.len(), 8);
+    }
+
+    /// 🏷️ Deconstruct must be idempotent: minting from each entity's [`PersistentLabel`] (not a
+    /// session counter) means calling it twice on the same untouched shape yields byte-identical
+    /// handles, and shells are now included (audit §5.4 — shell was not a first-class handle kind).
+    #[semio_framework_async_macros::async_test]
+    async fn deconstruct_twice_yields_identical_handles_and_includes_shells() {
+        let mut k = Brep::new();
+        let solid = k.box_prim_sync(1.0, 1.0, 1.0).expect("box");
+        let first = k.deconstruct_sync(&solid).expect("first deconstruct");
+        let second = k.deconstruct_sync(&solid).expect("second deconstruct");
+        assert_eq!(first.shells.len(), 1, "a box has exactly one outer shell");
+        assert_eq!(first.vertices, second.vertices, "deconstruct must be idempotent per PersistentLabel");
+        assert_eq!(first.edges, second.edges);
+        assert_eq!(first.faces, second.faces);
+        assert_eq!(first.shells, second.shells);
+    }
+
+    /// 🏷️ Registering unrelated geometry between the two calls must not perturb a single handle —
+    /// under the old counter-based `mint`, this alone would have changed every handle the second
+    /// `deconstruct` produces (audit §5.1: "deconstructing the same body repeatedly can mint new
+    /// handles repeatedly").
+    #[semio_framework_async_macros::async_test]
+    async fn deconstruct_handles_are_unaffected_by_unrelated_registrations_between_calls() {
+        let mut k = Brep::new();
+        let solid = k.box_prim_sync(1.0, 1.0, 1.0).expect("box");
+        let before = k.deconstruct_sync(&solid).expect("deconstruct before");
+        let _ = k.line_curve_sync([0.0, 0.0, 0.0], [1.0, 0.0, 0.0]).expect("unrelated curve");
+        let _ = k.sphere_prim_sync(0.5).expect("unrelated sphere");
+        let after = k.deconstruct_sync(&solid).expect("deconstruct after");
+        assert_eq!(before.vertices, after.vertices);
+        assert_eq!(before.edges, after.edges);
+        assert_eq!(before.faces, after.faces);
+        assert_eq!(before.shells, after.shells);
+    }
+
+    /// ♻️ Disposing the only handle reaching a body's geometry must actually free it (audit §5.3:
+    /// "dispose is not equivalent to deleting geometry" under the old registry-only dispose).
+    #[semio_framework_async_macros::async_test]
+    async fn dispose_reclaims_unreferenced_topology() {
+        let mut k = Brep::new();
+        let solid = k.box_prim_sync(1.0, 1.0, 1.0).expect("box");
+        k.dispose(&solid);
+        assert_eq!(k.registry_len(), 0);
+        let counts = k.body.entity_counts();
+        assert_eq!(counts.vertices, 0);
+        assert_eq!(counts.edges, 0);
+        assert_eq!(counts.faces, 0);
+        assert_eq!(counts.shells, 0);
+        assert_eq!(counts.solids, 0);
+    }
+
+    /// ♻️ `retain` is dispose-of-everything-else-then-compact: the dropped solid's own geometry
+    /// must be freed while the kept solid stays fully intact and resolvable.
+    #[semio_framework_async_macros::async_test]
+    async fn retain_compacts_everything_not_kept() {
+        let mut k = Brep::new();
+        let keep = k.box_prim_sync(1.0, 1.0, 1.0).expect("keep");
+        let drop = k.box_prim_sync(2.0, 2.0, 2.0).expect("drop");
+        let mut live = std::collections::HashSet::new();
+        live.insert(keep.as_str().to_string());
+        k.retain(&live);
+        assert_eq!(k.registry_len(), 1);
+        assert!(k.kind(&keep).is_ok());
+        assert!(k.kind(&drop).is_err(), "the dropped handle must no longer resolve");
+        let vol = k.volume(&keep).expect("kept solid stays intact");
+        assert!((vol - 1.0).abs() < 1e-6, "volume {vol}");
+    }
+
+    /// 🧩️ `import_step` merges into the existing body (audit §5.2's required fix) rather than
+    /// replacing it: a handle minted before the import must still resolve, and the original
+    /// solid's own geometry must be untouched by the merge.
+    #[semio_framework_async_macros::async_test]
+    async fn import_step_merges_and_keeps_prior_handles_resolvable() {
+        let mut k = Brep::new();
+        let original = k.box_prim_sync(1.0, 1.0, 1.0).expect("box");
+        let step_text = k.export_step_sync(std::slice::from_ref(&original)).expect("export");
+        let imported = k.import_step_sync(&step_text).expect("import");
+        assert!(k.kind(&original).is_ok(), "a handle minted before import must still resolve");
+        assert!((k.volume(&original).unwrap() - 1.0).abs() < 1e-6, "the original solid's own geometry must be untouched");
+        assert_eq!(imported.len(), 1);
+        assert!((k.volume(&imported[0]).unwrap() - 1.0).abs() < 1e-2, "the round-tripped solid should have the same volume");
+    }
+
+    /// 🧩️ Shell/compound are first-class handle kinds now (audit §5.4); `explode` is `compound`'s
+    /// inverse.
+    #[semio_framework_async_macros::async_test]
+    async fn solid_shells_compound_and_explode_round_trip() {
+        let mut k = Brep::new();
+        let a = k.box_prim_sync(1.0, 1.0, 1.0).expect("a");
+        let b = k.box_prim_sync(1.0, 1.0, 1.0).expect("b");
+
+        let shells = k.solid_shells(&a).expect("shells");
+        assert_eq!(shells.len(), 1);
+        assert_eq!(k.kind(&shells[0]).unwrap(), GeometryKind::Shell);
+
+        let compound = k.compound(&[a.clone(), b.clone()]).expect("compound");
+        assert_eq!(k.kind(&compound).unwrap(), GeometryKind::Compound);
+
+        let members = k.explode(&compound).expect("explode");
+        assert_eq!(members.len(), 2);
+        for m in &members {
+            assert!((k.volume(m).unwrap() - 1.0).abs() < 1e-6);
+        }
+    }
+
+    /// 🏷️ `label`/`handle_for_label` are the ephemeral-handle↔persistent-label bridge the audit's
+    /// §5.5 required fix asks for.
+    #[semio_framework_async_macros::async_test]
+    async fn label_and_handle_for_label_round_trip() {
+        let mut k = Brep::new();
+        let solid = k.box_prim_sync(1.0, 1.0, 1.0).expect("box");
+        let label = k.label(&solid).expect("solid must carry a label");
+        let via_label = k.handle_for_label(PersistentLabel(label));
+        assert_eq!(via_label, Some(solid));
     }
 }

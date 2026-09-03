@@ -360,9 +360,9 @@ pub fn scene_layers_from_drawing_handle(handle: &str, prefix: &str) -> Vec<dsl::
         .collect()
 }
 
-pub fn evaluate_generation_preview(fixture: &FlowFixture, values: &serde_json::Map<String, serde_json::Value>) -> String {
+pub fn evaluate_generation_preview(fixture: &FlowFixture, values: &flow::playbook::PlaybookValues) -> String {
     let fixture_json = dsl::json::to_json_string(fixture);
-    let object: dsl::json::Object = values.iter().map(|(key, value)| (key.clone(), dsl::json::from_dsl_value(&dsl::DslValue::from(value)))).collect();
+    let object: dsl::json::Object = values.iter().map(|(key, value)| (key.clone(), dsl::json::from_dsl_value(value))).collect();
     let patched = apply_generation_values_to_fixture(&fixture_json, &object);
     let patched_fixture = FlowHost::parse_fixture_json(&patched).unwrap_or_else(|_| fixture.clone());
     let mut host = FlowHost::from_fixture(patched_fixture);

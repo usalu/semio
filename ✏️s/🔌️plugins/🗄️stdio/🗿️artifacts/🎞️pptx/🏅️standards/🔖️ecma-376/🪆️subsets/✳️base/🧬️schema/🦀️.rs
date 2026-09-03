@@ -733,8 +733,8 @@ mod tests {
         assert_eq!(unpacked, snapshot);
         assert_exact_export(&unpacked, &exact_bytes).await;
 
-        let binary = crate::artifacts::pptx::standards::v_ecma_376::subsets::base::io::export::serializers::artifacts::zip::v2_0::any::serialize(&snapshot).expect("serialize exact fixture to binary");
-        let from_binary = crate::artifacts::pptx::standards::v_ecma_376::subsets::base::io::import::deserializers::artifacts::zip::v2_0::any::deserialize(&binary).expect("deserialize exact fixture from binary");
+        let binary = crate::artifacts::pptx::standards::v_ecma_376::subsets::base::io::export::serializers::artifacts::zip::v2_0::base::serialize(&snapshot).expect("serialize exact fixture to binary");
+        let from_binary = crate::artifacts::pptx::standards::v_ecma_376::subsets::base::io::import::deserializers::artifacts::zip::v2_0::base::deserialize(&binary).expect("deserialize exact fixture from binary");
         assert_eq!(from_binary, snapshot);
         assert_exact_export(&from_binary, &exact_bytes).await;
 

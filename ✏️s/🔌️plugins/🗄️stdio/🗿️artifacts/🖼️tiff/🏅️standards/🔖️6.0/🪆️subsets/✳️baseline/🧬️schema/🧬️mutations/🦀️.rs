@@ -426,7 +426,7 @@ mod tests {
         assert_eq!(codes(&snapshot), vec![CODE_TILED_NOT_BASELINE.to_string()]);
 
         let mut snapshot = conforming();
-        apply_tiff_baseline_mutation(&mut snapshot, &TiffBaselineMutation::RemoveStripOffsets(_));
+        apply_tiff_baseline_mutation(&mut snapshot, &TiffBaselineMutation::RemoveStripOffsets(remove_strip_offsets::RemoveStripOffsets {}));
         assert_eq!(codes(&snapshot), vec![CODE_MISSING_STRIP_OFFSETS.to_string()]);
     }
 
@@ -468,7 +468,7 @@ mod tests {
         let mut base = conforming();
         base.ifds[0].entries.retain(|entry| entry.tag != TAG_STRIP_OFFSETS);
         let mutation = TiffBaselineMutation::SetStripOffsets(set_strip_offsets::SetStripOffsets { offsets: vec![8] });
-        assert_eq!(inverse_tiff_baseline_mutation(&mutation, &base), vec![TiffBaselineMutation::RemoveStripOffsets]);
+        assert_eq!(inverse_tiff_baseline_mutation(&mutation, &base), vec![TiffBaselineMutation::RemoveStripOffsets(remove_strip_offsets::RemoveStripOffsets {})]);
 
         let mut snapshot = base.clone();
         apply_tiff_baseline_mutation(&mut snapshot, &mutation);

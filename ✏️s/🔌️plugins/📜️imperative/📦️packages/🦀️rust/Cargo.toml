@@ -37,6 +37,7 @@ imperative_extension_sdk = { path = "../../../../../✏️s/🔨️modules/📜�
 semio-framework-plugin = { workspace = true, features = ["component-guest"] }
 semio-framework-dispatch-macros = { path = "../../../../../🧰️framework/🔨️modules/🔀️dispatch/📦️packages/🦀️rust", package = "semio-framework-dispatch-macros" }
 semio-framework-schema = { path = "../../../../../🧰️framework/🔨️modules/🧬️schema/📦️packages/🦀️rust", package = "semio-framework-schema" }
+semio-framework-value-derive = { path = "../../../../../🧰️framework/🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust", package = "semio-framework-value-derive" }
 semio-framework.workspace = true
 
 [dev-dependencies]

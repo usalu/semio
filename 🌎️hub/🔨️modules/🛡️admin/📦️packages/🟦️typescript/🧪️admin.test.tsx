@@ -1,8 +1,5 @@
 // #region 🧲️Header
-/** @emoji 🧪️ Component tests for `@semio-tech/hub-admin` — mocks at the transport boundary (`fetch`
- * for `AdminClient`, a fake `WebSocket` for `DirectoryClient.stream`), matching this repo's own
- * `DirectoryClient` test style (`🧰️framework/…/💻️os/🟦️.ts`'s `FakeDirectoryWebSocket`)
- * rather than reaching into React context internals. */
+/** @emoji 🧪️ Component tests for `@semio-tech/hub-admin` at its fetch boundary. */
 // #endregion 🧲️Header
 
 // #region 🔌️Adapters
@@ -10,7 +7,6 @@ import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/re
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import type { DirectoryStreamMessage } from "@semio-tech/framework-os";
 import { vitestRunArguments } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { AdminLocaleProvider } from "../../🧱️elements/📚️I18n/🟦️.tsx";
 import { AdminSessionProvider, AdminTokenForm } from "../../🧱️elements/🔑️AdminSession/🟦️.tsx";
@@ -65,38 +61,6 @@ function requestCount(fetchMock: ReturnType<typeof vi.fn>, pathname: string): nu
   return fetchMock.mock.calls.filter(([input]) => new URL(String(input)).pathname === pathname).length;
 }
 //#endregion 🔖️FetchRouter
-
-//#region 🔖️FakeWebSocket
-/** 🧵️ Mirrors `🧰️framework/…/💻️os/🟦️.ts`'s own `FakeDirectoryWebSocket` test double — this
- * package cannot import that in-source test class, so it is duplicated here at the same shape. */
-class FakeDirectoryWebSocket {
-  static instances: FakeDirectoryWebSocket[] = [];
-  readonly url: string;
-  readyState = 0;
-  onopen: (() => void) | null = null;
-  onmessage: ((event: { data: string }) => void) | null = null;
-  onclose: (() => void) | null = null;
-  onerror: (() => void) | null = null;
-  closeCount = 0;
-  constructor(url: string) {
-    this.url = url;
-    FakeDirectoryWebSocket.instances.push(this);
-  }
-  send(): void {}
-  close(): void {
-    if (this.readyState >= 2) return;
-    this.closeCount += 1;
-    this.readyState = 3;
-  }
-  triggerOpen(): void {
-    this.readyState = 1;
-    this.onopen?.();
-  }
-  triggerMessage(message: DirectoryStreamMessage): void {
-    this.onmessage?.({ data: JSON.stringify(message) });
-  }
-}
-//#endregion 🔖️FakeWebSocket
 
 //#region 🔑️AdminTokenForm
 describe("AdminTokenForm", () => {
@@ -166,13 +130,11 @@ describe("SpacesPage", () => {
 });
 
 describe("ConnectionsPage", () => {
-  it("updates live on a pushed connection message", async () => {
+  it("renders only the authenticated REST snapshot and reports freshness", async () => {
     mockFetch({
       "/admin/api/overview": OVERVIEW_BODY,
-      "/admin/api/connections": [],
+      "/admin/api/connections": [{ syncSessionId: "sync-1", spaceId: "sp-1", documentId: "doc-1", surface: "s.space.home@1/*#editor", actor: "user:u-1#tab-a", userId: "u-1", email: "amara@semio.dev", role: "author", connectedAtMs: 0, presenceKnown: false }],
     });
-    FakeDirectoryWebSocket.instances = [];
-    vi.stubGlobal("WebSocket", FakeDirectoryWebSocket);
 
     render(
       <AdminLocaleProvider>
@@ -182,26 +144,9 @@ describe("ConnectionsPage", () => {
       </AdminLocaleProvider>,
     );
 
-    await waitFor(() => expect(FakeDirectoryWebSocket.instances).toHaveLength(1));
-    const socket = FakeDirectoryWebSocket.instances[0]!;
-    expect(socket.url).toBe(`ws://${window.location.host}/directory/ws?since=${OVERVIEW_BODY.headSeq}`);
-    socket.triggerOpen();
-    socket.triggerMessage({
-      kind: "connection",
-      phase: "opened",
-      connection: { syncSessionId: "sync-1", spaceId: "sp-1", documentId: "doc-1", surface: "s.space.home@1/*#editor", actor: "user:u-1#tab-a", userId: "u-1", email: "amara@semio.dev", role: "author", connectedAtMs: 0, presenceKnown: false },
-    });
-
     await waitFor(() => expect(document.querySelector('[data-row-id="connection:sync-1"]')).not.toBeNull());
     expect(screen.getByText(/amara@semio.dev/)).toBeTruthy();
-
-    socket.triggerMessage({
-      kind: "connection",
-      phase: "closed",
-      connection: { syncSessionId: "sync-1", spaceId: "sp-1", documentId: "doc-1", surface: "s.space.home@1/*#editor", actor: "user:u-1#tab-a", userId: "u-1", email: "amara@semio.dev", role: "author", connectedAtMs: 0, presenceKnown: false },
-    });
-
-    await waitFor(() => expect(document.querySelector('[data-row-id="connection:sync-1"]')).toBeNull());
+    expect(document.querySelector('[data-slot="admin-connections-freshness"]')?.textContent).toBe("Fresh snapshot");
   });
 });
 
@@ -230,10 +175,8 @@ describe("AdminApp tabs", () => {
     expect(document.activeElement).toBe(trigger);
   });
 
-  it("mounts requests and streams only for the active panel and cleans up on every switch", async () => {
+  it("mounts REST polling only for the active panel and cleans up on every switch", async () => {
     sessionStorage.clear();
-    FakeDirectoryWebSocket.instances = [];
-    vi.stubGlobal("WebSocket", FakeDirectoryWebSocket);
     const fetchMock = mockFetch({
       "/admin/api/overview": OVERVIEW_BODY,
       "/admin/api/spaces": [],
@@ -261,7 +204,6 @@ describe("AdminApp tabs", () => {
     expect(requestCount(fetchMock, "/admin/api/users")).toBe(0);
     expect(requestCount(fetchMock, "/admin/api/documents")).toBe(0);
     expect(requestCount(fetchMock, "/admin/api/events")).toBe(0);
-    expect(FakeDirectoryWebSocket.instances).toHaveLength(0);
 
     fireEvent.click(spacesTab);
     expect(spacesTab.getAttribute("aria-selected")).toBe("true");
@@ -272,27 +214,18 @@ describe("AdminApp tabs", () => {
     expect(spacesPanel.getAttribute("aria-labelledby")).toBe("admin-tab-spaces");
     await waitFor(() => expect(requestCount(fetchMock, "/admin/api/spaces")).toBe(1));
     expect(requestCount(fetchMock, "/admin/api/connections")).toBe(0);
-    expect(FakeDirectoryWebSocket.instances).toHaveLength(0);
 
     fireEvent.click(connectionsTab);
-    await waitFor(() => expect(FakeDirectoryWebSocket.instances).toHaveLength(1));
-    expect(requestCount(fetchMock, "/admin/api/connections")).toBe(1);
-    expect(requestCount(fetchMock, "/admin/api/overview")).toBe(3);
+    await waitFor(() => expect(requestCount(fetchMock, "/admin/api/connections")).toBe(1));
+    expect(requestCount(fetchMock, "/admin/api/overview")).toBe(2);
     expect(document.querySelectorAll('[role="tabpanel"]')).toHaveLength(1);
-    const firstSocket = FakeDirectoryWebSocket.instances[0]!;
-    expect(firstSocket.closeCount).toBe(0);
 
     fireEvent.click(spacesTab);
-    await waitFor(() => expect(firstSocket.closeCount).toBe(1));
     await waitFor(() => expect(requestCount(fetchMock, "/admin/api/spaces")).toBe(2));
-    expect(FakeDirectoryWebSocket.instances).toHaveLength(1);
 
     fireEvent.click(connectionsTab);
-    await waitFor(() => expect(FakeDirectoryWebSocket.instances).toHaveLength(2));
-    expect(requestCount(fetchMock, "/admin/api/connections")).toBe(2);
-    expect(requestCount(fetchMock, "/admin/api/overview")).toBe(4);
-    expect(firstSocket.closeCount).toBe(1);
-    expect(FakeDirectoryWebSocket.instances[1]?.closeCount).toBe(0);
+    await waitFor(() => expect(requestCount(fetchMock, "/admin/api/connections")).toBe(2));
+    expect(requestCount(fetchMock, "/admin/api/overview")).toBe(2);
   });
 });
 //#endregion 🛡️AdminTabs

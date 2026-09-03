@@ -5,7 +5,6 @@ use crate::artifacts::generation3d::diff::Generation3dDiff;
 use crate::artifacts::generation3d::mutations::Generation3dMutation;
 use crate::artifacts::generation3d::Generation3dSnapshot;
 use semio_framework_value_derive::{FromValue, ToValue};
-use serde_json::Value;
 
 //#region 🔖️ChangeGenerationValue
 /// 🔧 Nested address: outermost `id` (the generation) then `question_id` (the form field).
@@ -15,7 +14,7 @@ use serde_json::Value;
 pub struct ChangeGenerationValue {
     pub id: String,
     pub question_id: String,
-    pub new_value: Value,
+    pub new_value: dsl::DslValue,
 }
 
 impl protocol::MutationKind<Generation3dSnapshot, Generation3dMutation> for ChangeGenerationValue {

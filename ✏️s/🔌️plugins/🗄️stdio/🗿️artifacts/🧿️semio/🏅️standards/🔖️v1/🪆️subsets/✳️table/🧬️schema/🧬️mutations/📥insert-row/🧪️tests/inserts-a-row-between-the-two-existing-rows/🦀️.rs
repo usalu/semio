@@ -44,7 +44,7 @@ async fn the_undo_remove_row_takes_the_hamburg_row_back_out() {
     let base = before();
     let mutation = insert_row();
     let undo = mutation.inverse(&base);
-    assert_eq!(undo, vec![SemioTableMutation::RemoveRow(crate::artifacts::semio::standards::v1::subsets::table::schema::mutations::remove_row::mutation::RemoveRow { index: 1 })], "insert-row at #1 must undo as remove-row at #1");
+    assert_eq!(undo, vec![SemioTableMutation::RemoveRow(crate::artifacts::semio::standards::v1::subsets::table::schema::mutations::remove_row::RemoveRow { index: 1 })], "insert-row at #1 must undo as remove-row at #1");
     let mut current = mutation.diff(&base).diff().apply(&base).expect("forward insert-row applies");
     for step in &undo {
         current = step.diff(&current).diff().apply(&current).expect("the undo remove-row applies to the lengthened table");

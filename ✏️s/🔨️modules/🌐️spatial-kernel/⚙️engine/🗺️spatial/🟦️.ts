@@ -323,7 +323,7 @@ export interface KernelQueryContext {
 import { ObjectRef, SelectionTarget, deletableObjectIdsFromSelection, deleteObjectsFromModel } from "../📐️geometry/🟦️.ts";
 
 const __spatialCoreTestRuntime = import.meta.vitest ? await import("../../../../🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🏃️runtime/🟦️.ts") : null;
-const __spatialCoreTestKernel = import.meta.vitest ? await import("../🧱️brepjs/🟦️.ts") : null;
+const __spatialCoreTestKernel = import.meta.vitest ? await import("../🧮️preview/🟦️.ts") : null;
 
 if (import.meta.vitest) {
   __spatialCoreTestRuntime!.bootstrapCadModules();

@@ -126,12 +126,21 @@ async fn plugin_contributions<PA: crate::app::PluginApp>(runtime: &crate::plugin
     }
 }
 
+fn encode_package_descriptor(descriptor: &PackageDescriptor) -> Vec<u8> {
+    let value = dsl::to_dsl_value(descriptor).unwrap_or_else(|error| {
+        let bounded = error.chars().take(1024).collect::<String>();
+        panic!("package descriptor structural encoding failed: {bounded}")
+    });
+    store::pack_rt::encode_wire_value(&value)
+}
+
 pub async fn describe_plugin<PA: crate::app::PluginApp>(runtime: &crate::plugin_runtime::PluginRuntime<PA>) -> Vec<u8> {
     let manifest = crate::plugin_runtime::plugin_manifest(runtime).await;
     let extras = crate::plugin_runtime::plugin_descriptor_extras().await;
     let contributions = plugin_contributions(runtime, &manifest).await;
     let descriptor = PackageDescriptor {
         descriptor_version: 1,
+        package_id: extras.package_id,
         role: PackageRole::Plugin,
         manifest,
         activation_events: extras.activation_events,
@@ -143,14 +152,7 @@ pub async fn describe_plugin<PA: crate::app::PluginApp>(runtime: &crate::plugin_
         assets: extras.assets,
         hashes: PackageHashes { wasm_sha256: String::new(), core_wasm_sha256: String::new(), descriptor_sha256: String::new() },
     };
-    // 🌉️ Bridges through `serde_json` rather than `dsl::to_dsl_value`: `PackageDescriptor` still
-    // derives only `serde`, transitively through `PluginManifest`/`AppDefinition`'s own huge,
-    // largely-unconverted field graph (RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS's
-    // own in-flight work) — the sanctioned transitional bridge for "a type that still derives serde"
-    // (`🌱️value/🦀️.rs`'s `From<&serde_json::Value> for DslValue` doc). Byte-identical to a
-    // native `ToValue` encode since both paths bottom out on the same struct shape either way.
-    let value = serde_json::to_value(&descriptor).map(|json| dsl::DslValue::from(&json)).unwrap_or(dsl::DslValue::Null);
-    store::pack_rt::encode_wire_value(&value)
+    encode_package_descriptor(&descriptor)
 }
 
 /// 🧩️ E1-describe: the `extension_exports!` counterpart of `describe_plugin` — added alongside it
@@ -167,6 +169,7 @@ pub async fn describe_plugin<PA: crate::app::PluginApp>(runtime: &crate::plugin_
 /// host's `ExtensionPointDeclaration.activation`, not a declaration of its own.
 pub async fn describe_extension() -> Vec<u8> {
     let extension = crate::plugin_runtime::extension_manifest().await;
+    let package_id = extension.package_id.clone();
     let manifest = PluginManifest {
         plugin_id: extension.extension_id,
         label: extension.label,
@@ -195,6 +198,7 @@ pub async fn describe_extension() -> Vec<u8> {
     };
     let descriptor = PackageDescriptor {
         descriptor_version: 1,
+        package_id,
         role: PackageRole::Extension,
         manifest,
         activation_events: Vec::new(),
@@ -206,14 +210,7 @@ pub async fn describe_extension() -> Vec<u8> {
         assets: Vec::new(),
         hashes: PackageHashes { wasm_sha256: String::new(), core_wasm_sha256: String::new(), descriptor_sha256: String::new() },
     };
-    // 🌉️ Bridges through `serde_json` rather than `dsl::to_dsl_value`: `PackageDescriptor` still
-    // derives only `serde`, transitively through `PluginManifest`/`AppDefinition`'s own huge,
-    // largely-unconverted field graph (RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS's
-    // own in-flight work) — the sanctioned transitional bridge for "a type that still derives serde"
-    // (`🌱️value/🦀️.rs`'s `From<&serde_json::Value> for DslValue` doc). Byte-identical to a
-    // native `ToValue` encode since both paths bottom out on the same struct shape either way.
-    let value = serde_json::to_value(&descriptor).map(|json| dsl::DslValue::from(&json)).unwrap_or(dsl::DslValue::Null);
-    store::pack_rt::encode_wire_value(&value)
+    encode_package_descriptor(&descriptor)
 }
 
 #[cfg(test)]

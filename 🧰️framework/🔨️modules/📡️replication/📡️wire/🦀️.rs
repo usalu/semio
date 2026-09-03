@@ -47,6 +47,7 @@ impl Lane {
 #[derive(Clone, Debug, PartialEq)]
 pub enum ClientFrame {
     Hello { wire_version: u32, protocol_version: u32, schema: String, pack_schema_hash: [u8; 32], actor: crate::ids::ActorId, token: Option<String>, resume_token: Option<String>, frontier: Option<crate::causal::FrontierSummary> },
+    SocketHelloV1 { wire_version: u32, protocol_version: u32, schema: String, pack_schema_hash: [u8; 32], resume_token: Option<String>, frontier: Option<crate::causal::FrontierSummary> },
     Commands { batch_id: u64, envelopes: Vec<crate::causal::MutationEnvelope> },
     FrontierAdvertise { frontier: crate::causal::FrontierSummary },
     PreviewPublish { key: String, seq: u64, payload: Vec<u8> },
@@ -864,6 +865,15 @@ pub async fn encode_client_frame(frame: &ClientFrame, lane: Lane) -> Vec<u8> {
             write_opt_str(&mut out, resume_token).await;
             write_opt_frontier(&mut out, frontier).await;
         }
+        ClientFrame::SocketHelloV1 { wire_version, protocol_version, schema, pack_schema_hash, resume_token, frontier } => {
+            out.push(7);
+            crate::wire::write_varint_u64(&mut out, *wire_version as u64);
+            crate::wire::write_varint_u64(&mut out, *protocol_version as u64);
+            crate::write_str(&mut out, schema);
+            crate::write_hash32(&mut out, pack_schema_hash);
+            write_opt_str(&mut out, resume_token).await;
+            write_opt_frontier(&mut out, frontier).await;
+        }
         ClientFrame::Commands { batch_id, envelopes } => {
             out.push(1);
             crate::wire::write_varint_u64(&mut out, *batch_id);
@@ -925,6 +935,14 @@ pub async fn decode_client_frame(bytes: &[u8]) -> Result<(Lane, ClientFrame), cr
         4 => ClientFrame::Presence { peer: crate::read_bytes(bytes, &mut pos)? },
         5 => ClientFrame::CreditGrant { n: crate::wire::read_varint_u64(bytes, &mut pos)? as u32 },
         6 => ClientFrame::Bye,
+        7 => ClientFrame::SocketHelloV1 {
+            wire_version: crate::wire::read_varint_u64(bytes, &mut pos)? as u32,
+            protocol_version: crate::wire::read_varint_u64(bytes, &mut pos)? as u32,
+            schema: crate::read_str(bytes, &mut pos)?,
+            pack_schema_hash: crate::read_hash32(bytes, &mut pos)?,
+            resume_token: read_opt_str(bytes, &mut pos).await?,
+            frontier: read_opt_frontier(bytes, &mut pos).await?,
+        },
         other => return Err(malformed("wire client-frame tag", pos as u64, &format!("unknown tag {other:#x}")).await),
     };
     Ok((lane, frame))
@@ -1230,6 +1248,15 @@ mod tests {
     async fn client_frame_hello_with_no_optionals_round_trips() {
         assert_client_round_trips(
             &ClientFrame::Hello { wire_version: 1, protocol_version: 1, schema: "schema.v1".to_string(), pack_schema_hash: [0u8; 32], actor: crate::ids::ActorId("actor-2".to_string()), token: None, resume_token: None, frontier: None },
+            Lane::Command,
+        )
+        .await;
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn client_frame_socket_hello_v1_round_trips_without_credentials() {
+        assert_client_round_trips(
+            &ClientFrame::SocketHelloV1 { wire_version: 1, protocol_version: 1, schema: "schema.v1".to_string(), pack_schema_hash: [2u8; 32], resume_token: None, frontier: Some(sample_frontier().await) },
             Lane::Command,
         )
         .await;

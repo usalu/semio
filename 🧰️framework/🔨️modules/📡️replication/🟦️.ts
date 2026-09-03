@@ -227,6 +227,16 @@ export type ClientFrame =
         readonly frontier: WireFrontierSummary | null;
       };
     }
+  | {
+      readonly SocketHelloV1: {
+        readonly wire_version: number;
+        readonly protocol_version: number;
+        readonly schema: string;
+        readonly pack_schema_hash: readonly number[];
+        readonly resume_token: string | null;
+        readonly frontier: WireFrontierSummary | null;
+      };
+    }
   | { readonly Commands: { readonly batch_id: number; readonly envelopes: readonly WireMutationEnvelope[] } }
   | { readonly FrontierAdvertise: { readonly frontier: WireFrontierSummary } }
   | { readonly PreviewPublish: { readonly key: string; readonly seq: number; readonly payload: readonly number[] } }
@@ -1086,6 +1096,15 @@ export function encodeClientFrame(frame: ClientFrame, lane: WireLane): Uint8Arra
     writeOptStr(out, hello.token);
     writeOptStr(out, hello.resume_token);
     writeOptFrontier(out, hello.frontier);
+  } else if ("SocketHelloV1" in frame) {
+    out.push(7);
+    const hello = frame.SocketHelloV1;
+    writeVarintU64(out, hello.wire_version);
+    writeVarintU64(out, hello.protocol_version);
+    writeStr(out, hello.schema);
+    writeHash32(out, hello.pack_schema_hash);
+    writeOptStr(out, hello.resume_token);
+    writeOptFrontier(out, hello.frontier);
   } else if ("Commands" in frame) {
     out.push(1);
     writeVarintU64(out, frame.Commands.batch_id);
@@ -1150,6 +1169,18 @@ export function decodeClientFrame(bytes: Uint8Array): { readonly lane: WireLane;
       break;
     case 6:
       frame = "Bye";
+      break;
+    case 7:
+      frame = {
+        SocketHelloV1: {
+          wire_version: readVarintU64(bytes, pos),
+          protocol_version: readVarintU64(bytes, pos),
+          schema: readStr(bytes, pos),
+          pack_schema_hash: readHash32(bytes, pos),
+          resume_token: readOptStr(bytes, pos),
+          frontier: readOptFrontier(bytes, pos),
+        },
+      };
       break;
     default:
       throw new Error(`wire client-frame tag: unknown tag ${tag}`);

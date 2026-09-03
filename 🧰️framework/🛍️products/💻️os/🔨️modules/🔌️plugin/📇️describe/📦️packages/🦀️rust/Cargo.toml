@@ -46,3 +46,5 @@ semio-framework-async = { workspace = true }
 
 [dev-dependencies]
 semio-framework-async-macros = { path = "../../../../../../../🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust" }
+serde = { workspace = true }
+serde_json = { workspace = true }

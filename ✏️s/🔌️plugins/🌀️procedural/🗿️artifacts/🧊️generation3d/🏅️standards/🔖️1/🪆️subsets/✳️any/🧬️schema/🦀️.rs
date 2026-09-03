@@ -328,11 +328,11 @@ pub fn example_document_json(example_id: &str) -> String {
     dsl::json::to_json_string(&example_snapshot(example_id).unwrap_or_default())
 }
 
-/// 🌉️ Bridges a `FormGeneration.values` map (framework-mandated `serde_json::Map<String,
-/// serde_json::Value>`, see `FormGeneration` in `📖️playbook/🦀️.rs`) into the `pack::json::Object`
-/// that `forms_bridge::apply_generation_values_to_fixture` actually takes.
-fn generation_values_to_pack_object(values: &serde_json::Map<String, Value>) -> dsl::json::Object {
-    match dsl::json::from_dsl_value(&dsl::DslValue::from(&Value::Object(values.clone()))) {
+/// 🌉️ Bridges a `FormGeneration.values` map (`flow::playbook::PlaybookValues`, see `FormGeneration`
+/// in `📖️playbook/🦀️.rs`) into the `pack::json::Object` that `forms_bridge::apply_generation_values_to_fixture`
+/// actually takes.
+fn generation_values_to_pack_object(values: &flow::playbook::PlaybookValues) -> dsl::json::Object {
+    match dsl::json::from_dsl_value(&dsl::DslValue::object(values.clone())) {
         dsl::json::Value::Object(object) => object,
         _ => dsl::json::Object::new(),
     }
@@ -404,7 +404,7 @@ pub fn widget_id_from_instance_id(instance_id: &str) -> &str {
     base.split('@').next().unwrap_or(base)
 }
 
-pub fn evaluate_generation_preview(fixture: &FlowFixture, values: &serde_json::Map<String, Value>) -> String {
+pub fn evaluate_generation_preview(fixture: &FlowFixture, values: &flow::playbook::PlaybookValues) -> String {
     let fixture_json = dsl::json::to_json_string(fixture);
     let patched = apply_generation_values_to_fixture(&fixture_json, &generation_values_to_pack_object(values));
     let patched_fixture = FlowHost::parse_fixture_json(&patched).unwrap_or_else(|_| fixture.clone());

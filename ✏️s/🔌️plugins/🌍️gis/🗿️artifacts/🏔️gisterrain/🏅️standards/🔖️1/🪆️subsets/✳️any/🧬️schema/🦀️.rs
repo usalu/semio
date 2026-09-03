@@ -286,7 +286,7 @@ fn default_exaggeration() -> f64 {
 
 pub const GIS_3D_TERRAIN_TILE_URL_TEMPLATE: &str = "/dem/{z}/{x}/{y}.png";
 
-#[derive(ToValue, FromValue)]
+#[derive(ToValue)]
 #[value(rename_all = "camelCase")]
 struct TerrainSceneStyleJson<'a> {
     tile_url_template: &'a str,
@@ -311,7 +311,7 @@ pub fn build_terrain_scene_json(descriptor: &TerrainDescriptorJson) -> String {
         min_zoom: tiles::TERRAIN_TILE_MIN_ZOOM,
         max_zoom: tiles::TERRAIN_TILE_MAX_ZOOM,
     };
-    serde_json::to_string(&style).unwrap_or_default()
+    dsl::os_pack::json::to_json_string(&style)
 }
 //#endregion 🔖️TerrainDescriptor
 

@@ -33,7 +33,7 @@ use ui_contract::{SurfaceId, UiDocumentLease, UiFixedList, UiText, UI_DOCUMENT_L
 #[cfg(not(target_arch = "wasm32"))]
 use semio_framework_os_kernel::os_directory::{
     client::{native::NativeDirectoryTransport, DirectoryClient, DirectoryStream, DirectoryStreamTurn, DirectoryTransport},
-    identity::{actor_id, mint_or_restore, Identity, IdentityOutcome, IdentityStatus},
+    identity::{actor_id, restore_inherited, Identity, IdentityOutcome, IdentityStatus},
     DirectoryCommand, DirectoryEvent, DirectorySpaceKind, DirectorySpaceRole, DirectorySpaceVisibility, DirectoryStreamMessage,
 };
 // 🌀️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (terra-directory-and-run): `DirectoryClient`'s request
@@ -361,7 +361,7 @@ fn default_persistence_bindings(identity: Option<&Identity>, space_id: Option<&s
     };
     match (identity, space_id) {
         (Some(identity), Some(space_id)) => {
-            let mut bindings = vec![PersistenceBinding::Hub { base_url: identity.hub_base_url.clone(), space_id: space_id.to_string(), token: Some(identity.session_token.clone()), surface: surface.map(str::to_string) }];
+            let mut bindings = vec![PersistenceBinding::Hub { base_url: identity.hub_base_url.clone(), space_id: space_id.to_string(), token: None, surface: surface.map(str::to_string) }];
             bindings.extend(folder);
             bindings
         }
@@ -638,7 +638,7 @@ mod identity_directory_presence_tests {
     use super::*;
 
     fn sample_identity() -> Identity {
-        Identity { user_id: "u-amara".to_string(), email: "amara@semio.dev".to_string(), display_name: "Amara".to_string(), hub_base_url: "http://hub.local".to_string(), session_token: "tok".to_string(), issued_at_ms: 0 }
+        Identity { user_id: "u-amara".to_string(), email: "amara@semio.dev".to_string(), display_name: "Amara".to_string(), hub_base_url: "http://hub.local".to_string(), issued_at_ms: 0 }
     }
 
     /// 🧪️ Verify item: "the actor id shape".
@@ -1294,13 +1294,13 @@ impl ShellDirectoryRunner {
             }
             let action = self.stream.lock().expect("directory stream mutex poisoned").turn(&self.context, self.pool.now_ms());
             match action {
-                DirectoryStreamTurn::Dial { transport, url } => {
+                DirectoryStreamTurn::Dial { client, since } => {
                     let weak = std::sync::Arc::downgrade(&self);
                     let context = self.context.clone();
                     self.pool.submit(
                         Lane::Io,
                         Box::new(move || {
-                            let result = transport.open_ws(&context, &url, Self::DIAL_TIMEOUT_MS);
+                            let result = client.open_stream_ws(&context, since, Self::DIAL_TIMEOUT_MS).map_err(|error| semio_framework_os_kernel::os_directory::client::TransportError::Io(error.to_string()));
                             if let Some(runner) = weak.upgrade() {
                                 let now_ms = runner.pool.now_ms();
                                 let _ = runner.stream.lock().expect("directory stream mutex poisoned").complete_dial(now_ms, result);
@@ -4028,8 +4028,7 @@ impl ShellState {
         let mut ctx = self.directory_ctx();
         ctx.deadline_ms = Some(pool.now_ms().saturating_add(5_000));
         self.identity_bootstrap_task = Some(ShellPoolFuture::spawn(pool, Lane::Io, async move {
-            let client = DirectoryClient::new(transport, env.hub_url.clone());
-            let outcome = mint_or_restore(&ctx, &client, &env).await.map_err(|error| error.to_string());
+            let outcome = restore_inherited(&ctx, transport).await.map_err(|error| error.to_string());
             let _ = tx.send(outcome);
         }));
         self.identity_bootstrap_rx = Some(rx);
@@ -4045,8 +4044,7 @@ impl ShellState {
                 self.identity_bootstrap_task.take();
                 self.identity_offline = outcome.status == IdentityStatus::Offline;
                 self.identity = Some(outcome.identity.clone());
-                let client = std::sync::Arc::new(DirectoryClient::new(self.directory_transport.clone(), outcome.identity.hub_base_url.clone()));
-                client.set_token(Some(outcome.identity.session_token.clone()));
+                let client = std::sync::Arc::new(DirectoryClient::authenticated(self.directory_transport.clone(), outcome.credential.clone()));
                 self.directory_client = Some(client.clone());
                 if !self.identity_offline {
                     self.open_directory_stream(client);

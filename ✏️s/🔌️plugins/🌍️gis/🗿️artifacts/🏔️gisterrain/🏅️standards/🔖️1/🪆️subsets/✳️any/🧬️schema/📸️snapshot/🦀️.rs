@@ -13,7 +13,7 @@ use schema::ArtifactSchema;
 use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::base::schema::triples::{split_top_level, strip_brackets};
 use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::mesh::schema::snapshot::SemioMeshSnapshot;
 use serde::{Deserialize, Serialize};
-use semio_framework_value_derive::{FromValue, ToValue};
+use dsl::{FromValue, ToValue};
 
 //#region 🔹Snapshot
 /// 📸️ Persisted GIS terrain document snapshot (persistent fields of the artifact).
@@ -262,13 +262,13 @@ pub fn gis_terrain_identity_report_json(dsl_text: &str) -> Result<String, String
     let canonical_again = <GisTerrainSnapshot as store::ArtifactDsl>::print_dsl(&reparsed);
     let packed = <GisTerrainSnapshot as store::ArtifactPack>::encode_pack(&reparsed);
     let unpacked = <GisTerrainSnapshot as store::ArtifactPack>::decode_pack(&packed).map_err(|error| error.to_string())?;
-    let report = serde_json::json!({
-        "parsed": serde_json::to_value(&parsed).map_err(|error| error.to_string())?,
-        "reparsed": serde_json::to_value(&reparsed).map_err(|error| error.to_string())?,
-        "packDecoded": serde_json::to_value(&unpacked).map_err(|error| error.to_string())?,
-        "canonicalText": canonical,
-        "canonicalTextAgain": canonical_again,
-    });
-    Ok(report.to_string())
+    let report = dsl::os_pack::json::object([
+        ("parsed".to_string(), dsl::os_pack::json::from_dsl_value(&parsed.to_value())),
+        ("reparsed".to_string(), dsl::os_pack::json::from_dsl_value(&reparsed.to_value())),
+        ("packDecoded".to_string(), dsl::os_pack::json::from_dsl_value(&unpacked.to_value())),
+        ("canonicalText".to_string(), dsl::os_pack::json::Value::from(canonical.as_str())),
+        ("canonicalTextAgain".to_string(), dsl::os_pack::json::Value::from(canonical_again.as_str())),
+    ]);
+    Ok(dsl::os_pack::json::to_string(&report))
 }
 //#endregion 🌉️IdentityBridge

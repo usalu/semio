@@ -5007,6 +5007,16 @@ const MICRO_COMMIT_SEED_EMPTY_GK_SH = `compose_micro_commit_seed_empty_gk() {
   git config --local commit.template "$GK_TEMPLATE" 2>/dev/null || true
 }`;
 
+const MICRO_COMMIT_DISABLE_PREPARE_SH = `${MICRO_COMMIT_SEED_EMPTY_GK_SH}
+compose_micro_commit_disable_prepare() {
+  GIT_DIR=$(git rev-parse --git-dir 2>/dev/null) || return 0
+  for f in "$GIT_DIR"/compose-micro-commit-*; do
+    [ -e "$f" ] || continue
+    rm -f "$f" 2>/dev/null || true
+  done
+  compose_micro_commit_seed_empty_gk
+}`;
+
 const MICRO_COMMIT_WIPE_FULL_SH = `${MICRO_COMMIT_SEED_EMPTY_GK_SH}
 compose_micro_commit_wipe() {
   GIT_DIR=$(git rev-parse --git-dir 2>/dev/null) || return 0
@@ -5040,16 +5050,34 @@ const MICRO_COMMIT_RESOLVE_REPO_CLI_SH = `compose_resolve_repo_cli() {
   fi
 }`;
 
+const MICRO_COMMIT_RESOLVE_BUN_SH = `compose_resolve_bun() {
+  ROOT="$1"
+  if [ -n "$COMPOSE_BUN" ] && [ -x "$COMPOSE_BUN" ]; then
+    echo "$COMPOSE_BUN"
+    return
+  fi
+  BUN_PIN="$ROOT/.🧬semio/🦑️repo/${MICRO_COMMIT_BUN_PIN}"
+  if [ -f "$BUN_PIN" ]; then
+    BUN=$(sed -n '1p' "$BUN_PIN" 2>/dev/null)
+    if [ -n "$BUN" ] && [ -x "$BUN" ]; then
+      echo "$BUN"
+      return
+    fi
+  fi
+  command -v bun 2>/dev/null || true
+}`;
+
 /** 🪝️Renders a portable `sh` git hook (LF, inline wipe; repo client binary for micro-commit). */
 export function renderMicroCommitGitHook(name: "prepare-commit-msg" | (typeof MICRO_COMMIT_POST_WIPE_HOOKS)[number]): string {
   const isPostWipe = (MICRO_COMMIT_POST_WIPE_HOOKS as readonly string[]).includes(name);
   const lines = [
     "#!/usr/bin/env sh",
-    isPostWipe ? MICRO_COMMIT_WIPE_FULL_SH : MICRO_COMMIT_SEED_EMPTY_GK_SH,
+    isPostWipe ? MICRO_COMMIT_WIPE_FULL_SH : MICRO_COMMIT_DISABLE_PREPARE_SH,
     "ROOT=$(git rev-parse --show-toplevel 2>/dev/null) || exit 0",
     'cd "$ROOT" || exit 0',
     "GIT_DIR=$(git rev-parse --git-dir 2>/dev/null) || exit 0",
     MICRO_COMMIT_RESOLVE_REPO_CLI_SH,
+    MICRO_COMMIT_RESOLVE_BUN_SH,
   ];
   if (isPostWipe) {
     lines.push('CLI=$(compose_resolve_repo_cli "$ROOT")', '[ -n "$CLI" ] && "$CLI" micro-commit reset 2>/dev/null || true', "compose_micro_commit_wipe", "exit 0");
@@ -5059,9 +5087,10 @@ export function renderMicroCommitGitHook(name: "prepare-commit-msg" | (typeof MI
       "  compose_micro_commit_seed_empty_gk",
       "  exit 0",
       "}",
-      'CLI=$(compose_resolve_repo_cli "$ROOT")',
-      '[ -z "$CLI" ] && exit 0',
-      'exec "$CLI" micro-commit prepare-commit-msg "$1" "$2"',
+      'BUN=$(compose_resolve_bun "$ROOT")',
+      '[ -z "$BUN" ] && { compose_micro_commit_disable_prepare; exit 0; }',
+      '"$BUN" "$ROOT/📜️script.ts" micro-commit prepare-commit-msg "$1" "$2" 2>/dev/null || compose_micro_commit_disable_prepare',
+      "exit 0",
     );
   }
   return `${lines.join("\n")}\n`;

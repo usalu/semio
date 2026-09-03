@@ -1,0 +1,8 @@
+{
+  "title": "Brep Kernel Dependency Free Runtime",
+  "emoji": "📐️",
+  "status": "open",
+  "description": "Finish the first-party B-Rep kernel (stdio `semio/v1/brep` artifact) so every brep-backed app runs without BRepJS/OpenCascade/BRepKit at runtime. Driven by `.🧬semio/🦑️repo/✍️notes/semio_brep_kernel_audit_7ad363f.md`: kernel-owned neutral math/mesh types, exact affine transforms, exact sweeps, exact booleans (intersect→split→classify→stitch), rolling-ball blends, offsets/shell/draft, robust closest-point/UV + p-curves, one authoritative classifier on the BVH, stable persistent labels + operation history, real viewer/editor tessellation and mutation paths, STEP fidelity, and the removal of `brepjs`/`brepjs-opencascade` from the CAD TypeScript runtime in favour of the first-party kernel. Coordination: Opus 5 High main chat plans; Sonnet 5 High agents execute; Haiku 4.5 agents explore read-only; maximum parallel fleet; other agents work concurrently on the same files.",
+  "goal": "🎯r2603",
+  "sessions": []
+}

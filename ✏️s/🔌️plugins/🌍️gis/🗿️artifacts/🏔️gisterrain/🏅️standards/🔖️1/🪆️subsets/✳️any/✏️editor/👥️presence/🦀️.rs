@@ -104,6 +104,20 @@ pub enum Gis3dPresenceMutation {
 impl Mutation<Gis3dPresence> for Gis3dPresenceMutation {
     type Diff = Gis3dPresence;
 
+    /// 🧾️ Leaf metadata for the single presence verb. ⚠️ PROVISIONAL: the `owner` path below names
+    /// no directory on disk — this enum has no `👥️presence/<slug>` leaf triad of its own, so the
+    /// entry is a metadata placeholder to satisfy `protocol::Mutation`, matching `process3d`'s own
+    /// presence precedent.
+    const DESCRIPTORS: &'static [protocol::MutationLeafDescriptor] = &[
+        protocol::MutationLeafDescriptor { schema_version: 1, owner: "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/📄snapshot", semantic_kind: "snapshot", display_name: "Snapshot", emoji: "📄", aggregate_variant: "Snapshot", payload_schema: "🔣️.schema.json", text_opcode: None, binary_tag: None, invertibility: protocol::MutationInvertibility::ExplicitMutation, diff_participation: protocol::MutationDiffParticipation::Detect, outcome_classes: &[protocol::MutationOutcomeClass::Applied], composition: protocol::MutationComposition::Atomic, required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema] },
+    ];
+
+    fn descriptor(&self) -> &'static protocol::MutationLeafDescriptor {
+        match self {
+            Self::Snapshot { .. } => &Self::DESCRIPTORS[0],
+        }
+    }
+
     fn diff(&self, base: &Gis3dPresence) -> protocol::MutationOutcome<Gis3dPresence> {
         match self {
             Self::Snapshot { presence } => {

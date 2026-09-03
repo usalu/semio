@@ -1,0 +1,5 @@
+# 🎯 Pins this standalone harness's build output away from the root workspace's
+# `target/` so nine parallel workers running `cargo test` here never contend the
+# root `Cargo.lock`/target directory lock (see TICKET/📓️h0-harness.md).
+[build]
+target-dir = "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️03/BREP-KERNEL-DEPENDENCY-FREE-RUNTIME/🗑️generated/harness-target"

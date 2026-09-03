@@ -311,7 +311,8 @@ mod tests {
         let base = crate::artifacts::mp4::standards::isobmff::subsets::any::io::decode_mp4(&bytes).expect("decode exact MP4 fixture");
 
         let mut unchanged = base.clone();
-        apply_mp4_mutation(&mut unchanged, &Mp4Mutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: unchanged.clone() }));
+        let snapshot = unchanged.clone();
+        apply_mp4_mutation(&mut unchanged, &Mp4Mutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot }));
         assert_eq!(crate::artifacts::mp4::standards::isobmff::subsets::any::io::encode_mp4(&unchanged), bytes);
 
         let mutation = Mp4Mutation::SetSampleSync(set_sample_sync::SetSampleSync { track_index: 0, index: 0, sync: !base.tracks[0].samples[0].sync });

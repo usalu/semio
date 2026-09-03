@@ -1338,12 +1338,9 @@ pub struct ActionInvocation {
 /// @emoji 🧰️ Declares one interactive utility (a live-preview pointer mode) an app exposes. Distinct from
 /// an `ActionDefinition`: exactly one utility is active per window kind at a time, and activation is
 /// host-owned session view state (`ViewModel.active_utility_id`), never a document field or VCS operation.
-// 🚧️ BLOCKED (26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS): `category`
-// below is `ui_wgpu::wgpu::UtilityCategory` — NOT among the seven ui_wgpu keystone types that
-// gained `ToValue`/`FromValue` this ticket (see 📓️ui-wgpu-keystone-seven-value-derive-2026-09-02.md);
-// `🖱️ui` is out of scope this pass. Left serde-only. Revisit once `UtilityCategory` converts.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[value(rename_all = "camelCase", deny_unknown_fields)]
 pub struct UtilityDefinition {
     pub id: String,
     /// 🗣️ Manifest-level, locale×terminology-checked — see `LocalizedLabel` (follow-up: no owned schema mirror yet).
@@ -1351,18 +1348,23 @@ pub struct UtilityDefinition {
     pub icon_id: IconName,
     /// 🧺️ Visual ribbon collection this utility groups into; `None` = a flat top-level ribbon entry.
     #[serde(skip_serializing_if = "Option::is_none")]
+    #[value(skip_serializing_if = "Option::is_none")]
     pub group: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
+    #[value(skip_serializing_if = "Option::is_none")]
     pub keys: Option<String>,
     /// 🖱️ CSS/winit cursor name applied to the window body while this utility is active.
     #[serde(skip_serializing_if = "Option::is_none")]
+    #[value(skip_serializing_if = "Option::is_none")]
     pub cursor: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
+    #[value(skip_serializing_if = "Option::is_none")]
     pub category: Option<ui_wgpu::wgpu::UtilityCategory>,
     /// 🚦️ Whether window-scoped actions stay enabled while this utility is active. Defaults to `false`
     /// (matching today's whitelist-based gating where an active utility suppresses the action panel);
     /// set `true` for passive view utilities (e.g. cad `cad.play.view.*`) that should not gate actions.
     #[serde(default)]
+    #[value(default)]
     pub allows_actions_while_active: bool,
 }
 
@@ -3181,12 +3183,9 @@ pub type Modes = NonEmptyVec<ModeDefinition>;
 /// `AppBuilder::build_definition`.
 pub type WindowKinds = NonEmptyVec<WindowKindDefinition>;
 
-// 🚧️ BLOCKED (26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS): a field
-// here embeds `kernel::CapabilityRequirement`, which has no `ToValue`/`FromValue` yet (🎠️kernel
-// owned by another agent this pass). Left serde-only. Revisit once `CapabilityRequirement`
-// converts.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[value(rename_all = "camelCase", deny_unknown_fields)]
 pub struct WindowKindDefinition {
     pub id: String,
     /// 🗣️ Manifest-level, locale×terminology-checked — see `LocalizedLabel` (follow-up: no owned schema mirror yet).
@@ -3196,26 +3195,35 @@ pub struct WindowKindDefinition {
     pub icon_id: IconName,
     /// 🎛️ Always-present chrome facets (was: separately-optional `measures`/`engagement`).
     #[serde(default)]
+    #[value(default)]
     pub options: WindowOptions,
     /// 📇️ Actions owned by this window kind. Mandatory, may be empty, never absent.
     #[serde(default)]
+    #[value(default)]
     pub actions: Vec<ActionDefinition>,
     /// 🧰️ Utilities this window kind accepts — references `AppDefinition.utilities` ids. Empty = no utilities.
     #[serde(default)]
+    #[value(default)]
     pub utilities: Vec<UtilityRef>,
     /// 🕹️ Interaction domains this window kind accepts — references `AppDefinition.interactions` ids.
     /// Empty = no interactions.
     #[serde(default)]
+    #[value(default)]
     pub interactions: Vec<InteractionRef>,
     #[serde(skip_serializing_if = "Option::is_none")]
+    #[value(skip_serializing_if = "Option::is_none")]
     pub params_schema: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
+    #[value(skip_serializing_if = "Option::is_none")]
     pub artifact_snapshot_schema: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
+    #[value(skip_serializing_if = "Option::is_none")]
     pub input_event_schema: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
+    #[value(skip_serializing_if = "Option::is_none")]
     pub output_schema: Option<String>,
     #[serde(default)]
+    #[value(default)]
     pub capabilities: Vec<kernel::CapabilityRequirement>,
 }
 
@@ -3405,12 +3413,9 @@ pub fn parse_surface_app_id(id: &str) -> Result<(ArtifactDialect, AppRole), Stri
 }
 //#endregion 🔖️Surface
 
-// 🚧️ BLOCKED (26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS): transitively
-// embeds `WindowKindDefinition`/`UtilityDefinition` above, both still serde-only (blocked on
-// `kernel::CapabilityRequirement`/`ui_wgpu::UtilityCategory`, neither owned by this pass). Left
-// serde-only. Revisit once both convert.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[value(rename_all = "camelCase", deny_unknown_fields)]
 pub struct AppDefinition {
     pub id: String,
     /// 👁️✏️ Whether this surface may mutate the artifact it is bound to — see `AppRole`.
@@ -3423,6 +3428,7 @@ pub struct AppDefinition {
     pub label: LocalizedLabel,
     pub breadcrumb: Vec<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
+    #[value(skip_serializing_if = "Option::is_none")]
     pub icon_id: Option<IconName>,
     pub controller_id: String,
     /// 🚧️ `Modes` is `NonEmptyVec<ModeDefinition>`, whose `serde(try_from/into = "Vec<T>")` wire
@@ -3437,60 +3443,77 @@ pub struct AppDefinition {
     pub keybindings: Vec<Keybinding>,
     /// 🧰️ The interactive utilities this app exposes (referenced by `WindowKindDefinition.utilities`).
     #[serde(default)]
+    #[value(default)]
     pub utilities: Vec<UtilityDefinition>,
     /// 🛠️ The mode-level tools this app exposes (referenced by `ModeDefinition.tools`).
     #[serde(default)]
+    #[value(default)]
     pub tools: Vec<ToolDefinition>,
     /// 🎛️ Commands owned by this app and active whenever it is focused.
     #[serde(default)]
+    #[value(default)]
     pub commands: Vec<CommandDefinition>,
     /// 🕹️ The interaction domains (hover + selection) this app exposes (referenced by
     /// `WindowKindDefinition.interactions`) — see `crate::InteractionDefinition`.
     #[serde(default)]
+    #[value(default)]
     pub interactions: Vec<InteractionDefinition>,
     #[serde(default)]
+    #[value(default)]
     pub named_layouts: Vec<NamedLayout>,
     #[serde(skip_serializing_if = "Option::is_none")]
+    #[value(skip_serializing_if = "Option::is_none")]
     pub default_layout: Option<WindowLayout>,
     /// 🗣️ Terminology ids this app declares beyond the implicit "native" default.
     #[serde(default)]
+    #[value(default)]
     pub terminologies: Vec<String>,
     /// 🗺️ Terminology id -> full replacement breadcrumb (product + app segments), e.g. "reuse" ->
     /// ["Entwerfen mit Bestand", "Aggregator"]; ids absent here keep the canonical breadcrumb under that terminology.
     #[serde(default)]
+    #[value(default)]
     pub terminology_breadcrumbs: std::collections::HashMap<String, Vec<String>>,
     /// 🎓️ This app's first-run walkthrough, if it declares one — see `IntroductionDefinition`.
     #[serde(skip_serializing_if = "Option::is_none")]
+    #[value(skip_serializing_if = "Option::is_none")]
     pub introduction: Option<IntroductionDefinition>,
     /// 🎬️ Recorded, timed walkthroughs this app declares — see `TutorialDefinition`. A brand's own
     /// `tutorials` (if any) are shown alongside these, never replacing them (unlike `introduction`).
     #[serde(default)]
+    #[value(default)]
     pub tutorials: Vec<TutorialDefinition>,
     /// 🗨️ The modal form dialogs this app can open via `Effect::OpenDialog`.
     #[serde(default)]
+    #[value(default)]
     pub dialogs: Vec<DialogDefinition>,
     /// 🔌️ This app's workflow input ports — see `crate::MediaPortSpec`.
     #[serde(default)]
+    #[value(default)]
     pub media_inputs: Vec<MediaPortSpec>,
     /// 🔌️ This app's workflow output ports — see `crate::MediaPortSpec`.
     #[serde(default)]
+    #[value(default)]
     pub media_outputs: Vec<MediaPortSpec>,
     /// 🗂️ OS resource kinds this app produces/consumes — see `crate::ArtifactKindSpec`. Drives
     /// `framework/product/os/core`'s artifact catalog registry instead of a hardcoded per-app match.
     #[serde(default)]
+    #[value(default)]
     pub artifact_kinds: Vec<ArtifactKindSpec>,
     /// 🧮️ This app's typed configuration record — see `crate::ConfigSpec`. Empty until per-app waves
     /// populate it.
     #[serde(default)]
+    #[value(default)]
     pub config: ConfigSpec,
     /// 🎛️ This app's typed binary command grammar — see `crate::CommandGrammar`. Empty until per-app
     /// waves populate it.
     #[serde(default)]
+    #[value(default)]
     pub command_grammar: CommandGrammar,
     /// 🔌️ This app's typed media I/O surface — see `crate::AppIo`. Not yet populated; `media_inputs`/
     /// `media_outputs`/`artifact_kinds` above remain the live source of truth until later waves migrate
     /// onto this.
     #[serde(default)]
+    #[value(default)]
     pub io: AppIo,
 }
 
@@ -4052,12 +4075,9 @@ pub struct ArtifactContributionDescriptor {
 }
 //#endregion 🔖️ArtifactContribution
 
-// 🚧️ BLOCKED (26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS): a field
-// here embeds `kernel::CapabilityRequirement`, which has no `ToValue`/`FromValue` yet (🎠️kernel
-// owned by another agent this pass). Left serde-only. Revisit once `CapabilityRequirement`
-// converts.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[value(rename_all = "camelCase", deny_unknown_fields)]
 pub struct PluginManifest {
     pub plugin_id: String,
     pub label: String,
@@ -4065,23 +4085,29 @@ pub struct PluginManifest {
     pub apps: Vec<AppDefinition>,
     pub examples: Vec<ExampleDefinition>,
     #[serde(default)]
+    #[value(default)]
     pub capabilities: Vec<kernel::CapabilityRequirement>,
     /// 🗂️ Open plugin contributions — see `TopicContribution`.
     #[serde(default)]
+    #[value(default)]
     pub topic_contributions: Vec<TopicContribution>,
     /// 🎛️ Plugin-scope commands this program exposes — apply whenever any of its apps is focused.
     #[serde(default)]
+    #[value(default)]
     pub commands: Vec<CommandDefinition>,
     /// 🗂️ Plugin-level artifact kinds (library plugins with zero apps declare kinds here).
     #[serde(default)]
+    #[value(default)]
     pub artifact_kinds: Vec<ArtifactKindSpec>,
     /// 🔗️ Direct plugin dependencies this plugin requires to load — see `PluginDependency`/
     /// `resolve_load_order`.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[value(default, skip_serializing_if = "Vec::is_empty")]
     pub dependencies: Vec<PluginDependency>,
     /// 🗂️ Artifact-kind contributions (mutations/inferences) this plugin contributes onto artifact
     /// kinds it depends on — see `ArtifactContributionDescriptor`.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[value(default, skip_serializing_if = "Vec::is_empty")]
     pub contributions: Vec<ArtifactContributionDescriptor>,
 }
 
@@ -4687,19 +4713,18 @@ pub enum ExecutionMode {
 /// (`📓️design-abi.md` §5). `allowed_modes` gates `Linked` (same publisher required);
 /// `capability_allowance`/`quota_ceiling` bound what any extension attaching here can ever hold,
 /// regardless of what it requests — "a host can never delegate more than it holds".
-// 🚧️ BLOCKED (26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS): a field
-// here embeds `kernel::ActivationEvent`, which has no `ToValue`/`FromValue` yet (🎠️kernel owned
-// by another agent this pass). `ToValue`/`FromValue` cannot be derived here until it does;
-// left serde-only. Revisit once `ActivationEvent` converts.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[value(rename_all = "camelCase", deny_unknown_fields)]
 pub struct ExtensionPointDeclaration {
     pub id: String,
     pub publisher_scope: String,
     pub allowed_modes: Vec<ExecutionMode>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[value(default, skip_serializing_if = "Vec::is_empty")]
     pub capability_allowance: Vec<kernel::CapabilityId>,
     #[serde(default)]
+    #[value(default)]
     pub quota_ceiling: kernel::QuotaSchema,
     pub payload_schema: kernel::SchemaId,
     pub activation: kernel::ActivationEvent,
@@ -4873,30 +4898,86 @@ pub const ASSEMBLY_FAILED_PLUGIN_ID: &str = "assembly-failed";
 /// `📓️design-abi.md` §3's `describe()` output (`🛂️.descriptor.semio`/`🔣️.json`).
 /// Nothing constructs or reads one yet in this packet: additive contract only (packet
 /// A2-abi-sdk's builder wiring and E1-describe's emitter/registry `check` gate consume it next).
-// 🚧️ BLOCKED (26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS): transitively
-// embeds `kernel::ActivationEvent` via `ExtensionPointDeclaration`/`ContributionSet` above, which
-// has no `ToValue`/`FromValue` yet (🎠️kernel owned by another agent this pass). Left serde-only.
-// Revisit once `ActivationEvent` converts.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[value(rename_all = "camelCase", deny_unknown_fields)]
 pub struct PackageDescriptor {
     pub descriptor_version: u32,
+    pub package_id: String,
     pub role: PackageRole,
     pub manifest: PluginManifest,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[value(default, skip_serializing_if = "Vec::is_empty")]
     pub activation_events: Vec<kernel::ActivationEvent>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[value(default, skip_serializing_if = "Vec::is_empty")]
     pub capability_requests: Vec<kernel::CapabilityRequest>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[value(default, skip_serializing_if = "Vec::is_empty")]
     pub extension_points: Vec<ExtensionPointDeclaration>,
     pub execution: ExecutionMode,
     #[serde(default)]
+    #[value(default)]
     pub quotas: kernel::QuotaSchema,
     #[serde(default)]
+    #[value(default)]
     pub contributions: ContributionSet,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[value(default, skip_serializing_if = "Vec::is_empty")]
     pub assets: Vec<AssetDeclaration>,
     pub hashes: PackageHashes,
+}
+
+#[cfg(test)]
+mod package_descriptor_value_codec_tests {
+    use super::*;
+
+    fn descriptor() -> PackageDescriptor {
+        PackageDescriptor {
+            descriptor_version: 1,
+            package_id: "semio:value-codec-fixture".into(),
+            role: PackageRole::Plugin,
+            manifest: PluginManifest {
+                plugin_id: "value-codec-fixture".into(),
+                label: "Value Codec Fixture".into(),
+                version: "1.0.0".into(),
+                apps: Vec::new(),
+                examples: Vec::new(),
+                capabilities: Vec::new(),
+                topic_contributions: Vec::new(),
+                commands: Vec::new(),
+                artifact_kinds: Vec::new(),
+                dependencies: Vec::new(),
+                contributions: Vec::new(),
+            },
+            activation_events: Vec::new(),
+            capability_requests: Vec::new(),
+            extension_points: Vec::new(),
+            execution: ExecutionMode::Isolated,
+            quotas: kernel::QuotaSchema::default(),
+            contributions: ContributionSet::default(),
+            assets: Vec::new(),
+            hashes: PackageHashes { wasm_sha256: String::new(), core_wasm_sha256: String::new(), descriptor_sha256: String::new() },
+        }
+    }
+
+    #[test]
+    fn package_descriptor_first_party_codec_preserves_serde_wire_and_required_fields() {
+        let descriptor = descriptor();
+        let value = descriptor.to_value();
+        assert_eq!(serde_json::Value::from(&value), serde_json::to_value(&descriptor).expect("serde oracle encodes descriptor"));
+        assert_eq!(PackageDescriptor::from_value(value.clone()).expect("first-party codec decodes descriptor"), descriptor);
+        let DslValue::Object(fields) = value else { panic!("descriptor must encode as an object") };
+        for omitted in ["activationEvents", "capabilityRequests", "extensionPoints", "assets"] {
+            assert!(!fields.iter().any(|(name, _)| name == omitted), "{omitted} must remain omitted when empty");
+        }
+        for required in ["descriptorVersion", "packageId"] {
+            let mut missing = fields.clone();
+            missing.retain(|(name, _)| name != required);
+            let error = PackageDescriptor::from_value(DslValue::Object(missing)).expect_err("missing required descriptor field must fail");
+            assert!(error.to_string().contains(required), "{error}");
+        }
+    }
 }
 //#endregion 🔖️PackageDescriptor
 

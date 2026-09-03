@@ -1,7 +1,7 @@
 //! 🕸️ CAD play app commands — the scene's node tree: create and rename.
 
-use crate::artifacts::cad::mutations::create_node::mutation::CreateNode as CreateNodeMutation;
-use crate::artifacts::cad::mutations::rename_node::mutation::RenameNode as RenameNodeMutation;
+use crate::artifacts::cad::mutations::create_node::CreateNode as CreateNodeMutation;
+use crate::artifacts::cad::mutations::rename_node::RenameNode as RenameNodeMutation;
 use crate::artifacts::cad::op::CadMutation;
 use crate::artifacts::cad::standards::v1::subsets::any::schema::inferences::next_cad_id;
 use crate::artifacts::cad::CadNode;

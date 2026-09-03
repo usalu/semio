@@ -3,7 +3,7 @@
   "$id": "https://semio.tech/schema/hub/artifact-chunk-cas-v1.fixture.json",
   "type": "object",
   "additionalProperties": false,
-  "required": ["version", "spaceId", "chunkBytes", "maximumRawBytes", "maximumChunkCount", "maximumManifestBytes", "vectors", "largePair", "retentionLedger"],
+  "required": ["version", "spaceId", "chunkBytes", "maximumRawBytes", "maximumChunkCount", "maximumManifestBytes", "vectors", "largePair", "retentionLedger", "sweepContinuation", "deleteBarrier"],
   "properties": {
     "version": { "const": 1 },
     "spaceId": { "type": "string", "minLength": 1, "maxLength": 1024 },
@@ -49,11 +49,117 @@
           "items": { "$ref": "#/$defs/ledgerSnapshot" }
         }
       }
+    },
+    "sweepContinuation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["formatVersion", "tokenPayloadBytes", "tokenAuthenticationBytes", "cursorExposesObjectIdentity", "invalidAfterGenerationChange", "invalidAfterRestart", "ledgerGeneration", "pageLedgerEvents", "planObjectCounts", "totalObjects", "requestMaximumObjects", "expectedExaminedPerRequest", "expectedFirstCursor"],
+      "properties": {
+        "formatVersion": { "const": 1 },
+        "tokenPayloadBytes": { "const": 21 },
+        "tokenAuthenticationBytes": { "const": 32 },
+        "cursorExposesObjectIdentity": { "const": false },
+        "invalidAfterGenerationChange": { "const": true },
+        "invalidAfterRestart": { "const": true },
+        "ledgerGeneration": { "const": 17 },
+        "pageLedgerEvents": { "const": 16 },
+        "planObjectCounts": {
+          "type": "array",
+          "minItems": 17,
+          "maxItems": 17,
+          "items": { "const": 258 }
+        },
+        "totalObjects": { "const": 4386 },
+        "requestMaximumObjects": { "const": 4096 },
+        "expectedExaminedPerRequest": {
+          "type": "array",
+          "prefixItems": [{ "const": 4096 }, { "const": 290 }],
+          "items": false,
+          "minItems": 2,
+          "maxItems": 2
+        },
+        "expectedFirstCursor": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["observedGeneration", "afterGeneration", "objectOffset"],
+          "properties": {
+            "observedGeneration": { "const": 17 },
+            "afterGeneration": { "const": 0 },
+            "objectOffset": { "const": 4096 }
+          }
+        }
+      }
+    },
+    "deleteBarrier": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["formatVersion", "coordinatorId", "spaceId", "objectBytesHex", "initialPhysicalEpoch", "deleteLeaseEpoch", "successorReservationEpoch", "leaseMaximumMs", "dryRunAdvancesEpoch", "orders"],
+      "properties": {
+        "formatVersion": { "const": 1 },
+        "coordinatorId": { "$ref": "#/$defs/hash" },
+        "spaceId": { "const": "barrier-race-space" },
+        "objectBytesHex": { "type": "string", "pattern": "^[0-9a-f]+$" },
+        "initialPhysicalEpoch": { "const": 1 },
+        "deleteLeaseEpoch": { "const": 2 },
+        "successorReservationEpoch": { "const": 3 },
+        "leaseMaximumMs": { "const": 5000 },
+        "dryRunAdvancesEpoch": { "const": false },
+        "orders": {
+          "type": "array",
+          "prefixItems": [
+            { "$ref": "#/$defs/deleteFirstOrder" },
+            { "$ref": "#/$defs/successorFirstOrder" }
+          ],
+          "items": false,
+          "minItems": 2,
+          "maxItems": 2
+        }
+      }
     }
   },
   "$defs": {
     "hash": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
     "objectToken": { "type": "string", "pattern": "^(chunk|manifest):[0-9a-f]{64}$" },
+    "deleteFirstOrder": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "actions", "oldDeleteOutcome", "publishedReadOutcome"],
+      "properties": {
+        "id": { "const": "delete-first" },
+        "actions": {
+          "type": "array",
+          "prefixItems": [
+            { "const": "lease:2" }, { "const": "cas-advance:2" }, { "const": "validate:2" }, { "const": "delete:2" },
+            { "const": "reserve:3" }, { "const": "cas-advance:3" }, { "const": "stage" }, { "const": "publish" }, { "const": "read" }
+          ],
+          "items": false,
+          "minItems": 9,
+          "maxItems": 9
+        },
+        "oldDeleteOutcome": { "const": "deleted-before-successor-stage" },
+        "publishedReadOutcome": { "const": "exact" }
+      }
+    },
+    "successorFirstOrder": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "actions", "oldDeleteOutcome", "publishedReadOutcome"],
+      "properties": {
+        "id": { "const": "successor-first" },
+        "actions": {
+          "type": "array",
+          "prefixItems": [
+            { "const": "lease:2" }, { "const": "cas-advance:2" }, { "const": "lease-expire" }, { "const": "reserve:3" },
+            { "const": "cas-advance:3" }, { "const": "stage" }, { "const": "publish" }, { "const": "delete:2" }, { "const": "read" }
+          ],
+          "items": false,
+          "minItems": 9,
+          "maxItems": 9
+        },
+        "oldDeleteOutcome": { "const": "stale-fence-rejected" },
+        "publishedReadOutcome": { "const": "exact" }
+      }
+    },
     "ledgerEvent": {
       "oneOf": [
         {

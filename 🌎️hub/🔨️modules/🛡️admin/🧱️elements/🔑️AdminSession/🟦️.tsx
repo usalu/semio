@@ -53,8 +53,8 @@ export class AdminClient {
     return headers;
   }
 
-  private async getJson<T>(path: string): Promise<T> {
-    const response = await fetch(`${this.baseUrl}${path}`, { headers: this.headers(false) });
+  private async getJson<T>(path: string, signal?: AbortSignal): Promise<T> {
+    const response = await fetch(`${this.baseUrl}${path}`, { headers: this.headers(false), signal });
     if (!response.ok) throw new AdminHttpError(response.status, `admin: GET ${path} failed (${response.status})`);
     return (await response.json()) as T;
   }
@@ -82,8 +82,8 @@ export class AdminClient {
     return this.getJson<UserView[]>("/admin/api/users");
   }
 
-  connections(): Promise<readonly ConnectionView[]> {
-    return this.getJson<ConnectionView[]>("/admin/api/connections");
+  connections(signal?: AbortSignal): Promise<readonly ConnectionView[]> {
+    return this.getJson<ConnectionView[]>("/admin/api/connections", signal);
   }
 
   documents(spaceId?: string): Promise<readonly DocumentView[]> {

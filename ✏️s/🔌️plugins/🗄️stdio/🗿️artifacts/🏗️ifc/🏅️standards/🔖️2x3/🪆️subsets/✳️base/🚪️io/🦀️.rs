@@ -201,8 +201,8 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn exact_native_engine_raw_serializers_analyzer_and_composer_roundtrip() {
         use crate::artifacts::binary::{BinarySnapshot, STDIO_BINARY_DOCUMENT_SCHEMA};
-        use crate::artifacts::ifc::standards::v2x3::subsets::base::io::export::serializers::artifacts::{binary::v_raw::any as binary_export, txt::v_utf_8::any as text_export};
-        use crate::artifacts::ifc::standards::v2x3::subsets::base::io::import::deserializers::artifacts::{binary::v_raw::any as binary_import, txt::v_utf_8::any as text_import};
+        use crate::artifacts::ifc::standards::v2x3::subsets::base::io::export::serializers::artifacts::{binary::v_raw::base as binary_export, txt::v_utf_8::base as text_export};
+        use crate::artifacts::ifc::standards::v2x3::subsets::base::io::import::deserializers::artifacts::{binary::v_raw::base as binary_import, txt::v_utf_8::base as text_import};
         use crate::artifacts::ifc::standards::v2x3::subsets::base::schema::Ifc2x3Analyzer;
         use crate::artifacts::txt::TxtSnapshot;
 

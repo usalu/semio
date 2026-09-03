@@ -8,7 +8,6 @@ use flow::playbook::{apply_generation_mutation, generation_operations, select_ge
 use flow::FlowEvalSession;
 use flow::FlowFixture;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
-use serde_json::Value;
 use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️PreviewHelper
@@ -30,7 +29,7 @@ fn refresh_generation_preview(config: &mut Generation2dConfig, fixture: &FlowFix
 /// 🧬️ Emits generation operations for the generate-mode commands, updating the config's ephemeral
 /// selection and preview from the post-operation state via a whole-config `Snapshot`.
 /// `selectGeneration` is config-only (no document operations).
-fn handle_generation(action: &str, args: Option<&Value>, doc: &ArtifactView<'_, Generation2dSnapshot>, cfg: &ConfigView<'_, Generation2dConfig>, session: &mut FlowEvalSession) -> Emit<Generation2dMutation, Generation2dConfigMutation> {
+fn handle_generation(action: &str, args: Option<&dsl::DslValue>, doc: &ArtifactView<'_, Generation2dSnapshot>, cfg: &ConfigView<'_, Generation2dConfig>, session: &mut FlowEvalSession) -> Emit<Generation2dMutation, Generation2dConfigMutation> {
     let projection = doc.snapshot;
     let spec = flow_fixture_to_form_spec(&projection.fixture);
     let mut state = projection.generation.as_state().clone();

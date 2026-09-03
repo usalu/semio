@@ -7,12 +7,15 @@ import { afterEach, describe, expect, it } from "vitest";
 import { encodePackValue } from "../../../🟦️.ts";
 import {
   CATALOG_ARTIFACT_MAX_BYTES,
+  CATALOG_COMMIT_MARKER_FILENAME,
   CATALOG_DEPENDENCY_MAX,
   CATALOG_NODE_MAX,
   auditPluginCatalogSources,
+  createFreshCatalogCommitMarker,
   createFreshCatalogBuildVerifier,
   executeCatalogVerificationPlan,
   orderCatalogNodes,
+  parseComponentPackageId,
   sha256CatalogArtifact,
   validateCatalogDescriptorPair,
   type CatalogVerificationNode,
@@ -42,6 +45,7 @@ async function sha256(bytes: Uint8Array): Promise<string> {
 async function syntheticDescriptor(pluginId: string, raw: Uint8Array, core: Uint8Array): Promise<{ readonly descriptor: Record<string, any>; readonly bytes: Uint8Array }> {
   const descriptor: Record<string, any> = {
     descriptorVersion: 1,
+    packageId: `semio:${pluginId}`,
     role: "plugin",
     manifest: { pluginId, label: pluginId, version: "1.0.0", apps: [], examples: [], capabilities: [], topicContributions: [], commands: [], artifactKinds: [] },
     execution: "isolated",
@@ -56,6 +60,7 @@ async function syntheticDescriptor(pluginId: string, raw: Uint8Array, core: Uint
 function syntheticEntry(hashes: PluginRegistryEntry["hashes"]): PluginRegistryEntry {
   return {
     pluginId: "parent",
+    packageId: "semio:parent",
     cratePath: join("owner", "📦️packages", "🦀️rust"),
     packageName: "semio-s-plugin-parent",
     wasmOut: "semio_s_plugin_parent.wasm",
@@ -125,15 +130,28 @@ describe("strict plugin catalog completion", () => {
     writeFileSync(join(ownerRoot, "🛂️.descriptor.semio"), bytes);
     const source = validateCatalogDescriptorPair(entry, sourceRoot);
     expect(entry.pluginId).not.toBe(entry.packageName);
+    const wrongPackage = structuredClone(descriptor);
+    wrongPackage.packageId = "semio:not-parent";
+    wrongPackage.hashes.descriptorSha256 = "";
+    wrongPackage.hashes.descriptorSha256 = await sha256(encodePackValue(wrongPackage));
+    writeFileSync(join(ownerRoot, "🔣️.json"), `${JSON.stringify(wrongPackage, null, 2)}\n`);
+    writeFileSync(join(ownerRoot, "🛂️.descriptor.semio"), encodePackValue(wrongPackage));
+    expect(() => validateCatalogDescriptorPair(entry, sourceRoot)).toThrow(/packageId/);
     const mismatch = await syntheticDescriptor("package-name-is-not-plugin-id", raw, core);
+    mismatch.descriptor.packageId = "semio:parent";
+    mismatch.descriptor.hashes.descriptorSha256 = "";
+    mismatch.descriptor.hashes.descriptorSha256 = await sha256(encodePackValue(mismatch.descriptor));
     writeFileSync(join(ownerRoot, "🔣️.json"), `${JSON.stringify(mismatch.descriptor, null, 2)}\n`);
-    writeFileSync(join(ownerRoot, "🛂️.descriptor.semio"), mismatch.bytes);
+    writeFileSync(join(ownerRoot, "🛂️.descriptor.semio"), encodePackValue(mismatch.descriptor));
     expect(() => validateCatalogDescriptorPair(entry, sourceRoot)).toThrow(/manifest\.pluginId/);
     const malformed = structuredClone(descriptor);
     malformed.hashes.wasmSha256 = malformed.hashes.wasmSha256.toUpperCase();
     writeFileSync(join(ownerRoot, "🔣️.json"), `${JSON.stringify(malformed, null, 2)}\n`);
     writeFileSync(join(ownerRoot, "🛂️.descriptor.semio"), encodePackValue(malformed));
     expect(() => validateCatalogDescriptorPair(entry, sourceRoot)).toThrow(/lowercase 64-hex/);
+    const duplicatePackageId = `${JSON.stringify(descriptor, null, 2).replace(/\n\}/u, ',\n  "packageId": "semio:parent"\n}')}\n`;
+    writeFileSync(join(ownerRoot, "🔣️.json"), duplicatePackageId);
+    expect(() => validateCatalogDescriptorPair(entry, sourceRoot)).toThrow(/duplicate object field "packageId"/);
     writeFileSync(join(ownerRoot, "🔣️.json"), `${JSON.stringify(descriptor, null, 2)}\n`);
     rmSync(join(ownerRoot, "🛂️.descriptor.semio"));
     expect(() => validateCatalogDescriptorPair(entry, sourceRoot)).toThrow();
@@ -144,28 +162,59 @@ describe("strict plugin catalog completion", () => {
     writeFileSync(join(rowRoot, "core", entry.wasmOut), core);
     writeFileSync(join(rowRoot, "descriptor", "🛂️.descriptor.semio"), bytes);
     const verifier = createFreshCatalogBuildVerifier(sourceRoot, buildRoot);
-    const receipt = verifier.verify(source);
+    expect(() => verifier.verify(source.entry)).toThrow(/commit marker/);
+    const marker = createFreshCatalogCommitMarker(source, buildRoot);
+    writeFileSync(join(rowRoot, CATALOG_COMMIT_MARKER_FILENAME), `${JSON.stringify(marker)}\n`, { flag: "wx" });
+    rmSync(source.jsonPath);
+    rmSync(source.packPath);
+    const { hashes: _ownerProjection, ...ownerlessEntry } = source.entry;
+    const receipt = verifier.verify(ownerlessEntry);
     expect(receipt.rawSha256).toBe(await sha256(raw));
     expect(receipt.coreSha256).toBe(await sha256(core));
     expect(receipt.descriptorSha256).toBe(descriptor.hashes.descriptorSha256);
+    expect(() => verifier.verify({ ...ownerlessEntry, packageId: "semio:not-parent" })).toThrow(/carried Cargo identity/);
+    expect(() => verifier.verify({ ...ownerlessEntry, packageId: "semio:Parent" })).toThrow(/carried Cargo identity/);
     expect(createHash("sha256").update(raw).digest("hex")).toBe(await sha256(raw));
+    writeFileSync(join(rowRoot, CATALOG_COMMIT_MARKER_FILENAME), `${JSON.stringify({ ...marker, pluginId: "tampered" })}\n`);
+    expect(() => verifier.verify(ownerlessEntry)).toThrow(/commit marker/);
+    writeFileSync(join(rowRoot, CATALOG_COMMIT_MARKER_FILENAME), `${JSON.stringify(marker)}\n`);
     const rawMutation = Uint8Array.from(raw);
     rawMutation[0] ^= 1;
     writeFileSync(join(rowRoot, "raw", entry.wasmOut), rawMutation);
-    expect(() => verifier.verify(source)).toThrow(/raw/);
+    expect(() => verifier.verify(ownerlessEntry)).toThrow(/commit marker/);
     writeFileSync(join(rowRoot, "raw", entry.wasmOut), raw);
     const coreMutation = Uint8Array.from(core);
     coreMutation[0] ^= 1;
     writeFileSync(join(rowRoot, "core", entry.wasmOut), coreMutation);
-    expect(() => verifier.verify(source)).toThrow(/core/);
+    expect(() => verifier.verify(ownerlessEntry)).toThrow(/commit marker/);
     writeFileSync(join(rowRoot, "core", entry.wasmOut), core);
+    let rewroteRawAfterRead = false;
+    const pinned = verifier.verify(ownerlessEntry, {
+      afterArtifact(artifact) {
+        if (artifact === "raw" && !rewroteRawAfterRead) {
+          rewroteRawAfterRead = true;
+          writeFileSync(join(rowRoot, "raw", entry.wasmOut), rawMutation);
+        }
+      },
+    });
+    expect(Buffer.from(pinned.rawBytes).equals(Buffer.from(raw))).toBe(true);
+    expect(Buffer.from(pinned.coreBytes).equals(Buffer.from(core))).toBe(true);
+    expect(Buffer.from(pinned.descriptorBytes).equals(Buffer.from(bytes))).toBe(true);
+    expect(readFileSync(join(rowRoot, "raw", entry.wasmOut))).toEqual(Buffer.from(rawMutation));
+    writeFileSync(join(rowRoot, "raw", entry.wasmOut), raw);
     const descriptorMutation = Uint8Array.from(bytes);
     descriptorMutation[0] ^= 1;
     writeFileSync(join(rowRoot, "descriptor", "🛂️.descriptor.semio"), descriptorMutation);
-    expect(() => verifier.verify(source)).toThrow(/descriptor bytes/);
+    expect(() => verifier.verify(ownerlessEntry)).toThrow(/commit marker/);
   });
 
   it("refuses ambient roots and detects the exact artifact max+1 boundary", () => {
+    expect(parseComponentPackageId('[package.metadata.component]\npackage = "semio:parent"\n', "fixture/Cargo.toml")).toBe("semio:parent");
+    expect(() => parseComponentPackageId('[package.metadata.component]\npackage = "semio:parent"\n[package.metadata.component]\npackage = "semio:parent"\n', "fixture/Cargo.toml")).toThrow(/repeats/);
+    expect(() => parseComponentPackageId('[package.metadata.component]\npackage = "semio:parent"\npackage = "semio:parent"\n', "fixture/Cargo.toml")).toThrow(/repeats/);
+    expect(() => parseComponentPackageId('[package.metadata.component]\npackage = "semio:parent"\npackage = 7\n', "fixture/Cargo.toml")).toThrow(/repeats/);
+    expect(() => parseComponentPackageId('[package.metadata.component]\npackage = "semio:Parent"\n', "fixture/Cargo.toml")).toThrow(/lowercase/);
+    expect(() => parseComponentPackageId('[package.metadata.component]\npackage-name = "semio:parent"\n', "fixture/Cargo.toml")).toThrow(/missing/);
     const repoRoot = temporaryRoot();
     const cache = join(repoRoot, "🧰️framework", "🛍️products", "💻️os", "🔨️modules", "🧑️‍💻️dev", "🔌️plugin-modules");
     mkdirSync(join(repoRoot, "target"), { recursive: true });

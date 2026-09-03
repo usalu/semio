@@ -18,6 +18,13 @@
         "forwardAllArgs": true
       }
     },
+    "test-package-descriptor-value-codec": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🧰️framework/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test-package-descriptor-value-codec"
+      }
+    },
     "test-quick": {
       "executor": "nx:run-commands",
       "options": {

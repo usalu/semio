@@ -539,3 +539,159 @@ be silent. Exactly the "compiles, dispatches, does nothing" class this ticket ke
 
 So of the two blocker strings in that fixture I have now checked against source, **one was stale and
 one was accurate.** Neither can be trusted without reading the code; both must be.
+
+## Session close — `framework-surface` fixed; the wasm plugin profile is the next real gate
+
+### Fixed and verified this pass
+
+`semio-framework-surface` was failing the `dev 3d` engine build with 2 errors — the same
+"type migrated, call site didn't" shape as the earlier `DagCamera` one:
+
+```
+🗺️surface/🕸️node-graph/🦀️.rs:903  DagNodeSpec: serde::Deserialize not satisfied
+🗺️surface/🕸️node-graph/🦀️.rs:989  DagLayoutOptions: serde::Deserialize not satisfied
+```
+
+Both call sites still used `serde_json::from_str`. Converted to the established convention,
+`dsl::os_pack::json::from_json_str`, after confirming both types actually carry `FromValue`
+(`DagLayoutOptions` derives it; `DagNodeSpec`'s is hand-written because its `kind` is
+`#[serde(flatten)]`, which the derive cannot express). **`cargo check -p semio-framework-surface`
+→ 0 errors, verified.**
+
+### The stdio wasm profile gate — documented, not a new breakage
+
+Driving the plugin wasm build directly produced:
+
+```
+error: linking with `wasm-component-ld` failed
+  failed to encode component → module was not valid
+  functions count exceeds limit of 1000000
+```
+
+This looked like a hard structural blocker. It is not new, and Cargo.toml says so explicitly at
+`[profile.dev.package.semio-s-plugin-stdio]`:
+
+> "even at one unit that monolith crosses the component parser's one-million-function ceiling.
+> Owned component publication therefore uses the optimized `[profile.wasm-release]`; debug builds
+> remain compile/check inputs, never catalog bytes."
+
+So a `dev`-profile stdio component is expected to be inadmissible. The documented path is
+`SEMIO_PLUGIN_PROFILE=wasm-release` (or `SEMIO_BUILD_MODE=ship`), selected in
+`🧑️‍💻️dev/…/📜️script.ts:94`. **I nearly reported this as a discovered structural blocker; reading the
+manifest before claiming it is what caught it.** Fifteenth measurement trap, and the first where the
+answer was already written down.
+
+### Where it stops
+
+Re-running with `SEMIO_PLUGIN_PROFILE=wasm-release` got past stdio and into
+`semio-framework-os-kernel`, which now fails with:
+
+```
+E0599: no method named `set_token` found for reference `&DirectoryClient<T>`
+E0599: no method named `mint_session` found for reference `&DirectoryClient<T>`
+   at 🔨️modules/📇️directory/🪪️identity/🦀️.rs:176,189,192
+```
+
+`🪪️identity/🦀️.rs` has not been touched since Sep 1 23:11. `🔌️client/🦀️.rs`, where
+`DirectoryClient` is defined, was modified **22 seconds before I measured** (16:20:53). Another
+session is mid-refactor on that type right now, having removed or renamed those methods while the
+consumer still calls them. Not mine, and not safe to fix underneath them.
+
+### For the next run
+
+```bash
+SEMIO_PLUGIN_PROFILE=wasm-release S_OS_PORT=6081 bun dev:puzzle:3d
+```
+
+Plain `bun dev:puzzle:3d` uses `--profile dev`, which cannot produce an admissible stdio component.
+Run it from a real terminal: a `dev 3d` invocation longer than ~9.5 minutes cannot complete from an
+agent session — the child is killed when the tool call backgrounds, which cost five attempts here
+even though the native plugin build did complete once (15m 42s).
+
+## Why `fillBuildTick` cannot be migrated by wiring — the precise reason
+
+Earlier this note said the blocker was that `Puzzle3dPrecomputeCommandWork`'s completion emits only a
+`ui_scope`. That is true but is a symptom. The structural cause, from the shared trait at
+`✏️s/🔌️plugins/🧩️puzzle/🎮️commands/🧵️retained/🦀️.rs:38-56`:
+
+```rust
+pub trait PuzzleCommandWork<A: ArtifactApp>: Send {
+    fn step(&mut self, command: &A::Command, snapshot: &A::Snapshot, config: &A::Config,
+            interaction: &protocol::InteractionState, hover: &InteractionHoverState)
+        -> Result<PuzzleCommandWorkStep<A>, Fault>;
+    …
+}
+```
+
+A `Work` receives command, snapshot, config, interaction and hover. **It never receives the app
+instance.** But the legacy `fill_build_tick` (`🎮️commands/🪣️fill-build-tick/🦀️.rs:18-32`) needs exactly
+that:
+
+```rust
+let mut precompute = ctx.app.precompute.borrow_mut();
+let changed = precompute.poll_fill_job();
+let spawn = precompute.enqueue_fill_job();
+…
+ctx.effects.push(Effect::SpawnJob { job, kind: FILL_JOB_KIND.into(), input, placement: JobPlacement::Isolated });
+```
+
+`poll_fill_job` / `enqueue_fill_job` live on `app.precompute`. So the Work cannot produce the
+`SpawnJob` effect because **it cannot reach the state that decides whether to spawn one** — not
+merely because its `Emit` happens to be empty. (`Emit` does carry `effects: Vec<Effect>`, so the
+carrier exists; the input does not.)
+
+Migrating it therefore requires extending `PuzzleCommandWork::step` to pass the app — a signature
+change on a trait shared by **all three** puzzle artifacts, touching every `Work` impl in 2d, 3d and
+5d, in files other sessions are actively editing. That is a real design change, correctly recorded in
+the fixture as semantic rather than wiring, and it is not something to write without a compiler.
+
+**Consequence for the goal:** the fill tool's *control* is migrated and functional
+(`setFillCount` emits a real `SetFillRequest`), but its *background planning tick* still needs the
+legacy dispatch path or the trait change above. Until then the slider commits a value while the
+planner does not advance under the migrated path.
+
+## Chain state at 17:10 — one link remaining
+
+Every crate `bun dev:puzzle:3d` needs, measured (not inferred), after this session's fixes:
+
+| crate | target | result |
+|---|---|---|
+| `semio-framework-surface` | native | **0** (fixed here: `DagNodeSpec`/`DagLayoutOptions` → `from_json_str`) |
+| `semio-framework-editor` | native | **0** |
+| `semio-framework-os-flow` | wasm32-wasip2 | **0** (two independent runs) |
+| `semio-framework-os-kernel` **--lib** | wasm32-wasip2 | **0** |
+| `semio-s-plugin-puzzle` | native | **0** |
+| `semio-s-plugin-stdio` | wasm32-wasip2 | **18** — ticket 26/09/03/BREP-KERNEL-DEPENDENCY-FREE-RUNTIME, another session's live fleet refactor |
+
+### `--lib` matters on os-kernel
+
+`cargo check -p semio-framework-os-kernel --target wasm32-wasip2` reports 2 errors that are pure
+noise for this path: `cannot find cli in os_spr` / `os_pack`, from the `spr` and `pack` **binary**
+targets. A plugin build never builds those bins. Checking that crate without `--lib` sends you
+chasing failures that cannot affect the app.
+
+### The `DirectoryClient` episode — and a false attribution stopped
+
+`os-kernel` was blocked by 3 × E0599 (`set_token`, `mint_session` removed from `DirectoryClient`
+while `🪪️identity/🦀️.rs` still called them). Three peers each confirmed it was not theirs, which
+pointed at an orphaned uncommitted edit — HEAD had both methods, the worktree had neither. I said I
+would restore them from HEAD **if** that held, and asked all three first rather than acting.
+
+It did not hold: the owner was alive and drove it 3 → 1 while we watched. The last error was not
+mid-write either — `LocalHubCredential::read_inherited` is `#[cfg(not(target_arch = "wasm32"))]`
+(it reads inherited fd 3) and the consumer called it unconditionally, i.e. a cfg mismatch. A peer
+gated the consumer to match; verified clean afterwards.
+
+Two things worth keeping from it:
+- **"Nobody claims it" is not evidence of abandonment.** Three independent "not mine" answers plus an
+  uncommitted diff still pointed the wrong way. Only mtimes and a falling error count settled it.
+- A peer relayed my *conditional* intent as a plan, and another session began waiting on me to fix a
+  file I had never opened. Corrected immediately. **A wrong owner is worse than an unknown one,
+  because everyone else stops looking.**
+
+### Remaining work for the goal, unchanged and specific
+
+1. stdio's brep arms land (owner's fleet, gated on `cargo check -p semio-s-plugin-stdio --lib`).
+2. `SEMIO_PLUGIN_PROFILE=wasm-release S_OS_PORT=6081 bun dev:puzzle:3d` — from a real terminal.
+3. `fillBuildTick` still needs `PuzzleCommandWork::step` to receive the app instance; until then the
+   fill slider commits real values while the planner does not advance under the migrated path.

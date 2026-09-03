@@ -92,3 +92,12 @@ pub fn apply(
     let ids = mesh_selection_ids_typed(&payload.node_ids, &interaction.selection("graph").ids);
     Ok(scale_ids(&doc.snapshot.fixture, &ids, (payload.sx + payload.sy + payload.sz) / 3.0))
 }
+
+/// 🕹️ Retained-command-job entry point (`generation3d_retained_reduce`, editor `🦀️.rs`) — same real-selection
+/// behavior as `apply` above, but callable without an `app::InteractionView` (which plugin code cannot
+/// construct; its fields are `pub(crate)` to the framework crate). `selected` is read straight off
+/// `protocol::InteractionState` by the caller.
+pub(crate) fn apply_selected(payload: &ScaleSelection, doc: &ArtifactView<'_, Generation3dSnapshot>, selected: &[String]) -> Emit<Generation3dMutation, Generation3dConfigMutation> {
+    let ids = mesh_selection_ids_typed(&payload.node_ids, selected);
+    scale_ids(&doc.snapshot.fixture, &ids, (payload.sx + payload.sy + payload.sz) / 3.0)
+}

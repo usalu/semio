@@ -900,7 +900,7 @@ mod wasm_session {
                 self.state.borrow_mut().host.dag.set_ghost_node(None);
                 return;
             }
-            if let Ok(node) = serde_json::from_str::<DagNodeSpec>(json) {
+            if let Ok(node) = dsl::os_pack::json::from_json_str::<DagNodeSpec>(json) {
                 self.state.borrow_mut().host.dag.set_ghost_node(Some(node));
             }
         }
@@ -986,7 +986,7 @@ mod wasm_session {
 
         #[wasm_bindgen(js_name = reorganize)]
         pub fn reorganize(&self, options_json: &str) -> Result<(), JsValue> {
-            let opts = if options_json.trim().is_empty() { DagLayoutOptions::default() } else { serde_json::from_str(options_json).unwrap_or_default() };
+            let opts = if options_json.trim().is_empty() { DagLayoutOptions::default() } else { dsl::os_pack::json::from_json_str(options_json).unwrap_or_default() };
             self.state.borrow_mut().host.dag.reorganize(&opts).map_err(|e| JsValue::from_str(&e.to_string()))
         }
     }

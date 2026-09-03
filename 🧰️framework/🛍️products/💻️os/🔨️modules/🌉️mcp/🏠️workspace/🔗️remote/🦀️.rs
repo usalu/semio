@@ -477,10 +477,10 @@ impl NativeHubBindingDriver {
             .map_err(binding_error_to_gateway)?;
 
         let mut stream = client.stream(0);
-        let DirectoryStreamTurn::Dial { transport, url } = stream.turn(&ctx, operation_now) else {
+        let DirectoryStreamTurn::Dial { client: dial_client, since } = stream.turn(&ctx, operation_now) else {
             return Err(GatewayError::new(GatewayErrorCode::PluginUnavailable, "hub directory stream did not enter its initial dial").retryable());
         };
-        let connection = transport.open_ws(&ctx, &url, 1_000).map_err(|_| {
+        let connection = dial_client.open_stream_ws(&ctx, since, 1_000).map_err(|_| {
             binding.invalidate_stream();
             GatewayError::new(GatewayErrorCode::PluginUnavailable, "hub directory stream is unavailable; authenticated snapshot was not activated").retryable()
         })?;
@@ -506,15 +506,15 @@ impl NativeHubBindingDriver {
                         capability: None,
                     };
                     match stream.turn(&ctx, operation_now) {
-                        DirectoryStreamTurn::Dial { transport, url } => {
+                        DirectoryStreamTurn::Dial { client: dial_client, since } => {
                             thread_binding.invalidate_stream();
-                            match transport.open_ws(&ctx, &url, 1_000) {
+                            match dial_client.open_stream_ws(&ctx, since, 1_000) {
                                 Ok(connection) => {
                                     let _ = stream.complete_dial(operation_now, Ok(connection));
                                     needs_refresh = true;
                                 }
                                 Err(error) => {
-                                    let _ = stream.complete_dial(operation_now, Err(error));
+                                    let _ = stream.complete_dial(operation_now, Err(semio_framework_os_kernel::os_directory::client::TransportError::Io(error.to_string())));
                                     match thread_runtime.block_on(thread_binding.refresh(thread_client.as_ref(), &ctx, wall_now_ms(), operation_now)) {
                                         Err(HubBindingError::Unauthorized | HubBindingError::SessionExpired | HubBindingError::MembershipRequired) => break,
                                         Ok(_) => thread_binding.invalidate_stream(),

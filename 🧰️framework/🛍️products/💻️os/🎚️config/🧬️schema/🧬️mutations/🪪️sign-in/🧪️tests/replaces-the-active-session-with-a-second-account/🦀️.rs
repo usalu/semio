@@ -39,7 +39,7 @@ fn session(setting: &IdentitySetting) -> Identity {
 }
 
 /// ▶️ Signing in over an active session replaces the whole record — every field moves to the new
-/// account, including the token and the issue time, and nothing of the prior session survives.
+/// account, including the issue time, and nothing of the prior identity survives.
 #[test]
 fn replaces_the_whole_active_session() {
     let base = before();
@@ -47,7 +47,7 @@ fn replaces_the_whole_active_session() {
     let applied = protocol::MutationDiff::apply(outcome.diff(), &base).expect("sign-in applies to its committed before-setting");
     assert_eq!(applied, expected_after(), "sign-in/replaces-the-active-session-with-a-second-account: the replaced session differs from the committed after-snapshot");
     assert_eq!(session(&applied).user_id, "grace", "sign-in/replaces-the-active-session-with-a-second-account: the payload's account must land verbatim on the setting");
-    assert_ne!(session(&applied).session_token, session(&base).session_token, "sign-in/replaces-the-active-session-with-a-second-account: the prior session token must not survive a replacement");
+    assert_ne!(session(&applied).email, session(&base).email, "sign-in/replaces-the-active-session-with-a-second-account: the prior account must not survive a replacement");
     assert_ne!(session(&applied).issued_at_ms, session(&base).issued_at_ms, "sign-in/replaces-the-active-session-with-a-second-account: the prior issue time must not survive a replacement");
 }
 

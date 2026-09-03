@@ -7,9 +7,9 @@
 // #endregion Header
 
 import type { ArtifactBootstrapControl, ArtifactBootstrapProgress, ArtifactPresencePeer, ClientFrame, MutationEnvelope, ServerFrame, WireAckStage, WireArtifactBootstrap, WireFrontierSummary, WireLane, WireMutationEnvelope } from "@semio-tech/framework-replication";
-import type { ArtifactActorConfig, ArtifactActorMsg, ArtifactBootstrapWorkerEvent, ArtifactEvent, ArtifactSyncStatus, BackboneWorkerRequest, BackboneWorkerResponse, BackboneWorkerWireMessage, CommandAckOutcome, DirectoryCommand, DirectoryStreamMessage, PersistenceBinding, RemoteState } from "./🟦️";
+import type { ArtifactActorConfig, ArtifactActorMsg, ArtifactBootstrapWorkerEvent, ArtifactEvent, ArtifactSyncStatus, BackboneWorkerRequest, BackboneWorkerResponse, BackboneWorkerWireMessage, CommandAckOutcome, DirectoryCommand, DirectoryStreamMessage, PersistenceBinding, RemoteState, SocketGrantReceiptV1 } from "./🟦️";
 import { ArtifactBootstrapAssembler, DEFAULT_ARTIFACT_BOOTSTRAP_LIMITS, decodeClientFrame, decodePresencePeer, decodeServerFrame, encodeClientFrame, encodePresencePeer, encodeServerFrame } from "@semio-tech/framework-replication";
-import { DirectoryClient, HUB_RECONNECT_MAX_MS, HUB_RECONNECT_MIN_MS, decodeBackboneWorkerRequest, decodeBackboneWorkerResponse, decodeDocumentPackBytes, decodePackValue, encodeBackboneWorkerRequest, encodeBackboneWorkerResponse, encodeDocumentPackBytes, encodePackValue } from "./🟦️";
+import { DirectoryClient, HUB_RECONNECT_MAX_MS, HUB_RECONNECT_MIN_MS, createSocketGrantIssuerV1, decodeBackboneWorkerRequest, decodeBackboneWorkerResponse, decodeDocumentPackBytes, decodePackValue, encodeBackboneWorkerRequest, encodeBackboneWorkerResponse, encodeDocumentPackBytes, encodePackValue, parseSocketGrantReceiptV1, socketGrantProtocolsV1 } from "./🟦️";
 /** 🎚️ config-lane attach (contract freeze §4) — `OpeningPreferences` is a kernel type (domain-neutral
  * framework), never redefined here; see this file's `🔖️ConfigLane` region. */
 import type { OpeningPreferences } from "@semio-tech/framework";
@@ -65,6 +65,10 @@ const workerScope = typeof self !== "undefined" && !Reflect.has(self, "document"
 
 if (workerScope) {
   workerScope.onmessage = (messageEvent: MessageEvent<unknown>) => {
+    if (typeof messageEvent.data === "object" && messageEvent.data !== null && Reflect.get(messageEvent.data, "kind") === "semio-browser-broker-port" && Reflect.get(messageEvent.data, "port") instanceof MessagePort) {
+      attachLocalBrokerPort(Reflect.get(messageEvent.data, "port") as MessagePort);
+      return;
+    }
     // 🛡️ React DevTools and other injectors postMessage into every Worker; ignore non-wire traffic.
     if (!isBackboneWorkerWireMessage(messageEvent.data)) return;
     const request = decodeWorkerRequest(messageEvent.data);
@@ -157,6 +161,8 @@ async function reconnectForever(signal: AbortSignal, attempt: () => Promise<void
 //#region 🔖️DocumentState
 type ArtifactState = {
   config: ArtifactActorConfig;
+  actor: string;
+  hubActorReady: boolean;
   channel: BroadcastChannel;
   socket: WebSocket | null;
   /** 🛑️ Aborted once, in {@link closeArtifact} — cancels every in-flight folder/blob fetch this
@@ -219,6 +225,116 @@ function post(message: BackboneWorkerResponse): void {
 
 function emitEvent(documentId: string, event: ArtifactEvent): void {
   post({ kind: "event", documentId, event });
+}
+
+const SOCKET_GRANT_REQUEST_TIMEOUT_MS = 10_000;
+const SOCKET_GRANT_REQUEST_LIMIT = 256;
+let socketGrantTestIssue: ((baseUrl: string, path: string, signal?: AbortSignal) => Promise<SocketGrantReceiptV1>) | null = null;
+let localBrowserBrokerProof: Uint8Array | undefined;
+let localBrowserBrokerQueue: Promise<void> = Promise.resolve();
+let localBrowserBrokerQueued = 0;
+let localBrowserBrokerPort: MessagePort | undefined;
+const localBrowserBrokerRpcControllers = new Map<string, AbortController>();
+
+function hexBytes(value: string): Uint8Array | undefined {
+  if (!/^[0-9a-f]{64}$/u.test(value)) return undefined;
+  return Uint8Array.from({ length: 32 }, (_, index) => Number.parseInt(value.slice(index * 2, index * 2 + 2), 16));
+}
+
+function bytesHex(value: Uint8Array): string {
+  return Array.from(value, (byte) => byte.toString(16).padStart(2, "0")).join("");
+}
+
+async function browserBrokerFetch(input: string, init: RequestInit = {}, options: { readonly timeoutMs: number; readonly signal?: AbortSignal }): Promise<FetchTimeoutResponse> {
+  if (options.signal?.aborted) throw options.signal.reason ?? new Error("browser broker cancelled");
+  if (localBrowserBrokerQueued >= 64) throw new Error("browser broker capacity exceeded");
+  localBrowserBrokerQueued += 1;
+  let resolveTurn: () => void = () => undefined;
+  const prior = localBrowserBrokerQueue;
+  localBrowserBrokerQueue = new Promise<void>((resolve) => { resolveTurn = resolve; });
+  await prior;
+  try {
+    const current = localBrowserBrokerProof;
+    if (!current) throw new Error("browser broker unavailable");
+    const next = crypto.getRandomValues(new Uint8Array(32));
+    const nextDigest = new Uint8Array(await crypto.subtle.digest("SHA-256", next));
+    const currentHex = bytesHex(current);
+    localBrowserBrokerProof = next;
+    current.fill(0);
+    try {
+      const response = await fetchWithTimeout(input, {
+        ...init,
+        headers: { ...(init.headers as Record<string, string> | undefined), "x-semio-browser-broker": currentHex, "x-semio-browser-broker-next": bytesHex(nextDigest) },
+      }, options);
+      if (response.headers.get("x-semio-browser-broker-advanced") !== "1" || response.status === 401) {
+        localBrowserBrokerProof?.fill(0);
+        localBrowserBrokerProof = undefined;
+      }
+      return response;
+    } catch (error) {
+      localBrowserBrokerProof?.fill(0);
+      localBrowserBrokerProof = undefined;
+      throw error;
+    }
+  } finally {
+    localBrowserBrokerQueued -= 1;
+    resolveTurn();
+  }
+}
+
+function attachLocalBrokerPort(port: MessagePort): void {
+  localBrowserBrokerPort?.close();
+  localBrowserBrokerPort = port;
+  port.onmessage = (event: MessageEvent<unknown>) => {
+    const message = event.data as Record<string, unknown> | null;
+    if (!message || typeof message.kind !== "string") return;
+    if (message.kind === "initialize" && typeof message.proof === "string" && !localBrowserBrokerProof) {
+      localBrowserBrokerProof = hexBytes(message.proof);
+      return;
+    }
+    if (message.kind === "cancel" && typeof message.requestId === "string") {
+      localBrowserBrokerRpcControllers.get(message.requestId)?.abort();
+      return;
+    }
+    if (message.kind !== "request" || typeof message.requestId !== "string" || message.operation !== "me") return;
+    if (localBrowserBrokerRpcControllers.size >= 64) {
+      port.postMessage({ kind: "response", requestId: message.requestId, status: 503, body: "" });
+      return;
+    }
+    const controller = new AbortController();
+    localBrowserBrokerRpcControllers.set(message.requestId, controller);
+    void browserBrokerFetch("/_semio/hub/auth/sessions/me", { method: "GET" }, { timeoutMs: 2_000, signal: controller.signal }).then(async (response) => {
+      const body = await response.text();
+      port.postMessage({ kind: "response", requestId: message.requestId, status: response.status, body });
+    }).catch(() => {
+      port.postMessage({ kind: "response", requestId: message.requestId, status: 503, body: "" });
+    }).finally(() => localBrowserBrokerRpcControllers.delete(message.requestId));
+  };
+  port.start();
+}
+
+/** 🎫 Mints one audience-bound grant inside the credential-owning broker worker. */
+async function requestSocketGrant(baseUrl: string, path: string, signal?: AbortSignal): Promise<SocketGrantReceiptV1> {
+  if (socketGrantTestIssue) return socketGrantTestIssue(baseUrl, path, signal);
+  if (signal?.aborted || !baseUrl) throw new Error("socket grant: cancelled");
+  const response = await browserBrokerFetch(`/_semio/hub${path}`, { method: "POST", headers: { "content-type": "application/json" }, body: "{}" }, { timeoutMs: SOCKET_GRANT_REQUEST_TIMEOUT_MS, signal });
+  if (!response.ok) throw new Error("socket grant: unavailable");
+  try {
+    return parseSocketGrantReceiptV1(await response.json());
+  } catch (error) {
+    localBrowserBrokerProof?.fill(0);
+    localBrowserBrokerProof = undefined;
+    throw error;
+  }
+}
+
+function browserDirectoryRequest(input: string, init: RequestInit = {}, options: { readonly timeoutMs: number; readonly signal?: AbortSignal }): Promise<FetchTimeoutResponse> {
+  const url = new URL(input, "http://browser-broker.invalid");
+  const method = init.method ?? "GET";
+  const allowed = (method === "GET" && (((url.pathname === "/_semio/hub/directory/spaces" || /^\/_semio\/hub\/directory\/spaces\/[^/]+$/u.test(url.pathname)) && url.search === "") || (url.pathname === "/_semio/hub/directory/events" && [...url.searchParams].length === 1 && /^\d+$/u.test(url.searchParams.get("since") ?? ""))))
+    || (method === "POST" && url.pathname === "/_semio/hub/directory/commands" && url.search === "");
+  if (!allowed) return Promise.reject(new Error("browser directory operation denied"));
+  return browserBrokerFetch(`${url.pathname}${url.search}`, init, options);
 }
 
 function setStatus(state: ArtifactState, patch: Partial<ArtifactSyncStatus>): void {
@@ -323,7 +439,7 @@ function actorSeed(actor: string): number {
  * the TS twin of the Rust actor's `next_timestamp`. */
 function nextWireTimestamp(state: ArtifactState): WireMutationEnvelope["timestamp"] {
   state.hlcCounter += 1;
-  return { actor: actorSeed(state.config.actor), physical_ms: Date.now(), logical: state.hlcCounter };
+  return { actor: actorSeed(state.actor), physical_ms: Date.now(), logical: state.hlcCounter };
 }
 
 /** #⃣ A cheap, non-cryptographic FNV-1a-style digest for {@link toWireEnvelope}'s placeholder
@@ -357,11 +473,11 @@ function decodePackPayload(bytes: readonly number[]): unknown {
 /** 🌉️ Converts this fallback's local, camelCase {@link MutationEnvelope} into the snake_case
  * {@link WireMutationEnvelope} `protocol_wire::ClientFrame::Commands`/`ServerFrame::Commands`
  * carry — the TS twin of the Rust actor's `to_wire_envelope`. */
-function toWireEnvelope(envelope: MutationEnvelope, timestamp: WireMutationEnvelope["timestamp"]): WireMutationEnvelope {
+function toWireEnvelope(envelope: MutationEnvelope, timestamp: WireMutationEnvelope["timestamp"], actor = envelope.actor): WireMutationEnvelope {
   return {
     mutation_id: envelope.id,
     document_id: envelope.document,
-    actor: envelope.actor,
+    actor,
     dependencies: [...(envelope.deps ?? [])],
     diff: { schema: envelope.diff.schemaId, payload: encodePackPayload(envelope.diff.payload) },
     inverse: { schema: envelope.inverse.inverseDiff.schemaId, payload: encodePackPayload(envelope.inverse.inverseDiff.payload) },
@@ -560,7 +676,13 @@ async function writeFolder(state: ArtifactState, binding: Extract<PersistenceBin
  * batch the dying socket never acked is moved back into {@link ArtifactState.outbox} before the
  * retry either way, rather than left stranded in `pendingBatches` forever (finding 5 — a dead
  * socket will never deliver that `Ack`). */
-function connectHubOnce(state: ArtifactState, binding: Extract<PersistenceBinding, { kind: "hub" }>): Promise<void> {
+async function connectHubOnce(state: ArtifactState, binding: Extract<PersistenceBinding, { kind: "hub" }>): Promise<void> {
+  const grantPath = `/spaces/${encodeURIComponent(binding.spaceId)}/documents/${encodeURIComponent(state.config.documentId)}/socket-grants`;
+  const receipt = await requestSocketGrant(binding.baseUrl, grantPath, state.docAbort.signal);
+  if (receipt.expiresAtMs <= Date.now()) throw new Error("backbone-worker: expired socket grant");
+  state.actor = receipt.actorId;
+  state.hubActorReady = true;
+  post({ kind: "socket-actor", documentId: state.config.documentId, actorId: receipt.actorId });
   return new Promise<void>((resolve, reject) => {
     if (state.docAbort.signal.aborted) {
       reject(state.docAbort.signal.reason ?? new Error("backbone-worker: document closed"));
@@ -571,7 +693,7 @@ function connectHubOnce(state: ArtifactState, binding: Extract<PersistenceBindin
     // 📡️ Presence scope (contract §C0) travels out of band as `?surface=` — no `PresencePeer` wire
     // change (its flag byte is full and the file is peer-leased).
     const surfaceQuery = binding.surface ? `?surface=${encodeURIComponent(binding.surface)}` : "";
-    const socket = new WebSocket(`${wsBase}/spaces/${encodeURIComponent(binding.spaceId)}/documents/${encodeURIComponent(state.config.documentId)}/ws${surfaceQuery}`);
+    const socket = new WebSocket(`${wsBase}/spaces/${encodeURIComponent(binding.spaceId)}/documents/${encodeURIComponent(state.config.documentId)}/socket/v1${surfaceQuery}`, [...socketGrantProtocolsV1(receipt)]);
     // 🎞️ Binary frames (`protocol_wire`), not JSON text — see this file's header + `WireBridge` region.
     socket.binaryType = "arraybuffer";
     state.socket = socket;
@@ -580,12 +702,16 @@ function connectHubOnce(state: ArtifactState, binding: Extract<PersistenceBindin
     const onAbort = (): void => socket.close();
     state.docAbort.signal.addEventListener("abort", onAbort, { once: true });
     socket.onopen = () => {
+      if (socket.protocol !== "semio.socket.v1") {
+        socket.close(1002, "socket protocol mismatch");
+        return;
+      }
       state.reconnectDelayMs = HUB_RECONNECT_MIN_MS;
       sustainedHealthTimer = setTimeout(() => {
         sustainedHealthReached = true;
       }, SUSTAINED_HEALTHY_MS);
       sendWireFrame(state, {
-        Hello: {
+        SocketHelloV1: {
           wire_version: 1,
           protocol_version: 1,
           schema: state.config.schema,
@@ -593,8 +719,6 @@ function connectHubOnce(state: ArtifactState, binding: Extract<PersistenceBindin
           // (from the wasm renderer's `document_pack_schema_hash` export); zeros otherwise, which the
           // hub treats as "schema-agnostic client" and never validates.
           pack_schema_hash: [...(state.config.packSchemaHash ?? new Array(32).fill(0))],
-          actor: state.config.actor,
-          token: binding.token ?? null,
           resume_token: state.resumeToken,
           frontier: state.frontier,
         },
@@ -658,13 +782,17 @@ function sendWireFrame(state: ArtifactState, frame: ClientFrame, lane: WireLane)
  * moment the hub is reachable again, so nothing queued offline is lost or left unsent. */
 function relayMutationsToHub(state: ArtifactState, envelopes: readonly MutationEnvelope[]): void {
   if (envelopes.length === 0) return;
+  if (!state.hubActorReady) {
+    emitEvent(state.config.documentId, { kind: "commandOutcome", batchId: state.nextBatchId, outcome: { kind: "rejected", reason: "socket actor unavailable", messages: [] } });
+    return;
+  }
   if (state.socket?.readyState !== WebSocket.OPEN) {
     queueOutbox(state, envelopes);
     return;
   }
   const batchId = state.nextBatchId;
   state.nextBatchId += 1;
-  const wireEnvelopes = envelopes.map((envelope) => toWireEnvelope(envelope, nextWireTimestamp(state)));
+  const wireEnvelopes = envelopes.map((envelope) => toWireEnvelope(envelope, nextWireTimestamp(state), state.actor));
   state.pendingBatches.set(batchId, [...envelopes]);
   sendWireFrame(state, { Commands: { batch_id: batchId, envelopes: wireEnvelopes } }, "command");
 }
@@ -933,7 +1061,7 @@ async function handleHubFrame(state: ArtifactState, frame: ServerFrame): Promise
       rejectArtifactBootstrap(state, new Error("tail arrived before artifact bootstrap completion"));
       return;
     }
-    if (frame.Commands.origin !== state.config.actor) {
+    if (frame.Commands.origin !== state.actor) {
       const envelopes = frame.Commands.envelopes.map(fromWireEnvelope);
       emitEvent(state.config.documentId, { kind: "remoteMutations", envelopes });
     }
@@ -951,7 +1079,7 @@ async function handleHubFrame(state: ArtifactState, frame: ServerFrame): Promise
     return;
   }
   if ("Preview" in frame) {
-    if (frame.Preview.actor !== state.config.actor) emitEvent(state.config.documentId, { kind: "preview", actor: frame.Preview.actor, key: frame.Preview.key, seq: frame.Preview.seq, payload: frame.Preview.payload });
+    if (frame.Preview.actor !== state.actor) emitEvent(state.config.documentId, { kind: "preview", actor: frame.Preview.actor, key: frame.Preview.key, seq: frame.Preview.seq, payload: frame.Preview.payload });
     return;
   }
   if ("Presence" in frame) {
@@ -1008,9 +1136,14 @@ function directoryStatus(): BackboneWorkerResponse {
   return { kind: "directory-status", pendingCommands: directoryCommandQueue.length };
 }
 
-function openDirectory(baseUrl: string, token: string | undefined, since: number): void {
+function openDirectory(baseUrl: string, since: number): void {
   closeDirectory();
-  const client = new DirectoryClient(baseUrl, token);
+  const issuer = createSocketGrantIssuerV1({ post: (path, options) => requestSocketGrant(baseUrl, path, options?.signal) });
+  const client = new DirectoryClient(baseUrl, {
+    requestBaseUrl: "/_semio/hub",
+    socketGrantIssuer: issuer,
+    request: browserDirectoryRequest,
+  });
   directoryClient = client;
   directoryStream = client.stream(since, (message: DirectoryStreamMessage) => {
     post({ kind: "directory-message", message });
@@ -1240,8 +1373,11 @@ void putCachedBlob;
 function openArtifact(config: ArtifactActorConfig): void {
   closeArtifact(config.documentId);
   const channel = new BroadcastChannel(`semio-doc-${config.documentId}`);
+  const hub = hubBinding(config);
   const state: ArtifactState = {
     config,
+    actor: config.actor,
+    hubActorReady: hub === null,
     channel,
     socket: null,
     docAbort: new AbortController(),
@@ -1280,7 +1416,6 @@ function openArtifact(config: ArtifactActorConfig): void {
     if (config.watchExternal !== false) watchFolder(state, folder);
     else void state.revalidateFolder();
   }
-  const hub = hubBinding(config);
   if (hub) connectHub(state, hub);
   emitEvent(config.documentId, { kind: "status", ...state.status });
 }
@@ -1304,6 +1439,10 @@ async function handleLocalMsg(state: ArtifactState, message: ArtifactActorMsg): 
   switch (message.kind) {
     case "localMutations": {
       if (message.envelopes.length === 0) break; // pure wake
+      if (hubBinding(state.config) && !state.hubActorReady) {
+        emitEvent(state.config.documentId, { kind: "commandOutcome", batchId: state.nextBatchId, outcome: { kind: "rejected", reason: "socket actor unavailable", messages: [] } });
+        break;
+      }
       // 🚨️ Finding 5: bounded queue, rejected+reported wholesale rather than silently dropped or
       // partially accepted — see {@link rejectMutationQueueOverflow}.
       if (state.pendingMutations.length + message.envelopes.length > PENDING_MUTATIONS_QUEUE_LIMIT) {
@@ -1371,7 +1510,7 @@ function handleTsRequest(request: BackboneWorkerRequest): void {
       break;
     }
     case "directory-open":
-      openDirectory(request.baseUrl, request.token, request.since);
+      openDirectory(request.baseUrl, request.since);
       break;
     case "directory-command":
       void submitDirectoryCommand(request.requestId, request.command);
@@ -1388,7 +1527,17 @@ function handleTsRequest(request: BackboneWorkerRequest): void {
 // 🧵️ Whole block stripped from production builds (see this file's header doc) — `node:*` imports
 // below are dynamic specifically so they never get bundled into the actual browser Worker script.
 if (import.meta.vitest) {
-  const { describe, expect, it, vi } = import.meta.vitest;
+  const { beforeEach, describe, expect, it, vi } = import.meta.vitest;
+
+  beforeEach(() => {
+    socketGrantTestIssue = async () => ({
+      schema: "semio.hub.socket-grant/v1",
+      protocol: "semio.socket.v1",
+      grant: `socket.v1.${"1".repeat(32)}.${"2".repeat(64)}`,
+      actorId: `hub.v1.${"3".repeat(64)}`,
+      expiresAtMs: Number.MAX_SAFE_INTEGER,
+    });
+  });
 
   function sampleEnvelope(): MutationEnvelope {
     return {
@@ -1401,6 +1550,12 @@ if (import.meta.vitest) {
       diff: { schemaId: "demo/v1", payload: { n: 5, sequenceNumber: 1 } },
       inverse: { targetOperation: "edit-1", inverseDiff: { schemaId: "demo/v1", payload: { n: 0 } }, baseVersion: 0, dependencies: [], undoPolicy: "exactBaseOnly" },
     };
+  }
+
+  async function flushSocketGrantTurns(): Promise<void> {
+    await Promise.resolve();
+    await Promise.resolve();
+    await Promise.resolve();
   }
 
   describe("backbone-worker wire bridge", () => {
@@ -1654,7 +1809,7 @@ if (import.meta.vitest) {
   //#region 🔖️IdentityTests
   describe("identity config facet", () => {
     function sampleIdentity(overrides: Partial<Identity> = {}): Identity {
-      return { userId: "u-1", email: "ada@semio.dev", displayName: "Ada", hubBaseUrl: "http://hub.test", sessionToken: "tok-1", issuedAtMs: 1_000, ...overrides };
+      return { userId: "u-1", email: "ada@semio.dev", displayName: "Ada", hubBaseUrl: "http://hub.test", issuedAtMs: 1_000, ...overrides };
     }
 
     it("identityActorConfig binds the folder lane under `${dataDir}/os` when given a dataDir, else local-only", () => {
@@ -1677,7 +1832,7 @@ if (import.meta.vitest) {
       const afterSignOut = applyIdentityConfigMutation(afterFirstSignIn, signOut());
       expect(afterSignOut).toBeNull();
 
-      const second = sampleIdentity({ userId: "u-2", email: "devon@semio.dev", displayName: "Devon", sessionToken: "tok-2", issuedAtMs: 2_000 });
+      const second = sampleIdentity({ userId: "u-2", email: "devon@semio.dev", displayName: "Devon", issuedAtMs: 2_000 });
       const afterSecondSignIn = applyIdentityConfigMutation(afterSignOut, signIn(second));
       expect(afterSecondSignIn).toEqual(second);
 
@@ -1693,7 +1848,7 @@ if (import.meta.vitest) {
 
     it("foldIdentityEvent folds sign-in -> sign-out -> sign-in as last-envelope-wins, ignoring non-remoteMutations events", () => {
       const first = sampleIdentity();
-      const second = sampleIdentity({ userId: "u-2", sessionToken: "tok-2" });
+      const second = sampleIdentity({ userId: "u-2" });
       const decodePayload = (payload: unknown): Identity | null | undefined => {
         if (payload === null) return null;
         if (typeof payload === "object" && payload !== null && "userId" in payload) return payload as Identity;
@@ -1763,11 +1918,12 @@ if (import.meta.vitest) {
     class FakeDirectoryWebSocket {
       static instances: FakeDirectoryWebSocket[] = [];
       readonly url: string;
+      readonly protocol = "semio.socket.v1";
       onopen: (() => void) | null = null;
       onmessage: ((event: { data: string }) => void) | null = null;
       onclose: (() => void) | null = null;
       onerror: (() => void) | null = null;
-      constructor(url: string) {
+      constructor(url: string, readonly protocols?: string | string[]) {
         this.url = url;
         FakeDirectoryWebSocket.instances.push(this);
       }
@@ -1795,7 +1951,7 @@ if (import.meta.vitest) {
       };
 
       try {
-        handleTsRequest({ kind: "directory-open", baseUrl: "http://hub.test", token: "tok-1", since: 0 });
+        handleTsRequest({ kind: "directory-open", baseUrl: "http://hub.test", since: 0 });
         handleTsRequest({ kind: "directory-command", requestId: "r1", command: { kind: "create-space", name: "Atelier", spaceKind: "atelier", visibility: "private" } });
         await flushMicrotasks();
         expect(fetchCalls).toBeGreaterThan(0);
@@ -1850,6 +2006,8 @@ if (import.meta.vitest) {
       static readonly CLOSED = 3;
       static instances: FakeHubWebSocket[] = [];
       readonly url: string;
+      readonly protocol = "semio.socket.v1";
+      readonly protocols: string | string[] | undefined;
       readyState = FakeHubWebSocket.CONNECTING;
       binaryType = "blob";
       readonly sent: Uint8Array[] = [];
@@ -1857,8 +2015,9 @@ if (import.meta.vitest) {
       onmessage: ((event: { data: ArrayBuffer }) => void) | null = null;
       onclose: (() => void) | null = null;
       onerror: (() => void) | null = null;
-      constructor(url: string) {
+      constructor(url: string, protocols?: string | string[]) {
         this.url = url;
+        this.protocols = protocols;
         FakeHubWebSocket.instances.push(this);
       }
       send(data: Uint8Array): void {
@@ -1881,6 +2040,52 @@ if (import.meta.vitest) {
     function notFoundResponse() {
       return { ok: false, status: 404, statusText: "not found", headers: { get: () => null }, json: async () => ({}), text: async () => "" };
     }
+
+    it("keeps two concurrent document grant actors isolated and rewrites caller envelopes at the wire boundary", async () => {
+      FakeHubWebSocket.instances = [];
+      const originalWebSocket = globalThis.WebSocket;
+      (globalThis as unknown as { WebSocket: unknown }).WebSocket = FakeHubWebSocket;
+      const actorA = `hub.v1.${"a".repeat(64)}`;
+      const actorB = `hub.v1.${"b".repeat(64)}`;
+      socketGrantTestIssue = async (_baseUrl, path) => ({
+        schema: "semio.hub.socket-grant/v1",
+        protocol: "semio.socket.v1",
+        grant: `socket.v1.${path.includes("doc-a") ? "1".repeat(32) : "2".repeat(32)}.${"3".repeat(64)}`,
+        actorId: path.includes("doc-a") ? actorA : actorB,
+        expiresAtMs: Number.MAX_SAFE_INTEGER,
+      });
+      const envelope = (document: string): MutationEnvelope => ({
+        id: `edit-${document}`,
+        actor: "caller-selected-actor",
+        document,
+        schemaVersion: "demo/v1",
+        deps: [],
+        payloadHash: "unused",
+        diff: { schemaId: "demo/v1", payload: { document } },
+        inverse: { targetOperation: `edit-${document}`, inverseDiff: { schemaId: "demo/v1", payload: {} }, baseVersion: 0, dependencies: [], undoPolicy: "exactBaseOnly" },
+      });
+      try {
+        for (const documentId of ["doc-a", "doc-b"]) openArtifact({ documentId, schema: "demo/v1", bindings: [{ kind: "hub", baseUrl: "http://hub.test", spaceId: "space-1" }], actor: "caller-selected-actor" });
+        await flushSocketGrantTurns();
+        const [socketA, socketB] = FakeHubWebSocket.instances;
+        socketA!.open();
+        socketB!.open();
+        handleTsRequest({ kind: "send", documentId: "doc-a", message: { kind: "localMutations", envelopes: [envelope("doc-a")] } });
+        handleTsRequest({ kind: "send", documentId: "doc-b", message: { kind: "localMutations", envelopes: [envelope("doc-b")] } });
+        const commandActor = (socket: FakeHubWebSocket): string => {
+          const frame = decodeClientFrame(socket.sent[1]!).frame;
+          if (typeof frame === "string" || !("Commands" in frame)) throw new Error("expected commands");
+          return frame.Commands.envelopes[0]!.actor;
+        };
+        expect(commandActor(socketA!)).toBe(actorA);
+        expect(commandActor(socketB!)).toBe(actorB);
+        expect(commandActor(socketA!)).not.toBe(commandActor(socketB!));
+      } finally {
+        closeArtifact("doc-a");
+        closeArtifact("doc-b");
+        (globalThis as unknown as { WebSocket: unknown }).WebSocket = originalWebSocket;
+      }
+    });
 
     async function flushMicrotasks(): Promise<void> {
       await new Promise((resolve) => setTimeout(resolve, 0));
@@ -2075,6 +2280,7 @@ if (import.meta.vitest) {
       try {
         const config: ArtifactActorConfig = { documentId: "doc-hub-flush", schema: "demo/v1", bindings: [{ kind: "hub", baseUrl: "http://hub.test", spaceId: "studio-1" }], actor: "actor-1" };
         openArtifact(config);
+        await flushSocketGrantTurns();
         const state = artifacts.get("doc-hub-flush")!;
         const socket = FakeHubWebSocket.instances.at(-1)!;
         expect(socket.readyState).toBe(FakeHubWebSocket.CONNECTING);
@@ -2126,7 +2332,7 @@ if (import.meta.vitest) {
       }
     });
 
-    it("a batch whose socket dies before Ack moves back into the outbox instead of being stranded", () => {
+    it("a batch whose socket dies before Ack moves back into the outbox instead of being stranded", async () => {
       FakeHubWebSocket.instances = [];
       const originalWebSocket = globalThis.WebSocket;
       (globalThis as unknown as { WebSocket: unknown }).WebSocket = FakeHubWebSocket;
@@ -2134,6 +2340,7 @@ if (import.meta.vitest) {
       try {
         const config: ArtifactActorConfig = { documentId: "doc-hub-stranded", schema: "demo/v1", bindings: [{ kind: "hub", baseUrl: "http://hub.test", spaceId: "studio-1" }], actor: "actor-1" };
         openArtifact(config);
+        await flushSocketGrantTurns();
         const state = artifacts.get("doc-hub-stranded")!;
         const socket = FakeHubWebSocket.instances.at(-1)!;
         socket.open();
@@ -2181,6 +2388,7 @@ if (import.meta.vitest) {
       try {
         const config: ArtifactActorConfig = { documentId: "doc-hub-reset", schema: "demo/v1", bindings: [{ kind: "hub", baseUrl: "http://hub.test", spaceId: "studio-1" }], actor: "actor-1" };
         openArtifact(config);
+        await flushSocketGrantTurns();
 
         // 💥️ Two quick failures BEFORE any sustained health — attempt 1 → 750ms, attempt 2 → 1250ms
         // (both exact with `Math.random` pinned at 0.5: `minMs + 0.5*(min(maxMs,minMs*2**attempt)-minMs)`).
@@ -2226,6 +2434,7 @@ if (import.meta.vitest) {
       try {
         const config: ArtifactActorConfig = { documentId: "doc-hub-no-reset", schema: "demo/v1", bindings: [{ kind: "hub", baseUrl: "http://hub.test", spaceId: "studio-1" }], actor: "actor-1" };
         openArtifact(config);
+        await flushSocketGrantTurns();
 
         // 🔁️ Each cycle opens (well under `SUSTAINED_HEALTHY_MS`) then drops immediately — never
         // healthy long enough to reset. Attempt 1 → 750ms, attempt 2 → 1250ms, attempt 3 → 2250ms.
@@ -2261,6 +2470,7 @@ if (import.meta.vitest) {
       try {
         const config: ArtifactActorConfig = { documentId: "doc-hub-abort", schema: "demo/v1", bindings: [{ kind: "hub", baseUrl: "http://hub.test", spaceId: "studio-1" }], actor: "actor-1" };
         openArtifact(config);
+        await flushSocketGrantTurns();
         FakeHubWebSocket.instances[0]!.open(); // sustained-health timer now pending too.
 
         closeArtifact("doc-hub-abort");

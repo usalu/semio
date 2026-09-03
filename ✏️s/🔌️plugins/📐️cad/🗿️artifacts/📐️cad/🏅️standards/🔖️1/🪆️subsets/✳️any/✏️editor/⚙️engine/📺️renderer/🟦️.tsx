@@ -227,7 +227,7 @@ type WireRef = kernelGeometry.WireRef;
 type EdgeRef = kernelGeometry.EdgeRef;
 
 export type { SpatialComputeMode };
-import { PreciseSpatialKernelMath, faceNormal, preciseSpatialKernelMath } from "../../../../../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/🧱️brepjs/🟦️.ts";
+import { PreciseSpatialKernelMath, faceNormal, preciseSpatialKernelMath } from "../../../../../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/🧮️preview/🟦️.ts";
 
 // #region ⚡️R3FPreviewKernel
 /** @emoji ⚡️ Fast approximate `SpatialPreviewKernel` for live R3F previews (lower tessellation). */

@@ -34,7 +34,7 @@ ureq = ["dep:ureq", "dep:semio-framework-actor"]
 # the `[target.cfg(not(wasm32))]` `tokio` entry below — see its docstring. WASI-P2 guest plugins
 # never link the sync actor's native (tokio-tungstenite) transport — see `🔄️sync/🦀️.rs`'s
 # `native_actor` vs `wasm_actor` split — so `net` has no business reaching wasm32 at all.
-sync = ["dep:tokio-tungstenite", "dep:semio-framework-os-services", "tokio/rt", "tokio/time"]
+sync = ["dep:tokio-tungstenite", "dep:semio-framework-os-services", "dep:ureq", "tokio/rt", "tokio/time"]
 worker = ["sync"]
 # 🧬️ Keeps the boundary/protocol type-generation capability explicit at this layer. The current
 # wire declarations are owned by `semio-framework`, so enabling this feature adds no dependency.

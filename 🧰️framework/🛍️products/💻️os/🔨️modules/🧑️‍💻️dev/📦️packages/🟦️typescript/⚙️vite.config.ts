@@ -92,7 +92,7 @@ export default defineConfig({
       { find: "@semio-tech/infinite-canvas-react-renderer", replacement: path.resolve(repoRoot, "./🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🖼️canvas/🎨️react-renderer/📦️packages/🟦️typescript/🟦️.tsx") },
       { find: "@semio-tech/infinite-world-r3f", replacement: path.resolve(repoRoot, "./🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/📦️packages/🟦️typescript/🟦️.tsx") },
       { find: "@semio-tech/framework-renderer-react", replacement: path.resolve(repoRoot, "./🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🟦️typescript/🎯️targets/⚛️react/🟦️.tsx") },
-      { find: "@semio-tech/framework-renderer-wgpu", replacement: path.resolve(repoRoot, "./🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/🟦️.ts") },
+      { find: "@semio-tech/framework-renderer-wgpu", replacement: path.resolve(repoRoot, "./🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/🟦️typescript/📚️library/🟦️.ts") },
       { find: "@semio-tech/framework", replacement: path.resolve(repoRoot, "./🧰️framework/📦️packages/🟦️typescript/🟦️.ts") },
       { find: "@semio-tech/framework-os", replacement: path.resolve(repoRoot, "./🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/🟦️.ts") },
       { find: "@semio-tech/framework-surface-board-2d-rs", replacement: path.resolve(repoRoot, "./🧰️framework/🔨️modules/🗺️surface/📦️packages/🦀️rust/pkg") },
@@ -103,8 +103,18 @@ export default defineConfig({
     dedupe: ["react", "react-dom", "three", "@react-three/fiber", "@react-three/drei"],
   },
   server: {
+    host: "127.0.0.1",
     port: Number(process.env.S_OS_PORT ?? 6066),
     strictPort: true,
+    ...(process.env.S_LOCAL_RELAY_URL ? {
+      proxy: {
+        "/_semio": {
+          target: process.env.S_LOCAL_RELAY_URL,
+          changeOrigin: false,
+          headers: process.env.S_LOCAL_RELAY_SECRET ? { "x-semio-local-relay": process.env.S_LOCAL_RELAY_SECRET } : undefined,
+        },
+      },
+    } : {}),
     fs: { allow: [repoRoot, pluginModulesDir, installedExtensionsDir, rendererModulesDir] },
     watch: {
       // Generated registry rewrites must not bounce Vite (write playgrounds.ts → restart → rewrite…).
@@ -158,11 +168,8 @@ export default defineConfig({
     "import.meta.env.VITE_SEMIO_PLUGIN": JSON.stringify(process.env.SEMIO_PLUGIN ?? DEFAULT_HOST_VARIANT),
     "import.meta.env.VITE_SEMIO_RENDERER": JSON.stringify(renderer),
     "import.meta.env.VITE_SEMIO_BRAND": JSON.stringify(brand?.id ?? ""),
-    // 👥️ Hub identity passthrough for collaborative dev sessions (contract freeze §C0/§C3) — unset for
-    // the plain single-user `s` launcher, populated for the `s` `users` launchers (`S_HUB_URL`/`S_USER`/
-    // `S_DATA_DIR` env, see `.vscode/🧩️launch.seed.jsonc`'s `devLaunchers.s.users`).
+    // 👥️ Non-secret collaborative endpoint metadata; authority stays inside the local relay.
     "import.meta.env.VITE_S_HUB_URL": JSON.stringify(process.env.S_HUB_URL ?? ""),
-    "import.meta.env.VITE_S_USER": JSON.stringify(process.env.S_USER ?? ""),
     "import.meta.env.VITE_S_DATA_DIR": JSON.stringify(process.env.S_DATA_DIR ?? ""),
   },
 });

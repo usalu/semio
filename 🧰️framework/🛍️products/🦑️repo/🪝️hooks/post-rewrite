@@ -44,6 +44,22 @@ compose_resolve_repo_cli() {
     return
   fi
 }
+compose_resolve_bun() {
+  ROOT="$1"
+  if [ -n "$COMPOSE_BUN" ] && [ -x "$COMPOSE_BUN" ]; then
+    echo "$COMPOSE_BUN"
+    return
+  fi
+  BUN_PIN="$ROOT/.🧬semio/🦑️repo/compose-micro-commit-bun"
+  if [ -f "$BUN_PIN" ]; then
+    BUN=$(sed -n '1p' "$BUN_PIN" 2>/dev/null)
+    if [ -n "$BUN" ] && [ -x "$BUN" ]; then
+      echo "$BUN"
+      return
+    fi
+  fi
+  command -v bun 2>/dev/null || true
+}
 CLI=$(compose_resolve_repo_cli "$ROOT")
 [ -n "$CLI" ] && "$CLI" micro-commit reset 2>/dev/null || true
 compose_micro_commit_wipe

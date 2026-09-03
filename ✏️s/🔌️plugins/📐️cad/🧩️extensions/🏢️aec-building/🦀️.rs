@@ -8,8 +8,8 @@ use pack::json::{self, Value as JsonValue};
 use semio_framework_plugin::app::ArtifactContribution;
 use semio_framework_plugin::{ArtifactInferenceExecution, ArtifactInferenceExecutionError, ArtifactInferenceExecutionRequest, ArtifactInferenceService, ArtifactInferenceServiceMetadata, ExecutionMode, ExtensionBundle};
 use semio_framework_os_kernel::{pack_rt, DslValue, FromValue, ToValue};
-use semio_s_plugin_cad::artifacts::cad::mutations::change_active_model_definition::mutation::ChangeActiveModelDefinition;
-use semio_s_plugin_cad::artifacts::cad::mutations::create_node::mutation::CreateNode;
+use semio_s_plugin_cad::artifacts::cad::mutations::change_active_model_definition::ChangeActiveModelDefinition;
+use semio_s_plugin_cad::artifacts::cad::mutations::create_node::CreateNode;
 use semio_s_plugin_cad::artifacts::cad::{CadMutation, CadNode, CadSnapshot, CAD_DOCUMENT_SCHEMA};
 use std::collections::BTreeMap;
 

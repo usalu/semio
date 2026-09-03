@@ -13,7 +13,7 @@ use crate::artifacts::gismap::{gis_map_drawing_child_handle, gis_map_value_child
 use schema::ArtifactSchema;
 use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::base::schema::triples::{split_top_level, strip_brackets};
 use serde::{Deserialize, Serialize};
-use semio_framework_value_derive::{FromValue, ToValue};
+use dsl::{FromValue, ToValue};
 
 //#region 🔹Snapshot
 /// 📸️ Persisted GIS map document snapshot (persistent fields of the artifact).
@@ -56,7 +56,7 @@ pub struct GisMapSnapshot {
 /// `regions`, JSON-serialized (features already `Serialize`); kept as one function so `Default` and
 /// `gis_map_snapshot_with_derived_children` can never disagree on what determines the handles.
 pub(crate) fn gis_map_content_key(positions: &[MapFeature], routes: &[MapFeature], regions: &[MapFeature]) -> String {
-    serde_json::to_string(&(positions, routes, regions)).unwrap_or_default()
+    dsl::os_pack::json::to_json_string(&(positions.to_vec(), routes.to_vec(), regions.to_vec()))
 }
 
 impl Default for GisMapSnapshot {
@@ -115,11 +115,11 @@ pub(crate) fn dec_child_opt<S>(s: &str) -> Result<Option<store::ArtifactChild<S>
 /// 🧾️ `positions`/`routes`/`regions` are structured (`Vec<MapFeature>`, already
 /// `Serialize`/`Deserialize`): serialize to JSON, then hex-encode the JSON bytes — same convention
 /// every other text field in this file already uses (`📐️cad`'s `enc_json`/`dec_json`).
-fn enc_json<T: Serialize>(value: &T) -> String {
-    enc_str(&serde_json::to_string(value).expect("gismap structured fields are always JSON-serializable"))
+fn enc_json<T: dsl::ToValue>(value: &T) -> String {
+    enc_str(&dsl::os_pack::json::to_json_string(value))
 }
-fn dec_json<T: serde::de::DeserializeOwned>(s: &str) -> Result<T, String> {
-    serde_json::from_str(&dec_str(s)?).map_err(|e| e.to_string())
+fn dec_json<T: dsl::FromValue>(s: &str) -> Result<T, String> {
+    dsl::os_pack::json::from_json_str(&dec_str(s)?).map_err(|e| e.to_string())
 }
 //#endregion 🔖️CodecPrimitives
 
@@ -216,9 +216,9 @@ pub(crate) fn read_child_opt<S>(reader: &mut store::ByteReader<'_>) -> Result<Op
 fn encode_gis_map_snapshot_binary(s: &GisMapSnapshot) -> Vec<u8> {
     const PACK_BINARY_FORMAT: u8 = 1;
     let mut out = vec![PACK_BINARY_FORMAT];
-    write_str_lp(&mut out, &serde_json::to_string(&s.positions).expect("MapFeature list is always JSON-serializable"));
-    write_str_lp(&mut out, &serde_json::to_string(&s.routes).expect("MapFeature list is always JSON-serializable"));
-    write_str_lp(&mut out, &serde_json::to_string(&s.regions).expect("MapFeature list is always JSON-serializable"));
+    write_str_lp(&mut out, &dsl::os_pack::json::to_json_string(&s.positions));
+    write_str_lp(&mut out, &dsl::os_pack::json::to_json_string(&s.routes));
+    write_str_lp(&mut out, &dsl::os_pack::json::to_json_string(&s.regions));
     write_child(&mut out, &s.drawing);
     write_child_opt(&mut out, &s.image);
     write_child(&mut out, &s.value);
@@ -231,9 +231,9 @@ fn decode_gis_map_snapshot_binary(bytes: &[u8]) -> Result<GisMapSnapshot, String
     if format != PACK_BINARY_FORMAT {
         return Err(format!("unsupported pack format {format}"));
     }
-    let positions = serde_json::from_str(&read_str_lp(&mut reader)?).map_err(|e| e.to_string())?;
-    let routes = serde_json::from_str(&read_str_lp(&mut reader)?).map_err(|e| e.to_string())?;
-    let regions = serde_json::from_str(&read_str_lp(&mut reader)?).map_err(|e| e.to_string())?;
+    let positions = dsl::os_pack::json::from_json_str(&read_str_lp(&mut reader)?).map_err(|e| e.to_string())?;
+    let routes = dsl::os_pack::json::from_json_str(&read_str_lp(&mut reader)?).map_err(|e| e.to_string())?;
+    let regions = dsl::os_pack::json::from_json_str(&read_str_lp(&mut reader)?).map_err(|e| e.to_string())?;
     let drawing = read_child(&mut reader)?;
     let image = read_child_opt(&mut reader)?;
     let value = read_child(&mut reader)?;
@@ -300,13 +300,13 @@ pub fn gis_map_identity_report_json(dsl_text: &str) -> Result<String, String> {
     let canonical_again = <GisMapSnapshot as store::ArtifactDsl>::print_dsl(&reparsed);
     let packed = <GisMapSnapshot as store::ArtifactPack>::encode_pack(&reparsed);
     let unpacked = <GisMapSnapshot as store::ArtifactPack>::decode_pack(&packed).map_err(|error| error.to_string())?;
-    let report = serde_json::json!({
-        "parsed": serde_json::to_value(&parsed).map_err(|error| error.to_string())?,
-        "reparsed": serde_json::to_value(&reparsed).map_err(|error| error.to_string())?,
-        "packDecoded": serde_json::to_value(&unpacked).map_err(|error| error.to_string())?,
-        "canonicalText": canonical,
-        "canonicalTextAgain": canonical_again,
-    });
-    Ok(report.to_string())
+    let report = dsl::os_pack::json::object([
+        ("parsed".to_string(), dsl::os_pack::json::from_dsl_value(&parsed.to_value())),
+        ("reparsed".to_string(), dsl::os_pack::json::from_dsl_value(&reparsed.to_value())),
+        ("packDecoded".to_string(), dsl::os_pack::json::from_dsl_value(&unpacked.to_value())),
+        ("canonicalText".to_string(), dsl::os_pack::json::Value::from(canonical.as_str())),
+        ("canonicalTextAgain".to_string(), dsl::os_pack::json::Value::from(canonical_again.as_str())),
+    ]);
+    Ok(dsl::os_pack::json::to_string(&report))
 }
 //#endregion 🌉️IdentityBridge

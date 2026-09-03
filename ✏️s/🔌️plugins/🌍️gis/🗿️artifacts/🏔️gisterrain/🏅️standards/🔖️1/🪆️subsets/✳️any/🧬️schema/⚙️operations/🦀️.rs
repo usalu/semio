@@ -8,6 +8,7 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.gram
 
 use crate::artifacts::gisterrain::schema::mutations::{ChangeExaggeration, ChangeImportedFeatures, GisTerrainMutation};
 use crate::artifacts::gisterrain::GisTerrainSnapshot;
+use dsl::ToValue;
 use protocol::Mutation;
 use store::{ArtifactEnvelope, ArtifactStore};
 
@@ -94,12 +95,12 @@ pub const KINDS: &[&str] = &["change-exaggeration", "change-imported-features"];
 /// @see ../../🔣️oracle.json — the catalog and the recorded no-oracle decision.
 pub fn gis_terrain_mutation_report_json(base_json: &str, mutation_json: &str, after_json: &str) -> Result<String, String> {
     let decode_snapshot = |text: &str| -> Result<GisTerrainSnapshot, String> {
-        let decoded: GisTerrainSnapshot = serde_json::from_str(text).map_err(|error| error.to_string())?;
+        let decoded: GisTerrainSnapshot = dsl::os_pack::json::from_json_str(text).map_err(|error| error.to_string())?;
         Ok(crate::artifacts::gisterrain::gis_terrain_snapshot_with_derived_mesh(decoded))
     };
     let base = decode_snapshot(base_json)?;
     let expected = decode_snapshot(after_json)?;
-    let mutation: GisTerrainMutation = serde_json::from_str(mutation_json).map_err(|error| error.to_string())?;
+    let mutation: GisTerrainMutation = dsl::os_pack::json::from_json_str(mutation_json).map_err(|error| error.to_string())?;
     let mut applied = base.clone();
     let forward = <GisTerrainMutation as Mutation<GisTerrainSnapshot>>::diff(&mutation, &base).apply_to(&mut applied);
     let inverse = <GisTerrainMutation as Mutation<GisTerrainSnapshot>>::inverse(&mutation, &base);
@@ -109,17 +110,17 @@ pub fn gis_terrain_mutation_report_json(base_json: &str, mutation_json: &str, af
         let outcome = <GisTerrainMutation as Mutation<GisTerrainSnapshot>>::diff(step, &undone).apply_to(&mut undone);
         inverse_messages.extend(outcome.messages().iter().cloned());
     }
-    let report = serde_json::json!({
-        "base": serde_json::to_value(&base).map_err(|error| error.to_string())?,
-        "expectedSnapshot": serde_json::to_value(&expected).map_err(|error| error.to_string())?,
-        "snapshot": serde_json::to_value(&applied).map_err(|error| error.to_string())?,
-        "diff": serde_json::to_value(forward.diff()).map_err(|error| error.to_string())?,
-        "messages": serde_json::to_value(forward.messages()).map_err(|error| error.to_string())?,
-        "inverseSteps": serde_json::to_value(&inverse).map_err(|error| error.to_string())?,
-        "inverseSnapshot": serde_json::to_value(&undone).map_err(|error| error.to_string())?,
-        "inverseMessages": serde_json::to_value(&inverse_messages).map_err(|error| error.to_string())?,
-    });
-    Ok(report.to_string())
+    let report = dsl::os_pack::json::object([
+        ("base".to_string(), dsl::os_pack::json::from_dsl_value(&base.to_value())),
+        ("expectedSnapshot".to_string(), dsl::os_pack::json::from_dsl_value(&expected.to_value())),
+        ("snapshot".to_string(), dsl::os_pack::json::from_dsl_value(&applied.to_value())),
+        ("diff".to_string(), dsl::os_pack::json::from_dsl_value(&forward.diff().to_value())),
+        ("messages".to_string(), dsl::os_pack::json::from_dsl_value(&forward.messages().to_vec().to_value())),
+        ("inverseSteps".to_string(), dsl::os_pack::json::from_dsl_value(&inverse.to_value())),
+        ("inverseSnapshot".to_string(), dsl::os_pack::json::from_dsl_value(&undone.to_value())),
+        ("inverseMessages".to_string(), dsl::os_pack::json::from_dsl_value(&inverse_messages.to_value())),
+    ]);
+    Ok(dsl::os_pack::json::to_string(&report))
 }
 //#endregion 🌉️TestBridge
 

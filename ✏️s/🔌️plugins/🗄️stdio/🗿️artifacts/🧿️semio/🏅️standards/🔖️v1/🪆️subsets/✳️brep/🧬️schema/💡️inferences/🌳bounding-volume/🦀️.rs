@@ -11,10 +11,10 @@ pub mod spatial {
     //! 🌳️ Generic bounding-volume-hierarchy spatial index over AABB-bounded items.
     //!
     //! Kernel-agnostic: works with any leaf payload (`semio_framework_3d::brep::kernel` instantiates
-    //! `Bvh<FaceId>`/`Bvh<EdgeId>` internally) using only [`semio_framework_3d::engine`]'s `Vec3`/`Aabb`
+    //! `Bvh<FaceId>`/`Bvh<EdgeId>` internally) using only this file's own `engine::contract`'s `Vec3`/`Aabb`
     //! types, so this crate never depends on brep and stays reusable by other 3D kernels.
 
-    use semio_framework_3d::engine::{Aabb, Vec3};
+    use crate::artifacts::semio::standards::v1::subsets::brep::schema::engine::{Aabb, Vec3};
 
     // #region 🔖️AabbHelpers
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
@@ -61,12 +61,20 @@ pub mod spatial {
     /// 🎯️ Ray-AABB slab intersection test (`origin + t * dir`, `t >= 0`).
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn aabb_ray_hits(aabb: &Aabb, origin: Vec3, dir: Vec3) -> bool {
+        aabb_ray_entry(aabb, origin, dir).is_some()
+    }
+
+    /// 🎯️ Ray-AABB slab intersection returning the clamped (`>= 0`) entry parameter, or `None` if
+    /// the ray misses — the ordering key for [`Bvh::query_ray_ordered`] and the traversal guard
+    /// for [`Bvh::query_nearest_exact`]'s branch-and-bound.
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn aabb_ray_entry(aabb: &Aabb, origin: Vec3, dir: Vec3) -> Option<f64> {
         let mut tmin = f64::NEG_INFINITY;
         let mut tmax = f64::INFINITY;
         for axis in 0..3 {
             if dir[axis].abs() < 1e-12 {
                 if origin[axis] < aabb.min[axis] || origin[axis] > aabb.max[axis] {
-                    return false;
+                    return None;
                 }
                 continue;
             }
@@ -79,10 +87,14 @@ pub mod spatial {
             tmin = tmin.max(t0);
             tmax = tmax.min(t1);
             if tmin > tmax {
-                return false;
+                return None;
             }
         }
-        tmax >= 0.0
+        if tmax < 0.0 {
+            None
+        } else {
+            Some(tmin.max(0.0))
+        }
     }
     // #endregion 🔖️AabbHelpers
 
@@ -217,6 +229,97 @@ pub mod spatial {
                 }
             }
         }
+
+        /// 🎯️ Like [`Bvh::query_ray`], but sorted near-to-far by AABB entry parameter `t` — lets a
+        /// caller stop at the first candidate whose *exact* intersection succeeds instead of
+        /// resolving every leaf the ray's box crosses.
+        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+        pub fn query_ray_ordered(&self, origin: Vec3, dir: Vec3) -> Vec<(&T, f64)> {
+            let mut hits = Vec::new();
+            Self::visit_ray_ordered(self.root.as_ref(), origin, dir, &mut hits);
+            hits.sort_by(|a, b| a.1.partial_cmp(&b.1).unwrap_or(std::cmp::Ordering::Equal));
+            hits
+        }
+
+        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+        fn visit_ray_ordered<'a>(node: Option<&'a Node<T>>, origin: Vec3, dir: Vec3, hits: &mut Vec<(&'a T, f64)>) {
+            let Some(node) = node else { return };
+            let Some(t) = aabb_ray_entry(node.aabb(), origin, dir) else { return };
+            match node {
+                Node::Leaf { item, .. } => hits.push((item, t)),
+                Node::Branch { left, right, .. } => {
+                    Self::visit_ray_ordered(Some(left), origin, dir, hits);
+                    Self::visit_ray_ordered(Some(right), origin, dir, hits);
+                }
+            }
+        }
+
+        /// 🔍️ Branch-and-bound nearest search: `exact` computes a leaf item's TRUE distance (not
+        /// just its AABB lower bound), and a subtree is pruned whenever its AABB lower bound
+        /// already exceeds the best exact distance found so far — unlike
+        /// [`Bvh::query_point_nearest`], this returns the genuinely closest item.
+        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+        pub fn query_nearest_exact<F: Fn(&T) -> f64>(&self, point: Vec3, exact: F) -> Option<&T> {
+            let mut best: Option<(&T, f64)> = None;
+            Self::visit_nearest_exact(self.root.as_ref(), point, &exact, &mut best);
+            best.map(|(item, _)| item)
+        }
+
+        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+        fn visit_nearest_exact<'a, F: Fn(&T) -> f64>(node: Option<&'a Node<T>>, point: Vec3, exact: &F, best: &mut Option<(&'a T, f64)>) {
+            let Some(node) = node else { return };
+            let lower_bound = aabb_point_distance_sq(node.aabb(), point).sqrt();
+            if let Some((_, best_dist)) = best {
+                if lower_bound > *best_dist {
+                    return;
+                }
+            }
+            match node {
+                Node::Leaf { item, .. } => {
+                    let d = exact(item);
+                    let better = match best {
+                        None => true,
+                        Some((_, best_dist)) => d < *best_dist,
+                    };
+                    if better {
+                        *best = Some((item, d));
+                    }
+                }
+                Node::Branch { left, right, .. } => {
+                    let left_lb = aabb_point_distance_sq(left.aabb(), point);
+                    let right_lb = aabb_point_distance_sq(right.aabb(), point);
+                    let (near, far) = if left_lb <= right_lb { (left, right) } else { (right, left) };
+                    Self::visit_nearest_exact(Some(near), point, exact, best);
+                    Self::visit_nearest_exact(Some(far), point, exact, best);
+                }
+            }
+        }
+
+        /// 🔁️ Recomputes every leaf and branch AABB in place (same tree topology) from a fresh
+        /// `bounds` lookup — cheaper than [`Bvh::build`] when items moved slightly but membership
+        /// didn't change enough to warrant a new median-split partition.
+        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+        pub fn refit<F: Fn(&T) -> Aabb>(&mut self, bounds: &F) {
+            if let Some(node) = &mut self.root {
+                Self::refit_node(node, bounds);
+            }
+        }
+
+        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+        fn refit_node<F: Fn(&T) -> Aabb>(node: &mut Node<T>, bounds: &F) -> Aabb {
+            match node {
+                Node::Leaf { aabb, item } => {
+                    *aabb = bounds(item);
+                    aabb.clone()
+                }
+                Node::Branch { aabb, left, right } => {
+                    let left_aabb = Self::refit_node(left, bounds);
+                    let right_aabb = Self::refit_node(right, bounds);
+                    *aabb = aabb_union(&left_aabb, &right_aabb);
+                    aabb.clone()
+                }
+            }
+        }
     }
     // #endregion 🔖️Bvh
 
@@ -269,6 +372,34 @@ pub mod spatial {
             let bvh = Bvh::build(items);
             assert_eq!(bvh.query_point_nearest([100.2, 0.2, 0.2]), Some(&100));
         }
+
+        #[semio_framework_async_macros::async_test]
+        async fn query_ray_ordered_returns_near_to_far() {
+            let items = vec![(aabb([5.0, -1.0, -1.0], [6.0, 1.0, 1.0]), "far"), (aabb([1.0, -1.0, -1.0], [2.0, 1.0, 1.0]), "near")];
+            let bvh = Bvh::build(items);
+            let hits = bvh.query_ray_ordered([0.0, 0.0, 0.0], [1.0, 0.0, 0.0]);
+            let ordered: Vec<&&str> = hits.iter().map(|(item, _)| item).collect();
+            assert_eq!(ordered, vec![&"near", &"far"]);
+            assert!(hits[0].1 < hits[1].1);
+        }
+
+        #[semio_framework_async_macros::async_test]
+        async fn query_nearest_exact_prefers_true_distance_over_aabb_lower_bound() {
+            let items = vec![(aabb([0.0, 0.0, 0.0], [3.0, 3.0, 3.0]), "big_far_corner"), (aabb([4.0, 4.0, 4.0], [4.2, 4.2, 4.2]), "small_near")];
+            let bvh = Bvh::build(items);
+            let target = [4.0, 4.0, 3.9];
+            let got = bvh.query_nearest_exact(target, |item: &&str| if *item == "big_far_corner" { 10.0 } else { 0.3 });
+            assert_eq!(got, Some(&"small_near"));
+        }
+
+        #[semio_framework_async_macros::async_test]
+        async fn refit_updates_bounds_in_place_without_rebuilding() {
+            let items = vec![(aabb([0.0, 0.0, 0.0], [1.0, 1.0, 1.0]), 0usize), (aabb([5.0, 5.0, 5.0], [6.0, 6.0, 6.0]), 1usize)];
+            let mut bvh = Bvh::build(items);
+            assert!(bvh.query_ray([10.0, 0.5, 0.5], [-1.0, 0.0, 0.0]).is_empty());
+            bvh.refit(&|item: &usize| if *item == 0 { aabb([9.0, 0.0, 0.0], [11.0, 1.0, 1.0]) } else { aabb([5.0, 5.0, 5.0], [6.0, 6.0, 6.0]) });
+            assert_eq!(bvh.query_ray([10.0, 0.5, 0.5], [0.0, 0.0, 1.0]), vec![&0]);
+        }
     }
     // #endregion 🔖️Tests
 }
@@ -276,12 +407,14 @@ pub mod spatial {
 
 // 🌳 B-Rep entity BVH adapters over `spatial::Bvh` (ray / AABB / nearest by leaf bounds).
 
+use crate::artifacts::semio::standards::v1::subsets::brep::schema::inferences::mass_properties::closest_point_on_face;
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::arena::{EdgeId, FaceId, SolidId};
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::curve::Curve3;
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::error::KernelError;
+use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::surface::Surface;
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::topology::Body;
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::vector::Pnt3;
-use semio_framework_3d::engine::{Aabb, Vec3};
+use crate::artifacts::semio::standards::v1::subsets::brep::schema::engine::{Aabb, Vec3};
 use spatial::Bvh;
 
 // #region 🔖️Bounds
@@ -333,7 +466,12 @@ pub fn edge_aabb(body: &Body, edge: EdgeId) -> Result<Aabb, KernelError> {
     Ok(box_)
 }
 
-/// 📦 Conservative world-space AABB for one face from its loop vertices and edge curve samples.
+/// 📦 Conservative world-space AABB for one face from its loop vertices, edge curve samples
+/// (trimmed boundary) plus, for non-planar surfaces, a coarse interior parametric grid over the
+/// surface's own domain — a plane can't bulge past its boundary samples, but a saddle-shaped NURBS
+/// patch's interior can, so boundary-only sampling under-bounds it. The grid samples the FULL
+/// surface domain rather than a trim-clipped subset, which stays a valid (if slightly loose)
+/// superset of the true trimmed region without needing this module to depend on UV triangulation.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn face_aabb(body: &Body, face: FaceId) -> Result<Aabb, KernelError> {
     let coedges = body.face_coedges(face);
@@ -352,11 +490,35 @@ pub fn face_aabb(body: &Body, face: FaceId) -> Result<Aabb, KernelError> {
         let (t0, t1) = edge_rec.range;
         vertices.extend(sample_curve_segment(curve, t0, t1, 4));
     }
+    if let Some(face_ent) = body.faces.get(face) {
+        if let Some(surface) = body.surfaces.get(face_ent.surface) {
+            if !matches!(surface, Surface::Plane { .. }) {
+                vertices.extend(surface_interior_samples(surface));
+            }
+        }
+    }
     let mut box_ = aabb_from_point(vertices[0]);
     for p in vertices.iter().skip(1) {
         box_ = aabb_extend(box_, *p);
     }
     Ok(box_)
+}
+
+/// 📦 A coarse `5x5` grid of world-space points over `surface`'s own parametric domain, used to
+/// conservatively widen a face's AABB past what boundary sampling alone would capture.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn surface_interior_samples(surface: &Surface) -> Vec<Pnt3> {
+    const GRID: usize = 5;
+    let ((u0, u1), (v0, v1)) = surface.domain();
+    let mut pts = Vec::with_capacity(GRID * GRID);
+    for i in 0..GRID {
+        let u = u0 + (u1 - u0) * (i as f64) / ((GRID - 1) as f64);
+        for j in 0..GRID {
+            let v = v0 + (v1 - v0) * (j as f64) / ((GRID - 1) as f64);
+            pts.push(surface.eval(u, v));
+        }
+    }
+    pts
 }
 // #endregion 🔖️Bounds
 
@@ -443,6 +605,28 @@ impl FaceBvh {
     pub fn query_nearest(&self, point: Vec3) -> Option<FaceId> {
         self.bvh.query_point_nearest(point).copied()
     }
+
+    /// 🎯️ Face ids whose leaf bounds are crossed by the ray, ordered near-to-far by AABB entry.
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn query_ray_ordered(&self, origin: Vec3, dir: Vec3) -> Vec<(FaceId, f64)> {
+        self.bvh.query_ray_ordered(origin, dir).into_iter().map(|(f, t)| (*f, t)).collect()
+    }
+
+    /// 📍 The face genuinely closest to `point` (surface `closest_point` plus trim test, not just
+    /// AABB distance) and its closest point and distance, via BVH branch-and-bound.
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn closest_face(&self, body: &Body, point: Pnt3) -> Option<(FaceId, Pnt3, f64)> {
+        let target = point.to_array();
+        let face = *self.bvh.query_nearest_exact(target, |f: &FaceId| closest_point_on_face(body, *f, point).map(|(_, d)| d).unwrap_or(f64::INFINITY))?;
+        let (p, d) = closest_point_on_face(body, face, point).ok()?;
+        Some((face, p, d))
+    }
+
+    /// 🔁️ Recomputes every face's AABB in place from the current `body` geometry.
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn refit(&mut self, body: &Body) {
+        self.bvh.refit(&|f: &FaceId| face_aabb(body, *f).unwrap_or(Aabb { min: [0.0; 3], max: [0.0; 3] }));
+    }
 }
 
 impl EdgeBvh {
@@ -462,6 +646,45 @@ impl EdgeBvh {
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn query_nearest(&self, point: Vec3) -> Option<EdgeId> {
         self.bvh.query_point_nearest(point).copied()
+    }
+
+    /// 🔁️ Recomputes every edge's AABB in place from the current `body` geometry.
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn refit(&mut self, body: &Body) {
+        self.bvh.refit(&|e: &EdgeId| edge_aabb(body, *e).unwrap_or(Aabb { min: [0.0; 3], max: [0.0; 3] }));
+    }
+}
+
+/// 🌳 One solid's face spatial index, keyed by the [`SolidId`] it was built from — the unit a
+/// future `Brep` engine wrapper caches per solid rather than rebuilding per query (audit §6.10).
+pub struct SolidBvh {
+    pub solid: SolidId,
+    faces: FaceBvh,
+}
+
+impl SolidBvh {
+    /// 🏗️ Builds the face index for `solid`.
+    // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+    pub fn build(body: &Body, solid: SolidId) -> Result<Self, KernelError> {
+        Ok(Self { solid, faces: build_face_bvh(body, solid)? })
+    }
+
+    /// 🌳 Borrows the underlying face index for direct ray/AABB/nearest queries.
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn faces(&self) -> &FaceBvh {
+        &self.faces
+    }
+
+    /// 📍 The face genuinely closest to `point` and its closest point and distance.
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn closest_face(&self, body: &Body, point: Pnt3) -> Option<(FaceId, Pnt3, f64)> {
+        self.faces.closest_face(body, point)
+    }
+
+    /// 🔁️ Recomputes every face's AABB in place from the current `body` geometry.
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn refit(&mut self, body: &Body) {
+        self.faces.refit(body);
     }
 }
 // #endregion 🔖️Index
@@ -559,6 +782,60 @@ mod tests {
         let bogus = SolidId::from_raw(9, 9);
         assert!(matches!(build_face_bvh(&body, bogus), Err(KernelError::MissingEntity(_))));
         assert!(matches!(build_edge_bvh(&body, bogus), Err(KernelError::MissingEntity(_))));
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn face_bvh_query_ray_ordered_is_sorted_near_to_far() {
+        let mut body = Body::new();
+        let mut rec = OpRecorder::new();
+        let solid = build_tetrahedron(&mut body, &mut rec);
+        let bvh = build_face_bvh(&body, solid).unwrap();
+        let hits = bvh.query_ray_ordered([-0.5, 0.25, 0.25], [1.0, 0.0, 0.0]);
+        assert!(!hits.is_empty());
+        for w in hits.windows(2) {
+            assert!(w[0].1 <= w[1].1);
+        }
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn face_bvh_closest_face_finds_true_nearest_not_just_aabb_nearest() {
+        let mut body = Body::new();
+        let mut rec = OpRecorder::new();
+        let solid = build_tetrahedron(&mut body, &mut rec);
+        let bvh = build_face_bvh(&body, solid).unwrap();
+        let probe = Pnt3::new(0.2, 0.2, -0.5);
+        let (face, closest, dist) = bvh.closest_face(&body, probe).unwrap();
+        assert!(body.solid_faces(solid).contains(&face));
+        assert!(dist > 0.0 && dist.is_finite());
+        assert!((closest.z - 0.0).abs() < 1e-6, "closest point on the z=0 base face should have z≈0, got {closest:?}");
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn solid_bvh_wraps_face_index_by_solid_id() {
+        let mut body = Body::new();
+        let mut rec = OpRecorder::new();
+        let solid = build_tetrahedron(&mut body, &mut rec);
+        let sbvh = SolidBvh::build(&body, solid).unwrap();
+        assert_eq!(sbvh.solid, solid);
+        let hits = sbvh.faces().query_ray([-0.5, 0.25, 0.25], [1.0, 0.0, 0.0]);
+        assert!(!hits.is_empty());
+        let (face, _, dist) = sbvh.closest_face(&body, Pnt3::new(0.2, 0.2, -0.5)).unwrap();
+        assert!(body.solid_faces(solid).contains(&face));
+        assert!(dist.is_finite());
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn face_bvh_refit_reflects_moved_geometry() {
+        let mut body = Body::new();
+        let mut rec = OpRecorder::new();
+        let solid = build_tetrahedron(&mut body, &mut rec);
+        let mut bvh = build_face_bvh(&body, solid).unwrap();
+        for (_, v) in body.vertices.iter_mut() {
+            v.position.x += 10.0;
+        }
+        bvh.refit(&body);
+        let hits = bvh.query_ray([9.5, 0.25, 0.25], [1.0, 0.0, 0.0]);
+        assert!(!hits.is_empty(), "refit BVH should find faces at the moved location");
     }
 }
 // #endregion 🔖️Tests

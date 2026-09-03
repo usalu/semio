@@ -8,14 +8,13 @@ use flow::forms_bridge::flow_fixture_to_form_spec;
 use flow::playbook::{apply_generation_mutation, generation_operations, selected_generation};
 use flow::FlowEvalSession;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
-use serde_json::Value;
 use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️Shared
 /// 🧬️ Emits generation operations for the generate-mode document-mutating commands — reuses
 /// `flow::playbook::generation_operations`'s id-generation/values-seeding logic via a synthetic JSON args
 /// value built from the typed command fields.
-fn handle_generation(action: &str, args: Option<&Value>, projection: &Generation3dSnapshot, cfg: &Generation3dConfig) -> Emit<Generation3dMutation, Generation3dConfigMutation> {
+fn handle_generation(action: &str, args: Option<&dsl::DslValue>, projection: &Generation3dSnapshot, cfg: &Generation3dConfig) -> Emit<Generation3dMutation, Generation3dConfigMutation> {
     let spec = flow_fixture_to_form_spec(&projection.fixture);
     let mut state = projection.generation.as_state().clone();
     state.selected_generation_id = cfg.selected_generation_id.clone();

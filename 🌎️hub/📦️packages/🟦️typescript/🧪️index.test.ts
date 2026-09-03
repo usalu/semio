@@ -40,12 +40,81 @@ import {
 } from "@semio-tech/framework-os";
 import { describe, expect, it } from "vitest";
 import { type HubHandle, findFreePort, getWorkspaceRoot, resolveHubBinaryPath, startHub, waitForHttpReady } from "./🟦️.ts";
-import { parseInviteCapabilityV1, parseSessionCapabilityV1, parseShareCapabilityV1 } from "../../🔐️auth/🧬️schema/🟦️.ts";
+import { parseInviteCapabilityV1, parseSessionCapabilityV1, parseShareCapabilityV1, parseSocketGrantCapabilityV1 } from "../../🔐️auth/🧬️schema/🟦️.ts";
 
 const HUB_E2E = process.env.HUB_E2E === "1";
 const TEST_TIMEOUT_MS = 240_000;
 const EDITOR_SURFACE = "s.space.space@1/*#editor";
 const VIEWER_SURFACE = "s.space.space@1/*#viewer";
+
+describe("canonical checkpoint pair neutral contract", () => {
+  it("validates the schema and independently proves hashes, framing, order, terminal, and ETag", async () => {
+    const root = getWorkspaceRoot();
+    const fixtureRoot = join(root, "🌎️hub", "🛰️lag-rebootstrap", "🧪️fixtures", "🧬️canonical-pair");
+    const fixture = JSON.parse(readFileSync(join(fixtureRoot, "🔣️.json"), "utf8"));
+    const schema = JSON.parse(readFileSync(join(fixtureRoot, "🧬️.schema.json"), "utf8"));
+    const validate = new Ajv2020({ strict: true }).compile(schema);
+    expect(validate(fixture), JSON.stringify(validate.errors)).toBe(true);
+    expect(validate({ ...fixture, locator: "private" })).toBe(false);
+
+    const generated = (part: { length: number; multiplier: number; increment: number }): Buffer =>
+      Buffer.from(Array.from({ length: part.length }, (_, index) => (index * part.multiplier + part.increment) % 256));
+    const pack = generated(fixture.pack);
+    const spr = generated(fixture.spr);
+    const digest = async (bytes: Uint8Array): Promise<string> => Buffer.from(await webcrypto.subtle.digest("SHA-256", bytes)).toString("hex");
+    expect(await digest(pack)).toBe(fixture.pack.sha256);
+    expect(await digest(spr)).toBe(fixture.spr.sha256);
+    expect(await digest(Buffer.concat([pack, spr]))).toBe(fixture.expected.aggregateSha256);
+    expect(createHash("sha256").update(pack).digest("hex")).toBe(fixture.pack.sha256);
+
+    const u32 = (value: number): Buffer => { const bytes = Buffer.alloc(4); bytes.writeUInt32BE(value); return bytes; };
+    const u64 = (value: number): Buffer => { const bytes = Buffer.alloc(8); bytes.writeBigUInt64BE(BigInt(value)); return bytes; };
+    const field = (bytes: Uint8Array): Buffer => Buffer.concat([u32(bytes.byteLength), bytes]);
+    const hex = (value: string): Buffer => Buffer.from(value, "hex");
+    const text = (value: string): Buffer => Buffer.from(value, "utf8");
+    const selection = fixture.selection;
+    const header = Buffer.concat([
+      Buffer.from([1]), u32(1), field(text(selection.spaceId)), field(text(selection.documentId)), hex(selection.descriptorDigest), hex(selection.checkpointId),
+      field(text(selection.baseline.documentId)), u64(selection.baseline.headEditOrdinal), field(text(selection.baseline.headEditId)), u64(selection.baseline.lastCommitSeq), hex(selection.baseline.chainHash),
+      hex(fixture.pack.sha256), u64(fixture.pack.length), hex(fixture.spr.sha256), u64(fixture.spr.length), hex(fixture.expected.aggregateSha256),
+    ]);
+    expect(header.byteLength).toBe(fixture.expected.headerPayloadBytes);
+    const frame = (payload: Uint8Array): Buffer => Buffer.concat([u32(payload.byteLength), payload]);
+    const records: Buffer[] = [];
+    let ordinal = 0;
+    for (const [part, bytes] of [[1, pack], [2, spr]] as const) {
+      for (let offset = 0; offset < bytes.byteLength; offset += fixture.limits.recordBytes) {
+        const data = bytes.subarray(offset, offset + fixture.limits.recordBytes);
+        records.push(frame(Buffer.concat([Buffer.from([2, part]), u32(ordinal++), u64(offset), field(data)])));
+      }
+    }
+    const wire = Buffer.concat([frame(header), ...records, frame(Buffer.from([3, 0]))]);
+    expect(ordinal).toBe(fixture.expected.dataRecords);
+    expect(wire.byteLength).toBe(fixture.expected.wireBytes);
+    expect(`"${createHash("sha256").update("semio.hub.canonical-checkpoint-pair-etag.v1\0").update(header).digest("hex")}"`).toBe(fixture.expected.etag);
+
+    let position = 0;
+    const next = (): Buffer => { const length = wire.readUInt32BE(position); position += 4; const payload = wire.subarray(position, position + length); position += length; return payload; };
+    expect(next().equals(header)).toBe(true);
+    let packOffset = 0;
+    let sprOffset = 0;
+    for (let expectedOrdinal = 0; expectedOrdinal < ordinal; expectedOrdinal++) {
+      const record = next();
+      expect(record[0]).toBe(2);
+      expect(record.readUInt32BE(2)).toBe(expectedOrdinal);
+      const part = record[1];
+      const offset = Number(record.readBigUInt64BE(6));
+      const length = record.readUInt32BE(14);
+      expect(length).toBeGreaterThan(0);
+      expect(length).toBeLessThanOrEqual(fixture.limits.recordBytes);
+      if (part === 1) { expect(offset).toBe(packOffset); packOffset += length; }
+      else { expect(part).toBe(2); expect(packOffset).toBe(pack.byteLength); expect(offset).toBe(sprOffset); sprOffset += length; }
+    }
+    expect(next().equals(Buffer.from([3, 0]))).toBe(true);
+    expect(position).toBe(wire.byteLength);
+    expect([packOffset, sprOffset]).toEqual([pack.byteLength, spr.byteLength]);
+  });
+});
 
 describe("hub harness quick contract", () => {
   it("validates local bootstrap, one-shot credential, and readiness schemas with independent HMAC", () => {
@@ -112,7 +181,7 @@ describe("hub harness quick contract", () => {
     expect(publicBodies).not.toContain("authorizationGeneration");
   });
 
-  it("validates typed auth capabilities and recomputes every digest with AJV and Node crypto", () => {
+  it("validates typed auth capabilities and independently recomputes the socket grant with AJV and WebCrypto", async () => {
     const root = getWorkspaceRoot();
     const fixture = JSON.parse(readFileSync(join(root, "🌎️hub", "🔐️auth", "🧪️fixtures", "🧬️capability-v1", "🔣️.json"), "utf8"));
     const schema = JSON.parse(readFileSync(join(root, "🌎️hub", "🔐️auth", "🧬️schema", "🔣️.json"), "utf8"));
@@ -126,6 +195,26 @@ describe("hub harness quick contract", () => {
     expect(parseSessionCapabilityV1(fixture.session.capability)).toBe(fixture.session.capability);
     expect(parseShareCapabilityV1(fixture.share.capability)).toBe(fixture.share.capability);
     expect(parseInviteCapabilityV1(fixture.invite.capability)).toBe(fixture.invite.capability);
+    expect(parseSocketGrantCapabilityV1(fixture.socket.capability)).toBe(fixture.socket.capability);
+    expect(fixture.socket.capability).toHaveLength(107);
+    const socketDomain = new TextEncoder().encode("semio/hub/socket/v1\0");
+    const socketSecret = Buffer.from(fixture.socket.secretHex, "hex");
+    const socketDigestInput = new Uint8Array(socketDomain.length + socketSecret.length);
+    socketDigestInput.set(socketDomain);
+    socketDigestInput.set(socketSecret, socketDomain.length);
+    expect(Buffer.from(await webcrypto.subtle.digest("SHA-256", socketDigestInput)).toString("hex")).toBe(fixture.socket.digestHex);
+    for (const hostile of fixture.socket.rejectedCapabilities.slice(0, 4)) expect(() => parseSocketGrantCapabilityV1(hostile)).toThrow();
+    const wrongSecret = parseSocketGrantCapabilityV1(fixture.socket.rejectedCapabilities[4]);
+    const wrongSecretBytes = Buffer.from(wrongSecret.split(".")[3], "hex");
+    const wrongDigestInput = new Uint8Array(socketDomain.length + wrongSecretBytes.length);
+    wrongDigestInput.set(socketDomain);
+    wrongDigestInput.set(wrongSecretBytes, socketDomain.length);
+    expect(Buffer.from(await webcrypto.subtle.digest("SHA-256", wrongDigestInput)).toString("hex")).not.toBe(fixture.socket.digestHex);
+    expect(Object.keys(fixture.socket.receipt).sort()).toEqual(["actorId", "expiresAtMs", "grant", "protocol", "schema"]);
+    expect(fixture.socket.receipt.grant).toBe(fixture.socket.capability);
+    const publicReceiptWithoutGrant = JSON.stringify({ ...fixture.socket.receipt, grant: "[REDACTED]" });
+    expect(publicReceiptWithoutGrant).not.toContain(fixture.socket.secretHex);
+    expect(publicReceiptWithoutGrant).not.toContain(fixture.socket.digestHex);
     expect(() => parseSessionCapabilityV1(fixture.share.capability)).toThrow();
     expect(() => parseShareCapabilityV1(fixture.share.capability.toUpperCase())).toThrow();
     const u32 = (value: number): Buffer => {
@@ -393,6 +482,144 @@ describe("hub harness quick contract", () => {
     expect(fixture.retentionLedger.reservationGraceMs).toBe(60_000);
     expect(fixture.retentionLedger.sweepPageMaximum).toBe(16);
     expect(fixture.retentionLedger.sweepObjectMaximum).toBe(4_096);
+
+    type SweepCursor = { observedGeneration: number; afterGeneration: number; objectOffset: number };
+    const sweep = fixture.sweepContinuation as {
+      tokenPayloadBytes: number;
+      tokenAuthenticationBytes: number;
+      cursorExposesObjectIdentity: boolean;
+      invalidAfterGenerationChange: boolean;
+      invalidAfterRestart: boolean;
+      ledgerGeneration: number;
+      pageLedgerEvents: number;
+      planObjectCounts: number[];
+      totalObjects: number;
+      requestMaximumObjects: number;
+      expectedExaminedPerRequest: number[];
+      expectedFirstCursor: SweepCursor;
+    };
+    const advanceSweep = (continuation: SweepCursor | undefined, maximum: number) => {
+      let afterGeneration = continuation?.afterGeneration ?? 0;
+      let objectOffset = continuation?.objectOffset ?? 0;
+      let examined = 0;
+      while (examined < maximum && afterGeneration < sweep.ledgerGeneration) {
+        const page = sweep.planObjectCounts.slice(afterGeneration, afterGeneration + sweep.pageLedgerEvents);
+        const pageObjects = page.reduce((total, count) => total + count, 0);
+        const taken = Math.min(maximum - examined, pageObjects - objectOffset);
+        examined += taken;
+        objectOffset += taken;
+        if (objectOffset < pageObjects) return { examined, continuation: { observedGeneration: sweep.ledgerGeneration, afterGeneration, objectOffset } };
+        afterGeneration += page.length;
+        objectOffset = 0;
+      }
+      return { examined, continuation: afterGeneration < sweep.ledgerGeneration ? { observedGeneration: sweep.ledgerGeneration, afterGeneration, objectOffset } : undefined };
+    };
+    const firstSweep = advanceSweep(undefined, sweep.requestMaximumObjects);
+    const secondSweep = advanceSweep(firstSweep.continuation, sweep.requestMaximumObjects);
+    expect(firstSweep).toEqual({ examined: sweep.expectedExaminedPerRequest[0], continuation: sweep.expectedFirstCursor });
+    expect(secondSweep).toEqual({ examined: sweep.expectedExaminedPerRequest[1], continuation: undefined });
+    expect(firstSweep.examined + secondSweep.examined).toBe(sweep.totalObjects);
+
+    const encodeSweepContinuation = async (secret: Buffer, execute: boolean, cursor: SweepCursor): Promise<Buffer> => {
+      const payload = Buffer.alloc(sweep.tokenPayloadBytes);
+      payload[0] = Number(execute);
+      payload.writeBigUInt64BE(BigInt(cursor.observedGeneration), 1);
+      payload.writeBigUInt64BE(BigInt(cursor.afterGeneration), 9);
+      payload.writeUInt32BE(cursor.objectOffset, 17);
+      const authentication = await sha256(Buffer.concat([Buffer.from("semio.hub.artifact-cas.sweep-continuation.v1\0"), secret, payload]));
+      return Buffer.concat([payload, authentication]);
+    };
+    const acceptsSweepContinuation = async (token: Buffer, secret: Buffer, execute: boolean, generation: number): Promise<boolean> => {
+      if (token.length !== sweep.tokenPayloadBytes + sweep.tokenAuthenticationBytes || token[0] !== Number(execute) || Number(token.readBigUInt64BE(1)) !== generation) return false;
+      const expected = await encodeSweepContinuation(secret, execute, {
+        observedGeneration: Number(token.readBigUInt64BE(1)),
+        afterGeneration: Number(token.readBigUInt64BE(9)),
+        objectOffset: token.readUInt32BE(17),
+      });
+      return expected.equals(token);
+    };
+    const firstInstanceSecret = await sha256(Buffer.from("first-instance"));
+    const restartedInstanceSecret = await sha256(Buffer.from("restarted-instance"));
+    const token = await encodeSweepContinuation(firstInstanceSecret, true, sweep.expectedFirstCursor);
+    expect(token.length).toBe(sweep.tokenPayloadBytes + sweep.tokenAuthenticationBytes);
+    expect(await acceptsSweepContinuation(token, firstInstanceSecret, true, sweep.ledgerGeneration)).toBe(true);
+    expect(await acceptsSweepContinuation(token, firstInstanceSecret, true, sweep.ledgerGeneration + 1)).toBe(!sweep.invalidAfterGenerationChange);
+    expect(await acceptsSweepContinuation(token, restartedInstanceSecret, true, sweep.ledgerGeneration)).toBe(!sweep.invalidAfterRestart);
+    expect(await acceptsSweepContinuation(token, firstInstanceSecret, false, sweep.ledgerGeneration)).toBe(false);
+    expect(sweep.cursorExposesObjectIdentity).toBe(false);
+
+    type BarrierOrder = {
+      id: "delete-first" | "successor-first";
+      actions: string[];
+      oldDeleteOutcome: "deleted-before-successor-stage" | "stale-fence-rejected";
+      publishedReadOutcome: "exact";
+    };
+    const barrier = fixture.deleteBarrier as {
+      coordinatorId: string;
+      spaceId: string;
+      objectBytesHex: string;
+      initialPhysicalEpoch: number;
+      deleteLeaseEpoch: number;
+      successorReservationEpoch: number;
+      leaseMaximumMs: number;
+      dryRunAdvancesEpoch: boolean;
+      orders: BarrierOrder[];
+    };
+    expect(Buffer.from(barrier.coordinatorId, "hex").length).toBe(32);
+    expect(barrier.leaseMaximumMs).toBe(5_000);
+    expect(barrier.dryRunAdvancesEpoch).toBe(false);
+    const objectBytes = Buffer.from(barrier.objectBytesHex, "hex");
+    const executeBarrierOrder = (order: BarrierOrder) => {
+      let physicalEpoch = barrier.initialPhysicalEpoch;
+      let leaseEpoch: number | undefined;
+      let leaseLive = false;
+      let reservationEpoch: number | undefined;
+      let bytes: Buffer | undefined = Buffer.from(objectBytes);
+      let referenced = false;
+      let oldDeleteOutcome: BarrierOrder["oldDeleteOutcome"] | undefined;
+      for (const action of order.actions) {
+        const [kind, encodedEpoch] = action.split(":");
+        const epoch = encodedEpoch === undefined ? undefined : Number(encodedEpoch);
+        if (kind === "lease") {
+          expect(epoch).toBeGreaterThan(physicalEpoch);
+          leaseEpoch = epoch;
+          leaseLive = true;
+        } else if (kind === "lease-expire") {
+          leaseLive = false;
+        } else if (kind === "reserve") {
+          expect(leaseLive).toBe(false);
+          expect(epoch).toBeGreaterThan(leaseEpoch ?? 0);
+          reservationEpoch = epoch;
+        } else if (kind === "cas-advance") {
+          if (epoch !== leaseEpoch && epoch !== reservationEpoch) throw new Error("advance without directory epoch");
+          physicalEpoch = Math.max(physicalEpoch, epoch ?? 0);
+        } else if (kind === "validate") {
+          expect(leaseLive && leaseEpoch === epoch && physicalEpoch === epoch && !referenced).toBe(true);
+        } else if (kind === "delete") {
+          if (physicalEpoch === epoch) {
+            bytes = undefined;
+            leaseLive = false;
+            oldDeleteOutcome = "deleted-before-successor-stage";
+          } else {
+            oldDeleteOutcome = "stale-fence-rejected";
+          }
+        } else if (kind === "stage") {
+          expect(physicalEpoch).toBe(reservationEpoch);
+          bytes = Buffer.from(objectBytes);
+        } else if (kind === "publish") {
+          if (!bytes?.equals(objectBytes)) throw new Error("publication without exact staged bytes");
+          referenced = true;
+        } else if (kind === "read") {
+          expect(referenced && bytes?.equals(objectBytes)).toBe(true);
+        } else {
+          throw new Error(`unknown barrier action: ${action}`);
+        }
+      }
+      return { oldDeleteOutcome, publishedReadOutcome: referenced && bytes?.equals(objectBytes) ? "exact" : "missing" };
+    };
+    for (const order of barrier.orders) {
+      expect(executeBarrierOrder(order)).toEqual({ oldDeleteOutcome: order.oldDeleteOutcome, publishedReadOutcome: order.publishedReadOutcome });
+    }
   });
 
   it("validates and independently encodes the typed lag rebootstrap control", () => {

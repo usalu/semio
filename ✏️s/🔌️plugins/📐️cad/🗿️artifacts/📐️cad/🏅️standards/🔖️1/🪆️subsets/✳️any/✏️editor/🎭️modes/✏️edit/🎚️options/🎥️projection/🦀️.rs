@@ -11,5 +11,5 @@ use crate::editor::cad::{cad_pane_camera_runtime, cad_window_action, CadPlayRunt
 use semio_framework_plugin::{world3d_projection_measures, WindowMeasure};
 
 pub fn measure(runtime: &CadPlayRuntime, pane: CadPaneId) -> WindowMeasure {
-    world3d_projection_measures(&format!("cad-{}", pane.model_definition_id()), &cad_camera_projection_config(cad_pane_camera_runtime(runtime, pane)), cad_window_action)
+    world3d_projection_measures(&format!("cad-{}", pane.model_definition_id()), &cad_camera_projection_config(cad_pane_camera_runtime(runtime, pane)), |action, args| cad_window_action(action, semio_framework::optional_json_to_dsl(args)))
 }

@@ -1,31 +1,11 @@
-//! 🪪️ Native session mint-or-restore helper (ticket 26/08/16/HUB-SPACES-LIVE-PRESENCE-AND-
-//! COLLABORATIVE-STUDIOS, contract §C0/§C3). This is a SIBLING of, not the same thing as, the
-//! CQRS `os.config.identity` config facet lane 1-C owns at
-//! `💻️os/🎚️config/🧬️schema/🧬️mutations/🪪️sign-in/🟦️.ts` (self-contained there, per 1-C's
-//! own `📓️w1-c-report.md` design-decision note — `💻️os/🎚️config/**` is peer-leased to 1-C per this
-//! ticket's `📋️ownership-and-handoffs.md` §A) — that facet is the browser/React shell's persisted-
-//! local-only op log. The wgpu NATIVE shell reads `S_*` env vars directly instead
-//! (`📓️scout-client.md` §4/§7: "wgpu native reads `S_*` directly"), so it needs a plain restore-
-//! or-mint-then-cache helper, not an event log — this module is that helper, built on
-//! `../🔌️client/🦀️.rs`'s `DirectoryClient`. The `Identity` shape below mirrors contract
-//! §C3's `Identity { userId, email, displayName, hubBaseUrl, sessionToken, issuedAtMs }` field-
-//! for-field (re-declared here for the same reason `🧬️schema/🦀️component.rs`'s header re-declares
-//! `DirectorySpaceKind` — the owning module is not reachable from this lease). Cross-checked
-//! field-for-field against 1-C's independently-built TS `DirectoryClient`
-//! (`SessionView`/`SessionMintResponse` shapes, `HUB_RECONNECT_MIN_MS`/`MAX_MS`) — no drift, per
-//! 1-C's own report.
+//! 🪪️ Native identity bootstrap from an owned one-shot local credential endpoint.
 
-use super::client::{DirectoryClient, DirectoryClientError, DirectoryTransport};
+use super::client::{DirectoryClient, DirectoryTransport, LocalHubCredential};
 use semio_framework_async::OperationContext;
 use semio_framework_value_derive::{FromValue, ToValue};
+use std::sync::Arc;
 
 //#region 🔖️Identity
-/// 🪪️ One restored-or-minted session, matching contract §C3's `Identity` field-for-field. Local-
-/// only cache shape (`🪪️identity.json`, `cache::load`/`save` below) — never crosses the hub wire
-/// (the mint/restore HTTP calls build/read `SessionMintResponse`/`SessionView` instead, both still
-/// serde per `🔌️client/🦀️.rs`'s frozen-contract note), so `ToValue`/`FromValue`'s
-/// `DslValue::Number` round-tripping `issued_at_ms` through its `Int` variant (exact, no `.0`) on
-/// disk is harmless either way: nothing but this same process ever reads that file back.
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
 #[value(rename_all = "camelCase")]
 pub struct Identity {
@@ -33,265 +13,82 @@ pub struct Identity {
     pub email: String,
     pub display_name: String,
     pub hub_base_url: String,
-    pub session_token: String,
     pub issued_at_ms: i64,
 }
 
-/// 🎭️ `user:{userId}#{sessionId}` (contract §C0) — `session_id` is the caller's own per-tab/
-/// per-process id (e.g. wgpu's `session.instance_id`), never derived here.
 pub fn actor_id(identity: &Identity, session_id: &str) -> String {
     format!("user:{}#{session_id}", identity.user_id)
 }
 
-/// 📶️ Whether `mint_or_restore` reached the hub this call.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum IdentityStatus {
     Online,
     Offline,
 }
 
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug)]
 pub struct IdentityOutcome {
     pub identity: Identity,
     pub status: IdentityStatus,
+    pub credential: Arc<LocalHubCredential>,
 }
 
 #[derive(Debug)]
-pub enum IdentityError {
-    Unavailable(String),
-}
+pub struct IdentityError;
 
 impl std::fmt::Display for IdentityError {
     fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            Self::Unavailable(user) => write!(formatter, "hub unreachable and no cached identity for {user}"),
-        }
+        formatter.write_str("local credential unavailable")
     }
 }
 
 impl std::error::Error for IdentityError {}
 //#endregion 🔖️Identity
 
-//#region 🔖️Env
-/// 🌱️ `S_HUB_URL` / `S_USER` / `S_DATA_DIR` (contract §C0). `data_dir` is optional — a caller
-/// with no `S_DATA_DIR` (e.g. an e2e harness) simply gets no cache, minting fresh every boot.
+//#region 🔖️Environment
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct IdentityEnv {
-    pub hub_url: String,
-    pub user_email: String,
     pub data_dir: Option<std::path::PathBuf>,
 }
 
 impl IdentityEnv {
     pub fn from_process_env() -> Option<Self> {
-        let hub_url = std::env::var("S_HUB_URL").ok()?;
-        let user_email = std::env::var("S_USER").ok()?;
-        let data_dir = std::env::var("S_DATA_DIR").ok().map(std::path::PathBuf::from);
-        Some(Self { hub_url, user_email, data_dir })
+        (std::env::var("S_LOCAL_CREDENTIAL_FD").ok().as_deref() == Some("3")).then(|| Self { data_dir: std::env::var("S_DATA_DIR").ok().map(std::path::PathBuf::from) })
     }
 }
-//#endregion 🔖️Env
+//#endregion 🔖️Environment
 
-//#region 🔖️Cache
+//#region 🔖️Bootstrap
 #[cfg(not(target_arch = "wasm32"))]
-mod cache {
-    use super::Identity;
-    use std::path::{Path, PathBuf};
-
-    async fn path(data_dir: &Path) -> PathBuf {
-        data_dir.join("os").join("🪪️identity.json")
-    }
-
-    pub async fn load(data_dir: &Path) -> Option<Identity> {
-        let bytes = std::fs::read(path(data_dir).await).ok()?;
-        let text = std::str::from_utf8(&bytes).ok()?;
-        crate::os_pack::json::from_json_str(text).ok()
-    }
-
-    pub async fn save(data_dir: &Path, identity: &Identity) {
-        let target = path(data_dir).await;
-        let Some(parent) = target.parent() else { return };
-        if std::fs::create_dir_all(parent).is_err() {
-            return;
-        }
-        let text = crate::os_pack::json::to_json_string(identity);
-        let _ = std::fs::write(&target, text);
-    }
+fn now_ms() -> i64 {
+    std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).map_or(0, |duration| i64::try_from(duration.as_millis()).unwrap_or(i64::MAX))
 }
 
-/// 🌉️ Documented seam (matches this lane's brief): the browser wgpu build has no filesystem, and
-/// production browser sessions restore identity through lane 1-C's `os.config.identity` facet
-/// instead — this cache never runs there. A future in-wasm host wires a real cache (IndexedDB via
-/// `web_sys`) here; kept so `mint_or_restore` stays one cross-target function.
-#[cfg(target_arch = "wasm32")]
-mod cache {
-    use super::Identity;
-    pub async fn load(_data_dir: &std::path::Path) -> Option<Identity> {
-        None
-    }
-    pub async fn save(_data_dir: &std::path::Path, _identity: &Identity) {}
+/// 🪪️ Native-only like `LocalHubCredential::read_inherited` — the credential arrives on an inherited
+/// pipe, which no wasm target has.
+#[cfg(not(target_arch = "wasm32"))]
+pub async fn restore_inherited<T: DirectoryTransport>(ctx: &OperationContext, transport: T) -> Result<IdentityOutcome, IdentityError> {
+    let credential = Arc::new(LocalHubCredential::read_inherited("native").map_err(|_| IdentityError)?);
+    let client = DirectoryClient::authenticated(transport, credential.clone());
+    let session = client.me(ctx).await.map_err(|_| IdentityError)?;
+    Ok(IdentityOutcome {
+        identity: Identity { user_id: session.user_id, email: session.email, display_name: session.display_name, hub_base_url: client.base_url().to_string(), issued_at_ms: now_ms() },
+        status: IdentityStatus::Online,
+        credential,
+    })
 }
-//#endregion 🔖️Cache
-
-//#region 🔖️MintOrRestore
-/// ⏰️ Millisecond wall-clock read: `SystemTime` on native AND `wasm32-wasip2` (WASI's clock backs
-/// it fine), `js_sys::Date` only in the actual browser wasm build — `target_arch = "wasm32"` is TRUE
-/// for wasip2 too, so that arm is narrowed to exclude it. Same split `🏪️store/🔄️sync`'s own
-/// `now_ms` uses.
-#[cfg(any(not(target_arch = "wasm32"), target_env = "p2"))]
-async fn now_ms() -> i64 {
-    std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).map_or(0, |duration| duration.as_millis() as i64)
-}
-
-#[cfg(all(target_arch = "wasm32", not(target_env = "p2")))]
-async fn now_ms() -> i64 {
-    js_sys::Date::now() as i64
-}
-
-async fn persist(env: &IdentityEnv, identity: &Identity) {
-    if let Some(data_dir) = &env.data_dir {
-        cache::save(data_dir, identity).await;
-    }
-}
-
-/// 🚪️ Boot flow (contract §C3): restore the cached identity and confirm it with
-/// `GET /auth/sessions/me`; a clean 401 falls through to `POST /auth/sessions {email}`; any
-/// OTHER transport failure degrades to the last cached identity marked `Offline` rather than
-/// blocking or panicking. With no cache at all, a mint failure has nothing to degrade to and
-/// surfaces `IdentityError::Unavailable`. `ctx` (ticket 26/08/17/MICROKERNEL-POOLED-ACTOR-PLUGIN-
-/// RUNTIME) is threaded into BOTH hub calls unchanged — cancelling it (e.g. on process shutdown,
-/// mid-boot) stops identity bootstrap the same way it stops any other directory request, rather
-/// than this path inventing its own bolted-on cancellation. The caller owns `ctx`'s lifetime
-/// (typically one scoped to "this boot attempt" or "this process"), same as every other
-/// `DirectoryClient` call site.
-pub async fn mint_or_restore<T: DirectoryTransport>(ctx: &OperationContext, client: &DirectoryClient<T>, env: &IdentityEnv) -> Result<IdentityOutcome, IdentityError> {
-    // 🪡️ `cache::load` does real I/O — its own consumer must stay async, so the closure form
-    // (`Option::and_then` is sync, E0728) is replaced with an explicit match (R10 residue #1).
-    let cached = match env.data_dir.as_deref() {
-        Some(data_dir) => cache::load(data_dir).await,
-        None => None,
-    };
-
-    if let Some(cached_identity) = &cached {
-        client.set_token(Some(cached_identity.session_token.clone()));
-        match client.me(ctx).await {
-            Ok(session) => {
-                let identity =
-                    Identity { user_id: session.user_id, email: session.email, display_name: session.display_name, hub_base_url: env.hub_url.clone(), session_token: cached_identity.session_token.clone(), issued_at_ms: cached_identity.issued_at_ms };
-                persist(env, &identity).await;
-                return Ok(IdentityOutcome { identity, status: IdentityStatus::Online });
-            }
-            Err(DirectoryClientError::Unauthorized) => {}
-            Err(_) => return Ok(IdentityOutcome { identity: cached_identity.clone(), status: IdentityStatus::Offline }),
-        }
-    }
-
-    match client.mint_session(ctx, &env.user_email).await {
-        Ok(minted) => {
-            let identity = Identity { user_id: minted.user_id, email: env.user_email.clone(), display_name: env.user_email.clone(), hub_base_url: env.hub_url.clone(), session_token: minted.token, issued_at_ms: now_ms().await };
-            client.set_token(Some(identity.session_token.clone()));
-            persist(env, &identity).await;
-            Ok(IdentityOutcome { identity, status: IdentityStatus::Online })
-        }
-        Err(_) => cached.map(|identity| IdentityOutcome { identity, status: IdentityStatus::Offline }).ok_or_else(|| IdentityError::Unavailable(env.user_email.clone())),
-    }
-}
-//#endregion 🔖️MintOrRestore
+//#endregion 🔖️Bootstrap
 
 //#region 🧪️Tests
 #[cfg(test)]
 mod tests {
-    use super::super::client::test_support::FakeTransport;
-    use super::super::client::HttpResponse;
     use super::*;
-    use semio_framework_async::{CancelToken, TraceId};
 
-    async fn env(data_dir: &std::path::Path) -> IdentityEnv {
-        IdentityEnv { hub_url: "http://hub.local".to_string(), user_email: "amara@semio.dev".to_string(), data_dir: Some(data_dir.to_path_buf()) }
-    }
-
-    async fn root_ctx() -> OperationContext {
-        OperationContext { actor: 0, generation: 0, trace: TraceId(0), lane: 0, deadline_ms: None, cancel: CancelToken::root().await, capability: None }
-    }
-
-    #[semio_framework_async_macros::async_test]
-    async fn actor_id_matches_contract_grammar() {
-        let identity = Identity { user_id: "u-amara".to_string(), email: "amara@semio.dev".to_string(), display_name: "Amara".to_string(), hub_base_url: "http://hub.local".to_string(), session_token: "tok".to_string(), issued_at_ms: 0 };
+    #[test]
+    fn identity_is_non_secret_and_actor_is_server_subject_derived() {
+        let identity = Identity { user_id: "u-amara".to_string(), email: "amara@semio.dev".to_string(), display_name: "Amara".to_string(), hub_base_url: "http://127.0.0.1:8787".to_string(), issued_at_ms: 0 };
         assert_eq!(actor_id(&identity, "sess-1"), "user:u-amara#sess-1");
-    }
-
-    #[semio_framework_async_macros::async_test]
-    async fn no_cache_mints_a_fresh_session() {
-        let dir = crate::os_store::test_support::tempdir().expect("tempdir");
-        let transport = FakeTransport::default();
-        transport.push_response(FakeTransport::json_response(200, &serde_json::json!({ "token": "tok-new", "user_id": "u-1" })).await).await;
-        let client = DirectoryClient::new(transport.clone(), "http://hub.local");
-
-        let outcome = mint_or_restore(&root_ctx().await, &client, &env(dir.path()).await).await.expect("mints");
-        assert_eq!(outcome.status, IdentityStatus::Online);
-        assert_eq!(outcome.identity.session_token, "tok-new");
-        assert_eq!(transport.requests.lock().unwrap().len(), 1, "restore is skipped entirely with no cache");
-        assert_eq!(cache::load(dir.path()).await.expect("cached").session_token, "tok-new");
-    }
-
-    #[semio_framework_async_macros::async_test]
-    async fn valid_cache_restores_without_minting() {
-        let dir = crate::os_store::test_support::tempdir().expect("tempdir");
-        let cached = Identity { user_id: "u-1".to_string(), email: "amara@semio.dev".to_string(), display_name: "Amara".to_string(), hub_base_url: "http://hub.local".to_string(), session_token: "tok-old".to_string(), issued_at_ms: 111 };
-        cache::save(dir.path(), &cached).await;
-        let transport = FakeTransport::default();
-        transport.push_response(FakeTransport::json_response(200, &serde_json::json!({ "userId": "u-1", "email": "amara@semio.dev", "displayName": "Amara", "expiresAt": 999 })).await).await;
-        let client = DirectoryClient::new(transport.clone(), "http://hub.local");
-
-        let outcome = mint_or_restore(&root_ctx().await, &client, &env(dir.path()).await).await.expect("restores");
-        assert_eq!(outcome.status, IdentityStatus::Online);
-        assert_eq!(outcome.identity.session_token, "tok-old", "restore keeps the cached token, /me only confirms it");
-        let requests = transport.requests.lock().unwrap();
-        assert_eq!(requests.len(), 1);
-        assert_eq!(requests[0].url, "http://hub.local/auth/sessions/me");
-    }
-
-    #[semio_framework_async_macros::async_test]
-    async fn expired_cache_falls_through_to_mint() {
-        let dir = crate::os_store::test_support::tempdir().expect("tempdir");
-        let cached = Identity { user_id: "u-1".to_string(), email: "amara@semio.dev".to_string(), display_name: "Amara".to_string(), hub_base_url: "http://hub.local".to_string(), session_token: "tok-expired".to_string(), issued_at_ms: 111 };
-        cache::save(dir.path(), &cached).await;
-        let transport = FakeTransport::default();
-        transport.push_response(Ok(HttpResponse { status: 401, body: Vec::new() })).await;
-        transport.push_response(FakeTransport::json_response(200, &serde_json::json!({ "token": "tok-fresh", "user_id": "u-1" })).await).await;
-        let client = DirectoryClient::new(transport.clone(), "http://hub.local");
-
-        let outcome = mint_or_restore(&root_ctx().await, &client, &env(dir.path()).await).await.expect("mints after 401");
-        assert_eq!(outcome.status, IdentityStatus::Online);
-        assert_eq!(outcome.identity.session_token, "tok-fresh");
-        let requests = transport.requests.lock().unwrap();
-        assert_eq!(requests.len(), 2, "one failed /me, one successful mint");
-        assert_eq!(requests[1].url, "http://hub.local/auth/sessions");
-    }
-
-    #[semio_framework_async_macros::async_test]
-    async fn unreachable_hub_degrades_to_cached_identity_offline() {
-        let dir = crate::os_store::test_support::tempdir().expect("tempdir");
-        let cached = Identity { user_id: "u-1".to_string(), email: "amara@semio.dev".to_string(), display_name: "Amara".to_string(), hub_base_url: "http://hub.local".to_string(), session_token: "tok-old".to_string(), issued_at_ms: 111 };
-        cache::save(dir.path(), &cached).await;
-        let transport = FakeTransport::default();
-        transport.push_response(Err(super::super::client::TransportError::Io("connection refused".to_string()))).await;
-        let client = DirectoryClient::new(transport, "http://hub.local");
-
-        let outcome = mint_or_restore(&root_ctx().await, &client, &env(dir.path()).await).await.expect("degrades, never errors, while a cache exists");
-        assert_eq!(outcome.status, IdentityStatus::Offline);
-        assert_eq!(outcome.identity, cached, "the stale identity is returned as-is, never mutated");
-    }
-
-    #[semio_framework_async_macros::async_test]
-    async fn unreachable_hub_with_no_cache_is_unavailable_not_a_panic() {
-        let dir = crate::os_store::test_support::tempdir().expect("tempdir");
-        let transport = FakeTransport::default();
-        transport.push_response(Err(super::super::client::TransportError::Io("connection refused".to_string()))).await;
-        let client = DirectoryClient::new(transport, "http://hub.local");
-
-        let error = mint_or_restore(&root_ctx().await, &client, &env(dir.path()).await).await.expect_err("no cache and no hub leaves nothing to restore");
-        assert!(matches!(error, IdentityError::Unavailable(email) if email == "amara@semio.dev"));
+        assert!(!crate::os_pack::json::to_json_string(&identity).contains("token"));
     }
 }
 //#endregion 🧪️Tests

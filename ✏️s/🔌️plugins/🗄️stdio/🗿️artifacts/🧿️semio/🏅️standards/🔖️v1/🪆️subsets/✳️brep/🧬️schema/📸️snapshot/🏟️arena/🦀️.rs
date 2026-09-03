@@ -144,6 +144,20 @@ impl<T, Id: ArenaId> Store<T, Id> {
     pub fn is_empty(&self) -> bool {
         self.len() == 0
     }
+    /// 🗄️ Frees `id`'s slot without needing its value back — the arena-GC primitive [`Body::compact`]
+    /// (`crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::topology::Body`) calls per unreachable id: bumps the slot's generation
+    /// (see [`Self::remove`]) so a still-held stale id self-detects instead of aliasing whatever
+    /// reuses the slot next. Returns `false` (no-op) for an already-stale or out-of-range id.
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn free(&mut self, id: Id) -> bool {
+        self.remove(id).is_some()
+    }
+    /// 🗄️ Whether `id` currently resolves to a value — [`Self::contains`] under the name a
+    /// liveness/registry call site reads more naturally.
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn is_live(&self, id: Id) -> bool {
+        self.contains(id)
+    }
     /// 🗄️ Deterministic index-order iteration over live entries.
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn iter(&self) -> impl Iterator<Item = (Id, &T)> {
@@ -221,6 +235,16 @@ mod tests {
         store.remove(a);
         assert_eq!(store.len(), 1);
         assert!(!store.is_empty());
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn free_bumps_generation_and_is_live_reflects_it() {
+        let mut store: Store<i32, TestId> = Store::new();
+        let id = store.insert(7);
+        assert!(store.is_live(id));
+        assert!(store.free(id));
+        assert!(!store.is_live(id));
+        assert!(!store.free(id), "freeing an already-stale id is a no-op, not a panic");
     }
 
     #[semio_framework_async_macros::async_test]

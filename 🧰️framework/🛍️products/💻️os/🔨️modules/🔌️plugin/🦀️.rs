@@ -28466,6 +28466,7 @@ pub mod plugin_runtime {
     /// assembly step, never an independently-maintained registry that could drift from the manifest.
     #[derive(Clone, Default)]
     pub struct PluginDescriptorExtras {
+        pub package_id: String,
         pub activation_events: Vec<ActivationEvent>,
         pub capability_requests: Vec<CapabilityRequest>,
         pub extension_points: Vec<ExtensionPointDeclaration>,
@@ -28499,14 +28500,13 @@ pub mod plugin_runtime {
     /// hash-blanked before the byte comparison; hash correctness is `📇️registry:check`'s own gate
     /// (built wasm's SHA-256 vs `hashes.wasm_sha256`), not this test's job. `None` on any decode
     /// failure (caller treats that as "cannot compare", same as a missing file).
-    /// 🌉️ `PackageDescriptor` is foreign (owned by `semio-framework`'s manifest vocabulary) and has
-    /// no `ToValue`/`FromValue` impl — orphan rule forbids adding one here, so this bridges through
-    /// its existing `Serialize`/`Deserialize` via `serde_json` instead of `to_dsl_value`/`from_dsl_value`.
+    /// 🌉️ Uses the descriptor's first-party structural codec so freshness observes exactly the
+    /// same wire contract as guest `describe()` and never introduces a serde-shaped adapter.
     pub fn descriptor_bytes_with_blank_hashes(bytes: &[u8]) -> Option<Vec<u8>> {
         let value = store::pack_rt::decode_wire_value(bytes).ok()?;
-        let mut descriptor: semio_framework::PackageDescriptor = serde_json::from_value(serde_json::Value::from(value)).ok()?;
+        let mut descriptor: semio_framework::PackageDescriptor = from_dsl_value(value).ok()?;
         descriptor.hashes = semio_framework::PackageHashes { wasm_sha256: String::new(), core_wasm_sha256: String::new(), descriptor_sha256: String::new() };
-        Some(store::pack_rt::encode_wire_value(&DslValue::from(&serde_json::to_value(&descriptor).ok()?)))
+        Some(store::pack_rt::encode_wire_value(&to_dsl_value(&descriptor).ok()?))
     }
 
     /// 💡️ Lists only inference services frozen into the installed plugin assembly.
@@ -31834,6 +31834,7 @@ pub mod plugin_runtime {
     #[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
     #[value(rename_all = "camelCase")]
     pub struct ExtensionManifest {
+        pub package_id: String,
         pub extension_id: String,
         pub label: String,
         pub version: String,
@@ -31873,6 +31874,7 @@ pub mod plugin_runtime {
         pub fn new(extension_id: impl Into<String>, label: impl Into<String>, version: impl Into<String>) -> Self {
             Self {
                 manifest: ExtensionManifest {
+                    package_id: String::new(),
                     extension_id: extension_id.into(),
                     label: label.into(),
                     version: version.into(),
@@ -31892,6 +31894,12 @@ pub mod plugin_runtime {
         pub fn extends(mut self, extends: impl Into<String>) -> Self {
             self.manifest.extends = extends.into();
             self.assert_extends_matches_primary_dependency();
+            self
+        }
+
+        /// 📦️ Declares the canonical component package identity emitted by `describe()`.
+        pub fn package_id(mut self, package_id: impl Into<String>) -> Self {
+            self.manifest.package_id = package_id.into();
             self
         }
 
@@ -32054,6 +32062,7 @@ pub mod plugin_runtime {
         ensure_extension_initialized().await;
         EXTENSION_BUNDLE.with(|slot| {
             slot.borrow().as_ref().map(|bundle| bundle.manifest.clone()).unwrap_or_else(|| ExtensionManifest {
+                package_id: String::new(),
                 extension_id: String::new(),
                 label: String::new(),
                 version: String::new(),

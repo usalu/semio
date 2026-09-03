@@ -4,7 +4,7 @@ use super::adapters::{bounded_message, AUTHORITY_MAX_CODEC_TEXT_BYTES, TRUSTED_C
 use super::{AcceptedArtifactOperation, ArtifactPair, ArtifactValidationStage, AuthorityError, AuthorityProgress, AuthorityProgressStage, OperationContext, TrustedArtifactCatalog, TrustedArtifactCodec, TrustedArtifactIdentity};
 use directory::os_directory::hex_lower;
 use directory::os_store::{self, ArtifactCodec};
-use semio_framework::{PackageDescriptor, PackageRole, Version};
+use semio_framework::{from_dsl_value, to_dsl_value, DslValue, PackageDescriptor, PackageRole, Version};
 use semio_framework_hash::{Hasher, Sha256};
 use semio_framework_plugin_host::{PackageHash, PackageId, PackageRef};
 use serde::Deserialize;
@@ -376,6 +376,16 @@ fn valid_identity(value: &str) -> bool {
     !value.is_empty() && value.len() <= TRUSTED_IDENTITY_MAX_BYTES && value.trim() == value
 }
 
+fn valid_package_id(value: &str) -> bool {
+    let Some(name) = value.strip_prefix("semio:") else { return false };
+    !name.is_empty()
+        && value.len() <= TRUSTED_IDENTITY_MAX_BYTES
+        && !name.starts_with('-')
+        && !name.ends_with('-')
+        && !name.contains("--")
+        && name.bytes().all(|byte| byte.is_ascii_lowercase() || byte.is_ascii_digit() || byte == b'-')
+}
+
 fn ensure_count(actual: usize, maximum: usize, resource: &'static str) -> Result<(), AuthorityError> {
     if actual > maximum {
         return Err(AuthorityError::ResourceLimit(resource));
@@ -384,7 +394,7 @@ fn ensure_count(actual: usize, maximum: usize, resource: &'static str) -> Result
 }
 
 fn validate_identity(identity: &BundleIdentity) -> Result<(), AuthorityError> {
-    if !valid_identity(&identity.plugin_id) || !valid_identity(&identity.package_id) || !valid_identity(&identity.version) {
+    if !valid_identity(&identity.plugin_id) || !valid_package_id(&identity.package_id) || !valid_identity(&identity.version) {
         return Err(catalog("trusted package identity is empty, padded, or oversized"));
     }
     Ok(())
@@ -518,7 +528,7 @@ fn validate_native_bindings(bindings: &[NativeCodecBinding]) -> Result<BTreeMap<
     ensure_count(bindings.len(), TRUSTED_CATALOG_MAX_CODECS, "trusted codec count")?;
     let mut map = BTreeMap::new();
     for binding in bindings {
-        if !valid_identity(&binding.plugin_id) || !valid_identity(&binding.package_id) || !valid_identity(&binding.artifact_kind) || !valid_identity(&binding.codec.schema) {
+        if !valid_identity(&binding.plugin_id) || !valid_package_id(&binding.package_id) || !valid_identity(&binding.artifact_kind) || !valid_identity(&binding.codec.schema) {
             return Err(catalog("native codec binding identity is invalid"));
         }
         let key = CodecKey::from_parts(&binding.plugin_id, &binding.package_id, &binding.artifact_kind, &binding.codec.schema);
@@ -530,7 +540,14 @@ fn validate_native_bindings(bindings: &[NativeCodecBinding]) -> Result<BTreeMap<
 }
 
 fn validate_descriptor(record: &BundlePackage, descriptor: &PackageDescriptor, packages: &[BundlePackage]) -> Result<(), AuthorityError> {
-    if descriptor.descriptor_version != 1 || !record.role.matches(descriptor.role) || descriptor.manifest.plugin_id != record.plugin_id || descriptor.manifest.version != record.version || descriptor.hashes.wasm_sha256 != record.component.sha256 {
+    if descriptor.descriptor_version != 1
+        || !valid_package_id(&descriptor.package_id)
+        || descriptor.package_id != record.package_id
+        || !record.role.matches(descriptor.role)
+        || descriptor.manifest.plugin_id != record.plugin_id
+        || descriptor.manifest.version != record.version
+        || descriptor.hashes.wasm_sha256 != record.component.sha256
+    {
         return Err(catalog("decoded package descriptor identity does not exactly match its trust record"));
     }
     if decode_digest(&descriptor.hashes.core_wasm_sha256, "descriptor core wasm sha256")? == [0; 32] || decode_digest(&descriptor.hashes.descriptor_sha256, "descriptor metadata sha256")? == [0; 32] {
@@ -636,28 +653,35 @@ async fn sha256(bytes: &[u8], context: &OperationContext<'_>) -> Result<[u8; 32]
 
 fn decode_package_descriptor(bytes: &[u8]) -> Result<PackageDescriptor, AuthorityError> {
     let value = directory::os_store::pack_rt::decode_wire_value(bytes).map_err(catalog_error)?;
-    let mut value = serde_json::Value::from(value);
-    normalize_integral_json_numbers(&mut value);
-    serde_json::from_value(value).map_err(catalog_error)
+    reject_duplicate_descriptor_fields(&value)?;
+    let descriptor: PackageDescriptor = from_dsl_value(value.clone()).map_err(catalog_error)?;
+    let projection = to_dsl_value(&descriptor).map_err(catalog_error)?;
+    let canonical = directory::os_store::pack_rt::encode_wire_value(&value);
+    if canonical != bytes || directory::os_store::pack_rt::encode_wire_value(&projection) != canonical {
+        return Err(catalog("package descriptor is not its exact canonical schema projection"));
+    }
+    Ok(descriptor)
 }
 
-fn normalize_integral_json_numbers(value: &mut serde_json::Value) {
+fn reject_duplicate_descriptor_fields(value: &DslValue) -> Result<(), AuthorityError> {
     match value {
-        serde_json::Value::Number(number) if number.is_f64() => {
-            let Some(float) = number.as_f64() else { return };
-            if float.fract() != 0.0 || !float.is_finite() {
-                return;
-            }
-            if float >= 0.0 && float <= 9_007_199_254_740_991.0 {
-                *value = serde_json::Value::Number(serde_json::Number::from(float as u64));
-            } else if float >= -9_007_199_254_740_991.0 && float < 0.0 {
-                *value = serde_json::Value::Number(serde_json::Number::from(float as i64));
+        DslValue::Array(items) => {
+            for item in items {
+                reject_duplicate_descriptor_fields(item)?;
             }
         }
-        serde_json::Value::Array(items) => items.iter_mut().for_each(normalize_integral_json_numbers),
-        serde_json::Value::Object(entries) => entries.values_mut().for_each(normalize_integral_json_numbers),
+        DslValue::Object(entries) => {
+            let mut keys = BTreeSet::new();
+            for (key, item) in entries {
+                if !keys.insert(key.as_str()) {
+                    return Err(catalog("package descriptor contains a duplicate object field"));
+                }
+                reject_duplicate_descriptor_fields(item)?;
+            }
+        }
         _ => {}
     }
+    Ok(())
 }
 
 fn verify_length(expected: u64, actual: usize) -> Result<(), AuthorityError> {
@@ -749,7 +773,7 @@ mod tests {
         }
 
         fn binding(&self) -> NativeCodecBinding {
-            NativeCodecBinding::new("fixture.editor", "fixture.editor.native", "fixture.document", fixture_codec(&self.schema, [0x11; 32]))
+            NativeCodecBinding::new("fixture.editor", "semio:fixture-editor", "fixture.document", fixture_codec(&self.schema, [0x11; 32]))
         }
     }
 
@@ -763,7 +787,7 @@ mod tests {
         serde_json::from_str(include_str!("🧪️fixtures/🧬️two-package/🔣️.json")).expect("trusted-catalog fixture")
     }
 
-    fn descriptor_bytes(plugin_id: &str, version: &str, component_sha256: &str, schema: Option<&str>, dependency: Option<(&str, &str)>) -> Vec<u8> {
+    fn descriptor_bytes(plugin_id: &str, package_id: &str, version: &str, component_sha256: &str, schema: Option<&str>, dependency: Option<(&str, &str)>) -> Vec<u8> {
         let artifact_kinds = schema.map_or_else(Vec::new, |schema| {
             vec![serde_json::json!({
                 "id": "fixture.document",
@@ -781,6 +805,7 @@ mod tests {
         let dependencies = dependency.map_or_else(Vec::new, |(plugin_id, version)| vec![serde_json::json!({ "pluginId": plugin_id, "version": format!("={version}") })]);
         let json = serde_json::json!({
             "descriptorVersion": 1,
+            "packageId": package_id,
             "role": "plugin",
             "manifest": {
                 "pluginId": plugin_id,
@@ -799,8 +824,7 @@ mod tests {
             }
         });
         let descriptor: PackageDescriptor = serde_json::from_value(json).expect("package descriptor");
-        let json = serde_json::to_value(descriptor).expect("serialize descriptor");
-        os_store::pack_rt::encode_wire_value(&semio_framework::DslValue::from(&json))
+        os_store::pack_rt::encode_wire_value(&to_dsl_value(&descriptor).expect("project descriptor"))
     }
 
     fn prepared_fixture() -> FixtureDirectory {
@@ -817,8 +841,8 @@ mod tests {
             let component_path = root.join(bundle["packages"][index]["component"]["path"].as_str().expect("component path"));
             std::fs::write(component_path, component).expect("write component");
         }
-        let root_descriptor = descriptor_bytes("fixture.editor", "1.2.3", fixture["componentSha256"].as_str().expect("sha256"), Some(&schema), Some(("fixture.base", "1.0.0")));
-        let base_descriptor = descriptor_bytes("fixture.base", "1.0.0", fixture["componentSha256"].as_str().expect("sha256"), None, None);
+        let root_descriptor = descriptor_bytes("fixture.editor", "semio:fixture-editor", "1.2.3", fixture["componentSha256"].as_str().expect("sha256"), Some(&schema), Some(("fixture.base", "1.0.0")));
+        let base_descriptor = descriptor_bytes("fixture.base", "semio:fixture-base", "1.0.0", fixture["componentSha256"].as_str().expect("sha256"), None, None);
         for (index, bytes) in [(0, root_descriptor), (1, base_descriptor)] {
             bundle["packages"][index]["descriptor"]["byteLength"] = bytes.len().into();
             bundle["packages"][index]["descriptor"]["sha256"] = hex_lower(&Sha256::digest(&bytes)).into();
@@ -900,7 +924,7 @@ mod tests {
         let catalog = TrustedCatalogLoader::load(&fixture.bundle_path, "fixture", &[binding], &control.context()).await.expect("verified catalog");
         assert_eq!(catalog.packages().iter().map(VerifiedTrustedPackage::plugin_id).collect::<Vec<_>>(), vec!["fixture.base", "fixture.editor"]);
         let editor = &catalog.packages()[1];
-        assert_eq!(editor.package_ref().package.0, "fixture.editor.native");
+        assert_eq!(editor.package_ref().package.0, "semio:fixture-editor");
         assert_ne!(editor.plugin_id(), editor.package_ref().package.0);
         assert_eq!(editor.component_bytes(), b"abc");
         assert_eq!(hex_lower(editor.component_sha256()), fixture_json()["componentSha256"]);
@@ -913,6 +937,40 @@ mod tests {
         assert_eq!(progress.first().map(|entry| entry.stage), Some(AuthorityProgressStage::Preflight));
         assert_eq!(progress.last().map(|entry| entry.stage), Some(AuthorityProgressStage::CatalogResolved));
         assert!(progress.iter().all(|entry| entry.completed_units <= entry.total_units));
+    }
+
+    #[test]
+    fn descriptor_projection_rejects_package_conflicts_unknown_fields_and_duplicate_fields() {
+        let fixture = fixture_json();
+        let bundle: Bundle = serde_json::from_value(fixture["bundle"].clone()).expect("bundle");
+        let component_sha256 = fixture["componentSha256"].as_str().expect("sha256");
+        let canonical = descriptor_bytes("fixture.editor", "semio:fixture-editor", "1.2.3", component_sha256, Some("fixture.document@1"), Some(("fixture.base", "1.0.0")));
+        decode_package_descriptor(&canonical).unwrap_or_else(|error| panic!("canonical descriptor must decode: {error}"));
+
+        let conflicting = decode_package_descriptor(&descriptor_bytes(
+            "fixture.editor",
+            "semio:other-package",
+            "1.2.3",
+            component_sha256,
+            Some("fixture.document@1"),
+            Some(("fixture.base", "1.0.0")),
+        ))
+        .expect("structurally valid conflicting descriptor");
+        assert!(validate_descriptor(&bundle.packages[0], &conflicting, &bundle.packages).expect_err("package mismatch").to_string().contains("identity"));
+
+        let mut unknown = os_store::pack_rt::decode_wire_value(&canonical).expect("canonical value");
+        let DslValue::Object(fields) = &mut unknown else { panic!("descriptor object") };
+        fields.push(("unexpected".to_owned(), DslValue::Null));
+        let error = decode_package_descriptor(&os_store::pack_rt::encode_wire_value(&unknown)).expect_err("unknown descriptor field");
+        assert!(error.to_string().contains("unknown field") || error.to_string().contains("canonical schema projection"));
+
+        let mut duplicate = os_store::pack_rt::decode_wire_value(&canonical).expect("canonical value");
+        let DslValue::Object(fields) = &mut duplicate else { panic!("descriptor object") };
+        fields.push(("packageId".to_owned(), DslValue::String("semio:fixture-editor".to_owned())));
+        assert!(decode_package_descriptor(&os_store::pack_rt::encode_wire_value(&duplicate)).expect_err("duplicate descriptor field").to_string().contains("duplicate object field"));
+        assert!(valid_package_id("semio:fixture-editor"));
+        assert!(!valid_package_id("fixture.editor.native"));
+        assert!(!valid_package_id("semio:Fixture"));
     }
 
     #[tokio::test]
@@ -940,7 +998,7 @@ mod tests {
         assert!(document_codec(&missing.schema).await.expect("codec registry").is_none());
 
         let wrong_package = prepared_fixture();
-        let lossy = NativeCodecBinding::new("fixture.editor", "fixture.editor", "fixture.document", fixture_codec(&wrong_package.schema, [0x11; 32]));
+        let lossy = NativeCodecBinding::new("fixture.editor", "semio:fixture-wrong", "fixture.document", fixture_codec(&wrong_package.schema, [0x11; 32]));
         let error = expect_load_error(&wrong_package, &[lossy], &control).await;
         assert!(error.to_string().contains("no explicit native codec"));
         assert!(document_codec(&wrong_package.schema).await.expect("codec registry").is_none());
@@ -953,7 +1011,7 @@ mod tests {
         assert!(document_codec(&zero.schema).await.expect("codec registry").is_none());
 
         let mismatch = prepared_fixture();
-        let binding = NativeCodecBinding::new("fixture.editor", "fixture.editor.native", "fixture.document", fixture_codec(&mismatch.schema, [0x12; 32]));
+        let binding = NativeCodecBinding::new("fixture.editor", "semio:fixture-editor", "fixture.document", fixture_codec(&mismatch.schema, [0x12; 32]));
         let error = expect_load_error(&mismatch, &[binding], &control).await;
         assert!(error.to_string().contains("mismatched"));
         assert!(document_codec(&mismatch.schema).await.expect("codec registry").is_none());

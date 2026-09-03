@@ -255,11 +255,11 @@ pub struct FormGenerationDsl {
 }
 
 pub fn form_generation_to_dsl(generation: &FormGeneration) -> FormGenerationDsl {
-    FormGenerationDsl { id: generation.id.clone(), name: generation.name.clone(), values: generation.values.iter().map(|(key, value)| (key.clone(), dsl::DslValue::from(value))).collect() }
+    FormGenerationDsl { id: generation.id.clone(), name: generation.name.clone(), values: generation.values.iter().map(|(key, value)| (key.clone(), value.clone())).collect() }
 }
 
 pub fn form_generation_from_dsl(generation: FormGenerationDsl) -> FormGeneration {
-    FormGeneration { id: generation.id, name: generation.name, values: generation.values.into_iter().map(|(key, value)| (key, serde_json::Value::from(value))).collect() }
+    FormGeneration { id: generation.id, name: generation.name, values: generation.values.into_iter().collect() }
 }
 
 /// 🧾️ Local twin of `Generation2dSnapshot`, flattening `FlowFixture`/`GenerationPlayState`'s fields

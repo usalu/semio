@@ -14,7 +14,6 @@ use semio_framework_value_derive::{FromValue, ToValue};
 pub struct SetLayerVisibility {
     pub layer_id: String,
     #[cfg_attr(test, serde(deserialize_with = "super::super::required_nullable"))]
-    #[value(deserialize_with = "super::super::required_nullable")]
     pub visible: Option<bool>,
 }
 //#endregion 🧬️Payload

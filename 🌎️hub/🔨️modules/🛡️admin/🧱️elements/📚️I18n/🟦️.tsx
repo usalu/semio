@@ -100,8 +100,8 @@ const en = {
   "admin.connections.connectedAt": "Connected",
   "admin.connections.kick": "Kick",
   "admin.connections.empty": "No live connections.",
-  "admin.connections.live": "Live",
-  "admin.connections.offline": "Offline",
+  "admin.connections.fresh": "Fresh snapshot",
+  "admin.connections.stale": "Stale snapshot",
 
   "admin.documents.title": "Documents",
   "admin.documents.space": "Space",
@@ -208,8 +208,8 @@ const de = {
   "admin.connections.connectedAt": "Verbunden",
   "admin.connections.kick": "Trennen",
   "admin.connections.empty": "Keine aktiven Verbindungen.",
-  "admin.connections.live": "Live",
-  "admin.connections.offline": "Offline",
+  "admin.connections.fresh": "Aktueller Stand",
+  "admin.connections.stale": "Veralteter Stand",
 
   "admin.documents.title": "Dokumente",
   "admin.documents.space": "Raum",

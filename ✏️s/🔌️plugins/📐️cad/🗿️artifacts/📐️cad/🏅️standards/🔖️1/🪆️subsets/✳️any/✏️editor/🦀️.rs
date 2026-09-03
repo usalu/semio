@@ -2512,7 +2512,7 @@ mod tests {
     fn retained_artifact_store_preparation_is_bounded_exact_and_reversible() {
         let base = crate::artifacts::cad::empty_cad_snapshot();
         let node = crate::artifacts::cad::CadNode { id: "node-retained".into(), label: "Retained".into(), kind: "group".into() };
-        let mutation = CadMutation::CreateNode(crate::artifacts::cad::mutations::create_node::mutation::CreateNode { node: node.clone() });
+        let mutation = CadMutation::CreateNode(crate::artifacts::cad::mutations::create_node::CreateNode { node: node.clone() });
         let footprint = admit_cad_artifact_mutation(&mutation).expect("bounded CAD Artifact mutation");
         assert_eq!(footprint.work_items, 1);
         let (post, inverse, forward) = prepare_cad_artifact(&base, mutation.clone()).expect("exact CAD Artifact preparation");

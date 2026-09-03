@@ -649,7 +649,7 @@ impl ArtifactEditor for Generation2dPlayApp {
     fn export_media(port: &str, doc: &ArtifactView<'_, Generation2dSnapshot>) -> Result<semio_framework_plugin::Media, semio_framework_plugin::MediaError> {
         match port {
             "drawing:out" => {
-                let eval_json = crate::artifacts::generation2d::schema::evaluate_generation_preview(&doc.snapshot.fixture, &serde_json::Map::new());
+                let eval_json = crate::artifacts::generation2d::schema::evaluate_generation_preview(&doc.snapshot.fixture, &flow::playbook::PlaybookValues::new());
                 let layers_json = crate::artifacts::generation2d::schema::generation_preview_layers(&eval_json);
                 Ok(semio_framework_plugin::Media { media_type: MediaType { class: MediaClass::TwoD, form: MediaForm::Vector }, payload: semio_framework_plugin::MediaPayload::Structured { schema: "2d.drawing".into(), json: layers_json } })
             }

@@ -370,9 +370,9 @@ impl MutationDiff<CadSnapshot> for CadDiff {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::cad::mutations::create_node::mutation::CreateNode;
-    use crate::artifacts::cad::mutations::delete_node::mutation::DeleteNode;
-    use crate::artifacts::cad::mutations::rename_node::mutation::RenameNode;
+    use crate::artifacts::cad::mutations::create_node::CreateNode;
+    use crate::artifacts::cad::mutations::delete_node::DeleteNode;
+    use crate::artifacts::cad::mutations::rename_node::RenameNode;
     use crate::artifacts::cad::op::CadMutation;
     use crate::artifacts::cad::testkit::sample_scene;
     use protocol::Mutation;

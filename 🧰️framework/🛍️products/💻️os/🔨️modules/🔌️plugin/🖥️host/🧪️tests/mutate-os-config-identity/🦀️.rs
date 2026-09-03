@@ -121,7 +121,7 @@ mod subject {
     /// 🔎️ The session token, read off the typed value — the field an undo is most likely to
     /// fabricate rather than restore.
     fn token(record: &IdentitySetting) -> Option<String> {
-        record.0.as_ref().map(|identity| identity.session_token.clone())
+        record.0.as_ref().map(|identity| identity.email.clone())
     }
     //#endregion 🔖️FixtureDecode
 

@@ -92,5 +92,49 @@
       { "throughGeneration": 6, "nowMs": 351, "protected": ["chunk:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", "manifest:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"], "eligible": ["chunk:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd", "manifest:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"] },
       { "throughGeneration": 7, "nowMs": 351, "protected": [], "eligible": ["chunk:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", "chunk:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd", "manifest:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb", "manifest:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"] }
     ]
+  },
+  "sweepContinuation": {
+    "formatVersion": 1,
+    "tokenPayloadBytes": 21,
+    "tokenAuthenticationBytes": 32,
+    "cursorExposesObjectIdentity": false,
+    "invalidAfterGenerationChange": true,
+    "invalidAfterRestart": true,
+    "ledgerGeneration": 17,
+    "pageLedgerEvents": 16,
+    "planObjectCounts": [258, 258, 258, 258, 258, 258, 258, 258, 258, 258, 258, 258, 258, 258, 258, 258, 258],
+    "totalObjects": 4386,
+    "requestMaximumObjects": 4096,
+    "expectedExaminedPerRequest": [4096, 290],
+    "expectedFirstCursor": {
+      "observedGeneration": 17,
+      "afterGeneration": 0,
+      "objectOffset": 4096
+    }
+  },
+  "deleteBarrier": {
+    "formatVersion": 1,
+    "coordinatorId": "7777777777777777777777777777777777777777777777777777777777777777",
+    "spaceId": "barrier-race-space",
+    "objectBytesHex": "726163652d6279746573",
+    "initialPhysicalEpoch": 1,
+    "deleteLeaseEpoch": 2,
+    "successorReservationEpoch": 3,
+    "leaseMaximumMs": 5000,
+    "dryRunAdvancesEpoch": false,
+    "orders": [
+      {
+        "id": "delete-first",
+        "actions": ["lease:2", "cas-advance:2", "validate:2", "delete:2", "reserve:3", "cas-advance:3", "stage", "publish", "read"],
+        "oldDeleteOutcome": "deleted-before-successor-stage",
+        "publishedReadOutcome": "exact"
+      },
+      {
+        "id": "successor-first",
+        "actions": ["lease:2", "cas-advance:2", "lease-expire", "reserve:3", "cas-advance:3", "stage", "publish", "delete:2", "read"],
+        "oldDeleteOutcome": "stale-fence-rejected",
+        "publishedReadOutcome": "exact"
+      }
+    ]
   }
 }

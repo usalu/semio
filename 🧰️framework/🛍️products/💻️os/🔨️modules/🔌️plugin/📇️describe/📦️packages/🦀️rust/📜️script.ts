@@ -1,14 +1,16 @@
 #!/usr/bin/env bun
 /**
  * 🛂️ `@semio-tech/os-plugin-describe-rs` task router: `bun ./📜️script.ts <build|test|describe>`.
- * `describe <component.wasm> --out <dir>` builds (if needed) and execs the
+ * `describe <component.wasm> --core <core.wasm> --out <dir>` builds (if needed) and execs the
  * `semio-framework-plugin-describe` binary — the build-time-only descriptor emitter
  * (`📓️design-abi.md` §3). Called from the dev `📜️script.ts` right after the `wasm32-wasip2` build,
  * and from each plugin crate's own `📜️script.ts describe` (see that script's own doc for the exact
  * invocation convention every migrated plugin crate follows).
  */
+import { existsSync, mkdtempSync, rmSync } from "node:fs";
+import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
-import { BundleScript, ScriptRouter, devToolingEnv, runBundleScriptMain, runCargoTestBudgeted, runCmd, runCmdStatus, resolveTestLevel } from "../../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { BundleScript, ScriptRouter, buildBudgetMs, devToolingEnv, resolveWorkspaceBin, runBundleScriptMain, runCargoTestBudgeted, runCmd, runCmdStatus, resolveTestLevel } from "../../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 
 const CRATE_NAME = "semio-framework-plugin-describe";
 
@@ -32,13 +34,13 @@ function cargoTargetRoot(repoRoot: string): string {
 }
 
 /** @emoji 🛠️ Resolves the debug-profile binary path for the current platform, after ensuring it is built (cargo's incremental cache makes a no-op rebuild fast — never exec a possibly-stale binary). */
-function ensureBuiltBin(repoRoot: string): string {
-  runCmd("cargo", ["build", "-p", CRATE_NAME], { cwd: repoRoot, env: devToolingEnv() });
+function ensureBuiltBin(repoRoot: string, budgetMs = buildBudgetMs()): string {
+  runCmd("cargo", ["build", "-p", CRATE_NAME], { cwd: repoRoot, env: devToolingEnv(), budgetMs });
   const binName = process.platform === "win32" ? `${CRATE_NAME}.exe` : CRATE_NAME;
   return join(cargoTargetRoot(repoRoot), "debug", binName);
 }
 
-/** @emoji 🛂️ `describe <component.wasm> --out <dir>` — builds then execs the emitter with forwarded argv and inherited stdio. */
+/** @emoji 🛂️ `describe <component.wasm> --core <core.wasm> --out <dir>` — builds then execs the emitter with forwarded argv and inherited stdio. */
 class DescribeScript extends BundleScript {
   run(segments: string[]): void {
     const bin = ensureBuiltBin(this.repoRoot);
@@ -53,6 +55,37 @@ export function pluginWasmArtifactPath(repoRoot: string, packageName: string): s
   return join(cargoTargetRoot(repoRoot), "wasm32-wasip2", "debug", `${packageName.replace(/-/g, "_")}.wasm`);
 }
 
+/** @emoji 🧩 Builds one exact plugin component and returns cargo's fresh output path. */
+export function buildPluginComponent(repoRoot: string, packageName: string, rootCdylib = false, budgetMs = buildBudgetMs()): string {
+  const buildArgs = rootCdylib
+    ? ["rustc", "-p", packageName, "--lib", "--crate-type", "cdylib", "--target", "wasm32-wasip2"]
+    : ["build", "-p", packageName, "--target", "wasm32-wasip2"];
+  runCmd("cargo", buildArgs, { cwd: repoRoot, env: devToolingEnv(), budgetMs });
+  const component = pluginWasmArtifactPath(repoRoot, packageName);
+  if (!existsSync(component)) throw new Error(`cargo did not produce ${component}`);
+  return component;
+}
+
+/** @emoji 🧬 Extracts the first core module from the exact component with jco's independent parser. */
+export function extractPluginCore(repoRoot: string, component: string, outDir: string, baseName: string, budgetMs = buildBudgetMs()): string {
+  const jco = resolveWorkspaceBin("@bytecodealliance/jco", repoRoot);
+  if (!jco) throw new Error("missing @bytecodealliance/jco workspace binary; run bun install");
+  runCmd("node", [jco, "transpile", component, "-o", outDir, "--name", baseName, "--map", "semio:framework/pure=./pure.js", "--map", "semio:framework/host-async=./host-async.js"], {
+    cwd: repoRoot,
+    env: devToolingEnv(),
+    budgetMs,
+  });
+  const core = join(outDir, `${baseName}.core.wasm`);
+  if (!existsSync(core)) throw new Error(`jco did not extract ${core}`);
+  return core;
+}
+
+/** @emoji 🛂️ Emits one canonical descriptor from independently supplied raw/core artifacts. */
+export function emitPluginDescriptor(repoRoot: string, component: string, core: string, outDir: string, budgetMs = buildBudgetMs()): number {
+  const bin = ensureBuiltBin(repoRoot, budgetMs);
+  return runCmdStatus(bin, ["describe", component, "--core", core, "--out", outDir], { cwd: repoRoot, env: devToolingEnv(), budgetMs });
+}
+
 /** @emoji 🛂️ Shared implementation for a plugin/extension crate's own `📜️script.ts describe` command
  * (D0-descriptor-plumbing, `📌️important.md`): builds `packageName`'s `wasm32-wasip2` component — no
  * extra `--features component-guest` flag needed, every plugin crate's own `Cargo.toml` already
@@ -65,13 +98,14 @@ export function pluginWasmArtifactPath(repoRoot: string, packageName: string): s
  * shared function so every migrated plugin crate's own `describe` command stays a thin two-line
  * wrapper around it rather than duplicating the build+emit sequence 33 times. */
 export function describePluginComponent(repoRoot: string, packageName: string, ownerRoot: string, rootCdylib = false): number {
-  const buildArgs = rootCdylib
-    ? ["rustc", "-p", packageName, "--lib", "--crate-type", "cdylib", "--target", "wasm32-wasip2"]
-    : ["build", "-p", packageName, "--target", "wasm32-wasip2"];
-  const buildStatus = runCmdStatus("cargo", buildArgs, { cwd: repoRoot, env: devToolingEnv() });
-  if (buildStatus !== 0) return buildStatus;
-  const bin = ensureBuiltBin(repoRoot);
-  return runCmdStatus(bin, ["describe", pluginWasmArtifactPath(repoRoot, packageName), "--out", ownerRoot], { cwd: repoRoot, env: devToolingEnv() });
+  const component = buildPluginComponent(repoRoot, packageName, rootCdylib);
+  const scratch = mkdtempSync(join(tmpdir(), "semio-plugin-core-"));
+  try {
+    const core = extractPluginCore(repoRoot, component, scratch, packageName.replace(/-/g, "_"));
+    return emitPluginDescriptor(repoRoot, component, core, ownerRoot);
+  } finally {
+    rmSync(scratch, { recursive: true, force: true });
+  }
 }
 
 if (import.meta.main) {

@@ -1,0 +1,73 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "semio.hub.canonical-checkpoint-pair.fixture/v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "limits", "selection", "pack", "spr", "expected"],
+  "properties": {
+    "schema": { "const": "semio.hub.canonical-checkpoint-pair.fixture/v1" },
+    "limits": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["pairBytes", "headerBytes", "recordBytes", "records", "deadlineMs"],
+      "properties": {
+        "pairBytes": { "const": 67108864 },
+        "headerBytes": { "const": 16384 },
+        "recordBytes": { "const": 4096 },
+        "records": { "const": 16384 },
+        "deadlineMs": { "const": 15000 }
+      }
+    },
+    "selection": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["spaceId", "documentId", "descriptorDigest", "checkpointId", "baseline"],
+      "properties": {
+        "spaceId": { "const": "space:alpha" },
+        "documentId": { "const": "doc:tokyo" },
+        "descriptorDigest": { "$ref": "#/$defs/hash" },
+        "checkpointId": { "$ref": "#/$defs/hash" },
+        "baseline": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["documentId", "headEditOrdinal", "headEditId", "lastCommitSeq", "chainHash"],
+          "properties": {
+            "documentId": { "const": "doc:tokyo" },
+            "headEditOrdinal": { "const": 7 },
+            "headEditId": { "const": "edit:7" },
+            "lastCommitSeq": { "const": 6 },
+            "chainHash": { "$ref": "#/$defs/hash" }
+          }
+        }
+      }
+    },
+    "pack": { "$ref": "#/$defs/part" },
+    "spr": { "$ref": "#/$defs/part" },
+    "expected": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["aggregateSha256", "etag", "headerPayloadBytes", "dataRecords", "wireBytes"],
+      "properties": {
+        "aggregateSha256": { "$ref": "#/$defs/hash" },
+        "etag": { "type": "string", "pattern": "^\"[0-9a-f]{64}\"$" },
+        "headerPayloadBytes": { "const": 280 },
+        "dataRecords": { "const": 4 },
+        "wireBytes": { "const": 9476 }
+      }
+    }
+  },
+  "$defs": {
+    "hash": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "part": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["length", "multiplier", "increment", "sha256"],
+      "properties": {
+        "length": { "type": "integer", "minimum": 1, "maximum": 67108864 },
+        "multiplier": { "type": "integer", "minimum": 0, "maximum": 255 },
+        "increment": { "type": "integer", "minimum": 0, "maximum": 255 },
+        "sha256": { "$ref": "#/$defs/hash" }
+      }
+    }
+  }
+}

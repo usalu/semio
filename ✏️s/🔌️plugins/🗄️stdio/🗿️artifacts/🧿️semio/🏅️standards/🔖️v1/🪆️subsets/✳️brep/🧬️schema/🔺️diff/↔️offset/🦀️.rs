@@ -19,7 +19,7 @@ use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::sur
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::topology::history::OpRecorder;
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::topology::Body;
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::vector::{Pnt3, Vec3};
-use semio_framework_3d::engine::MeshTransfer;
+use crate::artifacts::semio::standards::v1::subsets::brep::schema::engine::MeshTransfer;
 
 // #region 🔖️Api
 

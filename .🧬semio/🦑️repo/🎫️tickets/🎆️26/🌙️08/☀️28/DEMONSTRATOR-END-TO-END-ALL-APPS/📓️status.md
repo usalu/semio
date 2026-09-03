@@ -1283,3 +1283,222 @@ condition surfacing differently.
 `semio-s-plugin-demonstrator` cannot be built, therefore the panes keep loading the stale
 Aug 27 07:56 bundle and its `setLocale` fault. The fix is splitting `stdio` by artifact family — owned
 by the mutations/stdio ticket, not this one.
+
+## 2026-09-03 14:1x — cad unblocked (stale `::mutation::` path segments)
+
+The peer's `🦠️mutation/🦀️.rs` → `🦀️.rs` rename left **10 stale import paths** across the cad
+plugin, the same defect class already fixed in `flow`. Five mutation modules lost their
+`🦠️mutation/` subdirectory while their consumers still spelled `…::<name>::mutation::<Type>`:
+
+| module | stale refs |
+| --- | --- |
+| `change_active_model_definition` | 2 |
+| `create_node` | 4 |
+| `rename_node` | 2 |
+| `delete_node` | 1 |
+| `create_shape_model` | 1 |
+
+The module *declarations* in `📦️packages/🦀️rust/🦀️.rs` were already correct
+(`mod component; pub use component::*;`), so the fix was at the **call sites**: drop the
+`::mutation` segment. Verified each of the five re-exports via `pub use component::*` first.
+
+Only 2 of the 10 surfaced in a plain `cargo check` — the other 8 sit inside `#[cfg(test)]`
+blocks, which is why the error count read 7 → 4 → 2 across retries and looked like it was
+converging on its own. It was not; the test-gated ones would have failed later.
+
+**Result:** `semio-s-plugin-cad` now compiles clean for `wasm32-wasip2`. The 2 residual
+errors in that run are in `🗄️stdio` (`E0425 component_package_id`), not cad — and they are a
+stale read: both stdio files were dirty and modified at 14:04/14:06 while the check ran, and
+`component_package_id` **is** defined at the stdio crate root (`✏️s/🔌️plugins/🗄️stdio/🦀️.rs:192`).
+Peer's in-flight work; left untouched per the standing intervention rule.
+
+### Stale-artifact diagnosis re-confirmed
+`storybook-static/plugin-modules/demonstrator/…core.wasm` is dated Sep 2 10:33 and looked
+like a fresh build, but it is byte-identical to the `dist/` copy
+(`sha256 6639b8a1c6f5efab…`, 139,649,235 bytes both). The demonstrator wasm has **not** been
+rebuilt since Aug 27 08:04. The `setLocale` `interactive-job.catalog-authority` panic remains
+a stale-bundle symptom, not a code defect.
+
+### Build fleet
+A full plugin-catalog build (all plugins, not `SEMIO_PLUGIN_ONLY`) has been running for
+~1h50m on the dev's own tty (pid 17681), actively compiling `semio-s-plugin-process-metal`.
+It is **the dev's own shell**, not an orphan — not killed. It uses the default
+`CARGO_TARGET_DIR`, so it does not contend with the ticket's `target-engines` checks.
+The 4-minute retry monitor was stopped to keep a single writer.
+
+## 2026-09-03 ~16:00 — demonstrator dependency closure reaches ZERO errors (283 → 0)
+
+`cargo check -p semio-s-plugin-demonstrator --target wasm32-wasip2` is **clean**. This is the
+first time the demonstrator's whole dependency closure has compiled since the serde removal
+started. Verified from real command output, not inferred.
+
+### Root causes, in the order they were peeled back
+
+1. **Stale `::mutation::` path segments (cad 10, gis 33).** The `🦠️mutation/` subdirectories
+   were renamed away; items are re-exported from the parent via `pub use component::*`, but
+   call sites still spelled `<module>::mutation::<Type>`. The module *declarations* were
+   already correct, so the fix belonged at the call sites. Verified each module's re-export
+   before editing. Only a minority surfaced in a plain `cargo check` — the rest sat inside
+   `#[cfg(test)]`, which is why the count looked like it was self-converging when it was not.
+
+2. **Missing `semio-framework-value-derive` dependency — a systemic manifest defect.** gis
+   imported `semio_framework_value_derive` in 59 files without declaring it. That single
+   missing line produced 59 × E0432, every `cannot find attribute value`, and 108 E0277
+   "`ToValue`/`FromValue` not satisfied". Adding it took gis 242 → 64 in one step.
+   An audit of every plugin manifest found **8 more** with the identical defect:
+   `✒️writer, 🌿️vcs, 🎬️sequence, 🏛️architect, 💡️reasoning, 📏️layout, 📜️imperative, 🖍️draw`.
+   All 9 fixed. The demonstrator itself was a 10th case, but it aliases its dependencies with
+   short names, so it needed the key `value_derive` to match its own source and file style.
+
+3. **cad `E0631` — window action callback.** `cad_window_action` had migrated to
+   `Option<protocol::DslValue>` while `world3d_{sun,projection}_measures` still take
+   `Fn(&str, Option<serde_json::Value>)`. The framework plugin file is dirty (peer mid-migration),
+   so it was NOT edited. `process3d` already demonstrates the intended idiom: pass a closure
+   and convert with `semio_framework::optional_json_to_dsl`. Applied that to both cad sites.
+
+4. **cad `E0046` — missing `DESCRIPTORS`/`descriptor`** on `CadPresenceMutation` and
+   `CadConfigMutation`. Implemented following the `process3d` config descriptor convention
+   (kebab `semantic_kind`, titleized `display_name`, per-variant emoji, `aggregate_variant`).
+
+### Fleet
+Two Sonnet agents ran concurrently and both verified their own results by running the build:
+- `📓️fix-gis.md` — gis 64 → 0.
+- `📓️fix-procedural.md` — procedural 70 → 0, including a purely additive extension of the
+  shared derive macro to support single-field newtype tuple structs transparently, plus a
+  hand-written `ToValue`/`FromValue` for `GenerationPlayRoot`.
+
+One Haiku agent mapped the closure read-only: the demonstrator depends on exactly 7 plugins —
+`procedural, cad, puzzle, sourcing, process, gis, stdio`.
+
+**Correction to a subagent claim:** the procedural agent reported cad's 4 residual errors sat
+in another session's dirty files. They did not — all four were clean and stale (Sep 2 / Aug 24).
+They were fixed here as items 3 and 4 above. Subagent claims about file ownership were
+re-verified with `git status` rather than taken at face value.
+
+## 2026-09-03 ~16:30 — link-crash remedy extended; native host blocked by a live peer refactor
+
+### `rust-lld` SIGSEGV is not stdio-specific
+The first full build died linking **cad**, not stdio: the same
+`lld::wasm::ElemSection::writeBody()` → `signal: 11 (SIGSEGV)`. The root `Cargo.toml` already
+documents this crash and its remedy (`codegen-units = 1`) for `os-kernel`, `math` and `stdio`.
+The remedy was scoped one crate at a time, so each newly-large plugin rediscovers the crash at
+link time. Extended it in one step to the demonstrator's whole link set —
+`cad, gis, procedural, process, puzzle, sourcing` — following the existing comment/grouping
+convention rather than waiting to hit each crate serially.
+
+### Native `os-kernel` is blocked by another session, mid-edit
+`semio-framework-os-kernel` fails with three `E0599`s: `set_token` and `mint_session` do not
+exist on `DirectoryClient<T>`. Neither method is defined anywhere in the framework any more,
+while four call sites still invoke them
+(`📇️directory/🪪️identity/🦀️.rs:176,189,192`, `🌉️mcp/🏠️workspace/🔗️remote/🦀️.rs:462`).
+`📇️directory/🔌️client/🦀️.rs` is **dirty and was modified at 16:20:53**, i.e. while the build was
+running. This is a peer's in-flight API removal with the call sites not yet migrated — left
+untouched per the standing rule. The first dev run retried it 11 times in a loop; that build
+was stopped rather than left spinning.
+
+**This does not block the demonstrator bundle.** Plugin components target `wasm32-wasip2` and
+depend on the plugin host only off-wasm, so `os-kernel` is not in their closure — which is why
+`cargo check -p semio-s-plugin-demonstrator --target wasm32-wasip2` is clean while the native
+host is broken. The build was relaunched as `SEMIO_PLUGIN_ONLY=demonstrator` with
+`SKIP_ENGINE_BUILD=1`, and the serve step takes `SKIP_PLUGIN_BUILD=1 SKIP_ENGINE_BUILD=1`,
+so neither path needs the peer's half-migrated native code.
+
+## 2026-09-03 ~17:00 — the demonstrator web app RENDERS; four rename-sweep defects fixed
+
+The app was serving a completely blank page. It now renders the landing view with all six
+panes present (Generator, Koordinator, Aggregator, Aussuchen, Bearbeiten, Verfolgen), the
+project intro carousel, and a live plugin runtime that successfully hot-swaps six flow
+extensions (`brep, list, logic, math, text, primitive`).
+
+Four separate defects, all the same root cause — commit `21fbcd3538` (Sep 2) ran an automated
+`…component.tsx → 🟦️.tsx` rename sweep that rewrote *references* without renaming the
+*files*, or renamed files without updating references:
+
+| # | Defect | Fix |
+| --- | --- | --- |
+| 1 | `🌐️index.html` + `⚙️vite.config.ts` entry both said `./🟦️.tsx`; the file was still `📦️index.tsx` | renamed the file to `🟦️.tsx` |
+| 2 | 4 vite aliases pointed at nonexistent `🟦️glue.ts(x)` — `@semio-tech/framework`, `framework-os`, `infinite-canvas-react-renderer`, `infinite-world-r3f` | repointed to each package's real `exports["."]` |
+| 3 | `@semio-tech/puzzle-js/board-session` — no such subpath; the symbol lives on the main entry | import the bare package, matching the working dev harness |
+| 4 | `🎨️globals.css` imported the engine's `🎨️globals.css`, which is now `🎨️.css` | repointed the `@import` |
+
+Defect 1 is worth a note on method: I first "fixed" it backwards, pointing the HTML at
+`📦️index.tsx`. That was wrong — `⚙️vite.config.ts:76` declares `entry: "./🟦️.tsx"` and
+`semioHostHtmlVitePlugin` *generates* the served HTML, overriding the on-disk file. The
+generated HTML was the authority; the missing file rename was the defect. Reverted and renamed.
+
+Two process traps cost time here and are worth recording:
+- Killing the dev server's parent left an **orphan `bun` holding port 6029**, so the relaunch
+  silently refused (`strictPort`) and every subsequent probe was answered by the STALE server.
+  That is why on-disk edits appeared not to take effect. Always confirm the listener is gone
+  (`lsof -nP -iTCP:6029 -sTCP:LISTEN -t`) before concluding an edit did not land.
+- A `.claude/worktrees/agent-…` copy of the repo exists and pollutes repo-wide greps. CLAUDE.md
+  forbids worktrees; a subagent appears to have created one. Flagged, not yet removed.
+
+### Blocker cleared by a peer
+The `DirectoryClient` refactor that was failing every wasm plugin build is resolved.
+`semio-a4` gated `read_inherited`/`restore_inherited`/`now_ms` for wasm; the owner had already
+rewritten `🪪️identity/🦀️.rs`. `cargo check -p semio-s-plugin-demonstrator --target wasm32-wasip2`
+is back to **0 errors**. My earlier read that the edit was "abandoned" was wrong and was
+corrected to both peers — the owner was live the whole time.
+
+### Now running
+Full plugin catalog build with `SEMIO_PLUGIN_PROFILE=wasm-release` (the documented admissible
+path for stdio, whose dev-profile component exceeds the 1M-function ceiling). Remaining known
+gaps once it lands: `/plugin-modules/stdio/🔣️.json` 404, `flow-extension-draw` and
+`flow-extension-bim` descriptors 404, and a `procedural#1` boot fault — all consistent with the
+plugin bundles still being the stale Aug 27 artifacts under `SKIP_PLUGIN_BUILD`.
+
+## 2026-09-03 ~17:15 — catalog build running; stdio blocked by a peer's live brep refactor
+
+`SEMIO_PLUGIN_PROFILE=wasm-release` is confirmed honored (`🧑️‍💻️dev/📦️packages/🟦️typescript/📜️script.ts:94`
+feeds it straight to `--profile`; verified on the live process args, and
+`target-engines/wasm32-wasip2/wasm-release/` now exists). The catalog build is progressing —
+70+ rmeta, 15 concurrent `rustc`, and it continues past per-plugin failures.
+
+**One plugin fails: `stdio`, 6 errors, ALL inside `🪆️subsets/✳️brep`** — semio-ac's live area
+(29 dirty files there; `📏mass-properties/🦀️.rs` mtime 17:00:36):
+- `E0425: cannot find function closest_point in module curve_ops` at `📏mass-properties/🦀️.rs:746`.
+  rustc suggests `…mass_properties::surface_ops::closest_point`, i.e. a `curve_ops → surface_ops`
+  move with one call site left behind.
+- 5 × `E0502: cannot borrow *self as mutable because it is also borrowed as immutable`.
+
+Reported to semio-ac; not touched.
+
+### Why this blocks the goal
+`✳️brep` is mounted **unconditionally** at `✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/🦀️.rs:6187`
+— no `cfg`, no feature gate. So every dependent of stdio fails, and stdio is a demonstrator
+dependency. The demonstrator component therefore cannot be produced until that subset compiles.
+This also explains the runtime `/plugin-modules/stdio/🔣️.json` 404.
+
+### Methodological note
+This is the third time a peer's live edit has invalidated a green result I had already recorded
+(`os-kernel` twice, now `stdio`). `cargo check -p semio-s-plugin-demonstrator --target wasm32-wasip2`
+read 0 errors at ~17:05 and was broken again by 17:00:36's edit landing in the build.
+**Any recorded "0 errors" older than the current working tree is provisional, not settled** —
+re-measure against the tree at the moment of the claim rather than citing an earlier run.
+
+## 2026-09-03 ~17:25 — repo-wide sweep-collateral audit
+
+Having hit the same rename-sweep defect four times by accident, audited for it systematically
+(package.json `exports`, vite `resolve.alias` replacements, and `<script src>` entries — every
+target checked for existence on disk, excluding node_modules/dist/tickets/worktrees/temp).
+
+Live defects found and fixed:
+- `✏️s/🔌️plugins/🧩️puzzle/📦️packages/🟦️typescript/🎯️targets/⚛️5d-react` — package.json declares
+  `exports["."] = "./🟦️.tsx"` but the file was still `📦️index.tsx`. Renamed. This is a puzzle
+  target the demonstrator's 5D panes use, so it would have broken them.
+- `🧑️‍💻️dev/📦️packages/🟦️typescript/⚙️vite.config.ts` — the `@semio-tech/framework-renderer-wgpu`
+  alias pointed at `🧊️wgpu/📦️packages/🦀️rust/🟦️.ts`, which does not exist. The package's own
+  `exports["."]` is `./🟦️typescript/📚️library/🟦️.ts`. Repointed.
+
+Not fixed (out of scope, different apps — recorded for whoever owns them):
+- `♻️mit-bestand/🎤️präsentation/📅️33.projektetage/📦️packages/🟦️typescript` — `exports["."]`
+  → missing `./🟦️.ts`, and its `🌐️index.html` → missing `./js/index.ts`.
+- `temp/compose/client/lib/sketchpad/js` — `./boot` → missing `./🟦️boot.tsx` (scratch tree).
+
+**Process failure to record:** the wgpu edit went into a file that was already dirty (`M `). I
+printed the porcelain guard and misread a non-empty result as clean, so I edited another
+session's in-flight file — the exact thing this ticket's rule forbids. Verified afterwards that
+no work was lost: my unstaged diff is one line, their 11-insertion/4-deletion staged change is
+intact, because the edit was a read-modify-write of current content. The guard must be an
+assertion that stops the edit, not a line printed next to it.

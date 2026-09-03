@@ -16,7 +16,8 @@
 //! for the algorithm forward-edge above — dissolves that edge instead: the DWG calls become
 //! same-crate `crate::artifacts::dwg::{…}`, and the framework-3d algorithm imports become the same
 //! external `semio_framework_3d::engine::*` forward-edge pattern the parent `engine/component.rs`
-//! already uses.
+//! used at the time. `MeshTransfer` moved again in ticket 26/09/03/BREP-KERNEL-DEPENDENCY-FREE-RUNTIME
+//! wave 1 (W1-A): the parent's own `engine::contract` module now owns it same-crate.
 
 use crate::artifacts::dwg::{dwg_drawing_to_mesh, dwg_from_bytes, dwg_to_bytes, mesh_to_dwg_drawing};
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::euler::{add_shell, add_solid};
@@ -28,7 +29,7 @@ use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::tol
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::topology::history::OpRecorder;
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::topology::Body;
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::vector::{Pnt3, Vec3};
-use semio_framework_3d::engine::MeshTransfer;
+use crate::artifacts::semio::standards::v1::subsets::brep::schema::engine::MeshTransfer;
 use semio_framework_mesh_engine::{mesh_from_obj, mesh_from_stl, mesh_to_obj, mesh_to_stl, GlbExporter, GlbImporter, MeshData, MeshExporter, MeshImporter};
 
 // #region 🔖️Types

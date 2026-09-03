@@ -7,7 +7,7 @@
 // #region 🔌️Adapters
 import * as React from "react";
 import { Button } from "@semio-tech/ui-react";
-import { DirectoryClient, isDirectoryStreamMessageKind, type ConnectionView } from "@semio-tech/framework-os";
+import type { ConnectionView } from "@semio-tech/framework-os";
 import { useAdminT } from "../📚️I18n/🟦️.tsx";
 import { useAdminSession } from "../🔑️AdminSession/🟦️.tsx";
 // #endregion 🔌️Adapters
@@ -32,46 +32,42 @@ function groupConnections(connections: readonly ConnectionView[]): ConnectionGro
 }
 //#endregion 🔖️Grouping
 
-/** 🔴️ Live view of every currently-open document-WS connection, grouped `space -> document ->
- * surface -> actor` (contract §C1's `ConnectionView`). Seeded from `GET /admin/api/connections`
- * (a snapshot), then kept live by subscribing to `/directory/ws` through `@semio-tech/framework-os`'s
- * `DirectoryClient.stream()` — the SAME channel `POST /directory/commands`'s event replay uses, but
- * `DirectoryStreamMessage::Connection{phase,...}` frames are broadcast-only (never persisted/replayed,
- * see the hub's own `handle_ws`/`handle_directory_ws` doc), so this page reacts to them as they
- * happen rather than polling. `since` is seeded from the admin overview's `headSeq` so the WS replay
- * phase has nothing stale to resend — this page only cares about live `Connection` frames. */
+const CONNECTION_POLL_MS = 2_000;
+const CONNECTION_POLL_DEADLINE_MS = 2_000;
+
+/** 🔴️ Bounded authenticated REST snapshots of every currently-open document connection. */
 export function ConnectionsPage(): React.ReactElement {
   const t = useAdminT();
   const { client } = useAdminSession();
   const [connections, setConnections] = React.useState<Map<string, ConnectionView>>(new Map());
-  const [live, setLive] = React.useState(false);
+  const [fresh, setFresh] = React.useState(false);
 
   React.useEffect(() => {
     let cancelled = false;
-    client.connections().then((rows) => {
-      if (cancelled) return;
-      setConnections(new Map(rows.map((row) => [row.syncSessionId, row])));
-    });
-
-    let stream: { close: () => void } | undefined;
-    client.overview().then((overview) => {
-      if (cancelled) return;
-      const directory = new DirectoryClient(window.location.origin);
-      stream = directory.stream(overview.headSeq, (message) => {
-        if (!isDirectoryStreamMessageKind(message, "connection")) return;
-        setLive(true);
-        setConnections((existing) => {
-          const next = new Map(existing);
-          if (message.phase === "opened") next.set(message.connection.syncSessionId, message.connection);
-          else next.delete(message.connection.syncSessionId);
-          return next;
-        });
-      });
-    });
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    let controller: AbortController | undefined;
+    const poll = async (): Promise<void> => {
+      controller = new AbortController();
+      const deadline = setTimeout(() => controller?.abort(), CONNECTION_POLL_DEADLINE_MS);
+      try {
+        const rows = await client.connections(controller.signal);
+        if (cancelled) return;
+        setConnections(new Map(rows.map((row) => [row.syncSessionId, row])));
+        setFresh(true);
+      } catch {
+        if (!cancelled) setFresh(false);
+      } finally {
+        clearTimeout(deadline);
+        controller = undefined;
+        if (!cancelled) timer = setTimeout(poll, CONNECTION_POLL_MS);
+      }
+    };
+    void poll();
 
     return () => {
       cancelled = true;
-      stream?.close();
+      if (timer) clearTimeout(timer);
+      controller?.abort();
     };
   }, [client]);
 
@@ -82,8 +78,8 @@ export function ConnectionsPage(): React.ReactElement {
     <div className="flex h-full w-full flex-col gap-single overflow-auto p-single">
       <div className="flex items-center gap-single">
         <h1 className="text-lg font-semibold text-emphasized">{t("admin.connections.title")}</h1>
-        <span className={`text-xs ${live ? "text-emphasized" : "text-muted-foreground"}`} data-slot="admin-connections-live-indicator">
-          {live ? t("admin.connections.live") : t("admin.connections.offline")}
+        <span className={`text-xs ${fresh ? "text-emphasized" : "text-muted-foreground"}`} role="status" data-slot="admin-connections-freshness">
+          {fresh ? t("admin.connections.fresh") : t("admin.connections.stale")}
         </span>
       </div>
       {isEmpty ? (

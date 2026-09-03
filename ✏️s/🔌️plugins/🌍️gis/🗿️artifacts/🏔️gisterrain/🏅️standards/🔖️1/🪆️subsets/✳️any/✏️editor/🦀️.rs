@@ -262,20 +262,12 @@ fn gis3d_store_edit<M>(prefix: &str, forward: M, inverse: Vec<M>, description: O
     }
 }
 
-fn gis3d_bounded_serialized_bytes<T: serde::Serialize>(value: &T) -> Result<usize, String> {
-    struct Counter(usize);
-    impl std::io::Write for Counter {
-        fn write(&mut self, bytes: &[u8]) -> std::io::Result<usize> {
-            self.0 = self.0.checked_add(bytes.len()).filter(|total| *total <= GIS3D_STORE_MAXIMUM_BYTES).ok_or_else(|| std::io::Error::other("GIS terrain Store root exceeds its fixed envelope"))?;
-            Ok(bytes.len())
-        }
-        fn flush(&mut self) -> std::io::Result<()> {
-            Ok(())
-        }
+fn gis3d_bounded_serialized_bytes<T: dsl::ToValue>(value: &T) -> Result<usize, String> {
+    let bytes = dsl::os_pack::json::to_json_string(value).len();
+    if bytes > GIS3D_STORE_MAXIMUM_BYTES {
+        return Err("GIS terrain Store root exceeds its fixed envelope".to_string());
     }
-    let mut counter = Counter(0);
-    serde_json::to_writer(&mut counter, value).map_err(|error| error.to_string())?;
-    Ok(counter.0)
+    Ok(bytes)
 }
 
 fn prepare_gis3d_artifact(base: &GisTerrainSnapshot, mutation: GisTerrainMutation) -> Result<(GisTerrainSnapshot, Vec<GisTerrainMutation>, GisTerrainMutation, usize), String> {
@@ -307,7 +299,7 @@ fn prepare_gis3d_config(base: &Gis3dConfig, mutation: Gis3dConfigMutation) -> Re
 impl<P, M> store::ArtifactStoreOneItemPreparation<P, M> for Gis3dOneItemPreparation<P, M>
 where
     P: Send + Sync + 'static,
-    M: serde::Serialize + Send + 'static,
+    M: dsl::ToValue + Send + 'static,
 {
     fn advance(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::ArtifactStoreOneItemPreparationStep, String> {
         if !grant.permits_one() || self.cancelled {
@@ -390,7 +382,7 @@ fn begin_gis3d_preparation<P, M>(
 ) -> Result<Box<dyn store::ArtifactStoreOneItemPreparation<P, M>>, store::ArtifactStoreOneItemPreparationRequest<P, M>>
 where
     P: Send + Sync + 'static,
-    M: serde::Serialize + Send + 'static,
+    M: dsl::ToValue + Send + 'static,
 {
     if request.lane != store::HistoryLane::Document
         || request.operation != request.authority.operation()
@@ -585,8 +577,8 @@ impl ArtifactEditor for Gis3dPlayApp {
     /// `{action,args}` wire; this is the typed-command bridge until those call sites send `OpBinary`
     /// bytes directly. Mirrors `crate::editor::gis2d`'s arg-key tolerance (camelCase + snake_case + the
     /// nested `camera` object form).
-    fn command_from_action(action: &str, args: Option<&Value>) -> Result<Self::Command, Fault> {
-        let args = args.cloned().unwrap_or(Value::Null);
+    fn command_from_action(action: &str, args: Option<&dsl::DslValue>) -> Result<Self::Command, Fault> {
+        let args = args.map(Value::from).unwrap_or(Value::Null);
         let str_arg = |keys: &[&str]| -> Option<String> { keys.iter().find_map(|key| args.get(key).and_then(|value| value.as_str()).map(str::to_string)) };
         match action {
             "setExaggeration" => Ok(Gis3dCommand::SetExaggeration(set_exaggeration::SetExaggeration { exaggeration: ["exaggeration", "value"].iter().find_map(|key| args.get(key).and_then(Value::as_f64)).unwrap_or(1.0) })),

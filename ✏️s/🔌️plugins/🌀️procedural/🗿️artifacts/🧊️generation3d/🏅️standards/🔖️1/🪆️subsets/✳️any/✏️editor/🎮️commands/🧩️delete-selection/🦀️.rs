@@ -41,3 +41,11 @@ pub fn apply(
 ) -> Result<Emit<Generation3dMutation, Generation3dConfigMutation>, Fault> {
     Ok(delete_selected(&doc.snapshot.fixture, &interaction.selection("graph").ids))
 }
+
+/// 🕹️ Retained-command-job entry point (`generation3d_retained_reduce`, editor `🦀️.rs`) — same real-selection
+/// behavior as `apply` above, but callable without an `app::InteractionView` (which plugin code cannot
+/// construct; its fields are `pub(crate)` to the framework crate). `selected` is read straight off
+/// `protocol::InteractionState` by the caller.
+pub(crate) fn apply_selected(doc: &ArtifactView<'_, Generation3dSnapshot>, selected: &[String]) -> Emit<Generation3dMutation, Generation3dConfigMutation> {
+    delete_selected(&doc.snapshot.fixture, selected)
+}

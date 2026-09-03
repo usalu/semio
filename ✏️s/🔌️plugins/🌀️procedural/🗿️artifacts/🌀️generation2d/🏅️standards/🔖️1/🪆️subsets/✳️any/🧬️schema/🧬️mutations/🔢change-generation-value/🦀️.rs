@@ -10,11 +10,11 @@ use semio_framework_value_derive::{FromValue, ToValue};
 pub struct ChangeGenerationValue {
     pub id: String,
     pub question_id: String,
-    pub value: serde_json::Value,
+    pub value: dsl::DslValue,
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn change_generation_value(id: String, question_id: String, value: serde_json::Value) -> Generation2dMutation {
+pub fn change_generation_value(id: String, question_id: String, value: dsl::DslValue) -> Generation2dMutation {
     Generation2dMutation::ChangeGenerationValue(ChangeGenerationValue { id, question_id, value })
 }
 

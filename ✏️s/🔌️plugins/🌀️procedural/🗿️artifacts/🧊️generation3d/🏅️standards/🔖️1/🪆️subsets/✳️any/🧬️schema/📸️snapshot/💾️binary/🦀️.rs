@@ -44,11 +44,11 @@ mod tests {
     #[test]
     fn dsl_pack_equivalence_with_generation_state() {
         let mut projection = Generation3dSnapshot::default();
-        let mut values = serde_json::Map::new();
+        let mut values: flow::playbook::PlaybookValues = std::collections::HashMap::new();
         // 🌱️ Fractional (not whole-number) so `dsl::from_dsl_value`'s int-normalization of whole
         // `DslValue::Number`s (an engine-owned behavior, see the sibling dsl test) doesn't make this
         // round trip spuriously unequal.
-        values.insert("count".into(), serde_json::json!(3.5));
+        values.insert("count".into(), dsl::DslValue::float(3.5));
         projection.generation = flow::playbook::GenerationPlayState { generations: vec![flow::playbook::FormGeneration { id: "generation-1".into(), name: "Generation 1".into(), values }], selected_generation_id: Some("generation-1".into()), preview_text: Some("42".into()) }.into();
         test_support::assert_dsl_pack_equivalence(&projection);
     }
@@ -112,7 +112,7 @@ struct Generation3dMountedSynapseOwner {
 struct Generation3dMountedGenerationOwner {
     id: String,
     name: String,
-    values: serde_json::Map<String, serde_json::Value>,
+    values: Vec<(String, dsl::DslValue)>,
 }
 
 #[derive(Default)]
@@ -174,8 +174,8 @@ struct Generation3dMountedStringOwner {
 }
 
 enum Generation3dMountedJsonFrame {
-    Array(Vec<serde_json::Value>),
-    Object { values: serde_json::Map<String, serde_json::Value>, key: Option<String> },
+    Array(Vec<dsl::DslValue>),
+    Object { values: Vec<(String, dsl::DslValue)>, key: Option<String> },
 }
 
 enum Generation3dMountedDslFrame {
@@ -385,7 +385,7 @@ impl Generation3dMountedTypedSnapshotOwner {
                 Some(Generation3dMountedJsonFrame::Object { key, .. }) if key.is_none() => *key = Some(owner.value),
                 _ => return Err("generation3d-mounted.json-key-owner"),
             },
-            Generation3dMountedStringTarget::JsonValue => self.assign_json(serde_json::Value::String(owner.value))?,
+            Generation3dMountedStringTarget::JsonValue => self.assign_json(dsl::DslValue::String(owner.value))?,
             Generation3dMountedStringTarget::DslKey => match self.dsl_stack.last_mut() {
                 Some(Generation3dMountedDslFrame::Object { key, .. }) if key.is_none() => *key = Some(owner.value),
                 _ => return Err("generation3d-mounted.dsl-key-owner"),
@@ -413,16 +413,16 @@ impl Generation3dMountedTypedSnapshotOwner {
         Ok(())
     }
 
-    fn assign_json(&mut self, value: serde_json::Value) -> Result<(), &'static str> {
+    fn assign_json(&mut self, value: dsl::DslValue) -> Result<(), &'static str> {
         match self.json_stack.last_mut() {
             Some(Generation3dMountedJsonFrame::Array(values)) => values.push(value),
             Some(Generation3dMountedJsonFrame::Object { values, key }) => {
-                values.insert(key.take().ok_or("generation3d-mounted.json-value-key")?, value);
+                values.push((key.take().ok_or("generation3d-mounted.json-value-key")?, value));
             }
             None => {
                 let (table, row) = self.json_destination.take().ok_or("generation3d-mounted.json-destination")?;
                 let values = match value {
-                    serde_json::Value::Object(values) => values,
+                    dsl::DslValue::Object(values) => values,
                     _ => return Err("generation3d-mounted.generation-values-shape"),
                 };
                 match self.stack.get_mut(table) {
@@ -527,8 +527,8 @@ impl Generation3dMountedTypedSnapshotOwner {
             return Err("generation3d-mounted.json-container-mismatch");
         }
         let value = match self.json_stack.pop().ok_or("generation3d-mounted.json-end")? {
-            Generation3dMountedJsonFrame::Array(values) => serde_json::Value::Array(values),
-            Generation3dMountedJsonFrame::Object { values, key: None } => serde_json::Value::Object(values),
+            Generation3dMountedJsonFrame::Array(values) => dsl::DslValue::Array(values),
+            Generation3dMountedJsonFrame::Object { values, key: None } => dsl::DslValue::Object(values),
             Generation3dMountedJsonFrame::Object { .. } => return Err("generation3d-mounted.json-key-without-value"),
         };
         self.assign_json(value)?;
@@ -658,7 +658,7 @@ impl Generation3dMountedTypedSnapshotOwner {
                     _ => return Err("generation3d-mounted.generation-values-owner"),
                 };
                 self.json_destination = Some((table, row));
-                self.json_stack.push(Generation3dMountedJsonFrame::Object { values: serde_json::Map::new(), key: None });
+                self.json_stack.push(Generation3dMountedJsonFrame::Object { values: Vec::new(), key: None });
                 Ok(())
             }
             mounted::RetainedValueContainer::Wire if root_field == 3 => {
@@ -752,7 +752,7 @@ impl Generation3dMountedTypedSnapshotOwner {
             Generation3dMountedContainerOwner::Generations { rows, .. } if kind == mounted::RetainedValueContainer::Table => {
                 let target = &mut self.candidate.as_mut().ok_or("generation3d-mounted.snapshot-owner")?.generation.cold_builder_mut()?.generations;
                 for row in rows {
-                    target.push(flow::playbook::FormGeneration { id: row.id, name: row.name, values: row.values });
+                    target.push(flow::playbook::FormGeneration { id: row.id, name: row.name, values: row.values.into_iter().collect() });
                 }
                 if let Some(Generation3dMountedContainerOwner::Record { field, .. }) = self.stack.last_mut() {
                     *field = None;
@@ -812,7 +812,7 @@ impl Generation3dMountedTypedSnapshotOwner {
                             values.try_reserve_exact(usize::try_from(count).map_err(|_| "generation3d-mounted.json-count")?).map_err(|_| "generation3d-mounted.json-preflight")?;
                             self.json_stack.push(Generation3dMountedJsonFrame::Array(values));
                         }
-                        Container::Map => self.json_stack.push(Generation3dMountedJsonFrame::Object { values: serde_json::Map::new(), key: None }),
+                        Container::Map => self.json_stack.push(Generation3dMountedJsonFrame::Object { values: Vec::new(), key: None }),
                         _ => return Err("generation3d-mounted.json-container"),
                     }
                     return Ok(());
@@ -863,10 +863,10 @@ impl Generation3dMountedTypedSnapshotOwner {
                 self.begin_dsl()?;
             }
             Token::F64(value) if self.dsl_destination.is_some() => self.assign_dsl(dsl::DslValue::float(f64::from_bits(value)))?,
-            Token::F64(value) if self.json_destination.is_some() => self.assign_json(serde_json::Number::from_f64(f64::from_bits(value)).map(serde_json::Value::Number).ok_or("generation3d-mounted.json-number")?)?,
+            Token::F64(value) if self.json_destination.is_some() => self.assign_json(dsl::DslValue::float(f64::from_bits(value)))?,
             Token::F64(value) => self.assign_f64(f64::from_bits(value))?,
             Token::Signed(value) if self.dsl_destination.is_some() => self.assign_dsl(dsl::DslValue::int(value))?,
-            Token::Signed(value) if self.json_destination.is_some() => self.assign_json(serde_json::Value::Number(value.into()))?,
+            Token::Signed(value) if self.json_destination.is_some() => self.assign_json(dsl::DslValue::int(value))?,
             Token::Signed(value) => match self.stack.last_mut() {
                 Some(Generation3dMountedContainerOwner::Record { owner: Generation3dMountedRecordOwner::NeuralValue { value: target, .. }, field, .. }) if *field == Some(2) && target.is_none() => {
                     *target = Some(flow::neural::Value::Atom(flow::neural::Atom::Integer(value)));
@@ -874,14 +874,14 @@ impl Generation3dMountedTypedSnapshotOwner {
                 }
                 _ => return Err("generation3d-mounted.integer-owner"),
             },
-            Token::Unsigned { role: Role::Integer | Role::Unsigned | Role::Enum, value } if self.json_destination.is_some() => self.assign_json(serde_json::Value::Number(value.into()))?,
+            Token::Unsigned { role: Role::Integer | Role::Unsigned | Role::Enum, value } if self.json_destination.is_some() => self.assign_json(dsl::DslValue::uint(value))?,
             Token::Unsigned { role: Role::Integer | Role::Unsigned | Role::Enum, value } if self.dsl_destination.is_some() => self.assign_dsl(dsl::DslValue::uint(value))?,
             Token::Tag { value: 0x01, .. } if self.dsl_destination.is_some() => self.assign_dsl(dsl::DslValue::Bool(false))?,
             Token::Tag { value: 0x02, .. } if self.dsl_destination.is_some() => self.assign_dsl(dsl::DslValue::Bool(true))?,
             Token::Tag { value: 0x12, .. } if self.dsl_destination.is_some() => self.assign_dsl(dsl::DslValue::Null)?,
-            Token::Tag { value: 0x01, .. } if self.json_destination.is_some() => self.assign_json(serde_json::Value::Bool(false))?,
-            Token::Tag { value: 0x02, .. } if self.json_destination.is_some() => self.assign_json(serde_json::Value::Bool(true))?,
-            Token::Tag { value: 0x12, .. } if self.json_destination.is_some() => self.assign_json(serde_json::Value::Null)?,
+            Token::Tag { value: 0x01, .. } if self.json_destination.is_some() => self.assign_json(dsl::DslValue::Bool(false))?,
+            Token::Tag { value: 0x02, .. } if self.json_destination.is_some() => self.assign_json(dsl::DslValue::Bool(true))?,
+            Token::Tag { value: 0x12, .. } if self.json_destination.is_some() => self.assign_json(dsl::DslValue::Null)?,
             Token::Tag { value: 0x11, .. } if self.json_destination.is_some() => {}
             Token::Tag { value: 0x01, .. } => self.assign_bool(false),
             Token::Tag { value: 0x02, .. } => self.assign_bool(true),
@@ -1332,8 +1332,11 @@ mod retained_mounted_laws {
         expected.fixture.synapses.push(flow::SynapseSpec { id: "retained-synapse".into(), from: "retained-neuron".into(), to: "retained-preview".into(), from_port: "out".into(), to_port: String::new() });
         expected.fixture.layout.insert("retained-neuron".into(), flow::WidgetLayout { x: 12.5, y: -8.25 });
         expected.fixture.layout.insert("retained-preview".into(), flow::WidgetLayout { x: 36.0, y: -8.25 });
-        let mut values = serde_json::Map::new();
-        values.insert("nested".into(), serde_json::json!({"array": [true, null, 3.5], "text": "retained"}));
+        let mut values: flow::playbook::PlaybookValues = std::collections::HashMap::new();
+        values.insert(
+            "nested".into(),
+            dsl::DslValue::object([("array".to_string(), dsl::DslValue::Array(vec![dsl::DslValue::Bool(true), dsl::DslValue::Null, dsl::DslValue::float(3.5)])), ("text".to_string(), dsl::DslValue::String("retained".to_string()))]),
+        );
         expected.generation = flow::playbook::GenerationPlayState { generations: vec![flow::playbook::FormGeneration { id: "retained-generation".into(), name: "Generation".into(), values }], selected_generation_id: Some("retained-generation".into()), preview_text: Some("preview".into()) }.into();
         assert!(!expected.fixture.widgets.is_empty());
         assert!(!expected.fixture.synapses.is_empty());

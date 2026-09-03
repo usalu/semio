@@ -16,7 +16,6 @@ pub struct Identity {
     pub email: String,
     pub display_name: String,
     pub hub_base_url: String,
-    pub session_token: String,
     pub issued_at_ms: u64,
 }
 
@@ -64,7 +63,6 @@ pub struct SignIn {
     pub email: String,
     pub display_name: String,
     pub hub_base_url: String,
-    pub session_token: String,
     pub issued_at_ms: u64,
 }
 
@@ -80,7 +78,6 @@ impl From<Identity> for SignIn {
             email: identity.email,
             display_name: identity.display_name,
             hub_base_url: identity.hub_base_url,
-            session_token: identity.session_token,
             issued_at_ms: identity.issued_at_ms,
         }
     }
@@ -93,7 +90,6 @@ impl From<&SignIn> for Identity {
             email: payload.email.clone(),
             display_name: payload.display_name.clone(),
             hub_base_url: payload.hub_base_url.clone(),
-            session_token: payload.session_token.clone(),
             issued_at_ms: payload.issued_at_ms,
         }
     }
@@ -183,7 +179,6 @@ mod tests {
             email: format!("{user_id}@example.test"),
             display_name: user_id.to_string(),
             hub_base_url: "https://hub.example.test".to_string(),
-            session_token: format!("token-{user_id}"),
             issued_at_ms: 42,
         }
     }

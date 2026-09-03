@@ -83,6 +83,19 @@ struct Codec {
     from: String,
     to: String,
     executable_registration: bool,
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    native_factory: Option<NativeCodecBinding>,
+}
+
+#[derive(Clone, value_derive::FromValue, value_derive::ToValue)]
+#[value(deny_unknown_fields)]
+struct NativeCodecBinding {
+    factory_id: String,
+    artifact_kind: String,
+    document_schema: String,
+    extension: String,
+    pack_schema_hash: String,
+    runtime_capability_id: String,
 }
 
 #[derive(Clone, value_derive::FromValue, value_derive::ToValue)]
@@ -335,6 +348,17 @@ fn executable_mappings(source: &Source) -> Result<BTreeMap<String, ArtifactExecu
             }
         }
     }
+    for item in source.codecs.iter().filter(|item| item.executable_registration) {
+        let binding = item.native_factory.as_ref().ok_or_else(|| failure(format!("executable codec {} omits its native factory binding", item.id)))?;
+        let factory = native_codec_factories()
+            .into_iter()
+            .find(|factory| factory.id == binding.factory_id)
+            .ok_or_else(|| failure(format!("executable codec {} names unknown native factory {}", item.id, binding.factory_id)))?;
+        let identity = ArtifactExecutableIdentity::from_function_pointer(factory.codec as *const ());
+        if mappings.insert(item.id.clone(), identity).is_some() {
+            return Err(failure(format!("{} repeats executable mapping {}", source.id, item.id)));
+        }
+    }
     Ok(mappings)
 }
 
@@ -454,8 +478,16 @@ fn validate(source: &Source) -> Result<(), PluginAssemblyError> {
     for item in &source.codecs {
         let standard = source.standards.iter().find(|standard| item.id.starts_with(&format!("{}.codec.", standard.id))).ok_or_else(|| failure(format!("invalid codec {}", item.id)))?;
         versioned_leaf(&item.id, &format!("{}.codec.", standard.id))?;
-        if item.from.is_empty() || item.to.is_empty() || !matches!(item.status.as_str(), "unimplemented" | "implemented" | "verified") {
+        if !source.source_dialects.iter().any(|dialect| dialect.id == item.from)
+            || !source.source_dialects.iter().any(|dialect| dialect.id == item.to)
+            || !matches!(item.status.as_str(), "unimplemented" | "implemented" | "verified")
+        {
             return Err(failure(format!("invalid codec {}", item.id)));
+        }
+        match (&item.native_factory, item.executable_registration) {
+            (None, false) => {}
+            (Some(binding), true) if matches!(item.status.as_str(), "implemented" | "verified") => validate_native_codec_binding(source, item, binding)?,
+            _ => return Err(failure(format!("codec {} must bind an exact native factory if and only if it is executable and implemented", item.id))),
         }
     }
     for (category, item) in source.mutations.iter().map(|item| ("mutation", item)).chain(source.inferences.iter().map(|item| ("inference", item))) {
@@ -777,6 +809,233 @@ pub fn format_descriptors() -> Result<Vec<FormatDescriptor>, PluginAssemblyError
     values.iter().map(source_format_descriptors).collect::<Result<Vec<_>, _>>().map(|groups| groups.into_iter().flatten().collect())
 }
 
+//#region NativeCodecFactoryReceipts
+/// 🪢 One native codec factory bound to exact descriptor and Cargo component identities.
+#[derive(Clone)]
+pub struct NativeCodecFactoryReceipt {
+    pub plugin_id: &'static str,
+    pub package_id: String,
+    pub factory_id: String,
+    pub descriptor_codec_id: String,
+    pub runtime_capability_id: String,
+    pub artifact_kind: String,
+    pub schema: String,
+    pub pack_schema_hash: [u8; 32],
+    pub extension: String,
+    pub factory: fn() -> store::ArtifactCodec,
+}
+
+impl NativeCodecFactoryReceipt {
+    /// 🔐 Rechecks the immutable factory result before a trusted loader can bind it.
+    pub fn instantiate(&self) -> Result<store::ArtifactCodec, PluginAssemblyError> {
+        let codec = (self.factory)();
+        if self.plugin_id != "stdio"
+            || self.package_id != crate::plugin::component_package_id()?
+            || codec.schema != self.schema
+            || codec.extension != self.extension
+            || codec.pack_schema_hash != self.pack_schema_hash
+            || codec.pack_schema_hash == [0; 32]
+        {
+            return Err(failure(format!("native codec receipt {} failed factory verification", self.artifact_kind)));
+        }
+        Ok(codec)
+    }
+}
+
+#[derive(Clone, Copy)]
+struct NativeCodecFactory {
+    id: &'static str,
+    artifact: &'static str,
+    kind: fn() -> semio_framework_plugin::ArtifactKindSpec,
+    codec: fn() -> store::ArtifactCodec,
+}
+
+macro_rules! native_codec_factory {
+    ($factory:ident, $module:ident, $snapshot:ident, $mutation:ident, $schema:ident) => {
+        fn $factory() -> store::ArtifactCodec {
+            store::ArtifactCodec::of::<crate::artifacts::$module::$snapshot, crate::artifacts::$module::$mutation>(crate::artifacts::$module::$schema)
+        }
+    };
+}
+
+native_codec_factory!(ply_codec, ply, PlySnapshot, PlyMutation, STDIO_PLY_DOCUMENT_SCHEMA);
+native_codec_factory!(stl_codec, stl, StlSnapshot, StlMutation, STDIO_STL_DOCUMENT_SCHEMA);
+native_codec_factory!(las_codec, las, LasSnapshot, LasMutation, STDIO_LAS_DOCUMENT_SCHEMA);
+native_codec_factory!(dxf_codec, dxf, DxfSnapshot, DxfMutation, STDIO_DXF_DOCUMENT_SCHEMA);
+native_codec_factory!(mp3_codec, mp3, Mp3Snapshot, Mp3Mutation, STDIO_MP3_DOCUMENT_SCHEMA);
+native_codec_factory!(xlsx_codec, xlsx, XlsxSnapshot, XlsxMutation, STDIO_XLSX_DOCUMENT_SCHEMA);
+native_codec_factory!(tiff_codec, tiff, TiffSnapshot, TiffMutation, STDIO_TIFF_DOCUMENT_SCHEMA);
+native_codec_factory!(jpg_codec, jpg, JpgSnapshot, JpgMutation, STDIO_JPG_DOCUMENT_SCHEMA);
+native_codec_factory!(avi_codec, avi, AviSnapshot, AviMutation, STDIO_AVI_DOCUMENT_SCHEMA);
+native_codec_factory!(png_codec, png, PngSnapshot, PngMutation, STDIO_PNG_DOCUMENT_SCHEMA);
+native_codec_factory!(csv_codec, csv, CsvSnapshot, CsvMutation, STDIO_CSV_DOCUMENT_SCHEMA);
+native_codec_factory!(md_codec, md, MdSnapshot, MdMutation, STDIO_MD_DOCUMENT_SCHEMA);
+native_codec_factory!(docx_codec, docx, DocxSnapshot, DocxMutation, STDIO_DOCX_DOCUMENT_SCHEMA);
+native_codec_factory!(mp4_codec, mp4, Mp4Snapshot, Mp4Mutation, STDIO_MP4_DOCUMENT_SCHEMA);
+native_codec_factory!(json_codec, json, JsonSnapshot, JsonMutation, STDIO_JSON_DOCUMENT_SCHEMA);
+native_codec_factory!(gltf_codec, gltf, GltfSnapshot, GltfMutation, STDIO_GLTF_DOCUMENT_SCHEMA);
+native_codec_factory!(bcf_codec, bcf, BcfSnapshot, BcfMutation, STDIO_BCF_DOCUMENT_SCHEMA);
+native_codec_factory!(zip_codec, zip, ZipSnapshot, ZipMutation, STDIO_ZIP_DOCUMENT_SCHEMA);
+native_codec_factory!(xml_codec, xml, XmlSnapshot, XmlMutation, STDIO_XML_DOCUMENT_SCHEMA);
+native_codec_factory!(deflate_codec, deflate, DeflateSnapshot, DeflateMutation, STDIO_DEFLATE_DOCUMENT_SCHEMA);
+native_codec_factory!(obj_codec, obj, ObjSnapshot, ObjMutation, STDIO_OBJ_DOCUMENT_SCHEMA);
+native_codec_factory!(pptx_codec, pptx, PptxSnapshot, PptxMutation, STDIO_PPTX_DOCUMENT_SCHEMA);
+native_codec_factory!(step_codec, step, StepSnapshot, StepMutation, STDIO_STEP_DOCUMENT_SCHEMA);
+native_codec_factory!(dwg_codec, dwg, DwgSnapshot, DwgMutation, STDIO_DWG_DOCUMENT_SCHEMA);
+native_codec_factory!(svg_codec, svg, SvgSnapshot, SvgMutation, STDIO_SVG_DOCUMENT_SCHEMA);
+
+fn pdf_codec() -> store::ArtifactCodec {
+    store::ArtifactCodec::of::<
+        crate::artifacts::pdf::standards::v1_4::subsets::base::schema::snapshot::PdfSnapshot,
+        crate::artifacts::pdf::standards::v1_4::subsets::base::schema::mutations::PdfMutation,
+    >(crate::artifacts::pdf::STDIO_PDF_DOCUMENT_SCHEMA)
+}
+
+fn native_codec_factories() -> [NativeCodecFactory; 26] {
+    [
+        NativeCodecFactory { id: "stdio.native.ply.v1", artifact: "ply", kind: crate::artifacts::ply::artifact_kind, codec: ply_codec },
+        NativeCodecFactory { id: "stdio.native.stl.v1", artifact: "stl", kind: crate::artifacts::stl::artifact_kind, codec: stl_codec },
+        NativeCodecFactory { id: "stdio.native.las.v1", artifact: "las", kind: crate::artifacts::las::artifact_kind, codec: las_codec },
+        NativeCodecFactory { id: "stdio.native.dxf.v1", artifact: "dxf", kind: crate::artifacts::dxf::artifact_kind, codec: dxf_codec },
+        NativeCodecFactory { id: "stdio.native.mp3.v1", artifact: "mp3", kind: crate::artifacts::mp3::artifact_kind, codec: mp3_codec },
+        NativeCodecFactory { id: "stdio.native.xlsx.v1", artifact: "xlsx", kind: crate::artifacts::xlsx::artifact_kind, codec: xlsx_codec },
+        NativeCodecFactory { id: "stdio.native.tiff.v1", artifact: "tiff", kind: crate::artifacts::tiff::artifact_kind, codec: tiff_codec },
+        NativeCodecFactory { id: "stdio.native.jpg.v1", artifact: "jpg", kind: crate::artifacts::jpg::artifact_kind, codec: jpg_codec },
+        NativeCodecFactory { id: "stdio.native.avi.v1", artifact: "avi", kind: crate::artifacts::avi::artifact_kind, codec: avi_codec },
+        NativeCodecFactory { id: "stdio.native.png.v1", artifact: "png", kind: crate::artifacts::png::artifact_kind, codec: png_codec },
+        NativeCodecFactory { id: "stdio.native.csv.v1", artifact: "csv", kind: crate::artifacts::csv::artifact_kind, codec: csv_codec },
+        NativeCodecFactory { id: "stdio.native.md.v1", artifact: "md", kind: crate::artifacts::md::artifact_kind, codec: md_codec },
+        NativeCodecFactory { id: "stdio.native.docx.v1", artifact: "docx", kind: crate::artifacts::docx::artifact_kind, codec: docx_codec },
+        NativeCodecFactory { id: "stdio.native.mp4.v1", artifact: "mp4", kind: crate::artifacts::mp4::artifact_kind, codec: mp4_codec },
+        NativeCodecFactory { id: "stdio.native.json.v1", artifact: "json", kind: crate::artifacts::json::artifact_kind, codec: json_codec },
+        NativeCodecFactory { id: "stdio.native.gltf.v1", artifact: "gltf", kind: crate::artifacts::gltf::artifact_kind, codec: gltf_codec },
+        NativeCodecFactory { id: "stdio.native.bcf.v1", artifact: "bcf", kind: crate::artifacts::bcf::artifact_kind, codec: bcf_codec },
+        NativeCodecFactory { id: "stdio.native.zip.v1", artifact: "zip", kind: crate::artifacts::zip::artifact_kind, codec: zip_codec },
+        NativeCodecFactory { id: "stdio.native.xml.v1", artifact: "xml", kind: crate::artifacts::xml::artifact_kind, codec: xml_codec },
+        NativeCodecFactory { id: "stdio.native.deflate.v1", artifact: "deflate", kind: crate::artifacts::deflate::artifact_kind, codec: deflate_codec },
+        NativeCodecFactory { id: "stdio.native.obj.v1", artifact: "obj", kind: crate::artifacts::obj::artifact_kind, codec: obj_codec },
+        NativeCodecFactory { id: "stdio.native.pdf.v1", artifact: "pdf", kind: crate::artifacts::pdf::artifact_kind, codec: pdf_codec },
+        NativeCodecFactory { id: "stdio.native.pptx.v1", artifact: "pptx", kind: crate::artifacts::pptx::artifact_kind, codec: pptx_codec },
+        NativeCodecFactory { id: "stdio.native.step.v1", artifact: "step", kind: crate::artifacts::step::artifact_kind, codec: step_codec },
+        NativeCodecFactory { id: "stdio.native.dwg.v1", artifact: "dwg", kind: crate::artifacts::dwg::artifact_kind, codec: dwg_codec },
+        NativeCodecFactory { id: "stdio.native.svg.v1", artifact: "svg", kind: crate::artifacts::svg::artifact_kind, codec: svg_codec },
+    ]
+}
+
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via equality checks) — see R9
+fn native_codec_hash(value: &str) -> Result<[u8; 32], PluginAssemblyError> {
+    if value.len() != 64 {
+        return Err(failure("native codec pack schema hash must contain exactly 64 lowercase hexadecimal digits"));
+    }
+    let mut hash = [0u8; 32];
+    for (index, chunk) in value.as_bytes().chunks_exact(2).enumerate() {
+        let digit = |byte| match byte {
+            b'0'..=b'9' => Some(byte - b'0'),
+            b'a'..=b'f' => Some(byte - b'a' + 10),
+            _ => None,
+        };
+        let high = digit(chunk[0]).ok_or_else(|| failure("native codec pack schema hash must use lowercase hexadecimal"))?;
+        let low = digit(chunk[1]).ok_or_else(|| failure("native codec pack schema hash must use lowercase hexadecimal"))?;
+        hash[index] = high * 16 + low;
+    }
+    if hash == [0; 32] {
+        return Err(failure("native codec pack schema hash must be nonzero"));
+    }
+    Ok(hash)
+}
+
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via schema validation) — see R9
+fn validate_native_codec_binding(source: &Source, item: &Codec, binding: &NativeCodecBinding) -> Result<(), PluginAssemblyError> {
+    let factory = native_codec_factories()
+        .into_iter()
+        .find(|factory| factory.id == binding.factory_id)
+        .ok_or_else(|| failure(format!("codec {} names unknown native factory {}", item.id, binding.factory_id)))?;
+    let kind = (factory.kind)();
+    let hash = native_codec_hash(&binding.pack_schema_hash)?;
+    let runtime = source
+        .runtime_capabilities
+        .iter()
+        .find(|capability| capability.id == binding.runtime_capability_id)
+        .ok_or_else(|| failure(format!("codec {} names missing runtime capability {}", item.id, binding.runtime_capability_id)))?;
+    let expected_claims = BTreeSet::from([("codec".to_owned(), binding.document_schema.clone()), ("extension".to_owned(), binding.extension.clone())]);
+    let codec = (factory.codec)();
+    if factory.artifact != source.artifact
+        || kind.id != binding.artifact_kind
+        || runtime.category != "codec"
+        || runtime_claims(runtime) != expected_claims
+        || codec.schema != binding.document_schema
+        || codec.extension != binding.extension
+        || codec.pack_schema_hash != hash
+    {
+        return Err(failure(format!("codec {} native factory binding does not exactly match its artifact kind, runtime capability, schema, extension, and pack hash", item.id)));
+    }
+    Ok(())
+}
+
+/// 🧬 Lists only explicit native runtime roots; definition-only artifacts are unrepresentable here.
+pub fn native_codec_artifact_kinds() -> Vec<semio_framework_plugin::ArtifactKindSpec> {
+    native_codec_factories().into_iter().map(|factory| (factory.kind)()).collect()
+}
+
+/// 🧷 Emits receipts only when schema data explicitly authorizes the exact native factory.
+pub fn native_codec_factory_receipts() -> Result<Vec<NativeCodecFactoryReceipt>, PluginAssemblyError> {
+    let values = sources()?;
+    validate_catalog(&values)?;
+    let declared_codecs = values.iter().flat_map(|source| source.codecs.iter()).count();
+    let executable_codecs = values.iter().flat_map(|source| source.codecs.iter()).filter(|codec| codec.executable_registration).count();
+    if executable_codecs == 0 {
+        return Err(failure(format!("withholding 26 native codec factories: artifact-definition schema declares {declared_codecs} codec rows and {executable_codecs} executable registrations")));
+    }
+    let package_id = crate::plugin::component_package_id()?.to_owned();
+    let runtime_artifacts = artifact_assemblies()?
+        .into_iter()
+        .filter_map(|assembly| match assembly {
+            ArtifactAssembly::Runtime(declaration) => declaration.definition().identity().as_str().strip_prefix("s.stdio.").map(str::to_owned),
+            ArtifactAssembly::Definition(_) => None,
+        })
+        .collect::<BTreeSet<_>>();
+    let descriptor = crate::plugin()?.manifest;
+    let descriptor_kinds = descriptor.artifact_kinds.into_iter().map(|kind| (kind.id.clone(), kind)).collect::<BTreeMap<_, _>>();
+    let mut factory_ids = BTreeSet::new();
+    let mut descriptor_codec_ids = BTreeSet::new();
+    let mut receipts = Vec::with_capacity(executable_codecs);
+    for source in &values {
+        for item in source.codecs.iter().filter(|codec| codec.executable_registration) {
+            let binding = item.native_factory.as_ref().ok_or_else(|| failure(format!("executable codec {} omits its native factory binding", item.id)))?;
+            let factory = native_codec_factories()
+                .into_iter()
+                .find(|factory| factory.id == binding.factory_id)
+                .ok_or_else(|| failure(format!("executable codec {} names unknown native factory {}", item.id, binding.factory_id)))?;
+            if !runtime_artifacts.contains(factory.artifact) || !factory_ids.insert(factory.id) || !descriptor_codec_ids.insert(item.id.as_str()) {
+                return Err(failure(format!("executable codec {} is not bijective with one runtime artifact and private factory", item.id)));
+            }
+            let kind = (factory.kind)();
+            if descriptor_kinds.get(&binding.artifact_kind) != Some(&kind) {
+                return Err(failure(format!("descriptor artifact kind {} differs from executable codec {}", binding.artifact_kind, item.id)));
+            }
+            let receipt = NativeCodecFactoryReceipt {
+                plugin_id: "stdio",
+                package_id: package_id.clone(),
+                factory_id: binding.factory_id.clone(),
+                descriptor_codec_id: item.id.clone(),
+                runtime_capability_id: binding.runtime_capability_id.clone(),
+                artifact_kind: binding.artifact_kind.clone(),
+                schema: binding.document_schema.clone(),
+                pack_schema_hash: native_codec_hash(&binding.pack_schema_hash)?,
+                extension: binding.extension.clone(),
+                factory: factory.codec,
+            };
+            receipt.instantiate()?;
+            receipts.push(receipt);
+        }
+    }
+    if receipts.len() != executable_codecs || factory_ids.len() != executable_codecs || descriptor_codec_ids.len() != executable_codecs {
+        return Err(failure("executable codec descriptors, private factories, and verified receipts are not bijective"));
+    }
+    Ok(receipts)
+}
+//#endregion NativeCodecFactoryReceipts
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -845,6 +1104,41 @@ mod tests {
     async fn schema_keys_and_runtime_factories_are_exact() {
         let sources = sources().unwrap();
         assert_eq!(artifact_factories().keys().copied().collect::<BTreeSet<_>>(), sources.iter().map(|source| source.artifact.as_str()).collect());
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn runtime_assembly_without_explicit_native_codec_capability_is_not_authority() {
+        assert_eq!(artifact_assemblies().unwrap().into_iter().filter(|assembly| matches!(assembly, ArtifactAssembly::Runtime(_))).count(), 26);
+        let declared_kinds = native_codec_artifact_kinds().into_iter().map(|kind| kind.id).collect::<BTreeSet<_>>();
+        assert_eq!(declared_kinds.len(), 26);
+        assert!(!declared_kinds.contains("stdio.binary"));
+        assert_eq!(native_codec_factories().into_iter().map(|factory| factory.id).collect::<BTreeSet<_>>().len(), 26);
+        let error = match native_codec_factory_receipts() {
+            Ok(_) => panic!("runtime assemblies must not mint native codec authority"),
+            Err(error) => error,
+        };
+        assert!(error.to_string().contains("6 codec rows, 0 executable registrations"));
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn gltf_runtime_codec_capability_cannot_be_promoted_without_an_exact_factory_receipt() {
+        let source = sources().unwrap().into_iter().find(|source| source.artifact == "gltf").expect("gltf source");
+        assert!(source.codecs.iter().all(|codec| !codec.executable_registration && codec.native_factory.is_none()));
+        let runtime = source.runtime_capabilities.iter().find(|capability| capability.id == "s.stdio.gltf.runtime.codec.codec-stdio-gltf-extension-gltf.v1").expect("gltf runtime codec capability");
+        let codec = gltf_codec();
+        assert_eq!(codec.schema, "stdio.gltf");
+        assert_eq!(codec.extension, "stdio.gltf");
+        assert_eq!(codec.pack_schema_hash, [0; 32]);
+        assert_ne!(runtime_claims(runtime), BTreeSet::from([("codec".to_owned(), codec.schema), ("extension".to_owned(), codec.extension.to_owned())]));
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn executable_codec_without_a_complete_native_factory_binding_is_rejected() {
+        let mut source = sources().unwrap().into_iter().find(|source| source.artifact == "gltf").expect("gltf source");
+        source.codecs[0].status = "implemented".into();
+        source.codecs[0].executable_registration = true;
+        let error = validate(&source).expect_err("executable codec without exact factory binding must fail closed");
+        assert!(error.to_string().contains("must bind an exact native factory"));
     }
 
     #[semio_framework_async_macros::async_test]

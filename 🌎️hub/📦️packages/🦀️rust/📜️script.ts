@@ -1,5 +1,5 @@
 #!/usr/bin/env bun
-import { createHmac, randomBytes } from "node:crypto";
+import { createHash, createHmac, randomBytes, timingSafeEqual } from "node:crypto";
 import { chmodSync, mkdtempSync, rmSync } from "node:fs";
 import { createServer } from "node:net";
 import { tmpdir } from "node:os";
@@ -16,6 +16,165 @@ const LOCAL_BOOTSTRAP_DEADLINE_MS = 15_000;
 const LOCAL_READINESS_DEADLINE_MS = 30_000;
 type LocalClientClass = "native" | "mcp" | "react-relay" | "admin-relay";
 type LocalProfile = { readonly profileId: string; readonly subject: string; readonly displayName: string; readonly allowedClientClasses: readonly LocalClientClass[] };
+
+type LocalBrowserRelay = { readonly url: string; readonly secret: Buffer; stop: () => Promise<void> };
+
+const LOCAL_RELAY_MAX_BODY_BYTES = 1024 * 1024;
+const LOCAL_RELAY_MAX_IN_FLIGHT = 64;
+const LOCAL_RELAY_DEADLINE_MS = 2_000;
+
+function localRelayUpstreamPath(method: string, url: URL): string | undefined {
+  if (!url.pathname.startsWith("/_semio/hub/")) return undefined;
+  const upstream = url.pathname.slice("/_semio/hub".length);
+  const noQuery = url.search === "";
+  if (method === "GET" && upstream === "/auth/sessions/me" && noQuery) return upstream;
+  if (method === "GET" && (upstream === "/directory/spaces" || /^\/directory\/spaces\/[^/]+$/u.test(upstream)) && noQuery) return upstream;
+  if (method === "GET" && upstream === "/directory/events" && [...url.searchParams].length === 1 && /^\d+$/u.test(url.searchParams.get("since") ?? "")) return `${upstream}?since=${url.searchParams.get("since")}`;
+  if (method === "POST" && (upstream === "/directory/commands" || upstream === "/directory/socket-grants") && noQuery) return upstream;
+  if (method === "POST" && /^\/spaces\/[^/]+\/documents\/[^/]+\/socket-grants$/u.test(upstream) && noQuery) return upstream;
+  return undefined;
+}
+
+async function readLocalRelayBody(request: Request): Promise<Uint8Array | undefined> {
+  if (request.method === "GET" || request.method === "DELETE" || request.body === null) return undefined;
+  const reader = request.body.getReader();
+  const chunks: Uint8Array[] = [];
+  let retained = 0;
+  for (;;) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    retained += value.byteLength;
+    if (retained > LOCAL_RELAY_MAX_BODY_BYTES) {
+      await reader.cancel();
+      throw new Error("payload too large");
+    }
+    chunks.push(value);
+  }
+  const body = new Uint8Array(retained);
+  let offset = 0;
+  for (const chunk of chunks) {
+    body.set(chunk, offset);
+    offset += chunk.byteLength;
+  }
+  return body;
+}
+
+async function readLocalRelayResponse(response: Response): Promise<Uint8Array> {
+  const contentLength = Number(response.headers.get("content-length") ?? "0");
+  if (!Number.isSafeInteger(contentLength) || contentLength < 0 || contentLength > LOCAL_RELAY_MAX_BODY_BYTES) throw new Error("response too large");
+  if (response.body === null) return new Uint8Array();
+  const reader = response.body.getReader();
+  const chunks: Uint8Array[] = [];
+  let retained = 0;
+  for (;;) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    retained += value.byteLength;
+    if (retained > LOCAL_RELAY_MAX_BODY_BYTES) {
+      await reader.cancel();
+      throw new Error("response too large");
+    }
+    chunks.push(value);
+  }
+  const body = new Uint8Array(retained);
+  let offset = 0;
+  for (const chunk of chunks) {
+    body.set(chunk, offset);
+    offset += chunk.byteLength;
+  }
+  return body;
+}
+
+function matchesSecret(supplied: string | null, expected: Buffer): boolean {
+  if (supplied === null || !/^[0-9a-f]{64}$/u.test(supplied)) return false;
+  const candidate = Buffer.from(supplied, "hex");
+  return candidate.length === expected.length && timingSafeEqual(candidate, expected);
+}
+
+function startLocalBrowserRelay(hubOrigin: string, uiOrigin: string, envelope: Record<string, any>, browserProof: Buffer): LocalBrowserRelay {
+  if (envelope.schema !== "semio.hub.local-credential-envelope/v1" || envelope.clientClass !== "react-relay" || typeof envelope.capability !== "string" || !/^session\.v1\.[0-9a-f]{32}\.[0-9a-f]{64}$/u.test(envelope.capability)) throw new Error("react relay credential envelope binding mismatch");
+  const secret = randomBytes(32);
+  let browserProofDigest = createHash("sha256").update(browserProof).digest();
+  browserProof.fill(0);
+  const initialProofExpiresAt = Date.now() + LOCAL_BOOTSTRAP_DEADLINE_MS;
+  let initialProof = true;
+  let capability = envelope.capability;
+  envelope.capability = "";
+  let inFlight = 0;
+  let stopping = false;
+  let stopPromise: Promise<void> | undefined;
+  const upstreamControllers = new Set<AbortController>();
+  const idleWaiters = new Set<() => void>();
+  const server = Bun.serve({
+    hostname: "127.0.0.1",
+    port: 0,
+    async fetch(request, relayServer): Promise<Response> {
+      const supplied = request.headers.get("x-semio-local-relay");
+      const origin = request.headers.get("origin");
+      const referer = request.headers.get("referer");
+      const fetchSite = request.headers.get("sec-fetch-site");
+      const host = request.headers.get("host");
+      const peer = relayServer.requestIP(request)?.address;
+      if (stopping || !capability || !matchesSecret(supplied, secret) || host !== new URL(uiOrigin).host || (peer !== "127.0.0.1" && peer !== "::1") || origin !== uiOrigin || referer === null || !referer.startsWith(`${uiOrigin}/`) || fetchSite !== "same-origin") return new Response("unauthorized", { status: 401 });
+      const url = new URL(request.url);
+      const upstreamPath = localRelayUpstreamPath(request.method, url);
+      if (!upstreamPath || inFlight >= LOCAL_RELAY_MAX_IN_FLIGHT) return new Response("unavailable", { status: upstreamPath ? 503 : 404 });
+      const contentLength = Number(request.headers.get("content-length") ?? "0");
+      if (!Number.isSafeInteger(contentLength) || contentLength < 0 || contentLength > LOCAL_RELAY_MAX_BODY_BYTES) return new Response("payload too large", { status: 413 });
+      const currentProof = request.headers.get("x-semio-browser-broker");
+      const nextProofDigest = request.headers.get("x-semio-browser-broker-next");
+      if ((initialProof && Date.now() > initialProofExpiresAt) || currentProof === null || nextProofDigest === null || !/^[0-9a-f]{64}$/u.test(currentProof) || !/^[0-9a-f]{64}$/u.test(nextProofDigest)) return new Response("unauthorized", { status: 401 });
+      const currentDigest = createHash("sha256").update(Buffer.from(currentProof, "hex")).digest();
+      if (!timingSafeEqual(currentDigest, browserProofDigest)) return new Response("unauthorized", { status: 401 });
+      browserProofDigest.fill(0);
+      browserProofDigest = Buffer.from(nextProofDigest, "hex");
+      initialProof = false;
+      inFlight += 1;
+      const upstreamController = new AbortController();
+      upstreamControllers.add(upstreamController);
+      try {
+        const body = await readLocalRelayBody(request);
+        const upstream = await fetch(`${hubOrigin}${upstreamPath}`, {
+          method: request.method,
+          headers: { authorization: `Bearer ${capability}`, ...(body?.byteLength ? { "content-type": "application/json" } : {}) },
+          body,
+          redirect: "error",
+          signal: AbortSignal.any([upstreamController.signal, AbortSignal.timeout(LOCAL_RELAY_DEADLINE_MS)]),
+        });
+        if (upstream.status === 401) capability = "";
+        const responseBody = await readLocalRelayResponse(upstream);
+        const contentType = upstream.headers.get("content-type");
+        return new Response(responseBody, { status: upstream.status, headers: { "x-semio-browser-broker-advanced": "1", ...(contentType ? { "content-type": contentType } : {}) } });
+      } catch (error) {
+        return new Response(error instanceof Error && error.message === "payload too large" ? "payload too large" : "unavailable", { status: error instanceof Error && error.message === "payload too large" ? 413 : 503, headers: { "x-semio-browser-broker-advanced": "1" } });
+      } finally {
+        upstreamControllers.delete(upstreamController);
+        inFlight -= 1;
+        if (inFlight === 0) {
+          for (const resolveIdle of idleWaiters) resolveIdle();
+          idleWaiters.clear();
+        }
+      }
+    },
+  });
+  return {
+    url: `http://127.0.0.1:${server.port}`,
+    secret,
+    stop: () => {
+      if (stopPromise) return stopPromise;
+      stopping = true;
+      capability = "";
+      secret.fill(0);
+      browserProofDigest.fill(0);
+      for (const controller of upstreamControllers) controller.abort();
+      stopPromise = (async () => {
+        if (inFlight !== 0) await Promise.race([new Promise<void>((resolveIdle) => idleWaiters.add(resolveIdle)), Bun.sleep(2_000)]);
+        await server.stop(true);
+      })();
+      return stopPromise;
+    },
+  };
+}
 
 class LocalFrameReader {
   private retained = Buffer.alloc(0);
@@ -289,12 +448,32 @@ async function waitForReadiness(run: LocalHubRun, bootstrapSecuritySmoke = false
   throw new Error("hub readiness deadline exceeded");
 }
 
+async function waitForUiReadiness(origin: string, child: ChildProcess): Promise<void> {
+  const deadline = Date.now() + LOCAL_READINESS_DEADLINE_MS;
+  while (Date.now() < deadline) {
+    if (child.exitCode !== null) throw new Error("secure local UI exited before readiness");
+    try {
+      const response = await fetch(`${origin}/`, { redirect: "error", signal: AbortSignal.timeout(500) });
+      if (response.ok && response.url === `${origin}/`) return;
+    } catch {}
+    await Bun.sleep(50);
+  }
+  throw new Error("secure local UI readiness deadline exceeded");
+}
+
 async function waitForChildExit(child: ChildProcess, deadlineMs = LOCAL_BOOTSTRAP_DEADLINE_MS + 2_000): Promise<void> {
   if (child.exitCode !== null) return;
   await Promise.race([
     new Promise<void>((resolveExit) => child.once("exit", () => resolveExit())),
     Bun.sleep(deadlineMs).then(() => { throw new Error("hub child exit deadline exceeded"); }),
   ]);
+}
+
+function openExternalBrowser(url: string): void {
+  const command = process.platform === "darwin" ? "open" : process.platform === "win32" ? "cmd.exe" : "xdg-open";
+  const args = process.platform === "win32" ? ["/d", "/s", "/c", "start", "", url] : [url];
+  const opener = spawn(command, args, { shell: false, detached: true, stdio: "ignore" });
+  opener.unref();
 }
 
 async function finishLocalHub(run: LocalHubRun): Promise<void> {
@@ -315,9 +494,10 @@ async function finishLocalHub(run: LocalHubRun): Promise<void> {
   return run.finishPromise;
 }
 
-async function deliverCredentialEnvelopeToChild(executable: string, args: readonly string[], envelope: Record<string, any>, expectedClass: "native" | "mcp"): Promise<ChildProcess> {
+async function deliverCredentialEnvelopeToChild(executable: string, args: readonly string[], envelope: Record<string, any>, expectedClass: "native" | "mcp", hubOrigin: string): Promise<ChildProcess> {
   if (envelope.clientClass !== expectedClass) throw new Error("credential envelope client class mismatch");
-  const child = spawn(executable, [...args], { shell: false, stdio: expectedClass === "mcp" ? ["pipe", "pipe", "pipe", "pipe"] : ["ignore", "pipe", "pipe", "pipe"] });
+  if (!/^http:\/\/127\.0\.0\.1:\d+$/u.test(hubOrigin)) throw new Error("credential hub origin mismatch");
+  const child = spawn(executable, [...args], { shell: false, env: { ...process.env, S_LOCAL_CREDENTIAL_FD: "3" }, stdio: expectedClass === "mcp" ? ["pipe", "pipe", "pipe", "pipe"] : ["ignore", "pipe", "pipe", "pipe"] });
   const pipe = child.stdio[3] as Duplex;
   if (!pipe) {
     child.kill();
@@ -325,7 +505,15 @@ async function deliverCredentialEnvelopeToChild(executable: string, args: readon
     throw new Error("one-shot credential endpoint was not created");
   }
   try {
-    await writeLocalFrame(pipe, envelope);
+    await writeLocalFrame(pipe, {
+      schema: "semio.local.consumer-credential/v1",
+      clientClass: expectedClass,
+      hubOrigin,
+      sessionId: envelope.sessionId,
+      authorizationGeneration: envelope.authorizationGeneration,
+      expiresAtMs: envelope.expiresAt,
+      capability: envelope.capability,
+    });
     pipe.end();
     return child;
   } catch (error) {
@@ -336,15 +524,15 @@ async function deliverCredentialEnvelopeToChild(executable: string, args: readon
   }
 }
 
-export async function deliverNativeCredentialEnvelope(executable: string, args: readonly string[], envelope: Record<string, any>): Promise<ChildProcess> {
-  return deliverCredentialEnvelopeToChild(executable, args, envelope, "native");
+export async function deliverNativeCredentialEnvelope(executable: string, args: readonly string[], envelope: Record<string, any>, hubOrigin: string): Promise<ChildProcess> {
+  return deliverCredentialEnvelopeToChild(executable, args, envelope, "native", hubOrigin);
 }
 
-export async function deliverMcpCredentialEnvelope(executable: string, args: readonly string[], envelope: Record<string, any>): Promise<ChildProcess> {
-  return deliverCredentialEnvelopeToChild(executable, args, envelope, "mcp");
+export async function deliverMcpCredentialEnvelope(executable: string, args: readonly string[], envelope: Record<string, any>, hubOrigin: string): Promise<ChildProcess> {
+  return deliverCredentialEnvelopeToChild(executable, args, envelope, "mcp", hubOrigin);
 }
 
-async function proveCredentialEnvelopeDelivery(envelope: Record<string, any>, clientClass: "native" | "mcp"): Promise<void> {
+async function proveCredentialEnvelopeDelivery(envelope: Record<string, any>, clientClass: "native" | "mcp", hubOrigin: string): Promise<void> {
   const consumer = String.raw`
 const fs = require("node:fs");
 const expectedClass = process.argv.at(-1);
@@ -358,7 +546,7 @@ const envelope = new Promise((resolve, reject) => {
     const framed = Buffer.concat(chunks);
     if (framed.length < 5 || framed.readUInt32BE(0) !== framed.length - 4) return reject(new Error("framing"));
     const value = JSON.parse(framed.subarray(4).toString("utf8"));
-    if (value.schema !== "semio.hub.local-credential-envelope/v1" || value.clientClass !== expectedClass || value.sessionKind !== "development-local" || !Number.isSafeInteger(value.authorizationGeneration) || value.authorizationGeneration < 1 || !/^session\.v1\.[0-9a-f]{32}\.[0-9a-f]{64}$/.test(value.capability)) return reject(new Error("binding"));
+    if (value.schema !== "semio.local.consumer-credential/v1" || value.clientClass !== expectedClass || !/^http:\/\/127\.0\.0\.1:\d+$/.test(value.hubOrigin) || !Number.isSafeInteger(value.authorizationGeneration) || value.authorizationGeneration < 1 || !/^session\.v1\.[0-9a-f]{32}\.[0-9a-f]{64}$/.test(value.capability)) return reject(new Error("binding"));
     framed.fill(0);
     resolve(undefined);
   });
@@ -371,7 +559,7 @@ const protocol = expectedClass === "mcp" ? new Promise((resolve, reject) => {
 }) : Promise.resolve();
 Promise.all([envelope, protocol]).then(() => process.stdout.write("credential-delivery-ok")).catch(() => process.exit(2));`;
   const delivery = clientClass === "native" ? deliverNativeCredentialEnvelope : deliverMcpCredentialEnvelope;
-  const child = await delivery(process.execPath, ["-e", consumer, clientClass], structuredClone(envelope));
+  const child = await delivery(process.execPath, ["-e", consumer, clientClass], structuredClone(envelope), hubOrigin);
   let output = "";
   child.stdout?.on("data", (chunk: Buffer) => { if (output.length < 256) output += chunk.toString("utf8"); });
   if (clientClass === "mcp") child.stdin?.end('{"jsonrpc":"2.0","id":1}\n');
@@ -433,13 +621,13 @@ async function runSecureLocalSmoke(repoRoot: string, root: string): Promise<void
     capabilities.push(nativeEnvelope.capability, mcpEnvelope.capability, adminEnvelope.capability);
     let crossClassRejected = false;
     try {
-      await deliverMcpCredentialEnvelope(process.execPath, [], structuredClone(nativeEnvelope));
+      await deliverMcpCredentialEnvelope(process.execPath, [], structuredClone(nativeEnvelope), `http://127.0.0.1:${run.port}`);
     } catch {
       crossClassRejected = true;
     }
     if (!crossClassRejected) throw new Error("native envelope crossed into MCP delivery");
-    await proveCredentialEnvelopeDelivery(nativeEnvelope, "native");
-    await proveCredentialEnvelopeDelivery(mcpEnvelope, "mcp");
+    await proveCredentialEnvelopeDelivery(nativeEnvelope, "native", `http://127.0.0.1:${run.port}`);
+    await proveCredentialEnvelopeDelivery(mcpEnvelope, "mcp", `http://127.0.0.1:${run.port}`);
     const readiness = await waitForReadiness(run, true);
     if (readiness.status !== "not-ready" || readiness.authentication.bootstrapReady !== true || readiness.artifactAuthority?.ready !== false) throw new Error("security smoke did not observe truthful partial readiness");
     const readinessJson = JSON.stringify(readiness);
@@ -523,8 +711,44 @@ class TestScript extends BundleScript {
 
 class ArtifactCasCheckScript extends BundleScript {
   run(segments: string[]): void {
-    runCargo(["test", "--manifest-path", "Cargo.toml", "--all-features", "--lib", "artifact_chunk_cas", ...segments], this.root);
+    runCargo(["test", "--manifest-path", "Cargo.toml", "--all-features", "--lib", "artifact_chunk_cas", ...segments], this.root, { ...process.env, RUST_MIN_STACK: "16777216" });
+    runCargo(["test", "--manifest-path", "Cargo.toml", "--all-features", "--bin", "os-hub", "artifact_cas_maintenance", ...segments], this.root, { ...process.env, RUST_MIN_STACK: "16777216" });
     runCargo(["check", "--manifest-path", "Cargo.toml", "--all-features", "--bin", "os-hub"], this.root);
+  }
+}
+
+class SocketGrantCheckScript extends BundleScript {
+  run(): void {
+    const tests = [
+      "tests::directory_socket_forced_lag_is_scope_authorized_and_closes_1013",
+      "tests::document_socket_forced_lag_sends_verified_control_then_closes_1013",
+      "tests::socket_admin_user_gate_rejects_a_late_same_user_grant_after_batch_revoke",
+      "tests::socket_directory_revoke_after_admission_suppresses_replay_without_deadlock",
+      "tests::socket_directory_visibility_requires_membership_even_for_public_spaces",
+      "tests::socket_grant_directory_route_uses_credential_free_hello_and_revokes_live",
+      "tests::socket_grant_document_route_is_exact_replay_safe_actor_bound_and_revoke_live",
+      "tests::socket_grant_ledger_is_bounded_single_consume_restart_scoped_and_revoke_race_safe",
+      "tests::socket_grant_revoke_and_welcome_have_a_bounded_binding_linearization",
+      "tests::socket_grant_revoke_before_broadcast_authorization_suppresses_frame",
+      "tests::socket_grant_revoke_before_command_admission_has_no_storage_effect",
+      "tests::socket_grant_revoke_before_lag_authorization_reads_no_private_control",
+    ];
+    const env = { ...process.env, RUST_MIN_STACK: "268435456" };
+    for (const test of tests) runCargo(["test", "--manifest-path", "Cargo.toml", "--all-features", "--bin", "os-hub", test, "--", "--exact", "--test-threads=1"], this.root, env);
+    runCargo(["test", "--manifest-path", "Cargo.toml", "--all-features", "--lib", "typed_capabilities_match_neutral_sha256_vectors_and_fixed_boundaries", "--", "--test-threads=1"], this.root, env);
+    runCargo(["test", "--manifest-path", "Cargo.toml", "--all-features", "--lib", "socket_binding_reads_are_exact_id_generation_selector_scope_and_status", "--", "--test-threads=1"], this.root, env);
+    runCargo(["test", "--manifest-path", "Cargo.toml", "--all-features", "-p", "semio-framework-replication", "client_frame_socket_hello_v1_round_trips_without_credentials", "--", "--test-threads=1"], this.root, env);
+    runCargo(["check", "--manifest-path", "Cargo.toml", "--all-features", "--bin", "os-hub"], this.root, env);
+  }
+}
+
+class CanonicalPairCheckScript extends BundleScript {
+  run(): void {
+    const env = { ...process.env, RUST_MIN_STACK: "268435456" };
+    runCargo(["test", "--manifest-path", "Cargo.toml", "--lib", "canonical_pair", "--", "--test-threads=1"], this.root, env);
+    runCargo(["test", "--manifest-path", "Cargo.toml", "--bin", "os-hub", "canonical_pair_route", "--", "--test-threads=1"], this.root, env);
+    runCmd("bun", ["nx", "run", "os-hub-ts:test-quick", "--", "--run", "-t", "canonical checkpoint pair neutral contract"], { cwd: this.repoRoot, ...orchestratorBudgetOpts() });
+    runCargo(["check", "--manifest-path", "Cargo.toml", "--bin", "os-hub"], this.root, env);
   }
 }
 
@@ -532,26 +756,54 @@ class ArtifactCasCheckScript extends BundleScript {
  * `opts.env ?? process.env`), so this inherits the full process env and only defaults the port —
  * otherwise the launcher's `OS_HUB_PORT`/`OS_HUB_DATA` (and `PATH`) would be silently dropped. */
 class DevScript extends BundleScript {
-  async run(): Promise<void> {
+  async run(segments: string[]): Promise<void> {
     buildAdminSpa(this.repoRoot);
     runCargo(["build", "--manifest-path", "Cargo.toml"], this.root);
-    const profiles: readonly LocalProfile[] = [{ profileId: "developer", subject: "local-developer-01", displayName: "Local Developer", allowedClientClasses: ["native", "mcp"] }];
+    const secureSuite = segments[0] === "secure-suite";
+    const profiles: readonly LocalProfile[] = [{ profileId: "developer", subject: "local-developer-01", displayName: "Local Developer", allowedClientClasses: secureSuite ? ["native", "mcp", "react-relay"] : ["native", "mcp"] }];
     const run = await startLocalHub(this.repoRoot, this.root, profiles, {
       port: Number(process.env[OS_HUB_PORT_ENV] ?? OS_HUB_PORT),
       dataDir: process.env.OS_HUB_DATA,
     });
-    const stop = (): void => { void finishLocalHub(run); };
+    let relay: LocalBrowserRelay | undefined;
+    let ui: ChildProcess | undefined;
+    const stop = (): void => {
+      void relay?.stop();
+      if (ui?.exitCode === null) ui.kill();
+      void finishLocalHub(run);
+    };
     process.once("SIGINT", stop);
     process.once("SIGTERM", stop);
     try {
       await waitForReadiness(run);
       console.log(`[INFO] secure local hub ready at http://127.0.0.1:${run.port}`);
+      if (secureSuite) {
+        const uiPort = Number(process.env.S_OS_PORT ?? 6066);
+        const uiOrigin = `http://127.0.0.1:${uiPort}`;
+        const envelope = await issueLocalCredential(run, "developer", "react-relay");
+        const browserProof = randomBytes(32);
+        const browserProofHex = browserProof.toString("hex");
+        relay = startLocalBrowserRelay(`http://127.0.0.1:${run.port}`, uiOrigin, envelope, browserProof);
+        const uiScript = join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🧑️‍💻️dev/📦️packages/🟦️typescript/📜️script.ts");
+        ui = spawn(process.execPath, [uiScript, "dev", "s"], {
+          cwd: join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🧑️‍💻️dev/📦️packages/🟦️typescript"),
+          env: { ...process.env, S_OS_PORT: String(uiPort), S_HUB_URL: `http://127.0.0.1:${run.port}`, S_LOCAL_RELAY_URL: relay.url, S_LOCAL_RELAY_SECRET: relay.secret.toString("hex"), SEMIO_PLUGIN: "s", SEMIO_RENDERER: "react" },
+          shell: false,
+          stdio: "inherit",
+        });
+        await waitForUiReadiness(uiOrigin, ui);
+        openExternalBrowser(`${uiOrigin}/#semio-broker=${browserProofHex}`);
+        console.log(`[INFO] secure local OS profile starting at ${uiOrigin}`);
+      }
       await new Promise<void>((resolveExit, rejectExit) => {
         run.child.once("exit", (code) => code === 0 ? resolveExit() : rejectExit(new Error(`hub child exited with status ${code}`)));
+        ui?.once("exit", (code) => code === 0 ? resolveExit() : rejectExit(new Error(`secure local UI child exited with status ${code}`)));
       });
     } finally {
       process.off("SIGINT", stop);
       process.off("SIGTERM", stop);
+      await relay?.stop();
+      if (ui?.exitCode === null) ui.kill();
       await finishLocalHub(run);
     }
   }
@@ -565,6 +817,6 @@ class SecureLocalSmokeScript extends BundleScript {
   }
 }
 
-const router = new ScriptRouter(import.meta.dir).register("setup", SetupScript).register("build", BuildScript).register("test", TestScript).register("artifact-cas-check", ArtifactCasCheckScript).register("dev", DevScript).register("secure-local-smoke", SecureLocalSmokeScript);
+const router = new ScriptRouter(import.meta.dir).register("setup", SetupScript).register("build", BuildScript).register("test", TestScript).register("artifact-cas-check", ArtifactCasCheckScript).register("socket-grant-check", SocketGrantCheckScript).register("canonical-pair-check", CanonicalPairCheckScript).register("dev", DevScript).register("secure-local-smoke", SecureLocalSmokeScript);
 
 await runBundleScriptMain(router, import.meta.url, { defaultCommand: "dev" });

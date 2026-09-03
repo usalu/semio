@@ -51,6 +51,7 @@ pub struct Ready;
 /// already uses (see that struct's doc for why a bare, non-capturing `fn` cannot close over `def`).
 pub struct PluginBuilder<State, PA: PluginApp = crate::app::NoPluginApp> {
     plugin_id: String,
+    package_id: Option<String>,
     label: Option<String>,
     version: Option<String>,
     artifacts: Vec<ArtifactDeclaration>,
@@ -107,6 +108,7 @@ impl<PA: PluginApp> PluginBuilder<NeedsLabel, PA> {
     pub fn new(plugin_id: impl Into<String>) -> Self {
         Self {
             plugin_id: plugin_id.into(),
+            package_id: None,
             label: None,
             version: None,
             artifacts: Vec::new(),
@@ -140,6 +142,7 @@ impl<PA: PluginApp> PluginBuilder<NeedsLabel, PA> {
     pub fn label(self, label: impl Into<String>) -> PluginBuilder<NeedsVersion, PA> {
         PluginBuilder {
             plugin_id: self.plugin_id,
+            package_id: self.package_id,
             label: Some(label.into()),
             version: None,
             artifacts: self.artifacts,
@@ -175,6 +178,7 @@ impl<PA: PluginApp> PluginBuilder<NeedsVersion, PA> {
     pub fn version(self, version: impl Into<String>) -> PluginBuilder<Ready, PA> {
         PluginBuilder {
             plugin_id: self.plugin_id,
+            package_id: self.package_id,
             label: self.label,
             version: Some(version.into()),
             artifacts: self.artifacts,
@@ -206,6 +210,12 @@ impl<PA: PluginApp> PluginBuilder<NeedsVersion, PA> {
 }
 
 impl<PA: PluginApp> PluginBuilder<Ready, PA> {
+    /// 📦️ Declares the canonical component package identity emitted by `describe()`.
+    pub fn package_id(mut self, package_id: impl Into<String>) -> Self {
+        self.package_id = Some(package_id.into());
+        self
+    }
+
     /// 🗿️ Declares one artifact this plugin owns. Repeatable. `try_build()` walks every
     /// declared artifact in a fixed deterministic order and validates that it owns everything it
     /// declares — see `ArtifactDeclaration::preflight`.
@@ -560,6 +570,7 @@ impl<PA: PluginApp> PluginBuilder<Ready, PA> {
     pub fn try_build(self) -> Result<Plugin<PA>, PluginAssemblyError> {
         let Self {
             plugin_id,
+            package_id,
             label,
             version,
             artifacts,
@@ -589,6 +600,11 @@ impl<PA: PluginApp> PluginBuilder<Ready, PA> {
         } = self;
         let label = label.ok_or_else(|| PluginAssemblyError::new("plugin-assembly.label", "typestate-ready builder has no label"))?;
         let version = version.ok_or_else(|| PluginAssemblyError::new("plugin-assembly.version", "typestate-ready builder has no version"))?;
+        let package_id = package_id.ok_or_else(|| PluginAssemblyError::new("plugin-assembly.package-id", "component package identity was not declared"))?;
+        let package_suffix = package_id.strip_prefix("semio:").ok_or_else(|| PluginAssemblyError::new("plugin-assembly.package-id", "component package identity must use the semio namespace"))?;
+        if package_suffix != plugin_id || package_suffix.is_empty() || package_suffix.starts_with('-') || package_suffix.ends_with('-') || package_suffix.contains("--") || !package_suffix.bytes().all(|byte| byte.is_ascii_lowercase() || byte.is_ascii_digit() || byte == b'-') {
+            return Err(PluginAssemblyError::new("plugin-assembly.package-id", "component package identity must exactly match semio:<plugin-id> in canonical lowercase form"));
+        }
         // 🌳️ New declaration tree (ticket 26/08/17/CLEAN-ARTIFACT-STANDARD-SUBSET-MECHANISM W1-C):
         // committed FIRST, fully self-contained (own preflight-then-commit, own assembly-guard
         // scoping — see `crate::app::declarations::commit_artifact_declarations`'s doc), so it never
@@ -684,7 +700,7 @@ impl<PA: PluginApp> PluginBuilder<Ready, PA> {
         // just built `plugin` above, as a second output of this one assembly call — see
         // `plugin_runtime::PluginDescriptorExtras`'s own doc for why this is not an
         // independently-maintained side registry that could drift from the manifest.
-        crate::plugin_runtime::install_plugin_descriptor_extras(crate::plugin_runtime::PluginDescriptorExtras { activation_events, capability_requests, extension_points, execution, quotas, assets });
+        crate::plugin_runtime::install_plugin_descriptor_extras(crate::plugin_runtime::PluginDescriptorExtras { package_id, activation_events, capability_requests, extension_points, execution, quotas, assets });
         Ok(plugin)
     }
 }

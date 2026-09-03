@@ -1633,6 +1633,32 @@ describe("micro-commit", () => {
     }
   });
 
+  test("prepare-commit-msg lets a manual commit complete when template refresh fails", async () => {
+    const { renderMicroCommitGitHook } = await import("../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts");
+    const root = mkdtempSync(join(tmpdir(), "compose-micro-commit-hook-"));
+    try {
+      expect(spawnSync("git", ["init"], { cwd: root, encoding: "utf8", env: gitSpawnEnv() }).status).toBe(0);
+      expect(spawnSync("git", ["config", "user.email", "hook@example.com"], { cwd: root, encoding: "utf8", env: gitSpawnEnv() }).status).toBe(0);
+      expect(spawnSync("git", ["config", "user.name", "Hook"], { cwd: root, encoding: "utf8", env: gitSpawnEnv() }).status).toBe(0);
+      expect(spawnSync("git", ["config", "commit.gpgsign", "false"], { cwd: root, encoding: "utf8", env: gitSpawnEnv() }).status).toBe(0);
+      const hook = join(root, ".git", "hooks", "prepare-commit-msg");
+      const brokenBun = join(root, "broken-bun");
+      writeFileSync(hook, renderMicroCommitGitHook("prepare-commit-msg"));
+      writeFileSync(brokenBun, "#!/usr/bin/env sh\nexit 1\n");
+      chmodSync(hook, 0o755);
+      chmodSync(brokenBun, 0o755);
+      writeFileSync(join(root, ".git", "compose-micro-commit-active"), "1\n");
+      writeFileSync(join(root, "tracked.txt"), "tracked\n");
+      expect(spawnSync("git", ["add", "tracked.txt"], { cwd: root, encoding: "utf8", env: gitSpawnEnv() }).status).toBe(0);
+      const commit = spawnSync("git", ["commit", "-m", "Manual Commit"], { cwd: root, encoding: "utf8", env: { ...gitSpawnEnv(), COMPOSE_BUN: brokenBun } });
+      expect(commit.status, commit.stderr).toBe(0);
+      expect(spawnSync("git", ["log", "-1", "--format=%s"], { cwd: root, encoding: "utf8", env: gitSpawnEnv() }).stdout?.trim()).toBe("Manual Commit");
+      expect(existsSync(join(root, ".git", "compose-micro-commit-active"))).toBe(false);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
   test("handlePrepareCommitMsg inactive does not clear commit message file", async () => {
     const { handlePrepareCommitMsg } = await import("../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts");
     const { mkdtempSync, writeFileSync, readFileSync, rmSync } = await import("node:fs");

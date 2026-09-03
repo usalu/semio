@@ -46,7 +46,7 @@ async fn the_undo_rename_column_swaps_the_two_names_back() {
     let undo = mutation.inverse(&base);
     assert_eq!(
         undo,
-        vec![SemioTableMutation::RenameColumn(crate::artifacts::semio::standards::v1::subsets::table::schema::mutations::rename_column::mutation::RenameColumn { name: "town".to_string(), new_name: "city".to_string() })],
+        vec![SemioTableMutation::RenameColumn(crate::artifacts::semio::standards::v1::subsets::table::schema::mutations::rename_column::RenameColumn { name: "town".to_string(), new_name: "city".to_string() })],
         "the undo must address the NEW name and rename it back to the old one"
     );
     let mut current = mutation.diff(&base).diff().apply(&base).expect("forward rename-column applies");

@@ -57,7 +57,7 @@ fn restoring_the_prior_session_restores_before() {
     let IdentityConfigMutation::SignIn(undo) = &inverse[0] else {
         panic!("sign-out/clears-the-active-session: undoing a sign-out must be a sign-in");
     };
-    assert_eq!(undo.session_token, session(&base).session_token, "sign-out/clears-the-active-session: the undo must carry BASE's own session token");
+    assert_eq!(Identity::from(undo), session(&base), "sign-out/clears-the-active-session: the undo must carry BASE's non-secret identity");
     let forward = <IdentityConfigMutation as protocol::Mutation<IdentitySetting>>::diff(&mutation(), &base);
     let mut snapshot = protocol::MutationDiff::apply(forward.diff(), &base).expect("forward sign-out applies");
     for step in &inverse {

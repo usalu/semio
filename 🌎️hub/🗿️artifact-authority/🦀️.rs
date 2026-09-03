@@ -825,7 +825,7 @@ mod tests {
     impl VerifiedCheckpointPublisher for FakePublisher {
         async fn reserve(&self, plan: &chunk_cas::ArtifactCasOwnershipPlanV1, context: &OperationContext<'_>) -> Result<chunk_cas::ArtifactCasReservation, AuthorityError> {
             context.checkpoint()?;
-            Ok(chunk_cas::ArtifactCasReservation { plan: plan.clone(), generation: 1, write_epoch: 1, expires_at_ms: context.deadline_ms() })
+            Ok(chunk_cas::ArtifactCasReservation::unfenced(plan.clone(), 1, 1, context.deadline_ms()))
         }
 
         async fn publish_reserved(&self, checkpoint: &ArtifactCheckpoint, reservation: &chunk_cas::ArtifactCasReservation, context: &OperationContext<'_>) -> Result<(), AuthorityError> {

@@ -1,0 +1,42 @@
+# 🧪 Standalone test harness for the brep KERNEL layer (see TICKET/📓️h0-harness.md). Deliberately
+# NOT a member of the root workspace (`[workspace]` below with no `members`) so nine parallel
+# workers running `cargo test` here never contend the root `Cargo.lock`/target-dir lock, which is
+# currently unusable anyway (~1200 E0277 from an unrelated serde-elimination wave in OTHER subsets,
+# see TICKET/🗑️generated/baseline-check-stdio-2.txt). Mounts the REAL kernel source files verbatim
+# via `#[path]` — never copies them — so edits made by the nine workers are picked up on the next
+# run. Absolute paths below (not relative `../..`) because this file sits 8 directories under the
+# repo root through an emoji-heavy ticket path — relative counting is error-prone here.
+[workspace]
+
+[package]
+name = "brep-kernel-harness"
+version = "0.0.0"
+edition = "2021"
+publish = false
+
+[lib]
+path = "lib.rs"
+
+[dependencies]
+semio-framework-number = { path = "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust", package = "semio-framework-number" }
+semio-framework-os-kernel = { path = "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-framework-os-kernel" }
+semio-framework-value-derive = { path = "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust", package = "semio-framework-value-derive" }
+# `base::schema::geometry`'s `SemioTransform` still derives `serde::Serialize`/`Deserialize`
+# (mid-migration to `value_derive`, same as the rest of this crate — see stdio root Cargo.toml's
+# own `serde`/`serde_json` comment).
+serde = { version = "1.0.228", features = ["derive"] }
+
+[dev-dependencies]
+# 🧪 Test-only: `#[cfg(test)] mod tests` in the mounted kernel files reach for these directly
+# (oracle/property tests against `semio_framework_geometry`, `pack::to_json_string`/`from_json_str`
+# in arena.rs's own test, `#[semio_framework_async_macros::async_test]` on every async test fn).
+# Same crate/alias the real stdio root uses (`✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/🦀️.rs`'s
+# `pack = { …, package = "semio-framework-pack" }`).
+semio-framework-async-macros = { path = "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust" }
+semio-framework-geometry = { path = "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/📐️geometry/📦️packages/🦀️rust", package = "semio-framework-geometry" }
+pack = { path = "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust", package = "semio-framework-pack" }
+# topology.rs's own `serde_round_trips_a_whole_body` test calls `serde_json::to_string(&body)` —
+# kept even though `Body` currently does NOT derive `serde::Serialize`/`Deserialize` (only
+# `value_derive::ToValue`/`FromValue`), so that test is a KNOWN CURRENTLY-FAILING one (see
+# 📓️h0-harness.md), not a harness gap.
+serde_json = "1.0.149"

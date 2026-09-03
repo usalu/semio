@@ -10,7 +10,6 @@ export interface Identity {
   readonly email: string;
   readonly displayName: string;
   readonly hubBaseUrl: string;
-  readonly sessionToken: string;
   readonly issuedAtMs: number;
 }
 
@@ -34,7 +33,6 @@ export function diff(payload: SignIn, _base: Identity | null): Identity {
     email: payload.email,
     displayName: payload.displayName,
     hubBaseUrl: payload.hubBaseUrl,
-    sessionToken: payload.sessionToken,
     issuedAtMs: payload.issuedAtMs,
   };
 }

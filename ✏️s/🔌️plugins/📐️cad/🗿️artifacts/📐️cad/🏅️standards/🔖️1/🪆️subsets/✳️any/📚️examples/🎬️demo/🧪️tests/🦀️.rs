@@ -70,7 +70,7 @@ impl SubsetRoundtripSpec for CadAnyRoundtrip {
         // this demo fixture's `CadSnapshot` no longer carries inline. `RenameNode` is real and
         // unaffected (node data was never part of the deleted inline object list) and exercises the
         // identical sample-mutation-roundtrip law this spec is for.
-        use crate::artifacts::cad::mutations::rename_node::mutation::RenameNode;
+        use crate::artifacts::cad::mutations::rename_node::RenameNode;
         use crate::artifacts::cad::CadMutation;
         let Some(node) = snapshot.nodes.first() else {
             return Vec::new();

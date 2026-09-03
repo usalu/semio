@@ -1,0 +1,8 @@
+{
+  "title": "Procedural 3d End To End",
+  "emoji": "🌀️",
+  "status": "open",
+  "description": "Get procedural 3d (app `generation3d` of the `🌀️procedural` plugin) working end to end: `bun run dev:procedural:3d` must boot, every window must render non-empty content (the flow/node-graph window and the 3d scene preview in particular), and example fixtures must load and be switchable at runtime.",
+  "goal": "🎯r2602🎯runningsketchpad🎯runningsketchpadapps",
+  "sessions": []
+}

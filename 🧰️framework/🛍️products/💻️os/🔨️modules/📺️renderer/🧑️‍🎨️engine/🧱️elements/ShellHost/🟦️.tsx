@@ -135,7 +135,6 @@ import {
   encodePackValue,
   FRAMEWORK_SYNC_CONTROLLER_ID,
   type PersistenceBinding,
-  DirectoryClient,
   DirectoryHttpError,
   type DirectoryCommand,
   type DirectoryEvent,
@@ -150,6 +149,61 @@ import {
 import { mutationEnvelopeFromWire, mutationEnvelopeToWire, type MutationEnvelope } from "@semio-tech/framework-replication";
 
 const shellReplicationPackCodec = { encode: encodePackValue, decode: decodePackValue };
+
+let localBrowserBrokerProof = (() => {
+  if (typeof window === "undefined") return undefined;
+  const match = /^#semio-broker=([0-9a-f]{64})$/u.exec(window.location.hash);
+  if (!match) return undefined;
+  window.history.replaceState(window.history.state, "", `${window.location.pathname}${window.location.search}`);
+  return match[1];
+})();
+
+class LocalBrowserBrokerPort {
+  private readonly pending = new Map<string, { resolve(value: { status: number; body: string }): void; reject(error: Error): void; timer: ReturnType<typeof setTimeout>; signal?: AbortSignal; abort?: () => void }>();
+
+  constructor(private readonly port: MessagePort) {
+    port.onmessage = (event: MessageEvent<unknown>) => {
+      const message = event.data as Record<string, unknown> | null;
+      if (!message || message.kind !== "response" || typeof message.requestId !== "string" || typeof message.status !== "number" || typeof message.body !== "string") return;
+      const pending = this.pending.get(message.requestId);
+      if (!pending) return;
+      clearTimeout(pending.timer);
+      if (pending.signal && pending.abort) pending.signal.removeEventListener("abort", pending.abort);
+      this.pending.delete(message.requestId);
+      pending.resolve({ status: message.status, body: message.body });
+    };
+    port.start();
+  }
+
+  me(signal?: AbortSignal): Promise<{ status: number; body: string }> {
+    if (signal?.aborted) return Promise.reject(signal.reason ?? new Error("browser broker cancelled"));
+    if (this.pending.size >= 64) return Promise.reject(new Error("browser broker capacity exceeded"));
+    const requestId = crypto.randomUUID();
+    return new Promise((resolve, reject) => {
+      const abort = (): void => {
+        this.port.postMessage({ kind: "cancel", requestId });
+        const pending = this.pending.get(requestId);
+        if (!pending) return;
+        clearTimeout(pending.timer);
+        this.pending.delete(requestId);
+        reject(new Error("browser broker cancelled"));
+      };
+      const timer = setTimeout(abort, 2_000);
+      this.pending.set(requestId, { resolve, reject, timer, signal, abort });
+      signal?.addEventListener("abort", abort, { once: true });
+      this.port.postMessage({ kind: "request", requestId, operation: "me" });
+    });
+  }
+
+  close(): void {
+    for (const [requestId, pending] of this.pending) {
+      clearTimeout(pending.timer);
+      pending.reject(new Error("browser broker closed"));
+      this.pending.delete(requestId);
+    }
+    this.port.close();
+  }
+}
 /** 🪪️ ticket 26/08/16/HUB-SPACES-LIVE-PRESENCE-AND-COLLABORATIVE-STUDIOS §C3 — the config-lane
  * identity facet's documentId/schema + fold. `@semio-tech/framework-os` never had a live consumer of
  * its former `./backbone-worker` subpath export (the taxonomy-purity sweep removed the unused
@@ -836,7 +890,7 @@ export interface FrameworkOsShellProps {
  * lane's lease, so re-implemented locally rather than imported). Returns `undefined` for an unset/
  * empty define, never `""` — every call site treats "no hub env" as "skip identity entirely" (§C3
  * "No hub env ⇒ skip all of it and keep today's local-only behaviour exactly"). */
-function readViteSEnv(name: "VITE_S_HUB_URL" | "VITE_S_USER" | "VITE_S_DATA_DIR"): string | undefined {
+function readViteSEnv(name: "VITE_S_HUB_URL" | "VITE_S_DATA_DIR"): string | undefined {
   try {
     const env = (import.meta as unknown as { readonly env?: Readonly<Record<string, string | undefined>> }).env;
     return env?.[name] || undefined;
@@ -870,7 +924,7 @@ function decodeIdentityPayload(payload: unknown): Identity | null | undefined {
   if (payload === null) return null;
   if (typeof payload !== "object") return undefined;
   const candidate = payload as Partial<Identity>;
-  if (typeof candidate.userId === "string" && typeof candidate.email === "string" && typeof candidate.sessionToken === "string") return candidate as Identity;
+  if (typeof candidate.userId === "string" && typeof candidate.email === "string" && typeof candidate.hubBaseUrl === "string") return candidate as Identity;
   return undefined;
 }
 
@@ -1283,12 +1337,11 @@ function FrameworkOsShellInner({
    * directory-lane's persistent `/directory/ws` subscription, which the shell never opens itself (§C6:
    * `🟦️backbone-worker.ts`'s `🔖️Directory` region is the only socket owner). Re-created only if the
    * hub base url or token actually changes. */
-  const directoryClientRef = useRef<DirectoryClient | null>(null);
+  const localBrowserBrokerRef = useRef<LocalBrowserBrokerPort | null>(null);
   const hubEnv = useMemo(() => {
     const hubBaseUrl = readViteSEnv("VITE_S_HUB_URL");
-    const email = readViteSEnv("VITE_S_USER");
     const dataDir = readViteSEnv("VITE_S_DATA_DIR");
-    return hubBaseUrl ? { hubBaseUrl, email, dataDir } : null;
+    return hubBaseUrl ? { hubBaseUrl, dataDir } : null;
   }, []);
   /** 📇️ §C6 — guards `directory-open` to once per shell (a `useEffect` re-running on an unrelated
    * identity re-render must not reopen the socket). */
@@ -1339,6 +1392,7 @@ function FrameworkOsShellInner({
   const segmentedDownloadAbortRef = useRef(new AbortController());
   /** 🗂️ Which session/plugin owns each open document id, so incoming worker events route correctly. */
   const openDocumentSessionsRef = useRef<Map<string, { session: ActiveSession; plugin: PluginWasmHandle }>>(new Map());
+  const socketActorReadyRef = useRef<Map<string, { resolve(actorId: string): void; reject(error: Error): void }>>(new Map());
   const [bootstrapUiByDocument, setBootstrapUiByDocument] = useState<BootstrapUiState>({});
   const rebootstrapDiscardedSessionsRef = useRef<Map<string, ActiveSession>>(new Map());
   /** 🐚️ Unregisters this shell's `registerPluginBackboneRoute` entry for each open document id — called
@@ -1365,8 +1419,20 @@ function FrameworkOsShellInner({
   const ensureBackboneWorker = useCallback((): Worker => {
     if (backboneWorkerRef.current) return backboneWorkerRef.current;
     const worker = new Worker(new URL("../../../../../🟦️backbone-worker.ts", import.meta.url), { type: "module" });
+    const brokerChannel = new MessageChannel();
+    worker.postMessage({ kind: "semio-browser-broker-port", port: brokerChannel.port2 }, [brokerChannel.port2]);
+    localBrowserBrokerRef.current = new LocalBrowserBrokerPort(brokerChannel.port1);
+    if (localBrowserBrokerProof) {
+      brokerChannel.port1.postMessage({ kind: "initialize", proof: localBrowserBrokerProof });
+      localBrowserBrokerProof = undefined;
+    }
     worker.onmessage = (messageEvent: MessageEvent<BackboneWorkerResponse | { readonly wire: Uint8Array }>) => {
       const message = "wire" in messageEvent.data ? decodeBackboneWorkerResponse(messageEvent.data.wire) : messageEvent.data;
+      if (message.kind === "socket-actor") {
+        socketActorReadyRef.current.get(message.documentId)?.resolve(message.actorId);
+        socketActorReadyRef.current.delete(message.documentId);
+        return;
+      }
       // 📇️ §C6 directory lane — the worker's `directory-*` responses never carry a `documentId` this
       // shell already has an `openDocumentSessionsRef` entry for (they're not artifact-sync events at
       // all), so they're routed here, ahead of the artifact-event early return below.
@@ -1498,7 +1564,7 @@ function FrameworkOsShellInner({
     };
     backboneWorkerRef.current = worker;
     return worker;
-  }, []);
+  }, [hubEnv]);
 
   // 🪪️ §C3 identity bootstrap — pre-identity default actor, set once at mount so `PluginRuntime`'s
   // `AppChannelClient`s created before sign-in resolves (or with no hub env at all) still carry the
@@ -1547,18 +1613,16 @@ function FrameworkOsShellInner({
         cachedIdentity = null;
       }
       if (cancelled) return;
-      const client = new DirectoryClient(hubEnv.hubBaseUrl, cachedIdentity?.sessionToken);
-      directoryClientRef.current = client;
       let resolved: Identity | null = null;
       try {
-        const me = cachedIdentity?.sessionToken ? await client.me() : null;
-        if (me) {
-          resolved = { userId: me.userId, email: me.email, displayName: me.displayName, hubBaseUrl: hubEnv.hubBaseUrl, sessionToken: cachedIdentity!.sessionToken, issuedAtMs: cachedIdentity!.issuedAtMs };
+        const broker = localBrowserBrokerRef.current;
+        if (!broker) throw new Error("local browser broker unavailable");
+        const response = await broker.me(identityWaitAbort.signal);
+        if (response.status === 200) {
+          const me = JSON.parse(response.body) as { userId: string; email: string; displayName: string };
+          resolved = { userId: me.userId, email: me.email, displayName: me.displayName, hubBaseUrl: hubEnv.hubBaseUrl, issuedAtMs: cachedIdentity?.issuedAtMs ?? Date.now() };
         } else {
-          const email = hubEnv.email ?? cachedIdentity?.email;
-          if (!email) throw new DirectoryHttpError(0, "no VITE_S_USER and no cached identity to mint a session for");
-          const minted = await client.mintSession(email);
-          resolved = { userId: minted.userId, email, displayName: email, hubBaseUrl: hubEnv.hubBaseUrl, sessionToken: minted.token, issuedAtMs: Date.now() };
+          throw new DirectoryHttpError(401, "local authorization required");
         }
       } catch (error) {
         // 📇️ §C3 "Hub unreachable ⇒ keep the last persisted identity, show an offline state, never
@@ -1588,7 +1652,7 @@ function FrameworkOsShellInner({
       // socket's real owner).
       if (!directoryOpenedRef.current) {
         directoryOpenedRef.current = true;
-        worker.postMessage({ wire: encodeBackboneWorkerRequest({ kind: "directory-open", baseUrl: resolved.hubBaseUrl, token: resolved.sessionToken, since: 0 }) });
+        worker.postMessage({ wire: encodeBackboneWorkerRequest({ kind: "directory-open", baseUrl: resolved.hubBaseUrl, since: 0 }) });
       }
     })().catch((error) => console.error("[os-shell] identity bootstrap failed unexpectedly", error));
     return () => {
@@ -2380,6 +2444,8 @@ function FrameworkOsShellInner({
       // component unmount; see `extensionFetchAbortRef`'s own doc a few hundred lines up.
       extensionFetchAbortRef.current.abort();
       segmentedDownloadAbortRef.current.abort(new Error("segmented-download-shell-unmounted"));
+      localBrowserBrokerRef.current?.close();
+      localBrowserBrokerRef.current = null;
       for (const unregister of pluginBackboneRouteUnregistersRef.current.values()) unregister();
       pluginBackboneRouteUnregistersRef.current.clear();
       const primary = sessionRef.current;
@@ -3372,7 +3438,7 @@ function FrameworkOsShellInner({
           const currentIdentity = identityRef.current;
           if (!currentIdentity || !spaceId) return folder;
           const surface = targetSession.app.dialect ? canonicalSurfaceId(targetSession.app.dialect, targetSession.app.role) : undefined;
-          return [{ kind: "hub", baseUrl: currentIdentity.hubBaseUrl, spaceId, token: currentIdentity.sessionToken, surface }, ...folder];
+          return [{ kind: "hub", baseUrl: currentIdentity.hubBaseUrl, spaceId, surface }, ...folder];
         })();
       openDocumentSessionsRef.current.set(ref.documentId, { session: targetSession, plugin });
       // 🐚️ Registers THIS shell as the route for this document's outbound backbone bytes before the
@@ -3387,7 +3453,21 @@ function FrameworkOsShellInner({
         watchExternal: true,
         actor: shellActorIdRef.current,
       };
+      const expectsSocketActor = resolvedBindings.some((binding) => binding.kind === "hub");
+      const socketActor = expectsSocketActor
+        ? new Promise<string>((resolve, reject) => socketActorReadyRef.current.set(ref.documentId, { resolve, reject }))
+        : null;
       worker.postMessage({ wire: encodeBackboneWorkerRequest(request) });
+      if (socketActor) {
+        try {
+          await Promise.race([
+            socketActor,
+            new Promise<never>((_, reject) => setTimeout(() => reject(new Error("socket actor deadline exceeded")), 10_000)),
+          ]);
+        } finally {
+          socketActorReadyRef.current.delete(ref.documentId);
+        }
+      }
       const uri = `actor://${ref.documentId}`;
       if (plugin.attachBackbone) await plugin.attachBackbone(targetSession.instanceId, uri);
       dispatch({ type: "SET_SYNC_BACKBONE_URI", value: uri });
@@ -3398,6 +3478,8 @@ function FrameworkOsShellInner({
   openDocumentRef.current = openDocument;
 
   const closeDocument = useCallback((documentId: string) => {
+    socketActorReadyRef.current.get(documentId)?.reject(new Error("document closed"));
+    socketActorReadyRef.current.delete(documentId);
     const entry = openDocumentSessionsRef.current.get(documentId);
     if (entry?.plugin.detachBackbone) void entry.plugin.detachBackbone(entry.session.instanceId);
     openDocumentSessionsRef.current.delete(documentId);
@@ -5438,8 +5520,21 @@ function FrameworkOsShellInner({
           const currentIdentity = identityRef.current;
           const dataDir = hubEnv?.dataDir;
           const folder: PersistenceBinding[] = dataDir ? [{ kind: "folder", path: `${dataDir}/spaces/${spaceId}` }] : [];
-          const bindings: PersistenceBinding[] = currentIdentity ? [{ kind: "hub", baseUrl: currentIdentity.hubBaseUrl, spaceId, token: currentIdentity.sessionToken, surface: canonicalSurfaceId(SPACE_INDEX_DIALECT, "editor") }, ...folder] : folder;
+          const bindings: PersistenceBinding[] = currentIdentity ? [{ kind: "hub", baseUrl: currentIdentity.hubBaseUrl, spaceId, surface: canonicalSurfaceId(SPACE_INDEX_DIALECT, "editor") }, ...folder] : folder;
+          const socketActor = currentIdentity
+            ? new Promise<string>((resolve, reject) => socketActorReadyRef.current.set(S_SPACE_INDEX_DOCUMENT_ID, { resolve, reject }))
+            : null;
           worker.postMessage({ wire: encodeBackboneWorkerRequest({ kind: "open", documentId: S_SPACE_INDEX_DOCUMENT_ID, schema: S_SPACE_INDEX_DOCUMENT_SCHEMA, bindings, watchExternal: true, actor: shellActorIdRef.current }) });
+          if (socketActor) {
+            try {
+              await Promise.race([
+                socketActor,
+                new Promise<never>((_, reject) => setTimeout(() => reject(new Error("space index socket actor deadline exceeded")), 10_000)),
+              ]);
+            } finally {
+              socketActorReadyRef.current.delete(S_SPACE_INDEX_DOCUMENT_ID);
+            }
+          }
           const uri = `actor://${S_SPACE_INDEX_DOCUMENT_ID}`;
           if (pluginEntry.handle.attachBackbone) await pluginEntry.handle.attachBackbone(instanceId, uri);
         }

@@ -63,6 +63,45 @@ impl Mat3 {
         let t = 1.0 - c;
         Mat3::from_rows([[t * a.x * a.x + c, t * a.x * a.y - s * a.z, t * a.x * a.z + s * a.y], [t * a.x * a.y + s * a.z, t * a.y * a.y + c, t * a.y * a.z - s * a.x], [t * a.x * a.z - s * a.y, t * a.y * a.z + s * a.x, t * a.z * a.z + c]])
     }
+    /// 🧭️ The diagonal matrix `diag(d.x, d.y, d.z)` — an axis-aligned (possibly non-uniform) scale.
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn from_diagonal(d: Vec3) -> Mat3 {
+        Mat3::from_rows([[d.x, 0.0, 0.0], [0.0, d.y, 0.0], [0.0, 0.0, d.z]])
+    }
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn scaled(&self, s: f64) -> Mat3 {
+        let mut out = self.rows;
+        for row in out.iter_mut() {
+            for v in row.iter_mut() {
+                *v *= s;
+            }
+        }
+        Mat3::from_rows(out)
+    }
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn sub(&self, o: &Mat3) -> Mat3 {
+        let mut out = [[0.0; 3]; 3];
+        for r in 0..3 {
+            for c in 0..3 {
+                out[r][c] = self.rows[r][c] - o.rows[r][c];
+            }
+        }
+        Mat3::from_rows(out)
+    }
+    /// 🧭️ The cofactor matrix `C` with `C[i][j] = (-1)^(i+j) · minor(i, j)`; `Cᵀ / det` is `self`'s
+    /// inverse, and `C` alone (unscaled by `det`) is the standard robust normal-transform matrix
+    /// `(M⁻¹)ᵀ · det` — used by [`Affine3::apply_normal`] so a normal transform never divides by a
+    /// near-zero determinant.
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn cofactor(&self) -> Mat3 {
+        let m = &self.rows;
+        let minor = |r0: usize, r1: usize, c0: usize, c1: usize| m[r0][c0] * m[r1][c1] - m[r0][c1] * m[r1][c0];
+        Mat3::from_rows([
+            [minor(1, 2, 1, 2), -minor(1, 2, 0, 2), minor(1, 2, 0, 1)],
+            [-minor(0, 2, 1, 2), minor(0, 2, 0, 2), -minor(0, 2, 0, 1)],
+            [minor(0, 1, 1, 2), -minor(0, 1, 0, 2), minor(0, 1, 0, 1)],
+        ])
+    }
 }
 
 // #endregion 🔖️Mat
@@ -130,6 +169,27 @@ impl Quat {
             [2.0 * (x * y + z * w), 1.0 - 2.0 * (x * x + z * z), 2.0 * (y * z - x * w)],
             [2.0 * (x * z - y * w), 2.0 * (y * z + x * w), 1.0 - 2.0 * (x * x + y * y)],
         ])
+    }
+    /// 🧭️ Recovers the unit quaternion for a proper rotation matrix (`det ≈ +1`), via Shepperd's
+    /// branch-on-largest-diagonal method for numerical stability near every rotation angle.
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn from_mat3(m: &Mat3) -> Quat {
+        let r = &m.rows;
+        let trace = r[0][0] + r[1][1] + r[2][2];
+        let q = if trace > 0.0 {
+            let s = (trace + 1.0).sqrt() * 2.0;
+            Quat { w: 0.25 * s, x: (r[2][1] - r[1][2]) / s, y: (r[0][2] - r[2][0]) / s, z: (r[1][0] - r[0][1]) / s }
+        } else if r[0][0] > r[1][1] && r[0][0] > r[2][2] {
+            let s = (1.0 + r[0][0] - r[1][1] - r[2][2]).sqrt() * 2.0;
+            Quat { w: (r[2][1] - r[1][2]) / s, x: 0.25 * s, y: (r[0][1] + r[1][0]) / s, z: (r[0][2] + r[2][0]) / s }
+        } else if r[1][1] > r[2][2] {
+            let s = (1.0 + r[1][1] - r[0][0] - r[2][2]).sqrt() * 2.0;
+            Quat { w: (r[0][2] - r[2][0]) / s, x: (r[0][1] + r[1][0]) / s, y: 0.25 * s, z: (r[1][2] + r[2][1]) / s }
+        } else {
+            let s = (1.0 + r[2][2] - r[0][0] - r[1][1]).sqrt() * 2.0;
+            Quat { w: (r[1][0] - r[0][1]) / s, x: (r[0][2] + r[2][0]) / s, y: (r[1][2] + r[2][1]) / s, z: 0.25 * s }
+        };
+        q.normalized()
     }
     /// 🧭️ Spherical linear interpolation, taking the short arc between `self` and `o`.
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
@@ -214,6 +274,143 @@ impl Trsf {
 
 // #endregion 🔖️Trsf
 
+// #region 🔖️Affine
+
+/// 🧭️ The full affine group `p ↦ linear·p + translation` — mirror (`det < 0`) and non-uniform
+/// scale/shear included, unlike [`Trsf`] (kept for callers that only ever need rigid+uniform-scale
+/// and rely on that restriction to keep analytic surfaces analytic by construction). Every exact
+/// B-Rep transform (`transform_solid` and its `Curve3`/`Surface::transformed` building blocks)
+/// accepts `Affine3` instead: [`Self::is_similarity`] is the single gate a caller consults to
+/// decide whether a curve/surface can stay in its own analytic representation or must convert to
+/// NURBS to stay exact.
+#[derive(Clone, Copy, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+pub struct Affine3 {
+    pub linear: Mat3,
+    pub translation: Vec3,
+}
+
+impl Affine3 {
+    pub const IDENTITY: Affine3 = Affine3 { linear: Mat3::IDENTITY, translation: Vec3::ZERO };
+
+    /// 🧭️ Lifts a rigid+uniform-scale [`Trsf`] into the affine group.
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn from_trsf(t: &Trsf) -> Self {
+        Affine3 { linear: t.rotation.to_mat3().scaled(t.scale), translation: t.translation }
+    }
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn translation(t: Vec3) -> Self {
+        Affine3 { translation: t, ..Affine3::IDENTITY }
+    }
+    /// 🧭️ A pure rotation about the world origin — compose with [`Self::translation`] (or use
+    /// [`Self::rotation_about`] directly) for rotation about an arbitrary point.
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn rotation_axis_angle(axis: Vec3, angle: f64) -> Self {
+        Affine3 { linear: Mat3::from_axis_angle(axis, angle), translation: Vec3::ZERO }
+    }
+    /// 🧭️ A rotation about an explicit `origin` — the origin is the map's one fixed point.
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn rotation_about(origin: Pnt3, axis: Vec3, angle: f64) -> Self {
+        let linear = Mat3::from_axis_angle(axis, angle);
+        let t = origin.to_vec() - linear.transform(origin.to_vec());
+        Affine3 { linear, translation: t }
+    }
+    /// 🧭️ Per-axis (possibly non-uniform) scale by `factors` about `center` — `center` is the
+    /// map's one fixed point. `factors` uses the world axes; compose with a rotation for scale
+    /// along arbitrary axes.
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn scaling(center: Pnt3, factors: Vec3) -> Self {
+        let linear = Mat3::from_diagonal(factors);
+        let t = center.to_vec() - linear.transform(center.to_vec());
+        Affine3 { linear, translation: t }
+    }
+    /// 🧭️ Reflection across the plane through `origin` with unit `normal` (Householder matrix
+    /// `I - 2·n·nᵀ`); `origin` is a fixed point of the map.
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn mirror(origin: Pnt3, normal: Vec3) -> Self {
+        let n = normal.normalized().unwrap_or(Vec3::Z);
+        let outer = Mat3::from_rows([[n.x * n.x, n.x * n.y, n.x * n.z], [n.y * n.x, n.y * n.y, n.y * n.z], [n.z * n.x, n.z * n.y, n.z * n.z]]);
+        let linear = Mat3::IDENTITY.sub(&outer.scaled(2.0));
+        let t = origin.to_vec() - linear.transform(origin.to_vec());
+        Affine3 { linear, translation: t }
+    }
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn apply_point(&self, p: Pnt3) -> Pnt3 {
+        Pnt3::from_array(self.linear.transform(p.to_vec()).to_array()) + self.translation
+    }
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn apply_vector(&self, v: Vec3) -> Vec3 {
+        self.linear.transform(v)
+    }
+    /// 🧭️ Transforms a surface/vertex normal by the cofactor matrix (`(linear⁻¹)ᵀ` scaled by
+    /// `det`, robust to a near-singular `linear` since it never divides by `det`) — the standard
+    /// normal-transform law under a general (non-conformal) linear map; direction-only, so callers
+    /// normalize the result. A `det < 0` (mirror/reflection) flips the returned direction, which
+    /// is why every caller that needs a consistently-outward face normal also flips `Face::flipped`
+    /// when `self.determinant() < 0`, rather than expecting this method to compensate.
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn apply_normal(&self, n: Vec3) -> Vec3 {
+        self.linear.cofactor().transform(n)
+    }
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn determinant(&self) -> f64 {
+        self.linear.determinant()
+    }
+    /// 🧭️ `self ∘ inner`: applying the result to a point matches applying `inner` then `self`.
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn compose(&self, inner: &Affine3) -> Affine3 {
+        Affine3 { linear: self.linear.mul(&inner.linear), translation: self.apply_vector(inner.translation) + self.translation }
+    }
+    /// 🧭️ `None` iff `linear` is (numerically) singular.
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn inverse(&self) -> Option<Affine3> {
+        let det = self.linear.determinant();
+        if det.abs() <= 1e-300 {
+            return None;
+        }
+        let inv_linear = self.linear.cofactor().transpose().scaled(1.0 / det);
+        let inv_translation = -inv_linear.transform(self.translation);
+        Some(Affine3 { linear: inv_linear, translation: inv_translation })
+    }
+    /// 🧭️ `Some((rotation, uniform_scale, is_reflection))` when `linear` is `uniform_scale ·
+    /// rotation` (optionally composed with a fixed reflection, iff `is_reflection`) — i.e. exactly
+    /// the maps that keep an analytic curve/surface's own kind analytic after [`Curve3::transformed`]
+    /// / [`Surface::transformed`] ([`crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::curve::Curve3`] /
+    /// [`crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::surface::Surface`]). `None` for shear or non-uniform scale, which
+    /// force a NURBS conversion instead. Decomposition: `uniform_scale = |det|^(1/3)`;
+    /// `linear/uniform_scale` must be orthogonal (checked numerically) to qualify at all; a
+    /// negative `det` means that orthogonal matrix is an improper rotation (`det = -1`), factored
+    /// as `rotation · diag(1,1,-1)` so `rotation` itself is always a proper (`det = +1`) quaternion.
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn is_similarity(&self) -> Option<(Quat, f64, bool)> {
+        let det = self.linear.determinant();
+        if det.abs() <= 1e-12 {
+            return None;
+        }
+        let scale = det.abs().cbrt();
+        if scale <= f64::EPSILON {
+            return None;
+        }
+        let normalized = self.linear.scaled(1.0 / scale);
+        let (c0, c1, c2) = (normalized.column(0), normalized.column(1), normalized.column(2));
+        let tol = 1e-7;
+        let unit_ok = (c0.norm_sq() - 1.0).abs() < tol && (c1.norm_sq() - 1.0).abs() < tol && (c2.norm_sq() - 1.0).abs() < tol;
+        let perp_ok = c0.dot(c1).abs() < tol && c0.dot(c2).abs() < tol && c1.dot(c2).abs() < tol;
+        if !unit_ok || !perp_ok {
+            return None;
+        }
+        let is_reflection = det < 0.0;
+        let rotation_matrix = if is_reflection {
+            let flip = Mat3::from_rows([[1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [0.0, 0.0, -1.0]]);
+            normalized.mul(&flip)
+        } else {
+            normalized
+        };
+        Some((Quat::from_mat3(&rotation_matrix), scale, is_reflection))
+    }
+}
+
+// #endregion 🔖️Affine
+
 // #region 🔖️Frame
 
 /// 🧭️ A right-handed orthonormal frame: origin plus three unit axes with `z = x × y`.
@@ -263,6 +460,19 @@ impl Frame3 {
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn to_local_vector(&self, world: Vec3) -> Vec3 {
         Vec3::new(world.dot(self.x), world.dot(self.y), world.dot(self.z))
+    }
+    /// 🧭️ Maps every axis of `self` directly through `map`'s linear part under a similarity of
+    /// uniform factor `scale` (dividing the mapped axis by `scale` so it stays unit), rather than
+    /// re-deriving `z` from `x × y` — a mirror flips handedness (`z` no longer equals `x × y`),
+    /// which is exactly the correct image of the original frame's axes and is deliberately
+    /// preserved rather than corrected, since every `Curve3`/`Surface` variant that carries a
+    /// `Frame3` uses `frame.x`/`frame.y`/`frame.z` directly in its `eval`/`derivatives`, never
+    /// re-derives `z`. Only valid for a similarity map — call under [`Affine3::is_similarity`]'s
+    /// `Some` arm, passing back its own `scale`.
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn transformed(&self, map: &Affine3, scale: f64) -> Frame3 {
+        let inv_scale = 1.0 / scale;
+        Frame3 { origin: map.apply_point(self.origin), x: map.apply_vector(self.x) * inv_scale, y: map.apply_vector(self.y) * inv_scale, z: map.apply_vector(self.z) * inv_scale }
     }
 }
 
@@ -360,6 +570,94 @@ mod tests {
         let q = Quat::from_axis_angle(axis, angle);
         let v = Vec3::new(1.0, 2.0, -3.0);
         assert!((m.transform(v) - q.rotate(v)).norm() < 1e-9);
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn affine_translation_round_trips_via_inverse() {
+        let a = Affine3::translation(Vec3::new(3.0, -2.0, 5.0));
+        let p = Pnt3::new(1.0, 2.0, 3.0);
+        let round_trip = a.inverse().unwrap().apply_point(a.apply_point(p));
+        assert!(round_trip.distance(p) < 1e-9);
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn affine_from_trsf_matches_trsf_apply_point() {
+        let t = Trsf { rotation: Quat::from_axis_angle(Vec3::new(1.0, 1.0, 0.0), 0.9), translation: Vec3::new(5.0, -2.0, 3.0), scale: 2.5 };
+        let a = Affine3::from_trsf(&t);
+        let p = Pnt3::new(1.0, 2.0, 3.0);
+        assert!(a.apply_point(p).distance(t.apply_point(p)) < 1e-9);
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn affine_rotation_about_fixes_its_own_origin() {
+        let origin = Pnt3::new(4.0, -1.0, 2.0);
+        let a = Affine3::rotation_about(origin, Vec3::Z, 1.234);
+        assert!(a.apply_point(origin).distance(origin) < 1e-9);
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn affine_scaling_fixes_center_and_scales_offset() {
+        let center = Pnt3::new(1.0, 1.0, 1.0);
+        let a = Affine3::scaling(center, Vec3::new(2.0, 3.0, 4.0));
+        assert!(a.apply_point(center).distance(center) < 1e-9);
+        let p = center + Vec3::new(1.0, 1.0, 1.0);
+        let mapped = a.apply_point(p);
+        assert!(mapped.distance(center + Vec3::new(2.0, 3.0, 4.0)) < 1e-9);
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn affine_mirror_fixes_plane_and_flips_normal_side() {
+        let origin = Pnt3::new(0.0, 0.0, 0.0);
+        let a = Affine3::mirror(origin, Vec3::Z);
+        assert!(a.apply_point(origin).distance(origin) < 1e-9);
+        assert!((a.determinant() + 1.0).abs() < 1e-9);
+        let above = Pnt3::new(1.0, 2.0, 3.0);
+        let mapped = a.apply_point(above);
+        assert!((mapped.z + 3.0).abs() < 1e-9);
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn affine_compose_matches_sequential_application() {
+        let a = Affine3::rotation_axis_angle(Vec3::Z, 0.4).compose(&Affine3::translation(Vec3::new(1.0, 0.0, 0.0)));
+        let b = Affine3::scaling(Pnt3::new(0.0, 0.0, 0.0), Vec3::new(1.5, 1.5, 1.5)).compose(&Affine3::translation(Vec3::new(0.0, 2.0, 0.0)));
+        let p = Pnt3::new(3.0, -1.0, 2.0);
+        let composed = a.compose(&b).apply_point(p);
+        let sequential = a.apply_point(b.apply_point(p));
+        assert!(composed.distance(sequential) < 1e-9);
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn affine_is_similarity_recognizes_rotation_translation_uniform_scale() {
+        let t = Trsf { rotation: Quat::from_axis_angle(Vec3::new(0.2, 0.7, -0.3), 1.1), translation: Vec3::new(1.0, 2.0, 3.0), scale: 3.5 };
+        let a = Affine3::from_trsf(&t);
+        let (rotation, scale, is_reflection) = a.is_similarity().expect("rigid+uniform-scale must be recognized as a similarity");
+        assert!((scale - 3.5).abs() < 1e-9);
+        assert!(!is_reflection);
+        let v = Vec3::new(1.0, 0.0, 0.0);
+        assert!((rotation.rotate(v) - t.rotation.rotate(v)).norm() < 1e-9);
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn affine_is_similarity_recognizes_reflection() {
+        let a = Affine3::mirror(Pnt3::new(0.0, 0.0, 0.0), Vec3::Z);
+        let (_, scale, is_reflection) = a.is_similarity().expect("a mirror must be recognized as a similarity with reflection");
+        assert!((scale - 1.0).abs() < 1e-9);
+        assert!(is_reflection);
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn affine_is_similarity_rejects_non_uniform_scale() {
+        let a = Affine3::scaling(Pnt3::new(0.0, 0.0, 0.0), Vec3::new(1.0, 2.0, 3.0));
+        assert!(a.is_similarity().is_none());
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn affine_apply_normal_matches_rotation_for_similarity() {
+        let a = Affine3::rotation_axis_angle(Vec3::new(0.3, 0.6, 0.1), 0.8);
+        let n = Vec3::new(0.0, 0.0, 1.0).normalized().unwrap();
+        let via_normal = a.apply_normal(n).normalized().unwrap();
+        let via_vector = a.apply_vector(n).normalized().unwrap();
+        assert!((via_normal - via_vector).norm() < 1e-9);
     }
 
     mod quick {

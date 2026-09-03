@@ -47,7 +47,7 @@ async fn the_undo_reorder_moves_the_run_back_to_the_head() {
     let undo = mutation.inverse(&base);
     assert_eq!(
         undo,
-        vec![SemioTextMutation::ReorderRuns(crate::artifacts::semio::standards::v1::subsets::text::schema::mutations::reorder_runs::mutation::ReorderRuns { from: 2, to: 0 })],
+        vec![SemioTextMutation::ReorderRuns(crate::artifacts::semio::standards::v1::subsets::text::schema::mutations::reorder_runs::ReorderRuns { from: 2, to: 0 })],
         "the undo must address the landed index #2 and send it back to #0"
     );
     let mut current = mutation.diff(&base).diff().apply(&base).expect("forward reorder-runs applies");

@@ -61,12 +61,35 @@
         "forwardAllArgs": true
       }
     },
+    "socket-grant-check": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🌎️hub/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts socket-grant-check"
+      }
+    },
+    "canonical-pair-check": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "🌎️hub/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts canonical-pair-check"
+      }
+    },
     "dev": {
       "executor": "nx:run-commands",
       "dependsOn": [{ "target": "build", "projects": ["os-hub-admin"] }],
       "options": {
         "cwd": "🌎️hub/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts dev"
+      }
+    },
+    "dev-secure-suite": {
+      "executor": "nx:run-commands",
+      "dependsOn": [{ "target": "build", "projects": ["os-hub-admin"] }],
+      "options": {
+        "cwd": "🌎️hub/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts dev secure-suite"
       }
     },
     "secure-local-smoke": {

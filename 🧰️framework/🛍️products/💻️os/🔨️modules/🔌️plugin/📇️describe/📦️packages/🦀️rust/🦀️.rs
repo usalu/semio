@@ -1,5 +1,6 @@
 //! 🛂️ `semio-framework-plugin-describe` — the build-time-only descriptor emitter
-//! (`📓️design-abi.md` §3, packet E1-describe). `describe <component.wasm> --out <dir>`
+//! (`📓️design-abi.md` §3, packet E1-describe). `describe <component.wasm> --core
+//! <core.wasm> --out <dir>`
 //! instantiates the built `world actor` component exactly once, with ONLY its `pure` import
 //! satisfied and a fuel cap, calls the `describe()` export, decodes the packed
 //! `semio_framework::PackageDescriptor` it returns, patches in the content hashes (which the guest
@@ -15,7 +16,8 @@ extern crate semio_framework_os_kernel as store;
 #[path = "../../../🧠️interpreter/🦀️.rs"]
 pub mod interpreter;
 
-use std::fs;
+use std::fs::{self, File, OpenOptions};
+use std::io::{Read, Write};
 use std::path::{Path, PathBuf};
 
 use semio_framework::{PackageDescriptor, ASSEMBLY_FAILED_PLUGIN_ID};
@@ -89,6 +91,10 @@ impl actor_bindings::semio::framework::effects::Host for DescribeHostState {}
 impl actor_bindings::semio::framework::events::Host for DescribeHostState {}
 #[cfg(test)]
 impl actor_bindings::semio::framework::ui::Host for DescribeHostState {}
+#[cfg(test)]
+impl actor_bindings::semio::framework::instance_lifetime::Host for DescribeHostState {}
+#[cfg(test)]
+impl actor_bindings::semio::framework::byte_page::Host for DescribeHostState {}
 
 #[cfg(test)]
 impl actor_bindings::semio::framework::ui::HostSurface for DescribeHostState {
@@ -252,6 +258,12 @@ const DESCRIBE_FUEL_BUDGET: u64 = 2_000_000_000;
 /// machines.
 const DESCRIBE_DEADLINE_MS: u32 = 300_000;
 
+/// 🛡️ Descriptor inputs and outputs share the strict catalog's per-artifact ceiling.
+pub const DESCRIBE_ARTIFACT_MAX_BYTES: u64 = 64 * 1024 * 1024;
+
+/// 🧱 Fixed-size IO keeps hashing and publication memory/work bounded and observable.
+pub const DESCRIBE_IO_CHUNK_BYTES: usize = 64 * 1024;
+
 /// 🚨️ Every way `describe_component` can fail, rendered as a plain message for the CLI's stderr.
 #[derive(Debug)]
 pub struct DescribeError(pub String);
@@ -260,6 +272,116 @@ impl std::fmt::Display for DescribeError {
     fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(formatter, "{}", self.0)
     }
+}
+
+/// 📄 Reads exactly one bounded regular non-symlink artifact in fixed-size chunks.
+fn read_artifact(path: &Path, label: &str) -> Result<(Vec<u8>, String), DescribeError> {
+    let metadata = fs::symlink_metadata(path).map_err(|error| DescribeError(format!("reading {label} metadata {}: {error}", path.display())))?;
+    if metadata.file_type().is_symlink() || !metadata.file_type().is_file() {
+        return Err(DescribeError(format!("{label} {} must be a regular non-symlink file", path.display())));
+    }
+    if metadata.len() > DESCRIBE_ARTIFACT_MAX_BYTES {
+        return Err(DescribeError(format!("{label} {} exceeds {DESCRIBE_ARTIFACT_MAX_BYTES} bytes", path.display())));
+    }
+    let mut file = File::open(path).map_err(|error| DescribeError(format!("opening {label} {}: {error}", path.display())))?;
+    let mut bytes = Vec::with_capacity(metadata.len() as usize);
+    let mut hash = semio_framework_hash::Sha256::new();
+    let mut chunk = [0_u8; DESCRIBE_IO_CHUNK_BYTES];
+    loop {
+        let read = file.read(&mut chunk).map_err(|error| DescribeError(format!("reading {label} {}: {error}", path.display())))?;
+        if read == 0 {
+            break;
+        }
+        if bytes.len().saturating_add(read) > DESCRIBE_ARTIFACT_MAX_BYTES as usize {
+            return Err(DescribeError(format!("{label} {} changed while reading or exceeds {DESCRIBE_ARTIFACT_MAX_BYTES} bytes", path.display())));
+        }
+        hash.update(&chunk[..read]);
+        bytes.extend_from_slice(&chunk[..read]);
+    }
+    if bytes.len() as u64 != metadata.len() {
+        return Err(DescribeError(format!("{label} {} changed while reading", path.display())));
+    }
+    Ok((bytes, semio_framework_hash::hex_lower(&hash.finalize())))
+}
+
+/// #️⃣ Derives distinct raw/core identities and refuses the historical raw-only substitution.
+fn artifact_hashes(wasm_sha256: String, core_wasm_sha256: String) -> Result<(String, String), DescribeError> {
+    if wasm_sha256 == core_wasm_sha256 {
+        return Err(DescribeError("raw component and independently extracted core module have the same SHA-256".to_string()));
+    }
+    Ok((wasm_sha256, core_wasm_sha256))
+}
+
+fn transaction_path(out_dir: &Path, name: &str, role: &str) -> PathBuf {
+    out_dir.join(format!(".{name}.{role}.{}", std::process::id()))
+}
+
+fn write_synced_new(path: &Path, bytes: &[u8]) -> Result<(), DescribeError> {
+    let mut file = OpenOptions::new().write(true).create_new(true).open(path).map_err(|error| DescribeError(format!("creating {}: {error}", path.display())))?;
+    file.write_all(bytes).map_err(|error| DescribeError(format!("writing {}: {error}", path.display())))?;
+    file.sync_all().map_err(|error| DescribeError(format!("syncing {}: {error}", path.display())))
+}
+
+/// 🧩 Publishes the canonical pack/JSON pair as one rollback-safe transaction.
+fn write_descriptor_pair_atomic(out_dir: &Path, pack: &[u8], json: &[u8]) -> Result<(), DescribeError> {
+    fs::create_dir_all(out_dir).map_err(|error| DescribeError(format!("creating {}: {error}", out_dir.display())))?;
+    let metadata = fs::symlink_metadata(out_dir).map_err(|error| DescribeError(format!("reading output directory {}: {error}", out_dir.display())))?;
+    if metadata.file_type().is_symlink() || !metadata.file_type().is_dir() {
+        return Err(DescribeError(format!("output {} must be a regular non-symlink directory", out_dir.display())));
+    }
+    let pack_path = out_dir.join("🛂️.descriptor.semio");
+    let json_path = out_dir.join("🔣️.json");
+    let pack_temp = transaction_path(out_dir, "descriptor", "pack-new");
+    let json_temp = transaction_path(out_dir, "descriptor", "json-new");
+    let pack_backup = transaction_path(out_dir, "descriptor", "pack-old");
+    let json_backup = transaction_path(out_dir, "descriptor", "json-old");
+    for path in [&pack_temp, &json_temp, &pack_backup, &json_backup] {
+        let _ = fs::remove_file(path);
+    }
+    if let Err(error) = write_synced_new(&pack_temp, pack).and_then(|_| write_synced_new(&json_temp, json)) {
+        let _ = fs::remove_file(&pack_temp);
+        let _ = fs::remove_file(&json_temp);
+        return Err(error);
+    }
+    let had_pack = pack_path.exists();
+    let had_json = json_path.exists();
+    let result = (|| {
+        if had_pack {
+            fs::rename(&pack_path, &pack_backup).map_err(|error| DescribeError(format!("retiring {}: {error}", pack_path.display())))?;
+        }
+        if had_json {
+            if let Err(error) = fs::rename(&json_path, &json_backup) {
+                if had_pack {
+                    let _ = fs::rename(&pack_backup, &pack_path);
+                }
+                return Err(DescribeError(format!("retiring {}: {error}", json_path.display())));
+            }
+        }
+        if let Err(error) = fs::rename(&pack_temp, &pack_path) {
+            if had_pack {
+                let _ = fs::rename(&pack_backup, &pack_path);
+            }
+            if had_json {
+                let _ = fs::rename(&json_backup, &json_path);
+            }
+            return Err(DescribeError(format!("publishing {}: {error}", pack_path.display())));
+        }
+        if let Err(error) = fs::rename(&json_temp, &json_path) {
+            let _ = fs::remove_file(&pack_path);
+            if had_pack {
+                let _ = fs::rename(&pack_backup, &pack_path);
+            }
+            if had_json {
+                let _ = fs::rename(&json_backup, &json_path);
+            }
+            return Err(DescribeError(format!("publishing {}: {error}", json_path.display())));
+        }
+        Ok(())
+    })();
+    for path in [&pack_temp, &json_temp, &pack_backup, &json_backup] {
+        let _ = fs::remove_file(path);
+    }
+    result
 }
 
 #[cfg(test)]
@@ -297,25 +419,19 @@ async fn execute_describe_owned(wasm_bytes: &[u8], source: &Path) -> Result<Vec<
 }
 
 /// 🛂️ Instantiates `wasm_path` once (fuel-capped, `pure`-only imports), calls its `describe()`
-/// export, patches `hashes` in (the guest cannot know its own already-built wasm bytes), and writes
+/// export, patches independent raw-component and extracted-core `hashes` in, and writes
 /// both output files under `out_dir`. Returns the patched descriptor for the caller to print/verify.
-///
-/// ⚠️ `hashes.core_wasm_sha256` is set equal to `hashes.wasm_sha256`: this emitter receives exactly
-/// one file (the already-componentized `.wasm`), not the pre-`wasm-tools component new` core module
-/// it may have been assembled from, so it cannot independently hash a "core" module that was never
-/// handed to it. A future caller that has both files can re-run with a lower-level flag; documented
-/// here rather than silently left as an empty string (which would make the registry `check` gate's
-/// `hashes.wasm_sha256` verification the only one ever meaningfully populated).
-pub async fn describe_component(wasm_path: &Path, out_dir: &Path) -> Result<PackageDescriptor, DescribeError> {
-    let wasm_bytes = fs::read(wasm_path).map_err(|error| DescribeError(format!("reading {}: {error}", wasm_path.display())))?;
+pub async fn describe_component(wasm_path: &Path, core_wasm_path: &Path, out_dir: &Path) -> Result<PackageDescriptor, DescribeError> {
+    let (wasm_bytes, wasm_sha256) = read_artifact(wasm_path, "raw component")?;
+    let (_, core_wasm_sha256) = read_artifact(core_wasm_path, "extracted core module")?;
+    let (wasm_sha256, core_wasm_sha256) = artifact_hashes(wasm_sha256, core_wasm_sha256)?;
     let descriptor_bytes = execute_describe_owned(&wasm_bytes, wasm_path).await?;
 
     let decoded = store::pack_rt::decode_wire_value(&descriptor_bytes).map_err(|error| DescribeError(format!("decoding describe() output as a pack: {error}")))?;
     let mut descriptor: PackageDescriptor = dsl::from_dsl_value(decoded).map_err(|error| DescribeError(format!("decoding describe() output as a PackageDescriptor: {error}")))?;
 
-    let wasm_sha256 = semio_framework_hash::sha256_hex(&wasm_bytes);
-    descriptor.hashes.wasm_sha256 = wasm_sha256.clone();
-    descriptor.hashes.core_wasm_sha256 = wasm_sha256;
+    descriptor.hashes.wasm_sha256 = wasm_sha256;
+    descriptor.hashes.core_wasm_sha256 = core_wasm_sha256;
     // 🪪️ `descriptor_sha256` self-hashes the descriptor's own encoded pack MINUS this very field
     // (a self-referential hash cannot include itself) — encode once with an empty
     // `descriptor_sha256`, hash THAT, then patch the real value in before the final write. Any
@@ -341,16 +457,14 @@ pub async fn describe_component(wasm_path: &Path, out_dir: &Path) -> Result<Pack
     if descriptor.manifest.plugin_id == ASSEMBLY_FAILED_PLUGIN_ID {
         return Err(DescribeError(format!("refusing to write a placeholder descriptor for {}: plugin assembly failed — {}", wasm_path.display(), descriptor.manifest.label)));
     }
-    fs::create_dir_all(out_dir).map_err(|error| DescribeError(format!("creating {}: {error}", out_dir.display())))?;
-    fs::write(out_dir.join("🛂️.descriptor.semio"), &final_bytes).map_err(|error| DescribeError(format!("writing 🛂️.descriptor.semio: {error}")))?;
-    fs::write(out_dir.join("🔣️.json"), format!("{final_json}\n")).map_err(|error| DescribeError(format!("writing 🔣️.json: {error}")))?;
+    write_descriptor_pair_atomic(out_dir, &final_bytes, format!("{final_json}\n").as_bytes())?;
 
     Ok(descriptor)
 }
 //#endregion 🔖️Describe
 
 //#region 🔖️Cli
-/// ⌨️ `describe <component.wasm> --out <dir>` — the only subcommand this crate has. Returns the
+/// ⌨️ `describe <component.wasm> --core <core.wasm> --out <dir>` — the only subcommand this crate has. Returns the
 /// process exit code (0 success, 1 a `describe_component` failure, 2 a usage error).
 pub async fn run(args: Vec<String>) -> i32 {
     let mut rest = args.into_iter();
@@ -361,7 +475,7 @@ pub async fn run(args: Vec<String>) -> i32 {
             2
         }
         None => {
-            eprintln!("usage: semio-framework-plugin-describe describe <component.wasm> --out <dir>");
+            eprintln!("usage: semio-framework-plugin-describe describe <component.wasm> --core <core.wasm> --out <dir>");
             2
         }
     }
@@ -369,10 +483,12 @@ pub async fn run(args: Vec<String>) -> i32 {
 
 async fn run_describe(args: Vec<String>) -> i32 {
     let mut wasm_path: Option<PathBuf> = None;
+    let mut core_wasm_path: Option<PathBuf> = None;
     let mut out_dir: Option<PathBuf> = None;
     let mut iter = args.into_iter();
     while let Some(arg) = iter.next() {
         match arg.as_str() {
+            "--core" => core_wasm_path = iter.next().map(PathBuf::from),
             "--out" => out_dir = iter.next().map(PathBuf::from),
             _ if wasm_path.is_none() => wasm_path = Some(PathBuf::from(arg)),
             other => {
@@ -381,13 +497,13 @@ async fn run_describe(args: Vec<String>) -> i32 {
             }
         }
     }
-    let (Some(wasm_path), Some(out_dir)) = (wasm_path, out_dir) else {
-        eprintln!("usage: semio-framework-plugin-describe describe <component.wasm> --out <dir>");
+    let (Some(wasm_path), Some(core_wasm_path), Some(out_dir)) = (wasm_path, core_wasm_path, out_dir) else {
+        eprintln!("usage: semio-framework-plugin-describe describe <component.wasm> --core <core.wasm> --out <dir>");
         return 2;
     };
-    match describe_component(&wasm_path, &out_dir).await {
+    match describe_component(&wasm_path, &core_wasm_path, &out_dir).await {
         Ok(descriptor) => {
-            println!("described {} ({:?}, role={:?}) -> {}/🛂️.descriptor.semio + 🔣️.json (wasm_sha256={})", wasm_path.display(), descriptor.manifest.plugin_id, descriptor.role, out_dir.display(), descriptor.hashes.wasm_sha256);
+            println!("described {} with core {} ({:?}, role={:?}) -> {}/🛂️.descriptor.semio + 🔣️.json (wasm_sha256={}, core_wasm_sha256={})", wasm_path.display(), core_wasm_path.display(), descriptor.manifest.plugin_id, descriptor.role, out_dir.display(), descriptor.hashes.wasm_sha256, descriptor.hashes.core_wasm_sha256);
             0
         }
         Err(error) => {
@@ -409,6 +525,14 @@ mod tests {
     }
 
     #[semio_framework_async_macros::async_test]
+    async fn raw_and_core_hashes_are_independent() {
+        let (raw, core) = artifact_hashes(semio_framework_hash::sha256_hex(b"component"), semio_framework_hash::sha256_hex(b"core")).expect("distinct artifact hashes");
+        assert_ne!(raw, core);
+        let same = semio_framework_hash::sha256_hex(b"same");
+        assert!(artifact_hashes(same.clone(), same).is_err());
+    }
+
+    #[semio_framework_async_macros::async_test]
     async fn run_with_no_args_returns_usage_exit_code() {
         assert_eq!(run(Vec::new()).await, 2);
     }
@@ -419,13 +543,13 @@ mod tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    async fn run_describe_without_out_flag_returns_usage_exit_code() {
-        assert_eq!(run(vec!["describe".to_string(), "component.wasm".to_string()]).await, 2);
+    async fn run_describe_without_core_flag_returns_usage_exit_code() {
+        assert_eq!(run(vec!["describe".to_string(), "component.wasm".to_string(), "--out".to_string(), "/tmp/does-not-matter".to_string()]).await, 2);
     }
 
     #[semio_framework_async_macros::async_test]
     async fn run_describe_on_missing_file_returns_failure_exit_code() {
-        let code = run(vec!["describe".to_string(), "/nonexistent/component.wasm".to_string(), "--out".to_string(), "/tmp/does-not-matter".to_string()]).await;
+        let code = run(vec!["describe".to_string(), "/nonexistent/component.wasm".to_string(), "--core".to_string(), "/nonexistent/core.wasm".to_string(), "--out".to_string(), "/tmp/does-not-matter".to_string()]).await;
         assert_eq!(code, 1);
     }
 

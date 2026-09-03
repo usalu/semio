@@ -17,7 +17,7 @@ pub fn patch_routes_operations(document: &GisMapSnapshot, route_ids: &[String], 
     if route_ids.is_empty() {
         return Emit::default();
     }
-    let dsl_value = dsl::to_dsl_value(&json!(value)).unwrap_or(DslValue::Null);
+    let dsl_value = DslValue::String(value.to_string());
     let operations: Vec<GisMapMutation> = document
         .routes
         .iter()
@@ -32,7 +32,7 @@ pub fn patch_routes_operations(document: &GisMapSnapshot, route_ids: &[String], 
             } else {
                 entries.push((field.to_string(), dsl_value.clone()));
             }
-            Some(GisMapMutation::ReplaceRouteData(replace_route_data::mutation::ReplaceRouteData { id: route.id.clone(), new_data: data }))
+            Some(GisMapMutation::ReplaceRouteData(replace_route_data::ReplaceRouteData { id: route.id.clone(), new_data: data }))
         })
         .collect();
     Emit::mutations(operations)

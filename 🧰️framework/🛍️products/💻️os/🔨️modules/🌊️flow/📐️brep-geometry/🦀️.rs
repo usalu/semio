@@ -8,8 +8,7 @@
 
 use base64::Engine;
 use neural_engine::{Atom, Cardinality, ChannelSpec, Dictionary, EvalError, FieldSpec, Operator, OperatorImpl, OperatorInfo, Registry, Schema, Value, ValueType};
-use semio_framework_3d::engine::{ParamDomain, PointClassification, Vec3};
-use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::schema::engine::{Brep, BrepKernel, GeometryHandle, GeometryKind};
+use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::schema::engine::{Brep, BrepKernel, GeometryHandle, GeometryKind, ParamDomain, PointClassification, Vec3};
 use std::collections::{HashMap, HashSet};
 use std::sync::{Mutex, OnceLock, RwLock};
 
@@ -449,6 +448,8 @@ pub enum BrepModuleError {
     Mesh(String),
     UnsupportedExportFormat(String),
     UnsupportedImportFormat(String),
+    InvalidArgs(String),
+    UnknownMethod(String),
 }
 
 impl std::fmt::Display for BrepModuleError {
@@ -460,6 +461,8 @@ impl std::fmt::Display for BrepModuleError {
             Self::Mesh(detail) => formatter.write_str(detail),
             Self::UnsupportedExportFormat(format) => write!(formatter, "unsupported solid export format: {format}"),
             Self::UnsupportedImportFormat(format) => write!(formatter, "unsupported solid import format: {format}"),
+            Self::InvalidArgs(detail) => write!(formatter, "invalid brep_invoke args: {detail}"),
+            Self::UnknownMethod(method) => write!(formatter, "unknown brep_invoke method: {method}"),
         }
     }
 }
@@ -553,6 +556,14 @@ mod wasm_bridge {
     pub fn dispose(handle: &str) {
         super::dispose_geometry(handle);
     }
+
+    /// 🌐️ Generic JSON-RPC bridge for the CAD `SpatialKernel` (see `🧠️semio/🟦️.ts`): dispatches
+    /// one `BrepKernel` method by name over JSON args, sharing the same in-process `kernel()` the
+    /// `tessellate`/`dispose` exports above use so handles stay valid across calls.
+    #[wasm_bindgen]
+    pub fn brep_invoke(method: &str, args_json: &str) -> String {
+        super::brep_invoke_json(method, args_json)
+    }
 }
 // #endregion 🔖️WasmTessellationBridge
 
@@ -621,3 +632,287 @@ pub fn import_glb_via_tessellation(kernel: &mut Brep, bytes: &[u8], tolerance: f
     kernel.import_obj(&obj_text, tolerance).map(|handle| vec![handle.0]).map_err(BrepModuleError::from)
 }
 // #endregion 🔖️MediaExport
+
+// #region 🔖️GenericInvoke
+/// 🌉️ `brep_invoke` argument/result JSON shape: `{"error": "..."}` on failure, otherwise one of
+/// `{"handle": "..."}` / `{"handles": [...]}` / `{"value": ...}` / a raw `MeshTransfer` object /
+/// `{"vertices": [...], "edges": [...], "faces": [...], "shells": [...]}` for `deconstruct`.
+fn invoke_args(args_json: &str) -> Result<crate::os_pack::json::Value, BrepModuleError> {
+    crate::os_pack::json::parse(args_json).map_err(|error| BrepModuleError::InvalidArgs(error.to_string()))
+}
+
+fn arg_f64(args: &crate::os_pack::json::Value, key: &str) -> Result<f64, BrepModuleError> {
+    args.get(key).and_then(|value| value.as_f64()).ok_or_else(|| BrepModuleError::InvalidArgs(format!("missing number {key}")))
+}
+
+fn arg_f64_or(args: &crate::os_pack::json::Value, key: &str, fallback: f64) -> f64 {
+    args.get(key).and_then(|value| value.as_f64()).unwrap_or(fallback)
+}
+
+fn arg_usize(args: &crate::os_pack::json::Value, key: &str) -> Result<usize, BrepModuleError> {
+    args.get(key).and_then(|value| value.as_u64()).map(|value| value as usize).ok_or_else(|| BrepModuleError::InvalidArgs(format!("missing integer {key}")))
+}
+
+fn arg_bool_or(args: &crate::os_pack::json::Value, key: &str, fallback: bool) -> bool {
+    args.get(key).and_then(|value| value.as_bool()).unwrap_or(fallback)
+}
+
+fn arg_string(args: &crate::os_pack::json::Value, key: &str) -> Result<String, BrepModuleError> {
+    args.get(key).and_then(|value| value.as_str()).map(str::to_string).ok_or_else(|| BrepModuleError::InvalidArgs(format!("missing string {key}")))
+}
+
+fn value_vec3(value: &crate::os_pack::json::Value) -> Result<Vec3, BrepModuleError> {
+    let items = value.as_array().ok_or_else(|| BrepModuleError::InvalidArgs("expected a 3-number array".to_string()))?;
+    if items.len() != 3 {
+        return Err(BrepModuleError::InvalidArgs("expected a 3-number array".to_string()));
+    }
+    let axis = |index: usize| items[index].as_f64().ok_or_else(|| BrepModuleError::InvalidArgs("expected a 3-number array".to_string()));
+    Ok([axis(0)?, axis(1)?, axis(2)?])
+}
+
+fn arg_vec3(args: &crate::os_pack::json::Value, key: &str) -> Result<Vec3, BrepModuleError> {
+    let value = args.get(key).ok_or_else(|| BrepModuleError::InvalidArgs(format!("missing point {key}")))?;
+    value_vec3(value)
+}
+
+fn arg_points(args: &crate::os_pack::json::Value, key: &str) -> Result<Vec<Vec3>, BrepModuleError> {
+    let items = args.get(key).and_then(|value| value.as_array()).ok_or_else(|| BrepModuleError::InvalidArgs(format!("missing point array {key}")))?;
+    items.iter().map(value_vec3).collect()
+}
+
+fn arg_handle(args: &crate::os_pack::json::Value, key: &str) -> Result<GeometryHandle, BrepModuleError> {
+    arg_string(args, key).map(GeometryHandle)
+}
+
+fn arg_handles(args: &crate::os_pack::json::Value, key: &str) -> Result<Vec<GeometryHandle>, BrepModuleError> {
+    let items = args.get(key).and_then(|value| value.as_array()).ok_or_else(|| BrepModuleError::InvalidArgs(format!("missing handle array {key}")))?;
+    items.iter().map(|item| item.as_str().map(|text| GeometryHandle(text.to_string())).ok_or_else(|| BrepModuleError::InvalidArgs(format!("{key} entries must be strings")))).collect()
+}
+
+fn handle_result(handle: GeometryHandle) -> crate::os_pack::json::Value {
+    crate::os_pack::json::object([("handle".to_string(), crate::os_pack::json::Value::String(handle.0))])
+}
+
+fn handles_result(handles: Vec<GeometryHandle>) -> crate::os_pack::json::Value {
+    crate::os_pack::json::object([("handles".to_string(), crate::os_pack::json::array(handles.into_iter().map(|handle| crate::os_pack::json::Value::String(handle.0))))])
+}
+
+fn number_result(value: f64) -> crate::os_pack::json::Value {
+    crate::os_pack::json::object([("value".to_string(), crate::os_pack::json::Value::Number(crate::os_pack::json::Number::Float(value)))])
+}
+
+fn vec3_result(value: Vec3) -> crate::os_pack::json::Value {
+    crate::os_pack::json::object([(
+        "value".to_string(),
+        crate::os_pack::json::array(value.into_iter().map(crate::os_pack::json::Number::Float).map(crate::os_pack::json::Value::Number)),
+    )])
+}
+
+fn string_result(value: String) -> crate::os_pack::json::Value {
+    crate::os_pack::json::object([("value".to_string(), crate::os_pack::json::Value::String(value))])
+}
+
+fn unit_result() -> crate::os_pack::json::Value {
+    crate::os_pack::json::object([])
+}
+
+fn topology_result(topology: semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::schema::engine::BrepTopology) -> crate::os_pack::json::Value {
+    let handle_array = |handles: Vec<GeometryHandle>| crate::os_pack::json::array(handles.into_iter().map(|handle| crate::os_pack::json::Value::String(handle.0)));
+    crate::os_pack::json::object([
+        ("vertices".to_string(), handle_array(topology.vertices)),
+        ("edges".to_string(), handle_array(topology.edges)),
+        ("faces".to_string(), handle_array(topology.faces)),
+        ("shells".to_string(), handle_array(topology.shells)),
+    ])
+}
+
+fn mesh_result(mesh: &semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::schema::engine::MeshTransfer) -> crate::os_pack::json::Value {
+    crate::os_pack::json::from_dsl_value(&crate::os_dsl::ToValue::to_value(mesh))
+}
+
+/// 🌉️ Dispatches one `BrepKernel` method by name over `os_pack::json` args (see `handle_result`
+/// and friends above for the response shapes); the sole bridge every `SemioBrepKernel` TS method
+/// (`✏️s/🔨️modules/🌐️spatial-kernel/⚙️engine/🧠️semio/🟦️.ts`) calls into.
+fn brep_invoke_inner(method: &str, args_json: &str) -> Result<crate::os_pack::json::Value, BrepModuleError> {
+    let args = invoke_args(args_json)?;
+    match method {
+        "box" => {
+            let mut guard = kernel().write().map_err(|_| BrepModuleError::LockPoisoned)?;
+            guard.box_prim(arg_f64(&args, "width")?, arg_f64(&args, "depth")?, arg_f64(&args, "height")?).map(handle_result).map_err(BrepModuleError::from)
+        }
+        "sphere" => {
+            let mut guard = kernel().write().map_err(|_| BrepModuleError::LockPoisoned)?;
+            guard.sphere_prim(arg_f64(&args, "radius")?).map(handle_result).map_err(BrepModuleError::from)
+        }
+        "cylinder" => {
+            let mut guard = kernel().write().map_err(|_| BrepModuleError::LockPoisoned)?;
+            guard.cylinder_prim(arg_f64(&args, "radius")?, arg_f64(&args, "height")?).map(handle_result).map_err(BrepModuleError::from)
+        }
+        "cone" => {
+            let mut guard = kernel().write().map_err(|_| BrepModuleError::LockPoisoned)?;
+            guard.cone_prim(arg_f64(&args, "radius")?, arg_f64(&args, "height")?).map(handle_result).map_err(BrepModuleError::from)
+        }
+        "lineCurve" => {
+            let mut guard = kernel().write().map_err(|_| BrepModuleError::LockPoisoned)?;
+            guard.line_curve(arg_vec3(&args, "start")?, arg_vec3(&args, "end")?).map(handle_result).map_err(BrepModuleError::from)
+        }
+        "circleCurve" => {
+            let mut guard = kernel().write().map_err(|_| BrepModuleError::LockPoisoned)?;
+            guard.circle_curve(arg_vec3(&args, "center")?, arg_vec3(&args, "normal")?, arg_f64(&args, "radius")?).map(handle_result).map_err(BrepModuleError::from)
+        }
+        "arcCurve" => {
+            let mut guard = kernel().write().map_err(|_| BrepModuleError::LockPoisoned)?;
+            guard
+                .arc_curve(arg_vec3(&args, "center")?, arg_vec3(&args, "normal")?, arg_f64(&args, "radius")?, arg_f64(&args, "startAngle")?, arg_f64(&args, "endAngle")?)
+                .map(handle_result)
+                .map_err(BrepModuleError::from)
+        }
+        "ellipseCurve" => {
+            let mut guard = kernel().write().map_err(|_| BrepModuleError::LockPoisoned)?;
+            guard
+                .ellipse_curve(arg_vec3(&args, "center")?, arg_vec3(&args, "normal")?, arg_f64(&args, "semiMajor")?, arg_f64(&args, "semiMinor")?)
+                .map(handle_result)
+                .map_err(BrepModuleError::from)
+        }
+        "interpolateCurve" => {
+            let mut guard = kernel().write().map_err(|_| BrepModuleError::LockPoisoned)?;
+            guard.interpolate_curve(&arg_points(&args, "points")?, arg_usize(&args, "degree")?).map(handle_result).map_err(BrepModuleError::from)
+        }
+        "approximateCurve" => {
+            let mut guard = kernel().write().map_err(|_| BrepModuleError::LockPoisoned)?;
+            guard
+                .approximate_curve(&arg_points(&args, "points")?, arg_usize(&args, "degree")?, arg_usize(&args, "controlPoints")?)
+                .map(handle_result)
+                .map_err(BrepModuleError::from)
+        }
+        "polylineWire" => {
+            let mut guard = kernel().write().map_err(|_| BrepModuleError::LockPoisoned)?;
+            guard.polyline_wire(&arg_points(&args, "points")?).map(handle_result).map_err(BrepModuleError::from)
+        }
+        "rectangleWire" => {
+            let mut guard = kernel().write().map_err(|_| BrepModuleError::LockPoisoned)?;
+            guard.rectangle_wire(arg_f64(&args, "width")?, arg_f64(&args, "height")?).map(handle_result).map_err(BrepModuleError::from)
+        }
+        "planarFaceFromPoints" => {
+            let mut guard = kernel().write().map_err(|_| BrepModuleError::LockPoisoned)?;
+            guard.planar_face_from_points(&arg_points(&args, "points")?).map(handle_result).map_err(BrepModuleError::from)
+        }
+        "planarFaceFromWire" => {
+            let mut guard = kernel().write().map_err(|_| BrepModuleError::LockPoisoned)?;
+            guard.planar_face_from_wire(&arg_handle(&args, "wire")?).map(handle_result).map_err(BrepModuleError::from)
+        }
+        "extrudeWire" => {
+            let mut guard = kernel().write().map_err(|_| BrepModuleError::LockPoisoned)?;
+            guard.extrude_wire(&arg_handle(&args, "wire")?, arg_vec3(&args, "vector")?).map(handle_result).map_err(BrepModuleError::from)
+        }
+        "extrude" => {
+            let mut guard = kernel().write().map_err(|_| BrepModuleError::LockPoisoned)?;
+            guard.extrude(&arg_handle(&args, "face")?, arg_vec3(&args, "direction")?, arg_f64(&args, "distance")?).map(handle_result).map_err(BrepModuleError::from)
+        }
+        "revolve" => {
+            let mut guard = kernel().write().map_err(|_| BrepModuleError::LockPoisoned)?;
+            guard
+                .revolve(&arg_handle(&args, "face")?, arg_vec3(&args, "axisOrigin")?, arg_vec3(&args, "axisDirection")?, arg_f64(&args, "angle")?)
+                .map(handle_result)
+                .map_err(BrepModuleError::from)
+        }
+        "loft" => {
+            let mut guard = kernel().write().map_err(|_| BrepModuleError::LockPoisoned)?;
+            guard.loft(&arg_handles(&args, "profiles")?, arg_bool_or(&args, "smooth", false)).map(handle_result).map_err(BrepModuleError::from)
+        }
+        "sweep" => {
+            let mut guard = kernel().write().map_err(|_| BrepModuleError::LockPoisoned)?;
+            guard.sweep(&arg_handle(&args, "profile")?, &arg_handle(&args, "path")?).map(handle_result).map_err(BrepModuleError::from)
+        }
+        "thickenFace" => {
+            let mut guard = kernel().write().map_err(|_| BrepModuleError::LockPoisoned)?;
+            guard.thicken_face(&arg_handle(&args, "face")?, arg_f64(&args, "thickness")?).map(handle_result).map_err(BrepModuleError::from)
+        }
+        "offsetFace" => {
+            let mut guard = kernel().write().map_err(|_| BrepModuleError::LockPoisoned)?;
+            guard.offset_face(&arg_handle(&args, "face")?, arg_f64(&args, "distance")?).map(handle_result).map_err(BrepModuleError::from)
+        }
+        "fuse" => {
+            let mut guard = kernel().write().map_err(|_| BrepModuleError::LockPoisoned)?;
+            guard.fuse(&arg_handle(&args, "a")?, &arg_handle(&args, "b")?).map(handle_result).map_err(BrepModuleError::from)
+        }
+        "cut" => {
+            let mut guard = kernel().write().map_err(|_| BrepModuleError::LockPoisoned)?;
+            guard.cut(&arg_handle(&args, "a")?, &arg_handle(&args, "b")?).map(handle_result).map_err(BrepModuleError::from)
+        }
+        "intersect" => {
+            let mut guard = kernel().write().map_err(|_| BrepModuleError::LockPoisoned)?;
+            guard.intersect(&arg_handle(&args, "a")?, &arg_handle(&args, "b")?).map(handle_result).map_err(BrepModuleError::from)
+        }
+        "sewFaces" => {
+            let mut guard = kernel().write().map_err(|_| BrepModuleError::LockPoisoned)?;
+            guard.sew_faces(&arg_handles(&args, "faces")?, arg_f64_or(&args, "tolerance", 1e-6)).map(handle_result).map_err(BrepModuleError::from)
+        }
+        "faceFromWire" => {
+            let mut guard = kernel().write().map_err(|_| BrepModuleError::LockPoisoned)?;
+            guard.face_from_wire(&arg_handle(&args, "wire")?).map(handle_result).map_err(BrepModuleError::from)
+        }
+        "healSolid" => {
+            let mut guard = kernel().write().map_err(|_| BrepModuleError::LockPoisoned)?;
+            guard.heal_solid(&arg_handle(&args, "shape")?, arg_f64_or(&args, "tolerance", 1e-6)).map(handle_result).map_err(BrepModuleError::from)
+        }
+        "volume" => {
+            let guard = kernel().read().map_err(|_| BrepModuleError::LockPoisoned)?;
+            guard.volume(&arg_handle(&args, "shape")?).map(number_result).map_err(BrepModuleError::from)
+        }
+        "area" => {
+            let guard = kernel().read().map_err(|_| BrepModuleError::LockPoisoned)?;
+            guard.area(&arg_handle(&args, "shape")?).map(number_result).map_err(BrepModuleError::from)
+        }
+        "length" => {
+            let guard = kernel().read().map_err(|_| BrepModuleError::LockPoisoned)?;
+            guard.length(&arg_handle(&args, "shape")?).map(number_result).map_err(BrepModuleError::from)
+        }
+        "centerOfMass" => {
+            let guard = kernel().read().map_err(|_| BrepModuleError::LockPoisoned)?;
+            guard.center_of_mass(&arg_handle(&args, "shape")?).map(vec3_result).map_err(BrepModuleError::from)
+        }
+        "distance" => {
+            let guard = kernel().read().map_err(|_| BrepModuleError::LockPoisoned)?;
+            guard.distance(&arg_handle(&args, "a")?, &arg_handle(&args, "b")?).map(number_result).map_err(BrepModuleError::from)
+        }
+        "deconstruct" => {
+            let mut guard = kernel().write().map_err(|_| BrepModuleError::LockPoisoned)?;
+            guard.deconstruct(&arg_handle(&args, "shape")?).map(topology_result).map_err(BrepModuleError::from)
+        }
+        "tessellate" => {
+            let guard = kernel().read().map_err(|_| BrepModuleError::LockPoisoned)?;
+            guard.tessellate(&arg_handle(&args, "shape")?, arg_f64_or(&args, "tolerance", 1e-3)).map(|mesh| mesh_result(&mesh)).map_err(BrepModuleError::from)
+        }
+        "exportStep" => {
+            let guard = kernel().read().map_err(|_| BrepModuleError::LockPoisoned)?;
+            guard.export_step(&arg_handles(&args, "shapes")?).map(string_result).map_err(BrepModuleError::from)
+        }
+        "importStep" => {
+            let mut guard = kernel().write().map_err(|_| BrepModuleError::LockPoisoned)?;
+            guard.import_step(&arg_string(&args, "data")?).map(handles_result).map_err(BrepModuleError::from)
+        }
+        "dispose" => {
+            let mut guard = kernel().write().map_err(|_| BrepModuleError::LockPoisoned)?;
+            guard.dispose(&arg_handle(&args, "handle")?);
+            Ok(unit_result())
+        }
+        "retain" => {
+            let mut guard = kernel().write().map_err(|_| BrepModuleError::LockPoisoned)?;
+            let live: HashSet<String> = arg_handles(&args, "handles")?.into_iter().map(|handle| handle.0).collect();
+            guard.retain(&live);
+            Ok(unit_result())
+        }
+        other => Err(BrepModuleError::UnknownMethod(other.to_string())),
+    }
+}
+
+/// 🌐️ `brep_invoke` implementation shared by the wasm export and native callers/tests: returns
+/// the result JSON or `{"error": "..."}` — never panics on malformed input.
+pub fn brep_invoke_json(method: &str, args_json: &str) -> String {
+    match brep_invoke_inner(method, args_json) {
+        Ok(value) => crate::os_pack::json::to_string(&value),
+        Err(error) => crate::os_pack::json::to_string(&crate::os_pack::json::object([("error".to_string(), crate::os_pack::json::Value::String(error.to_string()))])),
+    }
+}
+// #endregion 🔖️GenericInvoke

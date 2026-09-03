@@ -40,7 +40,7 @@ mod tests {
     /// `command_envelope_round_trip_holds_for_an_applied_operation`).
     #[semio_framework_async_macros::async_test]
     async fn command_envelope_round_trip_holds_for_an_applied_operation() {
-        use crate::artifacts::cad::mutations::create_shape_model::mutation::CreateShapeModel;
+        use crate::artifacts::cad::mutations::create_shape_model::CreateShapeModel;
         use crate::artifacts::cad::op::CadMutation;
         use crate::artifacts::cad::{empty_cad_snapshot, testkit::sample_model_child, CAD_DOCUMENT_SCHEMA};
         use protocol::{ArtifactId, Edit, SchemaId};

@@ -162,7 +162,7 @@ fn generation_control_args(generation_id: &str, question_id: &str, field_index: 
 /// 📝 Renders generation questions as semantic controls with typed change bindings.
 pub(crate) fn generation_form(
     spec: &flow::playbook::PlaybookSpec,
-    values: &serde_json::Map<String, serde_json::Value>,
+    values: &flow::playbook::PlaybookValues,
     controller_id: &'static str,
     action: &str,
     generation_id: &str,
@@ -179,7 +179,7 @@ pub(crate) fn generation_form(
             if !flow::playbook::is_block_visible(question, values) {
                 continue;
             }
-            let value = values.get(&question.id).cloned().unwrap_or_else(|| flow::playbook::dsl_value_to_json(flow::playbook::default_value_for_block(question)));
+            let value = values.get(&question.id).cloned().unwrap_or_else(|| flow::playbook::default_value_for_block(question));
             let field_id = format!("generate.form.{}", question.id);
             let args = || generation_control_args(generation_id, &question.id, None);
             let control = match question.kind.as_str() {
@@ -208,7 +208,7 @@ pub(crate) fn generation_form(
                     ui_build(generation_control_action(ui_id(select, format!("{field_id}.select"))?, controller_id, action, args()?)?)?
                 }
                 "vector" => {
-                    let numbers = value.as_array().cloned().unwrap_or_else(|| question.fields.as_deref().unwrap_or_default().iter().map(|field| serde_json::json!(field.value.unwrap_or(0.0))).collect());
+                    let numbers = value.as_array().map(<[dsl::DslValue]>::to_vec).unwrap_or_else(|| question.fields.as_deref().unwrap_or_default().iter().map(|field| dsl::DslValue::float(field.value.unwrap_or(0.0))).collect());
                     let labels: Vec<String> = question
                         .fields
                         .as_deref()
@@ -228,7 +228,7 @@ pub(crate) fn generation_form(
                 "note" => ui_build(ui_id(text(ui_label(question.text.clone().unwrap_or_default())?), format!("{field_id}.note"))?)?,
                 "image" => ui_build(ui_id(text(ui_label(question.src.clone().unwrap_or_else(|| "(no image)".into()))?), format!("{field_id}.image"))?)?,
                 _ => {
-                    let input = input(InputKind::Text).value(ui_text(value.to_string())?);
+                    let input = input(InputKind::Text).value(ui_text(serde_json::Value::from(&value).to_string())?);
                     ui_build(generation_control_action(ui_id(input, format!("{field_id}.input"))?, controller_id, action, args()?)?)?
                 }
             };

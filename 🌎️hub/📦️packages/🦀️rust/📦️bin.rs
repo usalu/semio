@@ -13,9 +13,9 @@
 
 use axum::body::Bytes;
 use axum::extract::ws::{CloseFrame, Message, WebSocket, WebSocketUpgrade};
-use axum::extract::{Path, State};
+use axum::extract::{OriginalUri, Path, State};
 use axum::http::{HeaderMap, StatusCode};
-use axum::response::IntoResponse;
+use axum::response::{IntoResponse, Response};
 use axum::routing::{delete, get, post};
 use axum::{Json, Router};
 use db::db_storage::PayloadStorage as _;
@@ -29,31 +29,35 @@ use futures::{SinkExt, StreamExt};
 use protocol::{decode_client_frame, encode_server_frame, AckStage, ActorId, ApplyOutcome, ArtifactId as ProtocolArtifactId, ClientFrame, Lane, MutationEnvelope, RuntimeFrontierSummary, ServerFrame};
 use semio_framework_async::ShardedMap;
 use semio_hub::directory::error::DirectoryError;
-use semio_hub::directory::model::{AuthSessionKind, DocumentScope, InviteRecord, SpaceRole, SyncSessionRecord};
+use semio_hub::directory::model::{AuthSessionKind, DocumentScope, InviteRecord, SocketSessionBindingStatus, SocketShareBindingStatus, SpaceRole, SyncSessionRecord};
 #[cfg(test)]
 use semio_hub::directory::model::AuthSessionIssue;
-use semio_hub::directory::{identity_subject_digest, HubCapability, IdentityAssertionVerifier, IdentityVerificationControl, InviteCapability, LocalBootstrapTransport, SessionCapability};
-use semio_hub::lag_rebootstrap::{RebootstrapContext, RebootstrapProgress, RebootstrapTransferControl, VerifiedRebootstrapSource, REBOOTSTRAP_DEADLINE_MS};
+use semio_hub::directory::{identity_subject_digest, HubCapability, IdentityAssertionVerifier, IdentityVerificationControl, InviteCapability, LocalBootstrapTransport, SessionCapability, SocketGrantCapability, AUTH_TEXT_MAX_BYTES};
+use semio_hub::lag_rebootstrap::{append_canonical_pair_data, append_canonical_pair_header, append_canonical_pair_terminal, canonical_pair_etag, CanonicalPairTerminal, RebootstrapContext, RebootstrapError, RebootstrapProgress, RebootstrapProgressStage, RebootstrapTransferControl, VerifiedRebootstrapSource, CANONICAL_CHECKPOINT_PAIR_MEDIA_TYPE, REBOOTSTRAP_DEADLINE_MS};
+#[cfg(test)]
+use semio_hub::lag_rebootstrap::decode_canonical_checkpoint_pair;
 use semio_hub::local_bootstrap::{serve_local_bootstrap, InheritedLocalBootstrapTransport, LOCAL_BOOTSTRAP_EXCHANGE_DEADLINE_MS};
 use semio_hub::artifact_authority::trusted_catalog::{NativeCodecBinding, TrustedCatalogLoader, VerifiedTrustedCatalog};
-use semio_hub::artifact_authority::chunk_cas::{ArtifactChunkCasStores, FsArtifactChunkCasStorage};
+use semio_hub::artifact_authority::chunk_cas::{ArtifactChunkBlobStore, ArtifactChunkCasStorage, ArtifactChunkCasStores, FsArtifactChunkCasStorage};
 #[cfg(test)]
-use semio_hub::artifact_authority::chunk_cas::{artifact_cas_manifest_locator_v1, prepare_artifact_cas_manifest_v1, prepare_artifact_cas_ownership_v1, ArtifactChunkBlobStore, MemoryArtifactChunkCasStorage};
+use semio_hub::artifact_authority::chunk_cas::{artifact_cas_manifest_locator_v1, prepare_artifact_cas_manifest_v1, prepare_artifact_cas_ownership_v1, MemoryArtifactChunkCasStorage};
 #[cfg(feature = "neo4j")]
 use semio_hub::artifact_authority::chunk_cas::Neo4jArtifactChunkCasStorage;
 #[cfg(feature = "postgres")]
 use semio_hub::artifact_authority::chunk_cas::PostgresArtifactChunkCasStorage;
 #[cfg(feature = "sqlite")]
 use semio_hub::artifact_authority::chunk_cas::SqliteArtifactChunkCasStorage;
-use semio_hub::artifact_authority::{AuthorityError, AuthorityLimits, AuthorityOperationControl, AuthorityProgress, OperationContext, ValidatingCanonicalArtifactAuthority};
+use semio_hub::artifact_authority::{AuthorityError, AuthorityLimits, AuthorityOperationControl, AuthorityProgress, CheckpointPublicationOrchestrator, OperationContext, ValidatingCanonicalArtifactAuthority};
 #[cfg(test)]
 use semio_hub::artifact_authority::{ArtifactBlobIntegrity, ArtifactPair, ImmutableArtifactBlobStore};
 #[cfg(feature = "sqlite")]
 use semio_hub::directory::sqlite::SqliteDirectory;
-use semio_hub::directory::{CommandResult, DirectoryService, HubDirectories, HubDirectory, DIRECTORY_EVENT_READ_MAX, DIRECTORY_PROJECTION_REBUILD_MAX_EVENTS};
+use semio_hub::directory::{ArtifactCasSweepContinuation, ArtifactCasSweepRequest, ArtifactCasSweepResult, CommandResult, DirectoryService, HubDirectories, HubDirectory, HubVerifiedCheckpointPublisher, DIRECTORY_EVENT_READ_MAX, DIRECTORY_PROJECTION_REBUILD_MAX_EVENTS};
 use serde::{Deserialize, Serialize};
+use semio_framework_hash::Sha256;
+use std::collections::{BTreeMap, BTreeSet};
 use std::net::SocketAddr;
-use std::sync::Arc;
+use std::sync::{Arc, Mutex};
 use std::time::{SystemTime, UNIX_EPOCH};
 use tokio::sync::broadcast;
 
@@ -188,6 +192,165 @@ impl IdentityVerificationControl for HubBootstrapControl {
 }
 
 type HubArtifactAuthority = ValidatingCanonicalArtifactAuthority<Arc<VerifiedTrustedCatalog>>;
+type HubArtifactPublication = CheckpointPublicationOrchestrator<ArtifactChunkBlobStore<Arc<ArtifactChunkCasStores>>, HubVerifiedCheckpointPublisher<ArtifactChunkCasStores>>;
+
+struct ArtifactCasMaintenanceControl {
+    cancelled: Arc<std::sync::atomic::AtomicBool>,
+}
+
+impl AuthorityOperationControl for ArtifactCasMaintenanceControl {
+    fn now_ms(&self) -> u64 {
+        SystemTime::now().duration_since(UNIX_EPOCH).map_or(0, |duration| u64::try_from(duration.as_millis()).unwrap_or(u64::MAX))
+    }
+
+    fn is_cancelled(&self) -> bool {
+        self.cancelled.load(std::sync::atomic::Ordering::Acquire)
+    }
+
+    fn report(&self, progress: AuthorityProgress) {
+        if progress.completed_units == progress.total_units {
+            eprintln!("[INFO] artifact CAS maintenance {:?}: {}/{}", progress.stage, progress.completed_units, progress.total_units);
+        }
+    }
+}
+
+struct ArtifactCasMaintenanceSupervisor {
+    cancelled: Arc<std::sync::atomic::AtomicBool>,
+    healthy: Arc<std::sync::atomic::AtomicBool>,
+    wake: Arc<tokio::sync::Notify>,
+    task: std::sync::Mutex<Option<tokio::task::JoinHandle<()>>>,
+}
+
+#[derive(Default)]
+struct ArtifactCasMaintenanceCheckpoint {
+    continuation: Option<ArtifactCasSweepContinuation>,
+}
+
+impl ArtifactCasMaintenanceCheckpoint {
+    fn request(&self, execute: bool, max_objects: usize) -> ArtifactCasSweepRequest {
+        ArtifactCasSweepRequest { execute, max_objects, continuation: self.continuation }
+    }
+
+    fn accept(&mut self, result: &ArtifactCasSweepResult) -> bool {
+        self.continuation = result.continuation;
+        self.continuation.is_none()
+    }
+
+    fn fail(&mut self, error: &AuthorityError) {
+        if matches!(error, AuthorityError::Store(message) if message.contains("continuation generation changed") || message.contains("continuation is invalid")) {
+            self.continuation = None;
+        }
+    }
+}
+
+impl ArtifactCasMaintenanceSupervisor {
+    fn start(service: Arc<DirectoryService>, storage: Arc<ArtifactChunkCasStores>, execute: bool) -> Arc<Self> {
+        let cancelled = Arc::new(std::sync::atomic::AtomicBool::new(false));
+        let healthy = Arc::new(std::sync::atomic::AtomicBool::new(true));
+        let wake = Arc::new(tokio::sync::Notify::new());
+        let control_cancelled = cancelled.clone();
+        let task_healthy = healthy.clone();
+        let task_wake = wake.clone();
+        let task = tokio::spawn(async move {
+            let control = ArtifactCasMaintenanceControl { cancelled: control_cancelled };
+            let mut interval = tokio::time::interval(std::time::Duration::from_secs(60));
+            interval.set_missed_tick_behavior(tokio::time::MissedTickBehavior::Skip);
+            let mut checkpoint = ArtifactCasMaintenanceCheckpoint::default();
+            loop {
+                tokio::select! {
+                    _ = interval.tick() => {}
+                    _ = task_wake.notified() => {
+                        if control.is_cancelled() { return; }
+                        continue;
+                    }
+                }
+                if control.is_cancelled() {
+                    return;
+                }
+                let run_deadline_ms = control.now_ms().saturating_add(30_000);
+                for _ in 0..16 {
+                    if control.is_cancelled() {
+                        return;
+                    }
+                    let context = OperationContext::new(run_deadline_ms, AuthorityLimits::maximum(), &control);
+                    match service
+                        .sweep_artifact_cas(storage.as_ref(), checkpoint.request(execute, semio_hub::directory::ARTIFACT_CAS_SWEEP_OBJECT_MAX), &context)
+                        .await
+                    {
+                        Ok(result) => {
+                            task_healthy.store(true, std::sync::atomic::Ordering::Release);
+                            eprintln!(
+                                "[INFO] artifact CAS maintenance complete: examined={} protected={} eligible={} deleted={} missing={} continued={}",
+                                result.examined_objects,
+                                result.protected_objects,
+                                result.eligible_objects,
+                                result.deleted_objects,
+                                result.missing_objects,
+                                result.continuation.is_some()
+                            );
+                            if checkpoint.accept(&result) {
+                                break;
+                            }
+                        }
+                        Err(AuthorityError::Cancelled) if control.is_cancelled() => return,
+                        Err(error) => {
+                            task_healthy.store(false, std::sync::atomic::Ordering::Release);
+                            checkpoint.fail(&error);
+                            eprintln!("[WARN] artifact CAS maintenance failed closed: {error}");
+                            break;
+                        }
+                    }
+                }
+            }
+        });
+        Arc::new(Self { cancelled, healthy, wake, task: std::sync::Mutex::new(Some(task)) })
+    }
+
+    #[cfg(test)]
+    fn disabled() -> Arc<Self> {
+        Arc::new(Self {
+            cancelled: Arc::new(std::sync::atomic::AtomicBool::new(false)),
+            healthy: Arc::new(std::sync::atomic::AtomicBool::new(true)),
+            wake: Arc::new(tokio::sync::Notify::new()),
+            task: std::sync::Mutex::new(None),
+        })
+    }
+
+    fn healthy(&self) -> bool {
+        self.healthy.load(std::sync::atomic::Ordering::Acquire)
+    }
+
+    async fn shutdown(&self) {
+        self.cancelled.store(true, std::sync::atomic::Ordering::Release);
+        self.wake.notify_waiters();
+        let task = self.task.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take();
+        if let Some(mut task) = task {
+            if tokio::time::timeout(std::time::Duration::from_secs(31), &mut task).await.is_err() {
+                task.abort();
+                let _ = task.await;
+            }
+        }
+    }
+}
+
+impl Drop for ArtifactCasMaintenanceSupervisor {
+    fn drop(&mut self) {
+        self.cancelled.store(true, std::sync::atomic::Ordering::Release);
+        self.wake.notify_waiters();
+        if let Some(task) = self.task.get_mut().unwrap_or_else(std::sync::PoisonError::into_inner).take() {
+            task.abort();
+        }
+    }
+}
+
+fn artifact_cas_sweep_execute_from_env() -> Result<bool, HubError> {
+    match std::env::var("OS_HUB_ARTIFACT_CAS_SWEEP_EXECUTE").as_deref() {
+        Err(std::env::VarError::NotPresent) | Ok("") | Ok("false") | Ok("0") => Ok(false),
+        Ok("true") | Ok("1") => Ok(true),
+        Err(error) => Err(HubError::UnsafeAuthConfiguration(format!("OS_HUB_ARTIFACT_CAS_SWEEP_EXECUTE is unreadable: {error}"))),
+        Ok(_) => Err(HubError::UnsafeAuthConfiguration("OS_HUB_ARTIFACT_CAS_SWEEP_EXECUTE must be true, false, 1, or 0".into())),
+    }
+}
 
 async fn configured_artifact_authority(bundle_path: Option<std::path::PathBuf>, profile: Option<String>, bindings: &[NativeCodecBinding]) -> Result<Option<Arc<HubArtifactAuthority>>, AuthorityError> {
     let (bundle_path, profile) = match (bundle_path, profile) {
@@ -255,6 +418,21 @@ struct TestLiveGate {
     document_release: tokio::sync::Semaphore,
     directory_subscribed: tokio::sync::Semaphore,
     directory_release: tokio::sync::Semaphore,
+    socket_before_welcome: tokio::sync::Semaphore,
+    socket_welcome_release: tokio::sync::Semaphore,
+    socket_after_welcome: tokio::sync::Semaphore,
+    socket_bootstrap_release: tokio::sync::Semaphore,
+    socket_command_received: tokio::sync::Semaphore,
+    socket_command_release: tokio::sync::Semaphore,
+    socket_lag_received: tokio::sync::Semaphore,
+    socket_lag_release: tokio::sync::Semaphore,
+    socket_broadcast_received: tokio::sync::Semaphore,
+    socket_broadcast_release: tokio::sync::Semaphore,
+    socket_rebootstrap_read: tokio::sync::Semaphore,
+    socket_directory_admitted: tokio::sync::Semaphore,
+    socket_directory_release: tokio::sync::Semaphore,
+    socket_admin_revoke_admitted: tokio::sync::Semaphore,
+    socket_admin_revoke_release: tokio::sync::Semaphore,
 }
 
 #[cfg(test)]
@@ -265,8 +443,378 @@ impl Default for TestLiveGate {
             document_release: tokio::sync::Semaphore::new(0),
             directory_subscribed: tokio::sync::Semaphore::new(0),
             directory_release: tokio::sync::Semaphore::new(0),
+            socket_before_welcome: tokio::sync::Semaphore::new(0),
+            socket_welcome_release: tokio::sync::Semaphore::new(0),
+            socket_after_welcome: tokio::sync::Semaphore::new(0),
+            socket_bootstrap_release: tokio::sync::Semaphore::new(0),
+            socket_command_received: tokio::sync::Semaphore::new(0),
+            socket_command_release: tokio::sync::Semaphore::new(0),
+            socket_lag_received: tokio::sync::Semaphore::new(0),
+            socket_lag_release: tokio::sync::Semaphore::new(0),
+            socket_broadcast_received: tokio::sync::Semaphore::new(0),
+            socket_broadcast_release: tokio::sync::Semaphore::new(0),
+            socket_rebootstrap_read: tokio::sync::Semaphore::new(0),
+            socket_directory_admitted: tokio::sync::Semaphore::new(0),
+            socket_directory_release: tokio::sync::Semaphore::new(0),
+            socket_admin_revoke_admitted: tokio::sync::Semaphore::new(0),
+            socket_admin_revoke_release: tokio::sync::Semaphore::new(0),
         }
     }
+}
+
+const SOCKET_GRANT_TTL_MS: i64 = 30_000;
+const SOCKET_GRANT_LEDGER_CAPACITY: usize = 4_096;
+const SOCKET_GRANT_BINDING_PENDING_CAPACITY: usize = 64;
+const SOCKET_PROTOCOL_V1: &str = "semio.socket.v1";
+
+#[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord)]
+enum SocketBindingKeyV1 {
+    User(String),
+    Session(String),
+    Share(String),
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+enum SocketAudienceV1 {
+    Document(DocumentScope),
+    Directory { auth_session_id: String, authorization_generation: u64 },
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+enum SocketSubjectV1 {
+    Session { session_id: String, user_id: String, authorization_generation: u64, role: Option<SpaceRole>, expires_at_ms: i64 },
+    Share { share_id: String, selector: String, scope: DocumentScope, expires_at_ms: i64 },
+}
+
+impl SocketSubjectV1 {
+    fn binding(&self) -> SocketBindingKeyV1 {
+        match self {
+            Self::Session { session_id, .. } => SocketBindingKeyV1::Session(session_id.clone()),
+            Self::Share { share_id, .. } => SocketBindingKeyV1::Share(share_id.clone()),
+        }
+    }
+
+    fn admission_bindings(&self) -> Vec<SocketBindingKeyV1> {
+        match self {
+            Self::Session { session_id, user_id, .. } => vec![SocketBindingKeyV1::User(user_id.clone()), SocketBindingKeyV1::Session(session_id.clone())],
+            Self::Share { share_id, .. } => vec![SocketBindingKeyV1::Share(share_id.clone())],
+        }
+    }
+
+    async fn revalidate(&self, directory: &HubDirectories, audience: &SocketAudienceV1, at_ms: i64) -> SocketBindingValidityV1 {
+        match (self, audience) {
+            (Self::Session { session_id, user_id, authorization_generation, role, expires_at_ms }, SocketAudienceV1::Document(scope)) => {
+                match directory.socket_session_binding(session_id, user_id, *authorization_generation, Some(&scope.space_id), at_ms).await {
+                    Ok(SocketSessionBindingStatus::Active { role: current, expires_at_ms: current_expiry }) if current == *role && current_expiry == *expires_at_ms => SocketBindingValidityV1::Active,
+                    Ok(SocketSessionBindingStatus::Unavailable) | Err(_) => SocketBindingValidityV1::Unavailable,
+                    _ => SocketBindingValidityV1::Unauthorized,
+                }
+            }
+            (Self::Session { session_id, user_id, authorization_generation, expires_at_ms, .. }, SocketAudienceV1::Directory { auth_session_id, authorization_generation: audience_generation })
+                if session_id == auth_session_id && authorization_generation == audience_generation =>
+            {
+                match directory.socket_session_binding(session_id, user_id, *authorization_generation, None, at_ms).await {
+                    Ok(SocketSessionBindingStatus::Active { role: None, expires_at_ms: current_expiry }) if current_expiry == *expires_at_ms => SocketBindingValidityV1::Active,
+                    Ok(SocketSessionBindingStatus::Unavailable) | Err(_) => SocketBindingValidityV1::Unavailable,
+                    _ => SocketBindingValidityV1::Unauthorized,
+                }
+            }
+            (Self::Share { share_id, selector, scope, expires_at_ms }, SocketAudienceV1::Document(audience_scope)) if scope == audience_scope => {
+                match directory.socket_share_binding(share_id, selector, scope, at_ms).await {
+                    Ok(SocketShareBindingStatus::Active { expires_at_ms: current_expiry }) if current_expiry == *expires_at_ms => SocketBindingValidityV1::Active,
+                    Ok(SocketShareBindingStatus::Unavailable) | Err(_) => SocketBindingValidityV1::Unavailable,
+                    _ => SocketBindingValidityV1::Unauthorized,
+                }
+            }
+            _ => SocketBindingValidityV1::Unauthorized,
+        }
+    }
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum SocketBindingValidityV1 {
+    Active,
+    Unauthorized,
+    Unavailable,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum SocketGrantStateV1 {
+    Pending,
+    Consumed,
+}
+
+#[derive(Clone)]
+struct SocketGrantRecordV1 {
+    selector: String,
+    secret_digest: [u8; 32],
+    audience: SocketAudienceV1,
+    actor_id: String,
+    subject: SocketSubjectV1,
+    issued_at_ms: i64,
+    expires_at_ms: i64,
+    state: SocketGrantStateV1,
+}
+
+struct SocketGrantAdmissionV1 {
+    record: SocketGrantRecordV1,
+}
+
+#[derive(Default)]
+struct SocketGrantLedgerInnerV1 {
+    records: BTreeMap<String, SocketGrantRecordV1>,
+    pending_by_binding: BTreeMap<SocketBindingKeyV1, BTreeSet<String>>,
+    live_by_binding: BTreeMap<SocketBindingKeyV1, BTreeMap<String, (String, Arc<tokio::sync::Notify>)>>,
+}
+
+#[derive(Default)]
+struct SocketGrantLedgerV1 {
+    inner: Mutex<SocketGrantLedgerInnerV1>,
+}
+
+#[derive(Default)]
+struct SocketBindingGatesV1 {
+    inner: Mutex<BTreeMap<SocketBindingKeyV1, std::sync::Weak<tokio::sync::Mutex<()>>>>,
+}
+
+impl SocketBindingGatesV1 {
+    fn gate(&self, binding: SocketBindingKeyV1) -> Arc<tokio::sync::Mutex<()>> {
+        let mut inner = self.inner.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+        inner.retain(|_, gate| gate.strong_count() > 0);
+        if let Some(gate) = inner.get(&binding).and_then(std::sync::Weak::upgrade) {
+            return gate;
+        }
+        let gate = Arc::new(tokio::sync::Mutex::new(()));
+        inner.insert(binding, Arc::downgrade(&gate));
+        gate
+    }
+
+    async fn acquire_subject(&self, subject: &SocketSubjectV1) -> Vec<tokio::sync::OwnedMutexGuard<()>> {
+        let mut admissions = Vec::with_capacity(2);
+        for binding in subject.admission_bindings() {
+            admissions.push(self.gate(binding).lock_owned().await);
+        }
+        admissions
+    }
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum SocketGrantLedgerErrorV1 {
+    Rejected,
+    Capacity,
+}
+
+impl SocketGrantLedgerV1 {
+    fn sweep_expired(inner: &mut SocketGrantLedgerInnerV1, at_ms: i64) {
+        let live_selectors = inner
+            .live_by_binding
+            .values()
+            .flat_map(BTreeMap::values)
+            .map(|(selector, _)| selector.clone())
+            .collect::<BTreeSet<_>>();
+        let expired: Vec<String> = inner
+            .records
+            .iter()
+            .filter_map(|(selector, record)| {
+                (record.expires_at_ms <= at_ms && (record.state == SocketGrantStateV1::Pending || !live_selectors.contains(selector))).then(|| selector.clone())
+            })
+            .collect();
+        for selector in expired {
+            if let Some(record) = inner.records.remove(&selector) {
+                let binding = record.subject.binding();
+                if let Some(selectors) = inner.pending_by_binding.get_mut(&binding) {
+                    selectors.remove(&selector);
+                    if selectors.is_empty() {
+                        inner.pending_by_binding.remove(&binding);
+                    }
+                }
+            }
+        }
+    }
+
+    fn issue(&self, capability: &SocketGrantCapability, audience: SocketAudienceV1, actor_id: String, subject: SocketSubjectV1, issued_at_ms: i64, expires_at_ms: i64) -> Result<(), SocketGrantLedgerErrorV1> {
+        let mut inner = self.inner.lock().map_err(|_| SocketGrantLedgerErrorV1::Rejected)?;
+        Self::sweep_expired(&mut inner, issued_at_ms);
+        let binding = subject.binding();
+        if inner.records.len() >= SOCKET_GRANT_LEDGER_CAPACITY || inner.pending_by_binding.get(&binding).map_or(0, BTreeSet::len) >= SOCKET_GRANT_BINDING_PENDING_CAPACITY {
+            return Err(SocketGrantLedgerErrorV1::Capacity);
+        }
+        let selector = capability.selector().to_string();
+        if inner.records.contains_key(&selector) {
+            return Err(SocketGrantLedgerErrorV1::Rejected);
+        }
+        inner.pending_by_binding.entry(binding).or_default().insert(selector.clone());
+        inner.records.insert(
+            selector.clone(),
+            SocketGrantRecordV1 { selector, secret_digest: capability.secret_digest(), audience, actor_id, subject, issued_at_ms, expires_at_ms, state: SocketGrantStateV1::Pending },
+        );
+        Ok(())
+    }
+
+    fn pending(&self, capability: &SocketGrantCapability, audience: &SocketAudienceV1, at_ms: i64) -> Result<SocketGrantRecordV1, SocketGrantLedgerErrorV1> {
+        let mut inner = self.inner.lock().map_err(|_| SocketGrantLedgerErrorV1::Rejected)?;
+        Self::sweep_expired(&mut inner, at_ms);
+        let record = inner.records.get(capability.selector()).ok_or(SocketGrantLedgerErrorV1::Rejected)?;
+        if record.state != SocketGrantStateV1::Pending || record.audience != *audience || !semio_hub::directory::constant_time_digest_eq(&record.secret_digest, &capability.secret_digest()) {
+            return Err(SocketGrantLedgerErrorV1::Rejected);
+        }
+        Ok(record.clone())
+    }
+
+    fn pending_directory(&self, capability: &SocketGrantCapability, at_ms: i64) -> Result<SocketGrantRecordV1, SocketGrantLedgerErrorV1> {
+        let mut inner = self.inner.lock().map_err(|_| SocketGrantLedgerErrorV1::Rejected)?;
+        Self::sweep_expired(&mut inner, at_ms);
+        let record = inner.records.get(capability.selector()).ok_or(SocketGrantLedgerErrorV1::Rejected)?;
+        if record.state != SocketGrantStateV1::Pending
+            || !matches!(record.audience, SocketAudienceV1::Directory { .. })
+            || !semio_hub::directory::constant_time_digest_eq(&record.secret_digest, &capability.secret_digest())
+        {
+            return Err(SocketGrantLedgerErrorV1::Rejected);
+        }
+        Ok(record.clone())
+    }
+
+    fn consume(&self, candidate: &SocketGrantRecordV1, at_ms: i64) -> Result<SocketGrantRecordV1, SocketGrantLedgerErrorV1> {
+        let mut inner = self.inner.lock().map_err(|_| SocketGrantLedgerErrorV1::Rejected)?;
+        Self::sweep_expired(&mut inner, at_ms);
+        let binding = candidate.subject.binding();
+        if !inner.pending_by_binding.get(&binding).is_some_and(|selectors| selectors.contains(&candidate.selector)) {
+            return Err(SocketGrantLedgerErrorV1::Rejected);
+        }
+        let record = inner.records.get_mut(&candidate.selector).ok_or(SocketGrantLedgerErrorV1::Rejected)?;
+        if record.state != SocketGrantStateV1::Pending
+            || record.audience != candidate.audience
+            || record.secret_digest != candidate.secret_digest
+            || record.issued_at_ms != candidate.issued_at_ms
+            || record.expires_at_ms <= at_ms
+        {
+            return Err(SocketGrantLedgerErrorV1::Rejected);
+        }
+        record.state = SocketGrantStateV1::Consumed;
+        let consumed = record.clone();
+        if let Some(selectors) = inner.pending_by_binding.get_mut(&binding) {
+            selectors.remove(&candidate.selector);
+            if selectors.is_empty() {
+                inner.pending_by_binding.remove(&binding);
+            }
+        }
+        Ok(consumed)
+    }
+
+    fn register_live(&self, record: &SocketGrantRecordV1) -> Result<(String, Arc<tokio::sync::Notify>), SocketGrantLedgerErrorV1> {
+        let id = directory::os_identity::time_ordered_id();
+        let notify = Arc::new(tokio::sync::Notify::new());
+        let mut inner = self.inner.lock().map_err(|_| SocketGrantLedgerErrorV1::Rejected)?;
+        let stored = inner.records.get(&record.selector).ok_or(SocketGrantLedgerErrorV1::Rejected)?;
+        if stored.state != SocketGrantStateV1::Consumed || stored.secret_digest != record.secret_digest || stored.audience != record.audience || stored.subject != record.subject {
+            return Err(SocketGrantLedgerErrorV1::Rejected);
+        }
+        inner.live_by_binding.entry(record.subject.binding()).or_default().insert(id.clone(), (record.selector.clone(), notify.clone()));
+        Ok((id, notify))
+    }
+
+    fn unregister_live(&self, record: &SocketGrantRecordV1, live_id: &str) {
+        let Ok(mut inner) = self.inner.lock() else { return };
+        let binding = record.subject.binding();
+        if let Some(live) = inner.live_by_binding.get_mut(&binding) {
+            live.remove(live_id);
+            if live.is_empty() {
+                inner.live_by_binding.remove(&binding);
+            }
+        }
+        inner.records.remove(&record.selector);
+    }
+
+    fn is_live(&self, record: &SocketGrantRecordV1, live_id: &str) -> bool {
+        let Ok(inner) = self.inner.lock() else { return false };
+        inner.records.get(&record.selector).is_some_and(|stored| {
+            stored.state == SocketGrantStateV1::Consumed
+                && stored.secret_digest == record.secret_digest
+                && stored.audience == record.audience
+                && stored.subject == record.subject
+                && inner
+                    .live_by_binding
+                    .get(&record.subject.binding())
+                    .and_then(|live| live.get(live_id))
+                    .is_some_and(|(selector, _)| selector == &record.selector)
+        })
+    }
+
+    fn invalidate_binding(&self, binding: SocketBindingKeyV1) {
+        let notifiers = {
+            let Ok(mut inner) = self.inner.lock() else { return };
+            if let Some(selectors) = inner.pending_by_binding.remove(&binding) {
+                for selector in selectors {
+                    inner.records.remove(&selector);
+                }
+            }
+            let invalidated = inner
+                .records
+                .iter()
+                .filter_map(|(selector, record)| (record.subject.binding() == binding).then(|| selector.clone()))
+                .collect::<Vec<_>>();
+            for selector in invalidated {
+                inner.records.remove(&selector);
+            }
+            inner.live_by_binding.remove(&binding).into_iter().flat_map(BTreeMap::into_values).map(|(_, notify)| notify).collect::<Vec<_>>()
+        };
+        for notify in notifiers {
+            notify.notify_one();
+        }
+    }
+
+    fn reject_pending(&self, selector: &str) {
+        let Ok(mut inner) = self.inner.lock() else { return };
+        let Some(record) = inner.records.get(selector) else { return };
+        if record.state != SocketGrantStateV1::Pending {
+            return;
+        }
+        let binding = record.subject.binding();
+        inner.records.remove(selector);
+        if let Some(selectors) = inner.pending_by_binding.get_mut(&binding) {
+            selectors.remove(selector);
+            if selectors.is_empty() {
+                inner.pending_by_binding.remove(&binding);
+            }
+        }
+    }
+
+}
+
+struct SocketLiveLeaseV1 {
+    ledger: Arc<SocketGrantLedgerV1>,
+    record: SocketGrantRecordV1,
+    id: String,
+    notify: Arc<tokio::sync::Notify>,
+}
+
+impl Drop for SocketLiveLeaseV1 {
+    fn drop(&mut self) {
+        self.ledger.unregister_live(&self.record, &self.id);
+    }
+}
+
+async fn socket_live_authority(
+    state: &HubState,
+    record: &SocketGrantRecordV1,
+    live_id: &str,
+) -> Result<Vec<tokio::sync::OwnedMutexGuard<()>>, SocketBindingValidityV1> {
+    let admission = tokio::time::timeout(std::time::Duration::from_secs(2), state.socket_binding_gates.acquire_subject(&record.subject))
+        .await
+        .map_err(|_| SocketBindingValidityV1::Unavailable)?;
+    let validity = tokio::time::timeout(
+        std::time::Duration::from_secs(2),
+        record.subject.revalidate(state.directory.as_ref(), &record.audience, now_ms()),
+    )
+    .await
+    .unwrap_or(SocketBindingValidityV1::Unavailable);
+    if validity != SocketBindingValidityV1::Active {
+        return Err(validity);
+    }
+    if !state.socket_grants.is_live(record, live_id) {
+        return Err(SocketBindingValidityV1::Unauthorized);
+    }
+    Ok(admission)
 }
 
 #[derive(Clone)]
@@ -276,6 +824,8 @@ struct HubState {
     directory: Arc<HubDirectories>,
     rebootstrap: Arc<VerifiedRebootstrapSource>,
     _artifact_authority: Option<Arc<HubArtifactAuthority>>,
+    _artifact_publication: Arc<HubArtifactPublication>,
+    artifact_maintenance: Arc<ArtifactCasMaintenanceSupervisor>,
     /// @emoji 🏭️ Wave 1.B: the single serialized directory writer (contract §C1's decider laws +
     /// dense event `seq`) built once over `directory` at startup — see `semio_hub::directory::
     /// DirectoryService`'s own doc. `/directory/commands` and `/directory/invites/{token}/redeem`
@@ -301,6 +851,8 @@ struct HubState {
     fanout_capacity: usize,
     #[cfg(test)]
     live_gate: Option<Arc<TestLiveGate>>,
+    #[cfg(test)]
+    canonical_pair_authorization_gate: Option<Arc<dyn Fn() -> bool + Send + Sync>>,
     /// @emoji 👥️ `(document_scope_key_v1, actor)` -> that actor's presence session (contract §C7.3) — ephemeral,
     /// never durable (mirrors the preview lane's own law), rebuilt from nothing on hub restart. The
     /// roster is document-wide now (contract §C7.0): `ServerFrame::Presence` fans out on `fanout`, not
@@ -316,6 +868,8 @@ struct HubState {
     /// fires it; the loop observes the wake-up and closes the connection on its own next tick —
     /// this map never itself closes a socket, only signals the session that owns it to.
     session_kicks: Arc<ShardedMap<String, Arc<tokio::sync::Notify>>>,
+    socket_grants: Arc<SocketGrantLedgerV1>,
+    socket_binding_gates: Arc<SocketBindingGatesV1>,
     /// @emoji 🧩️ Wave 1.B: installed runtime extensions mirrored from dev `/extensions` static dir —
     /// populated by hub deploy copy / sideload; `GET /extensions` lists `install.json` rows.
     extensions_root: std::path::PathBuf,
@@ -497,6 +1051,18 @@ async fn authorized(state: &HubState, space_id: &str, document_id: &str, token: 
 async fn authorized_for_blob(state: &HubState, space_id: &str, hash: &str, token: Option<&str>) -> bool {
     !matches!(resolve_auth(state, space_id, hash, token).await, AuthOutcome::Denied)
 }
+
+fn canonical_pair_auth_outcome_allowed(outcome: &AuthOutcome) -> bool {
+    matches!(outcome, AuthOutcome::Session { .. } | AuthOutcome::ShareToken)
+}
+
+async fn authorized_for_canonical_pair(state: &HubState, scope: &DocumentScope, token: &str) -> bool {
+    #[cfg(test)]
+    if state.canonical_pair_authorization_gate.as_ref().is_some_and(|gate| !gate()) {
+        return false;
+    }
+    canonical_pair_auth_outcome_allowed(&resolve_auth(state, &scope.space_id, &scope.document_id, Some(token)).await)
+}
 //#endregion 🔖️Auth
 
 //#region 🔖️AdminAuth
@@ -535,6 +1101,9 @@ struct HubReadinessV1 {
     authentication: HubAuthenticationReadinessV1,
     directory: HubComponentReadinessV1,
     storage: HubComponentReadinessV1,
+    artifact_cas_barrier: HubComponentReadinessV1,
+    artifact_publication: HubComponentReadinessV1,
+    artifact_cas_sweeper: HubArtifactCasSweeperReadinessV1,
     artifact_authority: HubComponentReadinessV1,
     admin_assets: HubComponentReadinessV1,
     features: HubFeatureReadinessV1,
@@ -555,6 +1124,14 @@ struct HubComponentReadinessV1 {
 
 #[derive(Clone, Serialize)]
 #[serde(rename_all = "camelCase")]
+struct HubArtifactCasSweeperReadinessV1 {
+    ready: bool,
+    execute: bool,
+    default_mode: &'static str,
+}
+
+#[derive(Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
 struct HubFeatureReadinessV1 {
     open_plan: bool,
     rebootstrap: bool,
@@ -562,12 +1139,12 @@ struct HubFeatureReadinessV1 {
     inference: bool,
 }
 
-fn hub_readiness(mode: HubMode, run_id: String, bootstrap_ready: bool, artifact_authority_ready: bool, admin_assets_ready: bool) -> HubReadinessV1 {
+fn hub_readiness(mode: HubMode, bind_scope: &'static str, run_id: String, bootstrap_ready: bool, artifact_authority_ready: bool, admin_assets_ready: bool, artifact_cas_barrier_ready: bool, artifact_cas_sweep_execute: bool) -> HubReadinessV1 {
     let authentication_kind = match mode {
         HubMode::Development => "local-bootstrap-pipe-v1",
         HubMode::Production => "identity-assertion-verifier",
     };
-    let required_ready = bootstrap_ready && artifact_authority_ready && admin_assets_ready;
+    let required_ready = bootstrap_ready && artifact_authority_ready && admin_assets_ready && artifact_cas_barrier_ready;
     HubReadinessV1 {
         schema: "semio.hub.readiness/v1",
         status: if required_ready { "ready" } else { "not-ready" },
@@ -576,10 +1153,13 @@ fn hub_readiness(mode: HubMode, run_id: String, bootstrap_ready: bool, artifact_
             HubMode::Development => "development",
             HubMode::Production => "production",
         },
-        bind_scope: "loopback",
+        bind_scope,
         authentication: HubAuthenticationReadinessV1 { kind: authentication_kind, bootstrap_ready, public_session_issuance: false },
         directory: HubComponentReadinessV1 { ready: true },
         storage: HubComponentReadinessV1 { ready: true },
+        artifact_cas_barrier: HubComponentReadinessV1 { ready: artifact_cas_barrier_ready },
+        artifact_publication: HubComponentReadinessV1 { ready: artifact_cas_barrier_ready },
+        artifact_cas_sweeper: HubArtifactCasSweeperReadinessV1 { ready: artifact_cas_barrier_ready, execute: artifact_cas_sweep_execute, default_mode: "dry-run" },
         artifact_authority: HubComponentReadinessV1 { ready: artifact_authority_ready },
         admin_assets: HubComponentReadinessV1 { ready: admin_assets_ready },
         features: HubFeatureReadinessV1 { open_plan: false, rebootstrap: true, mcp_workspace: false, inference: false },
@@ -664,6 +1244,166 @@ struct ShareResponse {
     expires_at: i64,
 }
 
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+struct SocketGrantReceiptV1 {
+    schema: &'static str,
+    protocol: &'static str,
+    grant: String,
+    actor_id: String,
+    expires_at_ms: i64,
+}
+
+fn socket_issue_bearer(headers: &HeaderMap) -> Result<String, StatusCode> {
+    let values = headers.get_all(axum::http::header::AUTHORIZATION);
+    if values.iter().count() != 1 {
+        return Err(StatusCode::UNAUTHORIZED);
+    }
+    let encoded = values.iter().next().and_then(|value| value.to_str().ok()).ok_or(StatusCode::UNAUTHORIZED)?;
+    if encoded.len() > AUTH_TEXT_MAX_BYTES {
+        return Err(StatusCode::UNAUTHORIZED);
+    }
+    let capability = encoded.strip_prefix("Bearer ").ok_or(StatusCode::UNAUTHORIZED)?;
+    if capability.is_empty() || capability.len() > AUTH_TEXT_MAX_BYTES {
+        return Err(StatusCode::UNAUTHORIZED);
+    }
+    Ok(capability.to_string())
+}
+
+fn socket_actor_id(material: &[u8; 32], stable_session: bool) -> String {
+    let mut digest = Sha256::new();
+    digest.update(b"semio/hub/socket/actor/v1\0");
+    digest.update(if stable_session { b"session" } else { b"share" });
+    digest.update(material);
+    format!("hub.v1.{}", semio_framework_hash::hex_lower(&digest.finalize()))
+}
+
+fn socket_text_bounded(value: &str) -> bool {
+    !value.is_empty() && value.len() <= AUTH_TEXT_MAX_BYTES
+}
+
+async fn issue_socket_grant(
+    state: &HubState,
+    subject: SocketSubjectV1,
+    audience: SocketAudienceV1,
+    stable_actor_material: Option<[u8; 32]>,
+) -> Result<Json<SocketGrantReceiptV1>, StatusCode> {
+    let binding = subject.binding();
+    let _admission = tokio::time::timeout(std::time::Duration::from_secs(2), state.socket_binding_gates.acquire_subject(&subject))
+        .await
+        .map_err(|_| StatusCode::SERVICE_UNAVAILABLE)?;
+    let validity = tokio::time::timeout(std::time::Duration::from_secs(2), subject.revalidate(state.directory.as_ref(), &audience, now_ms()))
+        .await
+        .unwrap_or(SocketBindingValidityV1::Unavailable);
+    match validity {
+        SocketBindingValidityV1::Active => {}
+        SocketBindingValidityV1::Unauthorized => return Err(StatusCode::UNAUTHORIZED),
+        SocketBindingValidityV1::Unavailable => return Err(StatusCode::SERVICE_UNAVAILABLE),
+    }
+    let capability = SocketGrantCapability::mint().map_err(directory_error_status)?;
+    let now = now_ms();
+    let binding_expiry = match &subject {
+        SocketSubjectV1::Session { expires_at_ms, .. } | SocketSubjectV1::Share { expires_at_ms, .. } => *expires_at_ms,
+    };
+    let expires_at_ms = now.checked_add(SOCKET_GRANT_TTL_MS).ok_or(StatusCode::SERVICE_UNAVAILABLE)?.min(binding_expiry);
+    if expires_at_ms <= now {
+        return Err(StatusCode::UNAUTHORIZED);
+    }
+    let actor_id = socket_actor_id(&stable_actor_material.unwrap_or_else(|| capability.secret_digest()), stable_actor_material.is_some());
+    state.socket_grants.issue(&capability, audience.clone(), actor_id.clone(), subject, now, expires_at_ms).map_err(|error| match error {
+        SocketGrantLedgerErrorV1::Capacity => StatusCode::SERVICE_UNAVAILABLE,
+        SocketGrantLedgerErrorV1::Rejected => StatusCode::UNAUTHORIZED,
+    })?;
+    let record = state.socket_grants.pending(&capability, &audience, now_ms()).map_err(|_| StatusCode::UNAUTHORIZED)?;
+    let validity = tokio::time::timeout(std::time::Duration::from_secs(2), record.subject.revalidate(state.directory.as_ref(), &record.audience, now_ms()))
+        .await
+        .unwrap_or(SocketBindingValidityV1::Unavailable);
+    match validity {
+        SocketBindingValidityV1::Active => {}
+        SocketBindingValidityV1::Unauthorized => {
+            state.socket_grants.invalidate_binding(binding);
+            return Err(StatusCode::UNAUTHORIZED);
+        }
+        SocketBindingValidityV1::Unavailable => {
+            state.socket_grants.reject_pending(&record.selector);
+            return Err(StatusCode::SERVICE_UNAVAILABLE);
+        }
+    }
+    Ok(Json(SocketGrantReceiptV1 { schema: "semio.hub.socket-grant/v1", protocol: SOCKET_PROTOCOL_V1, grant: capability.expose_once(), actor_id, expires_at_ms }))
+}
+
+async fn issue_document_socket_grant(
+    Path((space_id, document_id)): Path<(String, String)>,
+    headers: HeaderMap,
+    State(state): State<HubState>,
+) -> Result<Json<SocketGrantReceiptV1>, StatusCode> {
+    if !socket_text_bounded(&space_id) || !socket_text_bounded(&document_id) {
+        return Err(StatusCode::BAD_REQUEST);
+    }
+    let scope = DocumentScope::new(space_id, document_id);
+    let capability = HubCapability::parse(&socket_issue_bearer(&headers)?).map_err(|_| StatusCode::UNAUTHORIZED)?;
+    let audience = SocketAudienceV1::Document(scope.clone());
+    let (subject, stable_actor_material) = match capability {
+        HubCapability::Session(capability) => {
+            let session = tokio::time::timeout(std::time::Duration::from_secs(2), state.directory.authenticate_session(&capability))
+                .await
+                .map_err(|_| StatusCode::SERVICE_UNAVAILABLE)?
+                .map_err(|_| StatusCode::SERVICE_UNAVAILABLE)?
+                .ok_or(StatusCode::UNAUTHORIZED)?;
+            let role = tokio::time::timeout(std::time::Duration::from_secs(2), state.directory.get_role(&scope.space_id, &session.user_id))
+                .await
+                .map_err(|_| StatusCode::SERVICE_UNAVAILABLE)?
+                .map_err(|_| StatusCode::SERVICE_UNAVAILABLE)?
+                .ok_or(StatusCode::UNAUTHORIZED)?;
+            let material = session.secret_digest;
+            let subject = SocketSubjectV1::Session {
+                session_id: session.id,
+                user_id: session.user_id,
+                authorization_generation: session.authorization_generation,
+                role: Some(role),
+                expires_at_ms: session.expires_at,
+            };
+            (subject, Some(material))
+        }
+        HubCapability::Share(capability) => {
+            let share = tokio::time::timeout(std::time::Duration::from_secs(2), state.directory.authenticate_share_binding(&scope, &capability))
+                .await
+                .map_err(|_| StatusCode::SERVICE_UNAVAILABLE)?
+                .map_err(|_| StatusCode::SERVICE_UNAVAILABLE)?
+                .ok_or(StatusCode::UNAUTHORIZED)?;
+            (SocketSubjectV1::Share { share_id: share.id, selector: share.selector, scope: scope.clone(), expires_at_ms: share.expires_at }, None)
+        }
+        HubCapability::Invite(_) => return Err(StatusCode::UNAUTHORIZED),
+    };
+    let descriptor = tokio::time::timeout(std::time::Duration::from_secs(2), state.directory.get_document_descriptor(&scope))
+        .await
+        .map_err(|_| StatusCode::SERVICE_UNAVAILABLE)?
+        .map_err(directory_error_status)?;
+    if descriptor.is_none() {
+        return Err(StatusCode::NOT_FOUND);
+    }
+    issue_socket_grant(&state, subject, audience, stable_actor_material).await
+}
+
+async fn issue_directory_socket_grant(headers: HeaderMap, State(state): State<HubState>) -> Result<Json<SocketGrantReceiptV1>, StatusCode> {
+    let capability = SessionCapability::parse(&socket_issue_bearer(&headers)?).map_err(|_| StatusCode::UNAUTHORIZED)?;
+    let session = tokio::time::timeout(std::time::Duration::from_secs(2), state.directory.authenticate_session(&capability))
+        .await
+        .map_err(|_| StatusCode::SERVICE_UNAVAILABLE)?
+        .map_err(|_| StatusCode::SERVICE_UNAVAILABLE)?
+        .ok_or(StatusCode::UNAUTHORIZED)?;
+    let material = session.secret_digest;
+    let audience = SocketAudienceV1::Directory { auth_session_id: session.id.clone(), authorization_generation: session.authorization_generation };
+    let subject = SocketSubjectV1::Session {
+        session_id: session.id,
+        user_id: session.user_id,
+        authorization_generation: session.authorization_generation,
+        role: None,
+        expires_at_ms: session.expires_at,
+    };
+    issue_socket_grant(&state, subject, audience, Some(material)).await
+}
+
 const DEFAULT_SHARE_TTL_SECS: i64 = 7 * 24 * 60 * 60;
 
 #[derive(Default, Deserialize)]
@@ -677,6 +1417,113 @@ struct BlobRecord {
     hash: String,
     media_type: String,
     size: i64,
+}
+
+fn canonical_pair_bearer(headers: &HeaderMap) -> Result<String, StatusCode> {
+    if headers.get_all(axum::http::header::AUTHORIZATION).iter().count() != 1 {
+        return Err(StatusCode::UNAUTHORIZED);
+    }
+    bearer(headers).filter(|value| !value.is_empty()).ok_or(StatusCode::UNAUTHORIZED)
+}
+
+fn canonical_pair_request_admission(uri: &axum::http::Uri, headers: &HeaderMap) -> Result<String, StatusCode> {
+    if uri.query().is_some() {
+        return Err(StatusCode::BAD_REQUEST);
+    }
+    if headers.contains_key(axum::http::header::RANGE) {
+        return Err(StatusCode::RANGE_NOT_SATISFIABLE);
+    }
+    if headers.get_all(axum::http::header::ACCEPT).iter().count() != 1
+        || headers.get(axum::http::header::ACCEPT).and_then(|value| value.to_str().ok()) != Some(CANONICAL_CHECKPOINT_PAIR_MEDIA_TYPE)
+    {
+        return Err(StatusCode::NOT_ACCEPTABLE);
+    }
+    canonical_pair_bearer(headers)
+}
+
+struct CanonicalPairHttpControl;
+
+impl RebootstrapTransferControl for CanonicalPairHttpControl {
+    fn now_ms(&self) -> u64 {
+        u64::try_from(now_ms()).unwrap_or(u64::MAX)
+    }
+
+    fn is_cancelled(&self) -> bool {
+        false
+    }
+
+    fn report(&self, _progress: RebootstrapProgress) {}
+}
+
+fn canonical_pair_error_status(error: RebootstrapError) -> StatusCode {
+    match error {
+        RebootstrapError::DeadlineExceeded => StatusCode::GATEWAY_TIMEOUT,
+        RebootstrapError::Unavailable => StatusCode::NOT_FOUND,
+        RebootstrapError::ResourceLimit => StatusCode::PAYLOAD_TOO_LARGE,
+        RebootstrapError::Cancelled => StatusCode::SERVICE_UNAVAILABLE,
+        RebootstrapError::AuthorityIdentityChanged | RebootstrapError::Integrity => StatusCode::CONFLICT,
+    }
+}
+
+/// 🧭️ Exact authenticated, path-only public projection of one active canonical checkpoint pair.
+async fn get_active_checkpoint_pair(
+    Path((space_id, document_id)): Path<(String, String)>,
+    OriginalUri(uri): OriginalUri,
+    headers: HeaderMap,
+    State(state): State<HubState>,
+) -> Response {
+    let token = match canonical_pair_request_admission(&uri, &headers) {
+        Ok(token) => token,
+        Err(status) => return status.into_response(),
+    };
+    let scope = DocumentScope::new(space_id, document_id);
+    let control = CanonicalPairHttpControl;
+    let deadline = control.now_ms().saturating_add(REBOOTSTRAP_DEADLINE_MS);
+    let context = RebootstrapContext::new(deadline, &control);
+    control.report(RebootstrapProgress { stage: RebootstrapProgressStage::Authorize, completed_units: 1, total_units: 1 });
+    if context.checkpoint().is_err() || !authorized_for_canonical_pair(&state, &scope, &token).await {
+        return StatusCode::UNAUTHORIZED.into_response();
+    }
+    let pair = match state.rebootstrap.active_pair(&scope, &context).await {
+        Ok(pair) => pair,
+        Err(error) => return canonical_pair_error_status(error).into_response(),
+    };
+    if !authorized_for_canonical_pair(&state, &scope, &token).await {
+        return StatusCode::UNAUTHORIZED.into_response();
+    }
+    let mut body = Vec::new();
+    if let Err(error) = append_canonical_pair_header(&mut body, &pair.selection) {
+        return canonical_pair_error_status(error).into_response();
+    }
+    for ordinal in 0..pair.data_record_count() {
+        if !authorized_for_canonical_pair(&state, &scope, &token).await {
+            return StatusCode::UNAUTHORIZED.into_response();
+        }
+        let record = match pair.data_record(ordinal, &context) {
+            Ok(Some(record)) => record,
+            Ok(None) => return StatusCode::CONFLICT.into_response(),
+            Err(error) => return canonical_pair_error_status(error).into_response(),
+        };
+        if let Err(error) = append_canonical_pair_data(&mut body, &record) {
+            return canonical_pair_error_status(error).into_response();
+        }
+    }
+    if !authorized_for_canonical_pair(&state, &scope, &token).await {
+        return StatusCode::UNAUTHORIZED.into_response();
+    }
+    if let Err(error) = append_canonical_pair_terminal(&mut body, CanonicalPairTerminal::Complete) {
+        return canonical_pair_error_status(error).into_response();
+    }
+    let etag = match canonical_pair_etag(&pair.selection).ok().and_then(|value| value.parse().ok()) {
+        Some(value) => value,
+        None => return StatusCode::INTERNAL_SERVER_ERROR.into_response(),
+    };
+    let mut response = Bytes::from(body).into_response();
+    response.headers_mut().insert(axum::http::header::CONTENT_TYPE, axum::http::HeaderValue::from_static(CANONICAL_CHECKPOINT_PAIR_MEDIA_TYPE));
+    response.headers_mut().insert(axum::http::header::CACHE_CONTROL, axum::http::HeaderValue::from_static("private, no-store"));
+    response.headers_mut().insert(axum::http::header::VARY, axum::http::HeaderValue::from_static("Authorization"));
+    response.headers_mut().insert(axum::http::header::ETAG, etag);
+    response
 }
 
 /// @emoji 🧭️ A durably announced document's current frontier.
@@ -716,9 +1563,24 @@ async fn revoke_share(Path((space_id, document_id, share_id)): Path<(String, Str
         return StatusCode::UNAUTHORIZED;
     }
     let scope = DocumentScope::new(space_id, document_id);
-    match state.directory.revoke_share_token(&scope, &share_id, "administrator-revoked", &directory::os_identity::time_ordered_id()).await {
-        Ok(()) => StatusCode::NO_CONTENT,
-        Err(error) => directory_error_status(error),
+    let binding = SocketBindingKeyV1::Share(share_id.clone());
+    let gate = state.socket_binding_gates.gate(binding.clone());
+    let _admission = match tokio::time::timeout(std::time::Duration::from_secs(2), gate.lock_owned()).await {
+        Ok(admission) => admission,
+        Err(_) => return StatusCode::SERVICE_UNAVAILABLE,
+    };
+    match tokio::time::timeout(
+        std::time::Duration::from_secs(2),
+        state.directory.revoke_share_token(&scope, &share_id, "administrator-revoked", &directory::os_identity::time_ordered_id()),
+    )
+    .await
+    {
+        Ok(Ok(())) => {
+            state.socket_grants.invalidate_binding(binding);
+            StatusCode::NO_CONTENT
+        }
+        Ok(Err(error)) => directory_error_status(error),
+        Err(_) => StatusCode::SERVICE_UNAVAILABLE,
     }
 }
 
@@ -791,6 +1653,67 @@ async fn head_blob(Path((space_id, hash)): Path<(String, String)>, headers: Head
 //#endregion 🔖️Rest
 
 //#region 🔖️WebSocket
+fn socket_grant_from_protocol_header(headers: &HeaderMap) -> Result<SocketGrantCapability, StatusCode> {
+    if headers.contains_key(axum::http::header::AUTHORIZATION) {
+        return Err(StatusCode::UNAUTHORIZED);
+    }
+    let values = headers.get_all(axum::http::header::SEC_WEBSOCKET_PROTOCOL);
+    if values.iter().count() != 1 {
+        return Err(StatusCode::UNAUTHORIZED);
+    }
+    let offered = values.iter().next().and_then(|value| value.to_str().ok()).ok_or(StatusCode::UNAUTHORIZED)?;
+    if offered.len() > AUTH_TEXT_MAX_BYTES {
+        return Err(StatusCode::UNAUTHORIZED);
+    }
+    let (protocol, grant) = offered.split_once(", ").ok_or(StatusCode::UNAUTHORIZED)?;
+    if protocol != SOCKET_PROTOCOL_V1 || grant.contains(',') {
+        return Err(StatusCode::UNAUTHORIZED);
+    }
+    SocketGrantCapability::parse(grant).map_err(|_| StatusCode::UNAUTHORIZED)
+}
+
+async fn consume_socket_grant(state: &HubState, headers: &HeaderMap, audience: SocketAudienceV1) -> Result<SocketGrantAdmissionV1, StatusCode> {
+    let capability = socket_grant_from_protocol_header(headers)?;
+    let candidate = state.socket_grants.pending(&capability, &audience, now_ms()).map_err(|_| StatusCode::UNAUTHORIZED)?;
+    let _binding_gates = tokio::time::timeout(std::time::Duration::from_secs(2), state.socket_binding_gates.acquire_subject(&candidate.subject)).await.map_err(|_| StatusCode::SERVICE_UNAVAILABLE)?;
+    let validity = tokio::time::timeout(
+        std::time::Duration::from_secs(2),
+        candidate.subject.revalidate(state.directory.as_ref(), &candidate.audience, now_ms()),
+    )
+    .await
+    .unwrap_or(SocketBindingValidityV1::Unavailable);
+    match validity {
+        SocketBindingValidityV1::Active => state
+            .socket_grants
+            .consume(&candidate, now_ms())
+            .map(|record| SocketGrantAdmissionV1 { record })
+            .map_err(|_| StatusCode::UNAUTHORIZED),
+        SocketBindingValidityV1::Unauthorized => Err(StatusCode::UNAUTHORIZED),
+        SocketBindingValidityV1::Unavailable => Err(StatusCode::SERVICE_UNAVAILABLE),
+    }
+}
+
+async fn consume_directory_socket_grant(state: &HubState, headers: &HeaderMap) -> Result<SocketGrantAdmissionV1, StatusCode> {
+    let capability = socket_grant_from_protocol_header(headers)?;
+    let candidate = state.socket_grants.pending_directory(&capability, now_ms()).map_err(|_| StatusCode::UNAUTHORIZED)?;
+    let _binding_gates = tokio::time::timeout(std::time::Duration::from_secs(2), state.socket_binding_gates.acquire_subject(&candidate.subject)).await.map_err(|_| StatusCode::SERVICE_UNAVAILABLE)?;
+    let validity = tokio::time::timeout(
+        std::time::Duration::from_secs(2),
+        candidate.subject.revalidate(state.directory.as_ref(), &candidate.audience, now_ms()),
+    )
+    .await
+    .unwrap_or(SocketBindingValidityV1::Unavailable);
+    match validity {
+        SocketBindingValidityV1::Active => state
+            .socket_grants
+            .consume(&candidate, now_ms())
+            .map(|record| SocketGrantAdmissionV1 { record })
+            .map_err(|_| StatusCode::UNAUTHORIZED),
+        SocketBindingValidityV1::Unauthorized => Err(StatusCode::UNAUTHORIZED),
+        SocketBindingValidityV1::Unavailable => Err(StatusCode::SERVICE_UNAVAILABLE),
+    }
+}
+
 /// @emoji 🎯️ Contract §C0: presence scope is `(space_id, document_id, surface)`, `surface` travels
 /// out of band as `?surface=` on the document WS URL — missing ⇒ `""` (a document with no surface
 /// concept still gets one scope, just the empty-string one).
@@ -802,7 +1725,32 @@ struct DocumentWsQuery {
 
 async fn document_ws(ws: WebSocketUpgrade, Path((space_id, document_id)): Path<(String, String)>, axum::extract::Query(query): axum::extract::Query<DocumentWsQuery>, State(state): State<HubState>) -> impl IntoResponse {
     let surface = query.surface.unwrap_or_default();
-    ws.on_upgrade(move |socket| handle_ws(socket, space_id, document_id, surface, state))
+    ws.on_upgrade(move |socket| handle_ws(socket, space_id, document_id, surface, state, None))
+}
+
+#[derive(Default, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+struct DocumentWsV1Query {
+    surface: Option<String>,
+}
+
+async fn document_ws_v1(
+    ws: WebSocketUpgrade,
+    Path((space_id, document_id)): Path<(String, String)>,
+    axum::extract::Query(query): axum::extract::Query<DocumentWsV1Query>,
+    headers: HeaderMap,
+    State(state): State<HubState>,
+) -> Response {
+    let surface = query.surface.unwrap_or_default();
+    if !socket_text_bounded(&space_id) || !socket_text_bounded(&document_id) || surface.len() > AUTH_TEXT_MAX_BYTES {
+        return StatusCode::BAD_REQUEST.into_response();
+    }
+    let scope = DocumentScope::new(&space_id, &document_id);
+    let admission = match consume_socket_grant(&state, &headers, SocketAudienceV1::Document(scope)).await {
+        Ok(admission) => admission,
+        Err(status) => return (status, "socket grant rejected").into_response(),
+    };
+    ws.protocols([SOCKET_PROTOCOL_V1]).on_upgrade(move |socket| handle_ws(socket, space_id, document_id, surface, state, Some(admission))).into_response()
 }
 
 async fn encode(frame: &ServerFrame) -> Message {
@@ -847,6 +1795,34 @@ async fn verified_rebootstrap_control(state: &HubState, scope: &DocumentScope) -
     let control = SocketRebootstrapControl;
     let deadline = control.now_ms().saturating_add(REBOOTSTRAP_DEADLINE_MS);
     state.rebootstrap.control(scope, &RebootstrapContext::new(deadline, &control)).await.ok()
+}
+
+async fn send_socket_document_rebootstrap(
+    sender: &mut SplitSink<WebSocket, Message>,
+    state: &HubState,
+    record: &SocketGrantRecordV1,
+    live_id: &str,
+    scope: &DocumentScope,
+) -> SocketBindingValidityV1 {
+    let _admission = match socket_live_authority(state, record, live_id).await {
+        Ok(admission) => admission,
+        Err(validity) => return validity,
+    };
+    #[cfg(test)]
+    if let Some(gate) = &state.live_gate {
+        gate.socket_rebootstrap_read.add_permits(1);
+    }
+    let control = match tokio::time::timeout(std::time::Duration::from_secs(2), verified_rebootstrap_control(state, scope)).await {
+        Ok(control) => control,
+        Err(_) => return SocketBindingValidityV1::Unavailable,
+    };
+    if let Some(control) = control {
+        let frame = encode(&ServerFrame::RebootstrapRequired { control: wire_rebootstrap(&control) }).await;
+        if !matches!(tokio::time::timeout(std::time::Duration::from_secs(2), sender.send(frame)).await, Ok(Ok(()))) {
+            return SocketBindingValidityV1::Unavailable;
+        }
+    }
+    SocketBindingValidityV1::Active
 }
 
 async fn close_document_for_rebootstrap(sender: &mut SplitSink<WebSocket, Message>, state: &HubState, scope: &DocumentScope) {
@@ -988,11 +1964,21 @@ async fn handle_client_frame(
     gate: &db::security::SecurityGate,
     principal: &db::security::Principal,
     tenant: &db::security::TenantId,
+    bound_actor: Option<&ActorId>,
     frame: ClientFrame,
     sender: &mut SplitSink<WebSocket, Message>,
 ) -> bool {
     match frame {
         ClientFrame::Commands { batch_id, envelopes } => {
+            if bound_actor.is_some_and(|bound| envelopes.iter().any(|envelope| &envelope.actor != bound)) {
+                let frontier = best_effort_frontier(handle).await;
+                let ack = ServerFrame::Ack {
+                    batch_id,
+                    stages: vec![AckStage::Applied { outcome: Box::new(ApplyOutcome::Rejected { reason: "socket subject actor mismatch".into(), messages: Vec::new() }) }],
+                    frontier,
+                };
+                return sender.send(encode(&ack).await).await.is_ok();
+            }
             if let Some(reason) = admit_writes(gate, principal, tenant, db_id, &envelopes, now_ms().max(0) as u64).await {
                 let frontier = best_effort_frontier(handle).await;
                 let ack = ServerFrame::Ack { batch_id, stages: vec![AckStage::Applied { outcome: Box::new(ApplyOutcome::Rejected { reason, messages: Vec::new() }) }], frontier };
@@ -1032,23 +2018,49 @@ async fn handle_client_frame(
         ClientFrame::Bye => false,
         // A second `Hello` mid-session has nothing to negotiate beyond the first — ignored rather
         // than torn down, matching this crate's generally forgiving-of-redundant-frames stance.
-        ClientFrame::Hello { .. } => true,
+        ClientFrame::Hello { .. } if bound_actor.is_some() => {
+            let _ = sender.send(Message::Close(Some(CloseFrame { code: 4401, reason: "unauthorized".into() }))).await;
+            false
+        }
+        ClientFrame::Hello { .. } | ClientFrame::SocketHelloV1 { .. } => true,
     }
 }
 
-async fn handle_ws(socket: WebSocket, space_id: String, document_id: String, surface: String, state: HubState) {
+async fn handle_ws(socket: WebSocket, space_id: String, document_id: String, surface: String, state: HubState, socket_admission: Option<SocketGrantAdmissionV1>) {
     let (mut sender, mut receiver) = socket.split();
+    let socket_grant = socket_admission.map(|admission| admission.record);
 
-    let hello = match receiver.next().await {
-        Some(Ok(Message::Binary(bytes))) => decode_client_frame(&bytes).await.ok().map(|(_lane, frame)| frame),
+    let hello = match tokio::time::timeout(std::time::Duration::from_secs(2), receiver.next()).await {
+        Ok(Some(Ok(Message::Binary(bytes)))) => decode_client_frame(&bytes).await.ok().map(|(_lane, frame)| frame),
         _ => None,
     };
-    let Some(ClientFrame::Hello { schema, pack_schema_hash, actor, token, frontier, .. }) = hello else {
-        let _ = sender.send(error_frame("protocol", "expected hello frame").await).await;
-        return;
+    let (schema, pack_schema_hash, actor, token, frontier, auth) = match (socket_grant.as_ref(), hello) {
+        (None, Some(ClientFrame::Hello { schema, pack_schema_hash, actor, token, frontier, .. })) => {
+            let auth = resolve_auth(&state, &space_id, &document_id, token.as_deref()).await;
+            (schema, pack_schema_hash, actor, token, frontier, auth)
+        }
+        (Some(record), Some(ClientFrame::SocketHelloV1 { wire_version: 1, protocol_version: 1, schema, pack_schema_hash, resume_token, frontier }))
+            if socket_text_bounded(&schema) && resume_token.as_ref().is_none_or(|value| value.len() <= AUTH_TEXT_MAX_BYTES) =>
+        {
+            let actor = ActorId(record.actor_id.clone());
+            let auth = match &record.subject {
+                SocketSubjectV1::Session { session_id, user_id, authorization_generation, role: Some(role), .. } => AuthOutcome::Session {
+                    user_id: user_id.clone(),
+                    role: *role,
+                    session_id: session_id.clone(),
+                    authorization_generation: *authorization_generation,
+                },
+                SocketSubjectV1::Share { .. } => AuthOutcome::ShareToken,
+                SocketSubjectV1::Session { role: None, .. } => AuthOutcome::Denied,
+            };
+            (schema, pack_schema_hash, actor, None, frontier, auth)
+        }
+        _ => {
+            let _ = sender.send(error_frame("protocol", "expected socket hello").await).await;
+            return;
+        }
     };
 
-    let auth = resolve_auth(&state, &space_id, &document_id, token.as_deref()).await;
     let (user_id, role, auth_session_id, authorization_generation) = match &auth {
         AuthOutcome::Session { user_id, role, session_id, authorization_generation } => (Some(user_id.clone()), Some(*role), Some(session_id.as_str()), *authorization_generation),
         AuthOutcome::ShareToken => (None, None, None, 0),
@@ -1139,12 +2151,71 @@ async fn handle_ws(socket: WebSocket, space_id: String, document_id: String, sur
             return;
         }
     };
-    let welcome_sent = sender.send(welcome_bytes).await;
+    let mut socket_binding_gates = if let Some(record) = socket_grant.as_ref() {
+        match tokio::time::timeout(std::time::Duration::from_secs(2), state.socket_binding_gates.acquire_subject(&record.subject)).await {
+            Ok(admission) => Some(admission),
+            Err(_) => {
+                let _ = sender.send(Message::Close(Some(CloseFrame { code: 1013, reason: "authorization-unavailable".into() }))).await;
+                state.release_color(&space_id, &actor.0);
+                return;
+            }
+        }
+    } else {
+        None
+    };
+    let socket_live = if let Some(record) = socket_grant.as_ref() {
+        let (id, notify) = match state.socket_grants.register_live(record) {
+            Ok(live) => live,
+            Err(_) => {
+                let _ = sender.send(Message::Close(Some(CloseFrame { code: 4401, reason: "unauthorized".into() }))).await;
+                state.release_color(&space_id, &actor.0);
+                return;
+            }
+        };
+        let lease = SocketLiveLeaseV1 { ledger: state.socket_grants.clone(), record: record.clone(), id, notify };
+        let validity = tokio::time::timeout(
+            std::time::Duration::from_secs(2),
+            record.subject.revalidate(state.directory.as_ref(), &record.audience, now_ms()),
+        )
+        .await
+        .unwrap_or(SocketBindingValidityV1::Unavailable);
+        match validity {
+            SocketBindingValidityV1::Active => Some(lease),
+            SocketBindingValidityV1::Unauthorized => {
+                let _ = sender.send(Message::Close(Some(CloseFrame { code: 4401, reason: "unauthorized".into() }))).await;
+                state.release_color(&space_id, &actor.0);
+                return;
+            }
+            SocketBindingValidityV1::Unavailable => {
+                let _ = sender.send(Message::Close(Some(CloseFrame { code: 1013, reason: "authorization-unavailable".into() }))).await;
+                state.release_color(&space_id, &actor.0);
+                return;
+            }
+        }
+    } else {
+        None
+    };
+    #[cfg(test)]
+    if socket_grant.is_some() {
+        if let Some(gate) = &state.live_gate {
+            gate.socket_before_welcome.add_permits(1);
+            let _ = gate.socket_welcome_release.acquire().await;
+        }
+    }
+    let welcome_sent = tokio::time::timeout(std::time::Duration::from_secs(2), sender.send(welcome_bytes)).await;
     let welcome_acknowledged = welcome.acknowledge();
-    if welcome_sent.is_err() || welcome_acknowledged.is_err() {
+    if !matches!(welcome_sent, Ok(Ok(()))) || welcome_acknowledged.is_err() {
         hello_session.cancel();
         state.release_color(&space_id, &actor.0);
         return;
+    }
+    drop(socket_binding_gates.take());
+    #[cfg(test)]
+    if socket_grant.is_some() {
+        if let Some(gate) = &state.live_gate {
+            gate.socket_after_welcome.add_permits(1);
+            let _ = gate.socket_bootstrap_release.acquire().await;
+        }
     }
     loop {
         match hello_session.next_frame().await {
@@ -1158,9 +2229,27 @@ async fn handle_ws(socket: WebSocket, space_id: String, document_id: String, sur
                         return;
                     }
                 };
-                let sent = sender.send(frame_bytes).await;
+                let _authority = match (socket_grant.as_ref(), socket_live.as_ref()) {
+                    (Some(record), Some(live)) => match socket_live_authority(&state, record, &live.id).await {
+                        Ok(admission) => Some(admission),
+                        Err(SocketBindingValidityV1::Unauthorized) => {
+                            let _ = sender.send(Message::Close(Some(CloseFrame { code: 4401, reason: "unauthorized".into() }))).await;
+                            hello_session.cancel();
+                            state.release_color(&space_id, &actor.0);
+                            return;
+                        }
+                        Err(SocketBindingValidityV1::Unavailable | SocketBindingValidityV1::Active) => {
+                            let _ = sender.send(Message::Close(Some(CloseFrame { code: 1013, reason: "authorization-unavailable".into() }))).await;
+                            hello_session.cancel();
+                            state.release_color(&space_id, &actor.0);
+                            return;
+                        }
+                    },
+                    _ => None,
+                };
+                let sent = tokio::time::timeout(std::time::Duration::from_secs(2), sender.send(frame_bytes)).await;
                 let acknowledged = frame.acknowledge();
-                if sent.is_err() || acknowledged.is_err() {
+                if !matches!(sent, Ok(Ok(()))) || acknowledged.is_err() {
                     hello_session.cancel();
                     state.release_color(&space_id, &actor.0);
                     return;
@@ -1176,11 +2265,29 @@ async fn handle_ws(socket: WebSocket, space_id: String, document_id: String, sur
     }
     // 🎨️ Contract §C7.3: sent exactly once per connection, after `Welcome` (and its follow-up
     // bootstrap frames) and before any `Presence` frame.
-    if sender.send(encode(&ServerFrame::Session { actor: actor.0.clone(), color }).await).await.is_err() {
+    let session_frame = encode(&ServerFrame::Session { actor: actor.0.clone(), color }).await;
+    let _session_authority = match (socket_grant.as_ref(), socket_live.as_ref()) {
+        (Some(record), Some(live)) => match socket_live_authority(&state, record, &live.id).await {
+            Ok(admission) => Some(admission),
+            Err(SocketBindingValidityV1::Unauthorized) => {
+                let _ = sender.send(Message::Close(Some(CloseFrame { code: 4401, reason: "unauthorized".into() }))).await;
+                state.release_color(&space_id, &actor.0);
+                return;
+            }
+            Err(SocketBindingValidityV1::Unavailable | SocketBindingValidityV1::Active) => {
+                let _ = sender.send(Message::Close(Some(CloseFrame { code: 1013, reason: "authorization-unavailable".into() }))).await;
+                state.release_color(&space_id, &actor.0);
+                return;
+            }
+        },
+        _ => None,
+    };
+    if !matches!(tokio::time::timeout(std::time::Duration::from_secs(2), sender.send(session_frame)).await, Ok(Ok(()))) {
         state.release_color(&space_id, &actor.0);
         return;
     }
     state.presence.insert((key.clone(), actor.0.clone()), PresenceSession { surface: surface.clone(), user_id: user_id.clone(), color, peer: None });
+    drop(_session_authority);
 
     let fanout = state.fanout_for(&key);
     let mut broadcast_rx = fanout.subscribe();
@@ -1217,7 +2324,19 @@ async fn handle_ws(socket: WebSocket, space_id: String, document_id: String, sur
     loop {
         tokio::select! {
             _ = authorization_tick.tick() => {
-                if matches!(resolve_auth(&state, &space_id, &document_id, token.as_deref()).await, AuthOutcome::Denied) {
+                if let (Some(record), Some(live)) = (socket_grant.as_ref(), socket_live.as_ref()) {
+                    match socket_live_authority(&state, record, &live.id).await {
+                        Ok(_) => {}
+                        Err(SocketBindingValidityV1::Unauthorized) => {
+                            let _ = sender.send(Message::Close(Some(CloseFrame { code: 4401, reason: "unauthorized".into() }))).await;
+                            break;
+                        }
+                        Err(SocketBindingValidityV1::Unavailable | SocketBindingValidityV1::Active) => {
+                            let _ = sender.send(Message::Close(Some(CloseFrame { code: 1013, reason: "authorization-unavailable".into() }))).await;
+                            break;
+                        }
+                    }
+                } else if matches!(resolve_auth(&state, &space_id, &document_id, token.as_deref()).await, AuthOutcome::Denied) {
                     break;
                 }
             }
@@ -1225,8 +2344,40 @@ async fn handle_ws(socket: WebSocket, space_id: String, document_id: String, sur
                 match incoming {
                     Some(Ok(Message::Binary(bytes))) => {
                         if let Ok((_lane, frame)) = decode_client_frame(&bytes).await {
-                            if !handle_client_frame(&state, &handle, &db_id, &key, &space_id, &document_id, &fanout, &actor, &gate, &principal, &tenant, frame, &mut sender).await {
-                                break;
+                            #[cfg(test)]
+                            if socket_grant.is_some() {
+                                if let Some(live_gate) = &state.live_gate {
+                                    live_gate.socket_command_received.add_permits(1);
+                                    let _ = live_gate.socket_command_release.acquire().await;
+                                }
+                            }
+                            let _authority = if let (Some(record), Some(live)) = (socket_grant.as_ref(), socket_live.as_ref()) {
+                                match socket_live_authority(&state, record, &live.id).await {
+                                    Ok(admission) => Some(admission),
+                                    Err(SocketBindingValidityV1::Unauthorized) => {
+                                        let _ = sender.send(Message::Close(Some(CloseFrame { code: 4401, reason: "unauthorized".into() }))).await;
+                                        break;
+                                    }
+                                    Err(SocketBindingValidityV1::Unavailable | SocketBindingValidityV1::Active) => {
+                                        let _ = sender.send(Message::Close(Some(CloseFrame { code: 1013, reason: "authorization-unavailable".into() }))).await;
+                                        break;
+                                    }
+                                }
+                            } else {
+                                None
+                            };
+                            match tokio::time::timeout(
+                                std::time::Duration::from_secs(2),
+                                handle_client_frame(&state, &handle, &db_id, &key, &space_id, &document_id, &fanout, &actor, &gate, &principal, &tenant, socket_grant.as_ref().map(|_| &actor), frame, &mut sender),
+                            )
+                            .await
+                            {
+                                Ok(true) => {}
+                                Ok(false) => break,
+                                Err(_) => {
+                                    let _ = sender.send(Message::Close(Some(CloseFrame { code: 1013, reason: "authorization-unavailable".into() }))).await;
+                                    break;
+                                }
                             }
                         }
                     }
@@ -1243,12 +2394,56 @@ async fn handle_ws(socket: WebSocket, space_id: String, document_id: String, sur
             event = broadcast_rx.recv() => {
                 match event {
                     Ok(frame) => {
-                        if sender.send(encode(&frame).await).await.is_err() {
+                        #[cfg(test)]
+                        if socket_grant.is_some() {
+                            if let Some(live_gate) = &state.live_gate {
+                                live_gate.socket_broadcast_received.add_permits(1);
+                                let _ = live_gate.socket_broadcast_release.acquire().await;
+                            }
+                        }
+                        let frame = encode(&frame).await;
+                        let _authority = if let (Some(record), Some(live)) = (socket_grant.as_ref(), socket_live.as_ref()) {
+                            match socket_live_authority(&state, record, &live.id).await {
+                                Ok(admission) => Some(admission),
+                                Err(SocketBindingValidityV1::Unauthorized) => {
+                                    let _ = sender.send(Message::Close(Some(CloseFrame { code: 4401, reason: "unauthorized".into() }))).await;
+                                    break;
+                                }
+                                Err(SocketBindingValidityV1::Unavailable | SocketBindingValidityV1::Active) => {
+                                    let _ = sender.send(Message::Close(Some(CloseFrame { code: 1013, reason: "authorization-unavailable".into() }))).await;
+                                    break;
+                                }
+                            }
+                        } else {
+                            None
+                        };
+                        if !matches!(tokio::time::timeout(std::time::Duration::from_secs(2), sender.send(frame)).await, Ok(Ok(()))) {
                             break;
                         }
                     }
                     Err(broadcast::error::RecvError::Lagged(_)) => {
-                        if !matches!(resolve_auth(&state, &space_id, &document_id, token.as_deref()).await, AuthOutcome::Denied) {
+                        if let (Some(record), Some(live)) = (socket_grant.as_ref(), socket_live.as_ref()) {
+                            #[cfg(test)]
+                            if let Some(live_gate) = &state.live_gate {
+                                live_gate.socket_lag_received.add_permits(1);
+                                let _ = live_gate.socket_lag_release.acquire().await;
+                            }
+                            match send_socket_document_rebootstrap(&mut sender, &state, record, &live.id, &scope).await {
+                                SocketBindingValidityV1::Active => {
+                                    let _ = tokio::time::timeout(
+                                        std::time::Duration::from_secs(2),
+                                        sender.send(Message::Close(Some(CloseFrame { code: 1013, reason: "rebootstrap-required".into() }))),
+                                    )
+                                    .await;
+                                }
+                                SocketBindingValidityV1::Unauthorized => {
+                                    let _ = sender.send(Message::Close(Some(CloseFrame { code: 4401, reason: "unauthorized".into() }))).await;
+                                }
+                                SocketBindingValidityV1::Unavailable => {
+                                    let _ = sender.send(Message::Close(Some(CloseFrame { code: 1013, reason: "authorization-unavailable".into() }))).await;
+                                }
+                            }
+                        } else if !matches!(resolve_auth(&state, &space_id, &document_id, token.as_deref()).await, AuthOutcome::Denied) {
                             close_document_for_rebootstrap(&mut sender, &state, &scope).await;
                         }
                         break;
@@ -1257,6 +2452,15 @@ async fn handle_ws(socket: WebSocket, space_id: String, document_id: String, sur
                 }
             }
             _ = kick.notified() => break,
+            _ = async {
+                match socket_live.as_ref() {
+                    Some(lease) => lease.notify.notified().await,
+                    None => std::future::pending::<()>().await,
+                }
+            } => {
+                let _ = sender.send(Message::Close(Some(CloseFrame { code: 4401, reason: "unauthorized".into() }))).await;
+                break;
+            }
         }
     }
 
@@ -1622,6 +2826,56 @@ async fn get_directory_events(axum::extract::Query(query): axum::extract::Query<
     Ok(DirectoryJson(visibility_filter_events(&state, events, caller.as_ref()).await))
 }
 
+async fn socket_user_space_member(state: &HubState, space_id: &str, user_id: &str) -> bool {
+    matches!(state.directory.get_role(space_id, user_id).await, Ok(Some(_)))
+}
+
+async fn socket_directory_message_visible(state: &HubState, record: &SocketGrantRecordV1, message: &DirectoryStreamMessage) -> SocketBindingValidityV1 {
+    let validity = record.subject.revalidate(state.directory.as_ref(), &record.audience, now_ms()).await;
+    if validity != SocketBindingValidityV1::Active {
+        return validity;
+    }
+    let SocketSubjectV1::Session { user_id, .. } = &record.subject else { return SocketBindingValidityV1::Unauthorized };
+    let visible = match message {
+        DirectoryStreamMessage::Event { event } => match event.space_id.as_deref() {
+            Some(space_id) => socket_user_space_member(state, space_id, user_id).await,
+            None => event.user_id.as_deref() == Some(user_id.as_str()),
+        },
+        DirectoryStreamMessage::Connection { connection, .. } => socket_user_space_member(state, &connection.space_id, user_id).await,
+        DirectoryStreamMessage::Presence { space_id, .. } => socket_user_space_member(state, space_id, user_id).await,
+        DirectoryStreamMessage::Heartbeat { .. } => true,
+        DirectoryStreamMessage::RebootstrapRequired { control } => socket_user_space_member(state, &control.scope.space_id, user_id).await,
+    };
+    if visible { SocketBindingValidityV1::Active } else { SocketBindingValidityV1::Unauthorized }
+}
+
+#[derive(Default, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+struct DirectoryWsV1Query {
+    #[serde(default)]
+    since: u64,
+    space_id: Option<String>,
+    document_id: Option<String>,
+}
+
+async fn directory_ws_v1(
+    ws: WebSocketUpgrade,
+    axum::extract::Query(query): axum::extract::Query<DirectoryWsV1Query>,
+    headers: HeaderMap,
+    State(state): State<HubState>,
+) -> Response {
+    let scope = match (query.space_id, query.document_id) {
+        (Some(space_id), Some(document_id)) if socket_text_bounded(&space_id) && socket_text_bounded(&document_id) => Some(DocumentScope::new(space_id, document_id)),
+        (None, None) => None,
+        _ => return StatusCode::BAD_REQUEST.into_response(),
+    };
+    let admission = match consume_directory_socket_grant(&state, &headers).await {
+        Ok(admission) => admission,
+        Err(status) => return (status, "socket grant rejected").into_response(),
+    };
+    ws.protocols([SOCKET_PROTOCOL_V1]).on_upgrade(move |socket| handle_directory_ws_v1(socket, query.since, scope, state, admission)).into_response()
+}
+
 #[derive(Deserialize)]
 #[serde(rename_all = "camelCase")]
 struct DirectoryWsQuery {
@@ -1640,6 +2894,68 @@ async fn directory_ws(ws: WebSocketUpgrade, axum::extract::Query(query): axum::e
 async fn send_directory_message(sender: &mut SplitSink<WebSocket, Message>, message: &DirectoryStreamMessage) -> bool {
     let text = directory::os_pack::json::to_json_string(message);
     sender.send(Message::Text(text.into())).await.is_ok()
+}
+
+async fn send_socket_directory_message(
+    sender: &mut SplitSink<WebSocket, Message>,
+    state: &HubState,
+    record: &SocketGrantRecordV1,
+    live_id: &str,
+    message: &DirectoryStreamMessage,
+) -> SocketBindingValidityV1 {
+    let _admission = match socket_live_authority(state, record, live_id).await {
+        Ok(admission) => admission,
+        Err(validity) => return validity,
+    };
+    let validity = tokio::time::timeout(std::time::Duration::from_secs(2), socket_directory_message_visible(state, record, message))
+        .await
+        .unwrap_or(SocketBindingValidityV1::Unavailable);
+    if validity != SocketBindingValidityV1::Active {
+        return validity;
+    }
+    match tokio::time::timeout(std::time::Duration::from_secs(2), send_directory_message(sender, message)).await {
+        Ok(true) => SocketBindingValidityV1::Active,
+        _ => SocketBindingValidityV1::Unavailable,
+    }
+}
+
+async fn send_socket_directory_rebootstrap(
+    sender: &mut SplitSink<WebSocket, Message>,
+    state: &HubState,
+    record: &SocketGrantRecordV1,
+    live_id: &str,
+    scope: &DocumentScope,
+) -> SocketBindingValidityV1 {
+    let _admission = match socket_live_authority(state, record, live_id).await {
+        Ok(admission) => admission,
+        Err(validity) => return validity,
+    };
+    let SocketSubjectV1::Session { user_id, .. } = &record.subject else { return SocketBindingValidityV1::Unauthorized };
+    match tokio::time::timeout(std::time::Duration::from_secs(2), state.directory.get_role(&scope.space_id, user_id)).await {
+        Ok(Ok(Some(_))) => {}
+        Ok(Ok(None)) => return SocketBindingValidityV1::Unauthorized,
+        Ok(Err(_)) | Err(_) => return SocketBindingValidityV1::Unavailable,
+    }
+    #[cfg(test)]
+    if let Some(gate) = &state.live_gate {
+        gate.socket_rebootstrap_read.add_permits(1);
+    }
+    let control = match tokio::time::timeout(std::time::Duration::from_secs(2), verified_rebootstrap_control(state, scope)).await {
+        Ok(control) => control,
+        Err(_) => return SocketBindingValidityV1::Unavailable,
+    };
+    match control {
+        Some(control) => match tokio::time::timeout(
+            std::time::Duration::from_secs(2),
+            send_directory_message(sender, &DirectoryStreamMessage::RebootstrapRequired { control }),
+        )
+        .await
+        {
+            Ok(true) => SocketBindingValidityV1::Active,
+            _ => SocketBindingValidityV1::Unavailable,
+        },
+        None => SocketBindingValidityV1::Active,
+    }
 }
 
 /// @emoji 📡️ Contract §C2's "subscribe, then replay, gap-free": subscribes to `DirectoryService`'s
@@ -1718,6 +3034,150 @@ async fn handle_directory_ws(socket: WebSocket, token: Option<String>, since: u6
     }
 }
 
+async fn handle_directory_ws_v1(socket: WebSocket, since: u64, scope: Option<DocumentScope>, state: HubState, admission: SocketGrantAdmissionV1) {
+    let (mut sender, mut receiver) = socket.split();
+    let SocketGrantAdmissionV1 { record } = admission;
+    let hello = match tokio::time::timeout(std::time::Duration::from_secs(2), receiver.next()).await {
+        Ok(Some(Ok(Message::Binary(bytes)))) => decode_client_frame(&bytes).await.ok().map(|(_, frame)| frame),
+        _ => None,
+    };
+    let Some(ClientFrame::SocketHelloV1 { wire_version: 1, protocol_version: 1, schema, resume_token, .. }) = hello else {
+        let _ = sender.send(Message::Close(Some(CloseFrame { code: 4401, reason: "unauthorized".into() }))).await;
+        return;
+    };
+    if !socket_text_bounded(&schema) || resume_token.as_ref().is_some_and(|value| value.len() > AUTH_TEXT_MAX_BYTES) {
+        let _ = sender.send(Message::Close(Some(CloseFrame { code: 4401, reason: "unauthorized".into() }))).await;
+        return;
+    }
+    let binding_gates = match tokio::time::timeout(std::time::Duration::from_secs(2), state.socket_binding_gates.acquire_subject(&record.subject)).await {
+        Ok(admission) => admission,
+        Err(_) => {
+            let _ = sender.send(Message::Close(Some(CloseFrame { code: 1013, reason: "authorization-unavailable".into() }))).await;
+            return;
+        }
+    };
+    let (live_id, notify) = match state.socket_grants.register_live(&record) {
+        Ok(live) => live,
+        Err(_) => {
+            let _ = sender.send(Message::Close(Some(CloseFrame { code: 4401, reason: "unauthorized".into() }))).await;
+            return;
+        }
+    };
+    let live_lease = SocketLiveLeaseV1 { ledger: state.socket_grants.clone(), record: record.clone(), id: live_id, notify };
+    let validity = tokio::time::timeout(
+        std::time::Duration::from_secs(2),
+        record.subject.revalidate(state.directory.as_ref(), &record.audience, now_ms()),
+    )
+    .await
+    .unwrap_or(SocketBindingValidityV1::Unavailable);
+    match validity {
+        SocketBindingValidityV1::Active => {}
+        SocketBindingValidityV1::Unauthorized => {
+            let _ = sender.send(Message::Close(Some(CloseFrame { code: 4401, reason: "unauthorized".into() }))).await;
+            return;
+        }
+        SocketBindingValidityV1::Unavailable => {
+            let _ = sender.send(Message::Close(Some(CloseFrame { code: 1013, reason: "authorization-unavailable".into() }))).await;
+            return;
+        }
+    }
+    drop(binding_gates);
+    #[cfg(test)]
+    if let Some(gate) = &state.live_gate {
+        gate.socket_directory_admitted.add_permits(1);
+        let _ = gate.socket_directory_release.acquire().await;
+    }
+    let mut live = state.directory_service.subscribe();
+    let replay = match load_all_directory_events(state.directory.as_ref(), since).await {
+        Ok(events) => events,
+        Err(_) => {
+            let _ = sender.send(Message::Close(Some(CloseFrame { code: 1013, reason: "directory-replay-unavailable".into() }))).await;
+            return;
+        }
+    };
+    let mut last_replayed = since;
+    for event in replay {
+        let seq = event.seq;
+        let message = DirectoryStreamMessage::Event { event };
+        match send_socket_directory_message(&mut sender, &state, &record, &live_lease.id, &message).await {
+            SocketBindingValidityV1::Active => {
+                last_replayed = last_replayed.max(seq);
+            }
+            SocketBindingValidityV1::Unauthorized => {}
+            SocketBindingValidityV1::Unavailable => {
+                let _ = sender.send(Message::Close(Some(CloseFrame { code: 1013, reason: "authorization-unavailable".into() }))).await;
+                return;
+            }
+        }
+    }
+    let mut authorization_tick = tokio::time::interval(std::time::Duration::from_secs(1));
+    loop {
+        tokio::select! {
+            _ = authorization_tick.tick() => match socket_live_authority(&state, &record, &live_lease.id).await {
+                Ok(_) => {}
+                Err(SocketBindingValidityV1::Unauthorized) => {
+                    let _ = sender.send(Message::Close(Some(CloseFrame { code: 4401, reason: "unauthorized".into() }))).await;
+                    break;
+                }
+                Err(SocketBindingValidityV1::Unavailable | SocketBindingValidityV1::Active) => {
+                    let _ = sender.send(Message::Close(Some(CloseFrame { code: 1013, reason: "authorization-unavailable".into() }))).await;
+                    break;
+                }
+            },
+            incoming = receiver.next() => match incoming {
+                Some(Ok(Message::Close(_))) | None => break,
+                Some(Ok(Message::Ping(payload))) => if sender.send(Message::Pong(payload)).await.is_err() { break },
+                Some(Ok(_)) => {}
+                Some(Err(_)) => break,
+            },
+            message = live.recv() => match message {
+                Ok(message) => {
+                    let seq = match &message { DirectoryStreamMessage::Event { event } => Some(event.seq), _ => None };
+                    if seq.is_some_and(|seq| seq <= last_replayed) {
+                        continue;
+                    }
+                    match send_socket_directory_message(&mut sender, &state, &record, &live_lease.id, &message).await {
+                        SocketBindingValidityV1::Active => {
+                            if let Some(seq) = seq { last_replayed = last_replayed.max(seq); }
+                        }
+                        SocketBindingValidityV1::Unauthorized => {}
+                        SocketBindingValidityV1::Unavailable => {
+                            let _ = sender.send(Message::Close(Some(CloseFrame { code: 1013, reason: "authorization-unavailable".into() }))).await;
+                            break;
+                        }
+                    }
+                }
+                Err(broadcast::error::RecvError::Lagged(_)) => {
+                    let validity = match scope.as_ref() {
+                        Some(scope) => send_socket_directory_rebootstrap(&mut sender, &state, &record, &live_lease.id, scope).await,
+                        None => match socket_live_authority(&state, &record, &live_lease.id).await {
+                            Ok(_) => SocketBindingValidityV1::Active,
+                            Err(validity) => validity,
+                        },
+                    };
+                    match validity {
+                        SocketBindingValidityV1::Active => {
+                            let _ = tokio::time::timeout(
+                                std::time::Duration::from_secs(2),
+                                sender.send(Message::Close(Some(CloseFrame { code: 1013, reason: "rebootstrap-required".into() }))),
+                            )
+                            .await;
+                        }
+                        SocketBindingValidityV1::Unauthorized => { let _ = sender.send(Message::Close(Some(CloseFrame { code: 4401, reason: "unauthorized".into() }))).await; }
+                        SocketBindingValidityV1::Unavailable => { let _ = sender.send(Message::Close(Some(CloseFrame { code: 1013, reason: "authorization-unavailable".into() }))).await; }
+                    }
+                    break;
+                }
+                Err(broadcast::error::RecvError::Closed) => break,
+            },
+            _ = live_lease.notify.notified() => {
+                let _ = sender.send(Message::Close(Some(CloseFrame { code: 4401, reason: "unauthorized".into() }))).await;
+                break;
+            }
+        }
+    }
+}
+
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
 struct SessionMeResponse {
@@ -1746,11 +3206,29 @@ async fn get_session_me(headers: HeaderMap, State(state): State<HubState>) -> Re
 async fn delete_session_me(headers: HeaderMap, State(state): State<HubState>) -> StatusCode {
     let Some(token) = bearer(&headers) else { return StatusCode::UNAUTHORIZED };
     let Ok(capability) = SessionCapability::parse(&token) else { return StatusCode::UNAUTHORIZED };
-    let Ok(Some(session)) = state.directory.authenticate_session(&capability).await else { return StatusCode::UNAUTHORIZED };
-    match state.directory.revoke_auth_session(&session.id, "self-revoked", Some(&session.user_id), &directory::os_identity::time_ordered_id()).await {
-        Ok(Some(_)) => StatusCode::NO_CONTENT,
-        Ok(None) => StatusCode::UNAUTHORIZED,
-        Err(_) => StatusCode::INTERNAL_SERVER_ERROR,
+    let Ok(Ok(Some(session))) = tokio::time::timeout(std::time::Duration::from_secs(2), state.directory.authenticate_session(&capability)).await else {
+        return StatusCode::UNAUTHORIZED;
+    };
+    let binding = SocketBindingKeyV1::Session(session.id.clone());
+    let gate = state.socket_binding_gates.gate(binding.clone());
+    let _admission = match tokio::time::timeout(std::time::Duration::from_secs(2), gate.lock_owned()).await {
+        Ok(admission) => admission,
+        Err(_) => return StatusCode::SERVICE_UNAVAILABLE,
+    };
+    match tokio::time::timeout(
+        std::time::Duration::from_secs(2),
+        state.directory.revoke_auth_session(&session.id, "self-revoked", Some(&session.user_id), &directory::os_identity::time_ordered_id()),
+    )
+    .await
+    {
+        Ok(Ok(Some(revoked))) => {
+            debug_assert_eq!(revoked.id, session.id);
+            state.socket_grants.invalidate_binding(binding);
+            StatusCode::NO_CONTENT
+        }
+        Ok(Ok(None)) => StatusCode::UNAUTHORIZED,
+        Ok(Err(_)) => StatusCode::INTERNAL_SERVER_ERROR,
+        Err(_) => StatusCode::SERVICE_UNAVAILABLE,
     }
 }
 
@@ -1774,7 +3252,7 @@ fn apply_cors_headers(headers: &mut HeaderMap, origin: Option<&axum::http::Heade
     if let Some(origin) = origin {
         headers.insert(axum::http::header::ACCESS_CONTROL_ALLOW_ORIGIN, origin.clone());
         headers.insert(axum::http::header::ACCESS_CONTROL_ALLOW_CREDENTIALS, axum::http::HeaderValue::from_static("true"));
-        headers.insert(axum::http::header::VARY, axum::http::HeaderValue::from_static("origin"));
+        headers.append(axum::http::header::VARY, axum::http::HeaderValue::from_static("Origin"));
     }
     headers.insert(axum::http::header::ACCESS_CONTROL_ALLOW_METHODS, axum::http::HeaderValue::from_static("GET, POST, PUT, HEAD, DELETE, OPTIONS"));
     headers.insert(axum::http::header::ACCESS_CONTROL_ALLOW_HEADERS, axum::http::HeaderValue::from_static("authorization, content-type"));
@@ -1946,8 +3424,31 @@ async fn admin_revoke_user_sessions(Path(user_id): Path<String>, headers: Header
     if !is_admin(&state, &headers, Some(peer)).await {
         return StatusCode::UNAUTHORIZED;
     }
+    let user_gate = state.socket_binding_gates.gate(SocketBindingKeyV1::User(user_id.clone()));
+    let user_admission = match tokio::time::timeout(std::time::Duration::from_secs(2), user_gate.lock_owned()).await {
+        Ok(admission) => admission,
+        Err(_) => return StatusCode::SERVICE_UNAVAILABLE,
+    };
+    #[cfg(test)]
+    if let Some(gate) = &state.live_gate {
+        gate.socket_admin_revoke_admitted.add_permits(1);
+        let _ = gate.socket_admin_revoke_release.acquire().await;
+    }
     let correlation_id = directory::os_identity::time_ordered_id();
-    let Ok(revoked) = state.directory.revoke_auth_sessions_for_user(&user_id, "administrator-revoked", None, &correlation_id).await else { return StatusCode::INTERNAL_SERVER_ERROR };
+    let revoked = match tokio::time::timeout(
+        std::time::Duration::from_secs(2),
+        state.directory.revoke_auth_sessions_for_user(&user_id, "administrator-revoked", None, &correlation_id),
+    )
+    .await
+    {
+        Ok(Ok(revoked)) => revoked,
+        Ok(Err(_)) => return StatusCode::INTERNAL_SERVER_ERROR,
+        Err(_) => return StatusCode::SERVICE_UNAVAILABLE,
+    };
+    for session in &revoked {
+        state.socket_grants.invalidate_binding(SocketBindingKeyV1::Session(session.id.clone()));
+    }
+    drop(user_admission);
     let revoked_ids: std::collections::BTreeSet<&str> = revoked.iter().map(|session| session.id.as_str()).collect();
     let Ok(sessions) = state.directory.list_active_sync_sessions(None).await else { return StatusCode::INTERNAL_SERVER_ERROR };
     for session in sessions.iter().filter(|session| session.auth_session_id.as_deref().is_some_and(|id| revoked_ids.contains(id))) {
@@ -2081,8 +3582,13 @@ async fn get_admin_asset(Path(rest): Path<String>, State(state): State<HubState>
 }
 
 async fn get_readyz(State(state): State<HubState>) -> impl IntoResponse {
-    let status = if state.readiness.status == "ready" { StatusCode::OK } else { StatusCode::SERVICE_UNAVAILABLE };
-    (status, Json((*state.readiness).clone()))
+    let mut readiness = (*state.readiness).clone();
+    readiness.artifact_cas_sweeper.ready = state.artifact_maintenance.healthy();
+    if !readiness.artifact_cas_sweeper.ready {
+        readiness.status = "not-ready";
+    }
+    let status = if readiness.status == "ready" { StatusCode::OK } else { StatusCode::SERVICE_UNAVAILABLE };
+    (status, Json(readiness))
 }
 //#endregion 🔖️AdminPage
 
@@ -2096,6 +3602,8 @@ fn router(state: HubState) -> Router {
         .route("/directory/spaces/{id}", get(get_directory_space))
         .route("/directory/invites/{token}/redeem", post(post_redeem_invite))
         .route("/directory/events", get(get_directory_events))
+        .route("/directory/socket-grants", post(issue_directory_socket_grant))
+        .route("/directory/socket/v1", get(directory_ws_v1))
         .route("/directory/ws", get(directory_ws))
         .route("/admin/api/overview", get(admin_overview))
         .route("/admin/api/spaces", get(admin_spaces))
@@ -2114,8 +3622,11 @@ fn router(state: HubState) -> Router {
         .route("/admin/{*path}", get(get_admin_asset))
         .route("/spaces/{space_id}/blobs/{hash}", get(get_blob).head(head_blob).put(put_blob))
         .route("/spaces/{space_id}/documents/{id}", get(get_document_status))
+        .route("/spaces/{space_id}/documents/{document_id}/active-checkpoint/pair", get(get_active_checkpoint_pair))
         .route("/spaces/{space_id}/documents/{id}/share", post(create_share))
         .route("/spaces/{space_id}/documents/{id}/share/{share_id}", delete(revoke_share))
+        .route("/spaces/{space_id}/documents/{id}/socket-grants", post(issue_document_socket_grant))
+        .route("/spaces/{space_id}/documents/{id}/socket/v1", get(document_ws_v1))
         .route("/spaces/{space_id}/documents/{id}/ws", get(document_ws))
         // 🐙️ w4-h: router-wide CORS grant — see `cors_middleware`'s doc comment (`🔖️Directory` region)
         // for why this must cover the whole router, not just `/directory/*`.
@@ -2274,12 +3785,23 @@ async fn main() -> Result<(), HubError> {
     )
     .await?;
     let db = Arc::new(connect_db(&data_dir).await?);
-    let artifact_cas = connect_artifact_cas(&data_dir).await?;
     let directory = connect_directory(&data_dir).await?;
     // 🧹️ Contract §C0: clear crash residue before any real connection lands — a session that never
     // got its `disconnected_at` because a previous process was killed mid-connection.
     directory.close_all_sync_sessions().await?;
     let directory_service = Arc::new(DirectoryService::new(directory.clone(), 1024));
+    let artifact_cas = connect_artifact_cas(&data_dir).await?;
+    let startup_control = StartupCatalogControl;
+    let startup_now_ms = startup_control.now_ms();
+    let startup_context = OperationContext::new(startup_now_ms.saturating_add(30_000), AuthorityLimits::maximum(), &startup_control);
+    let artifact_cas_coordinator_id = directory.artifact_cas_coordinator_id().await?;
+    artifact_cas.configure_coordinator(artifact_cas_coordinator_id, &startup_context).await?;
+    let artifact_publication = Arc::new(CheckpointPublicationOrchestrator::new(
+        ArtifactChunkBlobStore::new(artifact_cas.clone()),
+        HubVerifiedCheckpointPublisher::new(directory_service.clone(), artifact_cas.clone(), "system:artifact-authority"),
+    ));
+    let artifact_cas_sweep_execute = artifact_cas_sweep_execute_from_env()?;
+    let artifact_maintenance = ArtifactCasMaintenanceSupervisor::start(directory_service.clone(), artifact_cas.clone(), artifact_cas_sweep_execute);
     let rebootstrap = Arc::new(VerifiedRebootstrapSource::new(directory.clone(), artifact_cas.clone()));
     let admin_dir = std::env::var("OS_HUB_ADMIN_DIR").map(std::path::PathBuf::from).unwrap_or_else(|_| std::path::PathBuf::from(concat!(env!("CARGO_MANIFEST_DIR"), "/../../🔨️modules/🛡️admin/📦️packages/🟦️typescript/📤️dist")));
     let extensions_root = std::env::var("OS_HUB_EXTENSIONS_DIR").map(std::path::PathBuf::from).unwrap_or_else(|_| data_dir.join("extension-modules"));
@@ -2289,13 +3811,16 @@ async fn main() -> Result<(), HubError> {
         HubMode::Development => local_bootstrap.as_ref().is_some_and(|bootstrap| bootstrap.is_ready()),
         HubMode::Production => identity_verifier.is_some(),
     };
-    let readiness = Arc::new(hub_readiness(mode, run_id, bootstrap_ready, artifact_authority.is_some(), admin_dir.is_dir()));
+    let bind_scope = if bind.is_loopback() { "loopback" } else { "network" };
+    let readiness = Arc::new(hub_readiness(mode, bind_scope, run_id, bootstrap_ready, artifact_authority.is_some(), admin_dir.is_dir(), true, artifact_cas_sweep_execute));
     let state = HubState {
         db,
         artifact_cas,
         directory: directory.clone(),
         rebootstrap,
         _artifact_authority: artifact_authority,
+        _artifact_publication: artifact_publication,
+        artifact_maintenance: artifact_maintenance.clone(),
         directory_service,
         admin_subjects,
         readiness,
@@ -2304,9 +3829,13 @@ async fn main() -> Result<(), HubError> {
         fanout_capacity: 256,
         #[cfg(test)]
         live_gate: None,
+        #[cfg(test)]
+        canonical_pair_authorization_gate: None,
         presence: Arc::new(ShardedMap::new()),
         session_colors: Arc::new(ShardedMap::new()),
         session_kicks: Arc::new(ShardedMap::new()),
+        socket_grants: Arc::new(SocketGrantLedgerV1::default()),
+        socket_binding_gates: Arc::new(SocketBindingGatesV1::default()),
         extensions_root,
         merge_policy: merge_policy_from_env(),
     };
@@ -2319,7 +3848,7 @@ async fn main() -> Result<(), HubError> {
     eprintln!("[INFO] os-hub ready at http://{addr}");
     let server = std::future::IntoFuture::into_future(axum::serve(listener, router(state).into_make_service_with_connect_info::<SocketAddr>()));
     tokio::pin!(server);
-    if let Some(mut bootstrap_task) = bootstrap_task {
+    let result = if let Some(mut bootstrap_task) = bootstrap_task {
         tokio::select! {
             result = &mut server => {
                 bootstrap_control.cancel();
@@ -2341,7 +3870,9 @@ async fn main() -> Result<(), HubError> {
         }
     } else {
         server.await.map_err(HubError::Io)
-    }
+    };
+    artifact_maintenance.shutdown().await;
+    result
 }
 //#endregion 🔖️Main
 
@@ -2434,7 +3965,7 @@ mod tests {
 
     #[test]
     fn readiness_v1_is_redacted_and_never_claims_public_session_issuance() {
-        let ready = hub_readiness(HubMode::Development, "00112233445566778899aabbccddeeff".into(), true, true, true);
+        let ready = hub_readiness(HubMode::Development, "loopback", "00112233445566778899aabbccddeeff".into(), true, true, true, true, false);
         let encoded = serde_json::to_string(&ready).expect("readiness json");
         assert_eq!(ready.status, "ready");
         assert!(!ready.authentication.public_session_issuance);
@@ -2444,15 +3975,41 @@ mod tests {
         assert!(!encoded.contains("channel"));
         assert!(!encoded.contains("sessionKind"));
         assert!(!encoded.contains("authorizationGeneration"));
-        let partial = hub_readiness(HubMode::Development, ready.run_id.clone(), true, false, true);
+        let partial = hub_readiness(HubMode::Development, "loopback", ready.run_id.clone(), true, false, true, true, false);
         assert_eq!(partial.status, "not-ready");
         assert!(partial.authentication.bootstrap_ready);
         assert!(!partial.artifact_authority.ready);
-        assert_eq!(hub_readiness(HubMode::Development, ready.run_id.clone(), false, false, true).status, "not-ready");
-        assert_eq!(hub_readiness(HubMode::Development, ready.run_id, true, false, false).status, "not-ready");
+        assert_eq!(hub_readiness(HubMode::Development, "loopback", ready.run_id.clone(), false, false, true, true, false).status, "not-ready");
+        assert_eq!(hub_readiness(HubMode::Development, "loopback", ready.run_id.clone(), true, false, false, true, false).status, "not-ready");
+        assert_eq!(hub_readiness(HubMode::Development, "network", ready.run_id, true, true, true, false, false).status, "not-ready");
+    }
+
+    #[tokio::test]
+    async fn artifact_cas_maintenance_checkpoint_reaches_tail_after_sixteen_requests() {
+        let state = test_state().await;
+        for index in 0..5 {
+            let space_id = create_space_for_test(&state, "seed", &format!("CAS {index}"), os_directory::DirectorySpaceKind::Studio, DirectorySpaceVisibility::Private).await;
+            let document_id = format!("cas-maintenance-{index}");
+            announce_document_for_test(&state, &space_id, &document_id).await;
+            publish_checkpoint_for_test(&state, &space_id, &document_id).await;
+        }
+        let control = StartupCatalogControl;
+        let context = OperationContext::new(control.now_ms().saturating_add(30_000), AuthorityLimits::maximum(), &control);
+        let mut checkpoint = ArtifactCasMaintenanceCheckpoint::default();
+        let mut requests = 0usize;
+        let mut examined = 0u64;
+        loop {
+            let result = state.directory_service.sweep_artifact_cas(state.artifact_cas.as_ref(), checkpoint.request(false, 1), &context).await.expect("bounded maintenance page");
+            requests += 1;
+            examined += result.examined_objects;
+            if checkpoint.accept(&result) { break; }
+            assert!(requests < 128, "maintenance cursor converges");
+        }
+        assert!(requests > 16);
+        assert!(examined > 16);
     }
     use tokio_tungstenite::connect_async;
-    use tokio_tungstenite::tungstenite::Message as WsMessage;
+    use tokio_tungstenite::tungstenite::{client::IntoClientRequest, Message as WsMessage};
 
     /// @emoji 🏛️ The seeded space id every test routes against (see `SqliteDirectory::seed`).
     const STUDIO: &str = "default";
@@ -2534,6 +4091,14 @@ mod tests {
         let directory_service = Arc::new(DirectoryService::new(directory.clone(), directory_capacity));
         let database = Arc::new(database);
         let artifact_cas = Arc::new(ArtifactChunkCasStores::Filesystem(FsArtifactChunkCasStorage::open(&dir.join("artifact-cas/v1")).await.expect("open artifact CAS")));
+        let control = StartupCatalogControl;
+        let context = OperationContext::new(control.now_ms().saturating_add(30_000), AuthorityLimits::maximum(), &control);
+        let coordinator_id = directory.artifact_cas_coordinator_id().await.expect("artifact CAS coordinator");
+        artifact_cas.configure_coordinator(coordinator_id, &context).await.expect("configure artifact CAS coordinator");
+        let artifact_publication = Arc::new(CheckpointPublicationOrchestrator::new(
+            ArtifactChunkBlobStore::new(artifact_cas.clone()),
+            HubVerifiedCheckpointPublisher::new(directory_service.clone(), artifact_cas.clone(), "system:artifact-authority-test"),
+        ));
         let rebootstrap = Arc::new(VerifiedRebootstrapSource::new(directory.clone(), artifact_cas.clone()));
         HubState {
             db: database,
@@ -2541,16 +4106,21 @@ mod tests {
             directory,
             rebootstrap,
             _artifact_authority: None,
+            _artifact_publication: artifact_publication,
+            artifact_maintenance: ArtifactCasMaintenanceSupervisor::disabled(),
             directory_service,
             admin_subjects: Arc::from([]),
-            readiness: Arc::new(hub_readiness(HubMode::Development, "00112233445566778899aabbccddeeff".into(), true, false, true)),
+            readiness: Arc::new(hub_readiness(HubMode::Development, "loopback", "00112233445566778899aabbccddeeff".into(), true, false, true, true, false)),
             admin_dir: dir.join("admin-dist"),
             fanout: Arc::new(ShardedMap::new()),
             fanout_capacity,
             live_gate: None,
+            canonical_pair_authorization_gate: None,
             presence: Arc::new(ShardedMap::new()),
             session_colors: Arc::new(ShardedMap::new()),
             session_kicks: Arc::new(ShardedMap::new()),
+            socket_grants: Arc::new(SocketGrantLedgerV1::default()),
+            socket_binding_gates: Arc::new(SocketBindingGatesV1::default()),
             extensions_root: dir.join("extension-modules"),
             merge_policy: protocol::MergePolicy::default(),
         }
@@ -2558,7 +4128,7 @@ mod tests {
 
     async fn lag_test_state(directory_capacity: usize, fanout_capacity: usize) -> HubState {
         let dir = tempdir("lag-db");
-        let pool = Arc::new(db::semio_framework_async::process_worker_pool(db::semio_framework_async::WorkerPoolConfig::new(db::semio_framework_async::ProcessKind::HeadlessBatch, 2)));
+        let pool = hub_worker_pool();
         let backend = Arc::new(db::db_storage::DbBackend::Memory(db::db_storage::MemoryStorage::new(pool.clone()).await.expect("memory storage")));
         let database = Arc::new(db::Database::open(pool, db::DbConfig::for_profile(db::Profile::Test), backend).await.expect("open memory db"));
         let directory = SqliteDirectory::connect(":memory:").await.expect("connect directory");
@@ -2566,6 +4136,14 @@ mod tests {
         let directory: Arc<HubDirectories> = Arc::new(directory.into());
         let directory_service = Arc::new(DirectoryService::new(directory.clone(), directory_capacity));
         let artifact_cas = Arc::new(ArtifactChunkCasStores::Memory(MemoryArtifactChunkCasStorage::default()));
+        let control = StartupCatalogControl;
+        let context = OperationContext::new(control.now_ms().saturating_add(30_000), AuthorityLimits::maximum(), &control);
+        let coordinator_id = directory.artifact_cas_coordinator_id().await.expect("artifact CAS coordinator");
+        artifact_cas.configure_coordinator(coordinator_id, &context).await.expect("configure artifact CAS coordinator");
+        let artifact_publication = Arc::new(CheckpointPublicationOrchestrator::new(
+            ArtifactChunkBlobStore::new(artifact_cas.clone()),
+            HubVerifiedCheckpointPublisher::new(directory_service.clone(), artifact_cas.clone(), "system:artifact-authority-test"),
+        ));
         let rebootstrap = Arc::new(VerifiedRebootstrapSource::new(directory.clone(), artifact_cas.clone()));
         HubState {
             db: database,
@@ -2573,16 +4151,21 @@ mod tests {
             directory,
             rebootstrap,
             _artifact_authority: None,
+            _artifact_publication: artifact_publication,
+            artifact_maintenance: ArtifactCasMaintenanceSupervisor::disabled(),
             directory_service,
             admin_subjects: Arc::from([]),
-            readiness: Arc::new(hub_readiness(HubMode::Development, "00112233445566778899aabbccddeeff".into(), true, false, true)),
+            readiness: Arc::new(hub_readiness(HubMode::Development, "loopback", "00112233445566778899aabbccddeeff".into(), true, false, true, true, false)),
             admin_dir: dir.join("admin-dist"),
             fanout: Arc::new(ShardedMap::new()),
             fanout_capacity,
             live_gate: None,
+            canonical_pair_authorization_gate: None,
             presence: Arc::new(ShardedMap::new()),
             session_colors: Arc::new(ShardedMap::new()),
             session_kicks: Arc::new(ShardedMap::new()),
+            socket_grants: Arc::new(SocketGrantLedgerV1::default()),
+            socket_binding_gates: Arc::new(SocketBindingGatesV1::default()),
             extensions_root: dir.join("extension-modules"),
             merge_policy: protocol::MergePolicy::default(),
         }
@@ -2716,6 +4299,140 @@ mod tests {
         addr
     }
 
+    struct RawHttpResponse {
+        status: u16,
+        headers: String,
+        body: Vec<u8>,
+    }
+
+    async fn raw_http_get(addr: SocketAddr, path: &str, headers: &[(&str, &str)]) -> RawHttpResponse {
+        use tokio::io::{AsyncReadExt, AsyncWriteExt};
+        let mut stream = tokio::net::TcpStream::connect(addr).await.expect("HTTP connect");
+        let mut request = format!("GET {path} HTTP/1.1\r\nHost: {addr}\r\nConnection: close\r\n");
+        for (name, value) in headers {
+            request.push_str(name);
+            request.push_str(": ");
+            request.push_str(value);
+            request.push_str("\r\n");
+        }
+        request.push_str("\r\n");
+        stream.write_all(request.as_bytes()).await.expect("HTTP write");
+        let mut response = Vec::new();
+        tokio::time::timeout(std::time::Duration::from_secs(5), stream.read_to_end(&mut response)).await.expect("HTTP deadline").expect("HTTP read");
+        let boundary = response.windows(4).position(|bytes| bytes == b"\r\n\r\n").expect("HTTP header boundary");
+        let head = std::str::from_utf8(&response[..boundary]).expect("HTTP headers").to_string();
+        let status = head.split_whitespace().nth(1).expect("HTTP status").parse().expect("numeric HTTP status");
+        RawHttpResponse { status, headers: head, body: response[boundary + 4..].to_vec() }
+    }
+
+    #[test]
+    fn canonical_pair_route_rejects_non_path_and_ambiguous_headers_before_work() {
+        let mut headers = HeaderMap::new();
+        headers.insert(axum::http::header::ACCEPT, CANONICAL_CHECKPOINT_PAIR_MEDIA_TYPE.parse().expect("accept"));
+        headers.insert(axum::http::header::AUTHORIZATION, "Bearer session.v1.selector.proof".parse().expect("authorization"));
+        assert!(canonical_pair_request_admission(&"/spaces/s/documents/d/active-checkpoint/pair".parse().expect("URI"), &headers).is_ok());
+        assert_eq!(canonical_pair_request_admission(&"/spaces/s/documents/d/active-checkpoint/pair?checkpoint=other".parse().expect("URI"), &headers), Err(StatusCode::BAD_REQUEST));
+        headers.insert(axum::http::header::RANGE, "bytes=0-1".parse().expect("range"));
+        assert_eq!(canonical_pair_request_admission(&"/spaces/s/documents/d/active-checkpoint/pair".parse().expect("URI"), &headers), Err(StatusCode::RANGE_NOT_SATISFIABLE));
+        headers.remove(axum::http::header::RANGE);
+        headers.insert(axum::http::header::ACCEPT, "application/octet-stream".parse().expect("accept"));
+        assert_eq!(canonical_pair_request_admission(&"/spaces/s/documents/d/active-checkpoint/pair".parse().expect("URI"), &headers), Err(StatusCode::NOT_ACCEPTABLE));
+        headers.insert(axum::http::header::ACCEPT, CANONICAL_CHECKPOINT_PAIR_MEDIA_TYPE.parse().expect("accept"));
+        headers.append(axum::http::header::AUTHORIZATION, "Bearer duplicate".parse().expect("duplicate"));
+        assert_eq!(canonical_pair_request_admission(&"/spaces/s/documents/d/active-checkpoint/pair".parse().expect("URI"), &headers), Err(StatusCode::UNAUTHORIZED));
+        assert!(!canonical_pair_auth_outcome_allowed(&AuthOutcome::Public));
+        assert!(!canonical_pair_auth_outcome_allowed(&AuthOutcome::Denied));
+        assert!(canonical_pair_auth_outcome_allowed(&AuthOutcome::ShareToken));
+    }
+
+    #[tokio::test]
+    async fn canonical_pair_route_is_exact_member_or_share_and_emits_only_verified_public_pair() {
+        let mut state = lag_test_state(1024, 256).await;
+        let document_id = "canonical-pair-document";
+        announce_document_for_test(&state, STUDIO, document_id).await;
+        let checkpoint = publish_checkpoint_for_test(&state, STUDIO, document_id).await;
+        let member = issue_test_session(&state, "canonical-member@example.com").await;
+        upsert_member_for_test(&state, STUDIO, "canonical-member@example.com", DirectorySpaceRole::Spectator).await;
+        let scope = DocumentScope::new(STUDIO, document_id);
+        let issued_share = state.directory.issue_share_token(&scope, 60, "canonical-pair-share").await.expect("share issue");
+        let share_id = issued_share.record.id.clone();
+        let share = issued_share.capability.expose_once();
+        let outsider = issue_test_session(&state, "canonical-outsider@example.com").await;
+        state.admin_subjects = Arc::from([AdminSubject {
+            provider: "test-verifier".into(),
+            subject_digest: identity_subject_digest("test-verifier", "canonical-outsider@example.com").expect("admin subject digest"),
+        }]);
+        let other_space = create_space_for_test(&state, "another-owner", "Canonical Other", os_directory::DirectorySpaceKind::Studio, DirectorySpaceVisibility::Private).await;
+        announce_document_for_test(&state, &other_space, document_id).await;
+        publish_checkpoint_for_test(&state, &other_space, document_id).await;
+        let public_space = create_space_for_test(&state, "public-owner", "Canonical Public", os_directory::DirectorySpaceKind::Studio, DirectorySpaceVisibility::Public).await;
+        announce_document_for_test(&state, &public_space, document_id).await;
+        publish_checkpoint_for_test(&state, &public_space, document_id).await;
+        let other_document = "canonical-pair-other-document";
+        announce_document_for_test(&state, STUDIO, other_document).await;
+        publish_checkpoint_for_test(&state, STUDIO, other_document).await;
+        let addr = spawn_server(state.clone()).await;
+        let path = format!("/spaces/{STUDIO}/documents/{document_id}/active-checkpoint/pair");
+        let accept = [("Accept", CANONICAL_CHECKPOINT_PAIR_MEDIA_TYPE)];
+        let member_authorization = format!("Bearer {}", member.token);
+        assert_eq!(raw_http_get(addr, &format!("{path}?checkpoint=other"), &[("Accept", CANONICAL_CHECKPOINT_PAIR_MEDIA_TYPE), ("Authorization", &member_authorization)]).await.status, 400);
+        assert_eq!(raw_http_get(addr, &path, &[("Accept", "application/octet-stream"), ("Authorization", &member_authorization)]).await.status, 406);
+        assert_eq!(raw_http_get(addr, &path, &[("Accept", CANONICAL_CHECKPOINT_PAIR_MEDIA_TYPE), ("Range", "bytes=0-1"), ("Authorization", &member_authorization)]).await.status, 416);
+        assert_eq!(raw_http_get(addr, &path, &[("Accept", CANONICAL_CHECKPOINT_PAIR_MEDIA_TYPE), ("Authorization", &member_authorization), ("Authorization", &member_authorization)]).await.status, 401);
+        let public = raw_http_get(addr, &path, &accept).await;
+        assert_eq!(public.status, 401);
+        assert!(public.body.is_empty());
+        let malformed = raw_http_get(addr, &path, &[("Accept", CANONICAL_CHECKPOINT_PAIR_MEDIA_TYPE), ("Authorization", "Bearer malformed")]).await;
+        assert_eq!(malformed.status, 401);
+        let public_fallback = raw_http_get(addr, &format!("/spaces/{public_space}/documents/{document_id}/active-checkpoint/pair"), &[("Accept", CANONICAL_CHECKPOINT_PAIR_MEDIA_TYPE), ("Authorization", "Bearer malformed")]).await;
+        assert_eq!(public_fallback.status, 401);
+        let denied = raw_http_get(addr, &path, &[("Accept", CANONICAL_CHECKPOINT_PAIR_MEDIA_TYPE), ("Authorization", &format!("Bearer {}", outsider.token))]).await;
+        assert_eq!(denied.status, 401);
+        assert!(denied.body.is_empty());
+        let cross_space = raw_http_get(addr, &format!("/spaces/{other_space}/documents/{document_id}/active-checkpoint/pair"), &[("Accept", CANONICAL_CHECKPOINT_PAIR_MEDIA_TYPE), ("Authorization", &format!("Bearer {}", member.token))]).await;
+        assert_eq!(cross_space.status, 401);
+        let cross_document_share = raw_http_get(addr, &format!("/spaces/{STUDIO}/documents/{other_document}/active-checkpoint/pair"), &[("Accept", CANONICAL_CHECKPOINT_PAIR_MEDIA_TYPE), ("Authorization", &format!("Bearer {share}"))]).await;
+        assert_eq!(cross_document_share.status, 401);
+
+        for token in [&member.token, &share] {
+            let response = raw_http_get(addr, &path, &[("Accept", CANONICAL_CHECKPOINT_PAIR_MEDIA_TYPE), ("Authorization", &format!("Bearer {token}"))]).await;
+            assert_eq!(response.status, 200);
+            let lower_headers = response.headers.to_ascii_lowercase();
+            assert!(lower_headers.contains(&format!("content-type: {CANONICAL_CHECKPOINT_PAIR_MEDIA_TYPE}")));
+            assert!(lower_headers.contains("cache-control: private, no-store"));
+            assert!(lower_headers.contains("vary: authorization"));
+            assert!(lower_headers.contains("etag: \""));
+            let verified = decode_canonical_checkpoint_pair(&response.body).expect("verified route body");
+            assert_eq!(verified.selection.scope, scope);
+            assert_eq!(verified.selection.active_checkpoint_id, checkpoint.checkpoint_id);
+            assert_eq!(verified.pair().pack, b"verified-pack");
+            assert_eq!(verified.pair().spr, b"verified-spr");
+            assert!(!String::from_utf8_lossy(&response.body).contains("cas/v1"));
+            assert!(!String::from_utf8_lossy(&response.body).contains("manifest"));
+        }
+        for authorization_checks_before_revoke in [1usize, 3, 4] {
+            let checks = Arc::new(std::sync::atomic::AtomicUsize::new(0));
+            let gate_checks = checks.clone();
+            let mut revoked_state = state.clone();
+            revoked_state.canonical_pair_authorization_gate = Some(Arc::new(move || gate_checks.fetch_add(1, std::sync::atomic::Ordering::SeqCst) < authorization_checks_before_revoke));
+            let revoked_addr = spawn_server(revoked_state).await;
+            let response = raw_http_get(revoked_addr, &path, &[("Accept", CANONICAL_CHECKPOINT_PAIR_MEDIA_TYPE), ("Authorization", &member_authorization)]).await;
+            assert_eq!(response.status, 401);
+            assert!(response.body.is_empty(), "revocation never publishes a partial framed body");
+            assert_eq!(checks.load(std::sync::atomic::Ordering::SeqCst), authorization_checks_before_revoke + 1);
+        }
+        let mut missing_cas_state = state.clone();
+        missing_cas_state.rebootstrap = Arc::new(VerifiedRebootstrapSource::new(state.directory.clone(), Arc::new(ArtifactChunkCasStores::Memory(MemoryArtifactChunkCasStorage::default()))));
+        let missing_cas_addr = spawn_server(missing_cas_state).await;
+        let missing = raw_http_get(missing_cas_addr, &path, &[("Accept", CANONICAL_CHECKPOINT_PAIR_MEDIA_TYPE), ("Authorization", &member_authorization)]).await;
+        assert_eq!(missing.status, 409);
+        assert!(missing.body.is_empty());
+        state.directory.revoke_share_token(&scope, &share_id, "test-revoked", "canonical-pair-revoke").await.expect("revoke share");
+        let revoked = raw_http_get(addr, &path, &[("Accept", CANONICAL_CHECKPOINT_PAIR_MEDIA_TYPE), ("Authorization", &format!("Bearer {share}"))]).await;
+        assert_eq!(revoked.status, 401);
+        assert!(revoked.body.is_empty());
+    }
+
     /// @emoji 🧪️ A loopback `ConnectInfo` for handlers called directly in tests. Network
     /// proximity confers no authorization; every protected test also supplies a verified session.
     fn loopback_peer() -> axum::extract::ConnectInfo<SocketAddr> {
@@ -2759,8 +4476,38 @@ mod tests {
         }
     }
 
+    async fn next_close_without_authority<S>(ws: &mut S) -> u16
+    where
+        S: StreamExt<Item = Result<WsMessage, tokio_tungstenite::tungstenite::Error>> + Unpin,
+    {
+        match tokio::time::timeout(std::time::Duration::from_secs(5), ws.next()).await {
+            Ok(Some(Ok(WsMessage::Close(Some(frame))))) => frame.code.into(),
+            Ok(Some(Ok(WsMessage::Binary(_)))) => panic!("authority-bearing binary frame crossed revocation"),
+            Ok(Some(Ok(WsMessage::Text(_)))) => panic!("authority-bearing directory frame crossed revocation"),
+            Ok(Some(other)) => panic!("expected close after revocation, got {other:?}"),
+            Ok(None) => panic!("stream ended before revocation close"),
+            Err(_) => panic!("no revocation close before 5s deadline"),
+        }
+    }
+
     fn hello(actor: &str, token: Option<&str>) -> ClientFrame {
         ClientFrame::Hello { wire_version: 1, protocol_version: 1, schema: "test.v1".to_string(), pack_schema_hash: [0x11u8; 32], actor: ActorId(actor.to_string()), token: token.map(str::to_string), resume_token: None, frontier: None }
+    }
+
+    fn socket_hello() -> ClientFrame {
+        ClientFrame::SocketHelloV1 { wire_version: 1, protocol_version: 1, schema: "test.v1".to_string(), pack_schema_hash: [0x11; 32], resume_token: None, frontier: None }
+    }
+
+    fn bearer_headers(capability: &str) -> HeaderMap {
+        let mut headers = HeaderMap::new();
+        headers.insert(axum::http::header::AUTHORIZATION, format!("Bearer {capability}").parse().expect("bearer header"));
+        headers
+    }
+
+    fn socket_request(url: &str, grant: &str) -> tokio_tungstenite::tungstenite::http::Request<()> {
+        let mut request = url.into_client_request().expect("socket request");
+        request.headers_mut().insert(tokio_tungstenite::tungstenite::http::header::SEC_WEBSOCKET_PROTOCOL, format!("{SOCKET_PROTOCOL_V1}, {grant}").parse().expect("socket protocols"));
+        request
     }
 
     struct TestIssuedSession {
@@ -2810,6 +4557,460 @@ mod tests {
             peer_class: "test".into(),
         };
         state.directory.issue_auth_session(&issue).await.expect("seed author session").capability.expose_once()
+    }
+
+    #[tokio::test]
+    async fn socket_grant_ledger_is_bounded_single_consume_restart_scoped_and_revoke_race_safe() {
+        let ledger = Arc::new(SocketGrantLedgerV1::default());
+        let audience = SocketAudienceV1::Document(DocumentScope::new("space-a", "document-a"));
+        let subject = SocketSubjectV1::Session {
+            session_id: "session-a".into(),
+            user_id: "user-a".into(),
+            authorization_generation: 7,
+            role: Some(SpaceRole::Author),
+            expires_at_ms: 10_000,
+        };
+        let capability = SocketGrantCapability::mint().expect("socket grant");
+        ledger.issue(&capability, audience.clone(), "hub.v1.actor".into(), subject.clone(), 1, 9_000).expect("issue grant");
+        assert!(ledger.pending(&capability, &SocketAudienceV1::Document(DocumentScope::new("space-a", "document-b")), 2).is_err(), "audience mismatch never consumes");
+        let candidate = ledger.pending(&capability, &audience, 2).expect("pending grant");
+        let barrier = Arc::new(std::sync::Barrier::new(3));
+        let attempts = (0..2)
+            .map(|_| {
+                let ledger = ledger.clone();
+                let candidate = candidate.clone();
+                let barrier = barrier.clone();
+                std::thread::spawn(move || {
+                    barrier.wait();
+                    ledger.consume(&candidate, 3).is_ok()
+                })
+            })
+            .collect::<Vec<_>>();
+        barrier.wait();
+        assert_eq!(attempts.into_iter().map(|attempt| attempt.join().expect("consume race")).filter(|won| *won).count(), 1, "exactly one concurrent upgrade consumes");
+        assert!(ledger.pending(&capability, &audience, 4).is_err(), "consumed grants never replay");
+        assert!(SocketGrantLedgerV1::default().pending(&capability, &audience, 4).is_err(), "grants are process-bound and disappear on restart");
+        let (_, live_notify) = ledger.register_live(&candidate).expect("register consumed grant live");
+
+        let pending = SocketGrantCapability::mint().expect("pending socket grant");
+        ledger.issue(&pending, audience.clone(), "hub.v1.pending".into(), subject.clone(), 4, 9_000).expect("issue pending grant");
+        let stale = ledger.pending(&pending, &audience, 5).expect("candidate before revoke");
+        ledger.invalidate_binding(subject.binding());
+        tokio::time::timeout(std::time::Duration::from_secs(1), live_notify.notified()).await.expect("live revoke notification");
+        assert!(ledger.consume(&stale, 6).is_err(), "revoke between durable revalidation and consume fails closed");
+        assert!(ledger.register_live(&candidate).is_err(), "consume then revoke then late register fails closed");
+
+        let ttl_ledger = SocketGrantLedgerV1::default();
+        let ttl_capability = SocketGrantCapability::mint().expect("TTL grant");
+        ttl_ledger.issue(&ttl_capability, audience.clone(), "hub.v1.ttl".into(), subject.clone(), 1, 10).expect("issue TTL grant");
+        let ttl_candidate = ttl_ledger.pending(&ttl_capability, &audience, 2).expect("pending TTL grant");
+        let ttl_consumed = ttl_ledger.consume(&ttl_candidate, 3).expect("consume TTL grant");
+        let (ttl_live_id, _) = ttl_ledger.register_live(&ttl_consumed).expect("register TTL grant live");
+        let sweep_trigger = SocketGrantCapability::mint().expect("sweep trigger");
+        ttl_ledger.issue(&sweep_trigger, audience.clone(), "hub.v1.sweep".into(), subject.clone(), 11, 100).expect("trigger grant sweep");
+        assert!(ttl_ledger.is_live(&ttl_consumed, &ttl_live_id), "grant TTL applies to dial/consume, not a durably-authorized live socket");
+        ttl_ledger.unregister_live(&ttl_consumed, &ttl_live_id);
+        assert!(!ttl_ledger.inner.lock().expect("ledger").records.contains_key(ttl_capability.selector()), "last live lease reclaims its consumed grant record");
+
+        let abandoned = SocketGrantLedgerV1::default();
+        let mut first_abandoned = None;
+        for index in 0..SOCKET_GRANT_LEDGER_CAPACITY {
+            let capability = SocketGrantCapability::mint().expect("abandoned grant");
+            abandoned.issue(&capability, audience.clone(), format!("hub.v1.abandoned.{index}"), subject.clone(), 1, 10).expect("fill ledger");
+            let candidate = abandoned.pending(&capability, &audience, 2).expect("abandoned pending");
+            abandoned.consume(&candidate, 3).expect("abandoned consume");
+            first_abandoned.get_or_insert(capability);
+        }
+        assert!(abandoned.pending(first_abandoned.as_ref().expect("first abandoned"), &audience, 4).is_err(), "consumed failed-pre-live grant never replays");
+        let recovered = SocketGrantCapability::mint().expect("recovered grant");
+        abandoned.issue(&recovered, audience.clone(), "hub.v1.recovered".into(), subject.clone(), 11, 100).expect("expired pre-live tombstones reclaim full ledger capacity");
+
+        let bounded = SocketGrantLedgerV1::default();
+        for index in 0..SOCKET_GRANT_BINDING_PENDING_CAPACITY {
+            let capability = SocketGrantCapability::mint().expect("bounded grant");
+            bounded.issue(&capability, audience.clone(), format!("hub.v1.{index}"), subject.clone(), 1, 9_000).expect("within per-binding bound");
+        }
+        let overflow = SocketGrantCapability::mint().expect("overflow grant");
+        assert_eq!(bounded.issue(&overflow, audience, "hub.v1.overflow".into(), subject.clone(), 1, 9_000), Err(SocketGrantLedgerErrorV1::Capacity));
+        bounded.invalidate_binding(subject.binding());
+        assert!(bounded.issue(&overflow, SocketAudienceV1::Document(DocumentScope::new("space-a", "document-a")), "hub.v1.after-revoke".into(), subject, 2, 9_000).is_ok());
+    }
+
+    #[test]
+    fn socket_grant_document_route_is_exact_replay_safe_actor_bound_and_revoke_live() {
+        run_socket_test(|| async {
+            let state = test_state().await;
+            let token = seed_author_token(&state).await;
+            announce_document_for_test(&state, STUDIO, "socket-a").await;
+            announce_document_for_test(&state, STUDIO, "socket-b").await;
+            let nonmember = issue_test_session(&state, "socket-nonmember@example.com").await;
+            let unauthorized_existing = issue_document_socket_grant(
+                Path((STUDIO.to_string(), "socket-a".to_string())),
+                bearer_headers(&nonmember.token),
+                State(state.clone()),
+            )
+            .await
+            .err();
+            let unauthorized_missing = issue_document_socket_grant(
+                Path((STUDIO.to_string(), "socket-missing".to_string())),
+                bearer_headers(&nonmember.token),
+                State(state.clone()),
+            )
+            .await
+            .err();
+            assert_eq!(unauthorized_existing, Some(StatusCode::UNAUTHORIZED));
+            assert_eq!(unauthorized_missing, unauthorized_existing, "unauthorized callers cannot enumerate descriptor existence");
+            let receipt = issue_document_socket_grant(
+                Path((STUDIO.to_string(), "socket-a".to_string())),
+                bearer_headers(&token),
+                State(state.clone()),
+            )
+            .await
+            .expect("issue document socket grant")
+            .0;
+            assert_eq!(receipt.schema, "semio.hub.socket-grant/v1");
+            assert_eq!(receipt.protocol, SOCKET_PROTOCOL_V1);
+            assert_eq!(receipt.grant.len(), 107);
+            assert!(receipt.grant.starts_with("socket.v1."));
+            assert!(receipt.actor_id.starts_with("hub.v1."));
+            assert!(!receipt.actor_id.contains(receipt.grant.rsplit('.').next().expect("secret")));
+
+            let addr = spawn_server(state.clone()).await;
+            let rejected = connect_async(socket_request(&format!("ws://{addr}/spaces/{STUDIO}/documents/socket-b/socket/v1"), &receipt.grant)).await.expect_err("cross-document grant rejected");
+            assert!(matches!(rejected, tokio_tungstenite::tungstenite::Error::Http(response) if response.status().as_u16() == 401));
+
+            let url = format!("ws://{addr}/spaces/{STUDIO}/documents/socket-a/socket/v1");
+            let (mut socket, response) = connect_async(socket_request(&url, &receipt.grant)).await.expect("upgrade socket grant");
+            assert_eq!(response.headers().get(tokio_tungstenite::tungstenite::http::header::SEC_WEBSOCKET_PROTOCOL).and_then(|value| value.to_str().ok()), Some(SOCKET_PROTOCOL_V1));
+            socket.send(client_binary(&socket_hello(), Lane::Command).await).await.expect("socket hello");
+            assert!(matches!(next_server_frame(&mut socket).await, ServerFrame::Welcome { .. }));
+            assert!(matches!(next_server_frame(&mut socket).await, ServerFrame::Session { actor, .. } if actor == receipt.actor_id));
+
+            let document = db_artifact_id(&DocumentScope::new(STUDIO, "socket-a"));
+            let mut forged = sample_envelope("forged-actor", &document).await;
+            forged.actor = ActorId("client-selected-forgery".into());
+            socket.send(client_binary(&ClientFrame::Commands { batch_id: 77, envelopes: vec![forged] }, Lane::Command).await).await.expect("forged command");
+            match next_server_frame(&mut socket).await {
+                ServerFrame::Ack { batch_id: 77, stages, .. } => match &stages[0] {
+                    AckStage::Applied { outcome } => match outcome.as_ref() {
+                        ApplyOutcome::Rejected { reason, .. } => {
+                            assert_eq!(reason, "socket subject actor mismatch");
+                            assert!(!reason.contains(&receipt.grant));
+                        }
+                        other => panic!("forged actor was not rejected: {other:?}"),
+                    },
+                    other => panic!("unexpected forged actor stage: {other:?}"),
+                },
+                other => panic!("expected forged actor ack, got {other:?}"),
+            }
+
+            let legacy_receipt = issue_document_socket_grant(
+                Path((STUDIO.to_string(), "socket-a".to_string())),
+                bearer_headers(&token),
+                State(state.clone()),
+            )
+            .await
+            .expect("issue legacy-carrier rejection grant")
+            .0;
+            let (mut legacy, _) = connect_async(socket_request(&url, &legacy_receipt.grant)).await.expect("legacy rejection socket");
+            legacy.send(client_binary(&socket_hello(), Lane::Command).await).await.expect("initial socket hello");
+            assert!(matches!(next_server_frame(&mut legacy).await, ServerFrame::Welcome { .. }));
+            assert!(matches!(next_server_frame(&mut legacy).await, ServerFrame::Session { .. }));
+            legacy.send(client_binary(&hello("forged-legacy-actor", Some(&token)), Lane::Command).await).await.expect("legacy credential frame");
+            assert_eq!(next_close_code(&mut legacy, false).await, 4401, "v1 rejects the legacy actor/token carrier after upgrade");
+
+            let replay = connect_async(socket_request(&url, &receipt.grant)).await.expect_err("consumed grant replay rejected");
+            assert!(matches!(replay, tokio_tungstenite::tungstenite::Error::Http(response) if response.status().as_u16() == 401));
+            let pending = issue_document_socket_grant(
+                Path((STUDIO.to_string(), "socket-a".to_string())),
+                bearer_headers(&token),
+                State(state.clone()),
+            )
+            .await
+            .expect("issue pending grant")
+            .0;
+            assert_eq!(pending.actor_id, receipt.actor_id, "session-derived actor is stable across grants");
+
+            assert_eq!(delete_session_me(bearer_headers(&token), State(state.clone())).await, StatusCode::NO_CONTENT);
+            assert_eq!(next_close_code(&mut socket, false).await, 4401, "successful durable revoke immediately invalidates a live socket");
+            let revoked_pending = connect_async(socket_request(&url, &pending.grant)).await.expect_err("pending grant invalidated by revoke");
+            assert!(matches!(revoked_pending, tokio_tungstenite::tungstenite::Error::Http(response) if response.status().as_u16() == 401));
+        });
+    }
+
+    #[test]
+    fn socket_grant_revoke_and_welcome_have_a_bounded_binding_linearization() {
+        run_socket_test(|| async {
+            let mut state = test_state().await;
+            let gate = Arc::new(TestLiveGate::default());
+            state.live_gate = Some(gate.clone());
+            let token = seed_author_token(&state).await;
+            announce_document_for_test(&state, STUDIO, "socket-linearized").await;
+            let receipt = issue_document_socket_grant(
+                Path((STUDIO.to_string(), "socket-linearized".to_string())),
+                bearer_headers(&token),
+                State(state.clone()),
+            )
+            .await
+            .expect("issue socket grant")
+            .0;
+            let addr = spawn_server(state.clone()).await;
+            let url = format!("ws://{addr}/spaces/{STUDIO}/documents/socket-linearized/socket/v1");
+            let (mut socket, _) = connect_async(socket_request(&url, &receipt.grant)).await.expect("socket upgrade");
+            socket.send(client_binary(&socket_hello(), Lane::Command).await).await.expect("socket hello");
+            tokio::time::timeout(std::time::Duration::from_secs(2), gate.socket_before_welcome.acquire()).await.expect("pre-welcome gate deadline").expect("pre-welcome gate");
+            let mut revoke = tokio::spawn({
+                let state = state.clone();
+                let token = token.clone();
+                async move { delete_session_me(bearer_headers(&token), State(state)).await }
+            });
+            assert!(tokio::time::timeout(std::time::Duration::from_millis(100), &mut revoke).await.is_err(), "revoke waits while Welcome owns the binding linearization");
+            gate.socket_welcome_release.add_permits(1);
+            assert!(matches!(next_server_frame(&mut socket).await, ServerFrame::Welcome { .. }), "Welcome linearizes before the waiting revoke");
+            tokio::time::timeout(std::time::Duration::from_secs(2), gate.socket_after_welcome.acquire()).await.expect("post-Welcome boundary deadline").expect("post-Welcome boundary");
+            assert_eq!(tokio::time::timeout(std::time::Duration::from_secs(2), revoke).await.expect("bounded revoke completion").expect("revoke task"), StatusCode::NO_CONTENT);
+            gate.socket_bootstrap_release.add_permits(1);
+            assert_eq!(next_close_without_authority(&mut socket).await, 4401, "a revoke winning after Welcome suppresses bootstrap and Session authority");
+        });
+    }
+
+    #[test]
+    fn socket_grant_revoke_before_command_admission_has_no_storage_effect() {
+        run_socket_test(|| async {
+            let mut state = test_state().await;
+            let live_gate = Arc::new(TestLiveGate::default());
+            state.live_gate = Some(live_gate.clone());
+            let token = seed_author_token(&state).await;
+            announce_document_for_test(&state, STUDIO, "socket-command-revoke").await;
+            let receipt = issue_document_socket_grant(
+                Path((STUDIO.to_string(), "socket-command-revoke".to_string())),
+                bearer_headers(&token),
+                State(state.clone()),
+            )
+            .await
+            .expect("issue socket grant")
+            .0;
+            let addr = spawn_server(state.clone()).await;
+            let url = format!("ws://{addr}/spaces/{STUDIO}/documents/socket-command-revoke/socket/v1");
+            let (mut socket, _) = connect_async(socket_request(&url, &receipt.grant)).await.expect("socket upgrade");
+            socket.send(client_binary(&socket_hello(), Lane::Command).await).await.expect("socket hello");
+            tokio::time::timeout(std::time::Duration::from_secs(5), live_gate.socket_before_welcome.acquire()).await.expect("pre-Welcome deadline").expect("pre-Welcome");
+            live_gate.socket_welcome_release.add_permits(1);
+            assert!(matches!(next_server_frame(&mut socket).await, ServerFrame::Welcome { .. }));
+            tokio::time::timeout(std::time::Duration::from_secs(5), live_gate.socket_after_welcome.acquire()).await.expect("post-Welcome deadline").expect("post-Welcome");
+            live_gate.socket_bootstrap_release.add_permits(1);
+            assert!(matches!(next_server_frame(&mut socket).await, ServerFrame::Session { .. }));
+            tokio::time::timeout(std::time::Duration::from_secs(5), live_gate.document_subscribed.acquire()).await.expect("subscription deadline").expect("subscription");
+            live_gate.document_release.add_permits(1);
+
+            let document = db_artifact_id(&DocumentScope::new(STUDIO, "socket-command-revoke"));
+            let mut accepted = sample_envelope("accepted-op", &document).await;
+            accepted.actor = ActorId(receipt.actor_id.clone());
+            socket
+                .send(client_binary(&ClientFrame::Commands { batch_id: 90, envelopes: vec![accepted] }, Lane::Command).await)
+                .await
+                .expect("control command received by server");
+            tokio::time::timeout(std::time::Duration::from_secs(5), live_gate.socket_command_received.acquire()).await.expect("control command boundary deadline").expect("control command boundary");
+            live_gate.socket_command_release.add_permits(1);
+            assert!(matches!(next_server_frame(&mut socket).await, ServerFrame::Ack { batch_id: 90, .. }));
+            let accepted_frontier = state.db.document(&document).await.expect("document handle").frontier().await.expect("accepted frontier");
+            assert_eq!(accepted_frontier.head_seq, 1, "an actor-matching command persists while authorized");
+
+            let mut revoked = sample_envelope("revoked-op", &document).await;
+            revoked.actor = ActorId(receipt.actor_id.clone());
+            socket
+                .send(client_binary(&ClientFrame::Commands { batch_id: 91, envelopes: vec![revoked] }, Lane::Command).await)
+                .await
+                .expect("revoked command received by server");
+            tokio::time::timeout(std::time::Duration::from_secs(5), live_gate.socket_command_received.acquire()).await.expect("command boundary deadline").expect("command boundary");
+            assert_eq!(delete_session_me(bearer_headers(&token), State(state.clone())).await, StatusCode::NO_CONTENT);
+            live_gate.socket_command_release.add_permits(1);
+            assert_eq!(next_close_without_authority(&mut socket).await, 4401, "no Ack crosses a revoke that wins before command admission");
+            let frontier = state.db.document(&document).await.expect("document handle").frontier().await.expect("frontier");
+            assert_eq!(frontier.head_seq, 1, "the revoked actor-matching command never reaches durable storage");
+        });
+    }
+
+    #[test]
+    fn socket_grant_revoke_before_lag_authorization_reads_no_private_control() {
+        run_socket_test(|| async {
+            let mut state = test_state_with_capacity(1024, 1).await;
+            let live_gate = Arc::new(TestLiveGate::default());
+            state.live_gate = Some(live_gate.clone());
+            let token = seed_author_token(&state).await;
+            announce_document_for_test(&state, STUDIO, "socket-lag-revoke").await;
+            let receipt = issue_document_socket_grant(
+                Path((STUDIO.to_string(), "socket-lag-revoke".to_string())),
+                bearer_headers(&token),
+                State(state.clone()),
+            )
+            .await
+            .expect("issue socket grant")
+            .0;
+            let addr = spawn_server(state.clone()).await;
+            let url = format!("ws://{addr}/spaces/{STUDIO}/documents/socket-lag-revoke/socket/v1");
+            let (mut socket, _) = connect_async(socket_request(&url, &receipt.grant)).await.expect("socket upgrade");
+            socket.send(client_binary(&socket_hello(), Lane::Command).await).await.expect("socket hello");
+            tokio::time::timeout(std::time::Duration::from_secs(5), live_gate.socket_before_welcome.acquire()).await.expect("pre-Welcome deadline").expect("pre-Welcome");
+            live_gate.socket_welcome_release.add_permits(1);
+            assert!(matches!(next_server_frame(&mut socket).await, ServerFrame::Welcome { .. }));
+            tokio::time::timeout(std::time::Duration::from_secs(5), live_gate.socket_after_welcome.acquire()).await.expect("post-Welcome deadline").expect("post-Welcome");
+            live_gate.socket_bootstrap_release.add_permits(1);
+            assert!(matches!(next_server_frame(&mut socket).await, ServerFrame::Session { .. }));
+            tokio::time::timeout(std::time::Duration::from_secs(5), live_gate.document_subscribed.acquire()).await.expect("subscription deadline").expect("subscription");
+            let fanout = state.fanout_for(&document_scope_key_v1(&DocumentScope::new(STUDIO, "socket-lag-revoke")));
+            fanout.send(ServerFrame::Presence { peers: vec![b"first".to_vec()] }).expect("first fanout");
+            fanout.send(ServerFrame::Presence { peers: vec![b"second".to_vec()] }).expect("second fanout");
+            live_gate.document_release.add_permits(1);
+            tokio::time::timeout(std::time::Duration::from_secs(5), live_gate.socket_lag_received.acquire()).await.expect("lag boundary deadline").expect("lag boundary");
+            assert_eq!(delete_session_me(bearer_headers(&token), State(state)).await, StatusCode::NO_CONTENT);
+            live_gate.socket_lag_release.add_permits(1);
+            assert_eq!(next_close_without_authority(&mut socket).await, 4401, "revoked lag path discloses no control frame");
+            assert_eq!(live_gate.socket_rebootstrap_read.available_permits(), 0, "revoked lag path never enters the private checkpoint/control read");
+        });
+    }
+
+    #[test]
+    fn socket_grant_revoke_before_broadcast_authorization_suppresses_frame() {
+        run_socket_test(|| async {
+            let mut state = test_state().await;
+            let live_gate = Arc::new(TestLiveGate::default());
+            state.live_gate = Some(live_gate.clone());
+            let token = seed_author_token(&state).await;
+            announce_document_for_test(&state, STUDIO, "socket-broadcast-revoke").await;
+            let receipt = issue_document_socket_grant(
+                Path((STUDIO.to_string(), "socket-broadcast-revoke".to_string())),
+                bearer_headers(&token),
+                State(state.clone()),
+            )
+            .await
+            .expect("issue socket grant")
+            .0;
+            let addr = spawn_server(state.clone()).await;
+            let url = format!("ws://{addr}/spaces/{STUDIO}/documents/socket-broadcast-revoke/socket/v1");
+            let (mut socket, _) = connect_async(socket_request(&url, &receipt.grant)).await.expect("socket upgrade");
+            socket.send(client_binary(&socket_hello(), Lane::Command).await).await.expect("socket hello");
+            tokio::time::timeout(std::time::Duration::from_secs(2), live_gate.socket_before_welcome.acquire()).await.expect("pre-Welcome deadline").expect("pre-Welcome");
+            live_gate.socket_welcome_release.add_permits(1);
+            assert!(matches!(next_server_frame(&mut socket).await, ServerFrame::Welcome { .. }));
+            tokio::time::timeout(std::time::Duration::from_secs(2), live_gate.socket_after_welcome.acquire()).await.expect("post-Welcome deadline").expect("post-Welcome");
+            live_gate.socket_bootstrap_release.add_permits(1);
+            assert!(matches!(next_server_frame(&mut socket).await, ServerFrame::Session { .. }));
+            tokio::time::timeout(std::time::Duration::from_secs(2), live_gate.document_subscribed.acquire()).await.expect("subscription deadline").expect("subscription");
+            let fanout = state.fanout_for(&document_scope_key_v1(&DocumentScope::new(STUDIO, "socket-broadcast-revoke")));
+            fanout.send(ServerFrame::Presence { peers: vec![b"private-presence".to_vec()] }).expect("fanout");
+            live_gate.document_release.add_permits(1);
+            tokio::time::timeout(std::time::Duration::from_secs(2), live_gate.socket_broadcast_received.acquire()).await.expect("broadcast boundary deadline").expect("broadcast boundary");
+            assert_eq!(delete_session_me(bearer_headers(&token), State(state)).await, StatusCode::NO_CONTENT);
+            live_gate.socket_broadcast_release.add_permits(1);
+            assert_eq!(next_close_without_authority(&mut socket).await, 4401, "a broadcast received before a winning revoke is never disclosed afterward");
+        });
+    }
+
+    #[test]
+    fn socket_grant_directory_route_uses_credential_free_hello_and_revokes_live() {
+        run_socket_test(|| async {
+            let state = test_state().await;
+            let token = seed_author_token(&state).await;
+            let receipt = issue_directory_socket_grant(bearer_headers(&token), State(state.clone())).await.expect("issue directory socket grant").0;
+            let since = state.directory.head_seq().await.expect("directory head");
+            let addr = spawn_server(state.clone()).await;
+            let url = format!("ws://{addr}/directory/socket/v1?since={since}");
+            let (mut socket, _) = connect_async(socket_request(&url, &receipt.grant)).await.expect("directory socket");
+            socket.send(client_binary(&socket_hello(), Lane::Command).await).await.expect("credential-free hello");
+            tokio::time::sleep(std::time::Duration::from_millis(100)).await;
+            state.directory_service.publish(DirectoryStreamMessage::Heartbeat { head_seq: since });
+            assert!(matches!(next_directory_message(&mut socket).await, DirectoryStreamMessage::Heartbeat { head_seq } if head_seq == since));
+            assert_eq!(delete_session_me(bearer_headers(&token), State(state)).await, StatusCode::NO_CONTENT);
+            assert_eq!(next_close_code(&mut socket, false).await, 4401);
+        });
+    }
+
+    #[test]
+    fn socket_directory_revoke_after_admission_suppresses_replay_without_deadlock() {
+        run_socket_test(|| async {
+            let mut state = test_state().await;
+            let gate = Arc::new(TestLiveGate::default());
+            state.live_gate = Some(gate.clone());
+            let token = seed_author_token(&state).await;
+            let receipt = issue_directory_socket_grant(bearer_headers(&token), State(state.clone())).await.expect("issue directory grant").0;
+            let addr = spawn_server(state.clone()).await;
+            let url = format!("ws://{addr}/directory/socket/v1?since=0");
+            let (mut socket, _) = connect_async(socket_request(&url, &receipt.grant)).await.expect("directory socket");
+            socket.send(client_binary(&socket_hello(), Lane::Command).await).await.expect("socket hello");
+            tokio::time::timeout(std::time::Duration::from_secs(2), gate.socket_directory_admitted.acquire()).await.expect("directory admission deadline").expect("directory admission");
+            assert_eq!(
+                tokio::time::timeout(std::time::Duration::from_secs(2), delete_session_me(bearer_headers(&token), State(state))).await.expect("bounded revoke"),
+                StatusCode::NO_CONTENT,
+            );
+            gate.socket_directory_release.add_permits(1);
+            assert_eq!(next_close_code(&mut socket, false).await, 4401, "no replay text crosses a winning revoke");
+        });
+    }
+
+    #[tokio::test]
+    async fn socket_admin_user_gate_rejects_a_late_same_user_grant_after_batch_revoke() {
+        let mut state = test_state().await;
+        let gate = Arc::new(TestLiveGate::default());
+        state.live_gate = Some(gate.clone());
+        let admin_headers = authorize_test_admin(&mut state, "socket-admin@example.com").await;
+        let target = issue_test_session(&state, "socket-target@example.com").await;
+        upsert_member_for_test(&state, STUDIO, "socket-target@example.com", DirectorySpaceRole::Author).await;
+        announce_document_for_test(&state, STUDIO, "socket-admin-race").await;
+        let mut revoke = tokio::spawn({
+            let state = state.clone();
+            let user_id = target.user_id.clone();
+            async move { admin_revoke_user_sessions(Path(user_id), admin_headers, loopback_peer(), State(state)).await }
+        });
+        tokio::time::timeout(std::time::Duration::from_secs(2), gate.socket_admin_revoke_admitted.acquire()).await.expect("admin gate deadline").expect("admin gate");
+        let mut issue = tokio::spawn({
+            let state = state.clone();
+            let token = target.token.clone();
+            async move {
+                issue_document_socket_grant(Path((STUDIO.to_string(), "socket-admin-race".to_string())), bearer_headers(&token), State(state)).await
+            }
+        });
+        assert!(tokio::time::timeout(std::time::Duration::from_millis(100), &mut issue).await.is_err(), "same-user grant waits behind batch revoke");
+        gate.socket_admin_revoke_release.add_permits(1);
+        assert_eq!(tokio::time::timeout(std::time::Duration::from_secs(2), &mut revoke).await.expect("bounded admin revoke").expect("admin task"), StatusCode::NO_CONTENT);
+        let late_issue = tokio::time::timeout(std::time::Duration::from_secs(2), issue).await.expect("bounded late issue").expect("issue task");
+        assert!(matches!(late_issue, Err(StatusCode::UNAUTHORIZED)), "revoked session cannot mint");
+    }
+
+    #[tokio::test]
+    async fn socket_directory_visibility_requires_membership_even_for_public_spaces() {
+        let state = test_state().await;
+        let token = seed_author_token(&state).await;
+        let capability = SessionCapability::parse(&token).expect("session capability");
+        let session = state.directory.authenticate_session(&capability).await.expect("authenticate session").expect("active session");
+        let other = issue_test_session(&state, "public-owner@example.com").await;
+        let public_space = create_space_for_test(&state, &other.user_id, "Public Other", os_directory::DirectorySpaceKind::Studio, DirectorySpaceVisibility::Public).await;
+        let event = state
+            .directory
+            .events_since(0, 100)
+            .await
+            .expect("directory events")
+            .into_iter()
+            .find(|event| event.space_id.as_deref() == Some(public_space.as_str()))
+            .expect("public-space event");
+        let audience = SocketAudienceV1::Directory { auth_session_id: session.id.clone(), authorization_generation: session.authorization_generation };
+        let record = SocketGrantRecordV1 {
+            selector: "visibility".into(),
+            secret_digest: [0; 32],
+            audience,
+            actor_id: "hub.v1.visibility".into(),
+            subject: SocketSubjectV1::Session {
+                session_id: session.id,
+                user_id: session.user_id,
+                authorization_generation: session.authorization_generation,
+                role: None,
+                expires_at_ms: session.expires_at,
+            },
+            issued_at_ms: session.issued_at,
+            expires_at_ms: session.expires_at,
+            state: SocketGrantStateV1::Consumed,
+        };
+        assert_eq!(socket_directory_message_visible(&state, &record, &DirectoryStreamMessage::Event { event }).await, SocketBindingValidityV1::Unauthorized);
     }
 
     // 🔬️ WS duplex fan-out over the real wire-v2 protocol: A's committed command reaches B on its

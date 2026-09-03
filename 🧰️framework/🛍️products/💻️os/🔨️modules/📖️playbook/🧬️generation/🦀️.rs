@@ -2,7 +2,7 @@
 
 use super::GenerationPlayState;
 use crate::os_store as store;
-use dsl::DslValue;
+use dsl::{DslValue, FromValue, ToValue};
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use std::collections::LinkedList;
 use std::mem::ManuallyDrop;
@@ -23,6 +23,17 @@ impl Serialize for GenerationPlayRoot {
 }
 impl<'de> Deserialize<'de> for GenerationPlayRoot {
     fn deserialize<D: Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> { GenerationPlayState::deserialize(deserializer).map(Self::from) }
+}
+/// 🌉️ Hand-written, mirroring the `Serialize`/`Deserialize` impls just above — `GenerationPlayRoot`
+/// itself is a `ManuallyDrop<Option<Arc<GenerationPlayState>>>` newtype, not a wire shape in its own
+/// right, so `#[derive(ToValue, FromValue)]` is not applicable here (there is no sensible field to
+/// forward to but `as_state()`, which is a method, not a field). Delegates straight to the inner
+/// `GenerationPlayState`'s own derived `ToValue`/`FromValue`.
+impl ToValue for GenerationPlayRoot {
+    fn to_value(&self) -> DslValue { self.as_state().to_value() }
+}
+impl FromValue for GenerationPlayRoot {
+    fn from_value(value: DslValue) -> Result<Self, ::semio_framework_os_kernel::ValueError> { GenerationPlayState::from_value(value).map(Self::from) }
 }
 impl GenerationPlayRoot {
     pub fn as_state(&self) -> &GenerationPlayState { self.0.as_ref().expect("generation root transferred").as_ref() }

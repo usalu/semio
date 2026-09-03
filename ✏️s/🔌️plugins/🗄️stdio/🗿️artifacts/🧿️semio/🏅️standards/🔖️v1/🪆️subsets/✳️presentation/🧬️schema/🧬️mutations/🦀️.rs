@@ -400,7 +400,7 @@ pub(crate) fn demo_mutation_cases() -> Vec<SemioPresentationMutation> {
 mod tests {
     use super::*;
     use crate::artifacts::semio::standards::v1::subsets::base::schema::geometry::SemioPoint2;
-    use crate::artifacts::semio::standards::v1::subsets::base::schema::snapshot::DocRun;
+    use crate::artifacts::semio::standards::v1::subsets::document::schema::snapshot::DocRun;
     use crate::artifacts::semio::standards::v1::subsets::presentation::schema::snapshot::{PlaceholderKind, SlidePictureImage, SlideTableCell, SlideTableRow};
     use protocol::command::DiffAlgebra;
     use protocol::MutationDiff;

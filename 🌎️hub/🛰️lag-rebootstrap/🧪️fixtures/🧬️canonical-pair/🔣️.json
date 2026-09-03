@@ -1,0 +1,26 @@
+{
+  "schema": "semio.hub.canonical-checkpoint-pair.fixture/v1",
+  "limits": { "pairBytes": 67108864, "headerBytes": 16384, "recordBytes": 4096, "records": 16384, "deadlineMs": 15000 },
+  "selection": {
+    "spaceId": "space:alpha",
+    "documentId": "doc:tokyo",
+    "descriptorDigest": "1111111111111111111111111111111111111111111111111111111111111111",
+    "checkpointId": "2222222222222222222222222222222222222222222222222222222222222222",
+    "baseline": {
+      "documentId": "doc:tokyo",
+      "headEditOrdinal": 7,
+      "headEditId": "edit:7",
+      "lastCommitSeq": 6,
+      "chainHash": "3333333333333333333333333333333333333333333333333333333333333333"
+    }
+  },
+  "pack": { "length": 5001, "multiplier": 17, "increment": 3, "sha256": "5df441c4e2f9e82241d77329fbca62e4f0817e404796d652f3d258c3d01e137d" },
+  "spr": { "length": 4097, "multiplier": 29, "increment": 7, "sha256": "1c33f7415ff963382f8b53da1b7c03352ab29641f939b0e47acdc99c1274e1f3" },
+  "expected": {
+    "aggregateSha256": "ebd66a46ce77341330f00c4ccdd8ec86f7d2bf239d5f5cf317aed028bc7eeb0f",
+    "etag": "\"71d0013fe528893e2e946ebc4b7fa335f7b2d4abff5e5b65bf59891bca406068\"",
+    "headerPayloadBytes": 280,
+    "dataRecords": 4,
+    "wireBytes": 9476
+  }
+}

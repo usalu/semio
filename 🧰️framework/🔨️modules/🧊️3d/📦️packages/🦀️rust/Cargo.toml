@@ -18,21 +18,20 @@ path = "🦀️.rs"
 # REMOVED (ticket 26/08/12/DISSOLVE-KERNELS-AND-MODULES-INTO-EVENT-SOURCED-ARTIFACTS wave DEDUP):
 # they were only used by `⚙️engine`'s deleted `BrepKernel`/`Brep`/`BrepEngineHost` consumer-contract
 # duplicate and `🧰️kernel`'s `Brep` implementation, both now solely at
-# `semio_s_plugin_stdio::…::subsets::brep::schema::engine`. Repo-wide grep across the WHOLE 🧊️3d
-# tree (not just brep/) confirmed zero remaining uses of any of the five. `semio-framework-os-kernel`
-# stays — `🕸️topology`'s `EngineRep` still uses it.
-[features]
-default = ["brep"]
-brep = ["dep:semio-framework-os-kernel"]
+# `semio_s_plugin_stdio::…::subsets::brep::schema::engine`. `semio-framework-os-kernel` (and the
+# `brep` feature gating it) REMOVED too in ticket 26/09/03/BREP-KERNEL-DEPENDENCY-FREE-RUNTIME wave
+# 1: `⚙️engine` itself — its last remaining content was the neutral `Vec3`/`Aabb`/`ParamDomain`/
+# `FaceGroup`/`MeshTransfer`/`PointClassification` contract types, which never used os-kernel —
+# moved out to stdio's own `✳️brep/🧬️schema/⚙️engine/🔖️contract`, and this crate no longer mounts
+# any `⚙️engine` module at all.
 
 [dependencies]
 semio-framework-number = { workspace = true }
 semio-framework-geometry = { workspace = true }
-semio-framework-os-kernel = { workspace = true, optional = true }
 # 🧬️ `#[derive(ToValue, FromValue)]`, additive alongside serde
-# (RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS, 26/09/01). `semio-framework-os-kernel`
-# above is feature-gated behind `brep`, so types here target `#[value(crate = "::protocol::value")]`
-# (unconditional) rather than the derive's `brep`-dependent default path.
+# (RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS, 26/09/01). This crate has no
+# `semio-framework-os-kernel` dependency, so types here target `#[value(crate = "::protocol::value")]`
+# (unconditional) rather than the derive's `semio-framework-os-kernel`-dependent default path.
 semio-framework-value-derive = { path = "../../../../🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust" }
 semio-framework-replication = { workspace = true }
 # 🔤️ `🥽️mesh`'s `HalfedgeMesh::to_json`/`from_json` route through `pack::json::to_json_string`/

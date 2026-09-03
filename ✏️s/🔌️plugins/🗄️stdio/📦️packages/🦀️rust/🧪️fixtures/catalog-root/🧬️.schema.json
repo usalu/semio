@@ -1,0 +1,52 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "pluginId", "packageId", "wasmOut", "limits", "vectors", "wasmStructures"],
+  "properties": {
+    "schemaVersion": { "const": 2 },
+    "pluginId": { "const": "stdio" },
+    "packageId": { "const": "semio:stdio" },
+    "wasmOut": { "const": "semio_s_plugin_stdio.wasm" },
+    "limits": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["artifactBytes", "ioChunkBytes", "deadlineMs"],
+      "properties": {
+        "artifactBytes": { "const": 67108864 },
+        "ioChunkBytes": { "const": 65536 },
+        "deadlineMs": { "const": 1200000 }
+      }
+    },
+    "vectors": {
+      "type": "array",
+      "minItems": 2,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["name", "raw", "core", "distinct"],
+        "properties": {
+          "name": { "type": "string", "minLength": 1 },
+          "raw": { "type": "string", "pattern": "^(?:[0-9a-f]{2})+$" },
+          "core": { "type": "string", "pattern": "^(?:[0-9a-f]{2})+$" },
+          "distinct": { "type": "boolean" }
+        }
+      }
+    },
+    "wasmStructures": {
+      "type": "array",
+      "minItems": 3,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["name", "core", "definedFunctions", "componentizable"],
+        "properties": {
+          "name": { "type": "string", "minLength": 1 },
+          "core": { "type": "string", "pattern": "^(?:[0-9a-f]{2})+$" },
+          "definedFunctions": { "type": "integer", "minimum": 0 },
+          "componentizable": { "type": "boolean" }
+        }
+      }
+    }
+  }
+}

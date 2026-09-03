@@ -47,7 +47,7 @@ async fn the_undo_reorder_sends_the_row_back_to_the_tail() {
     let undo = mutation.inverse(&base);
     assert_eq!(
         undo,
-        vec![SemioTableMutation::ReorderRows(crate::artifacts::semio::standards::v1::subsets::table::schema::mutations::reorder_rows::mutation::ReorderRows { from: 0, to: 2 })],
+        vec![SemioTableMutation::ReorderRows(crate::artifacts::semio::standards::v1::subsets::table::schema::mutations::reorder_rows::ReorderRows { from: 0, to: 2 })],
         "the undo must address the landed index #0 and send it back to #2"
     );
     let mut current = mutation.diff(&base).diff().apply(&base).expect("forward reorder-rows applies");

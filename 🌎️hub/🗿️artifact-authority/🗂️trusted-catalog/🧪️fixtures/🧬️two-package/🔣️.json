@@ -18,18 +18,18 @@
       {
         "id": "fixture",
         "roots": [
-          { "pluginId": "fixture.editor", "packageId": "fixture.editor.native", "version": "1.2.3" }
+          { "pluginId": "fixture.editor", "packageId": "semio:fixture-editor", "version": "1.2.3" }
         ]
       }
     ],
     "packages": [
       {
         "pluginId": "fixture.editor",
-        "packageId": "fixture.editor.native",
+        "packageId": "semio:fixture-editor",
         "version": "1.2.3",
         "role": "plugin",
         "dependencies": [
-          { "pluginId": "fixture.base", "packageId": "fixture.base.native", "version": "1.0.0" }
+          { "pluginId": "fixture.base", "packageId": "semio:fixture-base", "version": "1.0.0" }
         ],
         "component": {
           "path": "components/editor.wasm",
@@ -52,7 +52,7 @@
       },
       {
         "pluginId": "fixture.base",
-        "packageId": "fixture.base.native",
+        "packageId": "semio:fixture-base",
         "version": "1.0.0",
         "role": "plugin",
         "dependencies": [],

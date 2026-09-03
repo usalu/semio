@@ -6,9 +6,10 @@
 //! when nothing cascaded — here two edges are incident, so the committed diff must carry BOTH
 //! collections. The before-snapshot deliberately stops at edges: the leaf performs no loop/face
 //! cascade, so a fixture carrying loops would encode a dangling reference the code never cleans.
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::SemioBrepDiff;
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::mutations::SemioBrepMutation;
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::SemioBrepSnapshot;
+use crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::{decode_semio_brep_diff_json, SemioBrepDiff};
+use crate::artifacts::semio::standards::v1::subsets::brep::schema::mutations::{decode_semio_brep_mutation_json, SemioBrepMutation};
+use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::{decode_semio_brep_snapshot_json, SemioBrepSnapshot};
+use pack::value::ToValue;
 use protocol::{Mutation, MutationDiff};
 
 const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️.json");
@@ -18,13 +19,13 @@ const DIFF: &str = include_str!("🔺️diff/🔣️.json");
 const OUTCOME: &str = include_str!("🎯️outcome/🔣️.json");
 
 fn before() -> SemioBrepSnapshot {
-    serde_json::from_str(BEFORE).expect("delete-vertex before snapshot decodes")
+    decode_semio_brep_snapshot_json(BEFORE).expect("delete-vertex before snapshot decodes")
 }
 fn expected_after() -> SemioBrepSnapshot {
-    serde_json::from_str(AFTER).expect("delete-vertex after snapshot decodes")
+    decode_semio_brep_snapshot_json(AFTER).expect("delete-vertex after snapshot decodes")
 }
 fn mutation() -> SemioBrepMutation {
-    serde_json::from_str(MUTATION).expect("delete-vertex mutation decodes")
+    decode_semio_brep_mutation_json(MUTATION).expect("delete-vertex mutation decodes")
 }
 
 /// ▶️ `v2` and the two edges touching it disappear together.
@@ -58,21 +59,21 @@ async fn the_undo_recreates_the_vertex_then_both_severed_edges() {
 #[semio_framework_async_macros::async_test]
 async fn committed_json_is_canonical() {
     for (label, text) in [("before", BEFORE), ("after", AFTER)] {
-        let decoded: SemioBrepSnapshot = serde_json::from_str(text).expect("snapshot decodes");
-        let reencoded = serde_json::to_value(&decoded).expect("snapshot encodes");
-        let original: serde_json::Value = serde_json::from_str(text).expect("snapshot reparses");
+        let decoded = decode_semio_brep_snapshot_json(text).expect("snapshot decodes");
+        let reencoded = pack::json::from_dsl_value(&decoded.to_value());
+        let original = pack::json::parse(text).expect("snapshot reparses");
         assert_eq!(reencoded, original, "delete-vertex/removes-a-corner-vertex-and-cascades-into-its-two-incident-edges: committed {label} JSON is not canonical");
     }
-    let reencoded = serde_json::to_value(mutation()).expect("delete-vertex mutation encodes");
-    let original: serde_json::Value = serde_json::from_str(MUTATION).expect("delete-vertex mutation reparses");
+    let reencoded = pack::json::from_dsl_value(&mutation().to_value());
+    let original = pack::json::parse(MUTATION).expect("delete-vertex mutation reparses");
     assert_eq!(reencoded, original, "delete-vertex/removes-a-corner-vertex-and-cascades-into-its-two-incident-edges: committed mutation JSON is not canonical");
 }
 
 /// 🎯️ Declared `applied`: the vertex exists, so mutation.target-missing must not fire; the cascade note is INFO and leaves the mutation applied
 #[semio_framework_async_macros::async_test]
 async fn declared_outcome_holds_as_committed() {
-    let outcome: serde_json::Value = serde_json::from_str(OUTCOME).expect("outcome decodes");
-    assert_eq!(outcome.get("status").and_then(serde_json::Value::as_str), Some("applied"), "delete-vertex/removes-a-corner-vertex-and-cascades-into-its-two-incident-edges: this case is declared applied");
+    let outcome = pack::json::parse(OUTCOME).expect("outcome decodes");
+    assert_eq!(outcome.get("status").and_then(pack::json::Value::as_str), Some("applied"), "delete-vertex/removes-a-corner-vertex-and-cascades-into-its-two-incident-edges: this case is declared applied");
     let produced = mutation().diff(&before());
 
     let messages = produced.messages();
@@ -86,15 +87,15 @@ async fn declared_outcome_holds_as_committed() {
 async fn produces_committed_diff() {
     let base = before();
     let outcome = <SemioBrepMutation as Mutation<SemioBrepSnapshot>>::diff(&mutation(), &base);
-    let produced = serde_json::to_value(outcome.diff()).expect("produced diff encodes");
-    let committed: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff decodes");
+    let produced = pack::json::from_dsl_value(&outcome.diff().to_value());
+    let committed = pack::json::parse(DIFF).expect("committed diff decodes");
     assert_eq!(produced, committed, "delete-vertex/removes-a-corner-vertex-and-cascades-into-its-two-incident-edges: produced diff differs from the committed 🔺️diff/🔣️.json");
 }
 
 /// 🩹 Applying the committed diff to `before` yields `after`.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
-    let decoded: SemioBrepDiff = serde_json::from_str(DIFF).expect("committed delete-vertex diff decodes");
+    let decoded = decode_semio_brep_diff_json(DIFF).expect("committed delete-vertex diff decodes");
     let produced = decoded.apply(&before()).expect("committed delete-vertex diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "delete-vertex/removes-a-corner-vertex-and-cascades-into-its-two-incident-edges: committed diff did not carry before to after");
 }
@@ -103,14 +104,14 @@ async fn committed_diff_applies_to_after() {
 /// allowed to touch appear in it at all.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_is_canonical_and_narrowly_scoped() {
-    let decoded: SemioBrepDiff = serde_json::from_str(DIFF).expect("committed delete-vertex diff decodes");
+    let decoded = decode_semio_brep_diff_json(DIFF).expect("committed delete-vertex diff decodes");
 
     let vertices = decoded.vertices.as_ref().expect("the vertices triple must be present");
     let edges = decoded.edges.as_ref().expect("the edges triple must be present — the cascade is part of the same diff");
     assert_eq!(vertices.removed, vec!["v2".to_string()], "the vertex is addressed by id");
     assert_eq!(edges.removed, vec!["e1".to_string(), "e2".to_string()], "the severed edges are listed in base order");
     assert!(decoded.loops.is_none() && decoded.faces.is_none() && decoded.shells.is_none() && decoded.solids.is_none(), "the leaf cascades into edges only — no loop/face/shell/solid slot may appear");
-    let reencoded = serde_json::to_value(&decoded).expect("diff re-encodes");
-    let original: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff reparses");
+    let reencoded = pack::json::from_dsl_value(&decoded.to_value());
+    let original = pack::json::parse(DIFF).expect("committed diff reparses");
     assert_eq!(reencoded, original, "delete-vertex/removes-a-corner-vertex-and-cascades-into-its-two-incident-edges: committed diff JSON is not canonical");
 }

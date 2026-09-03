@@ -214,6 +214,11 @@ CREATE TABLE IF NOT EXISTS hub_artifact_cas_ledger_head (
     generation INTEGER NOT NULL CHECK(generation >= 0)
 );
 INSERT OR IGNORE INTO hub_artifact_cas_ledger_head(singleton, generation) VALUES (1, 0);
+CREATE TABLE IF NOT EXISTS hub_artifact_cas_barrier_identity (
+    singleton INTEGER PRIMARY KEY CHECK(singleton = 1),
+    coordinator_id BLOB NOT NULL CHECK(length(coordinator_id) = 32)
+);
+INSERT OR IGNORE INTO hub_artifact_cas_barrier_identity(singleton, coordinator_id) VALUES (1, randomblob(32));
 CREATE TABLE IF NOT EXISTS hub_artifact_cas_ledger_journal (
     generation INTEGER PRIMARY KEY CHECK(generation >= 1),
     operation TEXT NOT NULL CHECK(operation IN ('reserve', 'publish', 'retention', 'space-delete')),
@@ -262,6 +267,13 @@ CREATE TABLE IF NOT EXISTS hub_artifact_cas_reference_object (
     object_digest BLOB NOT NULL CHECK(length(object_digest) = 32),
     PRIMARY KEY(space_id, document_id, checkpoint_id, kind, object_digest),
     FOREIGN KEY(space_id, document_id, checkpoint_id) REFERENCES hub_artifact_cas_reference(space_id, document_id, checkpoint_id) ON DELETE CASCADE
+);
+CREATE TABLE IF NOT EXISTS hub_artifact_cas_delete_lease (
+    space_id TEXT PRIMARY KEY,
+    fence_epoch INTEGER NOT NULL CHECK(fence_epoch >= 1),
+    lease_token BLOB CHECK(lease_token IS NULL OR length(lease_token) = 32),
+    expires_at_ms INTEGER,
+    CHECK((lease_token IS NULL AND expires_at_ms IS NULL) OR (lease_token IS NOT NULL AND expires_at_ms >= 1))
 );
 CREATE INDEX IF NOT EXISTS idx_artifact_cas_journal_scope ON hub_artifact_cas_ledger_journal(space_id, document_id, checkpoint_id, generation);
 CREATE INDEX IF NOT EXISTS idx_artifact_cas_reservation_object_lookup ON hub_artifact_cas_reservation_object(space_id, kind, object_digest);
@@ -404,6 +416,17 @@ impl SqliteDirectory {
         let next = current.checked_add(1).ok_or_else(|| DirectoryError::Conflict("artifact CAS ledger generation overflow".into()))?;
         tx.execute("UPDATE hub_artifact_cas_ledger_head SET generation = ?1 WHERE singleton = 1 AND generation = ?2", rusqlite::params![next, current]).map_err(backend)?;
         Ok(next)
+    }
+
+    fn cas_reservation_barrier(tx: &Transaction<'_>, space_id: &str, now_ms: i64) -> DirectoryResult<([u8; 32], u64)> {
+        let current: Option<(i64, Option<i64>)> = tx.query_row("SELECT fence_epoch, expires_at_ms FROM hub_artifact_cas_delete_lease WHERE space_id = ?1", [space_id], |row| Ok((row.get(0)?, row.get(1)?))).optional().map_err(backend)?;
+        if current.as_ref().and_then(|(_, expiry)| *expiry).is_some_and(|expiry| expiry > now_ms) {
+            return Err(DirectoryError::Conflict("artifact CAS deletion lease is active for this space".into()));
+        }
+        let epoch = match current { Some((epoch, _)) => epoch.checked_add(1).ok_or_else(|| DirectoryError::Conflict("artifact CAS fence epoch overflow".into()))?, None => 1 };
+        tx.execute("INSERT INTO hub_artifact_cas_delete_lease(space_id, fence_epoch, lease_token, expires_at_ms) VALUES (?1, ?2, NULL, NULL) ON CONFLICT(space_id) DO UPDATE SET fence_epoch = excluded.fence_epoch, lease_token = NULL, expires_at_ms = NULL", rusqlite::params![space_id, epoch]).map_err(backend)?;
+        let coordinator: Vec<u8> = tx.query_row("SELECT coordinator_id FROM hub_artifact_cas_barrier_identity WHERE singleton = 1", [], |row| row.get(0)).map_err(backend)?;
+        Ok((coordinator.try_into().map_err(|_| DirectoryError::Backend("artifact CAS barrier coordinator identity is invalid".into()))?, u64::try_from(epoch).map_err(backend)?))
     }
 
     fn cas_insert_objects(tx: &Transaction<'_>, table: &str, plan: &ArtifactCasOwnershipPlanV1) -> DirectoryResult<()> {
@@ -647,18 +670,38 @@ impl HubDirectory for SqliteDirectory {
     }
 
     async fn authenticate_share(&self, scope: &DocumentScope, capability: &ShareCapability) -> DirectoryResult<bool> {
-        let conn = self.lock()?;
-        let row: Option<(String, Vec<u8>, i64, Option<i64>)> = conn
+        Ok(self.authenticate_share_binding(scope, capability).await?.is_some())
+    }
+
+    async fn authenticate_share_binding(&self, scope: &DocumentScope, capability: &ShareCapability) -> DirectoryResult<Option<ShareTokenRecord>> {
+        let record = self
+            .lock()?
             .query_row(
-                "SELECT selector, secret_digest, expires_at, revoked_at FROM hub_share_grant WHERE space_id = ?1 AND document_id = ?2 AND selector = ?3",
+                "SELECT id, selector, secret_digest, space_id, document_id, created_at, expires_at, revoked_at, revoked_reason FROM hub_share_grant WHERE space_id = ?1 AND document_id = ?2 AND selector = ?3",
                 rusqlite::params![scope.space_id, scope.document_id, capability.selector()],
-                |row| Ok((row.get(0)?, row.get(1)?, row.get(2)?, row.get(3)?)),
+                share_token_row,
             )
             .optional()
             .map_err(backend)?;
-        let Some((selector, digest, expires_at, revoked_at)) = row else { return Ok(false) };
-        let Ok(digest): Result<[u8; 32], _> = digest.try_into() else { return Err(DirectoryError::Backend("stored share digest width is invalid".into())) };
-        Ok(active_capability(&selector, &digest, expires_at, revoked_at, capability.selector(), &capability.secret_digest(), now_ms()))
+        Ok(record.filter(|record| active_capability(&record.selector, &record.secret_digest, record.expires_at, record.revoked_at, capability.selector(), &capability.secret_digest(), now_ms())))
+    }
+
+    async fn socket_share_binding(&self, share_id: &str, selector: &str, scope: &DocumentScope, now_ms: i64) -> DirectoryResult<SocketShareBindingStatus> {
+        let record = self
+            .lock()?
+            .query_row(
+                "SELECT id, selector, secret_digest, space_id, document_id, created_at, expires_at, revoked_at, revoked_reason FROM hub_share_grant WHERE id = ?1 AND selector = ?2 AND space_id = ?3 AND document_id = ?4",
+                rusqlite::params![share_id, selector, scope.space_id, scope.document_id],
+                share_token_row,
+            )
+            .optional()
+            .map_err(backend)?;
+        Ok(match record {
+            None => SocketShareBindingStatus::Unavailable,
+            Some(record) if record.revoked_at.is_some() => SocketShareBindingStatus::Revoked,
+            Some(record) if record.expires_at <= now_ms => SocketShareBindingStatus::Expired,
+            Some(record) => SocketShareBindingStatus::Active { expires_at_ms: record.expires_at },
+        })
     }
     //#endregion
 
@@ -856,6 +899,40 @@ impl HubDirectory for SqliteDirectory {
         }))
     }
 
+    async fn socket_session_binding(&self, session_id: &str, user_id: &str, authorization_generation: u64, space_id: Option<&str>, now_ms: i64) -> DirectoryResult<SocketSessionBindingStatus> {
+        let conn = self.lock()?;
+        let record = conn
+            .query_row(
+                "SELECT id, selector, secret_digest, user_id, identity_provider, identity_subject_digest, issued_at, expires_at, revoked_at, revoked_reason, authorization_generation, device_instance_id, session_kind FROM hub_auth_session WHERE id = ?1",
+                [session_id],
+                auth_session_row,
+            )
+            .optional()
+            .map_err(backend)?;
+        let Some(record) = record else { return Ok(SocketSessionBindingStatus::Unavailable) };
+        if record.user_id != user_id {
+            return Ok(SocketSessionBindingStatus::Unavailable);
+        }
+        if record.revoked_at.is_some() || record.authorization_generation != authorization_generation {
+            return Ok(SocketSessionBindingStatus::Revoked);
+        }
+        if record.expires_at <= now_ms {
+            return Ok(SocketSessionBindingStatus::Expired);
+        }
+        let role = match space_id {
+            Some(space_id) => conn
+                .query_row("SELECT role FROM hub_space_membership WHERE space_id = ?1 AND user_id = ?2", rusqlite::params![space_id, user_id], |row| row.get::<_, String>(0))
+                .optional()
+                .map_err(backend)?
+                .and_then(|role| SpaceRole::parse(&role)),
+            None => None,
+        };
+        if space_id.is_some() && role.is_none() {
+            return Ok(SocketSessionBindingStatus::MembershipLost);
+        }
+        Ok(SocketSessionBindingStatus::Active { role, expires_at_ms: record.expires_at })
+    }
+
     async fn revoke_auth_session(&self, id: &str, reason: &str, actor_user_id: Option<&str>, correlation_id: &str) -> DirectoryResult<Option<RevokedAuthSession>> {
         validate_bounded_auth_text(reason, "session revoke reason", AUTH_TEXT_MAX_BYTES)?;
         let revoked_at = now_ms();
@@ -1028,6 +1105,7 @@ impl HubDirectory for SqliteDirectory {
         let now = i64::try_from(now_ms).map_err(backend)?;
         let mut conn = self.lock()?;
         let tx = conn.transaction_with_behavior(rusqlite::TransactionBehavior::Immediate).map_err(backend)?;
+        let (coordinator_id, physical_epoch) = Self::cas_reservation_barrier(&tx, &plan.scope.space_id, now)?;
         let historical: Option<Vec<u8>> = tx.query_row(
             "SELECT plan FROM hub_artifact_cas_ledger_journal WHERE space_id = ?1 AND document_id = ?2 AND checkpoint_id = ?3 AND plan IS NOT NULL ORDER BY generation LIMIT 1",
             rusqlite::params![plan.scope.space_id, plan.scope.document_id, plan.checkpoint_id.0.as_slice()],
@@ -1045,7 +1123,9 @@ impl HubDirectory for SqliteDirectory {
             if stored != encoded {
                 return Err(DirectoryError::Conflict("artifact CAS published ownership conflict".into()));
             }
-            return Ok(ArtifactCasReservation { plan: plan.clone(), generation: u64::try_from(generation).map_err(backend)?, write_epoch: u64::try_from(write_epoch).map_err(backend)?, expires_at_ms: i64::MAX as u64 });
+            let reservation = ArtifactCasReservation::fenced(plan.clone(), u64::try_from(generation).map_err(backend)?, u64::try_from(write_epoch).map_err(backend)?, i64::MAX as u64, coordinator_id, physical_epoch);
+            tx.commit().map_err(backend)?;
+            return Ok(reservation);
         }
         let released: i64 = tx.query_row(
             "SELECT EXISTS(SELECT 1 FROM hub_artifact_cas_ledger_journal WHERE space_id = ?1 AND document_id = ?2 AND checkpoint_id = ?3 AND operation = 'publish')",
@@ -1065,7 +1145,9 @@ impl HubDirectory for SqliteDirectory {
                 return Err(DirectoryError::Conflict("artifact CAS reservation identity conflict".into()));
             }
             if current_expiry > now {
-                return Ok(ArtifactCasReservation { plan: plan.clone(), generation: u64::try_from(generation).map_err(backend)?, write_epoch: u64::try_from(write_epoch).map_err(backend)?, expires_at_ms: u64::try_from(current_expiry).map_err(backend)? });
+                let reservation = ArtifactCasReservation::fenced(plan.clone(), u64::try_from(generation).map_err(backend)?, u64::try_from(write_epoch).map_err(backend)?, u64::try_from(current_expiry).map_err(backend)?, coordinator_id, physical_epoch);
+                tx.commit().map_err(backend)?;
+                return Ok(reservation);
             }
         }
         let previous_epoch: i64 = tx.query_row(
@@ -1079,7 +1161,7 @@ impl HubDirectory for SqliteDirectory {
             "INSERT INTO hub_artifact_cas_ledger_journal(generation, operation, space_id, document_id, checkpoint_id, write_epoch, expires_at_ms, plan) VALUES (?1, 'reserve', ?2, ?3, ?4, ?5, ?6, ?7)",
             rusqlite::params![generation, plan.scope.space_id, plan.scope.document_id, plan.checkpoint_id.0.as_slice(), write_epoch, expires_at, encoded],
         ).map_err(backend)?;
-        let reservation = ArtifactCasReservation { plan: plan.clone(), generation: u64::try_from(generation).map_err(backend)?, write_epoch: u64::try_from(write_epoch).map_err(backend)?, expires_at_ms };
+        let reservation = ArtifactCasReservation::fenced(plan.clone(), u64::try_from(generation).map_err(backend)?, u64::try_from(write_epoch).map_err(backend)?, expires_at_ms, coordinator_id, physical_epoch);
         Self::cas_project_reserve(&tx, &reservation)?;
         tx.commit().map_err(backend)?;
         Ok(reservation)
@@ -1096,6 +1178,8 @@ impl HubDirectory for SqliteDirectory {
         let token_epoch = i64::try_from(reservation.write_epoch).map_err(backend)?;
         let mut conn = self.lock()?;
         let tx = conn.transaction_with_behavior(rusqlite::TransactionBehavior::Immediate).map_err(backend)?;
+        let live_lease: i64 = tx.query_row("SELECT EXISTS(SELECT 1 FROM hub_artifact_cas_delete_lease WHERE space_id = ?1 AND expires_at_ms > ?2)", rusqlite::params![reservation.plan.scope.space_id, now], |row| row.get(0)).map_err(backend)?;
+        if live_lease != 0 { return Err(DirectoryError::Conflict("artifact CAS deletion lease is active for this space".into())); }
         let published: Option<(i64, i64, Vec<u8>)> = tx.query_row(
             "SELECT generation, write_epoch, plan FROM hub_artifact_cas_reference WHERE space_id = ?1 AND document_id = ?2 AND checkpoint_id = ?3",
             rusqlite::params![reservation.plan.scope.space_id, reservation.plan.scope.document_id, reservation.plan.checkpoint_id.0.as_slice()],
@@ -1140,6 +1224,11 @@ impl HubDirectory for SqliteDirectory {
         u64::try_from(generation).map_err(backend)
     }
 
+    async fn artifact_cas_coordinator_id(&self) -> DirectoryResult<[u8; 32]> {
+        let bytes: Vec<u8> = self.lock()?.query_row("SELECT coordinator_id FROM hub_artifact_cas_barrier_identity WHERE singleton = 1", [], |row| row.get(0)).map_err(backend)?;
+        bytes.try_into().map_err(|_| DirectoryError::Backend("artifact CAS barrier coordinator identity is invalid".into()))
+    }
+
     async fn artifact_cas_sweep_candidates(&self, after_generation: u64, through_generation: u64, limit: usize) -> DirectoryResult<ArtifactCasSweepCandidatePage> {
         if limit == 0 || limit > ARTIFACT_CAS_SWEEP_PAGE_MAX {
             return Err(DirectoryError::Conflict(format!("artifact CAS sweep page requires limit 1..={ARTIFACT_CAS_SWEEP_PAGE_MAX}")));
@@ -1170,15 +1259,10 @@ impl HubDirectory for SqliteDirectory {
         Ok(ArtifactCasSweepCandidatePage { observed_generation: through_generation, next_generation: u64::try_from(next).map_err(backend)?, objects })
     }
 
-    async fn artifact_cas_delete_fence(&self, key: &ArtifactCasObjectKey, observed_generation: u64, now_ms: u64) -> DirectoryResult<Option<ArtifactCasDeleteFence>> {
-        if observed_generation == 0 {
-            return Err(DirectoryError::Conflict("artifact CAS sweep requires a nonzero observed generation".into()));
-        }
-        let observed = i64::try_from(observed_generation).map_err(backend)?;
-        let now = i64::try_from(now_ms).map_err(backend)?;
+    async fn artifact_cas_delete_preview_protected(&self, key: &ArtifactCasObjectKey, observed_generation: u64, now_ms: u64) -> DirectoryResult<bool> {
         let conn = self.lock()?;
         let current: i64 = conn.query_row("SELECT generation FROM hub_artifact_cas_ledger_head WHERE singleton = 1", [], |row| row.get(0)).map_err(backend)?;
-        if current < observed {
+        if current < i64::try_from(observed_generation).map_err(backend)? {
             return Err(DirectoryError::Conflict("artifact CAS sweep observation is ahead of the ledger".into()));
         }
         let referenced: i64 = conn.query_row(
@@ -1188,10 +1272,109 @@ impl HubDirectory for SqliteDirectory {
         ).map_err(backend)?;
         let reserved: i64 = conn.query_row(
             "SELECT EXISTS(SELECT 1 FROM hub_artifact_cas_reservation_object object JOIN hub_artifact_cas_reservation reservation USING(space_id, document_id, checkpoint_id) WHERE object.space_id = ?1 AND object.kind = ?2 AND object.object_digest = ?3 AND reservation.expires_at_ms > ?4)",
+            rusqlite::params![key.space_id, key.kind.name(), key.digest.0.as_slice(), i64::try_from(now_ms).map_err(backend)?],
+            |row| row.get(0),
+        ).map_err(backend)?;
+        Ok(referenced != 0 || reserved != 0)
+    }
+
+    async fn acquire_artifact_cas_delete_fence(&self, key: &ArtifactCasObjectKey, observed_generation: u64, lease_token: [u8; 32], now_ms: u64, expires_at_ms: u64) -> DirectoryResult<Option<ArtifactCasDeleteFence>> {
+        if observed_generation == 0 {
+            return Err(DirectoryError::Conflict("artifact CAS sweep requires a nonzero observed generation".into()));
+        }
+        if lease_token == [0; 32] || expires_at_ms <= now_ms {
+            return Err(DirectoryError::Conflict("artifact CAS deletion lease is invalid".into()));
+        }
+        let observed = i64::try_from(observed_generation).map_err(backend)?;
+        let now = i64::try_from(now_ms).map_err(backend)?;
+        let expires_at = i64::try_from(expires_at_ms).map_err(backend)?;
+        let mut conn = self.lock()?;
+        let tx = conn.transaction_with_behavior(rusqlite::TransactionBehavior::Immediate).map_err(backend)?;
+        let current_lease: Option<(i64, Option<i64>)> = tx.query_row("SELECT fence_epoch, expires_at_ms FROM hub_artifact_cas_delete_lease WHERE space_id = ?1", [key.space_id.as_str()], |row| Ok((row.get(0)?, row.get(1)?))).optional().map_err(backend)?;
+        if current_lease.as_ref().and_then(|(_, expiry)| *expiry).is_some_and(|expiry| expiry > now) {
+            tx.commit().map_err(backend)?;
+            return Ok(None);
+        }
+        let physical_epoch = match current_lease { Some((epoch, _)) => epoch.checked_add(1).ok_or_else(|| DirectoryError::Conflict("artifact CAS fence epoch overflow".into()))?, None => 1 };
+        tx.execute("INSERT INTO hub_artifact_cas_delete_lease(space_id, fence_epoch, lease_token, expires_at_ms) VALUES (?1, ?2, ?3, ?4) ON CONFLICT(space_id) DO UPDATE SET fence_epoch = excluded.fence_epoch, lease_token = excluded.lease_token, expires_at_ms = excluded.expires_at_ms", rusqlite::params![key.space_id, physical_epoch, lease_token.as_slice(), expires_at]).map_err(backend)?;
+        let current: i64 = tx.query_row("SELECT generation FROM hub_artifact_cas_ledger_head WHERE singleton = 1", [], |row| row.get(0)).map_err(backend)?;
+        if current < observed {
+            return Err(DirectoryError::Conflict("artifact CAS sweep observation is ahead of the ledger".into()));
+        }
+        let referenced: i64 = tx.query_row(
+            "SELECT EXISTS(SELECT 1 FROM hub_artifact_cas_reference_object WHERE space_id = ?1 AND kind = ?2 AND object_digest = ?3)",
+            rusqlite::params![key.space_id, key.kind.name(), key.digest.0.as_slice()],
+            |row| row.get(0),
+        ).map_err(backend)?;
+        let reserved: i64 = tx.query_row(
+            "SELECT EXISTS(SELECT 1 FROM hub_artifact_cas_reservation_object object JOIN hub_artifact_cas_reservation reservation USING(space_id, document_id, checkpoint_id) WHERE object.space_id = ?1 AND object.kind = ?2 AND object.object_digest = ?3 AND reservation.expires_at_ms > ?4)",
             rusqlite::params![key.space_id, key.kind.name(), key.digest.0.as_slice(), now],
             |row| row.get(0),
         ).map_err(backend)?;
-        Ok((referenced == 0 && reserved == 0).then(|| ArtifactCasDeleteFence::new(key.clone(), u64::try_from(current).unwrap_or(0))))
+        if referenced != 0 || reserved != 0 {
+            tx.execute("UPDATE hub_artifact_cas_delete_lease SET lease_token = NULL, expires_at_ms = NULL WHERE space_id = ?1 AND lease_token = ?2", rusqlite::params![key.space_id, lease_token.as_slice()]).map_err(backend)?;
+            tx.commit().map_err(backend)?;
+            return Ok(None);
+        }
+        let coordinator: Vec<u8> = tx.query_row("SELECT coordinator_id FROM hub_artifact_cas_barrier_identity WHERE singleton = 1", [], |row| row.get(0)).map_err(backend)?;
+        let coordinator_id = coordinator.try_into().map_err(|_| DirectoryError::Backend("artifact CAS barrier coordinator identity is invalid".into()))?;
+        tx.commit().map_err(backend)?;
+        Ok(Some(ArtifactCasDeleteFence::new(key.clone(), observed_generation, coordinator_id, u64::try_from(physical_epoch).map_err(backend)?, lease_token)))
+    }
+
+    async fn validate_artifact_cas_delete_fence(&self, fence: &ArtifactCasDeleteFence, now_ms: u64) -> DirectoryResult<bool> {
+        let now = i64::try_from(now_ms).map_err(backend)?;
+        let mut conn = self.lock()?;
+        let tx = conn.transaction_with_behavior(rusqlite::TransactionBehavior::Immediate).map_err(backend)?;
+        let lease: Option<(i64, Option<Vec<u8>>, Option<i64>)> = tx
+            .query_row(
+                "SELECT fence_epoch, lease_token, expires_at_ms FROM hub_artifact_cas_delete_lease WHERE space_id = ?1",
+                [fence.object().space_id.as_str()],
+                |row| Ok((row.get(0)?, row.get(1)?, row.get(2)?)),
+            )
+            .optional()
+            .map_err(backend)?;
+        let lease_valid = lease.is_some_and(|(epoch, token, expiry)| {
+            u64::try_from(epoch).ok() == Some(fence.physical_epoch())
+                && token.as_deref() == Some(fence.lease_token().as_slice())
+                && expiry.is_some_and(|expiry| expiry > now)
+        });
+        let current: i64 = tx.query_row("SELECT generation FROM hub_artifact_cas_ledger_head WHERE singleton = 1", [], |row| row.get(0)).map_err(backend)?;
+        let referenced: i64 = tx
+            .query_row(
+                "SELECT EXISTS(SELECT 1 FROM hub_artifact_cas_reference_object WHERE space_id = ?1 AND kind = ?2 AND object_digest = ?3)",
+                rusqlite::params![fence.object().space_id, fence.object().kind.name(), fence.object().digest.0.as_slice()],
+                |row| row.get(0),
+            )
+            .map_err(backend)?;
+        let reserved: i64 = tx
+            .query_row(
+                "SELECT EXISTS(SELECT 1 FROM hub_artifact_cas_reservation_object object JOIN hub_artifact_cas_reservation reservation USING(space_id, document_id, checkpoint_id) WHERE object.space_id = ?1 AND object.kind = ?2 AND object.object_digest = ?3 AND reservation.expires_at_ms > ?4)",
+                rusqlite::params![fence.object().space_id, fence.object().kind.name(), fence.object().digest.0.as_slice(), now],
+                |row| row.get(0),
+            )
+            .map_err(backend)?;
+        let coordinator: Vec<u8> = tx.query_row("SELECT coordinator_id FROM hub_artifact_cas_barrier_identity WHERE singleton = 1", [], |row| row.get(0)).map_err(backend)?;
+        let coordinator_valid = coordinator.as_slice() == fence.coordinator_id().as_slice();
+        tx.commit().map_err(backend)?;
+        Ok(lease_valid && coordinator_valid && u64::try_from(current).map_err(backend)? >= fence.ledger_generation() && referenced == 0 && reserved == 0)
+    }
+
+    async fn renew_artifact_cas_delete_fence(&self, fence: &ArtifactCasDeleteFence, now_ms: u64, expires_at_ms: u64) -> DirectoryResult<()> {
+        if expires_at_ms <= now_ms { return Err(DirectoryError::Conflict("artifact CAS deletion lease renewal is invalid".into())); }
+        let conn = self.lock()?;
+        let changed = conn.execute("UPDATE hub_artifact_cas_delete_lease SET expires_at_ms = ?3 WHERE space_id = ?1 AND lease_token = ?2 AND expires_at_ms > ?4", rusqlite::params![fence.object().space_id, fence.lease_token().as_slice(), i64::try_from(expires_at_ms).map_err(backend)?, i64::try_from(now_ms).map_err(backend)?]).map_err(backend)?;
+        if changed != 1 { return Err(DirectoryError::Conflict("artifact CAS deletion lease is no longer owned".into())); }
+        Ok(())
+    }
+
+    async fn release_artifact_cas_delete_fence(&self, fence: ArtifactCasDeleteFence) -> DirectoryResult<()> {
+        let key = fence.object().clone();
+        let conn = self.lock()?;
+        if conn.execute("UPDATE hub_artifact_cas_delete_lease SET lease_token = NULL, expires_at_ms = NULL WHERE space_id = ?1 AND lease_token = ?2", rusqlite::params![key.space_id, fence.lease_token().as_slice()]).map_err(backend)? != 1 {
+            return Err(DirectoryError::Conflict("artifact CAS deletion lease is no longer owned".into()));
+        }
+        Ok(())
     }
 
     //#region EventLog
@@ -1275,22 +1458,12 @@ impl HubDirectory for SqliteDirectory {
             match operation.as_str() {
                 "reserve" => {
                     let plan = decode_artifact_cas_ownership_v1(plan.as_deref().ok_or_else(|| DirectoryError::Backend("artifact CAS reserve journal plan missing".into()))?).map_err(|error| DirectoryError::Backend(error.to_string()))?;
-                    let reservation = ArtifactCasReservation {
-                        plan,
-                        generation: u64::try_from(generation).map_err(backend)?,
-                        write_epoch: u64::try_from(write_epoch.ok_or_else(|| DirectoryError::Backend("artifact CAS reserve journal epoch missing".into()))?).map_err(backend)?,
-                        expires_at_ms: u64::try_from(expires_at_ms.ok_or_else(|| DirectoryError::Backend("artifact CAS reserve journal expiry missing".into()))?).map_err(backend)?,
-                    };
+                    let reservation = ArtifactCasReservation::unfenced(plan, u64::try_from(generation).map_err(backend)?, u64::try_from(write_epoch.ok_or_else(|| DirectoryError::Backend("artifact CAS reserve journal epoch missing".into()))?).map_err(backend)?, u64::try_from(expires_at_ms.ok_or_else(|| DirectoryError::Backend("artifact CAS reserve journal expiry missing".into()))?).map_err(backend)?);
                     Self::cas_project_reserve(&tx, &reservation)?;
                 }
                 "publish" => {
                     let plan = decode_artifact_cas_ownership_v1(plan.as_deref().ok_or_else(|| DirectoryError::Backend("artifact CAS publish journal plan missing".into()))?).map_err(|error| DirectoryError::Backend(error.to_string()))?;
-                    let reservation = ArtifactCasReservation {
-                        plan,
-                        generation: u64::try_from(generation).map_err(backend)?,
-                        write_epoch: u64::try_from(write_epoch.ok_or_else(|| DirectoryError::Backend("artifact CAS publish journal epoch missing".into()))?).map_err(backend)?,
-                        expires_at_ms: u64::try_from(expires_at_ms.ok_or_else(|| DirectoryError::Backend("artifact CAS publish journal expiry missing".into()))?).map_err(backend)?,
-                    };
+                    let reservation = ArtifactCasReservation::unfenced(plan, u64::try_from(generation).map_err(backend)?, u64::try_from(write_epoch.ok_or_else(|| DirectoryError::Backend("artifact CAS publish journal epoch missing".into()))?).map_err(backend)?, u64::try_from(expires_at_ms.ok_or_else(|| DirectoryError::Backend("artifact CAS publish journal expiry missing".into()))?).map_err(backend)?);
                     Self::cas_project_publish(&tx, &reservation, generation)?;
                 }
                 "retention" | "space-delete" => {
@@ -1341,6 +1514,19 @@ fn invite_row(row: &rusqlite::Row<'_>) -> rusqlite::Result<InviteRecord> {
         revoked_at: row.get(7)?,
         revoked_reason: row.get(8)?,
         accepted_at: row.get(9)?,
+    })
+}
+
+fn share_token_row(row: &rusqlite::Row<'_>) -> rusqlite::Result<ShareTokenRecord> {
+    Ok(ShareTokenRecord {
+        id: row.get(0)?,
+        selector: row.get(1)?,
+        secret_digest: blob32(row, 2)?,
+        scope: DocumentScope::new(row.get::<_, String>(3)?, row.get::<_, String>(4)?),
+        created_at: row.get(5)?,
+        expires_at: row.get(6)?,
+        revoked_at: row.get(7)?,
+        revoked_reason: row.get(8)?,
     })
 }
 
@@ -1587,6 +1773,62 @@ mod tests {
         directory.lock().unwrap().execute("UPDATE hub_share_grant SET expires_at = ?2 WHERE id = ?1", rusqlite::params![expiring.record.id, now_ms() - 1]).unwrap();
         assert!(!directory.authenticate_share(&expiring_scope, &expiring.capability).await.unwrap());
         assert!(matches!(directory.issue_share_token(&expiring_scope, 0, "share-invalid").await, Err(DirectoryError::Conflict(_))));
+    }
+
+    #[tokio::test]
+    async fn socket_binding_reads_are_exact_id_generation_selector_scope_and_status() {
+        let directory = SqliteDirectory::connect(":memory:").await.expect("connect");
+        directory.seed().await.expect("seed");
+        let issue = AuthSessionIssue {
+            user_id: "seed".into(),
+            identity_provider: "socket-test".into(),
+            identity_subject_digest: crate::directory::identity_subject_digest("socket-test", "seed").expect("subject digest"),
+            ttl_secs: 60,
+            device_instance_id: "socket-device".into(),
+            session_kind: AuthSessionKind::DevelopmentLocal,
+            correlation_id: "socket-session".into(),
+            peer_class: "loopback-test".into(),
+        };
+        let issued = directory.issue_auth_session(&issue).await.expect("issue session");
+        let at_ms = issued.record.issued_at;
+        assert_eq!(
+            directory.socket_session_binding(&issued.record.id, "seed", issued.record.authorization_generation, None, at_ms).await.expect("session status"),
+            SocketSessionBindingStatus::Active { role: None, expires_at_ms: issued.record.expires_at },
+        );
+        assert_eq!(
+            directory.socket_session_binding(&issued.record.id, "seed", issued.record.authorization_generation, Some("default"), at_ms).await.expect("membership status"),
+            SocketSessionBindingStatus::Active { role: Some(SpaceRole::Author), expires_at_ms: issued.record.expires_at },
+        );
+        assert_eq!(
+            directory.socket_session_binding(&issued.record.id, "seed", issued.record.authorization_generation + 1, None, at_ms).await.expect("generation status"),
+            SocketSessionBindingStatus::Revoked,
+        );
+        assert_eq!(directory.socket_session_binding(&issued.record.id, "other", issued.record.authorization_generation, None, at_ms).await.expect("user status"), SocketSessionBindingStatus::Unavailable);
+        assert_eq!(
+            directory.socket_session_binding(&issued.record.id, "seed", issued.record.authorization_generation, Some("missing"), at_ms).await.expect("lost membership status"),
+            SocketSessionBindingStatus::MembershipLost,
+        );
+
+        let scope = DocumentScope::new("default", "socket-share");
+        let share = directory.issue_share_token(&scope, 60, "socket-share").await.expect("issue share");
+        assert_eq!(
+            directory.socket_share_binding(&share.record.id, share.capability.selector(), &scope, share.record.created_at).await.expect("share status"),
+            SocketShareBindingStatus::Active { expires_at_ms: share.record.expires_at },
+        );
+        assert_eq!(directory.socket_share_binding("wrong", share.capability.selector(), &scope, share.record.created_at).await.expect("share id status"), SocketShareBindingStatus::Unavailable);
+        assert_eq!(directory.socket_share_binding(&share.record.id, "00", &scope, share.record.created_at).await.expect("share selector status"), SocketShareBindingStatus::Unavailable);
+        assert_eq!(
+            directory.socket_share_binding(&share.record.id, share.capability.selector(), &DocumentScope::new("default", "other"), share.record.created_at).await.expect("share scope status"),
+            SocketShareBindingStatus::Unavailable,
+        );
+        directory.revoke_share_token(&scope, &share.record.id, "socket-revoke", "socket-share").await.expect("revoke share");
+        assert_eq!(directory.socket_share_binding(&share.record.id, share.capability.selector(), &scope, share.record.created_at).await.expect("revoked share status"), SocketShareBindingStatus::Revoked);
+
+        directory.lock().expect("sqlite lock").execute("UPDATE hub_auth_session SET expires_at = ?2 WHERE id = ?1", rusqlite::params![issued.record.id, at_ms]).expect("expire session");
+        assert_eq!(directory.socket_session_binding(&issued.record.id, "seed", issued.record.authorization_generation, None, at_ms).await.expect("expired session status"), SocketSessionBindingStatus::Expired);
+        let expired_share = directory.issue_share_token(&scope, 60, "socket-expiry").await.expect("issue expiring share");
+        directory.lock().expect("sqlite lock").execute("UPDATE hub_share_grant SET expires_at = ?2 WHERE id = ?1", rusqlite::params![expired_share.record.id, at_ms]).expect("expire share");
+        assert_eq!(directory.socket_share_binding(&expired_share.record.id, expired_share.capability.selector(), &scope, at_ms).await.expect("expired share status"), SocketShareBindingStatus::Expired);
     }
 
     #[tokio::test]

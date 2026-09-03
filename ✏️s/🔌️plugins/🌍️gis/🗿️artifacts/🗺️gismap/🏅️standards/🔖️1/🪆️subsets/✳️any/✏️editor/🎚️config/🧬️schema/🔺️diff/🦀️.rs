@@ -16,7 +16,6 @@ pub struct Gis2dConfigDelta {
     pub vector_style: Option<String>,
     pub lod_mode: Option<String>,
     #[cfg_attr(test, serde(serialize_with = "serialize_scales"))]
-    #[value(serialize_with = "serialize_scales")]
     pub layer_stroke_scale: BTreeMap<String, Option<f64>>,
     pub locale: Option<String>,
 }

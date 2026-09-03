@@ -19,6 +19,7 @@ use directory::os_directory::{
 };
 use directory::os_identity::time_ordered_id;
 use directory::{FromValue, ToValue};
+use semio_framework_hash::Sha256;
 use neo4rs::{query, Graph, Txn};
 
 fn now_ms() -> i64 {
@@ -86,6 +87,26 @@ async fn cas_generation(txn: &mut Txn) -> DirectoryResult<i64> {
     Ok(generation)
 }
 
+async fn cas_lock_space(txn: &mut Txn, space_id: &str) -> DirectoryResult<i64> {
+    let mut result = txn.execute(query("MERGE (b:ArtifactCasSpaceBarrier {spaceId: $space_id}) ON CREATE SET b.lockNonce = 0 SET b.lockNonce = b.lockNonce + 1 RETURN coalesce(b.leaseExpiresAtMs, 0) AS leaseExpiresAtMs").param("space_id", space_id)).await.map_err(backend)?;
+    let expires_at_ms = result.next(txn.handle()).await.map_err(backend)?.ok_or_else(|| DirectoryError::Backend("artifact CAS space barrier returned no row".into()))?.get("leaseExpiresAtMs").map_err(backend)?;
+    drop(result);
+    Ok(expires_at_ms)
+}
+
+async fn cas_reservation_barrier(txn: &mut Txn, space_id: &str, now_ms: i64) -> DirectoryResult<([u8; 32], u64)> {
+    let lease_expires_at_ms = cas_lock_space(txn, space_id).await?;
+    if lease_expires_at_ms > now_ms { return Err(DirectoryError::Conflict("artifact CAS deletion lease is active for this space".into())); }
+    let mut epoch_result = txn.execute(query("MATCH (b:ArtifactCasSpaceBarrier {spaceId: $space_id}) SET b.fenceEpoch = coalesce(b.fenceEpoch, 0) + 1 REMOVE b.leaseToken, b.leaseExpiresAtMs RETURN b.fenceEpoch AS epoch").param("space_id", space_id)).await.map_err(backend)?;
+    let epoch: i64 = epoch_result.next(txn.handle()).await.map_err(backend)?.ok_or_else(|| DirectoryError::Backend("artifact CAS barrier epoch returned no row".into()))?.get("epoch").map_err(backend)?;
+    drop(epoch_result);
+    let mut identity = txn.execute(query("MATCH (b:ArtifactCasBarrierIdentity {id: 'singleton'}) RETURN b.coordinatorId AS coordinator")).await.map_err(backend)?;
+    let row = identity.next(txn.handle()).await.map_err(backend)?.ok_or_else(|| DirectoryError::Backend("artifact CAS barrier coordinator identity is missing".into()))?;
+    let coordinator: neo4rs::BoltBytes = row.get("coordinator").map_err(backend)?;
+    drop(identity);
+    Ok((coordinator.value.to_vec().try_into().map_err(|_| DirectoryError::Backend("artifact CAS barrier coordinator identity is invalid".into()))?, u64::try_from(epoch).map_err(backend)?))
+}
+
 async fn cas_project_reserve(txn: &mut Txn, reservation: &ArtifactCasReservation) -> DirectoryResult<()> {
     let scope_key = checkpoint_key_v1(&reservation.plan.scope, reservation.plan.checkpoint_id);
     txn.run(query("MERGE (r:ArtifactCasReservation {scopeCheckpointKey: $key}) SET r.spaceId = $space_id, r.documentId = $document_id, r.checkpointId = $checkpoint_id, r.generation = $generation, r.writeEpoch = $write_epoch, r.expiresAtMs = $expires_at, r.plan = $plan, r.objects = $objects")
@@ -132,6 +153,8 @@ const CONSTRAINTS: &[&str] = &[
     "CREATE CONSTRAINT IF NOT EXISTS FOR (e:ArtifactCasLedgerEvent) REQUIRE e.generation IS UNIQUE",
     "CREATE CONSTRAINT IF NOT EXISTS FOR (r:ArtifactCasReservation) REQUIRE r.scopeCheckpointKey IS UNIQUE",
     "CREATE CONSTRAINT IF NOT EXISTS FOR (r:ArtifactCasReference) REQUIRE r.scopeCheckpointKey IS UNIQUE",
+    "CREATE CONSTRAINT IF NOT EXISTS FOR (b:ArtifactCasSpaceBarrier) REQUIRE b.spaceId IS UNIQUE",
+    "CREATE CONSTRAINT IF NOT EXISTS FOR (b:ArtifactCasBarrierIdentity) REQUIRE b.id IS UNIQUE",
     "CREATE CONSTRAINT IF NOT EXISTS FOR (g:ShareGrant) REQUIRE g.id IS UNIQUE",
     "CREATE CONSTRAINT IF NOT EXISTS FOR (g:ShareGrant) REQUIRE g.selector IS UNIQUE",
     "CREATE CONSTRAINT IF NOT EXISTS FOR (a:AuthSession) REQUIRE a.id IS UNIQUE",
@@ -156,6 +179,10 @@ impl Neo4jDirectory {
         for statement in CONSTRAINTS {
             graph.run(query(statement)).await.map_err(backend)?;
         }
+        let mut identity = Sha256::new();
+        identity.update(b"semio.hub.artifact-cas.barrier-identity.v1\0");
+        identity.update(time_ordered_id().as_bytes());
+        graph.run(query("MERGE (b:ArtifactCasBarrierIdentity {id: 'singleton'}) ON CREATE SET b.coordinatorId = $coordinator").param("coordinator", identity.finalize().to_vec())).await.map_err(backend)?;
         Ok(Self { graph })
     }
 
@@ -511,22 +538,46 @@ impl HubDirectory for Neo4jDirectory {
     }
 
     async fn authenticate_share(&self, scope: &DocumentScope, capability: &ShareCapability) -> DirectoryResult<bool> {
+        Ok(self.authenticate_share_binding(scope, capability).await?.is_some())
+    }
+
+    async fn authenticate_share_binding(&self, scope: &DocumentScope, capability: &ShareCapability) -> DirectoryResult<Option<ShareTokenRecord>> {
         let mut result = self
             .graph
             .execute(
-                query("MATCH (g:ShareGrant {selector: $selector, spaceId: $space_id, documentId: $document_id}) RETURN g.selector AS selector, g.secretDigest AS digest, g.expiresAt AS expiresAt, g.revokedAt AS revokedAt")
+                query("MATCH (g:ShareGrant {selector: $selector, spaceId: $space_id, documentId: $document_id}) RETURN g AS g")
                     .param("selector", capability.selector())
                     .param("space_id", scope.space_id.clone())
                     .param("document_id", scope.document_id.clone()),
             )
             .await
             .map_err(backend)?;
-        let Some(row) = result.next().await.map_err(backend)? else { return Ok(false) };
-        let selector: String = row.get("selector").map_err(backend)?;
-        let digest = decode_auth_digest_hex(&row.get::<String>("digest").map_err(backend)?)?;
-        let expires_at: i64 = row.get("expiresAt").map_err(backend)?;
-        let revoked_at = row.get::<i64>("revokedAt").ok();
-        Ok(active_capability(&selector, &digest, expires_at, revoked_at, capability.selector(), &capability.secret_digest(), now_ms()))
+        let Some(row) = result.next().await.map_err(backend)? else { return Ok(None) };
+        let record = share_from_node(&row)?;
+        Ok(active_capability(&record.selector, &record.secret_digest, record.expires_at, record.revoked_at, capability.selector(), &capability.secret_digest(), now_ms()).then_some(record))
+    }
+
+    async fn socket_share_binding(&self, share_id: &str, selector: &str, scope: &DocumentScope, now_ms: i64) -> DirectoryResult<SocketShareBindingStatus> {
+        let mut result = self
+            .graph
+            .execute(
+                query("MATCH (g:ShareGrant {id: $id, selector: $selector, spaceId: $space_id, documentId: $document_id}) RETURN g AS g")
+                    .param("id", share_id)
+                    .param("selector", selector)
+                    .param("space_id", scope.space_id.clone())
+                    .param("document_id", scope.document_id.clone()),
+            )
+            .await
+            .map_err(backend)?;
+        let Some(row) = result.next().await.map_err(backend)? else { return Ok(SocketShareBindingStatus::Unavailable) };
+        let record = share_from_node(&row)?;
+        Ok(if record.revoked_at.is_some() {
+            SocketShareBindingStatus::Revoked
+        } else if record.expires_at <= now_ms {
+            SocketShareBindingStatus::Expired
+        } else {
+            SocketShareBindingStatus::Active { expires_at_ms: record.expires_at }
+        })
     }
     //#endregion
 
@@ -769,6 +820,37 @@ impl HubDirectory for Neo4jDirectory {
         }
     }
 
+    async fn socket_session_binding(&self, session_id: &str, user_id: &str, authorization_generation: u64, space_id: Option<&str>, now_ms: i64) -> DirectoryResult<SocketSessionBindingStatus> {
+        let mut result = match space_id {
+            Some(space_id) => self
+                .graph
+                .execute(
+                    query("MATCH (a:AuthSession {id: $session_id})-[:BELONGS_TO]->(u:User) OPTIONAL MATCH (u)-[m:MEMBER_OF]->(:Space {id: $space_id}) RETURN a AS a, u.id AS userId, m.role AS role")
+                        .param("session_id", session_id)
+                        .param("space_id", space_id),
+                )
+                .await
+                .map_err(backend)?,
+            None => self.graph.execute(query("MATCH (a:AuthSession {id: $session_id})-[:BELONGS_TO]->(u:User) RETURN a AS a, u.id AS userId").param("session_id", session_id)).await.map_err(backend)?,
+        };
+        let Some(row) = result.next().await.map_err(backend)? else { return Ok(SocketSessionBindingStatus::Unavailable) };
+        let record = auth_session_from_node(&row)?;
+        if record.user_id != user_id {
+            return Ok(SocketSessionBindingStatus::Unavailable);
+        }
+        if record.revoked_at.is_some() || record.authorization_generation != authorization_generation {
+            return Ok(SocketSessionBindingStatus::Revoked);
+        }
+        if record.expires_at <= now_ms {
+            return Ok(SocketSessionBindingStatus::Expired);
+        }
+        let role = space_id.and_then(|_| row.get::<String>("role").ok().and_then(|role| SpaceRole::parse(&role)));
+        if space_id.is_some() && role.is_none() {
+            return Ok(SocketSessionBindingStatus::MembershipLost);
+        }
+        Ok(SocketSessionBindingStatus::Active { role, expires_at_ms: record.expires_at })
+    }
+
     async fn revoke_auth_session(&self, id: &str, reason: &str, actor_user_id: Option<&str>, correlation_id: &str) -> DirectoryResult<Option<RevokedAuthSession>> {
         let mut revoked = self.revoke_auth_sessions_by("id", id, None, reason, actor_user_id, correlation_id).await?;
         Ok(revoked.pop())
@@ -991,6 +1073,7 @@ impl HubDirectory for Neo4jDirectory {
         }
         let scope_key = checkpoint_key_v1(&plan.scope, plan.checkpoint_id);
         let mut txn = self.graph.start_txn().await.map_err(backend)?;
+        let (coordinator_id, physical_epoch) = cas_reservation_barrier(&mut txn, &plan.scope.space_id, i64::try_from(now_ms).map_err(backend)?).await?;
         let mut historical = txn.execute(query("MATCH (e:ArtifactCasLedgerEvent {scopeCheckpointKey: $key}) WHERE e.plan IS NOT NULL RETURN e.plan AS plan ORDER BY e.generation LIMIT 1").param("key", scope_key.clone())).await.map_err(backend)?;
         if let Some(row) = historical.next(txn.handle()).await.map_err(backend)? {
             let stored: neo4rs::BoltBytes = row.get("plan").map_err(backend)?;
@@ -1001,7 +1084,9 @@ impl HubDirectory for Neo4jDirectory {
         if let Some(row) = published.next(txn.handle()).await.map_err(backend)? {
             let stored: neo4rs::BoltBytes = row.get("plan").map_err(backend)?;
             if stored.value.as_ref() != encoded { return Err(DirectoryError::Conflict("artifact CAS published ownership conflict".into())); }
-            let reservation = ArtifactCasReservation { plan: plan.clone(), generation: u64::try_from(row.get::<i64>("generation").map_err(backend)?).map_err(backend)?, write_epoch: u64::try_from(row.get::<i64>("writeEpoch").map_err(backend)?).map_err(backend)?, expires_at_ms: i64::MAX as u64 };
+            let reservation = ArtifactCasReservation::fenced(plan.clone(), u64::try_from(row.get::<i64>("generation").map_err(backend)?).map_err(backend)?, u64::try_from(row.get::<i64>("writeEpoch").map_err(backend)?).map_err(backend)?, i64::MAX as u64, coordinator_id, physical_epoch);
+            drop(published);
+            txn.commit().await.map_err(backend)?;
             return Ok(reservation);
         }
         drop(published);
@@ -1017,7 +1102,10 @@ impl HubDirectory for Neo4jDirectory {
             if stored.value.as_ref() != encoded { return Err(DirectoryError::Conflict("artifact CAS reservation identity conflict".into())); }
             let expiry: i64 = row.get("expiresAtMs").map_err(backend)?;
             if expiry > i64::try_from(now_ms).map_err(backend)? {
-                return Ok(ArtifactCasReservation { plan: plan.clone(), generation: u64::try_from(row.get::<i64>("generation").map_err(backend)?).map_err(backend)?, write_epoch: u64::try_from(row.get::<i64>("writeEpoch").map_err(backend)?).map_err(backend)?, expires_at_ms: u64::try_from(expiry).map_err(backend)? });
+                let reservation = ArtifactCasReservation::fenced(plan.clone(), u64::try_from(row.get::<i64>("generation").map_err(backend)?).map_err(backend)?, u64::try_from(row.get::<i64>("writeEpoch").map_err(backend)?).map_err(backend)?, u64::try_from(expiry).map_err(backend)?, coordinator_id, physical_epoch);
+                drop(current);
+                txn.commit().await.map_err(backend)?;
+                return Ok(reservation);
             }
         }
         drop(current);
@@ -1028,7 +1116,7 @@ impl HubDirectory for Neo4jDirectory {
         let generation = cas_generation(&mut txn).await?;
         txn.run(query("CREATE (:ArtifactCasLedgerEvent {generation: $generation, operation: 'reserve', scopeCheckpointKey: $key, spaceId: $space_id, documentId: $document_id, checkpointId: $checkpoint_id, writeEpoch: $write_epoch, expiresAtMs: $expires_at, plan: $plan})")
             .param("generation", generation).param("key", scope_key).param("space_id", plan.scope.space_id.clone()).param("document_id", plan.scope.document_id.clone()).param("checkpoint_id", hex_lower(&plan.checkpoint_id.0)).param("write_epoch", write_epoch).param("expires_at", i64::try_from(expires_at_ms).map_err(backend)?).param("plan", encoded)).await.map_err(backend)?;
-        let reservation = ArtifactCasReservation { plan: plan.clone(), generation: u64::try_from(generation).map_err(backend)?, write_epoch: u64::try_from(write_epoch).map_err(backend)?, expires_at_ms };
+        let reservation = ArtifactCasReservation::fenced(plan.clone(), u64::try_from(generation).map_err(backend)?, u64::try_from(write_epoch).map_err(backend)?, expires_at_ms, coordinator_id, physical_epoch);
         cas_project_reserve(&mut txn, &reservation).await?;
         txn.commit().await.map_err(backend)?;
         Ok(reservation)
@@ -1040,6 +1128,7 @@ impl HubDirectory for Neo4jDirectory {
         let scope_key = checkpoint_key_v1(&reservation.plan.scope, reservation.plan.checkpoint_id);
         let encoded = encode_artifact_cas_ownership_v1(&reservation.plan).map_err(|error| DirectoryError::Conflict(error.to_string()))?;
         let mut txn = self.graph.start_txn().await.map_err(backend)?;
+        if cas_lock_space(&mut txn, &reservation.plan.scope.space_id).await? > i64::try_from(current_now_ms).map_err(backend)? { return Err(DirectoryError::Conflict("artifact CAS deletion lease is active for this space".into())); }
         let mut published = txn.execute(query("MATCH (r:ArtifactCasReference {scopeCheckpointKey: $key}) RETURN r.generation AS generation, r.writeEpoch AS writeEpoch, r.plan AS plan").param("key", scope_key.clone())).await.map_err(backend)?;
         if let Some(row) = published.next(txn.handle()).await.map_err(backend)? {
             let stored: neo4rs::BoltBytes = row.get("plan").map_err(backend)?;
@@ -1082,6 +1171,13 @@ impl HubDirectory for Neo4jDirectory {
         }
     }
 
+    async fn artifact_cas_coordinator_id(&self) -> DirectoryResult<[u8; 32]> {
+        let mut result = self.graph.execute(query("MATCH (b:ArtifactCasBarrierIdentity {id: 'singleton'}) RETURN b.coordinatorId AS coordinator")).await.map_err(backend)?;
+        let row = result.next().await.map_err(backend)?.ok_or_else(|| DirectoryError::Backend("artifact CAS barrier coordinator identity is missing".into()))?;
+        let bytes: neo4rs::BoltBytes = row.get("coordinator").map_err(backend)?;
+        bytes.value.to_vec().try_into().map_err(|_| DirectoryError::Backend("artifact CAS barrier coordinator identity is invalid".into()))
+    }
+
     async fn artifact_cas_sweep_candidates(&self, after_generation: u64, through_generation: u64, limit: usize) -> DirectoryResult<ArtifactCasSweepCandidatePage> {
         if limit == 0 || limit > ARTIFACT_CAS_SWEEP_PAGE_MAX { return Err(DirectoryError::Conflict(format!("artifact CAS sweep page requires limit 1..={ARTIFACT_CAS_SWEEP_PAGE_MAX}"))); }
         let mut head = self.graph.execute(query("MATCH (h:ArtifactCasLedgerHead {id: 'singleton'}) RETURN h.generation AS generation")).await.map_err(backend)?;
@@ -1094,14 +1190,101 @@ impl HubDirectory for Neo4jDirectory {
         Ok(ArtifactCasSweepCandidatePage { observed_generation: through_generation, next_generation: u64::try_from(next).map_err(backend)?, objects })
     }
 
-    async fn artifact_cas_delete_fence(&self, key: &ArtifactCasObjectKey, observed_generation: u64, now_ms: u64) -> DirectoryResult<Option<ArtifactCasDeleteFence>> {
-        if observed_generation == 0 { return Err(DirectoryError::Conflict("artifact CAS sweep requires a nonzero observed generation".into())); }
+    async fn artifact_cas_delete_preview_protected(&self, key: &ArtifactCasObjectKey, observed_generation: u64, now_ms: u64) -> DirectoryResult<bool> {
         let token = cas_object_token(key);
-        let mut result = self.graph.execute(query("MATCH (h:ArtifactCasLedgerHead {id: 'singleton'}) RETURN h.generation AS generation, EXISTS { MATCH (r:ArtifactCasReference {spaceId: $space_id}) WHERE $token IN r.objects } AS referenced, EXISTS { MATCH (r:ArtifactCasReservation {spaceId: $space_id}) WHERE r.expiresAtMs > $now AND $token IN r.objects } AS reserved").param("space_id", key.space_id.clone()).param("token", token).param("now", i64::try_from(now_ms).map_err(backend)?)).await.map_err(backend)?;
-        let row = result.next().await.map_err(backend)?.ok_or_else(|| DirectoryError::Conflict("artifact CAS sweep requires an initialized ledger".into()))?; let generation: i64 = row.get("generation").map_err(backend)?;
+        let mut result = self.graph.execute(
+            query("MATCH (h:ArtifactCasLedgerHead {id: 'singleton'}) RETURN h.generation >= $observed AS observed, EXISTS { MATCH (r:ArtifactCasReference {spaceId: $space_id}) WHERE $token IN r.objects } AS referenced, EXISTS { MATCH (r:ArtifactCasReservation {spaceId: $space_id}) WHERE r.expiresAtMs > $now AND $token IN r.objects } AS reserved")
+                .param("observed", i64::try_from(observed_generation).map_err(backend)?)
+                .param("space_id", key.space_id.clone())
+                .param("token", token)
+                .param("now", i64::try_from(now_ms).map_err(backend)?),
+        ).await.map_err(backend)?;
+        let row = result.next().await.map_err(backend)?.ok_or_else(|| DirectoryError::Conflict("artifact CAS sweep requires an initialized ledger".into()))?;
+        if !row.get::<bool>("observed").map_err(backend)? { return Err(DirectoryError::Conflict("artifact CAS sweep observation is ahead of the ledger".into())); }
+        Ok(row.get::<bool>("referenced").map_err(backend)? || row.get::<bool>("reserved").map_err(backend)?)
+    }
+
+    async fn acquire_artifact_cas_delete_fence(&self, key: &ArtifactCasObjectKey, observed_generation: u64, lease_token: [u8; 32], now_ms: u64, expires_at_ms: u64) -> DirectoryResult<Option<ArtifactCasDeleteFence>> {
+        if observed_generation == 0 { return Err(DirectoryError::Conflict("artifact CAS sweep requires a nonzero observed generation".into())); }
+        if lease_token == [0; 32] || expires_at_ms <= now_ms { return Err(DirectoryError::Conflict("artifact CAS deletion lease is invalid".into())); }
+        let token = cas_object_token(key);
+        let now = i64::try_from(now_ms).map_err(backend)?;
+        let mut txn = self.graph.start_txn().await.map_err(backend)?;
+        if cas_lock_space(&mut txn, &key.space_id).await? > now {
+            txn.commit().await.map_err(backend)?;
+            return Ok(None);
+        }
+        let mut epoch_result = txn.execute(query("MATCH (b:ArtifactCasSpaceBarrier {spaceId: $space_id}) SET b.fenceEpoch = coalesce(b.fenceEpoch, 0) + 1, b.leaseToken = $lease_token, b.leaseExpiresAtMs = $expires_at RETURN b.fenceEpoch AS epoch").param("space_id", key.space_id.clone()).param("lease_token", lease_token.to_vec()).param("expires_at", i64::try_from(expires_at_ms).map_err(backend)?)).await.map_err(backend)?;
+        let physical_epoch: i64 = epoch_result.next(txn.handle()).await.map_err(backend)?.ok_or_else(|| DirectoryError::Backend("artifact CAS barrier epoch returned no row".into()))?.get("epoch").map_err(backend)?;
+        drop(epoch_result);
+        let mut result = txn.execute(query("MATCH (h:ArtifactCasLedgerHead {id: 'singleton'}) RETURN h.generation AS generation, EXISTS { MATCH (r:ArtifactCasReference {spaceId: $space_id}) WHERE $token IN r.objects } AS referenced, EXISTS { MATCH (r:ArtifactCasReservation {spaceId: $space_id}) WHERE r.expiresAtMs > $now AND $token IN r.objects } AS reserved").param("space_id", key.space_id.clone()).param("token", token).param("now", now)).await.map_err(backend)?;
+        let row = result.next(txn.handle()).await.map_err(backend)?.ok_or_else(|| DirectoryError::Conflict("artifact CAS sweep requires an initialized ledger".into()))?; let generation: i64 = row.get("generation").map_err(backend)?;
         if generation < i64::try_from(observed_generation).map_err(backend)? { return Err(DirectoryError::Conflict("artifact CAS sweep observation is ahead of the ledger".into())); }
         let referenced: bool = row.get("referenced").map_err(backend)?; let reserved: bool = row.get("reserved").map_err(backend)?;
-        Ok((!referenced && !reserved).then(|| ArtifactCasDeleteFence::new(key.clone(), u64::try_from(generation).unwrap_or(0))))
+        drop(result);
+        if referenced || reserved {
+            txn.run(query("MATCH (b:ArtifactCasSpaceBarrier {spaceId: $space_id}) REMOVE b.leaseToken, b.leaseExpiresAtMs").param("space_id", key.space_id.clone())).await.map_err(backend)?;
+            txn.commit().await.map_err(backend)?;
+            return Ok(None);
+        }
+        let mut identity = txn.execute(query("MATCH (b:ArtifactCasBarrierIdentity {id: 'singleton'}) RETURN b.coordinatorId AS coordinator")).await.map_err(backend)?;
+        let identity_row = identity.next(txn.handle()).await.map_err(backend)?.ok_or_else(|| DirectoryError::Backend("artifact CAS barrier coordinator identity is missing".into()))?;
+        let coordinator: neo4rs::BoltBytes = identity_row.get("coordinator").map_err(backend)?;
+        let coordinator_id = coordinator.value.to_vec().try_into().map_err(|_| DirectoryError::Backend("artifact CAS barrier coordinator identity is invalid".into()))?;
+        drop(identity);
+        txn.commit().await.map_err(backend)?;
+        Ok(Some(ArtifactCasDeleteFence::new(key.clone(), observed_generation, coordinator_id, u64::try_from(physical_epoch).map_err(backend)?, lease_token)))
+    }
+
+    async fn validate_artifact_cas_delete_fence(&self, fence: &ArtifactCasDeleteFence, now_ms: u64) -> DirectoryResult<bool> {
+        let token = cas_object_token(fence.object());
+        let mut txn = self.graph.start_txn().await.map_err(backend)?;
+        cas_lock_space(&mut txn, &fence.object().space_id).await?;
+        let mut result = txn
+            .execute(
+                query("MATCH (b:ArtifactCasSpaceBarrier {spaceId: $space_id}), (i:ArtifactCasBarrierIdentity {id: 'singleton'}), (h:ArtifactCasLedgerHead {id: 'singleton'}) RETURN b.fenceEpoch = $epoch AND b.leaseToken = $lease_token AND b.leaseExpiresAtMs > $now AND i.coordinatorId = $coordinator AND h.generation >= $observed AS leaseValid, EXISTS { MATCH (r:ArtifactCasReference {spaceId: $space_id}) WHERE $token IN r.objects } AS referenced, EXISTS { MATCH (r:ArtifactCasReservation {spaceId: $space_id}) WHERE r.expiresAtMs > $now AND $token IN r.objects } AS reserved")
+                    .param("space_id", fence.object().space_id.clone())
+                    .param("epoch", i64::try_from(fence.physical_epoch()).map_err(backend)?)
+                    .param("lease_token", fence.lease_token().to_vec())
+                    .param("now", i64::try_from(now_ms).map_err(backend)?)
+                    .param("coordinator", fence.coordinator_id().to_vec())
+                    .param("observed", i64::try_from(fence.ledger_generation()).map_err(backend)?)
+                    .param("token", token),
+            )
+            .await
+            .map_err(backend)?;
+        let Some(row) = result.next(txn.handle()).await.map_err(backend)? else {
+            return Err(DirectoryError::Conflict("artifact CAS deletion lease is no longer owned".into()));
+        };
+        let lease_valid: bool = row.get("leaseValid").map_err(backend)?;
+        let referenced: bool = row.get("referenced").map_err(backend)?;
+        let reserved: bool = row.get("reserved").map_err(backend)?;
+        drop(result);
+        txn.commit().await.map_err(backend)?;
+        Ok(lease_valid && !referenced && !reserved)
+    }
+
+    async fn renew_artifact_cas_delete_fence(&self, fence: &ArtifactCasDeleteFence, now_ms: u64, expires_at_ms: u64) -> DirectoryResult<()> {
+        if expires_at_ms <= now_ms { return Err(DirectoryError::Conflict("artifact CAS deletion lease renewal is invalid".into())); }
+        let mut txn = self.graph.start_txn().await.map_err(backend)?;
+        cas_lock_space(&mut txn, &fence.object().space_id).await?;
+        let mut result = txn.execute(query("MATCH (b:ArtifactCasSpaceBarrier {spaceId: $space_id}) WHERE b.leaseToken = $lease_token AND b.leaseExpiresAtMs > $now SET b.leaseExpiresAtMs = $expires_at RETURN count(b) AS renewed").param("space_id", fence.object().space_id.clone()).param("lease_token", fence.lease_token().to_vec()).param("now", i64::try_from(now_ms).map_err(backend)?).param("expires_at", i64::try_from(expires_at_ms).map_err(backend)?)).await.map_err(backend)?;
+        let renewed: i64 = result.next(txn.handle()).await.map_err(backend)?.ok_or_else(|| DirectoryError::Backend("artifact CAS deletion lease renewal returned no row".into()))?.get("renewed").map_err(backend)?;
+        drop(result);
+        if renewed != 1 { return Err(DirectoryError::Conflict("artifact CAS deletion lease is no longer owned".into())); }
+        txn.commit().await.map_err(backend)?;
+        Ok(())
+    }
+
+    async fn release_artifact_cas_delete_fence(&self, fence: ArtifactCasDeleteFence) -> DirectoryResult<()> {
+        let mut txn = self.graph.start_txn().await.map_err(backend)?;
+        cas_lock_space(&mut txn, &fence.object().space_id).await?;
+        let mut result = txn.execute(query("MATCH (b:ArtifactCasSpaceBarrier {spaceId: $space_id}) WHERE b.leaseToken = $lease_token REMOVE b.leaseToken, b.leaseExpiresAtMs RETURN count(b) AS released").param("space_id", fence.object().space_id.clone()).param("lease_token", fence.lease_token().to_vec())).await.map_err(backend)?;
+        let released: i64 = result.next(txn.handle()).await.map_err(backend)?.ok_or_else(|| DirectoryError::Backend("artifact CAS deletion lease release returned no row".into()))?.get("released").map_err(backend)?;
+        drop(result);
+        if released != 1 { return Err(DirectoryError::Conflict("artifact CAS deletion lease is no longer owned".into())); }
+        txn.commit().await.map_err(backend)?;
+        Ok(())
     }
 
     //#region EventLog
@@ -1244,12 +1427,12 @@ impl HubDirectory for Neo4jDirectory {
                 match operation.as_str() {
                     "reserve" | "publish" => {
                         let encoded: neo4rs::BoltBytes = entry.get("plan").map_err(backend)?;
-                        let reservation = ArtifactCasReservation {
-                            plan: decode_artifact_cas_ownership_v1(&encoded.value).map_err(|error| DirectoryError::Backend(error.to_string()))?,
-                            generation: u64::try_from(ledger_cursor).map_err(backend)?,
-                            write_epoch: u64::try_from(entry.get::<i64>("writeEpoch").map_err(backend)?).map_err(backend)?,
-                            expires_at_ms: u64::try_from(entry.get::<i64>("expiresAtMs").map_err(backend)?).map_err(backend)?,
-                        };
+                        let reservation = ArtifactCasReservation::unfenced(
+                            decode_artifact_cas_ownership_v1(&encoded.value).map_err(|error| DirectoryError::Backend(error.to_string()))?,
+                            u64::try_from(ledger_cursor).map_err(backend)?,
+                            u64::try_from(entry.get::<i64>("writeEpoch").map_err(backend)?).map_err(backend)?,
+                            u64::try_from(entry.get::<i64>("expiresAtMs").map_err(backend)?).map_err(backend)?,
+                        );
                         if operation == "reserve" { cas_project_reserve(&mut txn, &reservation).await?; } else { cas_project_publish(&mut txn, &reservation, ledger_cursor).await?; }
                     }
                     "retention" => {
@@ -1310,6 +1493,20 @@ fn invite_from_node(row: &neo4rs::Row) -> DirectoryResult<InviteRecord> {
         revoked_at: node.get::<i64>("revokedAt").ok(),
         revoked_reason: node.get::<String>("revokedReason").ok().filter(|value| !value.is_empty()),
         accepted_at: node.get::<i64>("acceptedAt").ok(),
+    })
+}
+
+fn share_from_node(row: &neo4rs::Row) -> DirectoryResult<ShareTokenRecord> {
+    let node: neo4rs::Node = row.get("g").map_err(backend)?;
+    Ok(ShareTokenRecord {
+        id: node.get("id").map_err(backend)?,
+        selector: node.get("selector").map_err(backend)?,
+        secret_digest: decode_auth_digest_hex(&node.get::<String>("secretDigest").map_err(backend)?)?,
+        scope: DocumentScope::new(node.get::<String>("spaceId").map_err(backend)?, node.get::<String>("documentId").map_err(backend)?),
+        created_at: node.get("createdAt").map_err(backend)?,
+        expires_at: node.get("expiresAt").map_err(backend)?,
+        revoked_at: node.get::<i64>("revokedAt").ok(),
+        revoked_reason: node.get::<String>("revokedReason").ok().filter(|value| !value.is_empty()),
     })
 }
 

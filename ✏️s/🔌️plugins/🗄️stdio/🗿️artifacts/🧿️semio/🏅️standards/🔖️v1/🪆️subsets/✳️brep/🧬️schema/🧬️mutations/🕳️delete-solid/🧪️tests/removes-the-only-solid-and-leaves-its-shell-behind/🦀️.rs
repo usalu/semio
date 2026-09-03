@@ -4,9 +4,10 @@
 //! `mutation.target-missing`; otherwise the diff is a bare `solids.removed[id]`. A solid is the
 //! TOP of this artifact's topology, so there is nothing above it to cascade into, and the leaf
 //! deliberately does not cascade down into its shells either.
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::SemioBrepDiff;
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::mutations::SemioBrepMutation;
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::SemioBrepSnapshot;
+use crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::{decode_semio_brep_diff_json, SemioBrepDiff};
+use crate::artifacts::semio::standards::v1::subsets::brep::schema::mutations::{decode_semio_brep_mutation_json, SemioBrepMutation};
+use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::{decode_semio_brep_snapshot_json, SemioBrepSnapshot};
+use pack::value::ToValue;
 use protocol::{Mutation, MutationDiff};
 
 const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️.json");
@@ -16,13 +17,13 @@ const DIFF: &str = include_str!("🔺️diff/🔣️.json");
 const OUTCOME: &str = include_str!("🎯️outcome/🔣️.json");
 
 fn before() -> SemioBrepSnapshot {
-    serde_json::from_str(BEFORE).expect("delete-solid before snapshot decodes")
+    decode_semio_brep_snapshot_json(BEFORE).expect("delete-solid before snapshot decodes")
 }
 fn expected_after() -> SemioBrepSnapshot {
-    serde_json::from_str(AFTER).expect("delete-solid after snapshot decodes")
+    decode_semio_brep_snapshot_json(AFTER).expect("delete-solid after snapshot decodes")
 }
 fn mutation() -> SemioBrepMutation {
-    serde_json::from_str(MUTATION).expect("delete-solid mutation decodes")
+    decode_semio_brep_mutation_json(MUTATION).expect("delete-solid mutation decodes")
 }
 
 /// ▶️ The solid goes; the shell it bounded and everything under it remain.
@@ -56,21 +57,21 @@ async fn the_undo_create_solid_restores_the_captured_shell_list() {
 #[semio_framework_async_macros::async_test]
 async fn committed_json_is_canonical() {
     for (label, text) in [("before", BEFORE), ("after", AFTER)] {
-        let decoded: SemioBrepSnapshot = serde_json::from_str(text).expect("snapshot decodes");
-        let reencoded = serde_json::to_value(&decoded).expect("snapshot encodes");
-        let original: serde_json::Value = serde_json::from_str(text).expect("snapshot reparses");
+        let decoded = decode_semio_brep_snapshot_json(text).expect("snapshot decodes");
+        let reencoded = pack::json::from_dsl_value(&decoded.to_value());
+        let original = pack::json::parse(text).expect("snapshot reparses");
         assert_eq!(reencoded, original, "delete-solid/removes-the-only-solid-and-leaves-its-shell-behind: committed {label} JSON is not canonical");
     }
-    let reencoded = serde_json::to_value(mutation()).expect("delete-solid mutation encodes");
-    let original: serde_json::Value = serde_json::from_str(MUTATION).expect("delete-solid mutation reparses");
+    let reencoded = pack::json::from_dsl_value(&mutation().to_value());
+    let original = pack::json::parse(MUTATION).expect("delete-solid mutation reparses");
     assert_eq!(reencoded, original, "delete-solid/removes-the-only-solid-and-leaves-its-shell-behind: committed mutation JSON is not canonical");
 }
 
 /// 🎯️ Declared `applied`: the solid exists, so mutation.target-missing must not fire
 #[semio_framework_async_macros::async_test]
 async fn declared_outcome_holds_as_committed() {
-    let outcome: serde_json::Value = serde_json::from_str(OUTCOME).expect("outcome decodes");
-    assert_eq!(outcome.get("status").and_then(serde_json::Value::as_str), Some("applied"), "delete-solid/removes-the-only-solid-and-leaves-its-shell-behind: this case is declared applied");
+    let outcome = pack::json::parse(OUTCOME).expect("outcome decodes");
+    assert_eq!(outcome.get("status").and_then(pack::json::Value::as_str), Some("applied"), "delete-solid/removes-the-only-solid-and-leaves-its-shell-behind: this case is declared applied");
     let produced = mutation().diff(&before());
     assert!(produced.messages().is_empty(), "deleting an existing solid must raise no diagnostics — nothing references a solid from above");
 }
@@ -80,8 +81,8 @@ async fn declared_outcome_holds_as_committed() {
 async fn produces_committed_diff() {
     let base = before();
     let outcome = <SemioBrepMutation as Mutation<SemioBrepSnapshot>>::diff(&mutation(), &base);
-    let produced = serde_json::to_value(outcome.diff()).expect("produced diff encodes");
-    let committed: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff decodes");
+    let produced = pack::json::from_dsl_value(&outcome.diff().to_value());
+    let committed = pack::json::parse(DIFF).expect("committed diff decodes");
     assert_eq!(produced, committed, "delete-solid/removes-the-only-solid-and-leaves-its-shell-behind: produced diff differs from the committed 🔺️diff/🔣️.json");
 }
 
@@ -89,21 +90,21 @@ async fn produces_committed_diff() {
 /// allowed to touch appears in it at all.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_is_canonical_and_narrowly_scoped() {
-    let decoded: SemioBrepDiff = serde_json::from_str(DIFF).expect("committed delete-solid diff decodes");
+    let decoded = decode_semio_brep_diff_json(DIFF).expect("committed delete-solid diff decodes");
 
     let solids = decoded.solids.as_ref().expect("delete-solid must write the solids triple");
     assert_eq!(solids.removed, vec!["so1".to_string()], "the removal is addressed by solid id");
     assert!(solids.modified.is_empty() && solids.added.is_empty(), "a removal neither modifies nor adds");
     assert!(decoded.vertices.is_none() && decoded.edges.is_none() && decoded.loops.is_none() && decoded.faces.is_none() && decoded.shells.is_none(), "delete-solid cascades nowhere — no other collection may appear");
-    let reencoded = serde_json::to_value(&decoded).expect("diff re-encodes");
-    let original: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff reparses");
+    let reencoded = pack::json::from_dsl_value(&decoded.to_value());
+    let original = pack::json::parse(DIFF).expect("committed diff reparses");
     assert_eq!(reencoded, original, "delete-solid/removes-the-only-solid-and-leaves-its-shell-behind: committed diff JSON is not canonical");
 }
 
 /// 🩹 Applying the committed diff to `before` yields `after`.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
-    let decoded: SemioBrepDiff = serde_json::from_str(DIFF).expect("committed delete-solid diff decodes");
+    let decoded = decode_semio_brep_diff_json(DIFF).expect("committed delete-solid diff decodes");
     let produced = decoded.apply(&before()).expect("committed delete-solid diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "delete-solid/removes-the-only-solid-and-leaves-its-shell-behind: committed diff did not carry before to after");
 }

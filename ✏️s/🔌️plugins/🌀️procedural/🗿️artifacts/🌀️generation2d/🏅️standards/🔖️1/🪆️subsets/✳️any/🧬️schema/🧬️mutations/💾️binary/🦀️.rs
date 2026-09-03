@@ -127,7 +127,7 @@ fn generation2d_operation_to_dsl(operation: &Generation2dMutation) -> Generation
         Generation2dMutation::DeleteGeneration(payload) => Generation2dOperationDsl::DeleteGeneration { id: payload.id.clone() },
         Generation2dMutation::RenameGeneration(payload) => Generation2dOperationDsl::RenameGeneration { id: payload.id.clone(), name: payload.name.clone() },
         Generation2dMutation::ChangeGenerationValue(payload) => {
-            Generation2dOperationDsl::ChangeGenerationValue { id: payload.id.clone(), question_id: payload.question_id.clone(), value: dsl::DslValue::from(&payload.value) }
+            Generation2dOperationDsl::ChangeGenerationValue { id: payload.id.clone(), question_id: payload.question_id.clone(), value: payload.value.clone() }
         }
     }
 }
@@ -151,7 +151,7 @@ fn generation2d_operation_from_dsl(operation: Generation2dOperationDsl) -> Resul
         Generation2dOperationDsl::CreateGeneration { generation } => create_generation(form_generation_from_dsl(generation)),
         Generation2dOperationDsl::DeleteGeneration { id } => delete_generation(id),
         Generation2dOperationDsl::RenameGeneration { id, name } => rename_generation(id, name),
-        Generation2dOperationDsl::ChangeGenerationValue { id, question_id, value } => change_generation_value(id, question_id, serde_json::Value::from(&value)),
+        Generation2dOperationDsl::ChangeGenerationValue { id, question_id, value } => change_generation_value(id, question_id, value),
     })
 }
 
@@ -707,8 +707,8 @@ fn generation2d_apply_initialization_mutation(snapshot: &mut Generation2dSnapsho
         }
         Generation2dMutation::ChangeGenerationValue(payload) => {
             let entry = snapshot.generation.cold_builder_mut()?.generations.iter_mut().find(|entry| entry.id == payload.id).ok_or("generation2d-replay.generation-missing")?;
-            let copied = generation2d_copy_json(&dsl::DslValue::from(&payload.value), 0)?;
-            entry.values.insert(generation2d_copy_string(&payload.question_id)?, serde_json::Value::from(&copied)).map(|displaced| Generation2dReplayDisplaced::Json(dsl::DslValue::from(&displaced))).and_then(generation2d_retire_displaced)
+            let copied = generation2d_copy_json(&payload.value, 0)?;
+            entry.values.insert(generation2d_copy_string(&payload.question_id)?, copied).map(Generation2dReplayDisplaced::Json).and_then(generation2d_retire_displaced)
         }
     };
     Ok(retired)
@@ -1593,7 +1593,7 @@ impl Generation2dRetainedMutationOwner {
                     Generation2dMutationFrame::Layout { field: None, value } if kind == Container::Record => self.layout = Some(value),
                     Generation2dMutationFrame::Camera { field: None, value } if kind == Container::Record => self.camera = Some(value),
                     Generation2dMutationFrame::Generation { field: None, id, name, values } if kind == Container::Record => {
-                        self.generation = Some(flow::playbook::FormGeneration { id, name, values: values.into_iter().map(|(key, value)| (key, serde_json::Value::from(&value))).collect() });
+                        self.generation = Some(flow::playbook::FormGeneration { id, name, values: values.into_iter().collect() });
                     }
                     Generation2dMutationFrame::NeuralValue { table, row, field: None, value: Some(value) } if kind == Container::Record => match self.stack.get_mut(table) {
                         Some(Generation2dMutationFrame::Dictionary { rows, field: Some(1), .. }) => {
@@ -1643,7 +1643,7 @@ impl Generation2dRetainedMutationOwner {
                     10 => create_generation(self.generation.take().ok_or("generation2d-mutation.create-generation")?),
                     11 => delete_generation(first),
                     12 => rename_generation(first, second),
-                    13 => change_generation_value(first, second, serde_json::Value::from(&std::mem::replace(&mut self.json, dsl::DslValue::Null))),
+                    13 => change_generation_value(first, second, std::mem::replace(&mut self.json, dsl::DslValue::Null)),
                     _ => return Err("generation2d-mutation.variant"),
                 };
                 *self.value = Some(mutation);
@@ -2535,10 +2535,10 @@ fn generation2d_copy_synapse(source: &flow::SynapseSpec) -> Result<flow::Synapse
 }
 
 fn generation2d_copy_generation(source: &flow::playbook::FormGeneration) -> Result<flow::playbook::FormGeneration, &'static str> {
-    let mut values = serde_json::Map::new();
+    let mut values: flow::playbook::PlaybookValues = std::collections::HashMap::new();
     for (key, value) in &source.values {
-        let copied = generation2d_copy_json(&dsl::DslValue::from(value), 0)?;
-        values.insert(generation2d_copy_string(key)?, serde_json::Value::from(&copied));
+        let copied = generation2d_copy_json(value, 0)?;
+        values.insert(generation2d_copy_string(key)?, copied);
     }
     Ok(flow::playbook::FormGeneration { id: generation2d_copy_string(&source.id)?, name: generation2d_copy_string(&source.name)?, values })
 }
@@ -2807,7 +2807,7 @@ fn generation2d_observe_generation(digest: &mut store::ArtifactStoreInitializati
     digest.observe(generation.name.as_bytes());
     for (key, value) in &generation.values {
         digest.observe(key.as_bytes());
-        generation2d_observe_json(digest, &dsl::DslValue::from(value));
+        generation2d_observe_json(digest, value);
     }
 }
 
@@ -2880,7 +2880,7 @@ fn generation2d_observe_mutation(digest: &mut store::ArtifactStoreInitialization
             digest.observe(b"change-generation-value");
             digest.observe(value.id.as_bytes());
             digest.observe(value.question_id.as_bytes());
-            generation2d_observe_json(digest, &dsl::DslValue::from(&value.value));
+            generation2d_observe_json(digest, &value.value);
         }
     }
 }

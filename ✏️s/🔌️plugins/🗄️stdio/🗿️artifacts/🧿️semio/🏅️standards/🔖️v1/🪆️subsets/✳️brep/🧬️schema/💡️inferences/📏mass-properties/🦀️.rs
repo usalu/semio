@@ -17,6 +17,7 @@ use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::err
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::surface::surface_ops;
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::surface::Surface;
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::topology::Body;
+use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::vector::predicates::{orient2d, Orient};
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::vector::{Pnt2, Pnt3, Vec3};
 
 // #region 🔖️Types
@@ -28,12 +29,16 @@ pub struct AxisAlignedBox {
     pub max: Pnt3,
 }
 
-/// 🎯 Point-in-solid classification (ray parity until Wave 3 classify lands).
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum PointSolidClassification {
-    Inside,
-    Outside,
-    OnBoundary,
+/// 📏 Volume, area, centroid and inertia tensor of a solid, integrated over its TRIMMED support
+/// (ear-clipped UV triangulation, adaptive Gauss-Legendre per triangle — see `solid_mass_properties`),
+/// with an error estimate propagated from that adaptive refinement rather than an unverified guess.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct MassProperties {
+    pub volume: f64,
+    pub area: f64,
+    pub centroid: Pnt3,
+    pub inertia: [[f64; 3]; 3],
+    pub error_estimate: f64,
 }
 
 // #endregion 🔖️Types
@@ -158,7 +163,11 @@ pub fn edge_length(body: &Body, edge: EdgeId) -> Result<f64, KernelError> {
 
 // #region 🔖️Distance
 
-/// 📏 Minimum distance between two closed solids.
+/// 📏 Minimum distance between two closed solids — `0.0` only when a real point-in-solid
+/// classification (not a coarse sample-point-happens-to-be-close heuristic) finds one solid
+/// genuinely containing a point of the other; otherwise the TRUE minimum via vertex/face, face
+/// sample point/face, and edge/edge candidates (§6.11: "overlapping-solid distance can sample face
+/// points and miss edge-edge/interior extrema").
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn distance_solid_solid(body: &Body, a: SolidId, b: SolidId) -> Result<f64, KernelError> {
     let bb_a = solid_bounding_box(body, a)?;
@@ -167,27 +176,107 @@ pub fn distance_solid_solid(body: &Body, a: SolidId, b: SolidId) -> Result<f64, 
     if separated > 1e-9 {
         return Ok(separated);
     }
+    if solids_overlap(body, a, b)? {
+        return Ok(0.0);
+    }
     let mut best = f64::INFINITY;
     for face in body.solid_faces(a) {
         for p in face_sample_points(body, face)? {
             let (_, d) = closest_point_on_solid(body, b, p)?;
-            if d > 1e-9 {
-                best = best.min(d);
-            }
+            best = best.min(d);
         }
     }
     for face in body.solid_faces(b) {
         for p in face_sample_points(body, face)? {
             let (_, d) = closest_point_on_solid(body, a, p)?;
-            if d > 1e-9 {
-                best = best.min(d);
+            best = best.min(d);
+        }
+    }
+    if let Some(d) = edge_edge_closest_distance(body, a, b) {
+        best = best.min(d);
+    }
+    if !best.is_finite() {
+        return Err(KernelError::Operation("distance_solid_solid: no finite candidate distance found".into()));
+    }
+    Ok(best)
+}
+
+/// 📏 `true` when a sample point on either solid's boundary is genuinely `Inside` the other, per
+/// the one authoritative classifier — not a bounding-box or sample-distance proxy for overlap.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn solids_overlap(body: &Body, a: SolidId, b: SolidId) -> Result<bool, KernelError> {
+    use crate::artifacts::semio::standards::v1::subsets::brep::schema::engine::PointClassification;
+    use crate::artifacts::semio::standards::v1::subsets::brep::schema::inferences::classification::point_in_solid;
+    for face in body.solid_faces(a) {
+        for p in face_sample_points(body, face)? {
+            if matches!(point_in_solid(body, b, p, 1e-9)?, PointClassification::Inside) {
+                return Ok(true);
             }
         }
     }
-    if !best.is_finite() {
-        return Ok(0.0);
+    for face in body.solid_faces(b) {
+        for p in face_sample_points(body, face)? {
+            if matches!(point_in_solid(body, a, p, 1e-9)?, PointClassification::Inside) {
+                return Ok(true);
+            }
+        }
     }
-    Ok(best)
+    Ok(false)
+}
+
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn solid_unique_edges(body: &Body, solid: SolidId) -> Vec<EdgeId> {
+    let mut seen = std::collections::HashSet::new();
+    for face in body.solid_faces(solid) {
+        for coedge in body.face_coedges(face) {
+            if let Some(c) = body.coedges.get(coedge) {
+                seen.insert(c.edge);
+            }
+        }
+    }
+    seen.into_iter().collect()
+}
+
+/// 📏 Nearest approach between every edge of `a` and every edge of `b`, sampling one curve against
+/// the other's `curve_ops::closest_parameter` in both directions — a practical (sampling-refined,
+/// not a certified global continuous optimum) edge/edge extremum candidate the old face-sample-only
+/// distance missed entirely.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn edge_edge_closest_distance(body: &Body, a: SolidId, b: SolidId) -> Option<f64> {
+    let edges_a = solid_unique_edges(body, a);
+    let edges_b = solid_unique_edges(body, b);
+    let mut best: Option<f64> = None;
+    for &ea in &edges_a {
+        for &eb in &edges_b {
+            if let Some(d) = edge_edge_min_distance(body, ea, eb) {
+                best = Some(best.map_or(d, |b: f64| b.min(d)));
+            }
+        }
+    }
+    best
+}
+
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn edge_edge_min_distance(body: &Body, ea: EdgeId, eb: EdgeId) -> Option<f64> {
+    let edge_a = body.edges.get(ea)?;
+    let edge_b = body.edges.get(eb)?;
+    let curve_a = body.curves3.get(edge_a.curve)?;
+    let curve_b = body.curves3.get(edge_b.curve)?;
+    const SAMPLES: usize = 12;
+    let mut best = f64::INFINITY;
+    for i in 0..=SAMPLES {
+        let s = i as f64 / SAMPLES as f64;
+        let t = edge_a.range.0 + (edge_a.range.1 - edge_a.range.0) * s;
+        let closest = curve_ops::closest_parameter(curve_b, edge_b.range, curve_a.eval(t), 1e-9);
+        best = best.min(closest.distance);
+    }
+    for i in 0..=SAMPLES {
+        let s = i as f64 / SAMPLES as f64;
+        let t = edge_b.range.0 + (edge_b.range.1 - edge_b.range.0) * s;
+        let closest = curve_ops::closest_parameter(curve_a, edge_a.range, curve_b.eval(t), 1e-9);
+        best = best.min(closest.distance);
+    }
+    Some(best)
 }
 
 /// 📏 Closest point on `solid` to `point` and the Euclidean distance.
@@ -212,108 +301,223 @@ pub fn closest_point_on_solid(body: &Body, solid: SolidId, point: Pnt3) -> Resul
 // #endregion 🔖️Distance
 
 // #region 🔖️Classify
-
-/// 🎯 Classifies `point` against `solid` via multi-ray parity (Wave 3: delegate to `classify` module).
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn classify_point_on_solid(body: &Body, solid: SolidId, point: Pnt3) -> Result<PointSolidClassification, KernelError> {
-    const RAY_DIRS: [Vec3; 3] = [Vec3::X, Vec3::Y, Vec3::Z];
-    let mut boundary_hits = 0;
-    let mut parity_votes = 0;
-    for dir in RAY_DIRS {
-        match ray_hits_solid(body, solid, point, dir)? {
-            RayHit::OnBoundary => boundary_hits += 1,
-            RayHit::Inside => parity_votes += 1,
-            RayHit::Outside => {}
-        }
-    }
-    if boundary_hits > 0 {
-        return Ok(PointSolidClassification::OnBoundary);
-    }
-    if parity_votes % 2 == 1 {
-        Ok(PointSolidClassification::Inside)
-    } else {
-        Ok(PointSolidClassification::Outside)
-    }
-}
-
-enum RayHit {
-    Inside,
-    Outside,
-    OnBoundary,
-}
-
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn ray_hits_solid(body: &Body, solid: SolidId, origin: Pnt3, dir: Vec3) -> Result<RayHit, KernelError> {
-    let d = dir.normalized().unwrap_or(Vec3::X);
-    let mut hits = 0usize;
-    for face in body.solid_faces(solid) {
-        if let Some(t) = ray_face_intersection(body, face, origin, d)? {
-            if t < 1e-9 {
-                return Ok(RayHit::OnBoundary);
-            }
-            hits += 1;
-        }
-    }
-    Ok(if hits % 2 == 1 { RayHit::Inside } else { RayHit::Outside })
-}
-
+//
+// 🏷️ The ray-parity classifier that used to live here was deleted (ticket
+// 26/09/03/BREP-KERNEL-DEPENDENCY-FREE-RUNTIME wave W1-F): `inferences::classification::point_in_solid`
+// is now the ONE authoritative point-in-solid classifier (BVH-culled, p-curve-aware trims, grazing
+// retry) — see that module's docstring. `distance_solid_solid` below now calls the real classifier
+// for its overlap check instead of keeping a second, coarser implementation in sync with it.
 // #endregion 🔖️Classify
 
 // #region 🔖️Quadrature
 
-const GL5_NODES: [f64; 5] = [-0.906_179_845_938_664, -0.538_469_310_105_683_1, 0.0, 0.538_469_310_105_683_1, 0.906_179_845_938_664];
-const GL5_WEIGHTS: [f64; 5] = [0.2369268850561891, 0.4786286704993665, 0.5688888888888889, 0.4786286704993665, 0.2369268850561891];
+/// 📏 One UV triangle's surface-integral contributions, all in NATURAL physical units (no legacy
+/// ×6/×24 tetra-sum scaling): `[area, vol, mx, my, mz, ∫x²dV, ∫y²dV, ∫z²dV, ∫xy dV, ∫xz dV, ∫yz dV]`.
+/// Every entry after `area` is a divergence-theorem surface integral of the form `∮ f(p)·n dA`,
+/// and since `n dA = (du × dv) du dv` exactly (no need to normalize the cross product), each is
+/// just `f(p) · cross` at the sample point — the SAME per-sample machinery serves volume, first
+/// moments (centroid) and second moments (inertia) at once.
+const MOMENT_COMPONENTS: usize = 11;
+const IDX_AREA: usize = 0;
+const IDX_VOL: usize = 1;
+const IDX_MX: usize = 2;
+const IDX_MY: usize = 3;
+const IDX_MZ: usize = 4;
+const IDX_JXX2: usize = 5;
+const IDX_JYY2: usize = 6;
+const IDX_JZZ2: usize = 7;
+const IDX_JXY: usize = 8;
+const IDX_JXZ: usize = 9;
+const IDX_JYZ: usize = 10;
 
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn gauss_samples(chord_tol: f64) -> usize {
-    ((1.0 / chord_tol.max(1e-6)).sqrt().ceil() as usize).clamp(4, 32)
-}
+/// 📏 6-point symmetric (degree-4) triangle quadrature rule in barycentric coordinates — exact
+/// for the cubic integrands second moments need on a flat facet, and a stable adaptive-refinement
+/// base case for curved ones.
+const TRI_BARY: [[f64; 3]; 6] = [
+    [0.108_103_018_168_070, 0.445_948_490_915_965, 0.445_948_490_915_965],
+    [0.445_948_490_915_965, 0.108_103_018_168_070, 0.445_948_490_915_965],
+    [0.445_948_490_915_965, 0.445_948_490_915_965, 0.108_103_018_168_070],
+    [0.816_847_572_980_459, 0.091_576_213_509_771, 0.091_576_213_509_771],
+    [0.091_576_213_509_771, 0.816_847_572_980_459, 0.091_576_213_509_771],
+    [0.091_576_213_509_771, 0.091_576_213_509_771, 0.816_847_572_980_459],
+];
+const TRI_WEIGHT: [f64; 6] = [0.223_381_589_678_011, 0.223_381_589_678_011, 0.223_381_589_678_011, 0.109_951_743_655_322, 0.109_951_743_655_322, 0.109_951_743_655_322];
 
+/// 📏 Single (non-adaptive) 6-point quadrature pass over one UV triangle.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn parametric_volume_moments(surface: &Surface, flipped: bool, u0: f64, u1: f64, v0: f64, v1: f64, boundary: &[Pnt2], _samples: usize) -> (f64, f64, f64, f64) {
-    let mut sv = 0.0;
-    let mut mx = 0.0;
-    let mut my = 0.0;
-    let mut mz = 0.0;
-    integrate_parametric_face(u0, u1, v0, v1, |u, v| {
-        if !point_in_uv_polygon(u, v, boundary) {
-            return 0.0;
-        }
+fn quad_triangle_once(surface: &Surface, flipped: bool, tri: [Pnt2; 3]) -> [f64; MOMENT_COMPONENTS] {
+    let signed_area2 = (tri[1].x - tri[0].x) * (tri[2].y - tri[0].y) - (tri[1].y - tri[0].y) * (tri[2].x - tri[0].x);
+    let tri_area = 0.5 * signed_area2.abs();
+    let mut acc = [0.0; MOMENT_COMPONENTS];
+    if tri_area < 1e-15 {
+        return acc;
+    }
+    for k in 0..6 {
+        let [l1, l2, l3] = TRI_BARY[k];
+        let u = l1 * tri[0].x + l2 * tri[1].x + l3 * tri[2].x;
+        let v = l1 * tri[0].y + l2 * tri[1].y + l3 * tri[2].y;
         let d = surface.derivatives(u, v);
         let p = d.point;
-        let cross = d.du.cross(d.dv);
-        let mut weight = p.x * cross.x + p.y * cross.y + p.z * cross.z;
+        let mut cross = d.du.cross(d.dv);
         if flipped {
-            weight = -weight;
+            cross = -cross;
         }
-        sv += weight;
-        mx += weight * p.x;
-        my += weight * p.y;
-        mz += weight * p.z;
-        weight
-    });
-    (sv, mx, my, mz)
+        let w = TRI_WEIGHT[k] * tri_area;
+        acc[IDX_AREA] += w * cross.norm();
+        acc[IDX_VOL] += w * (p.x * cross.x + p.y * cross.y + p.z * cross.z) / 3.0;
+        acc[IDX_MX] += w * 0.5 * p.x * p.x * cross.x;
+        acc[IDX_MY] += w * 0.5 * p.y * p.y * cross.y;
+        acc[IDX_MZ] += w * 0.5 * p.z * p.z * cross.z;
+        acc[IDX_JXX2] += w * (p.x * p.x * p.x / 3.0) * cross.x;
+        acc[IDX_JYY2] += w * (p.y * p.y * p.y / 3.0) * cross.y;
+        acc[IDX_JZZ2] += w * (p.z * p.z * p.z / 3.0) * cross.z;
+        acc[IDX_JXY] += w * 0.5 * p.x * p.x * p.y * cross.x;
+        acc[IDX_JXZ] += w * 0.5 * p.x * p.x * p.z * cross.x;
+        acc[IDX_JYZ] += w * 0.5 * p.y * p.y * p.z * cross.y;
+    }
+    acc
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn integrate_parametric_face<F>(u0: f64, u1: f64, v0: f64, v1: f64, mut f: F) -> f64
-where
-    F: FnMut(f64, f64) -> f64,
-{
-    let hu = 0.5 * (u1 - u0);
-    let hv = 0.5 * (v1 - v0);
-    let mu = 0.5 * (u0 + u1);
-    let mv = 0.5 * (v0 + v1);
-    let mut sum = 0.0;
-    for (&xu, &wu) in GL5_NODES.iter().zip(GL5_WEIGHTS.iter()) {
-        for (&xv, &wv) in GL5_NODES.iter().zip(GL5_WEIGHTS.iter()) {
-            sum += wu * wv * f(mu + hu * xu, mv + hv * xv);
+fn split_triangle_4(tri: [Pnt2; 3]) -> [[Pnt2; 3]; 4] {
+    let m01 = tri[0].lerp(tri[1], 0.5);
+    let m12 = tri[1].lerp(tri[2], 0.5);
+    let m20 = tri[2].lerp(tri[0], 0.5);
+    [[tri[0], m01, m20], [m01, tri[1], m12], [m20, m12, tri[2]], [m01, m12, m20]]
+}
+
+/// 📏 Adaptively refines one UV triangle by quartering until the volume component's relative
+/// change between one refinement level and the next falls below `tol`, or `depth` is exhausted.
+/// Returns the accumulated moments plus a Richardson-style absolute error estimate for the volume
+/// component (the coarse/fine gap at whichever level accepted the result).
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn integrate_triangle_adaptive(surface: &Surface, flipped: bool, tri: [Pnt2; 3], tol: f64, depth: u32) -> ([f64; MOMENT_COMPONENTS], f64) {
+    let coarse = quad_triangle_once(surface, flipped, tri);
+    let subs = split_triangle_4(tri);
+    let mut fine = [0.0; MOMENT_COMPONENTS];
+    for s in &subs {
+        let c = quad_triangle_once(surface, flipped, *s);
+        for i in 0..MOMENT_COMPONENTS {
+            fine[i] += c[i];
         }
     }
-    sum * hu * hv
+    let local_err = (fine[IDX_VOL] - coarse[IDX_VOL]).abs();
+    if depth == 0 {
+        return (fine, local_err);
+    }
+    let rel = if fine[IDX_VOL].abs() > 1e-12 { local_err / fine[IDX_VOL].abs() } else { local_err };
+    if rel < tol {
+        (fine, local_err)
+    } else {
+        let mut total = [0.0; MOMENT_COMPONENTS];
+        let mut err_sum = 0.0;
+        for s in subs {
+            let (r, e) = integrate_triangle_adaptive(surface, flipped, s, tol, depth - 1);
+            for i in 0..MOMENT_COMPONENTS {
+                total[i] += r[i];
+            }
+            err_sum += e;
+        }
+        (total, err_sum)
+    }
+}
+
+const ADAPTIVE_MAX_DEPTH: u32 = 6;
+
+/// 📏 One loop's surface-integral moments over its ear-clipped UV triangulation — the caller adds
+/// this for the outer loop and subtracts it for each inner (hole) loop to get the face's trimmed
+/// total, exactly mirroring the existing planar `signed_tetra_sum` +outer/-inner pattern.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn loop_moments(surface: &Surface, flipped: bool, poly: &[Pnt2], tol: f64) -> ([f64; MOMENT_COMPONENTS], f64) {
+    let mut total = [0.0; MOMENT_COMPONENTS];
+    let mut err = 0.0;
+    for tri in ear_clip(poly) {
+        let (m, e) = integrate_triangle_adaptive(surface, flipped, tri, tol, ADAPTIVE_MAX_DEPTH);
+        for i in 0..MOMENT_COMPONENTS {
+            total[i] += m[i];
+        }
+        err += e;
+    }
+    (total, err)
 }
 
 // #endregion 🔖️Quadrature
+
+// #region 🔖️Triangulation
+
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn polygon_signed_area_2d(poly: &[Pnt2]) -> f64 {
+    let mut a = 0.0;
+    let n = poly.len();
+    for i in 0..n {
+        let p = poly[i];
+        let q = poly[(i + 1) % n];
+        a += p.x * q.y - q.x * p.y;
+    }
+    0.5 * a
+}
+
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn point_in_or_on_triangle(p: Pnt2, a: Pnt2, b: Pnt2, c: Pnt2) -> bool {
+    let d1 = orient2d(a, b, p);
+    let d2 = orient2d(b, c, p);
+    let d3 = orient2d(c, a, p);
+    let has_neg = matches!(d1, Orient::Negative) || matches!(d2, Orient::Negative) || matches!(d3, Orient::Negative);
+    let has_pos = matches!(d1, Orient::Positive) || matches!(d2, Orient::Positive) || matches!(d3, Orient::Positive);
+    !(has_neg && has_pos)
+}
+
+/// 📐 Ear-clipping triangulation of a simple (non-self-intersecting) polygon, robust to either
+/// winding direction (normalized to CCW internally). Holes are handled by the caller triangulating
+/// each loop separately and subtracting — no hole-bridging needed. A degenerate input (collinear
+/// runs that starve the ear search) stops early rather than looping forever, covering whatever
+/// prefix was already clipped.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn ear_clip(poly: &[Pnt2]) -> Vec<[Pnt2; 3]> {
+    if poly.len() < 3 {
+        return Vec::new();
+    }
+    let mut pts = poly.to_vec();
+    if polygon_signed_area_2d(&pts) < 0.0 {
+        pts.reverse();
+    }
+    let mut idx: Vec<usize> = (0..pts.len()).collect();
+    let mut tris = Vec::new();
+    let guard_limit = pts.len() * pts.len() + 8;
+    let mut guard = 0usize;
+    while idx.len() > 3 && guard < guard_limit {
+        guard += 1;
+        let n = idx.len();
+        let mut ear_at: Option<usize> = None;
+        for i in 0..n {
+            let prev = idx[(i + n - 1) % n];
+            let cur = idx[i];
+            let next = idx[(i + 1) % n];
+            let (a, b, c) = (pts[prev], pts[cur], pts[next]);
+            if orient2d(a, b, c) != Orient::Positive {
+                continue;
+            }
+            let blocked = idx.iter().any(|&k| k != prev && k != cur && k != next && point_in_or_on_triangle(pts[k], a, b, c));
+            if !blocked {
+                ear_at = Some(i);
+                break;
+            }
+        }
+        let Some(i) = ear_at else { break };
+        let n = idx.len();
+        let prev = idx[(i + n - 1) % n];
+        let cur = idx[i];
+        let next = idx[(i + 1) % n];
+        tris.push([pts[prev], pts[cur], pts[next]]);
+        idx.remove(i);
+    }
+    if idx.len() == 3 {
+        tris.push([pts[idx[0]], pts[idx[1]], pts[idx[2]]]);
+    }
+    tris
+}
+
+// #endregion 🔖️Triangulation
 
 // #region 🔖️Loops
 
@@ -346,20 +550,9 @@ fn loop_area(body: &Body, face: FaceId, loop_id: crate::artifacts::semio::standa
             Ok(newell_area(&pts, outward_plane_normal(&frame, flipped)))
         }
         _ => {
-            let (u0, u1, v0, v1) = loop_uv_bounds(body, face, loop_id, surface)?;
             let boundary = loop_uv_polygon(body, loop_id, surface)?;
-            let area = integrate_parametric_face(u0, u1, v0, v1, |u, v| {
-                if !point_in_uv_polygon(u, v, &boundary) {
-                    return 0.0;
-                }
-                let d = surface.derivatives(u, v);
-                let cross = d.du.cross(d.dv);
-                match outward_normal(surface, u, v, flipped) {
-                    Some(nn) => cross.dot(nn).abs(),
-                    None => 0.0,
-                }
-            });
-            Ok(area)
+            let (m, _err) = loop_moments(surface, flipped, &boundary, _chord_tol.max(1e-5));
+            Ok(m[IDX_AREA])
         }
     }
 }
@@ -421,10 +614,9 @@ fn loop_volume_moments(body: &Body, face: FaceId, loop_id: crate::artifacts::sem
             Ok(signed_tetra_sum(&pts))
         }
         _ => {
-            let (u0, u1, v0, v1) = loop_uv_bounds(body, face, loop_id, surface)?;
             let boundary = loop_uv_polygon(body, loop_id, surface)?;
-            let samples = gauss_samples(chord_tol);
-            Ok(parametric_volume_moments(surface, flipped, u0, u1, v0, v1, &boundary, samples))
+            let (m, _err) = loop_moments(surface, flipped, &boundary, chord_tol.max(1e-5));
+            Ok((6.0 * m[IDX_VOL], 24.0 * m[IDX_MX], 24.0 * m[IDX_MY], 24.0 * m[IDX_MZ]))
         }
     }
 }
@@ -479,15 +671,6 @@ fn outward_plane_normal(frame: &crate::artifacts::semio::standards::v1::subsets:
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn outward_normal(surface: &Surface, u: f64, v: f64, flipped: bool) -> Option<Vec3> {
-    let mut n = surface.normal(u, v)?;
-    if flipped {
-        n = -n;
-    }
-    Some(n)
-}
-
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn newell_area(pts: &[Pnt3], normal: Vec3) -> f64 {
     if pts.len() < 3 {
         return 0.0;
@@ -503,27 +686,6 @@ fn newell_area(pts: &[Pnt3], normal: Vec3) -> f64 {
     }
     let area_vec = Vec3::new(cx, cy, cz);
     0.5 * area_vec.dot(normal).abs()
-}
-
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn loop_uv_bounds(_body: &Body, _face: FaceId, loop_id: crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::arena::LoopId, surface: &Surface) -> Result<(f64, f64, f64, f64), KernelError> {
-    let poly = loop_uv_polygon(_body, loop_id, surface)?;
-    if poly.is_empty() {
-        return Err(KernelError::InvalidInput("empty loop".into()));
-    }
-    let mut u0 = f64::INFINITY;
-    let mut u1 = f64::NEG_INFINITY;
-    let mut v0 = f64::INFINITY;
-    let mut v1 = f64::NEG_INFINITY;
-    for p in poly {
-        u0 = u0.min(p.x);
-        u1 = u1.max(p.x);
-        v0 = v0.min(p.y);
-        v1 = v1.max(p.y);
-    }
-    let pad_u = (u1 - u0).max(1e-6) * 0.02;
-    let pad_v = (v1 - v0).max(1e-6) * 0.02;
-    Ok((u0 - pad_u, u1 + pad_u, v0 - pad_v, v1 + pad_v))
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -591,8 +753,9 @@ fn surface_uv(surface: &Surface, p: Pnt3) -> Pnt2 {
             Pnt2::new(u, v)
         }
         Surface::Nurbs { .. } => {
-            let dom = surface.domain();
-            Pnt2::new(dom.0 .0, dom.1 .0)
+            let domain = surface.domain();
+            let closest = surface_ops::closest_uv(surface, domain, p, 1e-9);
+            Pnt2::new(closest.u, closest.v)
         }
     }
 }
@@ -711,15 +874,18 @@ fn try_analytic_sphere_volume(body: &Body, solid: SolidId) -> Option<f64> {
     Some(4.0 / 3.0 * std::f64::consts::PI * r * r * r)
 }
 
+/// 📏 Closest point on one face's TRIMMED surface to `point`, with the trim test applied — public
+/// so `bounding-volume`'s `FaceBvh::closest_face`/`SolidBvh::closest_face` can reuse the exact
+/// per-face distance behind their BVH branch-and-bound (one implementation, not a second copy).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn closest_point_on_face(body: &Body, face: FaceId, point: Pnt3) -> Result<(Pnt3, f64), KernelError> {
+pub fn closest_point_on_face(body: &Body, face: FaceId, point: Pnt3) -> Result<(Pnt3, f64), KernelError> {
     let surface = face_surface(body, face)?;
     match surface {
         Surface::Plane { .. } => closest_point_on_planar_face(body, face, point),
         _ => {
             let domain = surface.domain();
-            let (u, v, d) = surface_ops::closest_point(surface, domain, point, 24);
-            Ok((surface.eval(u, v), d))
+            let closest = surface_ops::closest_uv(surface, domain, point, 1e-9);
+            Ok((closest.point, closest.distance))
         }
     }
 }
@@ -728,8 +894,8 @@ fn closest_point_on_face(body: &Body, face: FaceId, point: Pnt3) -> Result<(Pnt3
 fn closest_point_on_planar_face(body: &Body, face: FaceId, point: Pnt3) -> Result<(Pnt3, f64), KernelError> {
     let surface = face_surface(body, face)?;
     let domain = surface.domain();
-    let (u, v, d) = surface_ops::closest_point(surface, domain, point, 8);
-    let p = surface.eval(u, v);
+    let closest = surface_ops::closest_uv(surface, domain, point, 1e-9);
+    let (d, p) = (closest.distance, closest.point);
     if point_in_face_plane(body, face, p)? {
         return Ok((p, d));
     }
@@ -740,60 +906,14 @@ fn closest_point_on_planar_face(body: &Body, face: FaceId, point: Pnt3) -> Resul
             let co = body.coedges.get(coedge).ok_or_else(|| KernelError::MissingEntity("coedge".into()))?;
             let edge = body.edges.get(co.edge).ok_or_else(|| KernelError::MissingEntity("edge".into()))?;
             let curve = body.curves3.get(edge.curve).ok_or_else(|| KernelError::MissingEntity("curve".into()))?;
-            let (t, dist) = curve_ops::closest_point(curve, edge.range, point, 16);
-            if dist < best_d {
-                best_d = dist;
-                best_p = curve.eval(t);
+            let closest = curve_ops::closest_parameter(curve, edge.range, point, 1e-9);
+            if closest.distance < best_d {
+                best_d = closest.distance;
+                best_p = closest.point;
             }
         }
     }
     Ok((best_p, best_d))
-}
-
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn ray_face_intersection(body: &Body, face: FaceId, origin: Pnt3, dir: Vec3) -> Result<Option<f64>, KernelError> {
-    let surface = face_surface(body, face)?;
-    let flipped = body.faces.get(face).map(|f| f.flipped).unwrap_or(false);
-    match surface {
-        Surface::Plane { frame } => {
-            let n = outward_plane_normal(frame, flipped);
-            let denom = n.dot(dir);
-            if denom.abs() < 1e-12 {
-                return Ok(None);
-            }
-            let t = n.dot(frame.origin - origin) / denom;
-            if t < 0.0 {
-                return Ok(None);
-            }
-            let hit = origin + dir * t;
-            if point_in_face_plane(body, face, hit)? {
-                Ok(Some(t))
-            } else {
-                Ok(None)
-            }
-        }
-        _ => {
-            let samples = 16;
-            let domain = surface.domain();
-            let (u_dom, v_dom) = domain;
-            let mut best: Option<f64> = None;
-            for i in 0..=samples {
-                for j in 0..=samples {
-                    let u = u_dom.0 + (u_dom.1 - u_dom.0) * (i as f64 / samples as f64);
-                    let v = v_dom.0 + (v_dom.1 - v_dom.0) * (j as f64 / samples as f64);
-                    let p = surface.eval(u, v);
-                    let w = p - origin;
-                    let cross = dir.cross(w);
-                    let cross_norm = cross.norm();
-                    if cross_norm < 1e-9 && w.dot(dir) > 0.0 {
-                        let t = w.dot(dir);
-                        best = Some(best.map_or(t, |b: f64| b.min(t)));
-                    }
-                }
-            }
-            Ok(best)
-        }
-    }
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -995,11 +1115,13 @@ mod tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    async fn classify_point_ray_parity_on_unit_box() {
+    async fn box_classifies_via_the_one_authoritative_classifier() {
+        use crate::artifacts::semio::standards::v1::subsets::brep::schema::engine::PointClassification;
+        use crate::artifacts::semio::standards::v1::subsets::brep::schema::inferences::classification::point_in_solid;
         let mut body = Body::new();
         let solid = make_box_solid(&mut body, Pnt3::new(0.0, 0.0, 0.0), 1.0, 1.0, 1.0);
-        assert_eq!(classify_point_on_solid(&body, solid, Pnt3::new(0.5, 0.5, 0.5)).unwrap(), PointSolidClassification::Inside);
-        assert_eq!(classify_point_on_solid(&body, solid, Pnt3::new(2.0, 2.0, 2.0)).unwrap(), PointSolidClassification::Outside);
+        assert_eq!(point_in_solid(&body, solid, Pnt3::new(0.5, 0.5, 0.5), 1e-9).unwrap(), PointClassification::Inside);
+        assert_eq!(point_in_solid(&body, solid, Pnt3::new(2.0, 2.0, 2.0), 1e-9).unwrap(), PointClassification::Outside);
     }
 
     #[semio_framework_async_macros::async_test]

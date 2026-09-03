@@ -33,7 +33,7 @@ pub type CadStore = ArtifactStore<CadSnapshot, CadMutation>;
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::cad::mutations::create_shape_model::mutation::CreateShapeModel;
+    use crate::artifacts::cad::mutations::create_shape_model::CreateShapeModel;
     use crate::artifacts::cad::{empty_cad_snapshot, testkit::sample_model_child, CAD_DOCUMENT_SCHEMA};
     use store::{create_document_envelope, ArtifactCommand};
 

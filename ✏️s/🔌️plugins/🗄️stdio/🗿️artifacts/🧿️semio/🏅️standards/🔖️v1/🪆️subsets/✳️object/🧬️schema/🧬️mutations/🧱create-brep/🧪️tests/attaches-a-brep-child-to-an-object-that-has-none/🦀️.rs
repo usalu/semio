@@ -51,7 +51,7 @@ async fn the_undo_delete_brep_detaches_the_handle_again() {
     let undo = mutation.inverse(&base);
     assert_eq!(
         undo,
-        vec![SemioObjectMutation::DeleteBrep(crate::artifacts::semio::standards::v1::subsets::object::schema::mutations::delete_brep::mutation::DeleteBrep {})],
+        vec![SemioObjectMutation::DeleteBrep(crate::artifacts::semio::standards::v1::subsets::object::schema::mutations::delete_brep::DeleteBrep {})],
         "creating a child into an EMPTY slot must undo as the matching delete, not as another create"
     );
     let mut current = mutation.diff(&base).diff().apply(&base).expect("forward 🧱create-brep applies");

@@ -14,7 +14,7 @@ use semio_s_plugin_stdio::artifacts::svg::SvgSnapshot;
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 use std::collections::{BTreeMap, HashSet};
-use semio_framework_value_derive::{FromValue, ToValue};
+use dsl::{FromValue, ToValue};
 
 //#region 🔹Artifact
 /// 🧬️ Full GIS map artifact state across the artifact, presence and config lanes.
@@ -255,11 +255,11 @@ semio_framework_plugin::derive_artifact_facets!(
 /// 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES): pure document helpers over
 /// `GisMapSnapshot`/`MapFeature`, no app-state dependency — an artifact must never depend on an app.
 fn value_to_dsl(value: &Value) -> dsl::DslValue {
-    dsl::to_dsl_value(value).unwrap_or(dsl::DslValue::Null)
+    dsl::DslValue::from(value)
 }
 
 fn dsl_to_value(value: &dsl::DslValue) -> Value {
-    dsl::from_dsl_value(value.clone()).unwrap_or(Value::Null)
+    Value::from(value)
 }
 
 pub fn empty_gis_map_snapshot() -> GisMapSnapshot {
@@ -341,9 +341,9 @@ pub fn positions_operations(before: &[MapFeature], after: &[MapFeature]) -> Vec<
     feature_collection_operations(
         before,
         after,
-        |index, item| GisMapMutation::CreatePosition(create_position::mutation::CreatePosition { index, item }),
-        |id| GisMapMutation::DeletePosition(delete_position::mutation::DeletePosition { id }),
-        |id, new_data| GisMapMutation::ReplacePositionData(replace_position_data::mutation::ReplacePositionData { id, new_data }),
+        |index, item| GisMapMutation::CreatePosition(create_position::CreatePosition { index, item }),
+        |id| GisMapMutation::DeletePosition(delete_position::DeletePosition { id }),
+        |id, new_data| GisMapMutation::ReplacePositionData(replace_position_data::ReplacePositionData { id, new_data }),
     )
 }
 
@@ -351,9 +351,9 @@ pub fn routes_operations(before: &[MapFeature], after: &[MapFeature]) -> Vec<Gis
     feature_collection_operations(
         before,
         after,
-        |index, item| GisMapMutation::CreateRoute(create_route::mutation::CreateRoute { index, item }),
-        |id| GisMapMutation::DeleteRoute(delete_route::mutation::DeleteRoute { id }),
-        |id, new_data| GisMapMutation::ReplaceRouteData(replace_route_data::mutation::ReplaceRouteData { id, new_data }),
+        |index, item| GisMapMutation::CreateRoute(create_route::CreateRoute { index, item }),
+        |id| GisMapMutation::DeleteRoute(delete_route::DeleteRoute { id }),
+        |id, new_data| GisMapMutation::ReplaceRouteData(replace_route_data::ReplaceRouteData { id, new_data }),
     )
 }
 
@@ -361,9 +361,9 @@ pub fn regions_operations(before: &[MapFeature], after: &[MapFeature]) -> Vec<Gi
     feature_collection_operations(
         before,
         after,
-        |index, item| GisMapMutation::CreateRegion(create_region::mutation::CreateRegion { index, item }),
-        |id| GisMapMutation::DeleteRegion(delete_region::mutation::DeleteRegion { id }),
-        |id, new_data| GisMapMutation::ReplaceRegionData(replace_region_data::mutation::ReplaceRegionData { id, new_data }),
+        |index, item| GisMapMutation::CreateRegion(create_region::CreateRegion { index, item }),
+        |id| GisMapMutation::DeleteRegion(delete_region::DeleteRegion { id }),
+        |id, new_data| GisMapMutation::ReplaceRegionData(replace_region_data::ReplaceRegionData { id, new_data }),
     )
 }
 //#endregion 🔖️CollectionDiffing
@@ -517,7 +517,7 @@ fn render_drawing_to_svg(drawing: &SemioDrawingSnapshot) -> Result<(String, u32,
 /// markers/polylines, `gis_map_snapshot_to_drawing`) and renders it through stdio's real
 /// drawing↔svg bridge (`io_dispatch`) — replaces the old hand-rolled `map_points_svg` delegate.
 pub fn gis2d_document_json_to_svg(value: &Value) -> Result<(String, u32, u32), String> {
-    let document: GisMapSnapshot = serde_json::from_value(value.clone()).unwrap_or_default();
+    let document = GisMapSnapshot::from_value(value_to_dsl(value)).unwrap_or_default();
     let drawing = gis_map_snapshot_to_drawing(&document);
     render_drawing_to_svg(&drawing)
 }
@@ -599,7 +599,7 @@ pub fn gis2d_document_json_from_dwg(drawing: &DwgDrawing) -> Result<Value, Strin
         collect_draw_node_points(&layer.root, &mut points);
     }
     if points.is_empty() {
-        return serde_json::to_value(default_document()).map_err(|error| error.to_string());
+        return Ok(dsl_to_value(&default_document().to_value()));
     }
     let positions: Vec<MapFeature> = points
         .iter()
@@ -610,7 +610,7 @@ pub fn gis2d_document_json_from_dwg(drawing: &DwgDrawing) -> Result<Value, Strin
         })
         .collect();
     let document = gis_map_snapshot_with_derived_children(GisMapSnapshot { positions, routes: Vec::new(), regions: Vec::new(), ..Default::default() });
-    serde_json::to_value(document).map_err(|error| error.to_string())
+    Ok(dsl_to_value(&document.to_value()))
 }
 //#endregion 🔖️MediaImport
 

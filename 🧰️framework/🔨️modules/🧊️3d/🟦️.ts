@@ -277,6 +277,7 @@ type BrepWasmModule = {
   readonly default?: () => Promise<unknown>;
   readonly tessellate: (handle: string, tolerance: number) => string;
   readonly dispose: (handle: string) => void;
+  readonly brep_invoke?: (method: string, argsJson: string) => string;
 };
 
 const brepWasm = ephemeralBox<BrepWasmModule | null>("s.modules.3d.packages.typescript.index.ts.brepWasm", null);
@@ -335,7 +336,7 @@ export function createBrepWasmBridge(module: BrepWasmModule): BrepWasmBridge {
 /** @emoji ⏳️ Loads brep tessellation WASM via flow (standalone `flow_extension_brep` pack removed in Wave 3.c). */
 export async function ensureBrepWasmLoaded(): Promise<BrepWasmModule> {
   if (brepWasm.current) return brepWasm.current;
-  const [{ default: initFlow, tessellate, dispose }, { default: wasmUrl }] = await Promise.all([
+  const [{ default: initFlow, tessellate, dispose, brep_invoke }, { default: wasmUrl }] = await Promise.all([
     import("../../../🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/pkg/flow_core.js"),
     import("../../../🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/pkg/flow_core_bg.wasm?url"),
   ]);
@@ -343,8 +344,22 @@ export async function ensureBrepWasmLoaded(): Promise<BrepWasmModule> {
     throw new Error("flow brep tessellation exports missing — rebuild flow/core wasm");
   }
   if (initFlow) await initFlow({ module_or_path: wasmUrl });
-  brepWasm.current = { tessellate, dispose };
+  brepWasm.current = { tessellate, dispose, brep_invoke };
   return brepWasm.current;
+}
+
+/** @emoji 🌉️ Generic JSON-RPC call into the first-party Rust `BrepKernel` (see `brep_invoke` in
+ * `🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📐️brep-geometry/🦀️.rs`). Parses the JSON
+ * result and throws on a `{"error"}` payload; used by `SemioBrepKernel`
+ * (`✏️s/🔨️modules/🌐️spatial-kernel/⚙️engine/🧠️semio/🟦️.ts`). */
+export async function invokeBrep<T = unknown>(method: string, args: Record<string, unknown>): Promise<T> {
+  const module = await ensureBrepWasmLoaded();
+  if (typeof module.brep_invoke !== "function") {
+    throw new Error("flow brep_invoke export missing — rebuild flow/core wasm");
+  }
+  const raw = JSON.parse(module.brep_invoke(method, JSON.stringify(args))) as { readonly error?: string } & Record<string, unknown>;
+  if (raw.error) throw new Error(`brep_invoke ${method}: ${raw.error}`);
+  return raw as T;
 }
 
 export async function createDefaultBrepWasmBridge(): Promise<BrepWasmBridge> {

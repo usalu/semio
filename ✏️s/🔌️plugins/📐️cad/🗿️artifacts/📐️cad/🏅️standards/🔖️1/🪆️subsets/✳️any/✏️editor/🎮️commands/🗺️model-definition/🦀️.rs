@@ -1,6 +1,6 @@
 //! 🗺️ CAD play app commands — which model definition the document is focused on, and which bundled example is loaded.
 
-use crate::artifacts::cad::mutations::change_active_model_definition::mutation::ChangeActiveModelDefinition;
+use crate::artifacts::cad::mutations::change_active_model_definition::ChangeActiveModelDefinition;
 use crate::artifacts::cad::op::CadMutation;
 use crate::artifacts::cad::standards::v1::subsets::any::schema::inferences::{default_document, forest_play_camera, forest_play_scene, CAD_EXAMPLE_FOREST_LEFT};
 use crate::artifacts::cad::CadSnapshot;

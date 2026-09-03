@@ -28,6 +28,16 @@ class TestScript extends BundleScript {
   }
 }
 
+class PackageDescriptorValueCodecTestScript extends BundleScript {
+  run(): void {
+    const status = runCmdStatus("cargo", ["test", "-p", "semio-framework", "--lib", "manifest::package_descriptor_value_codec_tests::package_descriptor_first_party_codec_preserves_serde_wire_and_required_fields", "--", "--exact"], {
+      cwd: this.repoRoot,
+      budgetMs: buildBudgetMs(),
+    });
+    if (status !== 0) process.exit(status);
+  }
+}
+
 /** 🧹️Zero-warning clippy gate: `cargo clippy -p semio-framework --all-targets -- -D warnings`. */
 class LintScript extends BundleScript {
   run(segments: string[]): void {
@@ -93,6 +103,6 @@ class CheckScript extends BundleScript {
 }
 //#endregion 🔖️Typegen
 
-const router = new ScriptRouter(import.meta.dir).register("test", TestScript).register("test-wire-retirement-source", WireRetirementSourceScript).register("test-wire-retirement-native", WireRetirementNativeScript).register("generate", GenerateScript).register("preview-generated", PreviewGeneratedScript).register("check", CheckScript).register("lint", LintScript);
+const router = new ScriptRouter(import.meta.dir).register("test", TestScript).register("test-package-descriptor-value-codec", PackageDescriptorValueCodecTestScript).register("test-wire-retirement-source", WireRetirementSourceScript).register("test-wire-retirement-native", WireRetirementNativeScript).register("generate", GenerateScript).register("preview-generated", PreviewGeneratedScript).register("check", CheckScript).register("lint", LintScript);
 
 await runBundleScriptMain(router, import.meta.url, { defaultCommand: "test" });

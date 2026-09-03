@@ -131,6 +131,7 @@ semio-framework-schema = { path = "../../../../../🧰️framework/🔨️module
 # crate bundles all six into ONE component and owns the single `semio_plugin_install_bundle`
 # entry point. Without this, seven crates export that `#[no_mangle]` symbol and the component
 # fails to link with duplicate-symbol errors.
+value_derive = { path = "../../../../../🧰️framework/🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust", package = "semio-framework-value-derive" }
 procedural = { path = "../../../🌀️procedural/📦️packages/🦀️rust", package = "semio-s-plugin-procedural", default-features = false }
 cad = { path = "../../../📐️cad/📦️packages/🦀️rust", package = "semio-s-plugin-cad", default-features = false }
 puzzle = { path = "../../../🧩️puzzle/📦️packages/🦀️rust", package = "semio-s-plugin-puzzle", default-features = false }

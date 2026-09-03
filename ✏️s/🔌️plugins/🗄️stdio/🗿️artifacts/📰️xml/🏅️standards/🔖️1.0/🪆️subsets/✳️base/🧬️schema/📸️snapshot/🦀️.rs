@@ -826,7 +826,7 @@ mod tests {
     /// `&#10;` character references. This is the exact real-world input that exposed the missing
     /// re-escape (see the Wave 7 ticket finding on `xml_escape_attr`). The `xml` and `svg` subsets
     /// share this codec, so this is a genuine regression case, not a synthetic one.
-    const REAL_QR_CODE_SVG: &str = include_str!("../../../../../../../🎨️svg/🧫️fixtures/qr-code.svg");
+    const REAL_QR_CODE_SVG: &str = include_str!("../../../../../../../🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/✳️base/🧫️fixtures/qr-code.svg");
 
     // 🚫️async: E1 pure test helper (file verified I/O-free) — see R9
     fn find_xlink_href(node: &XmlNode) -> Option<&str> {

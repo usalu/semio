@@ -23,7 +23,7 @@ pub mod curve_ops;
 
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::vector::matrix::Frame3;
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::vector::{Pnt2, Pnt3, Vec2, Vec3};
-use bspline::{de_boor, KnotVector};
+use bspline::{curve_derivatives_rational, de_boor, KnotVector};
 
 // #region 🔖️Curve3
 
@@ -63,14 +63,21 @@ impl Curve3 {
     }
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn is_periodic(&self) -> bool {
-        matches!(self, Curve3::Circle { .. } | Curve3::Ellipse { .. })
+        match self {
+            Curve3::Circle { .. } | Curve3::Ellipse { .. } => true,
+            Curve3::Nurbs { knots, .. } => knots.is_periodic(),
+            Curve3::Line { .. } => false,
+        }
     }
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn period(&self) -> Option<f64> {
-        if self.is_periodic() {
-            Some(std::f64::consts::TAU)
-        } else {
-            None
+        match self {
+            Curve3::Circle { .. } | Curve3::Ellipse { .. } => Some(std::f64::consts::TAU),
+            Curve3::Nurbs { knots, .. } if knots.is_periodic() => {
+                let (lo, hi) = knots.domain();
+                Some(hi - lo)
+            }
+            _ => None,
         }
     }
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
@@ -89,7 +96,7 @@ impl Curve3 {
             Curve3::Line { dir, .. } => *dir,
             Curve3::Circle { frame, radius } => frame.to_world_vector(Vec3::new(-radius * t.sin(), radius * t.cos(), 0.0)),
             Curve3::Ellipse { frame, major_radius, minor_radius } => frame.to_world_vector(Vec3::new(-major_radius * t.sin(), minor_radius * t.cos(), 0.0)),
-            Curve3::Nurbs { .. } => nurbs_derivative_finite(self, t, 1),
+            Curve3::Nurbs { .. } => self.derivatives(t, 1)[1],
         }
     }
     /// 🌀️ Second derivative `d²C/dt²`.
@@ -99,7 +106,52 @@ impl Curve3 {
             Curve3::Line { .. } => Vec3::ZERO,
             Curve3::Circle { frame, radius } => frame.to_world_vector(Vec3::new(-radius * t.cos(), -radius * t.sin(), 0.0)),
             Curve3::Ellipse { frame, major_radius, minor_radius } => frame.to_world_vector(Vec3::new(-major_radius * t.cos(), -minor_radius * t.sin(), 0.0)),
-            Curve3::Nurbs { .. } => nurbs_derivative_finite(self, t, 2),
+            Curve3::Nurbs { .. } => self.derivatives(t, 2)[2],
+        }
+    }
+    /// 🌀️ All derivatives `d^0C/dt^0 .. d^orderC/dt^order` (index 0 = position) in one pass — exact
+    /// through the rational de Boor `A_k(u)` recurrence for [`Curve3::Nurbs`] (any `order`, not
+    /// just 1/2), closed-form for the analytic kinds. `d1`/`d2` are thin wrappers over this.
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn derivatives(&self, t: f64, order: usize) -> Vec<Vec3> {
+        match self {
+            Curve3::Nurbs { knots, controls, weights } => {
+                let controls_h: Vec<Vec<f64>> = controls.iter().zip(weights).map(|(p, &w)| vec![p.x * w, p.y * w, p.z * w, w]).collect();
+                curve_derivatives_rational(knots, &controls_h, t, order)
+                    .into_iter()
+                    .map(|v| Vec3::new(v[0], v[1], v[2]))
+                    .collect()
+            }
+            _ => (0..=order)
+                .map(|k| match k {
+                    0 => self.eval(t).to_vec(),
+                    1 => self.d1_analytic(t),
+                    2 => self.d2_analytic(t),
+                    _ => Vec3::ZERO,
+                })
+                .collect(),
+        }
+    }
+    /// 🌀️ First derivative for the non-`Nurbs` (analytic) variants only — factored out of
+    /// [`Self::d1`]/[`Self::derivatives`] so the latter can call it without recursing back into
+    /// itself for the `Nurbs` case.
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn d1_analytic(&self, t: f64) -> Vec3 {
+        match self {
+            Curve3::Line { dir, .. } => *dir,
+            Curve3::Circle { frame, radius } => frame.to_world_vector(Vec3::new(-radius * t.sin(), radius * t.cos(), 0.0)),
+            Curve3::Ellipse { frame, major_radius, minor_radius } => frame.to_world_vector(Vec3::new(-major_radius * t.sin(), minor_radius * t.cos(), 0.0)),
+            Curve3::Nurbs { .. } => Vec3::ZERO,
+        }
+    }
+    /// 🌀️ Second derivative for the non-`Nurbs` (analytic) variants only, see [`Self::d1_analytic`].
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn d2_analytic(&self, t: f64) -> Vec3 {
+        match self {
+            Curve3::Line { .. } => Vec3::ZERO,
+            Curve3::Circle { frame, radius } => frame.to_world_vector(Vec3::new(-radius * t.cos(), -radius * t.sin(), 0.0)),
+            Curve3::Ellipse { frame, major_radius, minor_radius } => frame.to_world_vector(Vec3::new(-major_radius * t.cos(), -minor_radius * t.sin(), 0.0)),
+            Curve3::Nurbs { .. } => Vec3::ZERO,
         }
     }
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
@@ -147,25 +199,6 @@ fn eval_nurbs_curve(knots: &KnotVector, controls: &[Pnt3], weights: &[f64], t: f
     let hz: Vec<f64> = controls.iter().zip(weights).map(|(p, w)| p.z * w).collect();
     let w = de_boor(knots, weights, t);
     Pnt3::new(de_boor(knots, &hx, t) / w, de_boor(knots, &hy, t) / w, de_boor(knots, &hz, t) / w)
-}
-
-/// 🌀️ Central-difference derivative — used for NURBS curves as a robust, simple stand-in until a
-/// dedicated rational-derivative (de Boor `A_k(u)` recurrence) implementation is needed; accurate
-/// to ~1e-6, adequate for tangent/curvature use but not for tight Newton iterations on NURBS,
-/// which should prefer analytic curves or accept the extra refinement step.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn nurbs_derivative_finite(curve: &Curve3, t: f64, order: u32) -> Vec3 {
-    let h = 1e-4;
-    match order {
-        1 => (curve.eval(t + h) - curve.eval(t - h)) * (1.0 / (2.0 * h)),
-        2 => {
-            let a = curve.eval(t + h).to_vec();
-            let b = curve.eval(t).to_vec();
-            let c = curve.eval(t - h).to_vec();
-            (a - b * 2.0 + c) * (1.0 / (h * h))
-        }
-        _ => Vec3::ZERO,
-    }
 }
 
 /// 🌀️ Converts a circular/elliptical arc over `domain` into an exact rational-quadratic NURBS,
@@ -255,9 +288,29 @@ impl Curve2 {
                 let y = x.perp();
                 x * (-major_radius * t.sin()) + y * (minor_radius * t.cos())
             }
-            Curve2::Nurbs { .. } => {
-                let h = 1e-5;
-                (self.eval(t + h) - self.eval(t - h)) * (1.0 / (2.0 * h))
+            Curve2::Nurbs { knots, controls, weights } => {
+                let controls_h: Vec<Vec<f64>> = controls.iter().zip(weights).map(|(p, &w)| vec![p.x * w, p.y * w, w]).collect();
+                let derivs = curve_derivatives_rational(knots, &controls_h, t, 1);
+                Vec2::new(derivs[1][0], derivs[1][1])
+            }
+        }
+    }
+    /// 🌀️ Second derivative `d²C/dt²`, exact via the rational de Boor recurrence for
+    /// [`Curve2::Nurbs`], closed-form for the analytic kinds.
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn d2(&self, t: f64) -> Vec2 {
+        match self {
+            Curve2::Line { .. } => Vec2::ZERO,
+            Curve2::Circle { radius, .. } => Vec2::new(-radius * t.cos(), -radius * t.sin()),
+            Curve2::Ellipse { x_axis, major_radius, minor_radius, .. } => {
+                let x = x_axis.normalized().unwrap_or(Vec2::new(1.0, 0.0));
+                let y = x.perp();
+                x * (-major_radius * t.cos()) + y * (-minor_radius * t.sin())
+            }
+            Curve2::Nurbs { knots, controls, weights } => {
+                let controls_h: Vec<Vec<f64>> = controls.iter().zip(weights).map(|(p, &w)| vec![p.x * w, p.y * w, w]).collect();
+                let derivs = curve_derivatives_rational(knots, &controls_h, t, 2);
+                Vec2::new(derivs[2][0], derivs[2][1])
             }
         }
     }
@@ -410,6 +463,56 @@ mod tests {
         assert!(((p - Pnt2::new(1.0, 1.0)).norm() - 2.0).abs() < 1e-9);
     }
 
+    /// 🌀️ A quarter-circle as an exact rational-quadratic NURBS (radius 1, centered at origin,
+    /// `t=0` at `(1,0)`, `t=1` at `(0,1)`) — the same construction as [`Curve3::to_nurbs`] would
+    /// produce for a 90° arc, built by hand here so the test has an independent oracle.
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn quarter_circle_nurbs() -> Curve3 {
+        let w = std::f64::consts::FRAC_PI_4.cos();
+        Curve3::Nurbs {
+            knots: KnotVector::new(vec![0.0, 0.0, 0.0, 1.0, 1.0, 1.0], 2, 3).unwrap(),
+            controls: vec![Pnt3::new(1.0, 0.0, 0.0), Pnt3::new(1.0, 1.0, 0.0), Pnt3::new(0.0, 1.0, 0.0)],
+            weights: vec![1.0, w, 1.0],
+        }
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn nurbs_circle_d1_d2_are_exact_not_finite_difference() {
+        let c = quarter_circle_nurbs();
+        for i in 1..20 {
+            let t = i as f64 / 20.0;
+            let p = c.eval(t).to_vec();
+            let d1 = c.d1(t);
+            let d2 = c.d2(t);
+            // On a unit circle: |C|=1, C·C'=0 (tangent ⟂ radius), and the exact curvature formula
+            // |C'×C''|/|C'|³ must equal 1 (reciprocal of unit radius) to within 1e-9 — a much
+            // tighter bound than the old finite-difference implementation could ever satisfy.
+            assert!((p.norm() - 1.0).abs() < 1e-9, "off unit circle at t={t}");
+            assert!(p.dot(d1).abs() < 1e-9, "tangent not perpendicular to radius at t={t}");
+            let speed = d1.norm();
+            let curvature = d1.cross(d2).norm() / speed.powi(3);
+            assert!((curvature - 1.0).abs() < 1e-9, "curvature mismatch at t={t}: {curvature}");
+        }
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn nurbs_d1_matches_analytic_circle_d1_within_tight_tolerance() {
+        let analytic = Curve3::Circle { frame: Frame3::WORLD, radius: 1.0 };
+        let nurbs = quarter_circle_nurbs();
+        for i in 1..20 {
+            let nurbs_t = i as f64 / 20.0;
+            // The rational-quadratic parametrization is not angle-linear (see `to_nurbs`'s own
+            // doc), so derive the true angle from the NURBS point itself rather than assuming a
+            // linear map, then compare unit tangent *directions* (which depend only on position on
+            // the circle, not on parametrization speed).
+            let p = nurbs.eval(nurbs_t);
+            let angle = p.y.atan2(p.x);
+            let a_dir = analytic.d1(angle).normalized().unwrap();
+            let n_dir = nurbs.d1(nurbs_t).normalized().unwrap();
+            assert!((a_dir - n_dir).norm() < 1e-6, "tangent direction mismatch at nurbs_t={nurbs_t} (angle={angle})");
+        }
+    }
+
     mod quick {
         use super::*;
 
@@ -434,3 +537,138 @@ mod tests {
     }
 }
 // #endregion 🔖️Tests
+
+// #region 🔁️Transform
+
+use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::vector::matrix::Affine3;
+
+impl Curve3 {
+    /// 🌀️ Exact affine transform. `Line` stays exact under ANY invertible affine map — a line's
+    /// image under any invertible linear map is again a line, with no orthonormality or domain
+    /// constraint (unlike every other variant). `Circle`/`Ellipse` stay analytic under a similarity
+    /// (uniform scale/rotation/translation, optionally with reflection — [`crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::vector::matrix::Affine3::is_similarity`]),
+    /// with `frame` mapped via [`Frame3::transformed`] and `radius`/`major_radius`/`minor_radius`
+    /// scaled uniformly; a non-similarity map converts to the equivalent exact NURBS
+    /// ([`Self::to_nurbs`] over the curve's own bounded natural domain) and transforms its control
+    /// points (rational weights are affine-invariant, so they carry over unchanged either way).
+    /// `Nurbs` always just transforms its control points.
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn transformed(&self, map: &Affine3) -> Curve3 {
+        match self {
+            Curve3::Line { origin, dir } => Curve3::Line { origin: map.apply_point(*origin), dir: map.apply_vector(*dir) },
+            Curve3::Nurbs { knots, controls, weights } => Curve3::Nurbs { knots: knots.clone(), controls: controls.iter().map(|p| map.apply_point(*p)).collect(), weights: weights.clone() },
+            Curve3::Circle { frame, radius } => match map.is_similarity() {
+                Some((_, scale, _)) => Curve3::Circle { frame: frame.transformed(map, scale), radius: radius * scale },
+                None => self.transformed_via_nurbs(map),
+            },
+            Curve3::Ellipse { frame, major_radius, minor_radius } => match map.is_similarity() {
+                Some((_, scale, _)) => Curve3::Ellipse { frame: frame.transformed(map, scale), major_radius: major_radius * scale, minor_radius: minor_radius * scale },
+                None => self.transformed_via_nurbs(map),
+            },
+        }
+    }
+    /// 🌀️ The shared non-similarity fallback: convert to NURBS over the curve's own bounded
+    /// natural domain, then transform every control point (weights unchanged).
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn transformed_via_nurbs(&self, map: &Affine3) -> Curve3 {
+        let nurbs = self.to_nurbs(self.domain());
+        Curve3::Nurbs { knots: nurbs.knots, controls: nurbs.controls.into_iter().map(|p| map.apply_point(p)).collect(), weights: nurbs.weights }
+    }
+}
+
+// #region 🔖️Tests
+#[cfg(test)]
+mod transform_tests {
+    use super::*;
+
+    #[semio_framework_async_macros::async_test]
+    async fn line_transformed_matches_mapped_eval() {
+        let l = Curve3::Line { origin: Pnt3::new(1.0, 2.0, 3.0), dir: Vec3::new(2.0, -1.0, 0.5) };
+        let map = Affine3::scaling(Pnt3::new(0.0, 0.0, 0.0), Vec3::new(2.0, 3.0, 5.0)).compose(&Affine3::translation(Vec3::new(1.0, 0.0, 0.0)));
+        assert!(map.is_similarity().is_none(), "test fixture must actually be non-similarity");
+        let transformed = l.transformed(&map);
+        for i in 0..=5 {
+            let t = i as f64 - 2.0;
+            assert!(transformed.eval(t).distance(map.apply_point(l.eval(t))) < 1e-9, "line must stay exact under a non-similarity map at t={t}");
+        }
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn circle_transformed_stays_circle_under_similarity_and_matches_mapped_eval() {
+        let frame = Frame3::from_normal(Pnt3::new(1.0, -1.0, 2.0), Vec3::new(0.3, 0.2, 1.0)).unwrap();
+        let c = Curve3::Circle { frame, radius: 2.5 };
+        let map = Affine3::rotation_about(Pnt3::new(0.5, 0.0, 0.0), Vec3::new(0.1, 1.0, 0.2), 0.7).compose(&Affine3::scaling(Pnt3::new(0.0, 0.0, 0.0), Vec3::new(3.0, 3.0, 3.0)));
+        let (_, scale, _) = map.is_similarity().expect("rotation + uniform scale must be a similarity");
+        let transformed = c.transformed(&map);
+        assert!(matches!(transformed, Curve3::Circle { .. }), "a similarity must keep a circle a circle");
+        if let Curve3::Circle { radius, .. } = transformed {
+            assert!((radius - 2.5 * scale).abs() < 1e-9);
+        }
+        for i in 0..8 {
+            let t = i as f64 * 0.8;
+            assert!(transformed.eval(t).distance(map.apply_point(c.eval(t))) < 1e-7, "mismatch at t={t}");
+        }
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn circle_transformed_under_reflection_still_matches_mapped_eval() {
+        let frame = Frame3::from_normal(Pnt3::new(0.0, 0.0, 0.0), Vec3::Z).unwrap();
+        let c = Curve3::Circle { frame, radius: 4.0 };
+        let map = Affine3::mirror(Pnt3::new(0.0, 0.0, 0.0), Vec3::X);
+        let (_, _, is_reflection) = map.is_similarity().expect("a mirror must be a similarity");
+        assert!(is_reflection);
+        let transformed = c.transformed(&map);
+        for i in 0..8 {
+            let t = i as f64 * 0.8;
+            assert!(transformed.eval(t).distance(map.apply_point(c.eval(t))) < 1e-9, "mismatch at t={t}");
+        }
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn circle_transformed_via_nurbs_under_non_similarity_matches_mapped_eval() {
+        let frame = Frame3::WORLD;
+        let c = Curve3::Circle { frame, radius: 1.0 };
+        let map = Affine3::scaling(Pnt3::new(0.0, 0.0, 0.0), Vec3::new(2.0, 1.0, 1.0));
+        assert!(map.is_similarity().is_none());
+        let transformed = c.transformed(&map);
+        assert!(matches!(transformed, Curve3::Nurbs { .. }), "non-similarity must force NURBS");
+        for i in 0..=20 {
+            let t = i as f64 / 20.0 * std::f64::consts::TAU;
+            assert!(transformed.eval(t).distance(map.apply_point(c.eval(t))) < 1e-7, "mismatch at t={t}");
+        }
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn nurbs_transformed_matches_mapped_eval_and_keeps_weights() {
+        let l = Curve3::Line { origin: Pnt3::new(0.0, 0.0, 0.0), dir: Vec3::new(1.0, 2.0, 3.0) };
+        let base = l.to_nurbs((0.0, 1.0));
+        let nurbs = Curve3::Nurbs { knots: base.knots, controls: base.controls, weights: vec![1.0, 2.0] };
+        let map = Affine3::translation(Vec3::new(5.0, -1.0, 2.0));
+        let transformed = nurbs.transformed(&map);
+        if let (Curve3::Nurbs { weights: original_weights, .. }, Curve3::Nurbs { weights: transformed_weights, .. }) = (&nurbs, &transformed) {
+            assert_eq!(original_weights, transformed_weights);
+        } else {
+            panic!("expected Nurbs variants");
+        }
+        for i in 0..=10 {
+            let t = i as f64 / 10.0;
+            assert!(transformed.eval(t).distance(map.apply_point(nurbs.eval(t))) < 1e-9, "mismatch at t={t}");
+        }
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn transformed_inverse_round_trips_a_circle() {
+        let frame = Frame3::from_normal(Pnt3::new(2.0, 1.0, -1.0), Vec3::new(0.2, -0.4, 1.0)).unwrap();
+        let c = Curve3::Circle { frame, radius: 3.3 };
+        let map = Affine3::rotation_about(Pnt3::new(1.0, 0.0, 0.0), Vec3::new(0.0, 1.0, 0.0), 1.1).compose(&Affine3::translation(Vec3::new(2.0, -3.0, 1.0)));
+        let inverse = map.inverse().unwrap();
+        let round_trip = c.transformed(&map).transformed(&inverse);
+        for i in 0..6 {
+            let t = i as f64 * 1.0;
+            assert!(round_trip.eval(t).distance(c.eval(t)) < 1e-7, "round trip drifted at t={t}");
+        }
+    }
+}
+// #endregion 🔖️Tests
+
+// #endregion 🔁️Transform

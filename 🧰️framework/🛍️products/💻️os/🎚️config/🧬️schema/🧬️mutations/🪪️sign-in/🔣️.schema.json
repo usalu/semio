@@ -8,7 +8,6 @@
     "email",
     "hubBaseUrl",
     "issuedAtMs",
-    "sessionToken",
     "userId"
   ],
   "properties": {
@@ -22,9 +21,6 @@
       "type": "string"
     },
     "hubBaseUrl": {
-      "type": "string"
-    },
-    "sessionToken": {
       "type": "string"
     },
     "issuedAtMs": {

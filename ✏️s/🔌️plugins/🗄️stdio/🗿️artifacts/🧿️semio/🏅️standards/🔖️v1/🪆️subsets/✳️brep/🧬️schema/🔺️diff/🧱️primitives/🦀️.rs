@@ -2,27 +2,30 @@
 //!
 //! Builds closed [`Body`](crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::topology::Body) solids exclusively through
 //! [`crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::euler`] editors, attaching shared [`Curve3`](crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::curve::Curve3) /
-//! [`Surface`](crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::surface::Surface) geometry from the body's pools.
-//! Topology layouts follow the reference shapes (box V−E+F=2, sphere hemispheres,
-//! cylinder/cone seam wires, torus fundamental polygon, Quickhull convex hull).
+//! [`Surface`](crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::surface::Surface) geometry from the body's pools, with a stored [`Curve2`] p-curve on
+//! every coedge. Topology: box (V=8 E=12 F=6), sphere/cylinder/cone/torus as exact analytic
+//! surfaces with seam/degenerate edges (no faceting, no `segments`), convex hull as
+//! coplanar-merged polygon faces (Quickhull + boundary-walk merge).
 
 //! Moved from `🧰️framework/🔨️modules/🧊️3d/📐️brep/🧱️primitives` in ticket
-//! 26/08/12/DISSOLVE-KERNELS-AND-MODULES-INTO-EVENT-SOURCED-ARTIFACTS wave PEEL3.
+//! 26/08/12/DISSOLVE-KERNELS-AND-MODULES-INTO-EVENT-SOURCED-ARTIFACTS wave PEEL3. Rewritten to
+//! exact analytic primitives (no `segments`, no triangle-soup topology) in ticket
+//! 26/09/03/BREP-KERNEL-DEPENDENCY-FREE-RUNTIME wave W1-E.
 //!
 
 use std::collections::HashMap;
 use std::f64::consts::{FRAC_PI_2, TAU};
 
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::euler::{add_face, add_shell, add_solid, make_edge, make_loop, make_vertex};
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::arena::{ArenaId, EdgeId, FaceId, SolidId, VertexId};
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::curve::Curve3;
+use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::arena::{ArenaId, Curve2Id, EdgeId, FaceId, SolidId, VertexId};
+use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::curve::{Curve2, Curve3};
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::error::KernelError;
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::surface::Surface;
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::tolerance::Tol;
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::topology::history::OpRecorder;
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::topology::Body;
+use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::topology::{Body, Edge};
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::vector::matrix::Frame3;
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::vector::{Pnt3, Vec3};
+use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::vector::{Pnt2, Pnt3, Vec2, Vec3};
 
 // #region 🔖️Wire
 
@@ -67,13 +70,6 @@ pub(crate) fn line_edge(body: &mut Body, a: Pnt3, b: Pnt3, va: VertexId, vb: Ver
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn circle_edge(body: &mut Body, center: Pnt3, normal: Vec3, radius: f64, vertex: VertexId, tol: Tol, rec: &mut OpRecorder) -> EdgeId {
-    let frame = Frame3::from_normal(center, normal).expect("circle frame");
-    let curve = body.curves3.insert(Curve3::Circle { frame, radius });
-    make_edge(body, curve, (0.0, TAU), vertex, vertex, tol, rec)
-}
-
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn plane_at(origin: Pnt3, normal: Vec3) -> Surface {
     Surface::Plane { frame: Frame3::from_normal(origin, normal).expect("plane frame") }
 }
@@ -98,6 +94,48 @@ fn newell_normal(points: &[Pnt3]) -> Option<Vec3> {
         n.z += (p.x - q.x) * (p.y + q.y);
     }
     n.normalized()
+}
+
+/// 🧱 Inserts a `Curve2::Line` p-curve (`origin + dir·t`) — the common shape for every straight
+/// (non-seam-circle) p-curve segment below.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn line2(body: &mut Body, origin: (f64, f64), dir: (f64, f64)) -> Curve2Id {
+    body.curves2.insert(Curve2::Line { origin: Pnt2::new(origin.0, origin.1), dir: Vec2::new(dir.0, dir.1) })
+}
+
+/// 🧱 Inserts a `Curve2::Circle` p-curve — used where a 3D circle edge lands on a *planar* cap
+/// whose local frame is a reflection of the circle's own frame (see `w1e-primitives.md` §caps).
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn circle2(body: &mut Body, center: (f64, f64), radius: f64) -> Curve2Id {
+    body.curves2.insert(Curve2::Circle { center: Pnt2::new(center.0, center.1), radius })
+}
+
+/// 🧱 Stamps `pcurves` (one `(curve2, prange)` pair per coedge, in `attach_face`'s own `members`
+/// order) onto `face`'s outer loop. `prange` always shares its interpolating parameter `s` with
+/// the coedge's underlying [`Edge::range`] — i.e. it is *never* reversed to account for
+/// `Coedge::forward` (see [`crate::artifacts::semio::standards::v1::subsets::brep::schema::inferences::validation_report::check_same_parameter`], which samples both ranges with
+/// the same `s`) — only reparametrized (phase/sign/offset) when the p-curve targets a different
+/// surface frame than the edge's own curve.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn set_outer_pcurves(body: &mut Body, face: FaceId, pcurves: &[(Curve2Id, (f64, f64))]) {
+    let outer = body.faces.get(face).and_then(|f| f.outer).expect("face has an outer loop");
+    let coedges = body.loop_coedges(outer);
+    debug_assert_eq!(coedges.len(), pcurves.len(), "one p-curve per coedge, in member order");
+    for (&coedge_id, &(pcurve, prange)) in coedges.iter().zip(pcurves) {
+        let coedge = body.coedges.get_mut(coedge_id).expect("just-created coedge");
+        coedge.pcurve = Some(pcurve);
+        coedge.prange = prange;
+    }
+}
+
+/// 🧱 A "degenerate" edge (OCCT convention): both endpoints are the same vertex *and* the 3D
+/// curve is a zero-length line — the standard closing device for a pole where the whole `u`
+/// range of a periodic surface collapses to one point. Used by the Euler-characteristic tests
+/// below to exclude poles from the edge count (see `w1e-primitives.md` §sphere for why the naive
+/// `V−E+F` would otherwise read 0, not 2, for the sphere).
+// 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+pub(crate) fn is_degenerate_edge(edge: &Edge, curve: &Curve3) -> bool {
+    edge.v0 == edge.v1 && matches!(curve, Curve3::Line { dir, .. } if dir.norm() < 1e-12)
 }
 
 // #endregion 🔖️Helpers
@@ -143,168 +181,178 @@ pub fn make_box(body: &mut Body, w: f64, d: f64, h: f64, rec: &mut OpRecorder) -
     Ok(finish_solid(body, vec![bottom, top, front, back, left, right], rec))
 }
 
-/// 🧱 Sphere centered at the origin as two hemispherical faces sharing an `segments`-gon equator.
+/// 🧱 Sphere centered at the origin: ONE analytic [`Surface::Sphere`] face, bounded by a single
+/// seam edge (the u=0 half-meridian great circle from south to north pole, curve domain
+/// `[-π/2, π/2]`) used twice — once at u=0, once at u=2π — plus two degenerate edges (3D curve
+/// collapsed to the pole point, see [`is_degenerate_edge`]) that close the (u,v) parameter
+/// rectangle along `v=±π/2`. This is the standard OCCT-style sphere topology (chosen over the old
+/// two-hemisphere-plus-equator split so there is exactly one seam, matching cylinder/cone/torus'
+/// own single-seam convention) — see `w1e-primitives.md` for the coordinate-with-W1-F note.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn make_sphere(body: &mut Body, radius: f64, segments: usize, rec: &mut OpRecorder) -> Result<SolidId, KernelError> {
+pub fn make_sphere(body: &mut Body, radius: f64, rec: &mut OpRecorder) -> Result<SolidId, KernelError> {
     require_positive("sphere radius", radius)?;
-    if segments < 4 {
-        return Err(KernelError::InvalidInput(format!("sphere needs at least 4 segments, got {segments}")));
-    }
     let tol = Tol::DEFAULT;
     let frame = Frame3::WORLD;
-    let surface_n = body.surfaces.insert(Surface::Sphere { frame, radius });
-    let surface_s = body.surfaces.insert(Surface::Sphere { frame, radius });
-    let mut verts = Vec::with_capacity(segments);
-    let mut positions = Vec::with_capacity(segments);
-    for i in 0..segments {
-        let theta = TAU * i as f64 / segments as f64;
-        let p = Pnt3::new(radius * theta.cos(), radius * theta.sin(), 0.0);
-        positions.push(p);
-        verts.push(make_vertex(body, p, tol, rec));
-    }
-    let mut edges = Vec::with_capacity(segments);
-    for i in 0..segments {
-        let j = (i + 1) % segments;
-        edges.push(line_edge(body, positions[i], positions[j], verts[i], verts[j], tol, rec));
-    }
-    let north_members: Vec<(EdgeId, bool)> = edges.iter().map(|&e| (e, true)).collect();
-    let south_members: Vec<(EdgeId, bool)> = edges.iter().rev().map(|&e| (e, false)).collect();
-    let north = attach_face(body, surface_n, &north_members, false, tol, rec);
-    let south = attach_face(body, surface_s, &south_members, true, tol, rec);
-    Ok(finish_solid(body, vec![north, south], rec))
+    let south_pt = Pnt3::new(0.0, 0.0, -radius);
+    let north_pt = Pnt3::new(0.0, 0.0, radius);
+    let v_south = make_vertex(body, south_pt, tol, rec);
+    let v_north = make_vertex(body, north_pt, tol, rec);
+
+    // Meridian frame: local x=world X, local y=world Z ⇒ eval(t) = (r·cos t, 0, r·sin t), which
+    // is exactly `sphere.eval(0, t)` (frame=WORLD) — t IS v, no reparametrization needed.
+    let meridian_frame = Frame3 { origin: Pnt3::new(0.0, 0.0, 0.0), x: Vec3::X, y: Vec3::Z, z: -Vec3::Y };
+    let meridian = body.curves3.insert(Curve3::Circle { frame: meridian_frame, radius });
+    let e_seam = make_edge(body, meridian, (-FRAC_PI_2, FRAC_PI_2), v_south, v_north, tol, rec);
+
+    let south_curve = body.curves3.insert(Curve3::Line { origin: south_pt, dir: Vec3::ZERO });
+    let e_south = make_edge(body, south_curve, (0.0, TAU), v_south, v_south, tol, rec);
+    let north_curve = body.curves3.insert(Curve3::Line { origin: north_pt, dir: Vec3::ZERO });
+    let e_north = make_edge(body, north_curve, (0.0, TAU), v_north, v_north, tol, rec);
+
+    let surface = body.surfaces.insert(Surface::Sphere { frame, radius });
+    let face = attach_face(body, surface, &[(e_seam, true), (e_north, true), (e_seam, false), (e_south, false)], false, tol, rec);
+
+    let p_seam_u0 = line2(body, (0.0, 0.0), (0.0, 1.0));
+    let p_north = line2(body, (0.0, FRAC_PI_2), (1.0, 0.0));
+    let p_seam_u_tau = line2(body, (TAU, 0.0), (0.0, 1.0));
+    let p_south = line2(body, (0.0, -FRAC_PI_2), (1.0, 0.0));
+    set_outer_pcurves(body, face, &[(p_seam_u0, (-FRAC_PI_2, FRAC_PI_2)), (p_north, (0.0, TAU)), (p_seam_u_tau, (-FRAC_PI_2, FRAC_PI_2)), (p_south, (0.0, TAU))]);
+
+    Ok(finish_solid(body, vec![face], rec))
 }
 
-/// 🧱 Cylinder along +Z from `z=0` to `z=height` with analytic lateral surface and planar caps.
-///
-/// `segments` is retained for tessellation hints and must be ≥ 3; topology uses a single seam.
+/// 🧱 Cylinder along +Z from `z=0` to `z=height`: one analytic [`Surface::Cylinder`] lateral face
+/// (single seam at u=0) plus two planar caps, all four faces' coedges carrying exact p-curves.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn make_cylinder(body: &mut Body, radius: f64, height: f64, segments: usize, rec: &mut OpRecorder) -> Result<SolidId, KernelError> {
+pub fn make_cylinder(body: &mut Body, radius: f64, height: f64, rec: &mut OpRecorder) -> Result<SolidId, KernelError> {
     require_positive("cylinder radius", radius)?;
     require_positive("cylinder height", height)?;
-    if segments < 3 {
-        return Err(KernelError::InvalidInput(format!("cylinder needs at least 3 segments, got {segments}")));
-    }
-    let _ = segments;
     let tol = Tol::DEFAULT;
-    let bot_pt = Pnt3::new(radius, 0.0, 0.0);
-    let top_pt = Pnt3::new(radius, 0.0, height);
+    let bottom_frame = Frame3::WORLD;
+    let top_frame = Frame3 { origin: Pnt3::new(0.0, 0.0, height), x: Vec3::X, y: Vec3::Y, z: Vec3::Z };
+    let bot_pt = bottom_frame.to_world(Pnt3::new(radius, 0.0, 0.0));
+    let top_pt = top_frame.to_world(Pnt3::new(radius, 0.0, 0.0));
     let v_bot = make_vertex(body, bot_pt, tol, rec);
     let v_top = make_vertex(body, top_pt, tol, rec);
-    let e_bot = circle_edge(body, Pnt3::new(0.0, 0.0, 0.0), Vec3::Z, radius, v_bot, tol, rec);
-    let e_top = circle_edge(body, Pnt3::new(0.0, 0.0, height), Vec3::Z, radius, v_top, tol, rec);
+
+    let bot_circle = body.curves3.insert(Curve3::Circle { frame: bottom_frame, radius });
+    let e_bot = make_edge(body, bot_circle, (0.0, TAU), v_bot, v_bot, tol, rec);
+    let top_circle = body.curves3.insert(Curve3::Circle { frame: top_frame, radius });
+    let e_top = make_edge(body, top_circle, (0.0, TAU), v_top, v_top, tol, rec);
     let e_seam = line_edge(body, bot_pt, top_pt, v_bot, v_top, tol, rec);
+
     let cyl = body.surfaces.insert(Surface::Cylinder { frame: Frame3::WORLD, radius });
     let lateral = attach_face(body, cyl, &[(e_bot, true), (e_seam, true), (e_top, false), (e_seam, false)], false, tol, rec);
-    let s_bottom = body.surfaces.insert(plane_at(Pnt3::new(0.0, 0.0, 0.0), -Vec3::Z));
-    let s_top = body.surfaces.insert(plane_at(Pnt3::new(0.0, 0.0, height), Vec3::Z));
+    let p_bot_lat = line2(body, (0.0, 0.0), (1.0, 0.0));
+    let p_seam_up = line2(body, (0.0, 0.0), (0.0, height));
+    let p_top_lat = line2(body, (0.0, height), (1.0, 0.0));
+    set_outer_pcurves(body, lateral, &[(p_bot_lat, (0.0, TAU)), (p_seam_up, (0.0, 1.0)), (p_top_lat, (0.0, TAU)), (p_seam_up, (0.0, 1.0))]);
+
+    // Cap frames are reflections of the lateral circles' own frame (x kept, y/z negated) so each
+    // circle's world trace maps onto the cap's local (u,v) as the SAME angle mirrored: p = -t.
+    let bottom_cap_frame = Frame3 { origin: Pnt3::new(0.0, 0.0, 0.0), x: Vec3::X, y: -Vec3::Y, z: -Vec3::Z };
+    let s_bottom = body.surfaces.insert(Surface::Plane { frame: bottom_cap_frame });
     let bottom = attach_face(body, s_bottom, &[(e_bot, false)], false, tol, rec);
+    let p_bot_cap = circle2(body, (0.0, 0.0), radius);
+    set_outer_pcurves(body, bottom, &[(p_bot_cap, (0.0, -TAU))]);
+
+    // The top cap frame is IDENTICAL to the top circle's own frame (both x=X,y=Y,z=Z), so its
+    // p-curve is the direct, unreflected angle: p = t.
+    let s_top = body.surfaces.insert(Surface::Plane { frame: top_frame });
     let top = attach_face(body, s_top, &[(e_top, true)], false, tol, rec);
+    let p_top_cap = circle2(body, (0.0, 0.0), radius);
+    set_outer_pcurves(body, top, &[(p_top_cap, (0.0, TAU))]);
+
     Ok(finish_solid(body, vec![lateral, bottom, top], rec))
 }
 
-/// 🧱 Pointed cone with base radius at `z=0` and apex at `(0,0,height)`.
-///
-/// `segments` is a tessellation hint (≥ 3); topology uses a single generator seam.
+/// 🧱 Pointed cone with base radius at `z=0` and apex at `(0,0,height)`: one analytic
+/// [`Surface::Cone`] lateral face plus a planar base cap. No separate degenerate apex edge — the
+/// single seam edge (base→apex) is used TWICE in the lateral loop (up, then down), both
+/// traversals terminating at the shared apex vertex. This is the standard representation for a
+/// full (untrimmed) cone: since the whole `u` range already collapses to the apex point at v=0
+/// (radius `v·tan(half_angle)` → 0), an extra explicit degenerate edge there would just duplicate
+/// what the seam's own two endpoints already express — unlike the sphere, whose TWO poles are not
+/// both endpoints of the same seam edge and so each needs its own degenerate closer.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn make_cone(body: &mut Body, radius: f64, height: f64, segments: usize, rec: &mut OpRecorder) -> Result<SolidId, KernelError> {
+pub fn make_cone(body: &mut Body, radius: f64, height: f64, rec: &mut OpRecorder) -> Result<SolidId, KernelError> {
     require_positive("cone radius", radius)?;
     require_positive("cone height", height)?;
-    if segments < 3 {
-        return Err(KernelError::InvalidInput(format!("cone needs at least 3 segments, got {segments}")));
-    }
-    let _ = segments;
     let tol = Tol::DEFAULT;
     let half_angle = radius.atan2(height);
     if half_angle <= Tol::DEFAULT.value() || half_angle >= FRAC_PI_2 {
         return Err(KernelError::InvalidInput(format!("cone half-angle out of range: {half_angle}")));
     }
     let apex = Pnt3::new(0.0, 0.0, height);
-    let base_pt = Pnt3::new(radius, 0.0, 0.0);
+    let base_frame = Frame3::WORLD;
+    let base_pt = base_frame.to_world(Pnt3::new(radius, 0.0, 0.0));
     let v_apex = make_vertex(body, apex, tol, rec);
     let v_base = make_vertex(body, base_pt, tol, rec);
-    let e_circle = circle_edge(body, Pnt3::new(0.0, 0.0, 0.0), Vec3::Z, radius, v_base, tol, rec);
+
+    let base_circle = body.curves3.insert(Curve3::Circle { frame: base_frame, radius });
+    let e_circle = make_edge(body, base_circle, (0.0, TAU), v_base, v_base, tol, rec);
     let e_seam = line_edge(body, base_pt, apex, v_base, v_apex, tol, rec);
+
     let cone_frame = Frame3 { origin: apex, x: Vec3::X, y: Vec3::Y, z: -Vec3::Z };
     let cone_surf = body.surfaces.insert(Surface::Cone { frame: cone_frame, half_angle });
     let lateral = attach_face(body, cone_surf, &[(e_circle, true), (e_seam, true), (e_seam, false)], false, tol, rec);
-    let s_base = body.surfaces.insert(plane_at(Pnt3::new(0.0, 0.0, 0.0), -Vec3::Z));
+    let p_base_lat = line2(body, (0.0, height), (1.0, 0.0));
+    let p_seam = line2(body, (0.0, height), (0.0, -height));
+    set_outer_pcurves(body, lateral, &[(p_base_lat, (0.0, TAU)), (p_seam, (0.0, 1.0)), (p_seam, (0.0, 1.0))]);
+
+    let base_cap_frame = Frame3 { origin: Pnt3::new(0.0, 0.0, 0.0), x: Vec3::X, y: -Vec3::Y, z: -Vec3::Z };
+    let s_base = body.surfaces.insert(Surface::Plane { frame: base_cap_frame });
     let base = attach_face(body, s_base, &[(e_circle, false)], false, tol, rec);
+    let p_base_cap = circle2(body, (0.0, 0.0), radius);
+    set_outer_pcurves(body, base, &[(p_base_cap, (0.0, -TAU))]);
+
     Ok(finish_solid(body, vec![lateral, base], rec))
 }
 
-/// 🧱 Torus in the XY plane as one toroidal face with the fundamental-polygon seam wire (genus 1).
+/// 🧱 Torus in the XY plane: ONE analytic [`Surface::Torus`] face, the classic "fundamental
+/// polygon" identification of a torus as a square with opposite sides glued — two full-circle
+/// seam edges (the u=0 meridian and the v=0 equatorial circle), each used TWICE (once per glued
+/// side pair), all four coedges meeting at the single vertex `(u,v)=(0,0)`. No degenerate edges:
+/// genus 1 ⇒ χ = V−E+F = 1−2+1 = 0 (the existing test's own expectation, unlike the χ=2 solids).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn make_torus(body: &mut Body, major: f64, minor: f64, segments: usize, rec: &mut OpRecorder) -> Result<SolidId, KernelError> {
+pub fn make_torus(body: &mut Body, major: f64, minor: f64, rec: &mut OpRecorder) -> Result<SolidId, KernelError> {
     require_positive("torus major radius", major)?;
     require_positive("torus minor radius", minor)?;
     if minor >= major {
         return Err(KernelError::InvalidInput(format!("torus minor radius ({minor}) must be less than major radius ({major})")));
     }
-    let major_seg = segments.max(8);
-    let minor_seg = (segments / 2).max(6);
     let tol = Tol::DEFAULT;
+    let shared_pt = Pnt3::new(major + minor, 0.0, 0.0);
+    let v_shared = make_vertex(body, shared_pt, tol, rec);
 
-    let mut positions = Vec::with_capacity(major_seg * minor_seg);
-    let mut verts = Vec::with_capacity(major_seg * minor_seg);
-    for i in 0..major_seg {
-        let u = TAU * i as f64 / major_seg as f64;
-        let cu = u.cos();
-        let su = u.sin();
-        for j in 0..minor_seg {
-            let v = TAU * j as f64 / minor_seg as f64;
-            let cv = v.cos();
-            let sv = v.sin();
-            let r = major + minor * cv;
-            let p = Pnt3::new(r * cu, r * su, minor * sv);
-            positions.push(p);
-            verts.push(make_vertex(body, p, tol, rec));
-        }
-    }
+    // Meridian (u=0 tube cross-section): local x=world X, local y=world Z, centered on the main
+    // circle at (major,0,0) ⇒ eval(t) = (major+minor·cos t, 0, minor·sin t) = `torus.eval(0, t)`.
+    let meridian_frame = Frame3 { origin: Pnt3::new(major, 0.0, 0.0), x: Vec3::X, y: Vec3::Z, z: -Vec3::Y };
+    let meridian = body.curves3.insert(Curve3::Circle { frame: meridian_frame, radius: minor });
+    let e_meridian = make_edge(body, meridian, (0.0, TAU), v_shared, v_shared, tol, rec);
 
-    let mut edge_map: HashMap<(usize, usize), EdgeId> = HashMap::new();
-    let mut faces = Vec::with_capacity(major_seg * minor_seg * 2);
-    for i in 0..major_seg {
-        for j in 0..minor_seg {
-            let a = i * minor_seg + j;
-            let b = ((i + 1) % major_seg) * minor_seg + j;
-            let c = ((i + 1) % major_seg) * minor_seg + ((j + 1) % minor_seg);
-            let d = i * minor_seg + ((j + 1) % minor_seg);
-            for tri in [[a, b, c], [a, c, d]] {
-                let mut members = Vec::with_capacity(3);
-                for (ia, ib) in [(tri[0], tri[1]), (tri[1], tri[2]), (tri[2], tri[0])] {
-                    let key = (ia.min(ib), ia.max(ib));
-                    let (eid, forward) = if let Some(&existing) = edge_map.get(&key) {
-                        let edge = body.edges.get(existing).unwrap();
-                        (existing, edge.v0 == verts[ia])
-                    } else {
-                        let eid = line_edge(body, positions[ia], positions[ib], verts[ia], verts[ib], tol, rec);
-                        edge_map.insert(key, eid);
-                        (eid, true)
-                    };
-                    members.push((eid, forward));
-                }
-                let pa = positions[tri[0]];
-                let pb = positions[tri[1]];
-                let pc = positions[tri[2]];
-                let mut normal = (pb - pa).cross(pc - pa).normalized().unwrap_or(Vec3::Z);
-                let u = TAU * (tri[0] / minor_seg) as f64 / major_seg as f64;
-                let center = Pnt3::new(major * u.cos(), major * u.sin(), 0.0);
-                if normal.dot(pa - center) < 0.0 {
-                    members.reverse();
-                    for m in &mut members {
-                        m.1 = !m.1;
-                    }
-                    normal = -normal;
-                }
-                let surface = body.surfaces.insert(plane_at(pa, normal));
-                faces.push(attach_face(body, surface, &members, false, tol, rec));
-            }
-        }
-    }
-    Ok(finish_solid(body, faces, rec))
+    // Equatorial (v=0 main circle): eval(t) = ((major+minor)·cos t, (major+minor)·sin t, 0) =
+    // `torus.eval(t, 0)`.
+    let equatorial = body.curves3.insert(Curve3::Circle { frame: Frame3::WORLD, radius: major + minor });
+    let e_equatorial = make_edge(body, equatorial, (0.0, TAU), v_shared, v_shared, tol, rec);
+
+    let surface = body.surfaces.insert(Surface::Torus { frame: Frame3::WORLD, major_radius: major, minor_radius: minor });
+    let face = attach_face(body, surface, &[(e_meridian, true), (e_equatorial, true), (e_meridian, false), (e_equatorial, false)], false, tol, rec);
+
+    // u=2π ≡ u=0 and v=2π ≡ v=0 exactly (trig periodicity), so BOTH occurrences of each seam use
+    // the same direct `p = t` shape — only the constant offset along the other axis differs.
+    let p_meridian_u0 = line2(body, (0.0, 0.0), (0.0, 1.0));
+    let p_equatorial_v_tau = line2(body, (0.0, TAU), (1.0, 0.0));
+    let p_meridian_u_tau = line2(body, (TAU, 0.0), (0.0, 1.0));
+    let p_equatorial_v0 = line2(body, (0.0, 0.0), (1.0, 0.0));
+    set_outer_pcurves(body, face, &[(p_meridian_u0, (0.0, TAU)), (p_equatorial_v_tau, (0.0, TAU)), (p_meridian_u_tau, (0.0, TAU)), (p_equatorial_v0, (0.0, TAU))]);
+
+    Ok(finish_solid(body, vec![face], rec))
 }
 
-/// 🧱 Builds a (possibly non-convex) solid from a triangle soup — used when convex-hull boolean fails.
+/// 🧱 Builds a (possibly non-convex) solid from a triangle soup — used ONLY for mesh import and
+/// as [`make_convex_hull`]'s last-resort fallback (see [`merge_coplanar_triangles`], which is
+/// preferred whenever the hull's planar clusters walk to a clean boundary).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn solid_from_triangle_soup(body: &mut Body, triangles: &[[Pnt3; 3]], rec: &mut OpRecorder) -> Result<SolidId, KernelError> {
     if triangles.is_empty() {
@@ -354,23 +402,27 @@ pub fn solid_from_triangle_soup(body: &mut Body, triangles: &[[Pnt3; 3]], rec: &
     Ok(finish_solid(body, faces, rec))
 }
 
-/// 🧱 Convex hull of a point cloud as a closed solid of planar triangles (Quickhull).
+/// 🧱 Convex hull of a point cloud as a closed solid whose faces are the coplanar-MERGED polygons
+/// of the underlying Quickhull triangulation (e.g. 8 box corners → 6 quad faces, not 12
+/// triangles) — see [`merge_coplanar_triangles`].
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn make_convex_hull(body: &mut Body, points: &[Pnt3], rec: &mut OpRecorder) -> Result<SolidId, KernelError> {
     let hull = convex_hull_3d(points).ok_or_else(|| KernelError::InvalidInput("points are coplanar or degenerate — cannot form a 3D convex hull".into()))?;
     let tol = Tol::DEFAULT;
     let vertex_ids: Vec<VertexId> = hull.vertices.iter().map(|&p| make_vertex(body, p, tol, rec)).collect();
+    let groups = merge_coplanar_triangles(&hull);
     let mut edge_map: HashMap<(usize, usize), EdgeId> = HashMap::new();
-    let mut faces = Vec::with_capacity(hull.faces.len());
-    for &[a, b, c] in &hull.faces {
-        let pairs = [(a, b), (b, c), (c, a)];
-        let mut members = Vec::with_capacity(3);
-        for (ia, ib) in pairs {
+    let mut faces = Vec::with_capacity(groups.len());
+    for group in &groups {
+        let boundary = &group.boundary;
+        let mut members = Vec::with_capacity(boundary.len());
+        for i in 0..boundary.len() {
+            let ia = boundary[i];
+            let ib = boundary[(i + 1) % boundary.len()];
             let key = (ia.min(ib), ia.max(ib));
             let (eid, forward) = if let Some(&existing) = edge_map.get(&key) {
                 let edge = body.edges.get(existing).unwrap();
-                let forward = edge.v0 == vertex_ids[ia];
-                (existing, forward)
+                (existing, edge.v0 == vertex_ids[ia])
             } else {
                 let eid = line_edge(body, hull.vertices[ia], hull.vertices[ib], vertex_ids[ia], vertex_ids[ib], tol, rec);
                 edge_map.insert(key, eid);
@@ -378,11 +430,7 @@ pub fn make_convex_hull(body: &mut Body, points: &[Pnt3], rec: &mut OpRecorder) 
             };
             members.push((eid, forward));
         }
-        let pa = hull.vertices[a];
-        let pb = hull.vertices[b];
-        let pc = hull.vertices[c];
-        let normal = (pb - pa).cross(pc - pa).normalized().unwrap_or(Vec3::Z);
-        let surface = body.surfaces.insert(plane_at(pa, normal));
+        let surface = body.surfaces.insert(plane_at(hull.vertices[boundary[0]], group.normal));
         faces.push(attach_face(body, surface, &members, false, tol, rec));
     }
     Ok(finish_solid(body, faces, rec))
@@ -628,6 +676,75 @@ fn convex_hull_3d(points: &[Pnt3]) -> Option<ConvexHull> {
 
 // #endregion 🔖️ConvexHull
 
+// #region 🔖️CoplanarMerge
+
+/// 🧱 One merged planar face of a convex hull: all Quickhull triangles sharing (within tolerance)
+/// the same supporting plane, reduced to their outer boundary loop.
+struct FaceGroup {
+    normal: Vec3,
+    boundary: Vec<usize>,
+}
+
+/// 🧱 Quantizes a plane `(normal, d)` into a hashable bucket key — Quickhull triangles that are
+/// genuinely coplanar (same supporting plane of the convex body) compute bit-close normal/offset
+/// values from their own 3 vertices, so a `1e-7`-scale round is enough to bucket them together
+/// without merging two triangles that merely happen to be nearly-but-not-exactly coplanar.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn plane_key(normal: Vec3, d: f64) -> (i64, i64, i64, i64) {
+    let q = |x: f64| (x * 1e7).round() as i64;
+    (q(normal.x), q(normal.y), q(normal.z), q(d))
+}
+
+/// 🧱 Groups `hull`'s triangles by supporting plane, then reduces each group to its outer
+/// boundary loop by cancelling every directed edge against its opposite-direction twin (present
+/// exactly when two triangles in the group share that edge — the standard consistent-winding
+/// invariant a convex-hull triangulation maintains) and walking what remains. A singleton group
+/// (no coplanar neighbor) degenerates to its one triangle's own three edges, so non-merged faces
+/// (e.g. every face of a tetrahedron) round-trip unchanged.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn merge_coplanar_triangles(hull: &ConvexHull) -> Vec<FaceGroup> {
+    let mut clusters: HashMap<(i64, i64, i64, i64), (Vec3, Vec<[usize; 3]>)> = HashMap::new();
+    for &[a, b, c] in &hull.faces {
+        let normal = face_normal(&hull.vertices, a, b, c);
+        let d = -normal.dot(hull.vertices[a].to_vec());
+        let key = plane_key(normal, d);
+        clusters.entry(key).or_insert_with(|| (normal, Vec::new())).1.push([a, b, c]);
+    }
+    let mut groups = Vec::with_capacity(clusters.len());
+    for (normal, tris) in clusters.into_values() {
+        let mut directed: std::collections::HashSet<(usize, usize)> = std::collections::HashSet::new();
+        for tri in &tris {
+            for i in 0..3 {
+                directed.insert((tri[i], tri[(i + 1) % 3]));
+            }
+        }
+        let mut next: HashMap<usize, usize> = HashMap::new();
+        for &(a, b) in &directed {
+            if !directed.contains(&(b, a)) {
+                next.insert(a, b);
+            }
+        }
+        let Some((&start, _)) = next.iter().next() else { continue };
+        let mut boundary = vec![start];
+        let mut current = start;
+        loop {
+            let Some(&n) = next.get(&current) else { break };
+            if n == start {
+                break;
+            }
+            boundary.push(n);
+            current = n;
+            if boundary.len() > next.len() {
+                break; // malformed boundary guard: never loop forever on corrupt data
+            }
+        }
+        groups.push(FaceGroup { normal, boundary });
+    }
+    groups
+}
+
+// #endregion 🔖️CoplanarMerge
+
 // #region 🔖️Tests
 #[cfg(test)]
 mod tests {
@@ -651,11 +768,53 @@ mod tests {
         (vertex_ids.len(), edge_ids.len(), faces.len())
     }
 
+    /// 🧱 `(V, E_real, F, χ)` with degenerate edges (see [`is_degenerate_edge`]) excluded from the
+    /// edge count — the "count degenerate edges consistently" convention the ticket asks for, so
+    /// a pole-bearing sphere reads χ=2 like every other genus-0 solid instead of 0.
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn euler_excluding_degenerate(body: &Body, solid: SolidId) -> (usize, usize, usize, i64) {
+        let faces = body.solid_faces(solid);
+        let mut edge_ids = std::collections::HashSet::new();
+        let mut vertex_ids = std::collections::HashSet::new();
+        for face in &faces {
+            for coedge in body.face_coedges(*face) {
+                let edge = body.coedges.get(coedge).unwrap().edge;
+                edge_ids.insert(edge);
+                let e = body.edges.get(edge).unwrap();
+                vertex_ids.insert(e.v0);
+                vertex_ids.insert(e.v1);
+            }
+        }
+        let e_real = edge_ids.iter().filter(|&&eid| { let e = body.edges.get(eid).unwrap(); let c = body.curves3.get(e.curve).unwrap(); !is_degenerate_edge(e, c) }).count();
+        let v = vertex_ids.len();
+        let f = faces.len();
+        (v, e_real, f, v as i64 - e_real as i64 + f as i64)
+    }
+
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn assert_rings_ok(body: &Body) {
         let issues = validate_body(body);
         let ring_issues: Vec<_> = issues.iter().filter(|i| matches!(i.code, "empty-loop" | "broken-ring" | "loop-not-closed" | "next-prev-mismatch")).collect();
         assert!(ring_issues.is_empty(), "ring integrity failed: {ring_issues:?}");
+    }
+
+    /// 🧱 Every coedge on `solid` must carry a p-curve, and every p-curve must agree with its
+    /// edge's 3D curve at matching parameters (the same "same-parameter" check `validate_body`
+    /// runs, asserted here directly so a failure names the offending primitive test, not just
+    /// "some validation issue").
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn assert_pcurves_present_and_consistent(body: &Body, solid: SolidId) {
+        for face in body.solid_faces(solid) {
+            for loop_id in body.face_loops(face) {
+                for coedge in body.loop_coedges(loop_id) {
+                    let co = body.coedges.get(coedge).unwrap();
+                    assert!(co.pcurve.is_some(), "coedge {coedge:?} on face {face:?} has no p-curve");
+                }
+            }
+        }
+        let issues = validate_body(body);
+        let bad: Vec<_> = issues.iter().filter(|i| i.code == "same-parameter-violated").collect();
+        assert!(bad.is_empty(), "p-curve/3D-curve mismatch: {bad:?}");
     }
 
     #[semio_framework_async_macros::async_test]
@@ -691,53 +850,57 @@ mod tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    async fn make_sphere_two_hemispheres_euler() {
+    async fn make_sphere_one_face_with_seam_and_poles() {
         let mut body = Body::new();
         let mut rec = OpRecorder::new();
-        let solid = make_sphere(&mut body, 1.0, 8, &mut rec).unwrap();
+        let solid = make_sphere(&mut body, 1.0, &mut rec).unwrap();
+        let (v, _e, f) = solid_counts(&body, solid);
+        assert_eq!(f, 1, "one analytic spherical face, no faceting");
+        assert_eq!(v, 2, "two poles");
+        let (_, _, _, chi) = euler_excluding_degenerate(&body, solid);
+        assert_eq!(chi, 2, "χ must read 2 once degenerate pole edges are excluded from E");
+        assert_rings_ok(&body);
+        assert_pcurves_present_and_consistent(&body, solid);
+        assert!(make_sphere(&mut body, -1.0, &mut rec).is_err());
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn make_cylinder_three_analytic_faces() {
+        let mut body = Body::new();
+        let mut rec = OpRecorder::new();
+        let solid = make_cylinder(&mut body, 1.0, 2.0, &mut rec).unwrap();
         let (v, e, f) = solid_counts(&body, solid);
-        assert_eq!(f, 2);
-        assert_eq!(v, 8);
-        assert_eq!(e, 8);
+        assert_eq!(f, 3);
+        assert_eq!((v, e), (2, 3));
         assert_eq!(v as i64 - e as i64 + f as i64, 2);
         assert_rings_ok(&body);
-        assert!(make_sphere(&mut body, 1.0, 3, &mut rec).is_err());
+        assert_pcurves_present_and_consistent(&body, solid);
     }
 
     #[semio_framework_async_macros::async_test]
-    async fn make_cylinder_three_faces_and_rings() {
+    async fn make_cone_pointed_two_analytic_faces() {
         let mut body = Body::new();
         let mut rec = OpRecorder::new();
-        let solid = make_cylinder(&mut body, 1.0, 2.0, 16, &mut rec).unwrap();
-        let (_, _, f) = solid_counts(&body, solid);
-        assert_eq!(f, 3);
-        assert_rings_ok(&body);
-        let issues = validate_body(&body);
-        assert!(issues.iter().all(|i| i.code != "broken-ring" && i.code != "loop-not-closed"), "{issues:?}");
-    }
-
-    #[semio_framework_async_macros::async_test]
-    async fn make_cone_pointed_two_faces() {
-        let mut body = Body::new();
-        let mut rec = OpRecorder::new();
-        let solid = make_cone(&mut body, 1.0, 2.0, 12, &mut rec).unwrap();
-        let (_, _, f) = solid_counts(&body, solid);
-        assert_eq!(f, 2);
-        assert_rings_ok(&body);
-    }
-
-    #[semio_framework_async_macros::async_test]
-    async fn make_torus_genus_one_euler() {
-        let mut body = Body::new();
-        let mut rec = OpRecorder::new();
-        let solid = make_torus(&mut body, 3.0, 1.0, 8, &mut rec).unwrap();
+        let solid = make_cone(&mut body, 1.0, 2.0, &mut rec).unwrap();
         let (v, e, f) = solid_counts(&body, solid);
-        // Polyhedral torus grid: genus-1 ⇒ Euler characteristic 0, with many quad faces.
-        assert!(f > 1, "polyhedral torus should expose multiple faces, got {f}");
-        assert!(v > 1 && e > 2, "polyhedral torus counts v={v} e={e}");
-        assert_eq!(v as i64 - e as i64 + f as i64, 0, "torus χ must be 0 (got V={v} E={e} F={f})");
+        assert_eq!(f, 2);
+        assert_eq!((v, e), (2, 2));
+        assert_eq!(v as i64 - e as i64 + f as i64, 2);
         assert_rings_ok(&body);
-        assert!(make_torus(&mut body, 1.0, 1.0, 8, &mut rec).is_err());
+        assert_pcurves_present_and_consistent(&body, solid);
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn make_torus_genus_one_analytic_single_face() {
+        let mut body = Body::new();
+        let mut rec = OpRecorder::new();
+        let solid = make_torus(&mut body, 3.0, 1.0, &mut rec).unwrap();
+        let (v, e, f) = solid_counts(&body, solid);
+        assert_eq!((v, e, f), (1, 2, 1), "fundamental-polygon torus: 1 vertex, 2 seam edges, 1 face");
+        assert_eq!(v as i64 - e as i64 + f as i64, 0, "torus χ must be 0 (genus 1)");
+        assert_rings_ok(&body);
+        assert_pcurves_present_and_consistent(&body, solid);
+        assert!(make_torus(&mut body, 1.0, 1.0, &mut rec).is_err());
     }
 
     #[semio_framework_async_macros::async_test]
@@ -748,6 +911,30 @@ mod tests {
         let solid = make_convex_hull(&mut body, &pts, &mut rec).unwrap();
         let (v, e, f) = solid_counts(&body, solid);
         assert_eq!((v, e, f), (4, 6, 4));
+        assert_eq!(v as i64 - e as i64 + f as i64, 2);
+        assert_rings_ok(&body);
+        let issues = validate_body(&body);
+        assert!(issues.is_empty(), "{issues:?}");
+    }
+
+    /// 🧱 The coplanar-merge deliverable: 8 box corners must yield 6 quad faces, not 12 triangles.
+    #[semio_framework_async_macros::async_test]
+    async fn make_convex_hull_box_merges_coplanar_triangles_into_six_faces() {
+        let mut body = Body::new();
+        let mut rec = OpRecorder::new();
+        let pts = [
+            Pnt3::new(0.0, 0.0, 0.0),
+            Pnt3::new(2.0, 0.0, 0.0),
+            Pnt3::new(2.0, 3.0, 0.0),
+            Pnt3::new(0.0, 3.0, 0.0),
+            Pnt3::new(0.0, 0.0, 4.0),
+            Pnt3::new(2.0, 0.0, 4.0),
+            Pnt3::new(2.0, 3.0, 4.0),
+            Pnt3::new(0.0, 3.0, 4.0),
+        ];
+        let solid = make_convex_hull(&mut body, &pts, &mut rec).unwrap();
+        let (v, e, f) = solid_counts(&body, solid);
+        assert_eq!((v, e, f), (8, 12, 6), "merged hull of a box must look like a box");
         assert_eq!(v as i64 - e as i64 + f as i64, 2);
         assert_rings_ok(&body);
         let issues = validate_body(&body);
@@ -786,6 +973,42 @@ mod tests {
         assert!(!wire.closed);
         assert_eq!(wire.members.len(), 2);
         assert!(make_planar_face_from_wire(&mut body, &wire, Pnt3::new(0.0, 0.0, 0.0), Vec3::Z, &mut rec).is_err());
+    }
+
+    /// 🧱 Volume/area against closed forms, via the existing (not-yet-W1-F-updated) mass-properties
+    /// quadrature — see `w1e-primitives.md` for the honest pass/fail report on each shape.
+    #[semio_framework_async_macros::async_test]
+    async fn closed_form_volumes_via_mass_properties() {
+        use crate::artifacts::semio::standards::v1::subsets::brep::schema::inferences::mass_properties::solid_volume;
+        let tol = 1e-3;
+
+        let mut body = Body::new();
+        let mut rec = OpRecorder::new();
+        let sphere = make_sphere(&mut body, 2.0, &mut rec).unwrap();
+        let expected = 4.0 / 3.0 * std::f64::consts::PI * 8.0;
+        let got = solid_volume(&body, sphere, tol).unwrap();
+        assert!((got - expected).abs() / expected < 1e-6, "sphere volume: got {got}, expected {expected}");
+
+        let mut body = Body::new();
+        let mut rec = OpRecorder::new();
+        let cyl = make_cylinder(&mut body, 1.5, 4.0, &mut rec).unwrap();
+        let expected = std::f64::consts::PI * 1.5 * 1.5 * 4.0;
+        let got = solid_volume(&body, cyl, tol).unwrap();
+        assert!((got - expected).abs() / expected < 1e-2, "cylinder volume: got {got}, expected {expected}");
+
+        let mut body = Body::new();
+        let mut rec = OpRecorder::new();
+        let cone = make_cone(&mut body, 1.0, 3.0, &mut rec).unwrap();
+        let expected = std::f64::consts::PI * 1.0 * 1.0 * 3.0 / 3.0;
+        let got = solid_volume(&body, cone, tol).unwrap();
+        assert!((got - expected).abs() / expected < 1e-2, "cone volume: got {got}, expected {expected}");
+
+        let mut body = Body::new();
+        let mut rec = OpRecorder::new();
+        let torus = make_torus(&mut body, 3.0, 1.0, &mut rec).unwrap();
+        let expected = 2.0 * std::f64::consts::PI * std::f64::consts::PI * 3.0 * 1.0 * 1.0;
+        let got = solid_volume(&body, torus, tol).unwrap();
+        assert!((got - expected).abs() / expected < 1e-2, "torus volume: got {got}, expected {expected}");
     }
 }
 // #endregion 🔖️Tests

@@ -1057,6 +1057,17 @@ impl protocol::DiffCodec for SemioBrepDiff {
 //#endregion 🔖️TopLevel
 //#endregion 🔖️HandcraftedDiffCodec
 
+//#region 🌉️ExternalCodecBridge
+/// 📥️ The `pack::from_json_str` inverse of `SemioBrepDiff`'s `ToValue` — decodes the committed
+/// `../🧬️mutations/<kind>/🧪️tests/<fixture>/🔺️diff/🔣️.json` specification vectors into a real
+/// [`SemioBrepDiff`], mirroring `📸️snapshot/🦀️.rs`'s `decode_semio_brep_snapshot_json` and
+/// `🧬️mutations/🦀️.rs`'s `decode_semio_brep_mutation_json` so no fixture test needs `serde_json`.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn decode_semio_brep_diff_json(text: &str) -> Result<SemioBrepDiff, String> {
+    pack::from_json_str(text).map_err(|error| error.to_string())
+}
+//#endregion 🌉️ExternalCodecBridge
+
 //#region 🔖️Demo
 /// 🌱 Representative `SemioBrepDiff` cases (empty/no-op, a full removed/modified/added sweep both
 /// directions across every collection, plus a bare insert) — single source of truth for

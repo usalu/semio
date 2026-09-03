@@ -3,6 +3,5 @@
   "email": "ada@studio.example",
   "displayName": "Ada Lovelace",
   "hubBaseUrl": "https://hub.studio.example",
-  "sessionToken": "session-ada-0001",
   "issuedAtMs": 1756200000000
 }

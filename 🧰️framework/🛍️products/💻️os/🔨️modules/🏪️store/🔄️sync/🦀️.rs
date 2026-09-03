@@ -88,8 +88,6 @@ pub enum PersistenceBinding {
     Hub {
         base_url: String,
         space_id: String,
-        #[value(default, skip_serializing_if = "Option::is_none")]
-        token: Option<String>,
         /// @emoji 🎭️ Out-of-band presence scope (ticket 26/08/16/HUB-SPACES-…, contract §C0): rides
         /// as `?surface=` on the WS URL rather than a wire field — `PresencePeer`'s flag byte is
         /// already full. `<kind>@<standard>/<subset>#<role>`, e.g. `s.space.home@1/*#editor`.
@@ -1050,6 +1048,7 @@ impl ArtifactHostState {
 pub struct ArtifactHost {
     inner: std::sync::Arc<std::sync::Mutex<ArtifactHostState>>,
     pool: std::sync::Arc<semio_framework_async::WorkerPool>,
+    credential: std::sync::Arc<std::sync::RwLock<Option<std::sync::Arc<crate::os_directory::client::LocalHubCredential>>>>,
 }
 
 impl Clone for ArtifactHost {
@@ -1057,7 +1056,7 @@ impl Clone for ArtifactHost {
         let mut state = self.inner.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
         state.host_references = state.host_references.checked_add(1).expect("artifact host reference capacity exhausted");
         drop(state);
-        Self { inner: self.inner.clone(), pool: self.pool.clone() }
+        Self { inner: self.inner.clone(), pool: self.pool.clone(), credential: self.credential.clone() }
     }
 }
 
@@ -1065,7 +1064,11 @@ impl ArtifactHost {
     /// @emoji 🧩️ Creates a host on the process WorkerPool; callers must inject the same pool
     /// used by their service and renderer runtimes.
     pub fn new(pool: std::sync::Arc<semio_framework_async::WorkerPool>) -> Self {
-        Self { inner: std::sync::Arc::new(std::sync::Mutex::new(ArtifactHostState::new())), pool }
+        Self { inner: std::sync::Arc::new(std::sync::Mutex::new(ArtifactHostState::new())), pool, credential: std::sync::Arc::new(std::sync::RwLock::new(None)) }
+    }
+
+    pub fn set_local_hub_credential(&self, credential: std::sync::Arc<crate::os_directory::client::LocalHubCredential>) {
+        *self.credential.write().unwrap_or_else(std::sync::PoisonError::into_inner) = Some(credential);
     }
 
     /// @emoji 🚀️ Spawns (or replaces) the actor for `config.document_id` and returns the channels the
@@ -1078,7 +1081,7 @@ impl ArtifactHost {
         let (cmd_tx, cmd_rx) = artifact_mailbox_pair();
         let (event_tx, _event_rx) = broadcast::channel(256);
         #[cfg(not(target_arch = "wasm32"))]
-        let runner = spawn_actor(self.pool.clone(), generation, config, remote, cmd_rx, event_tx.clone()).await;
+        let runner = spawn_actor(self.pool.clone(), generation, config, remote, cmd_rx, event_tx.clone(), self.credential.clone()).await;
         // 🌉️ Narrowed to match `mod wasm_actor`'s own gate: it is a browser WebSocket/`web_sys`
         // bridge, and `target_arch = "wasm32"` is TRUE for `wasm32-wasip2` too. On the WASI
         // component target neither actor exists — `native_actor` is `tokio_tungstenite`/
@@ -1349,7 +1352,7 @@ mod native_actor {
         watch_external: bool,
         hub_base_url: Option<String>,
         hub_space_id: Option<String>,
-        hub_token: Option<String>,
+        credential: Arc<std::sync::RwLock<Option<Arc<crate::os_directory::client::LocalHubCredential>>>>,
         hub_surface: Option<String>,
         /// @emoji 🎨️ This connection's hub-assigned session color (`ServerFrame::Session.color`) —
         /// `None` until the hub sends it (or for a folder-only document, which never connects to a
@@ -1400,7 +1403,6 @@ mod native_actor {
             let mut folder_watch_path = None;
             let mut hub_base_url = None;
             let mut hub_space_id = None;
-            let mut hub_token = None;
             let mut hub_surface = None;
             for binding in &config.bindings {
                 match binding {
@@ -1410,11 +1412,10 @@ mod native_actor {
                             folder_watch_path = Some(folder_watch_path_for(path).await);
                         }
                     }
-                    PersistenceBinding::Hub { base_url, space_id, token, surface } => {
+                    PersistenceBinding::Hub { base_url, space_id, surface } => {
                         if hub_base_url.is_none() {
                             hub_base_url = Some(base_url.clone());
                             hub_space_id = Some(space_id.clone());
-                            hub_token = token.clone();
                             hub_surface = surface.clone();
                         }
                     }
@@ -1434,7 +1435,7 @@ mod native_actor {
                 watch_external: config.watch_external,
                 hub_base_url,
                 hub_space_id,
-                hub_token,
+                credential,
                 hub_surface,
                 session_color: None,
                 semio_hub: None,
@@ -2796,9 +2797,10 @@ mod native_actor {
         remote: ChannelBackboneRemote,
         cmd_rx: ArtifactMailboxReceiver,
         events: broadcast::Sender<ArtifactEvent>,
+        credential: Arc<std::sync::RwLock<Option<Arc<crate::os_directory::client::LocalHubCredential>>>>,
     ) -> ArtifactActorRunnerHandle {
         let mailbox = cmd_rx.close_handle();
-        let actor = ArtifactActor::new(pool.clone(), config, remote, cmd_rx, events).await;
+        let actor = ArtifactActor::new(pool.clone(), config, remote, cmd_rx, events, credential).await;
         let runner = Arc::new(ActorRunner {
             pool,
             generation,

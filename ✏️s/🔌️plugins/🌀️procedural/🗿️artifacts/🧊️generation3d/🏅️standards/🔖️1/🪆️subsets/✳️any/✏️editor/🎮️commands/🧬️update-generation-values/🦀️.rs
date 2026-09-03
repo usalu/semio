@@ -8,14 +8,13 @@ use flow::forms_bridge::flow_fixture_to_form_spec;
 use flow::playbook::{apply_generation_mutation, generation_operations, selected_generation};
 use flow::FlowEvalSession;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
-use serde_json::{json, Value};
 use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️Shared
 /// 🧬️ Emits generation operations for the generate-mode document-mutating commands — reuses
 /// `flow::playbook::generation_operations`'s id-generation/values-seeding logic via a synthetic JSON args
 /// value built from the typed command fields.
-fn handle_generation(action: &str, args: Option<&Value>, projection: &Generation3dSnapshot, cfg: &Generation3dConfig) -> Emit<Generation3dMutation, Generation3dConfigMutation> {
+fn handle_generation(action: &str, args: Option<&dsl::DslValue>, projection: &Generation3dSnapshot, cfg: &Generation3dConfig) -> Emit<Generation3dMutation, Generation3dConfigMutation> {
     let spec = flow_fixture_to_form_spec(&projection.fixture);
     let mut state = projection.generation.as_state().clone();
     state.selected_generation_id = cfg.selected_generation_id.clone();
@@ -60,6 +59,7 @@ pub struct UpdateGenerationValues {
 }
 
 pub fn handle(payload: &UpdateGenerationValues, doc: &ArtifactView<'_, Generation3dSnapshot>, cfg: &ConfigView<'_, Generation3dConfig>, _session: &mut FlowEvalSession) -> Result<Emit<Generation3dMutation, Generation3dConfigMutation>, Fault> {
-    let value_json = Value::from(payload.value.clone());
-    Ok(handle_generation("updateGenerationValues", Some(&json!({ "generationId": payload.generation_id, "questionId": payload.question_id, "value": value_json })), doc.snapshot, cfg.snapshot))
+    let generation_id = payload.generation_id.clone().map(dsl::DslValue::String).unwrap_or(dsl::DslValue::Null);
+    let args = dsl::DslValue::object([("generationId".to_string(), generation_id), ("questionId".to_string(), dsl::DslValue::String(payload.question_id.clone())), ("value".to_string(), payload.value.clone())]);
+    Ok(handle_generation("updateGenerationValues", Some(&args), doc.snapshot, cfg.snapshot))
 }

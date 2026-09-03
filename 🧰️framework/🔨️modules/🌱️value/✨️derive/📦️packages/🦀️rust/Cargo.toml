@@ -42,3 +42,7 @@ path = "tests/🛡️deny-unknown-fields-enums.rs"
 [[test]]
 name = "flatten_with_skip"
 path = "tests/🌾flatten-with-skip.rs"
+
+[[test]]
+name = "newtype_transparent"
+path = "tests/🆔️newtype-transparent.rs"
