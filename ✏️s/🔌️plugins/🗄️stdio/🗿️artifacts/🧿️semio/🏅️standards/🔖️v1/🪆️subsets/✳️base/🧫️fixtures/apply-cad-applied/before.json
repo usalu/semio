@@ -1,0 +1,17 @@
+{
+  "schema": "stdio.semio",
+  "subset": {
+    "blocks": [],
+    "entities": [],
+    "layers": [
+      {
+        "colorIndex": 7,
+        "lineType": "CONTINUOUS",
+        "name": "walls",
+        "visible": true
+      }
+    ],
+    "schema": "stdio.semio.cad",
+    "subset": "cad"
+  }
+}

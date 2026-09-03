@@ -1,9 +1,0 @@
-dialect grammar
-grammar imperative.diff
-extension imperative
-start document
-
-document = header body
-header = "schema" SP "imperative.imperative.diff" NL
-body = payload NL?
-payload = OCTET+

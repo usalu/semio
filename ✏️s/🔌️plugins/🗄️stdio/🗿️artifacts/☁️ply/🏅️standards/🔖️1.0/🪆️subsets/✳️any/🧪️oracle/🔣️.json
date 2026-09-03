@@ -34,7 +34,7 @@
     {
       "id": "semantic-ply-v1",
       "description": "PLY documents compared by wire format, in-order comments and name-keyed elements (each its own ordered property declarations and ordered rows of typed cell values). Unlike a pure mesh format, comments and element/property declarations are themselves normative here -- InsertComment/RemoveComment/AddElement/RemoveElement/SetFormat mutate exactly this surface -- so nothing here is producer freedom the way generator strings are for OBJ/STL.",
-      "tolerance": 0.00001
+      "tolerance": 1e-05
     }
   ],
   "mutationCatalogs": [
@@ -250,6 +250,352 @@
           ]
         }
       ]
+    }
+  ],
+  "fixtureManifests": [
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "add-element-applied",
+      "class": "handcrafted",
+      "target": {
+        "artifact": "s.stdio.ply",
+        "standard": "1.0",
+        "subset": "any"
+      },
+      "mutation": "add-element",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before",
+          "path": "../🧫️fixtures/add-element/before.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:182eda2c7b2791944a249dd50751370f7f736a84d2e8872607e8f4954a7cfd77",
+          "bytes": 1142
+        },
+        {
+          "role": "expected-after",
+          "path": "../🧫️fixtures/add-element/after.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:0166602648822a2ed82a7afb4e671d9ad03d7c3bfcc2b2f0e0d3e43ce619648f",
+          "bytes": 1546
+        }
+      ],
+      "provenance": {
+        "source": "authored",
+        "license": "public-domain (handcrafted by this repository)",
+        "attribution": "Handcrafted before/after vector authored directly against this subset's own documented schema — Law 2's handcrafted-vector category.",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "ordered-json-v1",
+      "reproducible": true,
+      "family": "ply-carrier",
+      "notes": "Handcrafted PlySnapshot before/after pair (schema per this subset's own set-snapshot leaf's committed fixture). AddElement{index:1,element:face} appends a real face element (a vertex-index list property) after the existing vertex element."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "remove-element-applied",
+      "class": "handcrafted",
+      "target": {
+        "artifact": "s.stdio.ply",
+        "standard": "1.0",
+        "subset": "any"
+      },
+      "mutation": "remove-element",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before",
+          "path": "../🧫️fixtures/remove-element/before.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:0166602648822a2ed82a7afb4e671d9ad03d7c3bfcc2b2f0e0d3e43ce619648f",
+          "bytes": 1546
+        },
+        {
+          "role": "expected-after",
+          "path": "../🧫️fixtures/remove-element/after.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:182eda2c7b2791944a249dd50751370f7f736a84d2e8872607e8f4954a7cfd77",
+          "bytes": 1142
+        }
+      ],
+      "provenance": {
+        "source": "authored",
+        "license": "public-domain (handcrafted by this repository)",
+        "attribution": "Handcrafted before/after vector authored directly against this subset's own documented schema — Law 2's handcrafted-vector category.",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "ordered-json-v1",
+      "reproducible": true,
+      "family": "ply-carrier",
+      "notes": "Handcrafted PlySnapshot before/after pair (schema per this subset's own set-snapshot leaf's committed fixture). RemoveElement{name:\"face\"} drops the face element, leaving only vertex."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "insert-row-applied",
+      "class": "handcrafted",
+      "target": {
+        "artifact": "s.stdio.ply",
+        "standard": "1.0",
+        "subset": "any"
+      },
+      "mutation": "insert-row",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before",
+          "path": "../🧫️fixtures/insert-row/before.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:182eda2c7b2791944a249dd50751370f7f736a84d2e8872607e8f4954a7cfd77",
+          "bytes": 1142
+        },
+        {
+          "role": "expected-after",
+          "path": "../🧫️fixtures/insert-row/after.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:92bfc17840081e5f949b293cf27e027985812fc50b2de4fbfbb57646236f4a1b",
+          "bytes": 1457
+        }
+      ],
+      "provenance": {
+        "source": "authored",
+        "license": "public-domain (handcrafted by this repository)",
+        "attribution": "Handcrafted before/after vector authored directly against this subset's own documented schema — Law 2's handcrafted-vector category.",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "ordered-json-v1",
+      "reproducible": true,
+      "family": "ply-carrier",
+      "notes": "Handcrafted PlySnapshot before/after pair (schema per this subset's own set-snapshot leaf's committed fixture). InsertRow{element_name:vertex,index:1,row:(0.5,0.5,0.0)} inserts a third vertex between the existing two."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "remove-row-applied",
+      "class": "handcrafted",
+      "target": {
+        "artifact": "s.stdio.ply",
+        "standard": "1.0",
+        "subset": "any"
+      },
+      "mutation": "remove-row",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before",
+          "path": "../🧫️fixtures/remove-row/before.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:182eda2c7b2791944a249dd50751370f7f736a84d2e8872607e8f4954a7cfd77",
+          "bytes": 1142
+        },
+        {
+          "role": "expected-after",
+          "path": "../🧫️fixtures/remove-row/after.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:f7c9a4f1cbe28bf42f20d03dcf1a512ddcfc99a3dd73eede15e80b0fb65310dd",
+          "bytes": 827
+        }
+      ],
+      "provenance": {
+        "source": "authored",
+        "license": "public-domain (handcrafted by this repository)",
+        "attribution": "Handcrafted before/after vector authored directly against this subset's own documented schema — Law 2's handcrafted-vector category.",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "ordered-json-v1",
+      "reproducible": true,
+      "family": "ply-carrier",
+      "notes": "Handcrafted PlySnapshot before/after pair (schema per this subset's own set-snapshot leaf's committed fixture). RemoveRow{element_name:vertex,index:0} drops the first vertex row."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "set-row-property-applied",
+      "class": "handcrafted",
+      "target": {
+        "artifact": "s.stdio.ply",
+        "standard": "1.0",
+        "subset": "any"
+      },
+      "mutation": "set-row-property",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before",
+          "path": "../🧫️fixtures/set-row-property/before.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:182eda2c7b2791944a249dd50751370f7f736a84d2e8872607e8f4954a7cfd77",
+          "bytes": 1142
+        },
+        {
+          "role": "expected-after",
+          "path": "../🧫️fixtures/set-row-property/after.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:a5ffa08791743b67e192d557da42b439affa0bdbd8e4d05528da241adba94401",
+          "bytes": 1142
+        }
+      ],
+      "provenance": {
+        "source": "authored",
+        "license": "public-domain (handcrafted by this repository)",
+        "attribution": "Handcrafted before/after vector authored directly against this subset's own documented schema — Law 2's handcrafted-vector category.",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "ordered-json-v1",
+      "reproducible": true,
+      "family": "ply-carrier",
+      "notes": "Handcrafted PlySnapshot before/after pair (schema per this subset's own set-snapshot leaf's committed fixture). SetRowProperty{element_name:vertex,row_index:1,property_name:z,value:2.5} overwrites one scalar property of one row in place."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "insert-comment-applied",
+      "class": "handcrafted",
+      "target": {
+        "artifact": "s.stdio.ply",
+        "standard": "1.0",
+        "subset": "any"
+      },
+      "mutation": "insert-comment",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before",
+          "path": "../🧫️fixtures/insert-comment/before.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:182eda2c7b2791944a249dd50751370f7f736a84d2e8872607e8f4954a7cfd77",
+          "bytes": 1142
+        },
+        {
+          "role": "expected-after",
+          "path": "../🧫️fixtures/insert-comment/after.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:fdad84edacace16264443b53be4c8b05b6222e50419fef99f3e5693c8b277684",
+          "bytes": 1161
+        }
+      ],
+      "provenance": {
+        "source": "authored",
+        "license": "public-domain (handcrafted by this repository)",
+        "attribution": "Handcrafted before/after vector authored directly against this subset's own documented schema — Law 2's handcrafted-vector category.",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "ordered-json-v1",
+      "reproducible": true,
+      "family": "ply-carrier",
+      "notes": "Handcrafted PlySnapshot before/after pair (schema per this subset's own set-snapshot leaf's committed fixture). InsertComment{index:1,comment:\"second pass\"} appends a header comment line."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "remove-comment-applied",
+      "class": "handcrafted",
+      "target": {
+        "artifact": "s.stdio.ply",
+        "standard": "1.0",
+        "subset": "any"
+      },
+      "mutation": "remove-comment",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before",
+          "path": "../🧫️fixtures/remove-comment/before.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:fdad84edacace16264443b53be4c8b05b6222e50419fef99f3e5693c8b277684",
+          "bytes": 1161
+        },
+        {
+          "role": "expected-after",
+          "path": "../🧫️fixtures/remove-comment/after.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:182eda2c7b2791944a249dd50751370f7f736a84d2e8872607e8f4954a7cfd77",
+          "bytes": 1142
+        }
+      ],
+      "provenance": {
+        "source": "authored",
+        "license": "public-domain (handcrafted by this repository)",
+        "attribution": "Handcrafted before/after vector authored directly against this subset's own documented schema — Law 2's handcrafted-vector category.",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "ordered-json-v1",
+      "reproducible": true,
+      "family": "ply-carrier",
+      "notes": "Handcrafted PlySnapshot before/after pair (schema per this subset's own set-snapshot leaf's committed fixture). RemoveComment{index:1} drops the appended comment, leaving the original."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "set-format-applied",
+      "class": "handcrafted",
+      "target": {
+        "artifact": "s.stdio.ply",
+        "standard": "1.0",
+        "subset": "any"
+      },
+      "mutation": "set-format",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before",
+          "path": "../🧫️fixtures/set-format/before.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:182eda2c7b2791944a249dd50751370f7f736a84d2e8872607e8f4954a7cfd77",
+          "bytes": 1142
+        },
+        {
+          "role": "expected-after",
+          "path": "../🧫️fixtures/set-format/after.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:6164985c141d9b55b53e0f02d3299df6763b9f0bb13ba8d108bcf28ca2dba79f",
+          "bytes": 1157
+        }
+      ],
+      "provenance": {
+        "source": "authored",
+        "license": "public-domain (handcrafted by this repository)",
+        "attribution": "Handcrafted before/after vector authored directly against this subset's own documented schema — Law 2's handcrafted-vector category.",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "ordered-json-v1",
+      "reproducible": true,
+      "family": "ply-carrier",
+      "notes": "Handcrafted PlySnapshot before/after pair (schema per this subset's own set-snapshot leaf's committed fixture). SetFormat{format:binary_little_endian} switches the PLY header's format line from ascii to a real PLY binary variant, per the format spec's own three-value enumeration."
     }
   ]
 }

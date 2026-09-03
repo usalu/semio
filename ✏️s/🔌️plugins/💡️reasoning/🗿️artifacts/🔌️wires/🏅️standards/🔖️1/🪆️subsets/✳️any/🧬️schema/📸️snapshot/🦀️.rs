@@ -14,12 +14,11 @@
 use crate::artifacts::wires::WiresContentChild;
 use dsl::DslValue;
 use schema::ArtifactSchema;
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️Snapshot
 /// 📸️ Persisted wires document snapshot (persistent fields of the artifact).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ArtifactSchema)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, ArtifactSchema)]
+#[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.reasoning.wires")]
 pub struct WiresSnapshot {
     #[state(artifact)]
@@ -42,18 +41,17 @@ pub struct WiresSnapshot {
 /// INLINE inside `wiresFixture`, so a mutation's effect is visible in it directly rather than only
 /// through a content digest.
 ///
-/// A thin `serde_json` wrapper (already a direct dependency of this crate, used behind this
-/// interface per CLAUDE.md's "external libraries behind an interface" rule, never a new one).
+/// A thin `dsl::os_pack::json` wrapper over `WiresSnapshot`'s own `ToValue` impl — first-party,
+/// infallible (RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS).
 pub fn encode_wires_snapshot_json(snapshot: &WiresSnapshot) -> String {
-    serde_json::to_string(snapshot).expect("WiresSnapshot serialization is infallible")
+    dsl::os_pack::json::to_json_string(snapshot)
 }
 
 /// 📥️ The inverse of [`encode_wires_snapshot_json`] — decodes those committed specification vectors
 /// into real [`WiresSnapshot`] values, so `mutate-wires-1`'s adapter reads the committed fixture
-/// rather than re-declaring it as a Rust literal beside it. Reaching `serde_json` from that adapter
-/// is impossible: the generated test host links only this crate and `semio-repo-test-host`.
+/// rather than re-declaring it as a Rust literal beside it.
 pub fn decode_wires_snapshot_json(text: &str) -> Result<WiresSnapshot, String> {
-    serde_json::from_str(text).map_err(|error| error.to_string())
+    dsl::os_pack::json::from_json_str(text).map_err(|error| error.to_string())
 }
 
 /// 📝️ Parses `.wires.dsl.semio` text into a [`WiresSnapshot`] — a named, non-async pass-through of

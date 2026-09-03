@@ -35,8 +35,10 @@ pub use protocol::{DomainHover, DomainSelection, DomainTopology, HierarchyProvid
 // (Serialize/Deserialize alongside ToValue/FromValue): `🛂️manifest/🦀️.rs`'s `AppDefinition`
 // embeds `Vec<InteractionDefinition>` and is itself consumed outside this pass by
 // `🛍️products/💻️os` (plugin/renderer modules) and `✏️s/🔌️plugins/**` while still serde-deriving.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
-#[serde(rename_all = "camelCase")]
+// 🌱️ RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS: the `HierarchyProvider`/`HoverSpec`
+// /`SelectionSpec` fields below have completed their move to `ToValue`/`FromValue`, so the additive
+// serde half of this declaration no longer has impls to stand on and comes off with them.
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, serde::Serialize, serde::Deserialize)]
 #[value(rename_all = "camelCase")]
 pub struct InteractionDefinition {
     pub id: String,

@@ -7,7 +7,7 @@
 //! engine and now resolve straight to their real home, the artifact root (`crate::artifacts::playbook`).
 
 use crate::artifacts::playbook::PLAYBOOK_DOCUMENT_SCHEMA;
-use serde::{Deserialize, Serialize};
+use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️Io
 /// 🔌️ This app's typed media I/O surface (`AppDefinition.io`) — the implicit document ports plus one
@@ -35,13 +35,13 @@ pub fn playbook_io() -> semio_framework_plugin::AppIo {
 /// 📥️ Mirror of `writer_engine::WriterChapterPayload` — the JSON shape `"chapters:in"` decodes (a
 /// writer document's text as one "chapter"). Kept structurally identical rather than shared: the two
 /// apps are on opposite sides of the wire and this crate must not depend on the writer plugin.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct PlaybookChapterPayload {
     pub id: String,
     pub title: String,
     pub text: String,
-    #[serde(default)]
+    #[value(default)]
     pub language_id: String,
 }
 //#endregion 🔖️Io

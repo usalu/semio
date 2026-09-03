@@ -64,7 +64,7 @@ Feature: Apply the one typed s.space.home mutation against an independent Python
     Then each reaches the committed after-snapshot under the committed outcome status and the two agree
     Examples:
       | id                        | dir                            | fixture                          |
-      | change-catalog-generation | 🔢change-catalog-generation    | bumps-the-catalog-generation-to-7 |
+      | change-catalog-generation | 🔢️change-catalog-generation    | bumps-the-catalog-generation-to-7 |
 
   @id-inverse
   @level-exhaustive
@@ -78,7 +78,7 @@ Feature: Apply the one typed s.space.home mutation against an independent Python
     Then both restore the before-snapshot and agree on the mutated and the restored document
     Examples:
       | id                        | dir                            | fixture                          |
-      | change-catalog-generation | 🔢change-catalog-generation    | bumps-the-catalog-generation-to-7 |
+      | change-catalog-generation | 🔢️change-catalog-generation    | bumps-the-catalog-generation-to-7 |
 
   @id-identity-round-trip
   @level-long

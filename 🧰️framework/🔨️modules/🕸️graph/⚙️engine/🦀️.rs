@@ -44,19 +44,45 @@ pub trait Directedness {
 }
 
 /// ➡️ Directed edges keep source→target order.
-// 🧬️ `value_derive::{ToValue, FromValue}` additive (RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS,
-// 26/09/01) — zero-field marker type, never had `serde`.
-#[derive(Clone, Copy, Debug, Default, value_derive::ToValue, value_derive::FromValue)]
+// 🧬️ ToValue/FromValue additive (RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS,
+// 26/09/01), hand-written rather than derived: `#[derive(ToValue, FromValue)]` rejects a
+// SEMICOLON-terminated unit struct (`Fields::Unit`, distinct from an empty-brace `struct Foo {}`,
+// which IS `Fields::Named`) — changing to brace form would ripple into every value-level
+// construction site of this marker type. Zero-field, so the wire shape is `null` (serde's own
+// default for a unit struct, had this type ever derived `Serialize`).
+#[derive(Clone, Copy, Debug, Default)]
 pub struct Directed;
+
+impl dsl_core::ToValue for Directed {
+    fn to_value(&self) -> dsl_core::DslValue {
+        dsl_core::DslValue::Null
+    }
+}
+impl dsl_core::FromValue for Directed {
+    fn from_value(_value: dsl_core::DslValue) -> Result<Self, dsl_core::ValueError> {
+        Ok(Directed)
+    }
+}
 
 impl Directedness for Directed {
     const DIRECTED: bool = true;
 }
 
 /// ↔ Undirected edges store ordered endpoint pair.
-// 🧬️ `value_derive::{ToValue, FromValue}` additive, see `Directed` above.
-#[derive(Clone, Copy, Debug, Default, value_derive::ToValue, value_derive::FromValue)]
+// 🧬️ Hand-written ToValue/FromValue, see `Directed` above.
+#[derive(Clone, Copy, Debug, Default)]
 pub struct Undirected;
+
+impl dsl_core::ToValue for Undirected {
+    fn to_value(&self) -> dsl_core::DslValue {
+        dsl_core::DslValue::Null
+    }
+}
+impl dsl_core::FromValue for Undirected {
+    fn from_value(_value: dsl_core::DslValue) -> Result<Self, dsl_core::ValueError> {
+        Ok(Undirected)
+    }
+}
 
 impl Directedness for Undirected {
     const DIRECTED: bool = false;
@@ -86,10 +112,22 @@ pub trait PortModel {
 }
 
 /// 🟠️ Node-to-node edges without handles.
-// 🧬️ `value_derive::{ToValue, FromValue}` additive (RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS,
-// 26/09/01) — zero-field marker type, never had `serde`.
-#[derive(Clone, Copy, Debug, Default, value_derive::ToValue, value_derive::FromValue)]
+// 🧬️ Hand-written ToValue/FromValue (RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS,
+// 26/09/01), not derived — see `Directed`'s note on why a semicolon-terminated unit struct can't
+// use `#[derive(ToValue, FromValue)]`.
+#[derive(Clone, Copy, Debug, Default)]
 pub struct Normal;
+
+impl dsl_core::ToValue for Normal {
+    fn to_value(&self) -> dsl_core::DslValue {
+        dsl_core::DslValue::Null
+    }
+}
+impl dsl_core::FromValue for Normal {
+    fn from_value(_value: dsl_core::DslValue) -> Result<Self, dsl_core::ValueError> {
+        Ok(Normal)
+    }
+}
 
 impl PortModel for Normal {
     type Endpoint = NodeId;
@@ -107,9 +145,20 @@ impl PortModel for Normal {
 }
 
 /// 🪝️ Handle-to-handle edges on nodes.
-// 🧬️ `value_derive::{ToValue, FromValue}` additive, see `Normal` above.
-#[derive(Clone, Copy, Debug, Default, value_derive::ToValue, value_derive::FromValue)]
+// 🧬️ Hand-written ToValue/FromValue, see `Normal` above.
+#[derive(Clone, Copy, Debug, Default)]
 pub struct Ported;
+
+impl dsl_core::ToValue for Ported {
+    fn to_value(&self) -> dsl_core::DslValue {
+        dsl_core::DslValue::Null
+    }
+}
+impl dsl_core::FromValue for Ported {
+    fn from_value(_value: dsl_core::DslValue) -> Result<Self, dsl_core::ValueError> {
+        Ok(Ported)
+    }
+}
 
 impl PortModel for Ported {
     type Endpoint = HandleId;
@@ -212,7 +261,7 @@ mod storage_nodes_bridge {
             })
             .collect()
     }
-    use super::dsl_core;
+    use crate::dsl_core;
 }
 
 /// 🌉️ `Storage::edges` bridge — generic over `E = P::Endpoint` (always `u64` in practice), same
@@ -234,7 +283,7 @@ mod storage_edges_bridge {
             })
             .collect()
     }
-    use super::dsl_core;
+    use crate::dsl_core;
 }
 
 /// 🌉️ `Storage::successors`/`predecessors` bridge — `NodeId -> NodeId -> [EdgeId]`, both map levels
@@ -268,7 +317,7 @@ mod storage_adjacency_bridge {
             })
             .collect()
     }
-    use super::dsl_core;
+    use crate::dsl_core;
 }
 
 /// 🌉️ `Storage::handle_owner` bridge — `HandleId -> NodeId`, `u64`-keyed.
@@ -289,7 +338,7 @@ mod storage_handle_owner_bridge {
             })
             .collect()
     }
-    use super::dsl_core;
+    use crate::dsl_core;
 }
 
 impl<P: PortModel, D: Directedness> Default for Storage<P, D> {
@@ -569,10 +618,22 @@ pub trait EdgeWeights {
 }
 
 /// 1⃣ Unweighted default: every edge costs `1.0` (NetworkX's unweighted-graph convention).
-// 🧬️ `value_derive::{ToValue, FromValue}` additive (RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS,
-// 26/09/01) — zero-field marker type, never had `serde`.
-#[derive(Clone, Copy, Debug, Default, value_derive::ToValue, value_derive::FromValue)]
+// 🧬️ Hand-written ToValue/FromValue (RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS,
+// 26/09/01), not derived — see `Directed`'s note (⚙️engine top) on why a semicolon-terminated unit
+// struct can't use `#[derive(ToValue, FromValue)]`.
+#[derive(Clone, Copy, Debug, Default)]
 pub struct UnitWeight;
+
+impl dsl_core::ToValue for UnitWeight {
+    fn to_value(&self) -> dsl_core::DslValue {
+        dsl_core::DslValue::Null
+    }
+}
+impl dsl_core::FromValue for UnitWeight {
+    fn from_value(_value: dsl_core::DslValue) -> Result<Self, dsl_core::ValueError> {
+        Ok(UnitWeight)
+    }
+}
 
 impl EdgeWeights for UnitWeight {
     fn weight(&self, _edge: EdgeRef) -> f64 {
@@ -701,7 +762,7 @@ mod csr_node_index_bridge {
             })
             .collect()
     }
-    use super::dsl_core;
+    use crate::dsl_core;
 }
 
 /// 🧊️ Frozen, index-based CSR adjacency snapshot for hot algorithms; supersedes the ad-hoc `algorithms::Adjacency` for NEW code (that type is left untouched — old call sites keep using it). Node index assignment is `0..n` in sorted `NodeId` order, so two snapshots of the same graph always assign the same indices.
@@ -1554,6 +1615,53 @@ impl<K: Ord, V: Eq + std::hash::Hash + Clone> MappedHeap<K, V> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    /// 🧬️ Additive `#[derive(ToValue, FromValue)]` round-trip (RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS,
+    /// 26/09/01): `FromValue(ToValue(x)) == x`, covering plain derives, the hand-written
+    /// zero-field marker types (`Directed`/`Normal`/…), `GraphError::NotImplementedForKind`'s
+    /// `String` fields, the `geometry::Point` bridge (`Node`/`Handle`), and a POPULATED `Storage`
+    /// (so its four `u64`-keyed `BTreeMap` bridges — `nodes`/`edges`/`successors`/`handle_owner` —
+    /// are all actually exercised, not just compiled).
+    #[test]
+    fn value_round_trip_matches_serde_shape() {
+        fn check<T: dsl_core::ToValue + dsl_core::FromValue + std::fmt::Debug + PartialEq>(value: T) {
+            let round_tripped = <T as dsl_core::FromValue>::from_value(dsl_core::ToValue::to_value(&value)).expect("round-trip decode");
+            assert_eq!(round_tripped, value);
+        }
+
+        // Zero-field marker types have no `PartialEq` (pre-existing), so their round-trip is just
+        // "decodes without error and re-encodes identically" rather than `check`'s equality form.
+        for encoded in [dsl_core::ToValue::to_value(&Directed), dsl_core::ToValue::to_value(&Undirected), dsl_core::ToValue::to_value(&Normal), dsl_core::ToValue::to_value(&Ported), dsl_core::ToValue::to_value(&UnitWeight)] {
+            assert_eq!(encoded, dsl_core::DslValue::Null);
+        }
+        <Directed as dsl_core::FromValue>::from_value(dsl_core::DslValue::Null).expect("decode");
+        <Undirected as dsl_core::FromValue>::from_value(dsl_core::DslValue::Null).expect("decode");
+        <Normal as dsl_core::FromValue>::from_value(dsl_core::DslValue::Null).expect("decode");
+        <Ported as dsl_core::FromValue>::from_value(dsl_core::DslValue::Null).expect("decode");
+        <UnitWeight as dsl_core::FromValue>::from_value(dsl_core::DslValue::Null).expect("decode");
+
+        check(EdgeRef { id: 3, u: 1, v: 2 });
+        check(GraphError::NodeNotFound(7));
+        check(GraphError::NotImplementedForKind { algorithm: "planarity".to_string(), kind: "multigraph".to_string() });
+        check(Node { id: 1, center: Point::new(1.5, -2.5), radius: 3.0, width: 4.0, height: 5.0, shape: NodeShape::Rectangle, draggable: true, kind: Some("box".to_string()), label: None, properties: PropertyBag::new() });
+        check(Handle { angle: 0.5, id: 9, node_id: 1, radius: 2.0, role: HandleRole::Source, kind: None, properties: PropertyBag::new() });
+
+        let mut storage: Storage<Ported, Directed> = Storage::default();
+        let n0 = storage.add_node();
+        let n1 = storage.add_node();
+        storage.add_handle(n0);
+        let h1 = storage.add_handle(n1).expect("handle");
+        let h0 = storage.add_handle(n0).expect("handle");
+        storage.add_edge(h0, h1);
+        let encoded = dsl_core::ToValue::to_value(&storage);
+        let decoded = <Storage<Ported, Directed> as dsl_core::FromValue>::from_value(encoded.clone()).expect("round-trip decode");
+        assert_eq!(dsl_core::ToValue::to_value(&decoded), encoded);
+
+        let csr = Csr::from_view(&storage);
+        let csr_encoded = dsl_core::ToValue::to_value(&csr);
+        let csr_decoded = <Csr as dsl_core::FromValue>::from_value(csr_encoded.clone()).expect("round-trip decode");
+        assert_eq!(dsl_core::ToValue::to_value(&csr_decoded), csr_encoded);
+    }
 
     // 🚫️async: E5-class executor bridge, sanctioned per R4 clause 5 — `#[test]` cannot run
     // an `async fn` directly (std has no executor for it), so every async test body in this
@@ -2443,48 +2551,52 @@ mod tests {
     }
     // #endsubregion
 
-    // #subregion PropertyJson
+    // #subregion PropertyValue
     #[test]
-    fn property_bag_json_round_trips_and_empty_bag_serializes_to_none() {
+    fn property_bag_value_round_trips_and_empty_bag_serializes_to_none() {
         block_on_test(async {
             let mut bag = PropertyBag::new();
             bag.insert("label".into(), PropertyValue::String("hi".into()));
             bag.insert("count".into(), PropertyValue::Number(3.0));
-            let json = property_bag_to_json(&bag).expect("non-empty bag serializes to Some");
-            let round_tripped = property_bag_from_json(&json);
+            let value = property_bag_to_value(&bag).expect("non-empty bag serializes to Some");
+            let round_tripped = property_bag_from_value(&value);
             assert_eq!(round_tripped.get("label").and_then(PropertyValue::as_str), Some("hi"));
             assert_eq!(round_tripped.get("count").and_then(PropertyValue::as_f64), Some(3.0));
-            assert!(property_bag_to_json(&PropertyBag::new()).is_none(), "an empty bag serializes to None");
+            assert!(property_bag_to_value(&PropertyBag::new()).is_none(), "an empty bag serializes to None");
         });
     }
 
     #[test]
-    fn property_bag_from_json_falls_back_to_default_on_unparsable_shape() {
+    fn property_bag_from_value_falls_back_to_default_on_unparsable_shape() {
         block_on_test(async {
-            let value = serde_json::json!("not-an-object-map");
-            let bag = property_bag_from_json(&value);
-            assert!(bag.is_empty(), "a JSON value that can't deserialize into a PropertyBag falls back to empty");
+            let value = dsl_core::DslValue::String("not-an-object-map".to_string());
+            let bag = property_bag_from_value(&value);
+            assert!(bag.is_empty(), "a value that can't deserialize into a PropertyBag falls back to empty");
         });
     }
     // #endsubregion
 }
 // #endregion 🔖️Tests
 
-// #region 🔖️PropertyJson
-/// 🧾️ Converts JSON fixture `userData` into a typed property bag.
-pub fn property_bag_from_json(value: &serde_json::Value) -> PropertyBag {
-    serde_json::from_value(value.clone()).unwrap_or_default()
+// #region 🔖️PropertyValue
+/// 🧾️ Converts a fixture `userData` value into a typed property bag.
+pub fn property_bag_from_value(value: &dsl_core::DslValue) -> PropertyBag {
+    let dsl_core::DslValue::Object(entries) = value.clone() else {
+        return PropertyBag::default();
+    };
+    entries.into_iter().filter_map(|(k, v)| dsl_core::FromValue::from_value(v).ok().map(|pv| (k, pv))).collect()
 }
 
-/// 🧾️ Serializes a property bag back to JSON for fixture export.
-pub fn property_bag_to_json(bag: &PropertyBag) -> Option<serde_json::Value> {
+/// 🧾️ Serializes a property bag back to a value for fixture export.
+pub fn property_bag_to_value(bag: &PropertyBag) -> Option<dsl_core::DslValue> {
     if bag.is_empty() {
         None
     } else {
-        serde_json::to_value(bag).ok()
+        let entries: Vec<(String, dsl_core::DslValue)> = bag.iter().map(|(k, v)| (k.clone(), dsl_core::ToValue::to_value(v))).collect();
+        Some(dsl_core::DslValue::Object(entries))
     }
 }
-// #endregion 🔖️PropertyJson
+// #endregion 🔖️PropertyValue
 
 // #region 🔖️Kinds
 use geometry::Point;
@@ -2511,7 +2623,7 @@ mod point_bridge {
             y: <f64 as dsl_core::FromValue>::from_value(y).map_err(|e| e.under("y"))?,
         })
     }
-    use super::dsl_core;
+    use crate::dsl_core;
 }
 
 /// 🔵️ Circle or axis-aligned rectangle node body.

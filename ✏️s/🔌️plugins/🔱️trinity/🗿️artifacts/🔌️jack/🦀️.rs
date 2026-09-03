@@ -159,7 +159,7 @@ impl From<ManifestValidationError> for TrinityRamError {
 /// instance data now lives in this composed child's own `nodes`/`edges`, not on `JackSnapshot`.
 pub type JackContentChild = store::ArtifactChild<SemioGraphSnapshot>;
 
-use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::any::schema::geometry::SemioPoint2;
+use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::base::schema::geometry::SemioPoint2;
 use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::graph::schema::snapshot::{
     GraphEdgeId as SemioGraphEdgeId, GraphNodeId as SemioGraphNodeId, SemioGraphEdge, SemioGraphNode, SemioGraphPort, SemioGraphPortKind, SemioGraphSnapshot, STDIO_SEMIOGRAPH_DOCUMENT_SCHEMA,
 };

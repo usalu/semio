@@ -32,7 +32,6 @@ import {
   type AppRouterManifest,
   type ArtifactDialect,
   dialectCoordinate,
-  parseDialectCoordinate,
   EMPTY_OPENING_PREFERENCES,
   foldOpeningPreferences,
   type OpeningConfigMutation,
@@ -141,6 +140,8 @@ import {
   type DirectoryCommand,
   type DirectoryEvent,
   type DirectoryStreamMessage,
+  resolveArtifactOpeningRelay,
+  type ResolvedArtifactOpeningRelay,
 } from "@semio-tech/framework-os";
 /** 🔗️ `mutationEnvelopeFromWire`/`mutationEnvelopeToWire`/`MutationEnvelope` live in the wire-contract
  * package itself, not re-exported by `@semio-tech/framework-os` — same source
@@ -309,6 +310,7 @@ import {
 } from "../Interpreter/🟦️.tsx";
 import { builtNodeToSnapshot, UiDocumentStore } from "../UiDocumentStore/🟦️.tsx";
 import { BoardSessionFactoryContext, resolveAppSurfaceSessionFactory, type AppSurfaceSessionFactory } from "../WasmSessionLoader/🟦️.tsx";
+import { resolveDocumentOpeningTarget, type DocumentOpeningTarget } from "./🧭️opening/🟦️.ts";
 import {
   actionStageKey,
   type ActiveSession,
@@ -489,6 +491,7 @@ import {
 import { type PluginWasmHandle, type PluginExtensionCompletion, serializePerActor, setPluginRuntimeActor } from "../PluginRuntime/🟦️.tsx";
 import { EXTENSION_TARGETS } from "../../../../🔌️plugin/📇️registry/🤖️generated/🟦️plugins.ts";
 import { PLUGIN_CATALOG } from "../../../../🔌️plugin/📇️registry/🟦️.ts";
+import { BootstrapStatusNotice, reduceBootstrapUiState, resolveRequiredHostApps, type BootstrapUiState } from "./🧬️contracts/🪪️host-bootstrap/🟦️.tsx";
 
 
 import { SyncAttachCard } from "../ShellSync/🟦️.tsx";
@@ -1128,13 +1131,26 @@ function FrameworkOsShellInner({
     });
   }, []);
   const hostPlugin = useMemo(() => (hostConfig ? loadedPlugins.find((entry) => entry.handle.pluginId === hostConfig.pluginId) : undefined), [loadedPlugins, hostConfig]);
-  const hostApp = useMemo(() => hostPlugin?.manifest.apps.find((app) => app.id === hostConfig?.hostAppId), [hostPlugin, hostConfig]);
-  const landingApp = useMemo(() => hostPlugin?.manifest.apps.find((app) => app.id === hostConfig?.landingAppId) ?? hostPlugin?.manifest.apps[0], [hostPlugin, hostConfig]);
-  const landingAppId = hostConfig?.landingAppId;
-  const hostAppId = hostConfig?.hostAppId;
+  const hostAppsResolution = useMemo(() => {
+    if (!hostPlugin || !hostConfig) return { apps: undefined, error: null };
+    try {
+      return { apps: resolveRequiredHostApps(hostPlugin.manifest.apps, hostConfig), error: null };
+    } catch (resolutionError) {
+      return { apps: undefined, error: resolutionError instanceof Error ? resolutionError.message : String(resolutionError) };
+    }
+  }, [hostPlugin, hostConfig]);
+  const hostApp = hostAppsResolution.apps?.host;
+  const landingApp = hostAppsResolution.apps?.landing;
+  const landingAppId = landingApp?.id;
+  const hostAppId = hostApp?.id;
   const hostControllerId = hostApp?.controllerId;
   const landingControllerId = landingApp?.controllerId;
   const hostCatalogueTabId = hostApp?.panelTabs[0] ? panelTabKindId(hostApp.panelTabs[0].kind) : undefined;
+  useEffect(() => {
+    if (!hostAppsResolution.error) return;
+    dispatch({ type: "SET_SESSION", value: null });
+    dispatch({ type: "SET_ERROR", value: hostAppsResolution.error });
+  }, [hostAppsResolution.error]);
   useEffect(() => {
     if (!session) return;
     // 🩹️ ticket 26/08/17/FINISH-HUB-SPACES-COLLABORATION-END-TO-END lane 5-A — reads `loadedPluginsRef`
@@ -1294,8 +1310,10 @@ function FrameworkOsShellInner({
    * temporal-dead-zone violation at the point `useCallback` evaluates that array. Same ref-forwarding
    * idiom `onActionRef`/`dispatchDirectoryEventsRef` already use: assigned as a plain statement right
    * after each real declaration, read only from inside a later callback body, never from a deps array. */
-  const openDocumentRef = useRef<(ref: { readonly documentId: string; readonly schema: string }, bindings?: readonly PersistenceBinding[]) => Promise<void>>(async () => {});
-  const openArtifactWithAppRefRef = useRef<(target: AppRef, dialect: ArtifactDialect, role: AppRole) => Promise<void>>(async () => {});
+  type OpenDocumentSessionTarget = DocumentOpeningTarget<ActiveSession, PluginWasmHandle>;
+  const openDocumentRef = useRef<(ref: { readonly documentId: string; readonly schema: string }, bindings?: readonly PersistenceBinding[], target?: OpenDocumentSessionTarget) => Promise<void>>(async () => {});
+  const openArtifactWithAppRefRef = useRef<(target: AppRef, dialect: ArtifactDialect, role: AppRole) => Promise<OpenDocumentSessionTarget | null>>(async () => null);
+  const resolveArtifactOpeningRelayRef = useRef<(actionId: string, args: unknown) => ResolvedArtifactOpeningRelay | null>(() => null);
   /** 📇️ Offline-queue depth surfaced by the worker's `directory-status` — not yet rendered by any
    * chrome this lane owns (2-F/3-A's "row shows 'pending'" territory); kept as local state so a
    * consumer can read it once that chrome lands, with zero further plumbing here. */
@@ -1321,6 +1339,8 @@ function FrameworkOsShellInner({
   const segmentedDownloadAbortRef = useRef(new AbortController());
   /** 🗂️ Which session/plugin owns each open document id, so incoming worker events route correctly. */
   const openDocumentSessionsRef = useRef<Map<string, { session: ActiveSession; plugin: PluginWasmHandle }>>(new Map());
+  const [bootstrapUiByDocument, setBootstrapUiByDocument] = useState<BootstrapUiState>({});
+  const rebootstrapDiscardedSessionsRef = useRef<Map<string, ActiveSession>>(new Map());
   /** 🐚️ Unregisters this shell's `registerPluginBackboneRoute` entry for each open document id — called
    * from `closeDocument` and (for whatever is still open) on shell unmount. */
   const pluginBackboneRouteUnregistersRef = useRef<Map<string, () => void>>(new Map());
@@ -1371,6 +1391,19 @@ function FrameworkOsShellInner({
           // client; a duplicate here is harmless — `FoldDirectoryEvent`'s fold is idempotent per event
           // id (config lane, "last envelope wins" — see `📓️w1-c-report.md`).
           dispatchDirectoryEventsRef.current(message.events);
+        }
+        return;
+      }
+      if (message.kind === "artifact-bootstrap-progress" || message.kind === "artifact-bootstrap-failed" || message.kind === "artifact-rebootstrap-required") {
+        const entry = openDocumentSessionsRef.current.get(message.documentId);
+        if (!entry) return;
+        setBootstrapUiByDocument((current) => reduceBootstrapUiState(current, message));
+        if (message.kind === "artifact-rebootstrap-required") {
+          const active = sessionRef.current;
+          if (active?.instanceId === entry.session.instanceId) {
+            rebootstrapDiscardedSessionsRef.current.set(message.documentId, entry.session);
+            dispatch({ type: "SET_SESSION", value: null });
+          }
         }
         return;
       }
@@ -1425,14 +1458,32 @@ function FrameworkOsShellInner({
             ),
           }),
         ]);
-      } else if (event.kind === "snapshotReplaced" && entry.plugin.loadAppDocumentPack) {
+      } else if (event.kind === "snapshotReplaced") {
         const packBytes = new Uint8Array(event.pack);
         const sprBytes = new Uint8Array(event.spr);
-        void entry.plugin.loadAppDocumentPack(entry.session.instanceId, packBytes, sprBytes);
         const actorUri = `actor://${message.documentId}`;
-        postPluginBackboneInbound(entry.session.pluginId, actorUri, [
-          encodeBackboneMessage({ kind: "snapshot", pack: packBytes, spr: sprBytes }),
-        ]);
+        void (async () => {
+          try {
+            if (entry.plugin.loadAppDocumentPack) await entry.plugin.loadAppDocumentPack(entry.session.instanceId, packBytes, sprBytes);
+            postPluginBackboneInbound(entry.session.pluginId, actorUri, [
+              encodeBackboneMessage({ kind: "snapshot", pack: packBytes, spr: sprBytes }),
+            ]);
+            const discarded = rebootstrapDiscardedSessionsRef.current.get(message.documentId);
+            if (discarded) {
+              rebootstrapDiscardedSessionsRef.current.delete(message.documentId);
+              dispatch({ type: "SET_SESSION", value: (current) => current ?? discarded });
+            }
+            setBootstrapUiByDocument((current) => reduceBootstrapUiState(current, { kind: "snapshot-replaced", documentId: message.documentId }));
+          } catch (replacementError) {
+            setBootstrapUiByDocument((current) => reduceBootstrapUiState(current, {
+              kind: "artifact-bootstrap-failed",
+              documentId: message.documentId,
+              code: "invalid-bootstrap",
+              message: (replacementError instanceof Error ? replacementError.message : String(replacementError)).slice(0, 4_096),
+              retryable: false,
+            }));
+          }
+        })();
       } else if (event.kind === "conflict") {
         // ⚖️ Investigated for contract freeze `26/08/16/MUTATION-OUTCOMES-MERGE-POLICIES-AND-FIRST-
         // CLASS-CONFLICTS` §C6/§C9 (lane L1): this is `🏪️store/🔄️sync/🦀️.rs`'s hub-relay
@@ -1592,8 +1643,7 @@ function FrameworkOsShellInner({
     async (handle: PluginWasmHandle) => {
       const manifest = handle.manifest;
       if (hostConfig) {
-        const sApp = manifest.apps.find((app) => app.id === hostConfig.landingAppId) ?? manifest.apps[0];
-        if (!sApp) throw new Error("host program missing landing app");
+        const sApp = resolveRequiredHostApps(manifest.apps, hostConfig).landing;
         // 🪦️ `manifest.workflows` (the source `buildSpacePrograms` used to read) was deleted from the
         // Rust `PluginManifest` — the studio catalogue is now registry-driven (see `SpaceCommand::SetAppRegistrations`),
         // so `SpacePanelState.programs` is permanently empty; `spawnedApps`/`activePanelTab`/`activeSpawnedId` are
@@ -3036,27 +3086,19 @@ function FrameworkOsShellInner({
               worker.postMessage({ wire: encodeBackboneWorkerRequest({ kind: "directory-command", requestId, command }) });
             }
           } else if (actionId === "os.open-artifact" || actionId === "os.open-artifact-with") {
-            const artifactRef = typeof argsRecord?.artifactRef === "string" ? argsRecord.artifactRef : undefined;
-            const pluginId = typeof argsRecord?.pluginId === "string" ? argsRecord.pluginId : undefined;
-            const appId = typeof argsRecord?.appId === "string" ? argsRecord.appId : undefined;
-            const documentId = typeof argsRecord?.documentId === "string" ? argsRecord.documentId : undefined;
-            const spaceId = typeof argsRecord?.spaceId === "string" ? argsRecord.spaceId : undefined;
-            const role: AppRole = argsRecord?.role === 0 ? "viewer" : "editor";
-            if (artifactRef && pluginId && appId) {
-              const dialect = parseDialectCoordinate(artifactRef);
-              await openArtifactWithAppRefRef.current({ pluginId, appId }, dialect, role);
-              if (documentId) {
-                if (spaceId) openSpaceIdRef.current = spaceId;
-                // 📇️ `schema` has no general dialect-coordinate → document-schema formula (verified
-                // against `s.space`'s own three DIFFERENT id strings — artifact-kind id, dialect
-                // coordinate, document schema — none derivable from the others); the one mapping known
-                // to this lane is used, `artifactRef` itself is the best-effort fallback for anything
-                // else until lane 3-B's opening relay carries a real `schema` field.
-                const schema = dialectCoordinate(dialect) === dialectCoordinate(SPACE_INDEX_DIALECT) ? S_SPACE_INDEX_DOCUMENT_SCHEMA : artifactRef;
-                await openDocumentRef.current({ documentId, schema });
+            try {
+              const opening = resolveArtifactOpeningRelayRef.current(actionId, argsRecord);
+              if (!opening) {
+                console.warn("[os-shell] replayShellCommand: artifact router is not ready", args);
+                continue;
               }
-            } else {
-              console.warn("[os-shell] replayShellCommand: os.open-artifact missing artifactRef/pluginId/appId", args);
+              const target = await openArtifactWithAppRefRef.current(opening.app, opening.dialect, opening.role);
+              if (target && opening.documentId && opening.schema) {
+                if (opening.spaceId) openSpaceIdRef.current = opening.spaceId;
+                await openDocumentRef.current({ documentId: opening.documentId, schema: opening.schema }, undefined, target);
+              }
+            } catch (openingError) {
+              console.warn("[os-shell] replayShellCommand: artifact opening rejected", openingError, args);
             }
           }
           continue;
@@ -3192,7 +3234,7 @@ function FrameworkOsShellInner({
         if (!hostConfig || !currentSession || loadedPlugins.length === 0) return;
         const path = uri.split("?")[0] ?? "/";
         // 📇️ ticket 26/08/16/HUB-SPACES-LIVE-PRESENCE-AND-COLLABORATIVE-STUDIOS §5 — `/spaces/{id}/studio`
-        // (optionally `/instances/{id}`) opens the workflow studio (`hostConfig.hostAppId`, the
+        // (optionally `/instances/{id}`) opens the workflow studio (the canonical resolved host app,
         // pre-existing behaviour every bare `/spaces/{id}` used to trigger). `parseShellRoute` (owned by
         // `ShellHelpers/🟦️.tsx`, outside this lane's lease) has no concept of a `/studio`
         // segment, so it's matched locally here first — `parseShellRoute` itself is never edited, and
@@ -3204,7 +3246,8 @@ function FrameworkOsShellInner({
         if (route.kind === "landing") {
           openSpaceIdRef.current = null;
           openInstanceIdRef.current = null;
-          if (currentSession.app.id !== hostConfig.landingAppId) await switchToManagedApp(hostConfig.landingAppId, preservedViewState);
+          if (!landingAppId) throw new Error("required landing app identity is unavailable");
+          if (currentSession.app.id !== landingAppId) await switchToManagedApp(landingAppId, preservedViewState);
           return;
         }
         if (route.kind === "notFound") {
@@ -3245,7 +3288,8 @@ function FrameworkOsShellInner({
         // race-navigate to `/spaces/demo` while `switchToManagedApp` is still awaiting.
         const studioChanged = openSpaceIdRef.current !== spaceId;
         openSpaceIdRef.current = spaceId;
-        const studioSession = currentSession.app.id === hostConfig.hostAppId ? currentSession : await switchToManagedApp(hostConfig.hostAppId, preservedViewState);
+        if (!hostAppId) throw new Error("required host app identity is unavailable");
+        const studioSession = currentSession.app.id === hostAppId ? currentSession : await switchToManagedApp(hostAppId, preservedViewState);
         if (!studioSession) return;
         const studioControllerId = studioSession.app.controllerId;
         if (studioChanged) {
@@ -3269,7 +3313,7 @@ function FrameworkOsShellInner({
         applyShellUriDepthRef.current -= 1;
       }
     },
-    [applyHostEffects, loadedPlugins, refreshUi, hostConfig, switchToManagedApp, updateSpacePanel],
+    [applyHostEffects, loadedPlugins, refreshUi, hostConfig, landingAppId, hostAppId, switchToManagedApp, updateSpacePanel],
   );
 
   useEffect(() => {
@@ -3314,11 +3358,10 @@ function FrameworkOsShellInner({
    * per this session's priority order if not otherwise completed); see that file's own notes.
    */
   const openDocument = useCallback(
-    async (ref: { readonly documentId: string; readonly schema: string }, bindings?: readonly PersistenceBinding[]) => {
-      const targetSession = resolveSyncTargetSession();
-      if (!targetSession) return;
-      const plugin = loadedPlugins.find((entry) => entry.handle.pluginId === targetSession.pluginId)?.handle;
-      if (!plugin) return;
+    async (ref: { readonly documentId: string; readonly schema: string }, bindings?: readonly PersistenceBinding[], target?: OpenDocumentSessionTarget) => {
+      const documentTarget = resolveDocumentOpeningTarget(target, resolveSyncTargetSession(), loadedPlugins);
+      if (!documentTarget) return;
+      const { session: targetSession, plugin } = documentTarget;
       const worker = ensureBackboneWorker();
       const resolvedBindings: readonly PersistenceBinding[] =
         bindings ??
@@ -3358,6 +3401,8 @@ function FrameworkOsShellInner({
     const entry = openDocumentSessionsRef.current.get(documentId);
     if (entry?.plugin.detachBackbone) void entry.plugin.detachBackbone(entry.session.instanceId);
     openDocumentSessionsRef.current.delete(documentId);
+    rebootstrapDiscardedSessionsRef.current.delete(documentId);
+    setBootstrapUiByDocument((current) => reduceBootstrapUiState(current, { kind: "detached", documentId }));
     pluginBackboneRouteUnregistersRef.current.get(documentId)?.();
     pluginBackboneRouteUnregistersRef.current.delete(documentId);
     const request: BackboneWorkerRequest = { kind: "close", documentId };
@@ -4106,21 +4151,8 @@ function FrameworkOsShellInner({
    * `space.created` event arriving, yet no row ever appeared — a data-shape bug, not a thrown error,
    * which is why neither `pageerror` nor any `console.error` ever caught it.
    *
-   * w4-h root-cause fix #2: `hostConfig.landingAppId`/`hostAppId` are the plugin's OWN Cargo.toml
-   * metadata aliases (`host = { landing = "home", shell = "studio" }`, a human-readable nickname pair
-   * the registry generator carries through verbatim) — NEVER the real canonical `app.id` a mounted
-   * session actually carries (`s.space.home@1/*#editor`, `s.space.studio@1/*#editor` — dialect-derived,
-   * confirmed via `engine::space::component::tests::space_manifest_uses_studio_app_id`). Comparing
-   * `current.app.id` against the raw alias string can never be true; this file's OWN `landingApp`/
-   * `hostApp` (a few lines up, `hostPlugin?.manifest.apps.find(app => app.id === hostConfig.landingAppId
-   * /hostAppId)`) already exist to bridge alias → real app object (`landingApp` masks the same dead
-   * comparison with a `?? manifest.apps[0]` fallback that happens to land on Home since it's the
-   * plugin's first-registered app; `hostApp` has no such fallback and is consequently always
-   * `undefined` today — a separate, pre-existing, wider bug this lane's lease does not cover fixing).
-   * Comparing against the resolved OBJECTS' `.id` instead of the raw alias strings is what actually
-   * works; proven live via a temporary debug log (`🧪️4-h-collab-e2e-run3.txt`): `isHome` was `false` on
-   * every single invocation even though `currentAppId` (`s.space.home@1/*#editor`) and the fold's own
-   * event payload were both correct. */
+   * Host aliases are resolved once against the immutable live manifest. Directory gating therefore
+   * compares exact canonical app identities and never relies on registry aliases or app ordering. */
   const dispatchDirectoryEventBatch = useCallback(
     (events: readonly DirectoryEvent[]) => {
       if (events.length === 0 || !hostConfig) return;
@@ -4451,6 +4483,7 @@ function FrameworkOsShellInner({
    * another session/shell is not reflected here until that gap closes. See `📓️w1-c-report.md`. */
   const [openingPreferences, setOpeningPreferences] = useState<OpeningPreferences>(EMPTY_OPENING_PREFERENCES);
   const pinnedAppFor = useCallback((dialect: ArtifactDialect, role: AppRole): AppRef | undefined => openingPreferences.defaults.find((entry) => dialectCoordinate(entry.dialect) === dialectCoordinate(dialect) && entry.role === role)?.app, [openingPreferences]);
+  resolveArtifactOpeningRelayRef.current = (actionId, args) => (appRouter ? resolveArtifactOpeningRelay(actionId, args, appRouter, openingPreferences) : null);
 
   /** 👁️✏️ `PluginRuntime`'s `PluginWasmHandle` wraps the raw `exchange` ABI behind typed methods —
    * `transactionPrepare`/`transactionCommit`/`transactionUndo`/`transactionRedo` and (as of ticket
@@ -4546,30 +4579,31 @@ function FrameworkOsShellInner({
    * (contract freeze §3/§5's "Open with…") — installs the target plugin first if it isn't loaded
    * yet, then mirrors `establishPrimarySession`'s non-studio create/seed/dispatch sequence. Also
    * best-effort notifies the host once `openArtifact` is wrapped (see `PendingAppChannelMethods`
-   * above); `artifactRef` is approximated as the dialect coordinate — there is no per-document
-   * identity surfaced to the shell yet, only per-dialect (see `📓️w1-c-report.md`). */
+   * above) using the canonical role-suffixed surface id. */
   const openArtifactWithAppRef = useCallback(
-    async (target: AppRef, dialect: ArtifactDialect, role: AppRole) => {
+    async (target: AppRef, dialect: ArtifactDialect, role: AppRole): Promise<OpenDocumentSessionTarget | null> => {
       let plugin = loadedPlugins.find((entry) => entry.handle.pluginId === target.pluginId);
       if (!plugin) {
         const outcome = await installPlugin(target.pluginId);
-        if (outcome !== "loaded" && outcome !== "already-loaded") return;
+        if (outcome !== "loaded" && outcome !== "already-loaded") return null;
         plugin = loadedPluginsRef.current.find((entry) => entry.handle.pluginId === target.pluginId);
       }
       const app = plugin?.manifest.apps.find((candidate) => candidate.id === target.appId);
       if (!plugin || !app) {
         console.error(`[DEBUG] openArtifactWithAppRef: ${target.pluginId}/${target.appId} not found after install`);
-        return;
+        return null;
       }
-      void (plugin.handle as PendingAppChannelMethods).openArtifact?.(dialectCoordinate(dialect), role === "editor" ? 1 : 0, target.pluginId, target.appId)?.catch((commandError) => console.error("[DEBUG] openArtifact failed", commandError));
+      void (plugin.handle as PendingAppChannelMethods).openArtifact?.(canonicalSurfaceId(dialect, role), role === "editor" ? 1 : 0, target.pluginId, target.appId)?.catch((commandError) => console.error("[DEBUG] openArtifact failed", commandError));
       const instanceId = await plugin.handle.createApp(app.id);
       const seeded = applyFrameworkLayoutSeed(app.defaultLayout, withLocalizedWindowKindLabels(app.windowKinds), EMPTY_APP_LABELS_OVERLAY, uiTerminology, uiLocale);
       extraWindowInstancesRef.current = seeded.extraInstances;
       extraWindowCounterRef.current = seeded.extraInstances.length;
-      dispatch({ type: "SET_SESSION", value: { pluginId: plugin.handle.pluginId, instanceId, app, viewState: { activeModeId: app.defaultModeId ?? app.modes[0]?.id } } });
+      const nextSession: ActiveSession = { pluginId: plugin.handle.pluginId, instanceId, app, viewState: { activeModeId: app.defaultModeId ?? app.modes[0]?.id } };
+      dispatch({ type: "SET_SESSION", value: nextSession });
       dispatch({ type: "SET_EXTRA_WINDOW_INSTANCES", value: seeded.extraInstances });
       dispatch({ type: "SET_SHELL_LAYOUT", value: seeded.modeLayout });
       dispatch({ type: "SET_ACTIVE_WINDOW_ID", value: null });
+      return { session: nextSession, plugin: plugin.handle };
     },
     [loadedPlugins, installPlugin, uiTerminology, uiLocale],
   );
@@ -7047,6 +7081,13 @@ function FrameworkOsShellInner({
     <UIFindProvider>
       <LevelProvider level="base">
         <div className="flex h-screen min-h-0 w-screen flex-col bg-transparent" data-level="base">
+          {Object.values(bootstrapUiByDocument).length > 0 ? (
+            <div className="pointer-events-auto absolute top-workbench left-1/2 z-50 flex -translate-x-1/2 flex-col gap-single rounded-sm border bg-base px-double py-single text-sm shadow-sm">
+              {Object.values(bootstrapUiByDocument).map((status) => (
+                <BootstrapStatusNotice key={status.documentId} status={status} locale={uiLocale} onCancel={closeDocument} />
+              ))}
+            </div>
+          ) : null}
           {/* 🧯️ Non-blocking notice — e.g. a `"viewer.read-only"` fault (contract freeze §2.3/§5): never
            * a crash, never blocks interaction with the rest of the shell. */}
           {transientNotice ? (

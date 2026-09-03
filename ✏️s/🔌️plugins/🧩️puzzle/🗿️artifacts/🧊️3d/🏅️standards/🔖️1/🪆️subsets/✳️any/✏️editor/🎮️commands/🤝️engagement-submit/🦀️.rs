@@ -4,7 +4,7 @@ use crate::editor::puzzle3d::commands::set_fill_count;
 use crate::editor::puzzle3d::modes::edit::windows::main::utilities;
 use crate::editor::puzzle3d::{apply_puzzle3d_focus_selection, drive_precompute, Puzzle3dActionCtx, PUZZLE3D_FILL_COUNT_MAX};
 use semio_framework_plugin::strip_engagement_prefix;
-use serde_json::Value;
+use dsl::os_pack::json::Value;
 
 pub fn engagement_submit(ctx: &mut Puzzle3dActionCtx<'_>, args: Option<&Value>) {
     let raw = args.and_then(|value| value.get("value")).and_then(|value| value.as_str()).unwrap_or("").trim().to_string();

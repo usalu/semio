@@ -3,7 +3,7 @@ name = "semio-s-plugin-procedural"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
-description = "Procedural plugin - one crate for the procedural2d/procedural3d artifacts (diff/op/dsl/pack/spr/engine) and the 2d/3d play apps (commands/modes/windows/panels)"
+description = "Procedural plugin - one crate for the generation2d/generation3d artifacts (diff/op/dsl/pack/spr/engine) and the 2d/3d play apps (commands/modes/windows/panels)"
 
 [lints]
 workspace = true
@@ -16,14 +16,14 @@ role = "plugin"
 consumes = ["forms.questionKind", "flow.extension"]
 
 [[package.metadata.semio.playground]]
-variant = "procedural2d"
-app = "s.procedural.procedural2d@1/*#editor"
+variant = "generation2d"
+app = "s.procedural.generation2d@1/*#editor"
 aliases = ["procedural 2d"]
 ports = { react = 6021, wgpu = 6121 }
 
 [[package.metadata.semio.playground]]
-variant = "procedural3d"
-app = "s.procedural.procedural3d@1/*#editor"
+variant = "generation3d"
+app = "s.procedural.generation3d@1/*#editor"
 aliases = ["procedural 3d"]
 ports = { react = 6018, wgpu = 6118 }
 
@@ -67,7 +67,7 @@ serde_json = { workspace = true, features = ["float_roundtrip"] }
 
 [dev-dependencies]
 semio-framework-async-macros = { path = "../../../../../🧰️framework/🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust" }
-# 🎬️ `EngineComputeTests` (below, in the procedural3d editor's root component.rs) exercises frustum-cull/AABB scene
+# 🎬️ `EngineComputeTests` (below, in the generation3d editor's root component.rs) exercises frustum-cull/AABB scene
 # math that now lives at `ui_wgpu`'s `kernel_3d_scene` mount (ticket
 # 26/08/12/DISSOLVE-KERNELS-AND-MODULES-INTO-EVENT-SOURCED-ARTIFACTS wave MESH — `semio-framework-3d`
 # no longer has a `scene` module to depend on). Same crate-rename as the normal `["wgpu"]` dependency

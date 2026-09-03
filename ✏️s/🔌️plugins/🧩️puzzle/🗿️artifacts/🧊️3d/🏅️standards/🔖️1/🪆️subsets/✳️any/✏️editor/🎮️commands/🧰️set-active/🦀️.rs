@@ -3,7 +3,7 @@
 use crate::editor::puzzle3d::modes::edit::windows::main::utilities;
 use crate::editor::puzzle3d::{drive_precompute, puzzle3d_scene_active_utility, Puzzle3dActionCtx};
 use semio_framework_plugin::SET_ACTIVE_UTILITY_ACTION_ID;
-use serde_json::Value;
+use dsl::os_pack::json::Value;
 
 pub fn set_active(ctx: &mut Puzzle3dActionCtx<'_>, action: &str, args: Option<&Value>) {
     if action == SET_ACTIVE_UTILITY_ACTION_ID {

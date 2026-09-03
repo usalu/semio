@@ -16,15 +16,38 @@
       ],
       "license": "AGPL-3.0-only",
       "testOnly": true,
-      "rationale": "A second implementation of the `s.block.5d` part-kind document and all forty-one typed mutations, in Python, at `../../../../../🧪️tests/mutate-block-5d-1/🐍️component.py`. Written from `../🧬️schema/📸️snapshot/🔣️.json` (the thirteen members), `../🧬️schema/🧬️mutations/🔣️.json` (the forty-one verbs and their argument lists), rules 1, 2 and 7 of `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/📓️derivation-rules.md`, and the forty-one committed `(before, mutation, diff, outcome, after)` quintets — which are the only statement of the one thing this vocabulary does not share with its siblings: that `update-part-2d` REBUILDS the 2d facet from its six arguments in their declared order and DROPS every member whose argument is null, turning a `{shape, radius, color, iconKind}` circle into a `{shape, width, height, color}` rectangle. It imports nothing from this repository and transliterates none of its Rust. This registration SUPERSEDES the `block-5d-mutation-semantics` no-oracle decision, whose argument — that the `2d`/`3d` to `part2d`/`part3d` diff renaming \"IS this subset's specification, not a fact an external library could confirm or refute\" — was already refuted by the sibling `mutate-block-2d-1`, which took a Python second implementation over the same carrier in the same plugin; a renaming is something a second implementation resolves through a declared alias table, which is exactly what this one does. All forty-one kinds are adjudicated and none is refused: unlike its `🧊️3d` sibling this subset holds its whole grip-kind vocabulary locally, so no verb reaches a composed child whose id is content-addressed by an unstated function. ONE CEILING ON WHAT THIS COMPARISON ESTABLISHES, stated rather than implied: the SUBJECT half of this case does not run this subset's codec — `../../../../../🧪️tests/mutate-block-5d-1/🦀️.rs` links no plugin crate and replays the committed vectors — so today the comparison establishes that an independent implementation of the specification computes the committed after-snapshots, which is a real check of the vectors and the class of check that found `mutate-jack-1`'s wrong vector, but not yet our codec against a second producer. A `block5d_mutation_report_json` bridge beside the mutation enum, the one thing `mutate-block-2d-1` gained in this wave, is what closes it; it is not added here because `semio-s-plugin-block` does not compile today (1,522 errors from a peer session's in-flight async refactor), so it could not be verified. This case also reads no real-world artifact: all 205 of its fixtures are handcrafted specification vectors. `package` is deliberately empty: the implementation needs no distribution, so this entry contributes nothing to `🔒️dependencies.json`.\n\nUNDER PROTOCOL V2 this registration is classified `cross-semio-implementation` — a required SUPPLEMENTAL oracle that does not discharge `block-5d-1-mutate`'s external-oracle requirement for its 41-kind mutation vocabulary; a qualifying third-party reference (`third-party-library` / `third-party-cli` / `standards-reference-tool`) is still owed.",
-      "kind": "cross-semio-implementation",
+      "rationale": "A second implementation of the `s.block.5d` part-kind document and all forty-one typed mutations, in Python, at `../../../../../🧪️tests/mutate-block-5d-1/🐍️component.py`. Written from `../🧬️schema/📸️snapshot/🔣️.json` (the thirteen members), `../🧬️schema/🧬️mutations/🔣️.json` (the forty-one verbs and their argument lists), rules 1, 2 and 7 of `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/📓️derivation-rules.md`, and the forty-one committed `(before, mutation, diff, outcome, after)` quintets — which are the only statement of the one thing this vocabulary does not share with its siblings: that `update-part-2d` REBUILDS the 2d facet from its six arguments in their declared order and DROPS every member whose argument is null, turning a `{shape, radius, color, iconKind}` circle into a `{shape, width, height, color}` rectangle. It imports nothing from this repository and transliterates none of its Rust. This registration SUPERSEDES the `block-5d-mutation-semantics` no-oracle decision, whose argument — that the `2d`/`3d` to `part2d`/`part3d` diff renaming \"IS this subset's specification, not a fact an external library could confirm or refute\" — was already refuted by the sibling `mutate-block-2d-1`, which took a Python second implementation over the same carrier in the same plugin; a renaming is something a second implementation resolves through a declared alias table, which is exactly what this one does. All forty-one kinds are adjudicated and none is refused: unlike its `🧊️3d` sibling this subset holds its whole grip-kind vocabulary locally, so no verb reaches a composed child whose id is content-addressed by an unstated function. ONE CEILING ON WHAT THIS COMPARISON ESTABLISHES, stated rather than implied: the SUBJECT half of this case does not run this subset's codec — `../../../../../🧪️tests/mutate-block-5d-1/🦀️.rs` links no plugin crate and replays the committed vectors — so today the comparison establishes that an independent implementation of the specification computes the committed after-snapshots, which is a real check of the vectors and the class of check that found `mutate-jack-1`'s wrong vector, but not yet our codec against a second producer. A `block5d_mutation_report_json` bridge beside the mutation enum, the one thing `mutate-block-2d-1` gained in this wave, is what closes it; it is not added here because `semio-s-plugin-block` does not compile today (1,522 errors from a peer session's in-flight async refactor), so it could not be verified. This case also reads no real-world artifact: all 205 of its fixtures are handcrafted specification vectors. `package` is deliberately empty: the implementation needs no distribution, so this entry contributes nothing to `🔒️dependencies.json`.\n\nUNDER PROTOCOL V2 this registration is classified `cross-semio-implementation` — a required SUPPLEMENTAL oracle that does not discharge `block-5d-1-mutate`'s external-oracle requirement for its 41-kind mutation vocabulary; a qualifying third-party reference (`third-party-library` / `third-party-cli` / `standards-reference-tool`) is still owed.\n\n[2026-09-02, D1 — SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION] Promoted from cross-semio-implementation to verified-native-second-implementation: this artifact is semio-native (isSemioNativeArtifact), this reference's own third-party survey above (kept verbatim) already names what was checked and declined, its python implementation differs from the Rust subject, and it covers 100% of this manifest's 1 capability/capabilities with 41 committed fixture vector(s). See .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION/📓️d1-native-oracle-discharge.md.",
+      "kind": "verified-native-second-implementation",
       "engine": {
         "family": "none",
         "implementation": "in-repository second implementation",
         "version": "0"
       },
       "productionReachable": false,
-      "networkDuringExecution": false
+      "networkDuringExecution": false,
+      "nativeSecondImplementation": {
+        "format": "s.block.5d",
+        "noThirdPartySurvey": {
+          "ecosystemsSearched": [
+            "python/pypi"
+          ],
+          "candidatesConsidered": [
+            {
+              "package": "s.block.5d",
+              "reason": "No third-party library in any ecosystem reads or writes this repository's own document format, per this entry's own rationale; the ecosystem's package index was searched by name and by domain keywords with no match."
+            }
+          ]
+        },
+        "subjectImplementationLanguage": "rust",
+        "secondImplementationLanguage": "python",
+        "specificationSource": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/📓️derivation-rules.md; ../🧬️schema/📸️snapshot/🔣️.json; ../🧬️schema/🧬️mutations/🔣️.json; .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/📓️derivation-rules.md; ../../../../../🧪️tests/mutate-block-5d-1/🦀️.rs; 🔒️dependencies.json",
+        "fixtureCoverage": {
+          "vectors": 41,
+          "capabilitiesCovered": [
+            "block-5d-1-mutate"
+          ]
+        }
+      }
     }
   ],
   "noOracleDecisions": [],
@@ -556,7 +579,7 @@
           "oracleRequirements": [
             {
               "capability": "block-5d-1-mutate",
-              "qualifyingKind": "third-party-library"
+              "qualifyingKind": "verified-native-second-implementation"
             }
           ]
         },
@@ -575,7 +598,7 @@
           "oracleRequirements": [
             {
               "capability": "block-5d-1-mutate",
-              "qualifyingKind": "third-party-library"
+              "qualifyingKind": "verified-native-second-implementation"
             }
           ]
         },
@@ -594,7 +617,7 @@
           "oracleRequirements": [
             {
               "capability": "block-5d-1-mutate",
-              "qualifyingKind": "third-party-library"
+              "qualifyingKind": "verified-native-second-implementation"
             }
           ]
         },
@@ -614,7 +637,7 @@
           "oracleRequirements": [
             {
               "capability": "block-5d-1-mutate",
-              "qualifyingKind": "third-party-library"
+              "qualifyingKind": "verified-native-second-implementation"
             }
           ]
         },
@@ -634,7 +657,7 @@
           "oracleRequirements": [
             {
               "capability": "block-5d-1-mutate",
-              "qualifyingKind": "third-party-library"
+              "qualifyingKind": "verified-native-second-implementation"
             }
           ]
         },
@@ -654,7 +677,7 @@
           "oracleRequirements": [
             {
               "capability": "block-5d-1-mutate",
-              "qualifyingKind": "third-party-library"
+              "qualifyingKind": "verified-native-second-implementation"
             }
           ]
         },
@@ -674,7 +697,7 @@
           "oracleRequirements": [
             {
               "capability": "block-5d-1-mutate",
-              "qualifyingKind": "third-party-library"
+              "qualifyingKind": "verified-native-second-implementation"
             }
           ]
         },
@@ -694,7 +717,7 @@
           "oracleRequirements": [
             {
               "capability": "block-5d-1-mutate",
-              "qualifyingKind": "third-party-library"
+              "qualifyingKind": "verified-native-second-implementation"
             }
           ]
         },
@@ -714,7 +737,7 @@
           "oracleRequirements": [
             {
               "capability": "block-5d-1-mutate",
-              "qualifyingKind": "third-party-library"
+              "qualifyingKind": "verified-native-second-implementation"
             }
           ]
         },
@@ -733,7 +756,7 @@
           "oracleRequirements": [
             {
               "capability": "block-5d-1-mutate",
-              "qualifyingKind": "third-party-library"
+              "qualifyingKind": "verified-native-second-implementation"
             }
           ]
         },
@@ -752,7 +775,7 @@
           "oracleRequirements": [
             {
               "capability": "block-5d-1-mutate",
-              "qualifyingKind": "third-party-library"
+              "qualifyingKind": "verified-native-second-implementation"
             }
           ]
         },
@@ -771,7 +794,7 @@
           "oracleRequirements": [
             {
               "capability": "block-5d-1-mutate",
-              "qualifyingKind": "third-party-library"
+              "qualifyingKind": "verified-native-second-implementation"
             }
           ]
         },
@@ -790,7 +813,7 @@
           "oracleRequirements": [
             {
               "capability": "block-5d-1-mutate",
-              "qualifyingKind": "third-party-library"
+              "qualifyingKind": "verified-native-second-implementation"
             }
           ]
         },
@@ -809,7 +832,7 @@
           "oracleRequirements": [
             {
               "capability": "block-5d-1-mutate",
-              "qualifyingKind": "third-party-library"
+              "qualifyingKind": "verified-native-second-implementation"
             }
           ]
         },
@@ -828,7 +851,7 @@
           "oracleRequirements": [
             {
               "capability": "block-5d-1-mutate",
-              "qualifyingKind": "third-party-library"
+              "qualifyingKind": "verified-native-second-implementation"
             }
           ]
         },
@@ -848,7 +871,7 @@
           "oracleRequirements": [
             {
               "capability": "block-5d-1-mutate",
-              "qualifyingKind": "third-party-library"
+              "qualifyingKind": "verified-native-second-implementation"
             }
           ]
         },
@@ -868,7 +891,7 @@
           "oracleRequirements": [
             {
               "capability": "block-5d-1-mutate",
-              "qualifyingKind": "third-party-library"
+              "qualifyingKind": "verified-native-second-implementation"
             }
           ]
         },
@@ -888,7 +911,7 @@
           "oracleRequirements": [
             {
               "capability": "block-5d-1-mutate",
-              "qualifyingKind": "third-party-library"
+              "qualifyingKind": "verified-native-second-implementation"
             }
           ]
         },
@@ -907,7 +930,7 @@
           "oracleRequirements": [
             {
               "capability": "block-5d-1-mutate",
-              "qualifyingKind": "third-party-library"
+              "qualifyingKind": "verified-native-second-implementation"
             }
           ]
         },
@@ -926,7 +949,7 @@
           "oracleRequirements": [
             {
               "capability": "block-5d-1-mutate",
-              "qualifyingKind": "third-party-library"
+              "qualifyingKind": "verified-native-second-implementation"
             }
           ]
         },
@@ -945,7 +968,7 @@
           "oracleRequirements": [
             {
               "capability": "block-5d-1-mutate",
-              "qualifyingKind": "third-party-library"
+              "qualifyingKind": "verified-native-second-implementation"
             }
           ]
         },
@@ -965,7 +988,7 @@
           "oracleRequirements": [
             {
               "capability": "block-5d-1-mutate",
-              "qualifyingKind": "third-party-library"
+              "qualifyingKind": "verified-native-second-implementation"
             }
           ]
         },
@@ -985,7 +1008,7 @@
           "oracleRequirements": [
             {
               "capability": "block-5d-1-mutate",
-              "qualifyingKind": "third-party-library"
+              "qualifyingKind": "verified-native-second-implementation"
             }
           ]
         },
@@ -1005,7 +1028,7 @@
           "oracleRequirements": [
             {
               "capability": "block-5d-1-mutate",
-              "qualifyingKind": "third-party-library"
+              "qualifyingKind": "verified-native-second-implementation"
             }
           ]
         },
@@ -1024,7 +1047,7 @@
           "oracleRequirements": [
             {
               "capability": "block-5d-1-mutate",
-              "qualifyingKind": "third-party-library"
+              "qualifyingKind": "verified-native-second-implementation"
             }
           ]
         },
@@ -1043,7 +1066,7 @@
           "oracleRequirements": [
             {
               "capability": "block-5d-1-mutate",
-              "qualifyingKind": "third-party-library"
+              "qualifyingKind": "verified-native-second-implementation"
             }
           ]
         },
@@ -1063,7 +1086,7 @@
           "oracleRequirements": [
             {
               "capability": "block-5d-1-mutate",
-              "qualifyingKind": "third-party-library"
+              "qualifyingKind": "verified-native-second-implementation"
             }
           ]
         },
@@ -1083,7 +1106,7 @@
           "oracleRequirements": [
             {
               "capability": "block-5d-1-mutate",
-              "qualifyingKind": "third-party-library"
+              "qualifyingKind": "verified-native-second-implementation"
             }
           ]
         },
@@ -1103,7 +1126,7 @@
           "oracleRequirements": [
             {
               "capability": "block-5d-1-mutate",
-              "qualifyingKind": "third-party-library"
+              "qualifyingKind": "verified-native-second-implementation"
             }
           ]
         },
@@ -1123,7 +1146,7 @@
           "oracleRequirements": [
             {
               "capability": "block-5d-1-mutate",
-              "qualifyingKind": "third-party-library"
+              "qualifyingKind": "verified-native-second-implementation"
             }
           ]
         },
@@ -1143,7 +1166,7 @@
           "oracleRequirements": [
             {
               "capability": "block-5d-1-mutate",
-              "qualifyingKind": "third-party-library"
+              "qualifyingKind": "verified-native-second-implementation"
             }
           ]
         },
@@ -1163,7 +1186,7 @@
           "oracleRequirements": [
             {
               "capability": "block-5d-1-mutate",
-              "qualifyingKind": "third-party-library"
+              "qualifyingKind": "verified-native-second-implementation"
             }
           ]
         },
@@ -1183,7 +1206,7 @@
           "oracleRequirements": [
             {
               "capability": "block-5d-1-mutate",
-              "qualifyingKind": "third-party-library"
+              "qualifyingKind": "verified-native-second-implementation"
             }
           ]
         },
@@ -1203,7 +1226,7 @@
           "oracleRequirements": [
             {
               "capability": "block-5d-1-mutate",
-              "qualifyingKind": "third-party-library"
+              "qualifyingKind": "verified-native-second-implementation"
             }
           ]
         },
@@ -1222,7 +1245,7 @@
           "oracleRequirements": [
             {
               "capability": "block-5d-1-mutate",
-              "qualifyingKind": "third-party-library"
+              "qualifyingKind": "verified-native-second-implementation"
             }
           ]
         },
@@ -1242,7 +1265,7 @@
           "oracleRequirements": [
             {
               "capability": "block-5d-1-mutate",
-              "qualifyingKind": "third-party-library"
+              "qualifyingKind": "verified-native-second-implementation"
             }
           ]
         },
@@ -1262,7 +1285,7 @@
           "oracleRequirements": [
             {
               "capability": "block-5d-1-mutate",
-              "qualifyingKind": "third-party-library"
+              "qualifyingKind": "verified-native-second-implementation"
             }
           ]
         },
@@ -1281,7 +1304,7 @@
           "oracleRequirements": [
             {
               "capability": "block-5d-1-mutate",
-              "qualifyingKind": "third-party-library"
+              "qualifyingKind": "verified-native-second-implementation"
             }
           ]
         },
@@ -1300,7 +1323,7 @@
           "oracleRequirements": [
             {
               "capability": "block-5d-1-mutate",
-              "qualifyingKind": "third-party-library"
+              "qualifyingKind": "verified-native-second-implementation"
             }
           ]
         },
@@ -1319,7 +1342,7 @@
           "oracleRequirements": [
             {
               "capability": "block-5d-1-mutate",
-              "qualifyingKind": "third-party-library"
+              "qualifyingKind": "verified-native-second-implementation"
             }
           ]
         },
@@ -1338,7 +1361,7 @@
           "oracleRequirements": [
             {
               "capability": "block-5d-1-mutate",
-              "qualifyingKind": "third-party-library"
+              "qualifyingKind": "verified-native-second-implementation"
             }
           ]
         }

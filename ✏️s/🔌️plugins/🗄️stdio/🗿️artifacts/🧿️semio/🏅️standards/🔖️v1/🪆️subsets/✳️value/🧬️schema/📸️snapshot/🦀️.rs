@@ -133,7 +133,7 @@ pub(crate) fn enc_semio_value_snapshot(s: &SemioValueSnapshot) -> String {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn dec_semio_value_snapshot(s: &str) -> Result<SemioValueSnapshot, String> {
-    use crate::artifacts::semio::standards::v1::subsets::any::schema::triples::{split_top_level, strip_brackets};
+    use crate::artifacts::semio::standards::v1::subsets::base::schema::triples::{split_top_level, strip_brackets};
     use crate::artifacts::semio::standards::v1::subsets::value::schema::diff::{dec_semio_value, dec_semio_value_node, dec_str};
     let inner = strip_brackets(s)?;
     let parts = split_top_level(inner, ',');
@@ -219,7 +219,7 @@ pub fn decode_semio_value_snapshot_json(text: &str) -> Result<SemioValueSnapshot
 /// 📝️ Parses `stdio.semio.value` DSL text into a [`SemioValueSnapshot`] — a named pass-through of
 /// this snapshot's own `store::ArtifactDsl` impl above, whose trait and error type are both
 /// unnameable outside this crate, so `mutate-semio-value`'s `identity-round-trip` scenario reaches
-/// the real committed artifact (`../../../../✳️any/📚️examples/🕸️graph/🖼️assets/🗣️.dsl.semio`)
+/// the real committed artifact (`../../../../✳️base/📚️examples/🕸️graph/🖼️assets/🗣️.dsl.semio`)
 /// through this instead.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn parse_semio_value_dsl(text: &str) -> Result<SemioValueSnapshot, String> {
@@ -241,7 +241,7 @@ pub fn encode_semio_value_pack(snapshot: &SemioValueSnapshot) -> Vec<u8> {
 
 /// 📦️ Decodes a semio pack envelope into a [`SemioValueSnapshot`] — the inverse of
 /// [`encode_semio_value_pack`], reading
-/// `../../../../✳️any/📚️examples/🕸️graph/🖼️assets/🎒️.pack.semio`.
+/// `../../../../✳️base/📚️examples/🕸️graph/🖼️assets/🎒️.pack.semio`.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn decode_semio_value_pack(bytes: &[u8]) -> Result<SemioValueSnapshot, String> {
     <SemioValueSnapshot as store::ArtifactPack>::decode_pack(bytes).map_err(|error| error.to_string())

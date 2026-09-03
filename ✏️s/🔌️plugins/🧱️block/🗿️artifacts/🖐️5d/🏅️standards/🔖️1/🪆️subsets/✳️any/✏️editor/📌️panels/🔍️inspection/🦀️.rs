@@ -1,13 +1,12 @@
 //! 🔍️ Block 5D play app panel — the inspector: the part kind's identity fields plus a grip count.
 
 use crate::artifacts::block5d::Block5dSnapshot;
-use crate::editor::block5d::block5d_action;
+use crate::editor::block5d::{block5d_action, ui_value_map, ui_value_text};
 use crate::editor::block5d::terminology::Block5dLabels;
 use semio_framework_plugin::{
     ui_inspector_groups_to_tree, ui_inspector_readonly_field, Label, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, UiFieldNode, UiInputNode, UiInspectorFieldGroup, UiNode, UiPresence, FRAMEWORK_PANEL_TAB_INSPECTION_ID,
     FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
 };
-use serde_json::json;
 
 //#region 🔖️Constants
 pub const BLOCK5D_BODY_INSPECTOR: &str = "block5d.play.inspector";
@@ -26,7 +25,7 @@ pub async fn definition() -> PanelTabDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-async fn text_field(id: &str, label: impl Into<Label>, value: &str, field: &str) -> UiNode {
+async fn text_field(id: &str, label: impl Into<Label>, value: &str, field: &'static str) -> UiNode {
     UiNode::Field(UiFieldNode {
         presence: UiPresence::default(),
         id: id.into(),
@@ -38,7 +37,7 @@ async fn text_field(id: &str, label: impl Into<Label>, value: &str, field: &str)
             value: value.into(),
             placeholder: None,
             commit: Some("blur".into()),
-            on_change: block5d_action("patchPartKind", Some(json!({ "field": field }))),
+            on_change: block5d_action("patchPartKind", Some(ui_value_map([("field", ui_value_text(field).expect("static field name fits ui text capacity"))]).expect("single-entry field map fits ui map capacity"))),
             min: None,
             max: None,
             step: None,

@@ -7,10 +7,10 @@
     "version": "0.1.0",
     "apps": [
       {
-        "id": "s.mathematical.mathematical@1/*#editor",
+        "id": "s.mathematical.equation@1/*#editor",
         "role": "editor",
         "dialect": {
-          "artifactKind": "s.mathematical.mathematical",
+          "artifactKind": "s.mathematical.equation",
           "standard": "1",
           "subset": "*"
         },
@@ -29,7 +29,7 @@
           "mathematical"
         ],
         "iconId": "math-app",
-        "controllerId": "s.mathematical.mathematical@1/*#editor",
+        "controllerId": "s.mathematical.equation@1/*#editor",
         "modes": [
           {
             "id": "edit",
@@ -2502,35 +2502,35 @@
           {
             "keys": "mod+z",
             "action": {
-              "controllerId": "s.mathematical.mathematical@1/*#editor",
+              "controllerId": "s.mathematical.equation@1/*#editor",
               "action": "undo"
             }
           },
           {
             "keys": "mod+shift+z",
             "action": {
-              "controllerId": "s.mathematical.mathematical@1/*#editor",
+              "controllerId": "s.mathematical.equation@1/*#editor",
               "action": "redo"
             }
           },
           {
             "keys": "mod+c",
             "action": {
-              "controllerId": "s.mathematical.mathematical@1/*#editor",
+              "controllerId": "s.mathematical.equation@1/*#editor",
               "action": "copy"
             }
           },
           {
             "keys": "mod+x",
             "action": {
-              "controllerId": "s.mathematical.mathematical@1/*#editor",
+              "controllerId": "s.mathematical.equation@1/*#editor",
               "action": "cut"
             }
           },
           {
             "keys": "mod+v",
             "action": {
-              "controllerId": "s.mathematical.mathematical@1/*#editor",
+              "controllerId": "s.mathematical.equation@1/*#editor",
               "action": "paste"
             }
           }
@@ -2577,17 +2577,17 @@
         "mediaOutputs": [],
         "artifactKinds": [
           {
-            "id": "computation.mathematical",
-            "name": "Mathematical",
-            "sourceFormat": "semio.mathematical/v1",
-            "componentKind": "mathematical",
+            "id": "computation.equation",
+            "name": "Equation",
+            "sourceFormat": "semio.equation/v1",
+            "componentKind": "equation",
             "dimension": "graph",
             "mediaCapability": "meshOnly",
             "mediaType": {
               "class": "computation",
               "form": "value"
             },
-            "schema": "computation.mathematical",
+            "schema": "computation.equation",
             "exportFormats": [],
             "importFormats": [],
             "exportStdioKinds": [],
@@ -2601,7 +2601,7 @@
           "variants": []
         },
         "io": {
-          "documentSchema": "semio.mathematical/v1",
+          "documentSchema": "semio.equation/v1",
           "documentMediaType": {
             "class": "computation",
             "form": "value"
@@ -2615,7 +2615,7 @@
                 "class": "data",
                 "form": "value"
               },
-              "kindId": "computation.mathematical",
+              "kindId": "computation.equation",
               "required": false,
               "multiplicity": "many"
             }
@@ -2623,18 +2623,18 @@
           "exportFormats": [],
           "importFormats": [],
           "artifact": {
-            "id": "computation.mathematical",
-            "name": "Mathematical",
+            "id": "computation.equation",
+            "name": "Equation",
             "dimension": "graph",
-            "componentKind": "mathematical"
+            "componentKind": "equation"
           }
         }
       },
       {
-        "id": "s.mathematical.mathematical@1/*#viewer",
+        "id": "s.mathematical.equation@1/*#viewer",
         "role": "viewer",
         "dialect": {
-          "artifactKind": "s.mathematical.mathematical",
+          "artifactKind": "s.mathematical.equation",
           "standard": "1",
           "subset": "*"
         },
@@ -2653,7 +2653,7 @@
           "mathematical"
         ],
         "iconId": "math-app",
-        "controllerId": "s.mathematical.mathematical@1/*#viewer",
+        "controllerId": "s.mathematical.equation@1/*#viewer",
         "modes": [
           {
             "id": "view",
@@ -3519,35 +3519,35 @@
           {
             "keys": "mod+z",
             "action": {
-              "controllerId": "s.mathematical.mathematical@1/*#viewer",
+              "controllerId": "s.mathematical.equation@1/*#viewer",
               "action": "undo"
             }
           },
           {
             "keys": "mod+shift+z",
             "action": {
-              "controllerId": "s.mathematical.mathematical@1/*#viewer",
+              "controllerId": "s.mathematical.equation@1/*#viewer",
               "action": "redo"
             }
           },
           {
             "keys": "mod+c",
             "action": {
-              "controllerId": "s.mathematical.mathematical@1/*#viewer",
+              "controllerId": "s.mathematical.equation@1/*#viewer",
               "action": "copy"
             }
           },
           {
             "keys": "mod+x",
             "action": {
-              "controllerId": "s.mathematical.mathematical@1/*#viewer",
+              "controllerId": "s.mathematical.equation@1/*#viewer",
               "action": "cut"
             }
           },
           {
             "keys": "mod+v",
             "action": {
-              "controllerId": "s.mathematical.mathematical@1/*#viewer",
+              "controllerId": "s.mathematical.equation@1/*#viewer",
               "action": "paste"
             }
           }
@@ -3614,8 +3614,8 @@
           }
         },
         "iconId": "file",
-        "artifactJson": "semio mathematical.mathematical.dsl v1\nnotation=[6d617468656d61746963616c2d7363656e652d65643339356238323232316465326232,6d617468656d61746963616c2d7465787421732e737464696f2e73656d696f4076312f74657874]\nresults=[6d617468656d61746963616c2d7363656e652d65643339356238323232316465326232,6d617468656d61746963616c2d7461626c6521732e737464696f2e73656d696f4076312f7461626c65]\ncomputed=[6d617468656d61746963616c2d7363656e652d65643339356238323232316465326232,6d617468656d61746963616c2d76616c756521732e737464696f2e73656d696f4076312f76616c7565]\nequation=7b2265787072223a7b226c6162656c223a302c226b696e64223a7b226b696e64223a22696e7465676572222c226c6578656d65223a2230227d7d2c226e6578744c6162656c223a317d\n",
-        "appId": "s.mathematical.mathematical@1/*#editor"
+        "artifactJson": "semio mathematical.equation.dsl v1\nnotation=[6571756174696f6e2d7363656e652d65643339356238323232316465326232,6571756174696f6e2d7465787421732e737464696f2e73656d696f4076312f74657874]\nresults=[6571756174696f6e2d7363656e652d65643339356238323232316465326232,6571756174696f6e2d7461626c6521732e737464696f2e73656d696f4076312f7461626c65]\ncomputed=[6571756174696f6e2d7363656e652d65643339356238323232316465326232,6571756174696f6e2d76616c756521732e737464696f2e73656d696f4076312f76616c7565]\nequation=7b2265787072223a7b226c6162656c223a302c226b696e64223a7b226b696e64223a22696e7465676572222c226c6578656d65223a2230227d7d2c226e6578744c6162656c223a317d\n",
+        "appId": "s.mathematical.equation@1/*#editor"
       }
     ],
     "capabilities": [
@@ -3637,7 +3637,7 @@
   "activationEvents": [
     {
       "onArtifactKind": {
-        "kind": "computation.mathematical"
+        "kind": "computation.equation"
       }
     }
   ],

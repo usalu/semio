@@ -1,6 +1,6 @@
 //! 🧩️ Assembly artifact — a WaveFunctionCollapse-style rule/slot composition engine. Authored fresh
-//! (ticket 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET, packet W2-P5): unlike `procedural2d`/
-//! `procedural3d`, this artifact never had a `🎛️apps` tree to migrate — the schema/mutations/
+//! (ticket 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET, packet W2-P5): unlike `generation2d`/
+//! `generation3d`, this artifact never had a `🎛️apps` tree to migrate — the schema/mutations/
 //! inferences tree under `🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/` predates this ticket and is
 //! reused as-is (never guessed); only this file plus the `✏️editor`/`👁️viewer` surfaces are new.
 
@@ -15,7 +15,7 @@ use semio_framework_plugin::{ArtifactKindSpec, Dialect, MediaClass, MediaForm, M
 /// sibling editor module. `artifact_kind` matches `AssemblySnapshot`/`AssemblyDiff`'s own real
 /// `#[artifact_schema(id = "s.assembly")]` attribute and `ASSEMBLY_DOCUMENT_SCHEMA`'s literal value —
 /// grepped against the schema tree before writing this, NOT the `"s.procedural.assembly"` naming this
-/// ticket's brief guessed by analogy with `procedural2d`/`procedural3d` (those two nest under the
+/// ticket's brief guessed by analogy with `generation2d`/`generation3d` (those two nest under the
 /// `procedural` plugin id; assembly's own schema tree was authored with a bare `"s.assembly"` id by
 /// the wave that built it, predating this ticket — followed as found, not overridden). `standard`/
 /// `subset` match this file's own `🏅️standards/🔖️1/🪆️subsets/✳️any` location on disk.
@@ -26,7 +26,7 @@ pub const ASSEMBLY_DIALECT: Dialect = Dialect { artifact_kind: ASSEMBLY_DOCUMENT
 /// 🗂️ This artifact's `ArtifactKindSpec` — a headless rule/slot specification (the WFC SOLVE is an
 /// inference, never persisted media), so `dimension`/`media_class`/`media_form` follow `energy.model`'s
 /// "data" precedent (also a schema-first, app-free artifact authored under this same ticket) rather
-/// than `procedural2d`/`procedural3d`'s `Flow` shape — assembly has no flow-graph fixture to render.
+/// than `generation2d`/`generation3d`'s `Flow` shape — assembly has no flow-graph fixture to render.
 pub fn artifact_kind() -> ArtifactKindSpec {
     ArtifactKindSpec {
         id: "data.assembly".into(),

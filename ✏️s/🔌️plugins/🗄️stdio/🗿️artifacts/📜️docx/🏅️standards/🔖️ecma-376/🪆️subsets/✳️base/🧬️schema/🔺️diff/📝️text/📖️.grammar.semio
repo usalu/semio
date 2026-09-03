@@ -147,7 +147,7 @@ block-item = block ","?
 style = "[" hex "," hex "," opt-hex "]"
 
 # Restated `XmlNode` value shape (this artifact's `extra_*_properties: Vec<XmlNode>` raw-retention
-# payload), verbatim from `📰xml/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🧬️schema/🔺️diff/📝️text/📖️.grammar.semio`'s
+# payload), verbatim from `📰️xml/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🧬️schema/🔺️diff/📝️text/📖️.grammar.semio`'s
 # own `xml-node` production, `x-`-prefixed here to stay a distinct namespace from this file's own
 # docx-specific production names (same restatement convention this file's sibling snapshot grammar
 # already established for its own `x-elem` productions).

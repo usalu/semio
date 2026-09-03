@@ -1,0 +1,35 @@
+[package]
+name = "semio-framework-2d"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "🖊️ 2D geometry kernel: shared path-segment vocabulary, planar booleans, bitmap trace."
+
+[lints]
+workspace = true
+
+[package.metadata.semio]
+role = "framework"
+
+[lib]
+path = "🦀️.rs"
+
+[features]
+default = ["booleans", "trace"]
+booleans = []
+trace = []
+# 🪶 Off-by-default: only `semio-framework-os-flow` (outside the in-component crate set) needs
+# `Serialize`/`Deserialize` on `PathSegment`. No plugin wasm component enables this — see
+# `⚙️engine/🦀️.rs`'s `PathSegment` doc comment. `RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS`, 26/09/02.
+serde = ["dep:serde"]
+
+[dependencies]
+semio-framework-os-kernel = { workspace = true }
+# 🔢️ `⚙️engine`, mounted into this crate via `#[path]`, content-addresses its cache keys with
+# `semio_framework_hash::hash` — the dep travels with that mount.
+semio-framework-hash = { path = "../../../🔢️hash/📦️packages/🦀️rust", package = "semio-framework-hash" }
+# 🪶 Optional — gated behind the `serde` feature above. See the `[features]` note and
+# `⚙️engine/🦀️.rs`'s `PathSegment` doc comment.
+serde = { workspace = true, optional = true }
+# 🧬️ `#[derive(ToValue, FromValue)]`, always on — the plugin-facing wire encoding for `PathSegment`.
+semio-framework-value-derive = { path = "../../../🌱️value/✨️derive/📦️packages/🦀️rust" }

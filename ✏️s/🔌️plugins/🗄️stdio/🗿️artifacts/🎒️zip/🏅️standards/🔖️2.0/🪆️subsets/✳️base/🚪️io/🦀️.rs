@@ -2,7 +2,7 @@
 //! (called once from 🔌️plugin/🔧️setup via ⚙️engine::register), not per-leaf register().
 //#region 🎹️DerivedComposition
 pub mod derived_composition {
-    use crate::artifacts::zip::standards::v2_0::subsets::any::schema::ZipAnalyzer;
+    use crate::artifacts::zip::standards::v2_0::subsets::base::schema::ZipAnalyzer;
     use crate::artifacts::zip::ZipSnapshot;
     use semio_framework_plugin::{AnalyzeSource, ArtifactComposition, ComposeError, ComposeSource, Composition, Dialect, StandardId, SubsetId};
 
@@ -1046,9 +1046,9 @@ mod codec_tests {
         crate::artifacts::zip::schema::mutations::apply_zip_mutation(&mut from_binary_op, &binary_op);
         assert_eq!(from_binary_op, logical);
 
-        let analysis = crate::artifacts::zip::standards::v2_0::subsets::any::schema::ZipAnalyzerAnalysis::analyze(&[AnalyzeSource::Binary(&pptx_bytes)]);
+        let analysis = crate::artifacts::zip::standards::v2_0::subsets::base::schema::ZipAnalyzerAnalysis::analyze(&[AnalyzeSource::Binary(&pptx_bytes)]);
         assert_eq!(analysis.parts.snapshot.as_ref(), Some(&logical));
-        let dialect = <crate::artifacts::zip::standards::v2_0::subsets::any::schema::ZipAnalyzerAnalysis as ArtifactAnalysis>::DIALECT;
+        let dialect = <crate::artifacts::zip::standards::v2_0::subsets::base::schema::ZipAnalyzerAnalysis as ArtifactAnalysis>::DIALECT;
         let composition = ZipComposerComposition::compose(&[ComposeSource { dialect, payload: AnalyzeSource::Binary(&pptx_bytes) }]).expect("compose native OPC ZIP");
         assert_eq!(composition.snapshot, logical);
 
@@ -1103,7 +1103,7 @@ mod codec_tests {
 /// DIFFERENT return type (`&'static [&'static ComposerEntry]` vs this module's
 /// `&'static [ComposerEntry]`); a bare `io_registry::entries()` silently rebinds to the wrong one.
 pub mod io_registry {
-    use crate::artifacts::zip::standards::v2_0::subsets::any::schema::ZipComposer as ZipRawAnyComposer;
+    use crate::artifacts::zip::standards::v2_0::subsets::base::schema::ZipComposer as ZipRawAnyComposer;
     use crate::artifacts::zip::standards::v2_0::subsets::iso21320::schema::ZipIso21320Composer;
     use semio_framework_plugin::{composer_entry_of, ComposerEntry};
     use std::sync::OnceLock;

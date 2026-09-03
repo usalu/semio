@@ -4,7 +4,7 @@ import {
   type DiagramLayoutDescriptor,
   type DiagramLayoutIngressPage,
   type DiagramLayoutWorkerJob,
-} from "../🧵️browser-interactive-job-port/🟦️";
+} from "../../../../../../../../🔨️modules/🖱️ui/🧱️elements/📊️Diagram/🟦️.ts";
 import {
   INTERACTIVE_JOB_INPUT_BYTE_CAPACITY,
   INTERACTIVE_JOB_INPUT_ITEM_CAPACITY,

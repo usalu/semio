@@ -1,6 +1,6 @@
 //! 🔺️ Diff for `DeleteSolid`.
 
-use crate::artifacts::semio::standards::v1::subsets::any::schema::triples::NamedTripleDiff;
+use crate::artifacts::semio::standards::v1::subsets::base::schema::triples::NamedTripleDiff;
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::SemioBrepDiff;
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::SemioBrepSnapshot;
 

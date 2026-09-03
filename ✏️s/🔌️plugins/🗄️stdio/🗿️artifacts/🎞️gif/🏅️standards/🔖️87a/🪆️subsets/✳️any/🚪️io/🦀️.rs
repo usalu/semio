@@ -685,7 +685,7 @@ pub fn register_artifact_inferences() {
 }
 
 /// 📌️ P2-FG2: 5-role `LanguageSpec` registration (Document/Ops/Diff/Pack/Spr), per the
-/// recipe's own exemplar pattern (`📄txt/…/⚙️engine/🦀️.rs`'s
+/// recipe's own exemplar pattern (`📄️txt/…/⚙️engine/🦀️.rs`'s
 /// `register_pilot_languages`) — `stdio.gif`/`.op`/`.diff`/`.pack`/`.spr`, all
 /// `dsl::passthrough_hooks`. `diff`'s `protocol` slot stays `None`, matching the exemplar's
 /// own shape exactly (the 5-role scheme has no dedicated "diff binary" role, even though

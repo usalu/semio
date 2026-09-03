@@ -1,0 +1,34 @@
+# 🧬️ Imperative artifact schema — every field with its state class.
+
+type ProcedureArtifact {
+  schema: String! @state(class: ARTIFACT)
+  path: ProcedurePath! @state(class: ARTIFACT)
+  seed: [ProcedureSeedEntry!]! @state(class: ARTIFACT)
+  selectedStepIds: [String!]! @state(class: PRESENCE)
+  locale: String! @state(class: CONFIG)
+  contributionsJson: String! @state(class: CONFIG)
+  runOutputJson: String! @state(class: TRANSIENT)
+}
+
+type ProcedurePath {
+  steps: [ProcedureStep!]!
+}
+
+type ProcedureStep {
+  id: String!
+  kind: String!
+  params: JSON
+  bodies: [ProcedureStepBodyEntry!]
+}
+
+type ProcedureStepBodyEntry {
+  slot: String!
+  path: ProcedurePath!
+}
+
+type ProcedureSeedEntry {
+  key: String!
+  value: JSON!
+}
+
+scalar JSON

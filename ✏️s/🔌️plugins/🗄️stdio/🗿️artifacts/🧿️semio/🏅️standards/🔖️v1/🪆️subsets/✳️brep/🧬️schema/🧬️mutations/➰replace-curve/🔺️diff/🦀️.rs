@@ -1,6 +1,6 @@
 //! 🔺️ Diff for `ReplaceCurve`.
 
-use crate::artifacts::semio::standards::v1::subsets::any::schema::triples::{NamedModified, NamedTripleDiff};
+use crate::artifacts::semio::standards::v1::subsets::base::schema::triples::{NamedModified, NamedTripleDiff};
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::{BrepEdgeDiff, SemioBrepDiff};
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::{BrepCurve, SemioBrepSnapshot};
 

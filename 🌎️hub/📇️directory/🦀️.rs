@@ -44,16 +44,21 @@ pub mod error {
 
 //#region 🔖️Model
 pub mod model {
+    pub use ::directory::os_directory::DocumentScope;
     use serde::{Deserialize, Serialize};
 
-    /// @emoji 🔗️ An anonymous per-document bearer token (existing auth-lite scheme, kept as-is).
-    /// `document_id` is opaque here — the directory has no FK relationship to a `db::Database`
-    /// document; it never persists document content itself.
+    /// @emoji 🔗️ A revocable, expiring, anonymous read grant for exactly one space/document.
+    /// Only its public selector and fixed digest are durable; the raw capability is returned once.
     #[derive(Clone, Debug, PartialEq)]
     pub struct ShareTokenRecord {
-        pub token: String,
-        pub document_id: String,
+        pub id: String,
+        pub selector: String,
+        pub secret_digest: [u8; 32],
+        pub scope: DocumentScope,
         pub created_at: i64,
+        pub expires_at: i64,
+        pub revoked_at: Option<i64>,
+        pub revoked_reason: Option<String>,
     }
 
     /// @emoji 🙋️ A platform user — local password login and/or one linked SSO identity. Also the
@@ -123,14 +128,74 @@ pub mod model {
         pub created_at: i64,
     }
 
-    /// @emoji 🍪️ A browser login session (distinct from {@link SyncSessionRecord}'s realtime connection).
+    /// @emoji 🧭️ How a trusted identity issuer created a durable session.
+    #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+    #[serde(rename_all = "kebab-case")]
+    pub enum AuthSessionKind {
+        External,
+        DevelopmentLocal,
+    }
+
+    impl AuthSessionKind {
+        pub fn as_str(self) -> &'static str {
+            match self {
+                Self::External => "external",
+                Self::DevelopmentLocal => "development-local",
+            }
+        }
+
+        pub fn parse(value: &str) -> Option<Self> {
+            match value {
+                "external" => Some(Self::External),
+                "development-local" => Some(Self::DevelopmentLocal),
+                _ => None,
+            }
+        }
+    }
+
+    /// @emoji 🍪️ A digest-only browser login session, distinct from a realtime connection.
     #[derive(Clone, Debug, PartialEq)]
     pub struct AuthSessionRecord {
         pub id: String,
+        pub selector: String,
+        pub secret_digest: [u8; 32],
         pub user_id: String,
-        pub created_at: i64,
+        pub identity_provider: String,
+        pub identity_subject_digest: [u8; 32],
+        pub issued_at: i64,
         pub expires_at: i64,
-        pub sso_provider: Option<String>,
+        pub revoked_at: Option<i64>,
+        pub revoked_reason: Option<String>,
+        pub authorization_generation: u64,
+        pub device_instance_id: String,
+        pub session_kind: AuthSessionKind,
+    }
+
+    /// @emoji 🎁️ A newly issued session plus its one-time plaintext capability.
+    pub struct IssuedAuthSession {
+        pub record: AuthSessionRecord,
+        pub capability: super::SessionCapability,
+    }
+
+    /// @emoji 🧹️ Durable revocation identity returned before connection kicks are attempted.
+    #[derive(Clone, Debug, PartialEq, Eq)]
+    pub struct RevokedAuthSession {
+        pub id: String,
+        pub authorization_generation: u64,
+        pub revoked_at: i64,
+    }
+
+    /// @emoji 🏭️ Validated input for digest-only session issuance.
+    #[derive(Clone, Debug, PartialEq, Eq)]
+    pub struct AuthSessionIssue {
+        pub user_id: String,
+        pub identity_provider: String,
+        pub identity_subject_digest: [u8; 32],
+        pub ttl_secs: i64,
+        pub device_instance_id: String,
+        pub session_kind: AuthSessionKind,
+        pub correlation_id: String,
+        pub peer_class: String,
     }
 
     /// @emoji 🔴️ A realtime document connection — the "session as live-features backend" record;
@@ -140,6 +205,9 @@ pub mod model {
     #[derive(Clone, Debug, PartialEq)]
     pub struct SyncSessionRecord {
         pub id: String,
+        pub auth_session_id: Option<String>,
+        pub authorization_generation: u64,
+        pub actor_id: String,
         pub space_id: String,
         pub document_id: String,
         pub surface: String,
@@ -151,26 +219,610 @@ pub mod model {
     }
 
     /// @emoji 🎟️ An outstanding (or revoked) space invite. Not event-sourced itself — only its
-    /// `invite.redeemed` outcome is (contract's decider laws) — so `token` (the bearer secret)
-    /// lives only here, never in the event log. `role` is the role a redeemer is granted.
+    /// `invite.redeemed` outcome is (contract's decider laws). Raw capability bytes are never
+    /// retained in this read model or the event log.
     #[derive(Clone, Debug, PartialEq)]
     pub struct InviteRecord {
         pub id: String,
-        pub token: String,
+        pub selector: String,
+        pub secret_digest: [u8; 32],
         pub space_id: String,
         pub role: SpaceRole,
         pub created_at: i64,
         pub expires_at: i64,
         pub revoked_at: Option<i64>,
+        pub revoked_reason: Option<String>,
+        pub accepted_at: Option<i64>,
+    }
+
+    /// @emoji 🎁️ A newly issued document share plus its one-time plaintext capability.
+    pub struct IssuedShareToken {
+        pub record: ShareTokenRecord,
+        pub capability: super::ShareCapability,
+    }
+
+    /// @emoji 🎁️ A newly issued invite plus its one-time plaintext capability.
+    pub struct IssuedInvite {
+        pub record: InviteRecord,
+        pub capability: super::InviteCapability,
+    }
+
+    /// @emoji 🧾️ Privacy-minimized append-only authentication audit entry.
+    #[derive(Clone, Debug, PartialEq, Eq)]
+    pub struct AuthAuditRecord {
+        pub id: String,
+        pub occurred_at: i64,
+        pub event_kind: String,
+        pub auth_session_id: Option<String>,
+        pub target_user_id: Option<String>,
+        pub actor_user_id: Option<String>,
+        pub provider: Option<String>,
+        pub outcome_code: String,
+        pub reason_code: Option<String>,
+        pub correlation_id: String,
+        pub peer_class: String,
     }
 }
 //#endregion 🔖️Model
 
-use directory::os_directory::{DirectoryActor, DirectoryActorKind, DirectoryCommand, DirectoryEvent, DirectoryEventBody, DirectorySpaceKind, DirectorySpaceRole, DirectorySpaceVisibility, DirectoryStreamMessage, Hlc};
+use directory::os_directory::{
+    descriptor_digest_v1, ArtifactBlobRef, ArtifactCheckpoint, ArtifactFrontier, ArtifactHash, ArtifactRetention, DirectoryActor, DirectoryActorKind, DirectoryCommand, DirectoryEvent, DirectoryEventBody, DirectorySpaceKind, DirectorySpaceRole,
+    DirectorySpaceVisibility, DirectoryStreamMessage, DocumentDescriptor, Hlc, PublishedArtifactBlob, PublishedArtifactCheckpoint,
+};
 use directory::os_identity::time_ordered_id;
 use error::{DirectoryError, DirectoryResult};
 use model::*;
+use semio_framework_hash::Sha256;
+use std::collections::HashMap;
 use std::sync::Arc;
+use crate::artifact_authority::chunk_cas::{ArtifactCasDeleteFence, ArtifactCasDeleteOutcome, ArtifactCasObjectKey, ArtifactCasOwnershipPlanV1, ArtifactCasReservation, ArtifactChunkCasStorage};
+
+/// 🧯️ Immutable per-document checkpoint-lineage ceiling shared by every backend.
+pub const ARTIFACT_CHECKPOINT_LINEAGE_MAX: u64 = 16_384;
+/// 🧯️ Immutable full-directory replay ceiling; exceeding it requires an operator repair.
+pub const DIRECTORY_PROJECTION_REBUILD_MAX_EVENTS: u64 = 1_000_000;
+/// 📖️ Immutable maximum number of public directory events returned by one read.
+pub const DIRECTORY_EVENT_READ_MAX: usize = 10_000;
+/// 🌐️ Largest exact integer shared by the Rust, JSON, and TypeScript contracts.
+pub const DIRECTORY_WIRE_INTEGER_MAX: u64 = 9_007_199_254_740_991;
+/// 🔑️ Fixed UTF-8 byte ceiling for one backend-private immutable blob locator.
+pub const ARTIFACT_PRIVATE_LOCATOR_MAX_BYTES: usize = 4_096;
+/// 🧯️ Maximum private ownership journal rows returned by one sweep read.
+pub const ARTIFACT_CAS_SWEEP_PAGE_MAX: usize = 16;
+/// 🧯️ Maximum physical objects considered by one sweep request.
+pub const ARTIFACT_CAS_SWEEP_OBJECT_MAX: usize = 4_096;
+/// ⏳️ Maximum wall-clock lifetime of one private pre-write reservation.
+pub const ARTIFACT_CAS_RESERVATION_MAX_TTL_MS: u64 = 300_000;
+
+/// 🗂️ One bounded page of private append-only reachability inputs.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct ArtifactCasSweepCandidatePage {
+    pub observed_generation: u64,
+    pub next_generation: u64,
+    pub objects: Vec<ArtifactCasObjectKey>,
+}
+
+/// 🧹️ Host intent for one bounded sweep; dry-run is the only default.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct ArtifactCasSweepRequest {
+    pub execute: bool,
+    pub max_objects: usize,
+}
+
+impl Default for ArtifactCasSweepRequest {
+    fn default() -> Self {
+        Self { execute: false, max_objects: ARTIFACT_CAS_SWEEP_OBJECT_MAX }
+    }
+}
+
+/// 📊️ Locator-free bounded sweep result.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct ArtifactCasSweepResult {
+    pub observed_generation: u64,
+    pub final_generation: u64,
+    pub examined_objects: u64,
+    pub protected_objects: u64,
+    pub eligible_objects: u64,
+    pub deleted_objects: u64,
+    pub missing_objects: u64,
+    pub result_digest: ArtifactHash,
+}
+
+/// 📈️ Bounded projection-rebuild progress emitted after every replayed event.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct ProjectionRebuildProgress {
+    pub completed_events: u64,
+    pub total_events: u64,
+}
+
+/// 🎛️ Host-owned cancellation/progress seam for a potentially expensive full-log replay.
+pub trait ProjectionRebuildControl: Send + Sync {
+    fn is_cancelled(&self) -> bool;
+    fn report(&self, progress: ProjectionRebuildProgress);
+}
+
+pub(crate) struct UncontrolledProjectionRebuild;
+
+impl ProjectionRebuildControl for UncontrolledProjectionRebuild {
+    fn is_cancelled(&self) -> bool {
+        false
+    }
+
+    fn report(&self, _progress: ProjectionRebuildProgress) {}
+}
+
+pub(crate) static UNCONTROLLED_PROJECTION_REBUILD: UncontrolledProjectionRebuild = UncontrolledProjectionRebuild;
+
+pub(crate) fn checkpoint_projection_rebuild(control: &dyn ProjectionRebuildControl, completed_events: u64, total_events: u64) -> DirectoryResult<()> {
+    if total_events > DIRECTORY_PROJECTION_REBUILD_MAX_EVENTS {
+        return Err(DirectoryError::Conflict(format!("directory projection rebuild exceeds fixed maximum {DIRECTORY_PROJECTION_REBUILD_MAX_EVENTS}")));
+    }
+    control.report(ProjectionRebuildProgress { completed_events, total_events });
+    if control.is_cancelled() {
+        return Err(DirectoryError::Conflict("directory projection rebuild cancelled".into()));
+    }
+    Ok(())
+}
+
+pub(crate) fn bounded_event_read(since_seq: u64, limit: usize) -> DirectoryResult<(i64, i64)> {
+    if since_seq > DIRECTORY_WIRE_INTEGER_MAX || limit == 0 || limit > DIRECTORY_EVENT_READ_MAX {
+        return Err(DirectoryError::Conflict(format!("directory event read requires since <= {DIRECTORY_WIRE_INTEGER_MAX} and limit 1..={DIRECTORY_EVENT_READ_MAX}")));
+    }
+    Ok((i64::try_from(since_seq).map_err(|error| DirectoryError::Conflict(error.to_string()))?, i64::try_from(limit).map_err(|error| DirectoryError::Conflict(error.to_string()))?))
+}
+
+//#region 🔖️Capabilities
+pub const CAPABILITY_SELECTOR_BYTES: usize = 16;
+pub const CAPABILITY_SECRET_BYTES: usize = 32;
+pub const CAPABILITY_MAX_TTL_SECS: i64 = 31_536_000;
+pub const DEVICE_INSTANCE_MAX_BYTES: usize = 128;
+pub const AUTH_ASSERTION_MAX_BYTES: usize = 16 * 1024;
+pub const AUTH_TEXT_MAX_BYTES: usize = 256;
+
+/// @emoji 🔐️ Encodes capability bytes without a runtime dependency.
+pub fn encode_capability_bytes(bytes: &[u8]) -> String {
+    const HEX: &[u8; 16] = b"0123456789abcdef";
+    let mut encoded = String::with_capacity(bytes.len() * 2);
+    for byte in bytes {
+        encoded.push(HEX[(byte >> 4) as usize] as char);
+        encoded.push(HEX[(byte & 0x0f) as usize] as char);
+    }
+    encoded
+}
+
+fn decode_capability_bytes<const N: usize>(encoded: &str) -> DirectoryResult<[u8; N]> {
+    if encoded.len() != N * 2 || !encoded.bytes().all(|byte| byte.is_ascii_digit() || (b'a'..=b'f').contains(&byte)) {
+        return Err(DirectoryError::Unauthorized);
+    }
+    let mut decoded = [0u8; N];
+    for (index, value) in decoded.iter_mut().enumerate() {
+        let digit = |byte: u8| if byte.is_ascii_digit() { byte - b'0' } else { byte - b'a' + 10 };
+        *value = (digit(encoded.as_bytes()[index * 2]) << 4) | digit(encoded.as_bytes()[index * 2 + 1]);
+    }
+    Ok(decoded)
+}
+
+pub(crate) fn decode_auth_digest_hex(encoded: &str) -> DirectoryResult<[u8; 32]> {
+    decode_capability_bytes(encoded)
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum CapabilityKind {
+    Session,
+    Share,
+    Invite,
+}
+
+impl CapabilityKind {
+    fn prefix(self) -> &'static str {
+        match self {
+            Self::Session => "session.v1",
+            Self::Share => "share.v1",
+            Self::Invite => "invite.v1",
+        }
+    }
+
+    fn digest_domain(self) -> &'static [u8] {
+        match self {
+            Self::Session => b"semio/hub/session/v1\0",
+            Self::Share => b"semio/hub/share/v1\0",
+            Self::Invite => b"semio/hub/invite/v1\0",
+        }
+    }
+}
+
+#[derive(Clone, PartialEq, Eq)]
+struct CapabilityParts {
+    selector: String,
+    secret: [u8; CAPABILITY_SECRET_BYTES],
+}
+
+fn parse_capability_parts(encoded: &str, kind: CapabilityKind) -> DirectoryResult<CapabilityParts> {
+    let mut components = encoded.split('.');
+    let expected_type = match kind {
+        CapabilityKind::Session => "session",
+        CapabilityKind::Share => "share",
+        CapabilityKind::Invite => "invite",
+    };
+    let Some(actual_type) = components.next() else { return Err(DirectoryError::Unauthorized) };
+    if actual_type != expected_type || components.next() != Some("v1") {
+        return Err(DirectoryError::Unauthorized);
+    }
+    let selector = components.next().ok_or(DirectoryError::Unauthorized)?;
+    let secret = components.next().ok_or(DirectoryError::Unauthorized)?;
+    if components.next().is_some() {
+        return Err(DirectoryError::Unauthorized);
+    }
+    decode_capability_bytes::<CAPABILITY_SELECTOR_BYTES>(selector)?;
+    Ok(CapabilityParts { selector: selector.to_string(), secret: decode_capability_bytes(secret)? })
+}
+
+fn mint_capability_parts() -> DirectoryResult<CapabilityParts> {
+    let mut entropy = [0u8; CAPABILITY_SELECTOR_BYTES + CAPABILITY_SECRET_BYTES];
+    directory::os_identity::fill_entropy(&mut entropy).map_err(|_| DirectoryError::Backend("operating-system credential entropy unavailable".into()))?;
+    let selector = encode_capability_bytes(&entropy[..CAPABILITY_SELECTOR_BYTES]);
+    let mut secret = [0u8; CAPABILITY_SECRET_BYTES];
+    secret.copy_from_slice(&entropy[CAPABILITY_SELECTOR_BYTES..]);
+    entropy.fill(0);
+    Ok(CapabilityParts { selector, secret })
+}
+
+fn capability_digest(kind: CapabilityKind, secret: &[u8; CAPABILITY_SECRET_BYTES]) -> [u8; 32] {
+    let mut hash = Sha256::new();
+    hash.update(kind.digest_domain());
+    hash.update(secret);
+    hash.finalize()
+}
+
+pub fn constant_time_digest_eq(left: &[u8; 32], right: &[u8; 32]) -> bool {
+    let mut difference = 0u8;
+    for index in 0..32 {
+        difference |= left[index] ^ right[index];
+    }
+    difference == 0
+}
+
+macro_rules! capability_type {
+    ($name:ident, $kind:expr) => {
+        #[derive(Clone, PartialEq, Eq)]
+        pub struct $name(CapabilityParts);
+
+        impl $name {
+            pub fn parse(encoded: &str) -> DirectoryResult<Self> {
+                parse_capability_parts(encoded, $kind).map(Self)
+            }
+
+            pub fn mint() -> DirectoryResult<Self> {
+                mint_capability_parts().map(Self)
+            }
+
+            pub fn selector(&self) -> &str {
+                &self.0.selector
+            }
+
+            pub fn secret_digest(&self) -> [u8; 32] {
+                capability_digest($kind, &self.0.secret)
+            }
+
+            pub fn expose_once(&self) -> String {
+                format!("{}.{}.{}", $kind.prefix(), self.0.selector, encode_capability_bytes(&self.0.secret))
+            }
+        }
+
+        impl std::fmt::Debug for $name {
+            fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+                formatter.debug_struct(stringify!($name)).field("selector", &self.0.selector).field("secret", &"[REDACTED]").finish()
+            }
+        }
+    };
+}
+
+capability_type!(SessionCapability, CapabilityKind::Session);
+capability_type!(ShareCapability, CapabilityKind::Share);
+capability_type!(InviteCapability, CapabilityKind::Invite);
+
+pub enum HubCapability {
+    Session(SessionCapability),
+    Share(ShareCapability),
+    Invite(InviteCapability),
+}
+
+impl HubCapability {
+    pub fn parse(encoded: &str) -> DirectoryResult<Self> {
+        if encoded.starts_with("session.") {
+            SessionCapability::parse(encoded).map(Self::Session)
+        } else if encoded.starts_with("share.") {
+            ShareCapability::parse(encoded).map(Self::Share)
+        } else if encoded.starts_with("invite.") {
+            InviteCapability::parse(encoded).map(Self::Invite)
+        } else {
+            Err(DirectoryError::Unauthorized)
+        }
+    }
+}
+
+/// @emoji ⏳️ Validates a bounded positive TTL and returns its overflow-safe millisecond window.
+pub fn capability_window(now: i64, ttl_secs: i64) -> DirectoryResult<(i64, i64)> {
+    if !(1..=CAPABILITY_MAX_TTL_SECS).contains(&ttl_secs) {
+        return Err(DirectoryError::Conflict(format!("capability ttl must be 1..={CAPABILITY_MAX_TTL_SECS}")));
+    }
+    let ttl_ms = ttl_secs.checked_mul(1_000).ok_or_else(|| DirectoryError::Conflict("capability ttl overflow".into()))?;
+    let expires_at = now.checked_add(ttl_ms).ok_or_else(|| DirectoryError::Conflict("capability expiry overflow".into()))?;
+    Ok((now, expires_at))
+}
+
+pub fn validate_bounded_auth_text(value: &str, field: &str, maximum: usize) -> DirectoryResult<()> {
+    if value.is_empty() || value.len() > maximum {
+        return Err(DirectoryError::Conflict(format!("{field} must be 1..={maximum} UTF-8 bytes")));
+    }
+    Ok(())
+}
+
+pub fn identity_subject_digest(provider: &str, subject: &str) -> DirectoryResult<[u8; 32]> {
+    validate_bounded_auth_text(provider, "identity provider", AUTH_TEXT_MAX_BYTES)?;
+    validate_bounded_auth_text(subject, "identity subject", AUTH_TEXT_MAX_BYTES)?;
+    let mut hash = Sha256::new();
+    hash.update(b"semio/hub/identity-subject/v1\0");
+    hash.update(&(provider.len() as u32).to_be_bytes());
+    hash.update(provider.as_bytes());
+    hash.update(&(subject.len() as u32).to_be_bytes());
+    hash.update(subject.as_bytes());
+    Ok(hash.finalize())
+}
+
+#[derive(Clone)]
+pub struct IdentityAssertion(Box<[u8]>);
+
+impl IdentityAssertion {
+    pub fn new(bytes: impl Into<Box<[u8]>>) -> DirectoryResult<Self> {
+        let bytes = bytes.into();
+        if bytes.is_empty() || bytes.len() > AUTH_ASSERTION_MAX_BYTES {
+            return Err(DirectoryError::Conflict(format!("identity assertion must be 1..={AUTH_ASSERTION_MAX_BYTES} bytes")));
+        }
+        Ok(Self(bytes))
+    }
+
+    pub fn as_bytes(&self) -> &[u8] {
+        &self.0
+    }
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum IdentityAssurance {
+    ExternalVerified,
+    DevelopmentLocal,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct VerifiedIdentity {
+    pub provider: String,
+    pub subject: String,
+    pub verified_email: Option<String>,
+    pub display_name: Option<String>,
+    pub issued_at: i64,
+    pub expires_at: i64,
+    pub assurance: IdentityAssurance,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct IdentityVerificationProgress {
+    pub completed_units: u8,
+    pub total_units: u8,
+}
+
+pub trait IdentityVerificationControl: Send + Sync {
+    fn now_ms(&self) -> i64;
+    fn is_cancelled(&self) -> bool;
+    fn report(&self, progress: IdentityVerificationProgress);
+}
+
+pub struct IdentityVerificationContext<'a> {
+    pub deadline_ms: i64,
+    pub control: &'a dyn IdentityVerificationControl,
+}
+
+impl IdentityVerificationContext<'_> {
+    pub fn checkpoint(&self, completed_units: u8, total_units: u8) -> DirectoryResult<()> {
+        self.control.report(IdentityVerificationProgress { completed_units, total_units });
+        if self.control.is_cancelled() {
+            return Err(DirectoryError::Conflict("identity assertion verification cancelled".into()));
+        }
+        if self.control.now_ms() > self.deadline_ms {
+            return Err(DirectoryError::Conflict("identity assertion verification deadline exceeded".into()));
+        }
+        Ok(())
+    }
+}
+
+pub type IdentityVerificationFuture<'a> = std::pin::Pin<Box<dyn std::future::Future<Output = DirectoryResult<VerifiedIdentity>> + Send + 'a>>;
+
+pub trait IdentityAssertionVerifier: Send + Sync + 'static {
+    fn verify<'a>(&'a self, assertion: &'a IdentityAssertion, context: &'a IdentityVerificationContext<'a>) -> IdentityVerificationFuture<'a>;
+}
+
+#[derive(Clone, Copy, Debug, Hash, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "kebab-case")]
+pub enum LocalBootstrapClientClass {
+    Native,
+    Mcp,
+    ReactRelay,
+    AdminRelay,
+}
+
+impl LocalBootstrapClientClass {
+    pub fn as_str(self) -> &'static str {
+        match self {
+            Self::Native => "native",
+            Self::Mcp => "mcp",
+            Self::ReactRelay => "react-relay",
+            Self::AdminRelay => "admin-relay",
+        }
+    }
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct VerifiedLocalBootstrapRequest {
+    pub request_id: String,
+    pub run_id: String,
+    pub profile_id: String,
+    pub identity_provider: String,
+    pub identity_subject: String,
+    pub display_name: String,
+    pub device_instance_id: String,
+    pub client_class: LocalBootstrapClientClass,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum LocalBootstrapRejectCode {
+    Cancelled,
+    Denied,
+    Expired,
+    ResourceLimit,
+    Unavailable,
+}
+
+impl LocalBootstrapRejectCode {
+    pub fn as_str(self) -> &'static str {
+        match self {
+            Self::Cancelled => "cancelled",
+            Self::Denied => "denied",
+            Self::Expired => "expired",
+            Self::ResourceLimit => "resource-limit",
+            Self::Unavailable => "unavailable",
+        }
+    }
+}
+
+pub type LocalBootstrapAcceptFuture<'a> = std::pin::Pin<Box<dyn std::future::Future<Output = DirectoryResult<Option<VerifiedLocalBootstrapRequest>>> + Send + 'a>>;
+pub type LocalBootstrapIssueFuture<'a> = std::pin::Pin<Box<dyn std::future::Future<Output = DirectoryResult<()>> + Send + 'a>>;
+pub type LocalBootstrapTerminalFuture<'a> = std::pin::Pin<Box<dyn std::future::Future<Output = DirectoryResult<()>> + Send + 'a>>;
+
+pub trait LocalBootstrapTransport: Send + Sync + 'static {
+    fn run_id(&self) -> &str;
+    fn is_ready(&self) -> bool;
+    fn request_cancelled(&self, request_id: &str) -> bool;
+    fn accept<'a>(&'a self, context: &'a IdentityVerificationContext<'a>) -> LocalBootstrapAcceptFuture<'a>;
+    fn issue<'a>(&'a self, request: &'a VerifiedLocalBootstrapRequest, session: &'a IssuedAuthSession, context: &'a IdentityVerificationContext<'a>) -> LocalBootstrapIssueFuture<'a>;
+    fn reject<'a>(&'a self, request_id: &'a str, code: LocalBootstrapRejectCode, context: &'a IdentityVerificationContext<'a>) -> LocalBootstrapTerminalFuture<'a>;
+    fn cancel<'a>(&'a self, request_id: &'a str) -> LocalBootstrapTerminalFuture<'a>;
+    fn shutdown<'a>(&'a self) -> LocalBootstrapTerminalFuture<'a>;
+}
+
+pub trait NativeCredentialEnvelopeDelivery: Send + Sync + 'static {
+    fn deliver_native<'a>(&'a self, request_id: &'a str, capability: &'a SessionCapability, context: &'a IdentityVerificationContext<'a>) -> LocalBootstrapTerminalFuture<'a>;
+}
+
+pub trait McpCredentialEnvelopeDelivery: Send + Sync + 'static {
+    fn deliver_mcp<'a>(&'a self, request_id: &'a str, capability: &'a SessionCapability, context: &'a IdentityVerificationContext<'a>) -> LocalBootstrapTerminalFuture<'a>;
+}
+
+pub trait BrowserCredentialRelay: Send + Sync + 'static {
+    fn deliver_to_relay<'a>(&'a self, request_id: &'a str, client_class: LocalBootstrapClientClass, capability: &'a SessionCapability, context: &'a IdentityVerificationContext<'a>) -> LocalBootstrapTerminalFuture<'a>;
+}
+
+pub const AUTH_AUDIT_PAGE_MAX: usize = 1_000;
+
+pub(crate) fn prepare_auth_session(issue: &AuthSessionIssue, now: i64) -> DirectoryResult<IssuedAuthSession> {
+    validate_bounded_auth_text(&issue.user_id, "session user", AUTH_TEXT_MAX_BYTES)?;
+    validate_bounded_auth_text(&issue.identity_provider, "identity provider", AUTH_TEXT_MAX_BYTES)?;
+    validate_bounded_auth_text(&issue.device_instance_id, "device instance", DEVICE_INSTANCE_MAX_BYTES)?;
+    validate_bounded_auth_text(&issue.correlation_id, "correlation id", AUTH_TEXT_MAX_BYTES)?;
+    validate_bounded_auth_text(&issue.peer_class, "peer class", AUTH_TEXT_MAX_BYTES)?;
+    if issue.identity_subject_digest == [0; 32] {
+        return Err(DirectoryError::Conflict("identity subject digest must not be zero".into()));
+    }
+    let (issued_at, expires_at) = capability_window(now, issue.ttl_secs)?;
+    let capability = SessionCapability::mint()?;
+    let record = AuthSessionRecord {
+        id: time_ordered_id(),
+        selector: capability.selector().to_string(),
+        secret_digest: capability.secret_digest(),
+        user_id: issue.user_id.clone(),
+        identity_provider: issue.identity_provider.clone(),
+        identity_subject_digest: issue.identity_subject_digest,
+        issued_at,
+        expires_at,
+        revoked_at: None,
+        revoked_reason: None,
+        authorization_generation: 1,
+        device_instance_id: issue.device_instance_id.clone(),
+        session_kind: issue.session_kind,
+    };
+    Ok(IssuedAuthSession { record, capability })
+}
+
+pub(crate) fn prepare_share_token(scope: &DocumentScope, ttl_secs: i64, now: i64) -> DirectoryResult<IssuedShareToken> {
+    let (created_at, expires_at) = capability_window(now, ttl_secs)?;
+    let capability = ShareCapability::mint()?;
+    let record = ShareTokenRecord {
+        id: time_ordered_id(),
+        selector: capability.selector().to_string(),
+        secret_digest: capability.secret_digest(),
+        scope: scope.clone(),
+        created_at,
+        expires_at,
+        revoked_at: None,
+        revoked_reason: None,
+    };
+    Ok(IssuedShareToken { record, capability })
+}
+
+pub(crate) fn prepare_invite(space_id: &str, role: SpaceRole, ttl_secs: i64, now: i64) -> DirectoryResult<IssuedInvite> {
+    validate_bounded_auth_text(space_id, "invite space", AUTH_TEXT_MAX_BYTES)?;
+    let (created_at, expires_at) = capability_window(now, ttl_secs)?;
+    let capability = InviteCapability::mint()?;
+    let record = InviteRecord {
+        id: time_ordered_id(),
+        selector: capability.selector().to_string(),
+        secret_digest: capability.secret_digest(),
+        space_id: space_id.to_string(),
+        role,
+        created_at,
+        expires_at,
+        revoked_at: None,
+        revoked_reason: None,
+        accepted_at: None,
+    };
+    Ok(IssuedInvite { record, capability })
+}
+
+pub(crate) fn active_capability(selector: &str, stored_digest: &[u8; 32], expires_at: i64, revoked_at: Option<i64>, capability_selector: &str, candidate_digest: &[u8; 32], now: i64) -> bool {
+    selector == capability_selector && revoked_at.is_none() && expires_at > now && constant_time_digest_eq(stored_digest, candidate_digest)
+}
+
+pub(crate) fn auth_audit(
+    occurred_at: i64,
+    event_kind: &str,
+    auth_session_id: Option<&str>,
+    target_user_id: Option<&str>,
+    actor_user_id: Option<&str>,
+    provider: Option<&str>,
+    outcome_code: &str,
+    reason_code: Option<&str>,
+    correlation_id: &str,
+    peer_class: &str,
+) -> DirectoryResult<AuthAuditRecord> {
+    for (value, field) in [(event_kind, "audit event kind"), (outcome_code, "audit outcome"), (correlation_id, "audit correlation"), (peer_class, "audit peer class")] {
+        validate_bounded_auth_text(value, field, AUTH_TEXT_MAX_BYTES)?;
+    }
+    if let Some(reason) = reason_code {
+        validate_bounded_auth_text(reason, "audit reason", AUTH_TEXT_MAX_BYTES)?;
+    }
+    Ok(AuthAuditRecord {
+        id: time_ordered_id(),
+        occurred_at,
+        event_kind: event_kind.to_string(),
+        auth_session_id: auth_session_id.map(str::to_string),
+        target_user_id: target_user_id.map(str::to_string),
+        actor_user_id: actor_user_id.map(str::to_string),
+        provider: provider.map(str::to_string),
+        outcome_code: outcome_code.to_string(),
+        reason_code: reason_code.map(str::to_string),
+        correlation_id: correlation_id.to_string(),
+        peer_class: peer_class.to_string(),
+    })
+}
+//#endregion 🔖️Capabilities
 
 //#region 🔖️Wire
 // 🔗️ This crate's storage-row vocabulary (`SpaceRole`, plain `kind`/`visibility` strings — see
@@ -214,6 +866,232 @@ pub(crate) fn visibility_to_str(visibility: DirectorySpaceVisibility) -> &'stati
     match visibility {
         DirectorySpaceVisibility::Private => "private",
         DirectorySpaceVisibility::Public => "public",
+    }
+}
+
+/// @emoji 🧬️ Rejects descriptors that cannot safely select and verify a cold-open codec.
+pub fn validate_document_descriptor(descriptor: &DocumentDescriptor) -> DirectoryResult<()> {
+    fn present(value: &str, field: &str) -> DirectoryResult<()> {
+        if value.trim().is_empty() {
+            Err(DirectoryError::Conflict(format!("document descriptor {field} must not be empty")))
+        } else {
+            Ok(())
+        }
+    }
+    fn hash(value: &str, field: &str) -> DirectoryResult<()> {
+        if value.len() != 64 || value == "0".repeat(64) || !value.bytes().all(|byte| byte.is_ascii_hexdigit() && !byte.is_ascii_uppercase()) {
+            return Err(DirectoryError::Conflict(format!("document descriptor {field} must be a non-zero lowercase sha-256")));
+        }
+        Ok(())
+    }
+    present(&descriptor.space_id, "spaceId")?;
+    present(&descriptor.document_id, "documentId")?;
+    present(&descriptor.artifact_kind, "artifactKind")?;
+    present(&descriptor.artifact_schema, "artifactSchema")?;
+    present(&descriptor.owner.plugin_id, "owner.pluginId")?;
+    present(&descriptor.owner.package_id, "owner.packageId")?;
+    present(&descriptor.owner.version, "owner.version")?;
+    hash(&descriptor.owner.package_hash, "owner.packageHash")?;
+    hash(&descriptor.pack_schema_hash, "packSchemaHash")?;
+    hash(&descriptor.bootstrap_snapshot_hash, "bootstrapSnapshotHash")?;
+    if descriptor.bootstrap_version == 0 {
+        return Err(DirectoryError::Conflict("document descriptor bootstrapVersion must be positive".into()));
+    }
+    if descriptor.bootstrap_frontier.commit_seq > descriptor.bootstrap_frontier.head_seq {
+        return Err(DirectoryError::Conflict("document descriptor bootstrap frontier commitSeq exceeds headSeq".into()));
+    }
+    Ok(())
+}
+
+/// 📦️ Removes the authority store's opaque locator before checkpoint metadata enters the event log.
+pub fn published_artifact_checkpoint(checkpoint: &ArtifactCheckpoint) -> PublishedArtifactCheckpoint {
+    PublishedArtifactCheckpoint {
+        scope: checkpoint.scope.clone(),
+        checkpoint_id: checkpoint.checkpoint_id,
+        parent_checkpoint_id: checkpoint.parent_checkpoint_id,
+        descriptor_digest_v1: checkpoint.descriptor_digest_v1,
+        baseline_frontier: checkpoint.baseline_frontier.clone(),
+        pack: PublishedArtifactBlob { sha256: checkpoint.pack.sha256, byte_length: checkpoint.pack.byte_length },
+        spr: PublishedArtifactBlob { sha256: checkpoint.spr.sha256, byte_length: checkpoint.spr.byte_length },
+        aggregate_sha256: checkpoint.aggregate_sha256,
+        published_at_ms: checkpoint.published_at_ms,
+    }
+}
+
+fn checkpoint_identity_input(checkpoint: &PublishedArtifactCheckpoint) -> ArtifactCheckpoint {
+    ArtifactCheckpoint {
+        scope: checkpoint.scope.clone(),
+        checkpoint_id: checkpoint.checkpoint_id,
+        parent_checkpoint_id: checkpoint.parent_checkpoint_id,
+        descriptor_digest_v1: checkpoint.descriptor_digest_v1,
+        baseline_frontier: checkpoint.baseline_frontier.clone(),
+        pack: ArtifactBlobRef { sha256: checkpoint.pack.sha256, byte_length: checkpoint.pack.byte_length, storage_key: String::new() },
+        spr: ArtifactBlobRef { sha256: checkpoint.spr.sha256, byte_length: checkpoint.spr.byte_length, storage_key: String::new() },
+        aggregate_sha256: checkpoint.aggregate_sha256,
+        published_at_ms: checkpoint.published_at_ms,
+    }
+}
+
+fn valid_hash(hash: ArtifactHash) -> bool {
+    hash.0 != [0; 32]
+}
+
+fn validate_checkpoint_shape(checkpoint: &PublishedArtifactCheckpoint) -> DirectoryResult<()> {
+    if checkpoint.scope.space_id.is_empty()
+        || checkpoint.scope.document_id.is_empty()
+        || checkpoint.baseline_frontier.document_id != checkpoint.scope.document_id
+        || checkpoint.baseline_frontier.head_edit_id.is_empty()
+        || checkpoint.pack.byte_length == 0
+        || checkpoint.spr.byte_length == 0
+        || checkpoint.baseline_frontier.head_edit_ordinal > DIRECTORY_WIRE_INTEGER_MAX
+        || checkpoint.baseline_frontier.last_commit_seq > DIRECTORY_WIRE_INTEGER_MAX
+        || checkpoint.pack.byte_length > DIRECTORY_WIRE_INTEGER_MAX
+        || checkpoint.spr.byte_length > DIRECTORY_WIRE_INTEGER_MAX
+        || checkpoint.published_at_ms > DIRECTORY_WIRE_INTEGER_MAX
+        || !valid_hash(checkpoint.checkpoint_id)
+        || checkpoint.parent_checkpoint_id.is_some_and(|id| !valid_hash(id))
+        || !valid_hash(checkpoint.descriptor_digest_v1)
+        || !valid_hash(checkpoint.baseline_frontier.chain_hash)
+        || !valid_hash(checkpoint.pack.sha256)
+        || !valid_hash(checkpoint.spr.sha256)
+        || !valid_hash(checkpoint.aggregate_sha256)
+    {
+        return Err(DirectoryError::Conflict("artifact checkpoint metadata is invalid".into()));
+    }
+    let identity = checkpoint_identity_input(checkpoint);
+    let encoded = crate::artifact_authority::checkpoint_id_encoding_v1(&identity).map_err(|error| DirectoryError::Conflict(error.to_string()))?;
+    if (ArtifactHash(Sha256::digest(&encoded))) != checkpoint.checkpoint_id {
+        return Err(DirectoryError::Conflict("artifact checkpoint identity does not match its canonical metadata".into()));
+    }
+    Ok(())
+}
+
+fn validate_retention_shape(retention: &ArtifactRetention) -> DirectoryResult<()> {
+    if retention.scope.space_id.is_empty()
+        || retention.scope.document_id.is_empty()
+        || retention.retained_floor.document_id != retention.scope.document_id
+        || retention.retained_floor.head_edit_id.is_empty()
+        || retention.retained_floor.head_edit_ordinal > DIRECTORY_WIRE_INTEGER_MAX
+        || retention.retained_floor.last_commit_seq > DIRECTORY_WIRE_INTEGER_MAX
+        || !valid_hash(retention.retained_checkpoint_id)
+        || !valid_hash(retention.retained_floor.chain_hash)
+        || !valid_hash(retention.checkpoint_lineage_head)
+    {
+        return Err(DirectoryError::Conflict("artifact retention metadata is invalid".into()));
+    }
+    Ok(())
+}
+
+/// 🔐️ Defends the backend-only atomic append seam even when called outside the service.
+pub(crate) fn validate_verified_checkpoint_append(event: &NewDirectoryEvent, checkpoint: &ArtifactCheckpoint) -> DirectoryResult<PublishedArtifactCheckpoint> {
+    if event.actor.kind != DirectoryActorKind::System {
+        return Err(DirectoryError::Unauthorized);
+    }
+    if event.space_id.as_deref() != Some(checkpoint.scope.space_id.as_str()) || event.user_id.is_some() {
+        return Err(DirectoryError::Conflict("verified artifact checkpoint event scope is invalid".into()));
+    }
+    if checkpoint.pack.storage_key.trim().is_empty() || checkpoint.spr.storage_key.trim().is_empty() || checkpoint.pack.storage_key.len() > ARTIFACT_PRIVATE_LOCATOR_MAX_BYTES || checkpoint.spr.storage_key.len() > ARTIFACT_PRIVATE_LOCATOR_MAX_BYTES {
+        return Err(DirectoryError::Conflict(format!("verified artifact checkpoint locator must contain 1..={ARTIFACT_PRIVATE_LOCATOR_MAX_BYTES} UTF-8 bytes")));
+    }
+    let published = published_artifact_checkpoint(checkpoint);
+    validate_checkpoint_shape(&published)?;
+    match &event.body {
+        DirectoryEventBody::ArtifactCheckpointPublished { checkpoint: body } if body == &published => Ok(published),
+        DirectoryEventBody::ArtifactCheckpointPublished { .. } => Err(DirectoryError::Conflict("verified artifact checkpoint differs from its public event".into())),
+        _ => Err(DirectoryError::Conflict("verified artifact append requires one checkpoint-published event".into())),
+    }
+}
+
+fn frontier_strictly_advances(previous: &ArtifactFrontier, next: &ArtifactFrontier) -> bool {
+    previous.document_id == next.document_id && next.head_edit_ordinal > previous.head_edit_ordinal && next.last_commit_seq > previous.last_commit_seq
+}
+
+/// 🧠️ Dependency-free in-memory artifact projection used by embedded hosts and backend parity laws.
+#[derive(Clone, Debug, Default, PartialEq, Eq)]
+pub struct MemoryArtifactProjection {
+    descriptors: HashMap<DocumentScope, DocumentDescriptor>,
+    checkpoints: HashMap<DocumentScope, Vec<PublishedArtifactCheckpoint>>,
+    retention: HashMap<DocumentScope, ArtifactRetention>,
+}
+
+impl MemoryArtifactProjection {
+    pub fn active_checkpoint(&self, scope: &DocumentScope) -> Option<&PublishedArtifactCheckpoint> {
+        self.checkpoints.get(scope).and_then(|lineage| lineage.last())
+    }
+
+    pub fn checkpoint_lineage(&self, scope: &DocumentScope) -> &[PublishedArtifactCheckpoint] {
+        self.checkpoints.get(scope).map_or(&[], Vec::as_slice)
+    }
+
+    pub fn retention(&self, scope: &DocumentScope) -> Option<&ArtifactRetention> {
+        self.retention.get(scope)
+    }
+
+    /// ⚛️ Folds all events into a clone and transfers it only after every invariant succeeds.
+    pub fn fold_atomically(&mut self, events: &[DirectoryEvent]) -> DirectoryResult<()> {
+        let mut next = self.clone();
+        for event in events {
+            next.fold(event)?;
+        }
+        *self = next;
+        Ok(())
+    }
+
+    fn fold(&mut self, event: &DirectoryEvent) -> DirectoryResult<()> {
+        match &event.body {
+            DirectoryEventBody::DocumentAnnounced { descriptor } => {
+                self.descriptors.insert(DocumentScope::new(&descriptor.space_id, &descriptor.document_id), descriptor.clone());
+            }
+            DirectoryEventBody::SpaceDeleted { space_id } => {
+                self.descriptors.retain(|scope, _| &scope.space_id != space_id);
+                self.checkpoints.retain(|scope, _| &scope.space_id != space_id);
+                self.retention.retain(|scope, _| &scope.space_id != space_id);
+            }
+            DirectoryEventBody::ArtifactCheckpointPublished { checkpoint } => {
+                validate_checkpoint_shape(checkpoint)?;
+                let descriptor = self.descriptors.get(&checkpoint.scope).ok_or_else(|| DirectoryError::NotFound("memory artifact descriptor".into()))?;
+                if descriptor_digest_v1(descriptor).map_err(|error| DirectoryError::Conflict(error.to_string()))? != checkpoint.descriptor_digest_v1 {
+                    return Err(DirectoryError::Conflict("memory artifact descriptor digest mismatch".into()));
+                }
+                let lineage = self.checkpoints.entry(checkpoint.scope.clone()).or_default();
+                if let Some(existing) = lineage.iter().find(|existing| existing.checkpoint_id == checkpoint.checkpoint_id) {
+                    return if existing == checkpoint { Ok(()) } else { Err(DirectoryError::Conflict("memory artifact checkpoint identity conflict".into())) };
+                }
+                if lineage.len() as u64 >= ARTIFACT_CHECKPOINT_LINEAGE_MAX {
+                    return Err(DirectoryError::Conflict(format!("artifact checkpoint lineage exceeds fixed maximum {ARTIFACT_CHECKPOINT_LINEAGE_MAX}")));
+                }
+                match lineage.last() {
+                    None if checkpoint.parent_checkpoint_id.is_some() => return Err(DirectoryError::Conflict("memory genesis checkpoint parent".into())),
+                    Some(active) if checkpoint.parent_checkpoint_id != Some(active.checkpoint_id) => return Err(DirectoryError::Conflict("memory artifact checkpoint parent".into())),
+                    Some(active) if !frontier_strictly_advances(&active.baseline_frontier, &checkpoint.baseline_frontier) => return Err(DirectoryError::Conflict("memory artifact checkpoint frontier".into())),
+                    _ => {}
+                }
+                lineage.push(checkpoint.clone());
+            }
+            DirectoryEventBody::ArtifactRetentionAdvanced { retention } => {
+                let lineage = self.checkpoints.get(&retention.scope).ok_or_else(|| DirectoryError::NotFound("memory artifact lineage".into()))?;
+                let active = lineage.last().ok_or_else(|| DirectoryError::NotFound("memory active artifact checkpoint".into()))?;
+                if active.checkpoint_id != retention.checkpoint_lineage_head {
+                    return Err(DirectoryError::Conflict("memory artifact retention head".into()));
+                }
+                let retained_index = lineage.iter().position(|checkpoint| checkpoint.checkpoint_id == retention.retained_checkpoint_id).ok_or_else(|| DirectoryError::NotFound("memory retained artifact checkpoint".into()))?;
+                if lineage[retained_index].baseline_frontier != retention.retained_floor {
+                    return Err(DirectoryError::Conflict("memory artifact retention floor".into()));
+                }
+                if let Some(previous) = self.retention.get(&retention.scope) {
+                    if previous == retention {
+                        return Ok(());
+                    }
+                    let previous_index = lineage.iter().position(|checkpoint| checkpoint.checkpoint_id == previous.retained_checkpoint_id).ok_or_else(|| DirectoryError::Conflict("memory prior retention lineage".into()))?;
+                    if retained_index < previous_index {
+                        return Err(DirectoryError::Conflict("memory artifact retention moved backward".into()));
+                    }
+                }
+                self.retention.insert(retention.scope.clone(), retention.clone());
+            }
+            _ => {}
+        }
+        Ok(())
     }
 }
 //#endregion 🔖️Wire
@@ -397,15 +1275,102 @@ pub async fn decide(dir: &HubDirectories, actor: &DirectoryActor, command: Direc
         }
         DirectoryCommand::CreateInvite { space_id, role, ttl_secs } => {
             require_space(dir, &space_id).await?;
-            let invite = dir.create_invite(&space_id, role_from_wire(role), ttl_secs as i64).await?;
-            Ok(Decision { events: Vec::new(), result: Some(CommandResult { invite_token: Some(invite.token) }) })
+            let ttl_secs = i64::try_from(ttl_secs).map_err(|_| DirectoryError::Conflict("invite ttl exceeds the signed storage boundary".into()))?;
+            let issued = dir.issue_invite(&space_id, role_from_wire(role), ttl_secs, &time_ordered_id()).await?;
+            Ok(Decision { events: Vec::new(), result: Some(CommandResult { invite_token: Some(issued.capability.expose_once()) }) })
         }
         DirectoryCommand::RevokeInvite { space_id, invite_id } => {
             require_space(dir, &space_id).await?;
-            dir.revoke_invite(&invite_id).await?;
+            dir.revoke_invite(&invite_id, "directory-command", &time_ordered_id()).await?;
             Ok(Decision { events: Vec::new(), result: None })
         }
+        DirectoryCommand::AnnounceDocument { descriptor } => {
+            validate_document_descriptor(&descriptor)?;
+            require_space(dir, &descriptor.space_id).await?;
+            let scope = DocumentScope::new(&descriptor.space_id, &descriptor.document_id);
+            match dir.get_document_descriptor(&scope).await? {
+                Some(existing) if existing == descriptor => Ok(Decision { events: Vec::new(), result: None }),
+                Some(_) => Err(DirectoryError::Conflict(format!("document descriptor for '{}/{}' is immutable", descriptor.space_id, descriptor.document_id))),
+                None => Ok(single(clock, actor, Some(descriptor.space_id.clone()), None, DirectoryEventBody::DocumentAnnounced { descriptor })),
+            }
+        }
     }
+}
+
+/// 🛡️ Server-only retention policy intent; it is deliberately absent from `DirectoryCommand`.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum ArtifactDirectoryCommand {
+    AdvanceRetention { retention: ArtifactRetention },
+}
+
+async fn decide_artifact_authority(dir: &HubDirectories, actor: &DirectoryActor, command: ArtifactDirectoryCommand, clock: &mut HubClock) -> DirectoryResult<Decision> {
+    if !matches!(actor.kind, DirectoryActorKind::System | DirectoryActorKind::Admin) {
+        return Err(DirectoryError::Unauthorized);
+    }
+    match command {
+        ArtifactDirectoryCommand::AdvanceRetention { retention } => {
+            validate_retention_shape(&retention)?;
+            let active = dir.get_active_artifact_checkpoint(&retention.scope).await?.ok_or_else(|| DirectoryError::NotFound("active artifact checkpoint".into()))?;
+            if retention.checkpoint_lineage_head != active.checkpoint_id {
+                return Err(DirectoryError::Conflict("artifact retention lineage head is not the active checkpoint".into()));
+            }
+            let retained = dir.get_artifact_checkpoint(&retention.scope, retention.retained_checkpoint_id).await?.ok_or_else(|| DirectoryError::NotFound("retained artifact checkpoint".into()))?;
+            if retained.baseline_frontier != retention.retained_floor {
+                return Err(DirectoryError::Conflict("artifact retention floor is not the retained checkpoint baseline".into()));
+            }
+            let lineage = dir.list_artifact_checkpoint_lineage(&retention.scope, ARTIFACT_CHECKPOINT_LINEAGE_MAX as usize).await?;
+            let retained_index = lineage.iter().position(|checkpoint| checkpoint.checkpoint_id == retention.retained_checkpoint_id).ok_or_else(|| DirectoryError::Conflict("retained artifact checkpoint is outside the active lineage".into()))?;
+            let active_index = lineage.iter().position(|checkpoint| checkpoint.checkpoint_id == active.checkpoint_id).ok_or_else(|| DirectoryError::Conflict("active artifact checkpoint is outside its lineage".into()))?;
+            if retained_index > active_index {
+                return Err(DirectoryError::Conflict("artifact retention floor is ahead of the active baseline".into()));
+            }
+            if let Some(previous) = dir.get_artifact_retention(&retention.scope).await? {
+                if previous == retention {
+                    return Ok(Decision { events: Vec::new(), result: None });
+                }
+                let previous_index =
+                    lineage.iter().position(|checkpoint| checkpoint.checkpoint_id == previous.retained_checkpoint_id).ok_or_else(|| DirectoryError::Conflict("existing artifact retention floor is outside the active lineage".into()))?;
+                if retained_index < previous_index {
+                    return Err(DirectoryError::Conflict("artifact retention floor cannot move backward".into()));
+                }
+            }
+            Ok(single(clock, actor, Some(retention.scope.space_id.clone()), None, DirectoryEventBody::ArtifactRetentionAdvanced { retention }))
+        }
+    }
+}
+
+async fn decide_verified_checkpoint(dir: &HubDirectories, actor: &DirectoryActor, checkpoint: &ArtifactCheckpoint, clock: &mut HubClock) -> DirectoryResult<Decision> {
+    if actor.kind != DirectoryActorKind::System {
+        return Err(DirectoryError::Unauthorized);
+    }
+    let published = published_artifact_checkpoint(checkpoint);
+    validate_checkpoint_shape(&published)?;
+    if checkpoint.pack.storage_key.trim().is_empty() || checkpoint.spr.storage_key.trim().is_empty() || checkpoint.pack.storage_key.len() > ARTIFACT_PRIVATE_LOCATOR_MAX_BYTES || checkpoint.spr.storage_key.len() > ARTIFACT_PRIVATE_LOCATOR_MAX_BYTES {
+        return Err(DirectoryError::Conflict(format!("verified artifact checkpoint locator must contain 1..={ARTIFACT_PRIVATE_LOCATOR_MAX_BYTES} UTF-8 bytes")));
+    }
+    let descriptor = dir.get_document_descriptor(&published.scope).await?.ok_or_else(|| DirectoryError::NotFound(format!("document descriptor for '{}/{}'", published.scope.space_id, published.scope.document_id)))?;
+    let digest = descriptor_digest_v1(&descriptor).map_err(|error| DirectoryError::Conflict(error.to_string()))?;
+    if digest != published.descriptor_digest_v1 {
+        return Err(DirectoryError::Conflict("artifact checkpoint descriptor digest differs from the durable descriptor".into()));
+    }
+    if let Some(existing) = dir.get_verified_artifact_checkpoint(&published.scope, published.checkpoint_id).await? {
+        return if &existing == checkpoint { Ok(Decision { events: Vec::new(), result: None }) } else { Err(DirectoryError::Conflict("artifact checkpoint id already names different public or private metadata".into())) };
+    }
+    if dir.get_artifact_checkpoint(&published.scope, published.checkpoint_id).await?.is_some() {
+        return Err(DirectoryError::Conflict("artifact checkpoint public projection has no matching private authority record".into()));
+    }
+    if dir.artifact_checkpoint_count(&published.scope).await? >= ARTIFACT_CHECKPOINT_LINEAGE_MAX {
+        return Err(DirectoryError::Conflict(format!("artifact checkpoint lineage exceeds fixed maximum {ARTIFACT_CHECKPOINT_LINEAGE_MAX}")));
+    }
+    match dir.get_active_artifact_checkpoint(&published.scope).await? {
+        None if published.parent_checkpoint_id.is_some() => return Err(DirectoryError::Conflict("genesis artifact checkpoint must not name a parent".into())),
+        Some(ref current) if published.parent_checkpoint_id != Some(current.checkpoint_id) => return Err(DirectoryError::Conflict("artifact checkpoint parent is not the active lineage head".into())),
+        Some(ref current) if !frontier_strictly_advances(&current.baseline_frontier, &published.baseline_frontier) => {
+            return Err(DirectoryError::Conflict("artifact checkpoint frontier does not strictly advance the active baseline".into()));
+        }
+        _ => {}
+    }
+    Ok(single(clock, actor, Some(published.scope.space_id.clone()), None, DirectoryEventBody::ArtifactCheckpointPublished { checkpoint: published }))
 }
 //#endregion 🔖️Decider
 
@@ -436,12 +1401,49 @@ impl DirectoryService {
     pub async fn execute(&self, actor: DirectoryActor, command: DirectoryCommand) -> DirectoryResult<(Vec<DirectoryEvent>, Option<CommandResult>)> {
         let mut clock = self.write.lock().await;
         let decision = decide(self.dir.as_ref(), &actor, command, &mut clock).await?;
-        drop(clock);
         let persisted = if decision.events.is_empty() { Vec::new() } else { self.dir.append_events(&decision.events).await? };
+        drop(clock);
         for event in &persisted {
             let _ = self.tx.send(DirectoryStreamMessage::Event { event: event.clone() });
         }
         Ok((persisted, decision.result))
+    }
+
+    /// 🏛️ Serializes a trusted server authority decision with its atomic event/projection append.
+    pub async fn execute_artifact_authority(&self, actor: DirectoryActor, command: ArtifactDirectoryCommand) -> DirectoryResult<Vec<DirectoryEvent>> {
+        let mut clock = self.write.lock().await;
+        let decision = decide_artifact_authority(self.dir.as_ref(), &actor, command, &mut clock).await?;
+        let persisted = if decision.events.is_empty() { Vec::new() } else { self.dir.append_events(&decision.events).await? };
+        drop(clock);
+        for event in &persisted {
+            let _ = self.tx.send(DirectoryStreamMessage::Event { event: event.clone() });
+        }
+        Ok(persisted)
+    }
+
+    /// 🎫️ Commits one exact server-owned reachability reservation before CAS writes.
+    pub async fn reserve_artifact_cas(&self, actor: DirectoryActor, plan: ArtifactCasOwnershipPlanV1, expires_at_ms: u64, now_ms: u64) -> DirectoryResult<ArtifactCasReservation> {
+        if actor.kind != DirectoryActorKind::System {
+            return Err(DirectoryError::Unauthorized);
+        }
+        let _write = self.write.lock().await;
+        self.dir.reserve_artifact_cas(&plan, expires_at_ms, now_ms).await
+    }
+
+    /// 📣️ Consumes one live reservation with private locators, public event, and projections atomically.
+    pub async fn publish_reserved_artifact_checkpoint(&self, actor: DirectoryActor, checkpoint: ArtifactCheckpoint, reservation: ArtifactCasReservation, now_ms: u64) -> DirectoryResult<Vec<DirectoryEvent>> {
+        let mut clock = self.write.lock().await;
+        let decision = decide_verified_checkpoint(self.dir.as_ref(), &actor, &checkpoint, &mut clock).await?;
+        let persisted = match decision.events.as_slice() {
+            [] => self.dir.append_reserved_artifact_checkpoint(None, &checkpoint, &reservation, now_ms).await?,
+            [event] => self.dir.append_reserved_artifact_checkpoint(Some(event), &checkpoint, &reservation, now_ms).await?,
+            _ => return Err(DirectoryError::Backend("verified checkpoint decision emitted more than one event".into())),
+        };
+        drop(clock);
+        for event in &persisted {
+            let _ = self.tx.send(DirectoryStreamMessage::Event { event: event.clone() });
+        }
+        Ok(persisted)
     }
 
     /// @emoji 🎟️ Redeems a still-valid, unrevoked invite: resolves (or, same unknown-email law as
@@ -450,31 +1452,25 @@ impl DirectoryService {
     /// concurrent command. `POST /directory/invites/{token}/redeem` (contract C2) is not a
     /// `DirectoryCommand` (invites are not event-sourced themselves), so it calls this instead of
     /// `execute`.
-    pub async fn redeem_invite(&self, actor: DirectoryActor, token: &str, email: &str, display_name: &str) -> DirectoryResult<Vec<DirectoryEvent>> {
+    pub async fn redeem_invite(&self, actor: DirectoryActor, capability: &InviteCapability, user_id: &str) -> DirectoryResult<Vec<DirectoryEvent>> {
         let mut clock = self.write.lock().await;
-        let invite = self.dir.get_invite_by_token(token).await?.ok_or_else(|| DirectoryError::NotFound(format!("invite token '{token}' not found")))?;
+        let invite = self.dir.authenticate_invite(capability).await?.ok_or(DirectoryError::Unauthorized)?;
         if invite.revoked_at.is_some() {
             return Err(DirectoryError::Conflict("invite already revoked".into()));
         }
         if invite.expires_at < now_ms() {
             return Err(DirectoryError::Conflict("invite expired".into()));
         }
-        let mut events = Vec::new();
-        let user_id = match self.dir.get_user_by_email(email).await? {
-            Some(existing) => existing.id,
-            None => {
-                let user_id = time_ordered_id();
-                events.push(new_event(&mut clock, &actor, None, Some(user_id.clone()), DirectoryEventBody::UserCreated { user_id: user_id.clone(), email: email.to_string(), display_name: display_name.to_string() }));
-                user_id
-            }
-        };
-        events.push(new_event(
+        if self.dir.get_user(user_id).await?.is_none() {
+            return Err(DirectoryError::Unauthorized);
+        }
+        let events = vec![new_event(
             &mut clock,
             &actor,
             Some(invite.space_id.clone()),
-            Some(user_id.clone()),
-            DirectoryEventBody::InviteRedeemed { space_id: invite.space_id.clone(), user_id, invite_id: invite.id.clone(), role: role_to_wire(invite.role) },
-        ));
+            Some(user_id.to_string()),
+            DirectoryEventBody::InviteRedeemed { space_id: invite.space_id.clone(), user_id: user_id.to_string(), invite_id: invite.id.clone(), role: role_to_wire(invite.role) },
+        )];
         drop(clock);
         let persisted = self.dir.append_events(&events).await?;
         for event in &persisted {
@@ -497,6 +1493,129 @@ impl DirectoryService {
     pub fn publish(&self, message: DirectoryStreamMessage) {
         let _ = self.tx.send(message);
     }
+
+    /// 🧹️ Sweeps only historical dedicated-CAS candidates after an immediate ledger recheck.
+    pub async fn sweep_artifact_cas<S: ArtifactChunkCasStorage>(&self, storage: &S, request: ArtifactCasSweepRequest, context: &crate::artifact_authority::OperationContext<'_>) -> Result<ArtifactCasSweepResult, crate::artifact_authority::AuthorityError> {
+        if request.max_objects == 0 || request.max_objects > ARTIFACT_CAS_SWEEP_OBJECT_MAX {
+            return Err(crate::artifact_authority::AuthorityError::ResourceLimit("artifact CAS sweep object"));
+        }
+        context.checkpoint()?;
+        let observed_generation = {
+            let _write = self.write.lock().await;
+            self.dir.artifact_cas_ledger_generation().await.map_err(|error| crate::artifact_authority::AuthorityError::Store(crate::artifact_authority::adapters::bounded_message(error)))?
+        };
+        let mut cursor = 0u64;
+        let mut examined = 0u64;
+        let mut protected = 0u64;
+        let mut eligible = 0u64;
+        let mut deleted = 0u64;
+        let mut missing = 0u64;
+        let mut digest = Sha256::new();
+        digest.update(b"semio.hub.artifact-cas.sweep-result.v1\0");
+        while examined < request.max_objects as u64 {
+            context.checkpoint()?;
+            let page = self.dir.artifact_cas_sweep_candidates(cursor, observed_generation, ARTIFACT_CAS_SWEEP_PAGE_MAX).await.map_err(|error| crate::artifact_authority::AuthorityError::Store(crate::artifact_authority::adapters::bounded_message(error)))?;
+            for key in page.objects {
+                if examined >= request.max_objects as u64 {
+                    break;
+                }
+                context.checkpoint()?;
+                examined += 1;
+                digest.update(&(key.space_id.len() as u64).to_be_bytes());
+                digest.update(key.space_id.as_bytes());
+                digest.update(key.kind.name().as_bytes());
+                digest.update(&key.digest.0);
+                let _write = self.write.lock().await;
+                let fence = self.dir.artifact_cas_delete_fence(&key, page.observed_generation, context.now_ms()).await.map_err(|error| crate::artifact_authority::AuthorityError::Store(crate::artifact_authority::adapters::bounded_message(error)))?;
+                match fence {
+                    None => {
+                        protected += 1;
+                        digest.update(&[0]);
+                    }
+                    Some(fence) => {
+                        eligible += 1;
+                        if request.execute {
+                            match storage.delete_if_unreferenced(&key, &fence, context).await? {
+                                ArtifactCasDeleteOutcome::Deleted => {
+                                    deleted += 1;
+                                    digest.update(&[1]);
+                                }
+                                ArtifactCasDeleteOutcome::Missing => {
+                                    missing += 1;
+                                    digest.update(&[2]);
+                                }
+                            }
+                        } else {
+                            digest.update(&[3]);
+                        }
+                    }
+                }
+                drop(_write);
+                context.report_committed(crate::artifact_authority::AuthorityProgress {
+                    stage: crate::artifact_authority::AuthorityProgressStage::CasSweep,
+                    completed_units: examined,
+                    total_units: request.max_objects as u64,
+                });
+                semio_framework_async::yield_once().await;
+            }
+            if page.next_generation <= cursor || page.next_generation >= observed_generation {
+                break;
+            }
+            cursor = page.next_generation;
+        }
+        let final_generation = {
+            let _write = self.write.lock().await;
+            let generation = self.dir.artifact_cas_ledger_generation().await.map_err(|error| crate::artifact_authority::AuthorityError::Store(crate::artifact_authority::adapters::bounded_message(error)))?;
+            if generation < observed_generation {
+                return Err(crate::artifact_authority::AuthorityError::Store("artifact CAS ledger generation moved backward".into()));
+            }
+            generation
+        };
+        Ok(ArtifactCasSweepResult {
+            observed_generation,
+            final_generation,
+            examined_objects: examined,
+            protected_objects: protected,
+            eligible_objects: eligible,
+            deleted_objects: deleted,
+            missing_objects: missing,
+            result_digest: ArtifactHash(digest.finalize()),
+        })
+    }
+}
+
+/// 🌉️ Concrete authority-to-directory publication adapter used after exact blob readback.
+pub struct HubVerifiedCheckpointPublisher {
+    service: Arc<DirectoryService>,
+    actor_id: String,
+}
+
+impl HubVerifiedCheckpointPublisher {
+    /// 🏗️ Binds verified publications to one system authority identity.
+    pub fn new(service: Arc<DirectoryService>, actor_id: impl Into<String>) -> Self {
+        Self { service, actor_id: actor_id.into() }
+    }
+}
+
+impl crate::artifact_authority::VerifiedCheckpointPublisher for HubVerifiedCheckpointPublisher {
+    async fn reserve(&self, plan: &ArtifactCasOwnershipPlanV1, context: &crate::artifact_authority::OperationContext<'_>) -> Result<ArtifactCasReservation, crate::artifact_authority::AuthorityError> {
+        context.checkpoint()?;
+        let now_ms = context.now_ms();
+        let expires_at_ms = context.deadline_ms().saturating_add(crate::artifact_authority::chunk_cas::ARTIFACT_CAS_RESERVATION_GRACE_MS).min(now_ms.saturating_add(ARTIFACT_CAS_RESERVATION_MAX_TTL_MS));
+        self.service
+            .reserve_artifact_cas(DirectoryActor { kind: DirectoryActorKind::System, id: self.actor_id.clone() }, plan.clone(), expires_at_ms, now_ms)
+            .await
+            .map_err(|error| crate::artifact_authority::AuthorityError::Publication(crate::artifact_authority::adapters::bounded_message(error)))
+    }
+
+    async fn publish_reserved(&self, checkpoint: &ArtifactCheckpoint, reservation: &ArtifactCasReservation, context: &crate::artifact_authority::OperationContext<'_>) -> Result<(), crate::artifact_authority::AuthorityError> {
+        context.checkpoint()?;
+        self.service
+            .publish_reserved_artifact_checkpoint(DirectoryActor { kind: DirectoryActorKind::System, id: self.actor_id.clone() }, checkpoint.clone(), reservation.clone(), context.now_ms())
+            .await
+            .map_err(|error| crate::artifact_authority::AuthorityError::Publication(crate::artifact_authority::adapters::bounded_message(error)))?;
+        Ok(())
+    }
 }
 //#endregion 🔖️Service
 
@@ -508,8 +1627,9 @@ impl DirectoryService {
 /// `OS_HUB_STORAGE_BACKEND`).
 pub trait HubDirectory: Send + Sync + 'static {
     //#region ShareTokens
-    async fn create_share_token(&self, document_id: &str) -> DirectoryResult<String>;
-    async fn authorized_by_token(&self, document_id: &str, token: Option<&str>) -> DirectoryResult<bool>;
+    async fn issue_share_token(&self, scope: &DocumentScope, ttl_secs: i64, correlation_id: &str) -> DirectoryResult<IssuedShareToken>;
+    async fn revoke_share_token(&self, scope: &DocumentScope, share_id: &str, reason: &str, correlation_id: &str) -> DirectoryResult<()>;
+    async fn authenticate_share(&self, scope: &DocumentScope, capability: &ShareCapability) -> DirectoryResult<bool>;
     //#endregion
 
     //#region Users
@@ -535,26 +1655,73 @@ pub trait HubDirectory: Send + Sync + 'static {
     async fn get_role(&self, space_id: &str, user_id: &str) -> DirectoryResult<Option<SpaceRole>>;
     //#endregion
 
+    //#region Documents
+    async fn get_document_descriptor(&self, scope: &DocumentScope) -> DirectoryResult<Option<DocumentDescriptor>>;
+    async fn list_document_descriptors(&self, space_id: &str) -> DirectoryResult<Vec<DocumentDescriptor>>;
+    async fn get_artifact_checkpoint(&self, scope: &DocumentScope, checkpoint_id: ArtifactHash) -> DirectoryResult<Option<PublishedArtifactCheckpoint>>;
+    /// 🔐️ Internal authority read model; never serialized through directory wire DTOs.
+    async fn get_verified_artifact_checkpoint(&self, scope: &DocumentScope, checkpoint_id: ArtifactHash) -> DirectoryResult<Option<ArtifactCheckpoint>>;
+    async fn get_active_artifact_checkpoint(&self, scope: &DocumentScope) -> DirectoryResult<Option<PublishedArtifactCheckpoint>>;
+    async fn get_artifact_retention(&self, scope: &DocumentScope) -> DirectoryResult<Option<ArtifactRetention>>;
+    async fn artifact_checkpoint_count(&self, scope: &DocumentScope) -> DirectoryResult<u64>;
+    /// 🧵️ Oldest-to-newest lineage with a fixed caller bound; zero or max+1 is rejected.
+    async fn list_artifact_checkpoint_lineage(&self, scope: &DocumentScope, limit: usize) -> DirectoryResult<Vec<PublishedArtifactCheckpoint>>;
+    /// 🎫️ Appends one exact expiring private reachability reservation before CAS writes.
+    async fn reserve_artifact_cas(&self, _plan: &ArtifactCasOwnershipPlanV1, _expires_at_ms: u64, _now_ms: u64) -> DirectoryResult<ArtifactCasReservation> {
+        Err(DirectoryError::Backend("artifact CAS ledger is unavailable for this backend".into()))
+    }
+    /// ⚛️ Consumes one live exact reservation with the public/private checkpoint commit.
+    async fn append_reserved_artifact_checkpoint(&self, _event: Option<&NewDirectoryEvent>, _checkpoint: &ArtifactCheckpoint, _reservation: &ArtifactCasReservation, _now_ms: u64) -> DirectoryResult<Vec<DirectoryEvent>> {
+        Err(DirectoryError::Backend("artifact CAS ledger is unavailable for this backend".into()))
+    }
+    /// 🧹️ Reads a bounded page of private historical object candidates for sweeping.
+    async fn artifact_cas_ledger_generation(&self) -> DirectoryResult<u64> {
+        Err(DirectoryError::Backend("artifact CAS ledger is unavailable for this backend".into()))
+    }
+    /// 🧹️ Reads a bounded historical page through one immutable sweep generation.
+    async fn artifact_cas_sweep_candidates(&self, _after_generation: u64, _through_generation: u64, _limit: usize) -> DirectoryResult<ArtifactCasSweepCandidatePage> {
+        Err(DirectoryError::Backend("artifact CAS ledger is unavailable for this backend".into()))
+    }
+    /// 🛡️ Rechecks current references and live reservations before minting a deletion fence.
+    async fn artifact_cas_delete_fence(&self, _key: &ArtifactCasObjectKey, _observed_generation: u64, _now_ms: u64) -> DirectoryResult<Option<ArtifactCasDeleteFence>> {
+        Err(DirectoryError::Backend("artifact CAS ledger is unavailable for this backend".into()))
+    }
+    //#endregion
+
     //#region AuthSessions
-    async fn create_auth_session(&self, user_id: &str, ttl_secs: i64, sso_provider: Option<&str>) -> DirectoryResult<AuthSessionRecord>;
-    async fn get_auth_session(&self, id: &str) -> DirectoryResult<Option<AuthSessionRecord>>;
-    async fn revoke_auth_session(&self, id: &str) -> DirectoryResult<()>;
+    async fn issue_auth_session(&self, issue: &AuthSessionIssue) -> DirectoryResult<IssuedAuthSession>;
+    async fn authenticate_session(&self, capability: &SessionCapability) -> DirectoryResult<Option<AuthSessionRecord>>;
+    async fn revoke_auth_session(&self, id: &str, reason: &str, actor_user_id: Option<&str>, correlation_id: &str) -> DirectoryResult<Option<RevokedAuthSession>>;
+    async fn revoke_auth_sessions_for_user(&self, user_id: &str, reason: &str, actor_user_id: Option<&str>, correlation_id: &str) -> DirectoryResult<Vec<RevokedAuthSession>>;
+    async fn revoke_auth_sessions_for_identity(&self, provider: &str, subject_digest: [u8; 32], reason: &str, actor_user_id: Option<&str>, correlation_id: &str) -> DirectoryResult<Vec<RevokedAuthSession>>;
+    async fn list_auth_audit(&self, limit: usize, offset: usize) -> DirectoryResult<Vec<AuthAuditRecord>>;
     //#endregion
 
     //#region Invites
     // 🎟️ Not event-sourced (contract's decider laws) — only redemption is (`invite.redeemed`, see
     // `DirectoryService::redeem_invite`). `create_invite`/`revoke_invite` are called directly by
     // `decide` as its one documented write exception (`//#region 🔖️Decider`).
-    async fn create_invite(&self, space_id: &str, role: SpaceRole, ttl_secs: i64) -> DirectoryResult<InviteRecord>;
-    async fn get_invite_by_token(&self, token: &str) -> DirectoryResult<Option<InviteRecord>>;
-    async fn revoke_invite(&self, invite_id: &str) -> DirectoryResult<()>;
+    async fn issue_invite(&self, space_id: &str, role: SpaceRole, ttl_secs: i64, correlation_id: &str) -> DirectoryResult<IssuedInvite>;
+    async fn authenticate_invite(&self, capability: &InviteCapability) -> DirectoryResult<Option<InviteRecord>>;
+    async fn revoke_invite(&self, invite_id: &str, reason: &str, correlation_id: &str) -> DirectoryResult<()>;
     async fn list_invites(&self, space_id: &str) -> DirectoryResult<Vec<InviteRecord>>;
     //#endregion
 
     //#region SyncSessions
     /// @emoji 🔴️ Widened over the pre-ticket signature with `space_id`/`surface` (contract's
     /// presence scope is `(space_id, document_id, surface)`).
-    async fn record_sync_session_open(&self, space_id: &str, document_id: &str, surface: &str, user_id: Option<&str>, space_role: Option<SpaceRole>, client_label: &str) -> DirectoryResult<SyncSessionRecord>;
+    async fn record_sync_session_open(
+        &self,
+        auth_session_id: Option<&str>,
+        authorization_generation: u64,
+        actor_id: &str,
+        space_id: &str,
+        document_id: &str,
+        surface: &str,
+        user_id: Option<&str>,
+        space_role: Option<SpaceRole>,
+        client_label: &str,
+    ) -> DirectoryResult<SyncSessionRecord>;
     async fn record_sync_session_close(&self, sync_session_id: &str) -> DirectoryResult<()>;
     async fn list_sync_sessions_for_document(&self, document_id: &str) -> DirectoryResult<Vec<SyncSessionRecord>>;
     /// @emoji 🟢️ Every still-open session, optionally scoped to one space — the admin connections
@@ -584,6 +1751,8 @@ pub trait HubDirectory: Send + Sync + 'static {
     /// each event's projection (`//#region 🔖️Projections`) — returns the number of events replayed
     /// (which must equal `head_seq()` afterward). `POST /admin/api/directory/rebuild` (contract C2).
     async fn rebuild_projections(&self) -> DirectoryResult<u64>;
+    /// 🔁️ Bounded replay with monotonic progress and success-only transaction commit.
+    async fn rebuild_projections_controlled(&self, control: &dyn ProjectionRebuildControl) -> DirectoryResult<u64>;
     //#endregion
 }
 //#endregion 🔖️Trait
@@ -646,25 +1815,36 @@ impl ::core::convert::From<neo4j::Neo4jDirectory> for HubDirectories {
 }
 
 impl HubDirectory for HubDirectories {
-    async fn create_share_token(&self, document_id: &str) -> DirectoryResult<String> {
+    async fn issue_share_token(&self, scope: &DocumentScope, ttl_secs: i64, correlation_id: &str) -> DirectoryResult<IssuedShareToken> {
         match self {
             #[cfg(feature = "sqlite")]
-            Self::Sqlite(inner) => inner.create_share_token(document_id).await,
+            Self::Sqlite(inner) => inner.issue_share_token(scope, ttl_secs, correlation_id).await,
             #[cfg(feature = "postgres")]
-            Self::Postgres(inner) => inner.create_share_token(document_id).await,
+            Self::Postgres(inner) => inner.issue_share_token(scope, ttl_secs, correlation_id).await,
             #[cfg(feature = "neo4j")]
-            Self::Neo4j(inner) => inner.create_share_token(document_id).await,
+            Self::Neo4j(inner) => inner.issue_share_token(scope, ttl_secs, correlation_id).await,
         }
     }
 
-    async fn authorized_by_token(&self, document_id: &str, token: Option<&str>) -> DirectoryResult<bool> {
+    async fn revoke_share_token(&self, scope: &DocumentScope, share_id: &str, reason: &str, correlation_id: &str) -> DirectoryResult<()> {
         match self {
             #[cfg(feature = "sqlite")]
-            Self::Sqlite(inner) => inner.authorized_by_token(document_id, token).await,
+            Self::Sqlite(inner) => inner.revoke_share_token(scope, share_id, reason, correlation_id).await,
             #[cfg(feature = "postgres")]
-            Self::Postgres(inner) => inner.authorized_by_token(document_id, token).await,
+            Self::Postgres(inner) => inner.revoke_share_token(scope, share_id, reason, correlation_id).await,
             #[cfg(feature = "neo4j")]
-            Self::Neo4j(inner) => inner.authorized_by_token(document_id, token).await,
+            Self::Neo4j(inner) => inner.revoke_share_token(scope, share_id, reason, correlation_id).await,
+        }
+    }
+
+    async fn authenticate_share(&self, scope: &DocumentScope, capability: &ShareCapability) -> DirectoryResult<bool> {
+        match self {
+            #[cfg(feature = "sqlite")]
+            Self::Sqlite(inner) => inner.authenticate_share(scope, capability).await,
+            #[cfg(feature = "postgres")]
+            Self::Postgres(inner) => inner.authenticate_share(scope, capability).await,
+            #[cfg(feature = "neo4j")]
+            Self::Neo4j(inner) => inner.authenticate_share(scope, capability).await,
         }
     }
 
@@ -778,69 +1958,245 @@ impl HubDirectory for HubDirectories {
         }
     }
 
-    async fn create_auth_session(&self, user_id: &str, ttl_secs: i64, sso_provider: Option<&str>) -> DirectoryResult<AuthSessionRecord> {
+    async fn get_document_descriptor(&self, scope: &DocumentScope) -> DirectoryResult<Option<DocumentDescriptor>> {
         match self {
             #[cfg(feature = "sqlite")]
-            Self::Sqlite(inner) => inner.create_auth_session(user_id, ttl_secs, sso_provider).await,
+            Self::Sqlite(inner) => inner.get_document_descriptor(scope).await,
             #[cfg(feature = "postgres")]
-            Self::Postgres(inner) => inner.create_auth_session(user_id, ttl_secs, sso_provider).await,
+            Self::Postgres(inner) => inner.get_document_descriptor(scope).await,
             #[cfg(feature = "neo4j")]
-            Self::Neo4j(inner) => inner.create_auth_session(user_id, ttl_secs, sso_provider).await,
+            Self::Neo4j(inner) => inner.get_document_descriptor(scope).await,
         }
     }
 
-    async fn get_auth_session(&self, id: &str) -> DirectoryResult<Option<AuthSessionRecord>> {
+    async fn list_document_descriptors(&self, space_id: &str) -> DirectoryResult<Vec<DocumentDescriptor>> {
         match self {
             #[cfg(feature = "sqlite")]
-            Self::Sqlite(inner) => inner.get_auth_session(id).await,
+            Self::Sqlite(inner) => inner.list_document_descriptors(space_id).await,
             #[cfg(feature = "postgres")]
-            Self::Postgres(inner) => inner.get_auth_session(id).await,
+            Self::Postgres(inner) => inner.list_document_descriptors(space_id).await,
             #[cfg(feature = "neo4j")]
-            Self::Neo4j(inner) => inner.get_auth_session(id).await,
+            Self::Neo4j(inner) => inner.list_document_descriptors(space_id).await,
         }
     }
 
-    async fn revoke_auth_session(&self, id: &str) -> DirectoryResult<()> {
+    async fn get_artifact_checkpoint(&self, scope: &DocumentScope, checkpoint_id: ArtifactHash) -> DirectoryResult<Option<PublishedArtifactCheckpoint>> {
         match self {
             #[cfg(feature = "sqlite")]
-            Self::Sqlite(inner) => inner.revoke_auth_session(id).await,
+            Self::Sqlite(inner) => inner.get_artifact_checkpoint(scope, checkpoint_id).await,
             #[cfg(feature = "postgres")]
-            Self::Postgres(inner) => inner.revoke_auth_session(id).await,
+            Self::Postgres(inner) => inner.get_artifact_checkpoint(scope, checkpoint_id).await,
             #[cfg(feature = "neo4j")]
-            Self::Neo4j(inner) => inner.revoke_auth_session(id).await,
+            Self::Neo4j(inner) => inner.get_artifact_checkpoint(scope, checkpoint_id).await,
         }
     }
 
-    async fn create_invite(&self, space_id: &str, role: SpaceRole, ttl_secs: i64) -> DirectoryResult<InviteRecord> {
+    async fn get_verified_artifact_checkpoint(&self, scope: &DocumentScope, checkpoint_id: ArtifactHash) -> DirectoryResult<Option<ArtifactCheckpoint>> {
         match self {
             #[cfg(feature = "sqlite")]
-            Self::Sqlite(inner) => inner.create_invite(space_id, role, ttl_secs).await,
+            Self::Sqlite(inner) => inner.get_verified_artifact_checkpoint(scope, checkpoint_id).await,
             #[cfg(feature = "postgres")]
-            Self::Postgres(inner) => inner.create_invite(space_id, role, ttl_secs).await,
+            Self::Postgres(inner) => inner.get_verified_artifact_checkpoint(scope, checkpoint_id).await,
             #[cfg(feature = "neo4j")]
-            Self::Neo4j(inner) => inner.create_invite(space_id, role, ttl_secs).await,
+            Self::Neo4j(inner) => inner.get_verified_artifact_checkpoint(scope, checkpoint_id).await,
         }
     }
 
-    async fn get_invite_by_token(&self, token: &str) -> DirectoryResult<Option<InviteRecord>> {
+    async fn get_active_artifact_checkpoint(&self, scope: &DocumentScope) -> DirectoryResult<Option<PublishedArtifactCheckpoint>> {
         match self {
             #[cfg(feature = "sqlite")]
-            Self::Sqlite(inner) => inner.get_invite_by_token(token).await,
+            Self::Sqlite(inner) => inner.get_active_artifact_checkpoint(scope).await,
             #[cfg(feature = "postgres")]
-            Self::Postgres(inner) => inner.get_invite_by_token(token).await,
+            Self::Postgres(inner) => inner.get_active_artifact_checkpoint(scope).await,
             #[cfg(feature = "neo4j")]
-            Self::Neo4j(inner) => inner.get_invite_by_token(token).await,
+            Self::Neo4j(inner) => inner.get_active_artifact_checkpoint(scope).await,
         }
     }
 
-    async fn revoke_invite(&self, invite_id: &str) -> DirectoryResult<()> {
+    async fn get_artifact_retention(&self, scope: &DocumentScope) -> DirectoryResult<Option<ArtifactRetention>> {
         match self {
             #[cfg(feature = "sqlite")]
-            Self::Sqlite(inner) => inner.revoke_invite(invite_id).await,
+            Self::Sqlite(inner) => inner.get_artifact_retention(scope).await,
             #[cfg(feature = "postgres")]
-            Self::Postgres(inner) => inner.revoke_invite(invite_id).await,
+            Self::Postgres(inner) => inner.get_artifact_retention(scope).await,
             #[cfg(feature = "neo4j")]
-            Self::Neo4j(inner) => inner.revoke_invite(invite_id).await,
+            Self::Neo4j(inner) => inner.get_artifact_retention(scope).await,
+        }
+    }
+
+    async fn artifact_checkpoint_count(&self, scope: &DocumentScope) -> DirectoryResult<u64> {
+        match self {
+            #[cfg(feature = "sqlite")]
+            Self::Sqlite(inner) => inner.artifact_checkpoint_count(scope).await,
+            #[cfg(feature = "postgres")]
+            Self::Postgres(inner) => inner.artifact_checkpoint_count(scope).await,
+            #[cfg(feature = "neo4j")]
+            Self::Neo4j(inner) => inner.artifact_checkpoint_count(scope).await,
+        }
+    }
+
+    async fn list_artifact_checkpoint_lineage(&self, scope: &DocumentScope, limit: usize) -> DirectoryResult<Vec<PublishedArtifactCheckpoint>> {
+        match self {
+            #[cfg(feature = "sqlite")]
+            Self::Sqlite(inner) => inner.list_artifact_checkpoint_lineage(scope, limit).await,
+            #[cfg(feature = "postgres")]
+            Self::Postgres(inner) => inner.list_artifact_checkpoint_lineage(scope, limit).await,
+            #[cfg(feature = "neo4j")]
+            Self::Neo4j(inner) => inner.list_artifact_checkpoint_lineage(scope, limit).await,
+        }
+    }
+
+    async fn reserve_artifact_cas(&self, plan: &ArtifactCasOwnershipPlanV1, expires_at_ms: u64, now_ms: u64) -> DirectoryResult<ArtifactCasReservation> {
+        match self {
+            #[cfg(feature = "sqlite")]
+            Self::Sqlite(inner) => inner.reserve_artifact_cas(plan, expires_at_ms, now_ms).await,
+            #[cfg(feature = "postgres")]
+            Self::Postgres(inner) => inner.reserve_artifact_cas(plan, expires_at_ms, now_ms).await,
+            #[cfg(feature = "neo4j")]
+            Self::Neo4j(inner) => inner.reserve_artifact_cas(plan, expires_at_ms, now_ms).await,
+        }
+    }
+
+    async fn append_reserved_artifact_checkpoint(&self, event: Option<&NewDirectoryEvent>, checkpoint: &ArtifactCheckpoint, reservation: &ArtifactCasReservation, now_ms: u64) -> DirectoryResult<Vec<DirectoryEvent>> {
+        match self {
+            #[cfg(feature = "sqlite")]
+            Self::Sqlite(inner) => inner.append_reserved_artifact_checkpoint(event, checkpoint, reservation, now_ms).await,
+            #[cfg(feature = "postgres")]
+            Self::Postgres(inner) => inner.append_reserved_artifact_checkpoint(event, checkpoint, reservation, now_ms).await,
+            #[cfg(feature = "neo4j")]
+            Self::Neo4j(inner) => inner.append_reserved_artifact_checkpoint(event, checkpoint, reservation, now_ms).await,
+        }
+    }
+
+    async fn artifact_cas_ledger_generation(&self) -> DirectoryResult<u64> {
+        match self {
+            #[cfg(feature = "sqlite")]
+            Self::Sqlite(inner) => inner.artifact_cas_ledger_generation().await,
+            #[cfg(feature = "postgres")]
+            Self::Postgres(inner) => inner.artifact_cas_ledger_generation().await,
+            #[cfg(feature = "neo4j")]
+            Self::Neo4j(inner) => inner.artifact_cas_ledger_generation().await,
+        }
+    }
+
+    async fn artifact_cas_sweep_candidates(&self, after_generation: u64, through_generation: u64, limit: usize) -> DirectoryResult<ArtifactCasSweepCandidatePage> {
+        match self {
+            #[cfg(feature = "sqlite")]
+            Self::Sqlite(inner) => inner.artifact_cas_sweep_candidates(after_generation, through_generation, limit).await,
+            #[cfg(feature = "postgres")]
+            Self::Postgres(inner) => inner.artifact_cas_sweep_candidates(after_generation, through_generation, limit).await,
+            #[cfg(feature = "neo4j")]
+            Self::Neo4j(inner) => inner.artifact_cas_sweep_candidates(after_generation, through_generation, limit).await,
+        }
+    }
+
+    async fn artifact_cas_delete_fence(&self, key: &ArtifactCasObjectKey, observed_generation: u64, now_ms: u64) -> DirectoryResult<Option<ArtifactCasDeleteFence>> {
+        match self {
+            #[cfg(feature = "sqlite")]
+            Self::Sqlite(inner) => inner.artifact_cas_delete_fence(key, observed_generation, now_ms).await,
+            #[cfg(feature = "postgres")]
+            Self::Postgres(inner) => inner.artifact_cas_delete_fence(key, observed_generation, now_ms).await,
+            #[cfg(feature = "neo4j")]
+            Self::Neo4j(inner) => inner.artifact_cas_delete_fence(key, observed_generation, now_ms).await,
+        }
+    }
+
+    async fn issue_auth_session(&self, issue: &AuthSessionIssue) -> DirectoryResult<IssuedAuthSession> {
+        match self {
+            #[cfg(feature = "sqlite")]
+            Self::Sqlite(inner) => inner.issue_auth_session(issue).await,
+            #[cfg(feature = "postgres")]
+            Self::Postgres(inner) => inner.issue_auth_session(issue).await,
+            #[cfg(feature = "neo4j")]
+            Self::Neo4j(inner) => inner.issue_auth_session(issue).await,
+        }
+    }
+
+    async fn authenticate_session(&self, capability: &SessionCapability) -> DirectoryResult<Option<AuthSessionRecord>> {
+        match self {
+            #[cfg(feature = "sqlite")]
+            Self::Sqlite(inner) => inner.authenticate_session(capability).await,
+            #[cfg(feature = "postgres")]
+            Self::Postgres(inner) => inner.authenticate_session(capability).await,
+            #[cfg(feature = "neo4j")]
+            Self::Neo4j(inner) => inner.authenticate_session(capability).await,
+        }
+    }
+
+    async fn revoke_auth_session(&self, id: &str, reason: &str, actor_user_id: Option<&str>, correlation_id: &str) -> DirectoryResult<Option<RevokedAuthSession>> {
+        match self {
+            #[cfg(feature = "sqlite")]
+            Self::Sqlite(inner) => inner.revoke_auth_session(id, reason, actor_user_id, correlation_id).await,
+            #[cfg(feature = "postgres")]
+            Self::Postgres(inner) => inner.revoke_auth_session(id, reason, actor_user_id, correlation_id).await,
+            #[cfg(feature = "neo4j")]
+            Self::Neo4j(inner) => inner.revoke_auth_session(id, reason, actor_user_id, correlation_id).await,
+        }
+    }
+
+    async fn revoke_auth_sessions_for_user(&self, user_id: &str, reason: &str, actor_user_id: Option<&str>, correlation_id: &str) -> DirectoryResult<Vec<RevokedAuthSession>> {
+        match self {
+            #[cfg(feature = "sqlite")]
+            Self::Sqlite(inner) => inner.revoke_auth_sessions_for_user(user_id, reason, actor_user_id, correlation_id).await,
+            #[cfg(feature = "postgres")]
+            Self::Postgres(inner) => inner.revoke_auth_sessions_for_user(user_id, reason, actor_user_id, correlation_id).await,
+            #[cfg(feature = "neo4j")]
+            Self::Neo4j(inner) => inner.revoke_auth_sessions_for_user(user_id, reason, actor_user_id, correlation_id).await,
+        }
+    }
+
+    async fn revoke_auth_sessions_for_identity(&self, provider: &str, subject_digest: [u8; 32], reason: &str, actor_user_id: Option<&str>, correlation_id: &str) -> DirectoryResult<Vec<RevokedAuthSession>> {
+        match self {
+            #[cfg(feature = "sqlite")]
+            Self::Sqlite(inner) => inner.revoke_auth_sessions_for_identity(provider, subject_digest, reason, actor_user_id, correlation_id).await,
+            #[cfg(feature = "postgres")]
+            Self::Postgres(inner) => inner.revoke_auth_sessions_for_identity(provider, subject_digest, reason, actor_user_id, correlation_id).await,
+            #[cfg(feature = "neo4j")]
+            Self::Neo4j(inner) => inner.revoke_auth_sessions_for_identity(provider, subject_digest, reason, actor_user_id, correlation_id).await,
+        }
+    }
+
+    async fn list_auth_audit(&self, limit: usize, offset: usize) -> DirectoryResult<Vec<AuthAuditRecord>> {
+        match self {
+            #[cfg(feature = "sqlite")]
+            Self::Sqlite(inner) => inner.list_auth_audit(limit, offset).await,
+            #[cfg(feature = "postgres")]
+            Self::Postgres(inner) => inner.list_auth_audit(limit, offset).await,
+            #[cfg(feature = "neo4j")]
+            Self::Neo4j(inner) => inner.list_auth_audit(limit, offset).await,
+        }
+    }
+
+    async fn issue_invite(&self, space_id: &str, role: SpaceRole, ttl_secs: i64, correlation_id: &str) -> DirectoryResult<IssuedInvite> {
+        match self {
+            #[cfg(feature = "sqlite")]
+            Self::Sqlite(inner) => inner.issue_invite(space_id, role, ttl_secs, correlation_id).await,
+            #[cfg(feature = "postgres")]
+            Self::Postgres(inner) => inner.issue_invite(space_id, role, ttl_secs, correlation_id).await,
+            #[cfg(feature = "neo4j")]
+            Self::Neo4j(inner) => inner.issue_invite(space_id, role, ttl_secs, correlation_id).await,
+        }
+    }
+
+    async fn authenticate_invite(&self, capability: &InviteCapability) -> DirectoryResult<Option<InviteRecord>> {
+        match self {
+            #[cfg(feature = "sqlite")]
+            Self::Sqlite(inner) => inner.authenticate_invite(capability).await,
+            #[cfg(feature = "postgres")]
+            Self::Postgres(inner) => inner.authenticate_invite(capability).await,
+            #[cfg(feature = "neo4j")]
+            Self::Neo4j(inner) => inner.authenticate_invite(capability).await,
+        }
+    }
+
+    async fn revoke_invite(&self, invite_id: &str, reason: &str, correlation_id: &str) -> DirectoryResult<()> {
+        match self {
+            #[cfg(feature = "sqlite")]
+            Self::Sqlite(inner) => inner.revoke_invite(invite_id, reason, correlation_id).await,
+            #[cfg(feature = "postgres")]
+            Self::Postgres(inner) => inner.revoke_invite(invite_id, reason, correlation_id).await,
+            #[cfg(feature = "neo4j")]
+            Self::Neo4j(inner) => inner.revoke_invite(invite_id, reason, correlation_id).await,
         }
     }
 
@@ -855,14 +2211,25 @@ impl HubDirectory for HubDirectories {
         }
     }
 
-    async fn record_sync_session_open(&self, space_id: &str, document_id: &str, surface: &str, user_id: Option<&str>, space_role: Option<SpaceRole>, client_label: &str) -> DirectoryResult<SyncSessionRecord> {
+    async fn record_sync_session_open(
+        &self,
+        auth_session_id: Option<&str>,
+        authorization_generation: u64,
+        actor_id: &str,
+        space_id: &str,
+        document_id: &str,
+        surface: &str,
+        user_id: Option<&str>,
+        space_role: Option<SpaceRole>,
+        client_label: &str,
+    ) -> DirectoryResult<SyncSessionRecord> {
         match self {
             #[cfg(feature = "sqlite")]
-            Self::Sqlite(inner) => inner.record_sync_session_open(space_id, document_id, surface, user_id, space_role, client_label).await,
+            Self::Sqlite(inner) => inner.record_sync_session_open(auth_session_id, authorization_generation, actor_id, space_id, document_id, surface, user_id, space_role, client_label).await,
             #[cfg(feature = "postgres")]
-            Self::Postgres(inner) => inner.record_sync_session_open(space_id, document_id, surface, user_id, space_role, client_label).await,
+            Self::Postgres(inner) => inner.record_sync_session_open(auth_session_id, authorization_generation, actor_id, space_id, document_id, surface, user_id, space_role, client_label).await,
             #[cfg(feature = "neo4j")]
-            Self::Neo4j(inner) => inner.record_sync_session_open(space_id, document_id, surface, user_id, space_role, client_label).await,
+            Self::Neo4j(inner) => inner.record_sync_session_open(auth_session_id, authorization_generation, actor_id, space_id, document_id, surface, user_id, space_role, client_label).await,
         }
     }
 
@@ -953,6 +2320,17 @@ impl HubDirectory for HubDirectories {
             Self::Neo4j(inner) => inner.rebuild_projections().await,
         }
     }
+
+    async fn rebuild_projections_controlled(&self, control: &dyn ProjectionRebuildControl) -> DirectoryResult<u64> {
+        match self {
+            #[cfg(feature = "sqlite")]
+            Self::Sqlite(inner) => inner.rebuild_projections_controlled(control).await,
+            #[cfg(feature = "postgres")]
+            Self::Postgres(inner) => inner.rebuild_projections_controlled(control).await,
+            #[cfg(feature = "neo4j")]
+            Self::Neo4j(inner) => inner.rebuild_projections_controlled(control).await,
+        }
+    }
 }
 //#endregion 🔖️Dispatch
 
@@ -965,18 +2343,319 @@ impl HubDirectory for HubDirectories {
 mod tests {
     use super::sqlite::SqliteDirectory;
     use super::*;
+    use crate::artifact_authority::chunk_cas::{artifact_cas_manifest_locator_v1, prepare_artifact_cas_manifest_v1, prepare_artifact_cas_ownership_v1, ArtifactCasObjectKind, ArtifactChunkBlobStore, FsArtifactChunkCasStorage, MemoryArtifactChunkCasStorage};
+    use crate::artifact_authority::{ArtifactBlobIntegrity, ArtifactPair, AuthorityLimits, AuthorityOperationControl, AuthorityProgress, AuthorityProgressStage, ImmutableArtifactBlobStore, OperationContext, StagedArtifactBlob};
+    use db::db_storage::{DbIoPageWriter, MemoryStorage as GenericMemoryStorage, PayloadStorage, DB_IO_PAGE_BYTES};
+    use directory::{DslValue, FromValue, ToValue};
+    use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
     use std::sync::Arc;
+
+    struct IdentityProbe {
+        now: i64,
+        cancelled: bool,
+        progress: std::sync::Mutex<Vec<IdentityVerificationProgress>>,
+    }
+
+    impl IdentityVerificationControl for IdentityProbe {
+        fn now_ms(&self) -> i64 {
+            self.now
+        }
+
+        fn is_cancelled(&self) -> bool {
+            self.cancelled
+        }
+
+        fn report(&self, progress: IdentityVerificationProgress) {
+            self.progress.lock().expect("identity progress lock").push(progress);
+        }
+    }
+
+    struct TestIdentityVerifier {
+        fail: bool,
+    }
+
+    impl IdentityAssertionVerifier for TestIdentityVerifier {
+        fn verify<'a>(&'a self, assertion: &'a IdentityAssertion, context: &'a IdentityVerificationContext<'a>) -> IdentityVerificationFuture<'a> {
+            Box::pin(async move {
+                context.checkpoint(0, 2)?;
+                semio_framework_async::yield_once().await;
+                context.checkpoint(1, 2)?;
+                if self.fail || assertion.as_bytes() != b"signed-test-assertion" {
+                    return Err(DirectoryError::Unauthorized);
+                }
+                context.checkpoint(2, 2)?;
+                Ok(VerifiedIdentity {
+                    provider: "test-verifier".into(),
+                    subject: "test-subject".into(),
+                    verified_email: Some("verified@example.com".into()),
+                    display_name: Some("Verified".into()),
+                    issued_at: 1,
+                    expires_at: 2,
+                    assurance: IdentityAssurance::ExternalVerified,
+                })
+            })
+        }
+    }
+
+    #[test]
+    fn typed_capabilities_match_neutral_sha256_vectors_and_fixed_boundaries() {
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("../🔐️auth/🧪️fixtures/🧬️capability-v1/🔣️.json")).expect("auth capability fixture");
+        let session = SessionCapability::parse(fixture["session"]["capability"].as_str().expect("session capability")).expect("session parser");
+        let share = ShareCapability::parse(fixture["share"]["capability"].as_str().expect("share capability")).expect("share parser");
+        let invite = InviteCapability::parse(fixture["invite"]["capability"].as_str().expect("invite capability")).expect("invite parser");
+        assert_eq!(session.selector(), fixture["session"]["selector"].as_str().expect("session selector"));
+        assert_eq!(encode_capability_bytes(&session.secret_digest()), fixture["session"]["digestHex"].as_str().expect("session digest"));
+        assert_eq!(encode_capability_bytes(&share.secret_digest()), fixture["share"]["digestHex"].as_str().expect("share digest"));
+        assert_eq!(encode_capability_bytes(&invite.secret_digest()), fixture["invite"]["digestHex"].as_str().expect("invite digest"));
+        assert!(SessionCapability::parse(fixture["share"]["capability"].as_str().expect("share capability")).is_err());
+        assert!(ShareCapability::parse(&share.expose_once().to_uppercase()).is_err());
+        assert_eq!(capability_window(1, CAPABILITY_MAX_TTL_SECS).expect("maximum ttl").1, 1 + CAPABILITY_MAX_TTL_SECS * 1_000);
+        assert!(capability_window(1, CAPABILITY_MAX_TTL_SECS + 1).is_err());
+        assert!(IdentityAssertion::new(vec![0; AUTH_ASSERTION_MAX_BYTES].into_boxed_slice()).is_ok());
+        assert!(IdentityAssertion::new(vec![0; AUTH_ASSERTION_MAX_BYTES + 1].into_boxed_slice()).is_err());
+        let mut issue = AuthSessionIssue {
+            user_id: "fixture-user".into(),
+            identity_provider: "oidc.example".into(),
+            identity_subject_digest: [7; 32],
+            ttl_secs: 60,
+            device_instance_id: "d".repeat(DEVICE_INSTANCE_MAX_BYTES),
+            session_kind: AuthSessionKind::External,
+            correlation_id: "fixture-correlation".into(),
+            peer_class: "fixture".into(),
+        };
+        assert!(prepare_auth_session(&issue, 1).is_ok());
+        issue.device_instance_id.push('d');
+        assert!(prepare_auth_session(&issue, 1).is_err());
+        assert!(constant_time_digest_eq(&[9; 32], &[9; 32]));
+        assert!(!constant_time_digest_eq(&[9; 32], &[8; 32]));
+        assert_eq!(
+            encode_capability_bytes(&identity_subject_digest(fixture["identity"]["provider"].as_str().expect("provider"), fixture["identity"]["subject"].as_str().expect("subject")).expect("identity digest")),
+            fixture["identity"]["digestHex"].as_str().expect("identity digest vector"),
+        );
+    }
+
+    #[tokio::test]
+    async fn identity_verifier_port_honors_progress_cancel_deadline_and_provider_error() {
+        let assertion = IdentityAssertion::new(b"signed-test-assertion".to_vec().into_boxed_slice()).expect("bounded assertion");
+        let success = IdentityProbe { now: 10, cancelled: false, progress: std::sync::Mutex::new(Vec::new()) };
+        let verified = TestIdentityVerifier { fail: false }
+            .verify(&assertion, &IdentityVerificationContext { deadline_ms: 10, control: &success })
+            .await
+            .expect("verified identity");
+        assert_eq!(verified.subject, "test-subject");
+        assert_eq!(success.progress.into_inner().expect("success progress"), vec![IdentityVerificationProgress { completed_units: 0, total_units: 2 }, IdentityVerificationProgress { completed_units: 1, total_units: 2 }, IdentityVerificationProgress { completed_units: 2, total_units: 2 }]);
+
+        let cancelled = IdentityProbe { now: 10, cancelled: true, progress: std::sync::Mutex::new(Vec::new()) };
+        assert!(matches!(TestIdentityVerifier { fail: false }.verify(&assertion, &IdentityVerificationContext { deadline_ms: 10, control: &cancelled }).await, Err(DirectoryError::Conflict(_))));
+        let expired = IdentityProbe { now: 11, cancelled: false, progress: std::sync::Mutex::new(Vec::new()) };
+        assert!(matches!(TestIdentityVerifier { fail: false }.verify(&assertion, &IdentityVerificationContext { deadline_ms: 10, control: &expired }).await, Err(DirectoryError::Conflict(_))));
+        let provider_error = IdentityProbe { now: 10, cancelled: false, progress: std::sync::Mutex::new(Vec::new()) };
+        assert!(matches!(TestIdentityVerifier { fail: true }.verify(&assertion, &IdentityVerificationContext { deadline_ms: 10, control: &provider_error }).await, Err(DirectoryError::Unauthorized)));
+    }
 
     fn user_actor(user_id: &str) -> DirectoryActor {
         DirectoryActor { kind: DirectoryActorKind::User, id: format!("user:{user_id}#s1") }
     }
 
+    fn descriptor(space_id: &str, document_id: &str) -> DocumentDescriptor {
+        DocumentDescriptor {
+            space_id: space_id.into(),
+            document_id: document_id.into(),
+            artifact_kind: "s.gis.gismap".into(),
+            artifact_schema: "s.gis.gismap@1/*".into(),
+            owner: directory::os_directory::DocumentOwner { plugin_id: "s.gis".into(), package_id: "s.gis.gismap".into(), version: "1.0.0".into(), package_hash: "22".repeat(32) },
+            pack_schema_hash: "11".repeat(32),
+            bootstrap_version: 1,
+            bootstrap_frontier: directory::os_directory::DocumentFrontier { head_seq: 7, commit_seq: 7, epoch: 2 },
+            bootstrap_snapshot_hash: "33".repeat(32),
+        }
+    }
+
+    fn artifact_projection_fixture() -> (DocumentDescriptor, PublishedArtifactCheckpoint, PublishedArtifactCheckpoint, ArtifactRetention, u64) {
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("🧪️tests/🔣️artifact-checkpoint-projection.json")).expect("checkpoint projection fixture");
+        let decode = |field: &str| DslValue::from(fixture.get(field).expect("fixture field").clone());
+        (
+            DocumentDescriptor::from_value(decode("descriptor")).expect("fixture descriptor"),
+            PublishedArtifactCheckpoint::from_value(decode("checkpoint1")).expect("fixture checkpoint 1"),
+            PublishedArtifactCheckpoint::from_value(decode("checkpoint2")).expect("fixture checkpoint 2"),
+            ArtifactRetention::from_value(decode("retention")).expect("fixture retention"),
+            fixture["lineageMaximum"].as_u64().expect("fixture maximum"),
+        )
+    }
+
+    fn verified_checkpoint(checkpoint: &PublishedArtifactCheckpoint, locator_suffix: &str) -> ArtifactCheckpoint {
+        let mut verified = checkpoint_identity_input(checkpoint);
+        verified.pack.storage_key = format!("semio.artifact-cas.manifest/v1/{}", semio_framework_hash::hex_lower(&Sha256::digest(format!("pack:{locator_suffix}").as_bytes())));
+        verified.spr.storage_key = format!("semio.artifact-cas.manifest/v1/{}", semio_framework_hash::hex_lower(&Sha256::digest(format!("spr:{locator_suffix}").as_bytes())));
+        verified
+    }
+
+    fn ownership_plan(checkpoint: &ArtifactCheckpoint) -> ArtifactCasOwnershipPlanV1 {
+        let pack_manifest_id = crate::artifact_authority::chunk_cas::decode_artifact_cas_manifest_locator_v1(&checkpoint.pack.storage_key).expect("pack manifest locator");
+        let spr_manifest_id = crate::artifact_authority::chunk_cas::decode_artifact_cas_manifest_locator_v1(&checkpoint.spr.storage_key).expect("SPR manifest locator");
+        let mut objects = vec![
+            ArtifactCasObjectKey { space_id: checkpoint.scope.space_id.clone(), kind: ArtifactCasObjectKind::Manifest, digest: pack_manifest_id },
+            ArtifactCasObjectKey { space_id: checkpoint.scope.space_id.clone(), kind: ArtifactCasObjectKind::Manifest, digest: spr_manifest_id },
+        ];
+        objects.sort_by_key(|object| (object.kind, object.digest.0));
+        objects.dedup();
+        ArtifactCasOwnershipPlanV1 { scope: checkpoint.scope.clone(), checkpoint_id: checkpoint.checkpoint_id, pack_manifest_id, spr_manifest_id, objects }
+    }
+
+    async fn publish_reserved(service: &DirectoryService, actor: DirectoryActor, checkpoint: ArtifactCheckpoint) -> DirectoryResult<Vec<DirectoryEvent>> {
+        let reservation = service.reserve_artifact_cas(actor.clone(), ownership_plan(&checkpoint), 1_000, 100).await?;
+        service.publish_reserved_artifact_checkpoint(actor, checkpoint, reservation, 100).await
+    }
+
+    struct ArtifactCasProbe {
+        now_ms: AtomicU64,
+        cancel_after_sweep: Option<u64>,
+        cancelled: AtomicBool,
+        progress: std::sync::Mutex<Vec<AuthorityProgress>>,
+    }
+
+    impl ArtifactCasProbe {
+        fn new(now_ms: u64, cancel_after_sweep: Option<u64>) -> Self {
+            Self { now_ms: AtomicU64::new(now_ms), cancel_after_sweep, cancelled: AtomicBool::new(false), progress: std::sync::Mutex::new(Vec::new()) }
+        }
+    }
+
+    impl AuthorityOperationControl for ArtifactCasProbe {
+        fn now_ms(&self) -> u64 {
+            self.now_ms.load(Ordering::SeqCst)
+        }
+
+        fn is_cancelled(&self) -> bool {
+            self.cancelled.load(Ordering::SeqCst)
+        }
+
+        fn report(&self, progress: AuthorityProgress) {
+            self.progress.lock().expect("artifact CAS progress").push(progress);
+            if progress.stage == AuthorityProgressStage::CasSweep && self.cancel_after_sweep.is_some_and(|after| progress.completed_units >= after) {
+                self.cancelled.store(true, Ordering::SeqCst);
+            }
+        }
+    }
+
+    struct BlockingDeleteArtifactCas {
+        inner: Arc<MemoryArtifactChunkCasStorage>,
+        block_next: AtomicBool,
+        entered: tokio::sync::Notify,
+        release: tokio::sync::Notify,
+    }
+
+    impl BlockingDeleteArtifactCas {
+        fn new() -> Self {
+            Self { inner: Arc::new(MemoryArtifactChunkCasStorage::default()), block_next: AtomicBool::new(true), entered: tokio::sync::Notify::new(), release: tokio::sync::Notify::new() }
+        }
+    }
+
+    impl ArtifactChunkCasStorage for BlockingDeleteArtifactCas {
+        async fn put_if_absent(&self, key: &ArtifactCasObjectKey, bytes: &[u8], context: &OperationContext<'_>) -> Result<crate::artifact_authority::chunk_cas::ArtifactCasPutOutcome, crate::artifact_authority::AuthorityError> {
+            self.inner.put_if_absent(key, bytes, context).await
+        }
+
+        async fn get(&self, key: &ArtifactCasObjectKey, context: &OperationContext<'_>) -> Result<Vec<u8>, crate::artifact_authority::AuthorityError> {
+            self.inner.get(key, context).await
+        }
+
+        async fn delete_if_unreferenced(&self, key: &ArtifactCasObjectKey, fence: &ArtifactCasDeleteFence, context: &OperationContext<'_>) -> Result<ArtifactCasDeleteOutcome, crate::artifact_authority::AuthorityError> {
+            if self.block_next.swap(false, Ordering::SeqCst) {
+                self.entered.notify_one();
+                self.release.notified().await;
+            }
+            self.inner.delete_if_unreferenced(key, fence, context).await
+        }
+    }
+
+    fn materialized_checkpoint(mut public: PublishedArtifactCheckpoint, pair: &ArtifactPair) -> ArtifactCheckpoint {
+        public.pack = PublishedArtifactBlob { sha256: ArtifactHash(Sha256::digest(&pair.pack)), byte_length: pair.pack.len() as u64 };
+        public.spr = PublishedArtifactBlob { sha256: ArtifactHash(Sha256::digest(&pair.spr)), byte_length: pair.spr.len() as u64 };
+        let mut aggregate = Sha256::new();
+        aggregate.update(&pair.pack);
+        aggregate.update(&pair.spr);
+        public.aggregate_sha256 = ArtifactHash(aggregate.finalize());
+        public.checkpoint_id = ArtifactHash(Sha256::digest(&crate::artifact_authority::checkpoint_id_encoding_v1(&checkpoint_identity_input(&public)).expect("checkpoint identity")));
+        let mut checkpoint = checkpoint_identity_input(&public);
+        checkpoint.pack.storage_key = artifact_cas_manifest_locator_v1(prepare_artifact_cas_manifest_v1(&checkpoint.scope.space_id, &pair.pack).expect("pack plan").manifest_id);
+        checkpoint.spr.storage_key = artifact_cas_manifest_locator_v1(prepare_artifact_cas_manifest_v1(&checkpoint.scope.space_id, &pair.spr).expect("SPR plan").manifest_id);
+        checkpoint
+    }
+
+    fn scoped_materialized_checkpoint(mut public: PublishedArtifactCheckpoint, descriptor: &DocumentDescriptor, pair: &ArtifactPair, parent_checkpoint_id: Option<ArtifactHash>, ordinal: u64) -> ArtifactCheckpoint {
+        public.scope = DocumentScope::new(descriptor.space_id.clone(), descriptor.document_id.clone());
+        public.parent_checkpoint_id = parent_checkpoint_id;
+        public.descriptor_digest_v1 = descriptor_digest_v1(descriptor).expect("descriptor digest");
+        public.baseline_frontier.document_id = descriptor.document_id.clone();
+        public.baseline_frontier.head_edit_ordinal = ordinal;
+        public.baseline_frontier.head_edit_id = format!("edit-{ordinal}");
+        public.baseline_frontier.last_commit_seq = ordinal;
+        public.baseline_frontier.chain_hash = ArtifactHash(Sha256::digest(&ordinal.to_be_bytes()));
+        public.published_at_ms = ordinal;
+        materialized_checkpoint(public, pair)
+    }
+
+    fn generic_payload_pages(bytes: &[u8]) -> db::db_storage::DbIoPages {
+        let mut writer = DbIoPageWriter::try_reserve(bytes.len().div_ceil(DB_IO_PAGE_BYTES)).expect("generic payload pages");
+        for fragment in bytes.chunks(DB_IO_PAGE_BYTES) {
+            assert_eq!(writer.write_fragment(fragment).expect("generic payload fragment"), fragment.len());
+        }
+        loop {
+            if let Some(pages) = writer.seal_retained_step().expect("generic payload pages seal") {
+                return pages;
+            }
+        }
+    }
+
+    async fn stage_reserved_checkpoint<S: ArtifactChunkCasStorage>(service: &DirectoryService, storage: Arc<S>, actor: DirectoryActor, checkpoint: &ArtifactCheckpoint, pair: &ArtifactPair, expires_at_ms: u64, now_ms: u64, context: &OperationContext<'_>) -> DirectoryResult<ArtifactCasReservation> {
+        let plan = prepare_artifact_cas_ownership_v1(checkpoint, pair).map_err(|error| DirectoryError::Conflict(error.to_string()))?;
+        let reservation = service.reserve_artifact_cas(actor, plan, expires_at_ms, now_ms).await?;
+        let blobs = ArtifactChunkBlobStore::new(storage);
+        let pack = blobs.stage(&checkpoint.scope.space_id, ArtifactBlobIntegrity { sha256: checkpoint.pack.sha256, byte_length: checkpoint.pack.byte_length }, &pair.pack, context).await.map_err(|error| DirectoryError::Backend(error.to_string()))?;
+        let spr = blobs.stage(&checkpoint.scope.space_id, ArtifactBlobIntegrity { sha256: checkpoint.spr.sha256, byte_length: checkpoint.spr.byte_length }, &pair.spr, context).await.map_err(|error| DirectoryError::Backend(error.to_string()))?;
+        if pack.storage_key != checkpoint.pack.storage_key || spr.storage_key != checkpoint.spr.storage_key {
+            return Err(DirectoryError::Conflict("artifact CAS pre-write plan changed while staging".into()));
+        }
+        Ok(reservation)
+    }
+
+    fn artifact_event(seq: u64, body: DirectoryEventBody) -> DirectoryEvent {
+        DirectoryEvent {
+            seq,
+            id: format!("event-{seq}"),
+            hlc: Hlc { physical_ms: seq as i64, logical: 0 },
+            actor: DirectoryActor { kind: DirectoryActorKind::System, id: "system:artifact-authority".into() },
+            space_id: Some("raum:ä".into()),
+            user_id: None,
+            body,
+            recorded_at_ms: seq as i64,
+        }
+    }
+
+    struct RebuildProbe {
+        cancelled: AtomicBool,
+        cancel_after_first: bool,
+        progress: std::sync::Mutex<Vec<ProjectionRebuildProgress>>,
+    }
+
+    impl ProjectionRebuildControl for RebuildProbe {
+        fn is_cancelled(&self) -> bool {
+            self.cancelled.load(Ordering::SeqCst)
+        }
+
+        fn report(&self, progress: ProjectionRebuildProgress) {
+            self.progress.lock().expect("progress").push(progress);
+            if self.cancel_after_first && progress.completed_events == 1 {
+                self.cancelled.store(true, Ordering::SeqCst);
+            }
+        }
+    }
+
     // 🌱️ Every test in this module creates a space owned by `user_actor("u-owner")`; `decide`'s
     // `CreateSpace` arm (correctly) never mints the owner's `hub_user` row itself — it only has an
     // actor id, no email, so it cannot self-heal a missing user the way `UpsertMember` can. In
-    // production the owner's `hub_user` row always predates `create-space` (an auth session is
-    // required to call any directory command, and `POST /auth/sessions` creates the user first via
-    // `HubDirectory::create_user`/`get_user_by_email`). This fixture reproduces that precondition by
+    // production the owner's `hub_user` row must predate `create-space`; the trusted identity
+    // completion boundary provisions it before issuing a session. This fixture reproduces that precondition by
     // appending a bare `user.created` event for `"u-owner"` under a `System` actor, mirroring
     // `SqliteDirectory::seed`'s own pattern one file over.
     async fn fresh_dir() -> Arc<HubDirectories> {
@@ -1017,6 +2696,412 @@ mod tests {
         assert_eq!(dir.list_spaces(100, 0).await.expect("list spaces"), spaces_before);
         assert_eq!(dir.list_members(&space_id).await.expect("list members"), members_before);
         assert_eq!(dir.list_users(100, 0).await.expect("list users"), users_before);
+    }
+
+    #[tokio::test]
+    async fn artifact_chunk_cas_retention_space_delete_and_dry_run_preserve_live_bytes() {
+        let (template_descriptor, first_public, second_public, _, _) = artifact_projection_fixture();
+        let dir = fresh_dir().await;
+        let service = DirectoryService::new(dir.clone(), 64);
+        let owner = user_actor("u-owner");
+        let space_id = create_space(&service, &owner, DirectorySpaceKind::Studio).await;
+        let mut descriptor = template_descriptor;
+        descriptor.space_id = space_id.clone();
+        descriptor.document_id = "artifact-cas-retention".into();
+        service.execute(owner.clone(), DirectoryCommand::AnnounceDocument { descriptor: descriptor.clone() }).await.expect("announce CAS document");
+        let system = DirectoryActor { kind: DirectoryActorKind::System, id: "system:artifact-authority".into() };
+        let first_pair = ArtifactPair { pack: b"shared-pack".to_vec(), spr: b"old-spr".to_vec() };
+        let first = scoped_materialized_checkpoint(first_public, &descriptor, &first_pair, None, 1);
+        let second_pair = ArtifactPair { pack: first_pair.pack.clone(), spr: b"new-spr".to_vec() };
+        let second = scoped_materialized_checkpoint(second_public, &descriptor, &second_pair, Some(first.checkpoint_id), 2);
+        let generic_pool = Arc::new(db::semio_framework_async::process_worker_pool(db::semio_framework_async::WorkerPoolConfig::new(db::semio_framework_async::ProcessKind::HeadlessBatch, 2)));
+        let generic = GenericMemoryStorage::new(generic_pool).await.expect("open generic payload storage");
+        let generic_hash = generic.put(generic_payload_pages(&first_pair.spr)).await.expect("seed identical generic payload bytes");
+        let storage = Arc::new(MemoryArtifactChunkCasStorage::default());
+        let control = ArtifactCasProbe::new(100, None);
+        let context = OperationContext::new(10_000, AuthorityLimits::maximum(), &control);
+
+        let first_reservation = stage_reserved_checkpoint(&service, storage.clone(), system.clone(), &first, &first_pair, 1_000, 100, &context).await.expect("reserve and stage first");
+        service.publish_reserved_artifact_checkpoint(system.clone(), first.clone(), first_reservation, 100).await.expect("publish first");
+        let second_reservation = stage_reserved_checkpoint(&service, storage.clone(), system.clone(), &second, &second_pair, 1_001, 101, &context).await.expect("reserve and stage second");
+        service.publish_reserved_artifact_checkpoint(system.clone(), second.clone(), second_reservation, 101).await.expect("publish second");
+        let retention = ArtifactRetention { scope: second.scope.clone(), retained_checkpoint_id: second.checkpoint_id, retained_floor: second.baseline_frontier.clone(), checkpoint_lineage_head: second.checkpoint_id };
+        service.execute_artifact_authority(system.clone(), ArtifactDirectoryCommand::AdvanceRetention { retention }).await.expect("advance retention");
+        assert_eq!(dir.get_verified_artifact_checkpoint(&first.scope, first.checkpoint_id).await.expect("released private checkpoint"), None);
+        assert_eq!(dir.get_verified_artifact_checkpoint(&second.scope, second.checkpoint_id).await.expect("live private checkpoint"), Some(second.clone()));
+        assert!(matches!(service.reserve_artifact_cas(system.clone(), prepare_artifact_cas_ownership_v1(&first, &first_pair).expect("first ownership"), 2_000, 200).await, Err(DirectoryError::Conflict(_))));
+
+        let old_spr = StagedArtifactBlob { storage_key: first.spr.storage_key.clone(), integrity: ArtifactBlobIntegrity { sha256: first.spr.sha256, byte_length: first.spr.byte_length } };
+        let live_spr = StagedArtifactBlob { storage_key: second.spr.storage_key.clone(), integrity: ArtifactBlobIntegrity { sha256: second.spr.sha256, byte_length: second.spr.byte_length } };
+        let blobs = ArtifactChunkBlobStore::new(storage.clone());
+        let dry = service.sweep_artifact_cas(storage.as_ref(), ArtifactCasSweepRequest { execute: false, max_objects: ARTIFACT_CAS_SWEEP_OBJECT_MAX }, &context).await.expect("dry sweep");
+        assert_eq!(dry.observed_generation, dry.final_generation);
+        assert!(dry.eligible_objects >= 2);
+        assert!(dry.protected_objects >= 2);
+        assert_eq!(dry.deleted_objects, 0);
+        assert_eq!(blobs.read(&space_id, &old_spr, &context).await.expect("dry run preserves released bytes"), first_pair.spr);
+
+        let swept = service.sweep_artifact_cas(storage.as_ref(), ArtifactCasSweepRequest { execute: true, max_objects: ARTIFACT_CAS_SWEEP_OBJECT_MAX }, &context).await.expect("retention sweep");
+        assert_eq!(swept.deleted_objects, swept.eligible_objects);
+        assert!(blobs.read(&space_id, &old_spr, &context).await.is_err());
+        assert_eq!(blobs.read(&space_id, &live_spr, &context).await.expect("retained checkpoint survives"), second_pair.spr);
+
+        service.execute(owner, DirectoryCommand::DeleteSpace { space_id: space_id.clone() }).await.expect("delete space");
+        assert_eq!(dir.get_active_artifact_checkpoint(&second.scope).await.expect("deleted active checkpoint"), None);
+        let deleted = service.sweep_artifact_cas(storage.as_ref(), ArtifactCasSweepRequest { execute: true, max_objects: ARTIFACT_CAS_SWEEP_OBJECT_MAX }, &context).await.expect("space deletion sweep");
+        assert!(deleted.deleted_objects >= 2);
+        assert!(deleted.missing_objects >= 2);
+        assert!(blobs.read(&space_id, &live_spr, &context).await.is_err());
+        assert!(generic.contains(&generic_hash).await.expect("generic payload survives dedicated CAS sweep"));
+    }
+
+    #[tokio::test]
+    async fn artifact_chunk_cas_expiry_supersedes_tokens_and_sweep_cancellation_commits_one_delete() {
+        let (template_descriptor, public, _, _, _) = artifact_projection_fixture();
+        let dir = fresh_dir().await;
+        let service = DirectoryService::new(dir, 64);
+        let owner = user_actor("u-owner");
+        let space_id = create_space(&service, &owner, DirectorySpaceKind::Studio).await;
+        let mut descriptor = template_descriptor;
+        descriptor.space_id = space_id;
+        descriptor.document_id = "artifact-cas-expiry".into();
+        service.execute(owner, DirectoryCommand::AnnounceDocument { descriptor: descriptor.clone() }).await.expect("announce expiry document");
+        let pair = ArtifactPair { pack: b"expired-pack".to_vec(), spr: b"expired-spr".to_vec() };
+        let checkpoint = scoped_materialized_checkpoint(public, &descriptor, &pair, None, 1);
+        let plan = prepare_artifact_cas_ownership_v1(&checkpoint, &pair).expect("ownership");
+        let system = DirectoryActor { kind: DirectoryActorKind::System, id: "system:artifact-authority".into() };
+        let expired = service.reserve_artifact_cas(system.clone(), plan.clone(), 200, 100).await.expect("initial reservation");
+        let replacement = service.reserve_artifact_cas(system.clone(), plan.clone(), 400, 201).await.expect("replacement reservation");
+        assert!(replacement.write_epoch > expired.write_epoch);
+        assert!(matches!(service.publish_reserved_artifact_checkpoint(system.clone(), checkpoint.clone(), expired, 201).await, Err(DirectoryError::Conflict(_))));
+        let storage = Arc::new(MemoryArtifactChunkCasStorage::default());
+        let stage_control = ArtifactCasProbe::new(201, None);
+        let stage_context = OperationContext::new(10_000, AuthorityLimits::maximum(), &stage_control);
+        let blobs = ArtifactChunkBlobStore::new(storage.clone());
+        blobs.stage(&checkpoint.scope.space_id, ArtifactBlobIntegrity { sha256: checkpoint.pack.sha256, byte_length: checkpoint.pack.byte_length }, &pair.pack, &stage_context).await.expect("stage expired pack");
+        blobs.stage(&checkpoint.scope.space_id, ArtifactBlobIntegrity { sha256: checkpoint.spr.sha256, byte_length: checkpoint.spr.byte_length }, &pair.spr, &stage_context).await.expect("stage expired SPR");
+        let protected = service.sweep_artifact_cas(storage.as_ref(), ArtifactCasSweepRequest { execute: false, max_objects: ARTIFACT_CAS_SWEEP_OBJECT_MAX }, &stage_context).await.expect("replacement protects bytes");
+        assert_eq!(protected.eligible_objects, 0);
+        assert_eq!(protected.protected_objects, plan.objects.len() as u64);
+        assert!(matches!(service.publish_reserved_artifact_checkpoint(system, checkpoint, replacement, 400).await, Err(DirectoryError::Conflict(_))));
+
+        stage_control.now_ms.store(401, Ordering::SeqCst);
+        let cancel = ArtifactCasProbe::new(401, Some(1));
+        let cancel_context = OperationContext::new(10_000, AuthorityLimits::maximum(), &cancel);
+        assert!(matches!(service.sweep_artifact_cas(storage.as_ref(), ArtifactCasSweepRequest { execute: true, max_objects: ARTIFACT_CAS_SWEEP_OBJECT_MAX }, &cancel_context).await, Err(crate::artifact_authority::AuthorityError::Cancelled)));
+        let progress = cancel.progress.lock().expect("cancel progress");
+        let swept: Vec<_> = progress.iter().filter(|item| item.stage == AuthorityProgressStage::CasSweep).copied().collect();
+        assert_eq!(swept.len(), 1);
+        assert_eq!(swept[0].completed_units, 1);
+        drop(progress);
+        let mut live_objects = 0usize;
+        for key in &plan.objects {
+            live_objects += usize::from(storage.get(key, &stage_context).await.is_ok());
+        }
+        assert_eq!(live_objects + 1, plan.objects.len());
+    }
+
+    #[tokio::test]
+    async fn artifact_chunk_cas_sweep_and_reservation_race_is_serialized_before_rewrite() {
+        let (mut orphan_descriptor, orphan_public, live_public, _, _) = artifact_projection_fixture();
+        let dir = fresh_dir().await;
+        let service = Arc::new(DirectoryService::new(dir, 64));
+        let owner = user_actor("u-owner");
+        let space_id = create_space(service.as_ref(), &owner, DirectorySpaceKind::Studio).await;
+        orphan_descriptor.space_id = space_id.clone();
+        orphan_descriptor.document_id = "artifact-cas-race-orphan".into();
+        let mut live_descriptor = orphan_descriptor.clone();
+        live_descriptor.document_id = "artifact-cas-race-live".into();
+        service.execute(owner.clone(), DirectoryCommand::AnnounceDocument { descriptor: orphan_descriptor.clone() }).await.expect("announce orphan document");
+        service.execute(owner, DirectoryCommand::AnnounceDocument { descriptor: live_descriptor.clone() }).await.expect("announce live document");
+        let pair = ArtifactPair { pack: b"race-pack".to_vec(), spr: b"race-spr".to_vec() };
+        let orphan = scoped_materialized_checkpoint(orphan_public, &orphan_descriptor, &pair, None, 1);
+        let live = scoped_materialized_checkpoint(live_public, &live_descriptor, &pair, None, 1);
+        let storage = Arc::new(BlockingDeleteArtifactCas::new());
+        let system = DirectoryActor { kind: DirectoryActorKind::System, id: "system:artifact-authority".into() };
+        let stage_control = ArtifactCasProbe::new(100, None);
+        let stage_context = OperationContext::new(10_000, AuthorityLimits::maximum(), &stage_control);
+        stage_reserved_checkpoint(service.as_ref(), storage.clone(), system.clone(), &orphan, &pair, 200, 100, &stage_context).await.expect("stage orphan");
+        let live_plan = prepare_artifact_cas_ownership_v1(&live, &pair).expect("live ownership");
+
+        let sweep_service = service.clone();
+        let sweep_storage = storage.clone();
+        let sweep_task = tokio::spawn(async move {
+            let control = ArtifactCasProbe::new(300, None);
+            let context = OperationContext::new(10_000, AuthorityLimits::maximum(), &control);
+            sweep_service.sweep_artifact_cas(sweep_storage.as_ref(), ArtifactCasSweepRequest { execute: true, max_objects: 1 }, &context).await
+        });
+        storage.entered.notified().await;
+        let reserve_service = service.clone();
+        let reserve_actor = system.clone();
+        let reserve_task = tokio::spawn(async move { reserve_service.reserve_artifact_cas(reserve_actor, live_plan, 1_000, 300).await });
+        semio_framework_async::yield_once().await;
+        assert!(!reserve_task.is_finished());
+        storage.release.notify_one();
+        let swept = sweep_task.await.expect("join sweep").expect("race sweep");
+        let reservation = reserve_task.await.expect("join reservation").expect("race reservation");
+        assert!(swept.final_generation > swept.observed_generation);
+
+        let rewrite_control = ArtifactCasProbe::new(301, None);
+        let rewrite_context = OperationContext::new(10_000, AuthorityLimits::maximum(), &rewrite_control);
+        let blobs = ArtifactChunkBlobStore::new(storage.clone());
+        let pack = blobs.stage(&space_id, ArtifactBlobIntegrity { sha256: live.pack.sha256, byte_length: live.pack.byte_length }, &pair.pack, &rewrite_context).await.expect("rewrite pack after reservation");
+        let spr = blobs.stage(&space_id, ArtifactBlobIntegrity { sha256: live.spr.sha256, byte_length: live.spr.byte_length }, &pair.spr, &rewrite_context).await.expect("rewrite SPR after reservation");
+        assert_eq!(pack.storage_key, live.pack.storage_key);
+        assert_eq!(spr.storage_key, live.spr.storage_key);
+        service.publish_reserved_artifact_checkpoint(system, live.clone(), reservation, 301).await.expect("publish raced checkpoint");
+        assert_eq!(blobs.read(&space_id, &pack, &rewrite_context).await.expect("read raced pack"), pair.pack);
+        assert_eq!(blobs.read(&space_id, &spr, &rewrite_context).await.expect("read raced SPR"), pair.spr);
+    }
+
+    #[tokio::test]
+    async fn artifact_checkpoint_publication_is_atomic_bounded_idempotent_and_replayable() {
+        let (descriptor, first, second, first_retention, fixture_maximum) = artifact_projection_fixture();
+        assert_eq!(fixture_maximum, ARTIFACT_CHECKPOINT_LINEAGE_MAX);
+        let dir = fresh_dir().await;
+        let service = DirectoryService::new(dir.clone(), 64);
+        let owner = user_actor("u-owner");
+        let space_id = create_space(&service, &owner, DirectorySpaceKind::Studio).await;
+        assert_ne!(space_id, descriptor.space_id);
+        service.execute(owner.clone(), DirectoryCommand::CreateSpace { name: "Fixture".into(), space_kind: DirectorySpaceKind::Studio, visibility: DirectorySpaceVisibility::Private }).await.expect("second space");
+        let fixture_space = dir.list_spaces(100, 0).await.expect("spaces").into_iter().find(|space| space.name == "Fixture").expect("fixture space");
+        let mut announced = descriptor.clone();
+        announced.space_id = fixture_space.id.clone();
+        let mut first = first;
+        let mut second = second;
+        let mut first_retention = first_retention;
+        first.scope.space_id = fixture_space.id.clone();
+        second.scope.space_id = fixture_space.id.clone();
+        first_retention.scope.space_id = fixture_space.id.clone();
+        let digest = descriptor_digest_v1(&announced).expect("digest");
+        first.descriptor_digest_v1 = digest;
+        second.descriptor_digest_v1 = digest;
+        first.checkpoint_id = ArtifactHash(Sha256::digest(&crate::artifact_authority::checkpoint_id_encoding_v1(&checkpoint_identity_input(&first)).expect("first identity")));
+        second.parent_checkpoint_id = Some(first.checkpoint_id);
+        second.checkpoint_id = ArtifactHash(Sha256::digest(&crate::artifact_authority::checkpoint_id_encoding_v1(&checkpoint_identity_input(&second)).expect("second identity")));
+        first_retention.retained_checkpoint_id = first.checkpoint_id;
+        first_retention.checkpoint_lineage_head = second.checkpoint_id;
+        service.execute(owner, DirectoryCommand::AnnounceDocument { descriptor: announced }).await.expect("announce");
+        let system = DirectoryActor { kind: DirectoryActorKind::System, id: "system:artifact-authority".into() };
+
+        let first_verified = verified_checkpoint(&first, "one");
+        let second_verified = verified_checkpoint(&second, "two");
+        let admin = DirectoryActor { kind: DirectoryActorKind::Admin, id: "admin:not-authority".into() };
+        assert!(matches!(publish_reserved(&service, admin, first_verified.clone()).await, Err(DirectoryError::Unauthorized)));
+        let first_events = publish_reserved(&service, system.clone(), first_verified.clone()).await.expect("publish first");
+        assert_eq!(first_events.len(), 1);
+        let public_json = serde_json::Value::from(&first_events[0].body.to_value()).to_string();
+        assert!(!public_json.contains("storageKey"));
+        assert!(!public_json.contains(&first_verified.pack.storage_key));
+        assert!(!public_json.contains(&first_verified.spr.storage_key));
+        let head = dir.head_seq().await.expect("head");
+        let mut failed_publication_stream = service.subscribe();
+        assert!(publish_reserved(&service, system.clone(), first_verified.clone()).await.expect("idempotent first").is_empty());
+        assert_eq!(dir.head_seq().await.expect("head unchanged"), head);
+        let mut private_conflict = first_verified.clone();
+        private_conflict.pack.storage_key.push_str("-altered");
+        assert!(matches!(publish_reserved(&service, system.clone(), private_conflict).await, Err(DirectoryError::Conflict(_))));
+        let mut public_conflict = first_verified.clone();
+        public_conflict.published_at_ms += 1;
+        assert!(matches!(publish_reserved(&service, system.clone(), public_conflict).await, Err(DirectoryError::Conflict(_))));
+        let forged_public =
+            NewDirectoryEvent { hlc: Hlc { physical_ms: 1, logical: 0 }, actor: system.clone(), space_id: Some(first.scope.space_id.clone()), user_id: None, body: DirectoryEventBody::ArtifactCheckpointPublished { checkpoint: first.clone() } };
+        assert!(matches!(dir.append_events(&[forged_public]).await, Err(DirectoryError::Conflict(_))));
+        assert_eq!(dir.head_seq().await.expect("append failure leaves head"), head);
+        assert!(matches!(failed_publication_stream.try_recv(), Err(tokio::sync::broadcast::error::TryRecvError::Empty)));
+
+        publish_reserved(&service, system.clone(), second_verified.clone()).await.expect("publish second");
+        service.execute_artifact_authority(system.clone(), ArtifactDirectoryCommand::AdvanceRetention { retention: first_retention.clone() }).await.expect("retain first");
+        assert!(service.execute_artifact_authority(system.clone(), ArtifactDirectoryCommand::AdvanceRetention { retention: first_retention.clone() }).await.expect("idempotent retention").is_empty());
+        let second_retention = ArtifactRetention { scope: second.scope.clone(), retained_checkpoint_id: second.checkpoint_id, retained_floor: second.baseline_frontier.clone(), checkpoint_lineage_head: second.checkpoint_id };
+        service.execute_artifact_authority(system.clone(), ArtifactDirectoryCommand::AdvanceRetention { retention: second_retention.clone() }).await.expect("retain second");
+        assert!(matches!(service.execute_artifact_authority(system, ArtifactDirectoryCommand::AdvanceRetention { retention: first_retention }).await, Err(DirectoryError::Conflict(_))));
+
+        let scope = second.scope.clone();
+        assert_eq!(dir.get_active_artifact_checkpoint(&scope).await.expect("active"), Some(second.clone()));
+        assert_eq!(dir.get_verified_artifact_checkpoint(&scope, first.checkpoint_id).await.expect("released private"), None);
+        assert_eq!(dir.get_verified_artifact_checkpoint(&scope, second.checkpoint_id).await.expect("private active"), Some(second_verified.clone()));
+        assert_eq!(dir.list_artifact_checkpoint_lineage(&scope, ARTIFACT_CHECKPOINT_LINEAGE_MAX as usize).await.expect("lineage"), vec![first.clone(), second.clone()]);
+        assert_eq!(dir.get_artifact_retention(&scope).await.expect("retention"), Some(second_retention.clone()));
+        assert!(matches!(dir.list_artifact_checkpoint_lineage(&scope, ARTIFACT_CHECKPOINT_LINEAGE_MAX as usize + 1).await, Err(DirectoryError::Conflict(_))));
+
+        let before = (dir.get_active_artifact_checkpoint(&scope).await.expect("before active"), dir.get_artifact_retention(&scope).await.expect("before retention"));
+        let cancel = RebuildProbe { cancelled: AtomicBool::new(false), cancel_after_first: true, progress: std::sync::Mutex::new(Vec::new()) };
+        assert!(matches!(dir.rebuild_projections_controlled(&cancel).await, Err(DirectoryError::Conflict(_))));
+        assert_eq!((dir.get_active_artifact_checkpoint(&scope).await.expect("rollback active"), dir.get_artifact_retention(&scope).await.expect("rollback retention")), before);
+        let complete = RebuildProbe { cancelled: AtomicBool::new(false), cancel_after_first: false, progress: std::sync::Mutex::new(Vec::new()) };
+        let replayed = dir.rebuild_projections_controlled(&complete).await.expect("controlled rebuild");
+        let progress = complete.progress.lock().expect("progress");
+        assert_eq!(progress.first().expect("initial").completed_events, 0);
+        assert_eq!(progress.last().expect("final"), &ProjectionRebuildProgress { completed_events: replayed, total_events: replayed });
+        assert_eq!(dir.get_active_artifact_checkpoint(&scope).await.expect("rebuilt active"), Some(second));
+        assert_eq!(dir.get_verified_artifact_checkpoint(&scope, first.checkpoint_id).await.expect("rebuilt released private"), None);
+        assert_eq!(dir.get_verified_artifact_checkpoint(&scope, second_verified.checkpoint_id).await.expect("rebuilt private"), Some(second_verified));
+        assert_eq!(dir.get_artifact_retention(&scope).await.expect("rebuilt retention"), Some(second_retention));
+    }
+
+    #[test]
+    fn memory_projection_is_atomic_and_fixed_caps_reject_max_plus_one() {
+        let (descriptor, first, second, retention, fixture_maximum) = artifact_projection_fixture();
+        let events = vec![
+            artifact_event(1, DirectoryEventBody::DocumentAnnounced { descriptor }),
+            artifact_event(2, DirectoryEventBody::ArtifactCheckpointPublished { checkpoint: first.clone() }),
+            artifact_event(3, DirectoryEventBody::ArtifactCheckpointPublished { checkpoint: second.clone() }),
+            artifact_event(4, DirectoryEventBody::ArtifactRetentionAdvanced { retention: retention.clone() }),
+        ];
+        let mut projection = MemoryArtifactProjection::default();
+        projection.fold_atomically(&events).expect("memory fold");
+        assert_eq!(projection.active_checkpoint(&second.scope), Some(&second));
+        assert_eq!(projection.retention(&second.scope), Some(&retention));
+        let before = projection.clone();
+        let mut backward = retention;
+        backward.checkpoint_lineage_head = first.checkpoint_id;
+        assert!(projection.fold_atomically(&[artifact_event(5, DirectoryEventBody::ArtifactRetentionAdvanced { retention: backward })]).is_err());
+        assert_eq!(projection, before);
+
+        projection.checkpoints.insert(first.scope.clone(), vec![first.clone(); fixture_maximum as usize]);
+        assert!(projection.fold_atomically(&[artifact_event(6, DirectoryEventBody::ArtifactCheckpointPublished { checkpoint: second })]).is_err());
+        let probe = RebuildProbe { cancelled: AtomicBool::new(false), cancel_after_first: false, progress: std::sync::Mutex::new(Vec::new()) };
+        checkpoint_projection_rebuild(&probe, DIRECTORY_PROJECTION_REBUILD_MAX_EVENTS, DIRECTORY_PROJECTION_REBUILD_MAX_EVENTS).expect("rebuild exact maximum");
+        assert!(checkpoint_projection_rebuild(&probe, 0, DIRECTORY_PROJECTION_REBUILD_MAX_EVENTS + 1).is_err());
+    }
+
+    #[test]
+    fn artifact_public_scalars_and_private_locators_obey_exact_max_plus_one_laws() {
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("🧪️tests/🔣️artifact-checkpoint-projection.json")).expect("checkpoint projection fixture");
+        assert_eq!(fixture["wireIntegerMaximum"].as_u64(), Some(DIRECTORY_WIRE_INTEGER_MAX));
+        assert_eq!(fixture["privateLocatorMaximumBytes"].as_u64(), Some(ARTIFACT_PRIVATE_LOCATOR_MAX_BYTES as u64));
+        assert_eq!(fixture["eventReadMaximum"].as_u64(), Some(DIRECTORY_EVENT_READ_MAX as u64));
+        bounded_event_read(DIRECTORY_WIRE_INTEGER_MAX, DIRECTORY_EVENT_READ_MAX).expect("event read exact maxima");
+        assert!(bounded_event_read(DIRECTORY_WIRE_INTEGER_MAX + 1, DIRECTORY_EVENT_READ_MAX).is_err());
+        assert!(bounded_event_read(0, DIRECTORY_EVENT_READ_MAX + 1).is_err());
+        let (_, first, _, retention, _) = artifact_projection_fixture();
+        let mut public_max = first.clone();
+        public_max.published_at_ms = DIRECTORY_WIRE_INTEGER_MAX;
+        validate_checkpoint_shape(&public_max).expect("wire integer exact maximum");
+        public_max.published_at_ms = DIRECTORY_WIRE_INTEGER_MAX + 1;
+        assert!(validate_checkpoint_shape(&public_max).is_err());
+
+        let mut frontier_max = first.clone();
+        frontier_max.baseline_frontier.head_edit_ordinal = DIRECTORY_WIRE_INTEGER_MAX;
+        frontier_max.baseline_frontier.last_commit_seq = DIRECTORY_WIRE_INTEGER_MAX;
+        frontier_max.pack.byte_length = DIRECTORY_WIRE_INTEGER_MAX;
+        frontier_max.spr.byte_length = DIRECTORY_WIRE_INTEGER_MAX;
+        frontier_max.checkpoint_id = ArtifactHash(Sha256::digest(&crate::artifact_authority::checkpoint_id_encoding_v1(&checkpoint_identity_input(&frontier_max)).expect("max identity")));
+        validate_checkpoint_shape(&frontier_max).expect("all exact wire maxima");
+        frontier_max.baseline_frontier.head_edit_ordinal += 1;
+        assert!(validate_checkpoint_shape(&frontier_max).is_err());
+
+        let mut retention_max = retention;
+        retention_max.retained_floor.head_edit_ordinal = DIRECTORY_WIRE_INTEGER_MAX;
+        retention_max.retained_floor.last_commit_seq = DIRECTORY_WIRE_INTEGER_MAX;
+        validate_retention_shape(&retention_max).expect("retention exact maximum");
+        retention_max.retained_floor.last_commit_seq += 1;
+        assert!(validate_retention_shape(&retention_max).is_err());
+
+        let mut private = verified_checkpoint(&first, "limits");
+        private.pack.storage_key = "p".repeat(ARTIFACT_PRIVATE_LOCATOR_MAX_BYTES);
+        private.spr.storage_key = "s".repeat(ARTIFACT_PRIVATE_LOCATOR_MAX_BYTES);
+        let event = NewDirectoryEvent {
+            hlc: Hlc { physical_ms: 1, logical: 0 },
+            actor: DirectoryActor { kind: DirectoryActorKind::System, id: "system:artifact-authority".into() },
+            space_id: Some(private.scope.space_id.clone()),
+            user_id: None,
+            body: DirectoryEventBody::ArtifactCheckpointPublished { checkpoint: published_artifact_checkpoint(&private) },
+        };
+        validate_verified_checkpoint_append(&event, &private).expect("locator exact maximum");
+        private.pack.storage_key.push('x');
+        assert!(validate_verified_checkpoint_append(&event, &private).is_err());
+    }
+
+    #[tokio::test]
+    async fn artifact_chunk_cas_sqlite_and_filesystem_restart_rebuild_restore_exact_authority() {
+        let (mut descriptor, public, _, _, _) = artifact_projection_fixture();
+        descriptor.space_id = "default".into();
+        descriptor.document_id = "artifact-cas-restart".into();
+        let pair = ArtifactPair { pack: b"restart-pack".to_vec(), spr: b"restart-spr".to_vec() };
+        let verified = scoped_materialized_checkpoint(public, &descriptor, &pair, None, 1);
+        let mut root = std::env::temp_dir();
+        root.push(format!("semio-artifact-checkpoint-{}", directory::os_identity::time_ordered_id()));
+        std::fs::create_dir_all(&root).expect("create test directory");
+        let path = root.join("directory.sqlite3");
+        let cas_root = root.join("artifact-cas").join("v1");
+        let path_text = path.to_str().expect("utf8 test path").to_string();
+        let control = ArtifactCasProbe::new(100, None);
+        let context = OperationContext::new(10_000, AuthorityLimits::maximum(), &control);
+        {
+            let directory = SqliteDirectory::connect(&path_text).await.expect("connect");
+            directory.seed().await.expect("seed");
+            let directories = Arc::new(HubDirectories::from(directory));
+            let service = DirectoryService::new(directories, 16);
+            service.execute(user_actor("seed"), DirectoryCommand::AnnounceDocument { descriptor: descriptor.clone() }).await.expect("announce descriptor");
+            let storage = Arc::new(FsArtifactChunkCasStorage::open(&cas_root).await.expect("open filesystem CAS"));
+            let system = DirectoryActor { kind: DirectoryActorKind::System, id: "system:artifact-authority".into() };
+            let reservation = stage_reserved_checkpoint(&service, storage, system.clone(), &verified, &pair, 1_000, 100, &context).await.expect("reserve and stage restart fixture");
+            service.publish_reserved_artifact_checkpoint(system, verified.clone(), reservation, 100).await.expect("publish verified checkpoint");
+        }
+        let reopened = SqliteDirectory::connect(&path_text).await.expect("reopen");
+        assert_eq!(reopened.get_verified_artifact_checkpoint(&verified.scope, verified.checkpoint_id).await.expect("restart private"), Some(verified.clone()));
+        let generation = reopened.artifact_cas_ledger_generation().await.expect("restart ledger generation");
+        let storage = Arc::new(FsArtifactChunkCasStorage::open(&cas_root).await.expect("reopen filesystem CAS"));
+        let blobs = ArtifactChunkBlobStore::new(storage);
+        let pack = StagedArtifactBlob { storage_key: verified.pack.storage_key.clone(), integrity: ArtifactBlobIntegrity { sha256: verified.pack.sha256, byte_length: verified.pack.byte_length } };
+        assert_eq!(blobs.read("default", &pack, &context).await.expect("restart CAS read"), pair.pack);
+        reopened.rebuild_projections().await.expect("rebuild");
+        assert_eq!(reopened.artifact_cas_ledger_generation().await.expect("rebuilt ledger generation"), generation);
+        assert_eq!(reopened.get_verified_artifact_checkpoint(&verified.scope, verified.checkpoint_id).await.expect("rebuilt private"), Some(verified.clone()));
+        assert_eq!(blobs.read("default", &pack, &context).await.expect("rebuilt CAS read"), pair.pack);
+        drop(reopened);
+        std::fs::remove_dir_all(&root).expect("remove exact restart test directory");
+    }
+
+    #[tokio::test]
+    async fn document_descriptor_is_immutable_space_scoped_and_survives_restart() {
+        let mut root = std::env::temp_dir();
+        root.push(format!("semio-document-descriptor-{}", directory::os_identity::time_ordered_id()));
+        std::fs::create_dir_all(&root).expect("create test directory");
+        let path = root.join("directory.sqlite3");
+        let path_text = path.to_str().expect("utf8 test path").to_string();
+
+        let persisted = descriptor("default", "shared-document");
+        let mut zero_identity = persisted.clone();
+        zero_identity.pack_schema_hash = "0".repeat(64);
+        assert!(matches!(validate_document_descriptor(&zero_identity), Err(DirectoryError::Conflict(_))));
+        {
+            let directory = SqliteDirectory::connect(&path_text).await.expect("connect");
+            directory.seed().await.expect("seed");
+            let directories = Arc::new(HubDirectories::from(directory));
+            let service = DirectoryService::new(directories.clone(), 16);
+            let (events, _) = service.execute(user_actor("seed"), DirectoryCommand::AnnounceDocument { descriptor: persisted.clone() }).await.expect("announce");
+            assert!(matches!(&events[0].body, DirectoryEventBody::DocumentAnnounced { descriptor } if descriptor == &persisted));
+
+            let mut conflict = persisted.clone();
+            conflict.pack_schema_hash = "44".repeat(32);
+            assert!(matches!(service.execute(user_actor("seed"), DirectoryCommand::AnnounceDocument { descriptor: conflict }).await, Err(DirectoryError::Conflict(_))));
+
+            let other = descriptor("other-space", "shared-document");
+            let actor = user_actor("seed");
+            let (created, _) = service.execute(actor.clone(), DirectoryCommand::CreateSpace { name: "Other".into(), space_kind: DirectorySpaceKind::Studio, visibility: DirectorySpaceVisibility::Private }).await.expect("create other space");
+            let other_space = created[0].space_id.clone().expect("space id");
+            let mut other = other;
+            other.space_id = other_space.clone();
+            service.execute(actor, DirectoryCommand::AnnounceDocument { descriptor: other.clone() }).await.expect("announce same document id in other space");
+            assert_eq!(directories.list_document_descriptors(&other_space).await.expect("other descriptors"), vec![other]);
+        }
+
+        let reopened = SqliteDirectory::connect(&path_text).await.expect("reopen");
+        assert_eq!(reopened.get_document_descriptor(&DocumentScope::new("default", "shared-document")).await.expect("read after restart"), Some(persisted.clone()));
+        let before = reopened.list_document_descriptors("default").await.expect("before rebuild");
+        reopened.rebuild_projections().await.expect("rebuild");
+        assert_eq!(reopened.list_document_descriptors("default").await.expect("after rebuild"), before);
+
+        drop(reopened);
+        for target in [&path, &root.join("directory.sqlite3-wal"), &root.join("directory.sqlite3-shm")] {
+            if target.exists() {
+                std::fs::remove_file(target).expect("remove exact sqlite test file");
+            }
+        }
+        std::fs::remove_dir(&root).expect("remove empty test directory");
     }
 
     // 🔬️ Decider law: an atelier rejects a second, distinct author (re-upserting the sole existing
@@ -1095,17 +3180,20 @@ mod tests {
 
         let (_, result) = service.execute(owner.clone(), DirectoryCommand::CreateInvite { space_id: space_id.clone(), role: DirectorySpaceRole::Spectator, ttl_secs: 3600 }).await.expect("create-invite");
         let token = result.expect("command result").invite_token.expect("invite token");
+        let capability = InviteCapability::parse(&token).expect("typed invite capability");
+        let invited = dir.create_user("invited@example.com", "Invited", None, None, None).await.expect("create invited user");
 
-        let redeemed = service.redeem_invite(user_actor("u-invited"), &token, "invited@example.com", "Invited").await.expect("redeem");
+        let redeemed = service.redeem_invite(user_actor(&invited.id), &capability, &invited.id).await.expect("redeem");
         assert!(matches!(redeemed.last().expect("at least one event").body, DirectoryEventBody::InviteRedeemed { .. }));
         let members = dir.list_members(&space_id).await.expect("list members");
         assert!(members.iter().any(|(user, role)| user.email == "invited@example.com" && *role == SpaceRole::Spectator));
 
         let invites = dir.list_invites(&space_id).await.expect("list invites");
         assert_eq!(invites.len(), 1);
-        dir.revoke_invite(&invites[0].id).await.expect("revoke");
-        let fetched = dir.get_invite_by_token(&invites[0].token).await.expect("get by token").expect("invite still exists");
+        dir.revoke_invite(&invites[0].id, "test-revoke", "invite-round-trip").await.expect("revoke");
+        let fetched = dir.list_invites(&space_id).await.expect("list revoked invite").pop().expect("invite still exists");
         assert!(fetched.revoked_at.is_some());
+        assert_eq!(fetched.revoked_reason.as_deref(), Some("test-revoke"));
     }
 }
 //#endregion 🧪️Tests

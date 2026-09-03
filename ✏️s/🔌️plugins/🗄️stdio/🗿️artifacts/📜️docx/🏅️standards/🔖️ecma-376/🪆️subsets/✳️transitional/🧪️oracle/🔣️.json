@@ -27,6 +27,30 @@
       },
       "productionReachable": false,
       "networkDuringExecution": false
+    },
+    {
+      "id": "python-docx-docx-ecma-376-transitional-mutate-reader",
+      "kind": "third-party-library",
+      "ecosystem": "python",
+      "package": "python-docx",
+      "version": "1.2.0",
+      "engine": {
+        "family": "python-docx",
+        "implementation": "python-docx OPC/OOXML reader",
+        "version": "1.2.0"
+      },
+      "capabilities": [
+        "docx-ecma-376-transitional-mutate"
+      ],
+      "license": "MIT",
+      "testOnly": true,
+      "productionReachable": false,
+      "networkDuringExecution": false,
+      "homepage": "https://python-docx.readthedocs.io",
+      "rationale": "📖️ A READER, registered separately from this file's existing `cross-semio-implementation` entry, which COMPUTES what a mutation should produce from this repository's own reading of the spec and therefore cannot discharge this requirement — both halves would descend from one reading of it. python-docx 1.2.0's `opc` sub-package resolves the real Transitional-conformance OPC package and `Document(path).element` exposes the parsed root directly, witnessing the same conformance-class axes the sibling ✳️strict subset's reader witnesses. Verified against this subset's own committed `shared://📜️example-readme.docx` (413 real paragraphs, real WordprocessingML namespace).",
+      "comparisonProfiles": [
+        "semantic-ooxml-docx-transitional-v1"
+      ]
     }
   ],
   "mutationCatalogs": [
@@ -78,7 +102,8 @@
           "oracleRequirements": [
             {
               "capability": "docx-ecma-376-transitional-mutate",
-              "qualifyingKind": "third-party-library"
+              "qualifyingKind": "third-party-library",
+              "oracle": "python-docx-docx-ecma-376-transitional-mutate-reader"
             }
           ]
         },
@@ -97,7 +122,8 @@
           "oracleRequirements": [
             {
               "capability": "docx-ecma-376-transitional-mutate",
-              "qualifyingKind": "third-party-library"
+              "qualifyingKind": "third-party-library",
+              "oracle": "python-docx-docx-ecma-376-transitional-mutate-reader"
             }
           ]
         },
@@ -116,7 +142,8 @@
           "oracleRequirements": [
             {
               "capability": "docx-ecma-376-transitional-mutate",
-              "qualifyingKind": "third-party-library"
+              "qualifyingKind": "third-party-library",
+              "oracle": "python-docx-docx-ecma-376-transitional-mutate-reader"
             }
           ]
         },
@@ -135,7 +162,8 @@
           "oracleRequirements": [
             {
               "capability": "docx-ecma-376-transitional-mutate",
-              "qualifyingKind": "third-party-library"
+              "qualifyingKind": "third-party-library",
+              "oracle": "python-docx-docx-ecma-376-transitional-mutate-reader"
             }
           ]
         },
@@ -154,11 +182,237 @@
           "oracleRequirements": [
             {
               "capability": "docx-ecma-376-transitional-mutate",
-              "qualifyingKind": "third-party-library"
+              "qualifyingKind": "third-party-library",
+              "oracle": "python-docx-docx-ecma-376-transitional-mutate-reader"
             }
           ]
         }
       ]
+    }
+  ],
+  "fixtureManifests": [
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "set-snapshot-applied",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.docx",
+        "standard": "ecma-376",
+        "subset": "transitional"
+      },
+      "mutation": "set-snapshot",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before-docx",
+          "path": "../🧫️fixtures/set-snapshot-applied/before.docx",
+          "mediaType": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+          "sha256": "sha256:b474c437e1a32791159ea86cdbab6eb49d07bb77d96e4acebcdec938e65ff1a1",
+          "bytes": 36581
+        },
+        {
+          "role": "expected-after-docx",
+          "path": "../🧫️fixtures/set-snapshot-applied/after.docx",
+          "mediaType": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+          "sha256": "sha256:a1ccdb3c31a2b14c95a79d483ce82e77520e52dc3dfdcf6e22d04bbb78d7ed50",
+          "bytes": 36589
+        }
+      ],
+      "provenance": {
+        "source": "generated",
+        "license": "MIT (python-docx)",
+        "attribution": "Written by python-docx 1.2.0's own Document.save()",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "exact-bytes-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "Whole-document snapshot replace: an unrelated valid document (two paragraphs instead of one) substituted wholesale.",
+      "generator": {
+        "oracle": "python-docx-docx-ecma-376-transitional-mutate-reader",
+        "packageVersion": "1.2.0",
+        "engineFamily": "python-docx",
+        "engineVersion": "1.2.0",
+        "command": "uv run python3 🔨️f2-gen-docx-structural-fixtures.py (python-docx Document object model + .save())",
+        "platform": "darwin-arm64"
+      }
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "set-conformance-attribute-applied",
+      "class": "handcrafted",
+      "target": {
+        "artifact": "s.stdio.docx",
+        "standard": "ecma-376",
+        "subset": "transitional"
+      },
+      "mutation": "set-conformance-attribute",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before-docx",
+          "path": "../🧫️fixtures/set-conformance-attribute-applied/before.docx",
+          "mediaType": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+          "sha256": "sha256:b474c437e1a32791159ea86cdbab6eb49d07bb77d96e4acebcdec938e65ff1a1",
+          "bytes": 36581
+        },
+        {
+          "role": "expected-after-docx",
+          "path": "../🧫️fixtures/set-conformance-attribute-applied/after.docx",
+          "mediaType": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+          "sha256": "sha256:ff0d569155a9c2f6d1b639c0a39a40ed9d384abea52aad0ea01dd0cc8e034a3a",
+          "bytes": 36597
+        }
+      ],
+      "provenance": {
+        "source": "authored",
+        "license": "n/a (handcrafted zip/XML patch of an MIT python-docx base package)",
+        "attribution": "A genuine python-docx 1.2.0 package hand-patched at the OOXML structural level (see notes); the patched word/document.xml is re-parsed with lxml to confirm well-formedness and the archive's own zip integrity is re-checked before commit",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "exact-bytes-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "The root <w:document>'s conformance attribute set, absent -> \"transitional\"."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "remove-conformance-attribute-applied",
+      "class": "handcrafted",
+      "target": {
+        "artifact": "s.stdio.docx",
+        "standard": "ecma-376",
+        "subset": "transitional"
+      },
+      "mutation": "remove-conformance-attribute",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before-docx",
+          "path": "../🧫️fixtures/remove-conformance-attribute-applied/before.docx",
+          "mediaType": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+          "sha256": "sha256:ff0d569155a9c2f6d1b639c0a39a40ed9d384abea52aad0ea01dd0cc8e034a3a",
+          "bytes": 36597
+        },
+        {
+          "role": "expected-after-docx",
+          "path": "../🧫️fixtures/remove-conformance-attribute-applied/after.docx",
+          "mediaType": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+          "sha256": "sha256:b474c437e1a32791159ea86cdbab6eb49d07bb77d96e4acebcdec938e65ff1a1",
+          "bytes": 36581
+        }
+      ],
+      "provenance": {
+        "source": "authored",
+        "license": "n/a (handcrafted zip/XML patch of an MIT python-docx base package)",
+        "attribution": "A genuine python-docx 1.2.0 package hand-patched at the OOXML structural level (see notes); the patched word/document.xml is re-parsed with lxml to confirm well-formedness and the archive's own zip integrity is re-checked before commit",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "exact-bytes-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "The root <w:document>'s conformance attribute removed, \"transitional\" -> absent."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "set-main-namespace-applied",
+      "class": "handcrafted",
+      "target": {
+        "artifact": "s.stdio.docx",
+        "standard": "ecma-376",
+        "subset": "transitional"
+      },
+      "mutation": "set-main-namespace",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before-docx",
+          "path": "../🧫️fixtures/set-main-namespace-applied/before.docx",
+          "mediaType": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+          "sha256": "sha256:b474c437e1a32791159ea86cdbab6eb49d07bb77d96e4acebcdec938e65ff1a1",
+          "bytes": 36581
+        },
+        {
+          "role": "expected-after-docx",
+          "path": "../🧫️fixtures/set-main-namespace-applied/after.docx",
+          "mediaType": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+          "sha256": "sha256:6f99031cda095895fc81e73d2c40f30f70ba87d908c6ddae5230ed1fa50cc908",
+          "bytes": 36590
+        }
+      ],
+      "provenance": {
+        "source": "authored",
+        "license": "n/a (handcrafted zip/XML patch of an MIT python-docx base package)",
+        "attribution": "A genuine python-docx 1.2.0 package hand-patched at the OOXML structural level (see notes); the patched word/document.xml is re-parsed with lxml to confirm well-formedness and the archive's own zip integrity is re-checked before commit",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "exact-bytes-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "The root <w:document>'s main xmlns:w namespace URI changed, Transitional (http://schemas.openxmlformats.org/wordprocessingml/2006/main) -> Strict (http://purl.oclc.org/ooxml/wordprocessingml/main)."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "set-relationship-base-applied",
+      "class": "handcrafted",
+      "target": {
+        "artifact": "s.stdio.docx",
+        "standard": "ecma-376",
+        "subset": "transitional"
+      },
+      "mutation": "set-relationship-base",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before-docx",
+          "path": "../🧫️fixtures/set-relationship-base-applied/before.docx",
+          "mediaType": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+          "sha256": "sha256:b474c437e1a32791159ea86cdbab6eb49d07bb77d96e4acebcdec938e65ff1a1",
+          "bytes": 36581
+        },
+        {
+          "role": "expected-after-docx",
+          "path": "../🧫️fixtures/set-relationship-base-applied/after.docx",
+          "mediaType": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+          "sha256": "sha256:663ad254bc16397ab8f64566dc7a402a50e782d415f6610de9b8b1f188eff11f",
+          "bytes": 36595
+        }
+      ],
+      "provenance": {
+        "source": "authored",
+        "license": "n/a (handcrafted zip/XML patch of an MIT python-docx base package)",
+        "attribution": "A genuine python-docx 1.2.0 package hand-patched at the OOXML structural level (see notes); the patched word/document.xml is re-parsed with lxml to confirm well-formedness and the archive's own zip integrity is re-checked before commit",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "exact-bytes-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "The root <w:document>'s relationships xmlns:r namespace URI changed, Transitional (http://schemas.openxmlformats.org/officeDocument/2006/relationships) -> Strict (http://purl.oclc.org/ooxml/officeDocument/relationships)."
     }
   ]
 }

@@ -83,7 +83,58 @@
       ]
     }
   ],
-  "mutationCatalogs": [],
+  "mutationCatalogs": [
+    {
+      "id": "drawing-1-any-metadata",
+      "capability": "drawing-1-metadata-mutate",
+      "standardDirectoryName": "🔖️1",
+      "subsetDirectoryName": "✳️any",
+      "kinds": [
+        "rename-layer",
+        "set-layer-locked",
+        "set-layer-visible"
+      ],
+      "vectors": []
+    },
+    {
+      "id": "drawing-1-any-structure",
+      "capability": "drawing-1-structure-mutate",
+      "standardDirectoryName": "🔖️1",
+      "subsetDirectoryName": "✳️any",
+      "kinds": [
+        "create-layer",
+        "delete-layer",
+        "duplicate-layer",
+        "reorder-layer"
+      ],
+      "vectors": []
+    },
+    {
+      "id": "drawing-1-any-style",
+      "capability": "drawing-1-style-mutate",
+      "standardDirectoryName": "🔖️1",
+      "subsetDirectoryName": "✳️any",
+      "kinds": [
+        "replace-layer-fill",
+        "replace-layer-stroke",
+        "set-layer-blend-mode",
+        "set-layer-opacity"
+      ],
+      "vectors": []
+    },
+    {
+      "id": "drawing-1-any-transform",
+      "capability": "drawing-1-transform-mutate",
+      "standardDirectoryName": "🔖️1",
+      "subsetDirectoryName": "✳️any",
+      "kinds": [
+        "set-layer-boolean-operation",
+        "update-layer-trace-params",
+        "update-layer-transform"
+      ],
+      "vectors": []
+    }
+  ],
   "probes": [
     {
       "id": "drawing-svg-structure",

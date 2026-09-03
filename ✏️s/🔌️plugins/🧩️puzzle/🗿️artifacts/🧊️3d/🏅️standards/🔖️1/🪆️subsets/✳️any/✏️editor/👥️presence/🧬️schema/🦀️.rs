@@ -1,7 +1,7 @@
 //! 🧬️ schema leaf
 use artifact_schema::ArtifactSchema;
 
-#[derive(Clone, Debug, Default, PartialEq, ArtifactSchema)]
+#[derive(Clone, Debug, Default, PartialEq, ArtifactSchema, value_derive::ToValue, value_derive::FromValue)]
 #[value(rename_all = "camelCase", default)]
 #[artifact_schema(id = "s.puzzle.puzzle3d.presence")]
 pub struct Puzzle3dPresence {

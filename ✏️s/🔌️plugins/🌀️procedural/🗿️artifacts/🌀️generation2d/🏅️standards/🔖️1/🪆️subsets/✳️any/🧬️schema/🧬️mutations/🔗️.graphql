@@ -1,0 +1,45 @@
+# 🧬️ Generation2d mutation schema — artifact-lane fields only.
+
+type Generation2dMutation {
+  fixture: FlowFixture! @state(class: ARTIFACT)
+  generation: GenerationPlayState! @state(class: ARTIFACT)
+}
+
+type CameraJson {
+  x: Float!
+  y: Float!
+  zoom: Float!
+}
+type WidgetLayout {
+  x: Float!
+  y: Float!
+}
+type SynapseSpec {
+  id: String!
+  from: String!
+  to: String!
+  fromPort: String!
+  toPort: String!
+}
+scalar Widget
+type FlowFixture {
+  schema: String!
+  camera: CameraJson!
+  widgets: [Widget!]!
+  synapses: [SynapseSpec!]!
+  layout: [FlowFixtureLayoutEntry!]!
+}
+type FlowFixtureLayoutEntry {
+  key: String!
+  value: WidgetLayout!
+}
+type FormGeneration {
+  id: String!
+  name: String!
+  valuesJson: String!
+}
+type GenerationPlayState {
+  generations: [FormGeneration!]!
+  selectedGenerationId: String
+  previewText: String
+}

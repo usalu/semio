@@ -5,7 +5,7 @@
 //! child handle into its target snapshot is a cross-artifact read, out of scope for a pure
 //! snapshot->inference fold).
 
-use crate::artifacts::semio::standards::v1::subsets::any::schema::geometry::SemioPoint3;
+use crate::artifacts::semio::standards::v1::subsets::base::schema::geometry::SemioPoint3;
 use crate::artifacts::semio::standards::v1::subsets::object::schema::snapshot::SemioObjectSnapshot;
 
 //#region 🔖️Composition
@@ -30,8 +30,8 @@ pub fn compute_semio_object_composition(snapshot: &SemioObjectSnapshot) -> Semio
 //#region 🧪️Tests
 mod tests {
     use super::*;
-    use crate::artifacts::semio::standards::v1::subsets::any::schema::geometry::SemioQuaternion;
-    use crate::artifacts::semio::standards::v1::subsets::any::schema::geometry::SemioTransform;
+    use crate::artifacts::semio::standards::v1::subsets::base::schema::geometry::SemioQuaternion;
+    use crate::artifacts::semio::standards::v1::subsets::base::schema::geometry::SemioTransform;
     use crate::artifacts::semio::standards::v1::subsets::object::schema::snapshot::STDIO_SEMIOOBJECT_DOCUMENT_SCHEMA;
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9

@@ -34,7 +34,7 @@
 // @see 🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json — ProbeReport
 // @see ../../../../../../../../🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️mesh/🔬️probes/📜️script.ts
 //      — the pilot this file trims down to exactly the two carriers FEM 3D actually exports.
-// @see ../../../../◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🔬️probes/📜️script.ts — the sibling 2D probe suite
+// @see ../../../../◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🔬️probes/📜️script.ts — the sibling 2D probe suite
 //      this file mirrors byte-for-byte except for this header.
 
 //#endregion 🧲️Header

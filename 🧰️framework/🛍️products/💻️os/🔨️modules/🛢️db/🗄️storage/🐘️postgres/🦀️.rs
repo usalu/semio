@@ -801,6 +801,7 @@ impl DbIoTaskExecutor for PostgresDbIoExecutor {
             let mut executor = self;
             let mut task = task;
             let terminal = executor.drive_task(operation, &mut task).await;
+            let executor: Box<dyn DbIoTaskExecutor> = executor;
             (executor, task, terminal)
         })
     }

@@ -1,0 +1,53 @@
+# 🗂️→🗂️ Rename `🪵️sourcing` artifact: verb `curate` → noun `curation`
+
+## What changed
+
+### Directory rename (plain `mv`, whole subtree)
+- `✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curate` → `.../🗿️artifacts/🗂️curation` (~190 files moved with it, all `#[path]`-wired, no symlinks).
+- `.../🧪️tests/mutate-curate-1` → `.../🧪️tests/mutate-curation-1`.
+- `.../✏️editor/🎮️commands/🧺️curate-add` → `🧺️curation-add`.
+- `.../✏️editor/🎮️commands/🧺️curate-remove` → `🧺️curation-remove`.
+- `.../✏️editor/🎮️commands/🧺️curate-set-count` → `🧺️curation-set-count`.
+
+Left untouched (different word, not the artifact name): the `curated` window/module (`🧺️curated`), `drop-on-curated` command, the mutation dirs `create-curated-item` / `delete-curated-item` / `change-curated-item-count`, `CuratedItem`, and every `curated`/`uncurated` occurrence.
+
+### Content rewrite
+Wrote a token-aware Python rewriter (`rename_curate_to_curation.py`, kept in this ticket folder) that renames the stems `curate` / `Curate` / `CURATE` → `curation` / `Curation` / `CURATION` wherever they are a whole identifier/word component, while leaving `curated`/`Curated`/`CURATED` (and English `accurate`) untouched. Two literal exceptions handled explicitly: `sourcingcuratecfg`→`sourcingcurationcfg`, `sourcingcurate.presence`→`sourcingcuration.presence` (no separator to anchor a boundary on), plus `Kuratieren`→`Kuratierung` (German verb→noun) for the mode label. Ran it over 298 candidate files, 192 changed content; a follow-up literal fix caught 3 files where the naive regex turned `..._CURATE_..._CURATED` into `..._CURATION_..._CURATIOND` (all-caps `CURATE` immediately followed by an uppercase continuation letter needed the same not-followed-by-any-letter guard as its lowercase/Titlecase siblings) — fixed by replacing the corrupted `CURATIOND` token back to `CURATED`.
+
+Covered, and manually spot-checked afterwards:
+- `crate::artifacts::curate::…` → `crate::artifacts::curation::…` and `mod curate` → `mod curation` in the sourcing plugin's `#[path]` wiring file (`📦️packages/🦀️rust/🦀️.rs`) — every `#[path = "…/🗂️curate/…"]` string updated too.
+- `ArtifactKindSpec.source_format`/`.schema`: `"sourcing.curate"` → `"sourcing.curation"` (`id`, `name`, `component_kind` left as-is, already nouns).
+- `Curate*` → `Curation*` types/fns/consts: `CurateSnapshot`, `CurateDiff`, `CurateArtifact`, `CurateEntries`, `SourcingCurateApp`/`create_sourcing_curate_app`, `SourcingCurateCommand` (+ variants `CurateAdd`/`CurateRemove`/`CurateSetCount`), `SourcingCurateConfig(Mutation)`, `SourcingCuratePresence(Mutation)`, `SOURCING_CURATE_SCHEMA`→`SOURCING_CURATION_SCHEMA`, `SOURCING_CURATE_MODE_CURATE`→`SOURCING_CURATION_MODE_CURATION`, `SOURCING_CURATE_WINDOW_CURATED`/`_BODY_CURATED` (the artifact-prefix half renamed, the `_CURATED` suffix kept), `curate_snapshot_from_stock`→`curation_snapshot_from_stock`, `sourcing_curate_labels`→`sourcing_curation_labels`, `compute_curate_entries`→`compute_curation_entries`, etc.
+- The deeper `definition()` capability-row table (`s.curate.standard.v1`, `s.curate.schema.artifact`, `s.curate.inference.artifact`, `s.curate.composer.*`, `s.curate.grammar.*`, `s.curate.codec.document.v1`, `s.curate.localization.*`, plus `sourcing.curate(.op|.diff|.inference)`, `curate.pack`, `curate.spr`, the `"curate"` codec extension, the `application/vnd.semio.sourcing.curate+json` mime, and `ArtifactIdentity::parse("s.curate")`) — all renamed to their `curation` equivalents.
+- Terminology/localization: `mode_curate`→`mode_curation`, English label `"Curate"`→`"Curation"`, German `"Kuratieren"`→`"Kuratierung"` (verb→noun, matches the ticket's intent), UI action labels/German text for the three add/remove/set-count actions.
+- DSL/grammar/protocol ids and fixtures: `#[dsl(id = "curate.curate")]`→`"curation.curation"`, the `semio curate.curate.dsl v1` document header in every `.dsl.semio`/embedded-JSON fixture and the `EMPTY_CURATION_TEXT`/`DEMO_STOCK_TEXT` Rust constants, `.proto` packages (`semio.app.sourcing.curation`, `semio.s.sourcing.curation.*`), `.g4`/`.ebnf`/`.abnf`/`.grammar.semio`/`.ksy`/`.spicy`/`.graphql` grammar ids, `.cmd.semio` example header, oracle `.json` prose and ids.
+- TypeScript barrel (`📦️packages/🟦️typescript/🟦️.ts`): `curate_schema`/`curate_io` exports → `curation_schema`/`curation_io`, import paths updated.
+- Sibling extension crates (`🧩️extensions/🪵️beams|🪟️windows|🧱️slabs`): the local Cargo alias `sourcing_curate` → `sourcing_curation`, `use sourcing_curate::artifacts::curate::…` → `use sourcing_curation::artifacts::curation::…`, `HOST_APP_ID = "sourcing-curate"` → `"sourcing-curation"`, test fn `bundle_contributes_module_for_sourcing_curate` → `..._curation`.
+- `📦️packages/🦀️rust/Cargo.toml`: description prose, `app = "s.sourcing.curate@1/*#editor"` → `"…curation…"`, `aliases = ["curate"]` → `["curation"]`.
+
+### Cross-repo references (outside the plugin)
+- `.vscode/launch.json` — both `SEMIO_APP` env values.
+- `✏️s/🔌️plugins/🎪️demonstrator/📦️packages/🦀️rust/Cargo.toml`, `.../🔣️.json` (its own copy of the composed manifest — ids `curateAdd`/`curateSetCount`/`curateRemove`/`curate` mode id/`sourcing.curate*` all renamed; `sourcing-curated`/`sourcing.curated` bodyKey/windowKindId correctly left alone), `.../🛂️manifest/🎪️demonstrator/🦀️.rs` (imports `SourcingCurationApp`/`create_sourcing_curation_app`, id strings, mode-tuple string list).
+- `✏️s/🔌️plugins/🔒️policy-allowlist.json` — the 5 sourcing rows (note: 2 of these already pointed at a nonexistent `🎛️apps/🗂️curate/…` layout predating the current `🗿️artifacts` tree and a `📸️set-snapshot/🦠️mutation` mutation that no longer exists; that drift is pre-existing and out of scope here — only the `curate`→`curation` token was updated, the stale paths were left as-is).
+- `✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🦀️.rs` — one doc-comment path reference.
+- `🧰️framework/🔨️modules/🛂️manifest/🦀️.rs` — `catalog_mode_icon_id`'s `"curate" => "folder-open"` key (functionally load-bearing: this is the icon lookup for the renamed mode id).
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️.rs`, `…/🔌️plugin/🪟️window-kits/📊️table/🟦️.ts`, `…/🗣️dsl/👪️family/🗂️catalog/🦀️.rs` — doc-comment precedent references.
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/🧪️fixture-sweep/🦀️.rs` — `use sourcing::artifacts::curate::CurateSnapshot as CurateDocument` → `curation::CurationSnapshot as CurationDocument`, and its `registry()` tuple.
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json` — the `🗂️curate`/`🧺️curate-add`/`🧺️curate-remove`/`🧺️curate-set-count` directory-name entries (the `curated`/`create-curated-item`/etc. entries were left alone).
+
+One citation fixed by hand (not by the regex): `🧪️tests/mutate-curation-1/🥒️.feature` cited a file in an **old, out-of-scope ticket** (`.../🌙️08/☀️23/END-TO-END-TESTING-REFACTOR/w16-cross-language/🐍️derive-curate-selection.py`) whose real on-disk name still says `curate` (that ticket predates this rename and was not touched). The blanket rewrite had renamed the citation text to `curation`, which would have pointed at a nonexistent file — reverted that one citation back to `curate` to match the real path.
+
+### Deliberately NOT touched
+- Everything under `✏️s/🔌️plugins/🗄️stdio/` (per instructions).
+- Gitignored/generated build output that would be regenerated anyway and is not tracked: `🧰️framework/.../🔌️plugin/📇️registry/🤖️generated/{🔣️playgrounds.json,🟦️playgrounds.ts,🦀️hosts.rs}`, `🧰️framework/.../🧑️‍💻️dev/dist/**`, `🧰️framework/.../🧑️‍💻️dev/🔌️plugin-modules/{sourcing,demonstrator}/🔣️.json`, and assorted `node_modules/.vite*` cache files that happened to contain a stale `curate` string.
+- Historical ticket folders under `.🧬semio/🦑️repo/🎫️tickets/` other than this one (many mention `curate` in old reports/logs — those are frozen history, not source).
+- `AGENTS.md` (never edited, per rule) — it still says "Sourcing handpicks and **curates**…", which is prose English, not the artifact name.
+
+## Verification
+
+Re-grepped the full `curate`/`Curate`/`CURATE` token space (word-boundary-correct, excluding `curated`/`curator`/`accurate`) across the sourcing plugin, its extensions, the demonstrator, and every cross-reference file listed above: **zero residual matches**. Also grepped for corruption patterns (`curationd`, `curationr`, `curationion`, `CURATIONd`, stray `Curationd`, etc.) after the rewrite — the one real corruption found (`SOURCING_CURATION_WINDOW_CURATIOND` / `SOURCING_CURATION_BODY_CURATIOND`, from the all-caps regex boundary bug described above) was caught and fixed; nothing else surfaced on a second pass.
+
+`cargo check -p semio-s-plugin-sourcing --target wasm32-wasip2`: **one full run completed with exit code 0** (clean, warnings only, no errors — confirmed via the run's tail: `warning: `semio-framework` (lib) generated 24 warnings` then `[exited with code 0]`). Every other invocation during this session (both before and after that success) failed **before ever reaching `semio-s-plugin-sourcing`'s own compilation**, inside the shared `semio-framework-graph` crate's build script / `#[derive(ToValue, FromValue)]` expansion, with errors exclusively about `rewrite_lhs`/`draw_layers`/tuple-struct derive issues and (once) a missing `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🧫️fixtures/…/📐️.stp` fixture. None of these errors mention `sourcing`, `curate`, or `curation` anywhere. Direct inspection confirmed the `🗄️stdio/🗿️artifacts/📐️step/🧫️fixtures` directory does not currently exist on disk at all, and `✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/…` (a path that only exists post-rename) appears in the same failing build's `cargo:rerun-if-changed` list — both point squarely at other agents' concurrent in-flight renames (`🖍️draw`→`🖍️drawing`, `♻️rewrite`→`♻️rewriting`, and stdio fixture work from a different, currently-running ticket) destabilizing the shared `semio-framework-graph` generated registry, not at anything in this change. Final exit-101 log kept at hand during the session but deleted afterward per the "no leftover tool-output logs" rule; the successful run's tail is quoted above and in this file's git history is not needed since nothing in it needs preserving beyond this note.
+
+## Files changed (summary)
+`git status` over the touched trees shows 249 renames (moved + edited), 30 pure in-place edits, and 37 add/delete pairs git couldn't similarity-match as renames — all under `✏️s/🔌️plugins/🪵️sourcing`, `✏️s/🔌️plugins/🎪️demonstrator`, `✏️s/🔌️plugins/🔒️policy-allowlist.json`, `✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🦀️.rs`, `.vscode/launch.json`, and the five `🧰️framework/…` files listed above.

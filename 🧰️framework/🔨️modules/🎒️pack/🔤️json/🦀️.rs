@@ -203,6 +203,20 @@ impl Object {
         self.0.is_empty()
     }
 
+    /// 🗑️ Removes `key` and returns its value, preserving the insertion order of the rest.
+    ///
+    /// Mirrors `serde_json::Map::remove` so a recursive key-at-a-time retirement walk can be
+    /// expressed against this type without reaching for serde_json.
+    pub fn remove(&mut self, key: &str) -> Option<Value> {
+        let index = self.0.iter().position(|(name, _)| name == key)?;
+        Some(self.0.remove(index).1)
+    }
+
+    /// ✏️ Mutable iteration in insertion order, for in-place rewrites of nested values.
+    pub fn iter_mut(&mut self) -> impl Iterator<Item = (&str, &mut Value)> {
+        self.0.iter_mut().map(|(name, value)| (name.as_str(), value))
+    }
+
     pub fn iter(&self) -> impl Iterator<Item = (&str, &Value)> {
         self.0.iter().map(|(k, v)| (k.as_str(), v))
     }

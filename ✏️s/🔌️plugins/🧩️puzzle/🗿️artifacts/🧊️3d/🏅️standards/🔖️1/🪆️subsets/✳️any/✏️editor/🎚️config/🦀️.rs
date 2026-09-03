@@ -72,24 +72,17 @@ fn default_window_ids() -> Vec<String> {
 /// `ActionKind::View`): orbiting one window instance must never move a sibling's camera and must
 /// never create a VCS edit.
 #[derive(Clone, Debug, PartialEq, Default, value_derive::ToValue, value_derive::FromValue)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase")]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct Puzzle3dCamera {
     #[value(default)]
-    #[cfg_attr(test, serde(default))]
     pub position: [f64; 3],
     #[value(default)]
-    #[cfg_attr(test, serde(default))]
     pub target: [f64; 3],
     #[value(default = "one_f64")]
-    #[cfg_attr(test, serde(default = "one_f64"))]
     pub zoom: f64,
     #[value(default)]
-    #[cfg_attr(test, serde(default))]
     pub up: Option<[f64; 3]>,
     #[value(default)]
-    #[cfg_attr(test, serde(default))]
     pub projection: WorldProjectionConfig,
 }
 
@@ -107,18 +100,13 @@ pub fn puzzle3d_camera_distance(camera: &Puzzle3dCamera) -> f64 {
 
 //#region 🔖️Selection
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase")]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct Puzzle3dSelectableKinds {
     #[value(default = "default_true")]
-    #[cfg_attr(test, serde(default = "default_true"))]
     pub objects: bool,
     #[value(default = "default_true")]
-    #[cfg_attr(test, serde(default = "default_true"))]
     pub vortices: bool,
     #[value(default = "default_true")]
-    #[cfg_attr(test, serde(default = "default_true"))]
     pub attractions: bool,
 }
 
@@ -130,150 +118,112 @@ impl Default for Puzzle3dSelectableKinds {
 
 /// 🎯️ Open per-vortex brush-candidate suggestion popup (context menu / Alt+right-click).
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase")]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct Puzzle3dSuggestionMenu {
     pub x: f64,
     pub y: f64,
     #[value(default)]
-    #[cfg_attr(test, serde(default))]
     pub window_id: String,
     /// 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: the target vortex full id this
     /// popup was opened on — previously implicit via `runtime.selection.vortex_ids`/
     /// `hovered_vortex_full_id`, now stored directly since selection is framework-owned and cannot be
     /// read back from `render` (see `puzzle3d_brush_target_vortex`'s doc comment).
     #[value(default)]
-    #[cfg_attr(test, serde(default))]
     pub vortex_full_id: String,
 }
 //#endregion 🔖️Selection
 
 //#region 🔖️Config
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase")]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct Puzzle3dConfig {
     #[value(default)]
-    #[cfg_attr(test, serde(default))]
     pub suggestion_menu: Option<Puzzle3dSuggestionMenu>,
     #[value(default = "default_overlap_budget")]
-    #[cfg_attr(test, serde(default = "default_overlap_budget"))]
     pub overlap_budget: f64,
     #[value(default)]
-    #[cfg_attr(test, serde(default))]
     pub fill_count: u32,
     /// 🧵 Invalidates stale fill-materialization continuations after a newer slider request.
     #[value(default)]
-    #[cfg_attr(test, serde(default))]
     pub fill_apply_generation: u64,
     /// 🪣️ Persisted prefix cursor, kept separate so each continuation need not reserialize the full plan.
     #[value(default)]
-    #[cfg_attr(test, serde(default))]
     pub fill_applied_count: u32,
     /// 🧵 Worker-independent checkpoint for the bounded fill planner. This travels with the
     /// config snapshot so successive commands may execute on any shared-pool worker.
     #[value(default)]
-    #[cfg_attr(test, serde(default))]
     pub fill_checkpoint: Vec<u8>,
     #[value(default)]
-    #[cfg_attr(test, serde(default))]
     pub brush_candidate_index: usize,
     #[value(default)]
-    #[cfg_attr(test, serde(default))]
     pub object_kind_weights: HashMap<String, f64>,
     #[value(default)]
-    #[cfg_attr(test, serde(default))]
     pub vortex_kind_weights: HashMap<String, f64>,
     #[value(default = "default_true")]
-    #[cfg_attr(test, serde(default = "default_true"))]
     pub lod_automatic: bool,
     #[value(default)]
-    #[cfg_attr(test, serde(default))]
     pub lod_depth_variable: bool,
     #[value(default = "default_true")]
-    #[cfg_attr(test, serde(default = "default_true"))]
     pub grid_visible: bool,
     #[value(default = "default_manual_lod")]
-    #[cfg_attr(test, serde(default = "default_manual_lod"))]
     pub lod_manual: f64,
     #[value(default)]
-    #[cfg_attr(test, serde(default))]
     pub grid_snap_enabled: bool,
     #[value(default = "default_grid_spacing")]
-    #[cfg_attr(test, serde(default = "default_grid_spacing"))]
     pub grid_spacing: f64,
     #[value(default)]
-    #[cfg_attr(test, serde(default))]
     pub selectable_kinds: Puzzle3dSelectableKinds,
     #[value(default)]
-    #[cfg_attr(test, serde(default))]
     pub engagement_input: String,
     #[value(default = "default_proximity_radius")]
-    #[cfg_attr(test, serde(default = "default_proximity_radius"))]
     pub proximity_radius: f64,
     #[value(default = "default_chunk_size")]
-    #[cfg_attr(test, serde(default = "default_chunk_size"))]
     pub chunk_size: f64,
     #[value(default = "default_voxel_dims")]
-    #[cfg_attr(test, serde(default = "default_voxel_dims"))]
     pub voxel_dims: [u32; 3],
     /// 🎛️ Whether the transform gumball exposes translate (move axes + move planes).
     #[value(default = "default_true")]
-    #[cfg_attr(test, serde(default = "default_true"))]
     pub transform_move: bool,
     /// 🎛️ Whether the transform gumball exposes rotate handles.
     #[value(default = "default_true")]
-    #[cfg_attr(test, serde(default = "default_true"))]
     pub transform_rotate: bool,
     /// 🌀️ When to emit vortex markers: `PUZZLE3D_VORTEX_SHOW_ALWAYS` or `PUZZLE3D_VORTEX_SHOW_SELECTED`.
     #[value(default = "default_vortex_show")]
-    #[cfg_attr(test, serde(default = "default_vortex_show"))]
     pub vortex_show: String,
     /// 🧭️ How vortex direction arrows are drawn: `PUZZLE3D_VORTEX_DIRECTION_OUTWARDS` or `…_INWARDS`.
     #[value(default = "default_vortex_direction")]
-    #[cfg_attr(test, serde(default = "default_vortex_direction"))]
     pub vortex_direction: String,
     #[value(default)]
-    #[cfg_attr(test, serde(default))]
     pub sun: WorldSunConfig,
     /// 🎥️ Session-only viewport camera for the window instance currently materialized onto this
     /// runtime (via `load_window`/`save_window`) — never persisted to the document.
     #[value(default)]
-    #[cfg_attr(test, serde(default))]
     pub camera: Puzzle3dCamera,
     /// 🪟️ Per-window-instance snapshot of view-local chrome options, keyed by window INSTANCE id.
     #[value(default)]
-    #[cfg_attr(test, serde(default))]
     pub window_options: BTreeMap<String, Puzzle3dWindowOptions>,
     /// 🧰️ B1: per-window active transform-gumball/brush/fill utility — was host-pushed
     /// `view_state.active_utility_by_window_id`, now real VCS'd config.
     #[value(default)]
-    #[cfg_attr(test, serde(default))]
     pub active_utility_by_window_id: BTreeMap<String, String>,
     /// 🛠️ B1: the mode-level active tool (e.g. `"fill"`) — was host-pushed `view_state.active_tool_id`.
     #[value(default)]
-    #[cfg_attr(test, serde(default))]
     pub active_tool_id: Option<String>,
     /// 🗣️ B1: terminology overlay (native/reuse) — was host-pushed `view_state.terminology`.
     #[value(default = "default_terminology")]
-    #[cfg_attr(test, serde(default = "default_terminology"))]
     pub terminology: String,
     /// 🗣️ B1: BCP-47 locale tag — was host-pushed `view_state.locale`.
     #[value(default = "default_locale")]
-    #[cfg_attr(test, serde(default = "default_locale"))]
     pub locale: String,
     /// 🪟️ B1: every window INSTANCE id currently open for this app — was host-pushed
     /// `view_state.window_instances`. Always contains at least the main window id (see `Default`
     /// below) so a freshly-loaded document still engages its one window.
     #[value(default = "default_window_ids")]
-    #[cfg_attr(test, serde(default = "default_window_ids"))]
     pub window_ids: Vec<String>,
 }
 
 impl Default for Puzzle3dConfig {
-    /// 🎛️ Mirrors every `#[serde(default = "...")]` above — `#[derive(Default)]` would silently ignore
+    /// 🎛️ Mirrors every `#[value(default = "...")]` above — `#[derive(Default)]` would silently ignore
     /// them and zero out fields like `overlap_budget`/`selection_method`/`lod_automatic` in Rust-constructed runtimes.
     fn default() -> Self {
         Self {
@@ -324,11 +274,11 @@ impl store::ArtifactDsl for Puzzle3dConfig {
     const EXTENSION: &'static str = "puzzle3dcfg";
 
     fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
-        serde_json::from_str(text).map_err(|error| store::TextError::new(error.to_string(), store::TextSpan::at(1, 1)))
+        dsl::json::from_json_str(text).map_err(|error| store::TextError::new(error.to_string(), store::TextSpan::at(1, 1)))
     }
 
     fn print_dsl(&self) -> String {
-        serde_json::to_string_pretty(self).unwrap_or_default()
+        dsl::json::to_string_pretty(&dsl::json::from_dsl_value(&dsl::ToValue::to_value(self)))
     }
 }
 
@@ -352,9 +302,7 @@ store::impl_whole_record_config!(Puzzle3dConfig);
 /// [`Puzzle3dRuntime::window_options`]. Fill count, distribution weights and overlap budget are
 /// intentionally absent: they drive the shared document/precompute plan.
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase")]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct Puzzle3dWindowOptions {
     pub lod_automatic: bool,
     pub lod_depth_variable: bool,
@@ -698,19 +646,20 @@ impl protocol::Mutation<Puzzle3dConfig> for Puzzle3dConfigMutation {
 
 impl protocol::OpBinary for Puzzle3dConfigMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        serde_json::to_vec(self).map_err(|error| protocol::ProtocolError::Pack(store::PackError::Schema(error.to_string())))
+        Ok(dsl::json::to_json_string(self).into_bytes())
     }
     fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        serde_json::from_slice(bytes).map_err(|error| protocol::ProtocolError::Pack(store::PackError::Schema(error.to_string())))
+        let text = std::str::from_utf8(bytes).map_err(|error| protocol::ProtocolError::Pack(store::PackError::Schema(error.to_string())))?;
+        dsl::json::from_json_str(text).map_err(|error| protocol::ProtocolError::Pack(store::PackError::Schema(error.to_string())))
     }
 }
 
 impl protocol::OpText for Puzzle3dConfigMutation {
     fn print_op(&self) -> String {
-        serde_json::to_string(self).unwrap_or_default()
+        dsl::json::to_json_string(self)
     }
     fn parse_op(line: &str) -> Result<Self, store::TextError> {
-        serde_json::from_str(line).map_err(|error| store::TextError::new(error.to_string(), store::TextSpan::at(1, 1)))
+        dsl::json::from_json_str(line).map_err(|error| store::TextError::new(error.to_string(), store::TextSpan::at(1, 1)))
     }
 }
 //#endregion 🔖️ConfigMutation
@@ -723,8 +672,8 @@ mod tests {
     #[test]
     fn config_round_trip_has_no_process_identity() {
         let config = Puzzle3dConfig::default();
-        let json = serde_json::to_string(&config).expect("config serializes");
-        let restored: Puzzle3dConfig = serde_json::from_str(&json).expect("config deserializes");
+        let json = dsl::json::to_json_string(&config);
+        let restored: Puzzle3dConfig = dsl::json::from_json_str(&json).expect("config deserializes");
         assert_eq!(config, restored);
         let mutation = Puzzle3dConfigMutation::Snapshot { config };
         let encoded = protocol::OpBinary::encode_op(&mutation).expect("mutation encodes");

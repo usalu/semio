@@ -14,7 +14,7 @@ pub mod board_host {
     use super::{
         board_json_locked_option, board_json_visible_option, builtin_edge_tips, circle_handle_angle_toward, compute_edge_bezier_points, distance_between, distance_point_to_cubic_bezier, fixture_edge_handle_ids_from_object,
         handle_exterior_cap_fill_path, handle_exterior_cap_stroke_path, handle_outward_at_node_rim, handle_position_on_circle, handle_position_on_rectangle, merge_ids_into_selection, merge_pick_into_selection, normalize_or_zero,
-        normalize_selection_mode, pick_merge_mode_for_modifiers, property_bag_from_json, rectangle_handle_angle_toward, selection_drag_enclosing, selection_drag_shape, ActiveUtility, BoardElementStyleKind, CachedIconBody, CachedIconPaintLease,
+        normalize_selection_mode, pick_merge_mode_for_modifiers, property_bag_from_value, rectangle_handle_angle_toward, selection_drag_enclosing, selection_drag_shape, ActiveUtility, BoardElementStyleKind, CachedIconBody, CachedIconPaintLease,
         CanvasPalette, CompatSpecificity, EdgeData, EdgeDescJson, EdgeKindDef, EdgeStrokePattern, EdgeTipDef, EdgeTipGeometry, FixtureJson, GraphPortMode, HandleData, HandleDescJson, HandleKindDef, IconPaintCache, Interaction, LinkCompatRule,
         NodeData, NodeDescJson, NodeKindDef, NodeKindHandleTemplate, NodeShape, SceneDescriptorJson, SelectionOptions, WireData, WireKindDef,
     };
@@ -9505,7 +9505,7 @@ pub mod board_host {
                     NodeShape::Rectangle => (0.0, n.width.unwrap_or(0.0), n.height.unwrap_or(0.0)),
                 };
                 let node_kind = n.node_kind.as_ref().map(|s| s.trim().to_string()).filter(|s| !s.is_empty()).unwrap_or_default();
-                let properties = n.user_data.as_ref().map(property_bag_from_json).unwrap_or_default();
+                let properties = n.user_data.as_ref().map(|v| property_bag_from_value(&dsl::DslValue::from(v))).unwrap_or_default();
                 self.nodes.insert(
                     n.id.clone(),
                     NodeData {
@@ -9537,7 +9537,7 @@ pub mod board_host {
                     Some(s) => Some(Self::parse_css_color(s).ok_or_else(|| NormalPortError::InvalidHandleColor(h.id.clone(), s.to_string()))?),
                 };
                 let icon_kind = h.icon_kind.as_ref().map(|s| s.trim()).filter(|s| !s.is_empty()).map(|s| s.to_string());
-                let properties = h.user_data.as_ref().map(property_bag_from_json).unwrap_or_default();
+                let properties = h.user_data.as_ref().map(|v| property_bag_from_value(&dsl::DslValue::from(v))).unwrap_or_default();
                 self.handles.insert(
                     h.id.clone(),
                     HandleData {
@@ -9562,7 +9562,7 @@ pub mod board_host {
                 let edge_kind = e.edge_kind.as_ref().map(|s| s.trim().to_string()).filter(|s| !s.is_empty()).unwrap_or_default();
                 let source_tip = Self::parse_catalog_tip_slot(e.source_tip.as_deref());
                 let target_tip = Self::parse_catalog_tip_slot(e.target_tip.as_deref());
-                let properties = e.user_data.as_ref().map(property_bag_from_json).unwrap_or_default();
+                let properties = e.user_data.as_ref().map(|v| property_bag_from_value(&dsl::DslValue::from(v))).unwrap_or_default();
                 self.edges.insert(
                     e.id.clone(),
                     EdgeData {
@@ -9610,7 +9610,7 @@ pub mod board_host {
                     .filter(|s| !s.is_empty())
                     .or_else(|| self.handles.get(w.source.as_str()).map(|h| self.resolve_default_wire_kind_for_handle(h)))
                     .unwrap_or_else(|| DEFAULT_WIRE_KIND_ID.to_string());
-                let properties = w.user_data.as_ref().map(property_bag_from_json).unwrap_or_default();
+                let properties = w.user_data.as_ref().map(|v| property_bag_from_value(&dsl::DslValue::from(v))).unwrap_or_default();
                 self.wires.insert(
                     w.id.clone(),
                     WireData {

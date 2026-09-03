@@ -11,7 +11,7 @@ start record
 # `SetSnapshot`=0, `InsertBlock`=1, `RemoveBlock`=2, `SetBlockContent`=3, `SetRunText`=4,
 # `SetRunFormatting`=5, `InsertStyle`=6, `RemoveStyle`=7, `SetStyleName`=8, `SetStyleBasedOn`=9,
 # `SetPart`=10, `RemovePart`=11) -- both REAL fixed fields, individually protocol-walked, matching
-# `📰xml/…/🧬️mutations/💾️binary/📡️.protocol.semio`'s own `format`/`tag` header shape.
+# `📰️xml/…/🧬️mutations/💾️binary/📡️.protocol.semio`'s own `format`/`tag` header shape.
 #
 # Past that header, the variant's own payload is one opaque trailing `bytes` chain: several
 # variants (`InsertBlock`/`SetBlockContent`'s `block: DocxBlock`, `SetSnapshot`'s whole

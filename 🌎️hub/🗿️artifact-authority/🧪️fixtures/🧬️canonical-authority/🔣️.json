@@ -1,0 +1,23 @@
+{
+  "formatVersion": 1,
+  "description": "Independent Node crypto SHA-256 oracle for the deterministic in-module trusted codec",
+  "input": {
+    "pack": [49, 48],
+    "spr": [115, 101, 101, 100],
+    "orderedOperations": [[53], [45, 50]]
+  },
+  "outputPack": [49, 51],
+  "outputSpr": [115, 101, 101, 100, 0, 0, 0, 1, 53, 0, 0, 0, 2, 45, 50],
+  "descriptorDigestV1": [3, 80, 64, 54, 217, 174, 207, 101, 58, 56, 216, 7, 210, 168, 82, 241, 141, 19, 188, 246, 18, 203, 157, 126, 97, 44, 70, 84, 12, 67, 12, 172],
+  "packSha256": [63, 219, 163, 95, 4, 220, 140, 70, 41, 134, 201, 146, 188, 248, 117, 84, 98, 87, 17, 48, 114, 169, 9, 193, 98, 247, 228, 112, 229, 129, 226, 120],
+  "sprSha256": [236, 81, 173, 187, 187, 123, 198, 199, 129, 250, 43, 248, 200, 221, 241, 192, 237, 189, 203, 122, 19, 118, 80, 155, 194, 203, 246, 119, 78, 229, 145, 216],
+  "aggregateSha256": [226, 159, 146, 135, 180, 43, 6, 66, 215, 25, 149, 226, 208, 12, 194, 115, 18, 185, 165, 104, 241, 208, 162, 248, 127, 187, 110, 54, 150, 50, 173, 53],
+  "checkpointIdEncoding": {
+    "domainUtf8": "semio.hub.artifact-checkpoint.v1\u0000",
+    "lengthPrefix": "u64-big-endian-byte-length-per-field",
+    "integerEncoding": "unsigned-big-endian-fixed-width-field-payload",
+    "fieldOrder": ["scope.spaceId", "scope.documentId", "parentCheckpointId", "descriptorDigestV1", "baselineFrontier.documentId", "baselineFrontier.headEditOrdinal", "baselineFrontier.headEditId", "baselineFrontier.lastCommitSeq", "baselineFrontier.chainHash", "pack.sha256", "pack.byteLength", "spr.sha256", "spr.byteLength", "aggregateSha256"]
+  },
+  "checkpointIdEncodingHexV1": "73656d696f2e6875622e61727469666163742d636865636b706f696e742e76310000000000000000077261756d3ac3a4000000000000000b706c616e3ae69db1e4baac0000000000000000000000000000002003504036d9aecf653a38d807d2a852f18d13bcf612cb9d7e612c46540c430cac000000000000000b706c616e3ae69db1e4baac000000000000000800000000000000020000000000000006656469743a32000000000000000800000000000000020000000000000020020202020202020202020202020202020202020202020202020202020202020200000000000000203fdba35f04dc8c462986c992bcf875546257113072a909c162f7e470e581e278000000000000000800000000000000020000000000000020ec51adbbbb7bc6c781fa2bf8c8ddf1c0edbdcb7a1376509bc2cbf6774ee591d80000000000000008000000000000000f0000000000000020e29f9287b42b0642d71995e2d00cc27312b9a568f1d0a2f87fbb6e369632ad35",
+  "checkpointIdV1": [72, 10, 59, 15, 20, 78, 56, 160, 82, 126, 79, 99, 65, 175, 68, 80, 152, 40, 74, 24, 165, 48, 23, 186, 94, 154, 140, 27, 205, 214, 13, 51]
+}

@@ -1,0 +1,16 @@
+dialect grammar
+grammar procedural.generation3d.op
+extension generation3d
+use family-scene
+start mutation
+
+artifact-mark = "procedural.generation3d-op"
+mutation = artifact-mark mesh-op+
+mesh-op = "add-vertex" vtx-field+ | "set-face" face-field+ | "transform-mesh" xfm-field+ | "merge-solid" merge-field+ | "revolve-profile" rev-field+
+rev-field = "profile" "=" IDENT | "axis" "=" IDENT | "angle" "=" FLOAT
+vtx-field = "x" "=" FLOAT | "y" "=" FLOAT | "z" "=" FLOAT
+face-field = "index" "=" INT | "loop" "=" list
+xfm-field = "axis" "=" IDENT | "angle" "=" FLOAT
+merge-field = "target" "=" IDENT | "source" "=" IDENT
+list = "[" INT* "]"
+layer = IDENT "@" FLOAT FLOAT FLOAT?

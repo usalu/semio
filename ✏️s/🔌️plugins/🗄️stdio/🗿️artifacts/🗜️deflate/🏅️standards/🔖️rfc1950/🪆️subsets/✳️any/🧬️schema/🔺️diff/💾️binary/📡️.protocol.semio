@@ -19,7 +19,7 @@ start record
 # §2.2's own `Cond` section), so a per-bit-guarded field list isn't expressible here. Filed as
 # `protocol-cond-no-bitmask` (this wave's report `mechanism_gaps`) -- the SAME gap this program's
 # prior wave already identified for an analogous multi-bit `flags` byte
-# (`../../../../../../📰xml/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🧬️schema/🔺️diff/💾️binary/
+# (`../../../../../../📰️xml/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🧬️schema/🔺️diff/💾️binary/
 # 📡️.protocol.semio`'s own identical `format`/`flags`/`chain` shape, copied here
 # verbatim in spirit). The Rust `encode_diff`/`decode_diff` side stays genuinely, fully
 # structured (bit-tested, individually typed, incl. `dict_id`'s own tri-state

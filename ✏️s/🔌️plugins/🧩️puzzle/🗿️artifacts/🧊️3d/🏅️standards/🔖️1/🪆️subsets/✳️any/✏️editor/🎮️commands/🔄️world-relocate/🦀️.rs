@@ -8,7 +8,7 @@ use crate::editor::puzzle3d::world_vortex_position;
 use crate::editor::puzzle3d::Puzzle3dActionCtx;
 use crate::editor::puzzle3d::Puzzle3dAttraction;
 use crate::editor::puzzle3d::PUZZLE3D_ID_COUNTER;
-use serde_json::Value;
+use dsl::os_pack::json::Value;
 use std::sync::atomic::Ordering;
 
 /// 🚚️ Drops one unlocked, visible object at an absolute world position and attracts its first vortex

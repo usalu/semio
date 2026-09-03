@@ -6,7 +6,7 @@
 so the browser was loading a plugin built against a different framework.
 
 ## Boot, after the compile fixes + a fresh `plugin sourcing` build (wasm 12:30, descriptor 12:35)
-The shell comes up and the app mounts: title `semio · sourcing · curate`, Editor mode, the `Demo`
+The shell comes up and the app mounts: title `semio · sourcing · curation`, Editor mode, the `Demo`
 example selector, and all four windows laid out — **Pool**, **Curated**, **Grid**, **Preview**.
 That is already past every failure mode the plugin used to have.
 
@@ -39,6 +39,6 @@ error: linking with `wasm-component-ld` failed
 ```
 `🔌️plugin-modules/stdio/` consequently has no `🔣️descriptor.json` at all (its last successful build
 was Aug 18), and the OS reports `plugin.descriptor-invalid: /plugin-modules/stdio/🔣️descriptor.json
-returned HTML` on every boot. This matters to sourcing because `CurateSnapshot::catalog` is an
+returned HTML` on every boot. This matters to sourcing because `CurationSnapshot::catalog` is an
 `ArtifactChild<SemioKitSnapshot>` composed from `s.stdio.semio.kit` — the pool's stock is joined out of
 that child plus sourcing's own `stock_extra`. It is a peer-owned crate and a peer-owned break.

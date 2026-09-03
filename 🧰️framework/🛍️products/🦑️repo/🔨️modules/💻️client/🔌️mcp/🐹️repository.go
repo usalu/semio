@@ -31,9 +31,18 @@ type RepositoryHandlers interface {
 	Prompt(context.Context, string, map[string]string) (GetPromptResult, error)
 }
 
-type ClientRepository struct{}
+type ClientRepository struct {
+	profile client.McpClientKind
+}
 
-func (ClientRepository) Call(ctx context.Context, name string, raw json.RawMessage) (RepositoryResult, error) {
+func NewClientRepository(profile client.McpClientKind) ClientRepository {
+	if profile == "" {
+		profile = client.McpClientGeneric
+	}
+	return ClientRepository{profile: profile}
+}
+
+func (repository ClientRepository) Call(ctx context.Context, name string, raw json.RawMessage) (RepositoryResult, error) {
 	if err := ctx.Err(); err != nil {
 		return RepositoryResult{}, err
 	}
@@ -52,13 +61,14 @@ func (ClientRepository) Call(ctx context.Context, name string, raw json.RawMessa
 			Parent       string `json:"parent"`
 			Issue        string `json:"issue"`
 			PlanID       string `json:"plan_id"`
+			SpecID       string `json:"spec_id"`
 			NoIssue      bool   `json:"no_issue"`
 			NoManagement bool   `json:"no_management"`
 		}
 		if err := DecodeParams(raw, &params); err != nil || params.Emoji == "" || params.Title == "" || params.Prompt == "" || params.Goal == "" {
 			return RepositoryResult{}, &HandlerError{Code: -32010, Message: "invalid ticket_open arguments"}
 		}
-		result = client.ToolTicketOpen(params.Emoji, params.Title, params.Prompt, params.LLM, params.Effort, params.Client, params.Draft, params.NoIssue, params.Goal, params.Parent, params.NoManagement, params.Issue, client.McpClientGeneric, params.PlanID, "")
+		result = client.ToolTicketOpen(params.Emoji, params.Title, params.Prompt, params.LLM, params.Effort, params.Client, params.Draft, params.NoIssue, params.Goal, params.Parent, params.NoManagement, params.Issue, repository.profile, params.PlanID, params.SpecID)
 	case "ticket_close":
 		var params struct {
 			Path         string   `json:"path"`
@@ -87,6 +97,7 @@ func (ClientRepository) Call(ctx context.Context, name string, raw json.RawMessa
 			Goal         string `json:"goal"`
 			Parent       string `json:"parent"`
 			PlanID       string `json:"plan_id"`
+			SpecID       string `json:"spec_id"`
 			NoManagement bool   `json:"no_management"`
 		}
 		if err := DecodeParams(raw, &params); err != nil {
@@ -96,7 +107,7 @@ func (ClientRepository) Call(ctx context.Context, name string, raw json.RawMessa
 		if err != nil {
 			return RepositoryResult{}, &HandlerError{Code: -32010, Message: "invalid ticket path"}
 		}
-		result = client.ToolTicketReopen(year, month, day, slug, params.Prompt, params.LLM, params.Effort, params.Client, params.Draft, params.Title, params.Goal, params.Parent, params.NoManagement, client.McpClientGeneric, params.PlanID, "")
+		result = client.ToolTicketReopen(year, month, day, slug, params.Prompt, params.LLM, params.Effort, params.Client, params.Draft, params.Title, params.Goal, params.Parent, params.NoManagement, repository.profile, params.PlanID, params.SpecID)
 	case "section_move":
 		var params struct {
 			File    string `json:"file"`
@@ -240,14 +251,26 @@ func resolveTicketPath(path string) (int, int, int, string, error) {
 // #region 🏭️ProductionServer
 
 func NewRepositoryServer(repository RepositoryHandlers) (*Server, error) {
-	return NewRepositoryServerWithLimits(repository, DefaultLimits())
+	return NewRepositoryServerFor(repository, client.McpClientGeneric)
+}
+
+func NewRepositoryServerFor(repository RepositoryHandlers, profile client.McpClientKind) (*Server, error) {
+	return NewRepositoryServerWithLimitsFor(repository, profile, DefaultLimits())
 }
 
 func NewRepositoryServerWithLimits(repository RepositoryHandlers, limits Limits) (*Server, error) {
+	return NewRepositoryServerWithLimitsFor(repository, client.McpClientGeneric, limits)
+}
+
+func NewRepositoryServerWithLimitsFor(repository RepositoryHandlers, profile client.McpClientKind, limits Limits) (*Server, error) {
 	if repository == nil {
 		return nil, errors.New("mcp: repository handlers are required")
 	}
-	server, err := NewServer(Config{ServerInfo: Implementation{Name: "repo", Version: "1.0.0"}, Instructions: "Use repository tools and resources through their owned schemas.", Limits: limits})
+	resolvedProfile, err := client.ParseMcpClientKind(string(profile))
+	if err != nil {
+		return nil, err
+	}
+	server, err := NewServer(Config{ServerInfo: Implementation{Name: client.McpServerName(resolvedProfile), Version: "1.0.0"}, Instructions: "Use repository tools and resources through their owned schemas.", Limits: limits})
 	if err != nil {
 		return nil, err
 	}
@@ -260,10 +283,20 @@ func NewRepositoryServerWithLimits(repository RepositoryHandlers, limits Limits)
 	arrayField := func(description string) Schema {
 		return Schema{Type: "array", Description: description, Items: &Schema{Type: "string"}}
 	}
+	openProperties := map[string]Schema{"emoji": stringField("Ticket emoji."), "title": stringField("Ticket title."), "prompt": stringField("Task description."), "goal": stringField("Goal id."), "client": stringField("Agent client."), "llm": stringField("Model."), "effort": stringField("Reasoning effort."), "draft": stringField("Draft id."), "parent": stringField("Parent ticket."), "issue": stringField("Existing issue URL."), "no_issue": booleanField("Skip issue creation."), "no_management": booleanField("Skip management integration.")}
+	reopenProperties := map[string]Schema{"path": stringField("YY/MM/DD/SLUG path."), "prompt": stringField("Additional task description."), "client": stringField("Agent client."), "llm": stringField("Model."), "effort": stringField("Reasoning effort."), "draft": stringField("Draft id."), "title": stringField("Updated title."), "goal": stringField("Goal id."), "parent": stringField("Parent ticket."), "no_management": booleanField("Skip management integration.")}
+	switch resolvedProfile {
+	case client.McpClientCursor, client.McpClientCopilot, client.McpClientClaude, client.McpClientCodex:
+		openProperties["plan_id"] = stringField("Client plan id.")
+		reopenProperties["plan_id"] = stringField("Client plan id.")
+	case client.McpClientKiro:
+		openProperties["spec_id"] = stringField("Kiro spec id.")
+		reopenProperties["spec_id"] = stringField("Kiro spec id.")
+	}
 	tools := []Tool{
-		{Name: "ticket_open", Description: "Open a repository ticket.", InputSchema: object(map[string]Schema{"emoji": stringField("Ticket emoji."), "title": stringField("Ticket title."), "prompt": stringField("Task description."), "goal": stringField("Goal id."), "client": stringField("Agent client."), "llm": stringField("Model."), "effort": stringField("Reasoning effort."), "draft": stringField("Draft id."), "parent": stringField("Parent ticket."), "issue": stringField("Existing issue URL."), "plan_id": stringField("Plan id."), "no_issue": booleanField("Skip issue creation."), "no_management": booleanField("Skip management integration.")}, "emoji", "title", "prompt", "goal")},
+		{Name: "ticket_open", Description: "Open a repository ticket.", InputSchema: object(openProperties, "emoji", "title", "prompt", "goal")},
 		{Name: "ticket_close", Description: "Close a repository ticket.", InputSchema: object(map[string]Schema{"path": stringField("YY/MM/DD/SLUG path."), "summary": stringField("Completion summary."), "files": arrayField("Changed files."), "title": stringField("Updated title."), "no_management": booleanField("Skip management integration.")}, "summary")},
-		{Name: "ticket_reopen", Description: "Reopen a repository ticket.", InputSchema: object(map[string]Schema{"path": stringField("YY/MM/DD/SLUG path."), "prompt": stringField("Additional task description."), "client": stringField("Agent client."), "llm": stringField("Model."), "effort": stringField("Reasoning effort."), "draft": stringField("Draft id."), "title": stringField("Updated title."), "goal": stringField("Goal id."), "parent": stringField("Parent ticket."), "plan_id": stringField("Plan id."), "no_management": booleanField("Skip management integration.")})},
+		{Name: "ticket_reopen", Description: "Reopen a repository ticket.", InputSchema: object(reopenProperties)},
 		{Name: "section_move", Description: "Rename or move a section.", InputSchema: object(map[string]Schema{"file": stringField("Source file."), "old_name": stringField("Current section."), "new_name": stringField("New section.")}, "file", "old_name", "new_name")},
 		{Name: "file_integrate", Description: "Integrate a source file into a target section.", InputSchema: object(map[string]Schema{"source": stringField("Source file."), "target_section": stringField("Target section."), "target_file": stringField("Target file."), "target_parent_section": stringField("Optional parent section.")}, "source", "target_section", "target_file")},
 		{Name: "section_extract", Description: "Extract a section into a target file.", InputSchema: object(map[string]Schema{"source_file": stringField("Source file."), "source_section": stringField("Source section."), "target_file": stringField("Target file.")}, "source_file", "source_section", "target_file")},

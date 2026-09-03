@@ -1,0 +1,25 @@
+semio procedural.generation3d.dsl v1
+schema="flow.fixture"
+camera {
+  x=120 y=-80 zoom=2
+}
+layout={
+  box=x=80 y=-60 fillet=x=240 y=-60 preview=x=360 y=-60 radius=x=40 y=-100 size=x=40 y=-140
+}
+synapses [id:TEXT wire:WIRE] {
+  e1 size@number->box@width
+  e2 size@number->box@depth
+  e3 size@number->box@height
+  e4 box@solid->fillet@geometry
+  e5 radius@number->fillet@radius
+  e6 fillet@solid->preview
+}
+generations [id:TEXT name:TEXT values:VAL] {
+}
+widgets {
+  input-slider id="size" label="Size" value=2 min=0.5 max=5 step=0.1
+  input-slider id="radius" label="Fillet Radius" value=0.15 min=0.01 max=0.5 step=0.01
+  neuron id="box" neuron-kind=brep.prim3d.box preview=false input-ports=[ "width" "depth" "height" ] output-ports=[ ] params=[ ]
+  neuron id="fillet" neuron-kind=brep.solid.fillet preview=true input-ports=[ "geometry" "radius" ] output-ports=[ ] params=[ ]
+  output-preview id="preview" preview=[ ] expanded=[ ]
+}

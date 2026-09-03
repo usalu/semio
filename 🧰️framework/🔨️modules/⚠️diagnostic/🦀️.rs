@@ -3,15 +3,13 @@
 
 pub use crate::span::TextSpan;
 use crate::value::{DslValue, FromValue, ToValue, ValueError};
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️Errors
 /// @emoji 🚧️ Span-carrying parse/print failure — the one error type every DSL surface returns.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct TextError {
     pub message: String,
     pub span: TextSpan,
-    #[serde(skip_serializing_if = "Option::is_none")]
     pub expected: Option<String>,
 }
 
@@ -22,6 +20,41 @@ impl std::fmt::Display for TextError {
 }
 
 impl std::error::Error for TextError {}
+
+/// 🌉️ Hand-written, not derived — same DAG reason as `FaultCode`/`Severity` above. No
+/// `#[serde(rename_all = …)]` on the original, so field names stay as declared.
+impl ToValue for TextError {
+    fn to_value(&self) -> DslValue {
+        let mut entries = vec![("message".to_string(), DslValue::String(self.message.clone())), ("span".to_string(), self.span.to_value())];
+        if let Some(expected) = &self.expected {
+            entries.push(("expected".to_string(), DslValue::String(expected.clone())));
+        }
+        DslValue::Object(entries)
+    }
+}
+impl FromValue for TextError {
+    fn from_value(value: DslValue) -> Result<Self, ValueError> {
+        let entries = match value {
+            DslValue::Object(entries) => entries,
+            other => return Err(ValueError::new(format!("expected an object for TextError, found {other:?}"))),
+        };
+        let find = |key: &str| entries.iter().find(|(name, _)| name == key).map(|(_, slot)| slot.clone());
+        let message = match find("message") {
+            Some(DslValue::String(text)) => text,
+            other => return Err(ValueError::new(format!("expected a string for TextError.message, found {other:?}"))),
+        };
+        let span = match find("span") {
+            Some(slot) => TextSpan::from_value(slot)?,
+            None => return Err(ValueError::new("missing TextError.span")),
+        };
+        let expected = match find("expected") {
+            None | Some(DslValue::Null) => None,
+            Some(DslValue::String(text)) => Some(text),
+            Some(other) => return Err(ValueError::new(format!("expected a string for TextError.expected, found {other:?}"))),
+        };
+        Ok(TextError { message, span, expected })
+    }
+}
 
 impl TextError {
     pub fn new(message: impl Into<String>, span: TextSpan) -> Self {
@@ -38,8 +71,7 @@ impl TextError {
 }
 
 /// @emoji 🏷️ Stable dotted fault/diagnostic code (e.g. `module.pack.checksum-mismatch`).
-#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(transparent)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct FaultCode(pub String);
 
 impl FaultCode {
@@ -89,8 +121,7 @@ impl From<DiagnosticCode> for FaultCode {
 /// 🚦️ Declaration order is the level order: `#[derive(PartialOrd, Ord)]` makes `Info < Warning <
 /// Error < Fatal` a structural fact, not a hand-maintained comparator. `as_u8`/`from_u8` (0..3)
 /// give a stable wire-compatible numeric mirror for TS/WIT twins.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub enum Severity {
     Info,
     Warning,
@@ -152,7 +183,7 @@ impl Severity {
 
 /// @emoji 🧭️ What the parser would have accepted at the failure point — the raw material for
 /// completions and for `TextError.expected`.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, Default, PartialEq)]
 pub struct ExpectedSet {
     pub tokens: Vec<String>,
     pub keywords: Vec<String>,
@@ -210,16 +241,13 @@ impl FromValue for ExpectedSet {
 
 /// @emoji 🩺️ A structured diagnostic anchored to a span, with an optional `ExpectedSet` for
 /// completions/fixes. Lowers into `TextError` at API boundaries that predate diagnostics.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq)]
 pub struct Diagnostic {
     pub code: FaultCode,
     pub severity: Severity,
     pub span: TextSpan,
     pub message: String,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub expected: Option<ExpectedSet>,
-    #[serde(default)]
     pub scope: FaultScope,
 }
 
@@ -291,8 +319,7 @@ impl FromValue for Diagnostic {
 
 //#region 🔖️Fault
 /// @emoji 🧭️ Which layer of the os stack produced a {@link Fault}.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum FaultOrigin {
     Edge,
     Renderer,
@@ -309,45 +336,32 @@ pub enum FaultOrigin {
 }
 
 /// @emoji 🎯️ Optional ids locating a fault/diagnostic to a plugin app surface.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq)]
 pub struct FaultScope {
-    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub plugin_id: Option<String>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub app_id: Option<String>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub instance_id: Option<String>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub module: Option<String>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub body_key: Option<String>,
 }
 
 /// @emoji 🔗️ One hop in a {@link Fault} cause chain.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq)]
 pub struct FaultCause {
     pub message: String,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub code: Option<FaultCode>,
 }
 
 /// @emoji 🧯️ Structured abort report crossing every os boundary.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq)]
 pub struct Fault {
     pub origin: FaultOrigin,
     pub code: FaultCode,
     pub severity: Severity,
     pub message: String,
-    #[serde(default)]
     pub scope: FaultScope,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub span: Option<TextSpan>,
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub causes: Vec<FaultCause>,
-    #[serde(default)]
     pub retryable: bool,
 }
 
@@ -599,12 +613,12 @@ impl FaultFrom for TextError {
 
 /// @emoji 📦️ JSON wire encoding for {@link Fault} crossing host/WIT boundaries.
 pub fn encode_fault_bytes(fault: &Fault) -> Vec<u8> {
-    serde_json::to_vec(fault).unwrap_or_else(|_| fault.message.as_bytes().to_vec())
+    serde_json::to_vec(&fault.to_value()).unwrap_or_else(|_| fault.message.as_bytes().to_vec())
 }
 
 /// @emoji 🌐️ Decodes a {@link Fault} from JSON wire bytes; falls back to an os-level message fault.
 pub fn decode_fault_bytes(bytes: &[u8]) -> Fault {
-    serde_json::from_slice(bytes).unwrap_or_else(|_| Fault::new(FaultOrigin::Os, "os.fault.decode", String::from_utf8_lossy(bytes)))
+    serde_json::from_slice::<DslValue>(bytes).ok().and_then(|value| Fault::from_value(value).ok()).unwrap_or_else(|| Fault::new(FaultOrigin::Os, "os.fault.decode", String::from_utf8_lossy(bytes)))
 }
 
 /// @emoji 🔁️ Maps an error type into {@link Fault} with a stable dotted code namespace.
@@ -634,7 +648,8 @@ macro_rules! fault_from_error {
 #[cfg(all(target_arch = "wasm32", not(target_env = "p2")))]
 /// @emoji 🌐️ Surfaces a structured {@link Fault} to JavaScript callers.
 pub fn fault_to_js(fault: Fault) -> wasm_bindgen::JsValue {
-    wasm_bindgen::JsValue::from_str(&serde_json::to_string(&fault).unwrap_or(fault.message))
+    let rendered = serde_json::to_string(&fault.to_value()).unwrap_or_else(|_| fault.message.clone());
+    wasm_bindgen::JsValue::from_str(&rendered)
 }
 
 #[cfg(all(target_arch = "wasm32", not(target_env = "p2")))]

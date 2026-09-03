@@ -939,7 +939,7 @@ impl Mutation<LowpolyTransient> for LowpolyTransientMutation {
     type Diff = LowpolyTransient;
 
     /// 🧷️ Provisional per-variant leaf metadata for this hand-written (non-derived) aggregate — one
-    /// entry for the sole `Snapshot` variant, mirroring `procedural2d`'s identical precedent for its
+    /// entry for the sole `Snapshot` variant, mirroring `generation2d`'s identical precedent for its
     /// own hand-written session/transient aggregate.
     const DESCRIPTORS: &'static [protocol::MutationLeafDescriptor] = &[
         protocol::MutationLeafDescriptor { schema_version: 1, owner: "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🖌️session/🖌️set-snapshot", semantic_kind: "set-snapshot", display_name: "Set Snapshot", emoji: "🖌️", aggregate_variant: "Snapshot", payload_schema: "🔣️.schema.json", text_opcode: None, binary_tag: None, invertibility: protocol::MutationInvertibility::ExplicitMutation, diff_participation: protocol::MutationDiffParticipation::Detect, outcome_classes: &[protocol::MutationOutcomeClass::Applied], composition: protocol::MutationComposition::Atomic, required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema] },
@@ -1083,7 +1083,7 @@ mod tests {
         assert_eq!(key, "gesture:transform");
         let value_a: serde_json::Value = serde_json::from_slice(&payload_a).expect("payload is valid json");
         assert_eq!(value_a["objectId"], serde_json::json!(projection.objects[0].id));
-        assert_ne!(value_a["patch"], serde_json::json!(LowpolyObjectPatch::default()), "the patch anchored to the drag-start snapshot must reflect the first tick");
+        assert_ne!(value_a["patch"], Into::<serde_json::Value>::into(dsl::ToValue::to_value(&LowpolyObjectPatch::default())), "the patch anchored to the drag-start snapshot must reflect the first tick");
 
         let tick_b = scratch.transform_selection(&projection, &config, "mesh", vec![], Transform::Translate(Vec3::new(0.25, 0.0, 0.0)), "translate");
         assert!(tick_b.artifact_mutations.is_empty());

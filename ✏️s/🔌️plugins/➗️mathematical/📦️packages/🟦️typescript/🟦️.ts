@@ -2,5 +2,5 @@
  * 26/08/17/CLEAN-ARTIFACT-STANDARD-SUBSET-MECHANISM). `🪓️decomposer` and the flat artifact-level
  * `🧬️schema`/`🚪️io` targets this file pointed at pre-migration never existed in the current tree
  * (confirmed: zero matching directories) — replaced with the real standard/subset-scoped paths. */
-export * as mathematical_schema from "../../🗿️artifacts/➗️mathematical/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🟦️.ts";
-export * as mathematical_io from "../../🗿️artifacts/➗️mathematical/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🟦️.ts";
+export * as equation_schema from "../../🗿️artifacts/➗️equation/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🟦️.ts";
+export * as equation_io from "../../🗿️artifacts/➗️equation/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🟦️.ts";

@@ -193,18 +193,16 @@ struct PlaybookOneItemPreparation<P, M> {
     closing: bool,
 }
 
-fn playbook_bounded_serialized_bytes<T: serde::Serialize>(value: &T) -> Result<usize, String> {
-    struct Counter(usize);
-    impl std::io::Write for Counter {
-        fn write(&mut self, bytes: &[u8]) -> std::io::Result<usize> {
-            self.0 = self.0.checked_add(bytes.len()).filter(|total| *total <= PLAYBOOK_STORE_MAXIMUM_BYTES).ok_or_else(|| std::io::Error::other("Playbook retained Store value exceeds its fixed envelope"))?;
-            Ok(bytes.len())
-        }
-        fn flush(&mut self) -> std::io::Result<()> { Ok(()) }
+// 🌉️ `protocol::json::to_json_string` (`pack`'s `ToValue`-keyed helper) has no streaming-writer
+// analog of `serde_json::to_writer` — it materializes the full JSON text before the length is
+// known. `PLAYBOOK_STORE_MAXIMUM_BYTES` is small (32KiB) so this is an accepted trade-off, not a
+// bounded/incremental check anymore.
+fn playbook_bounded_serialized_bytes<T: protocol::ToValue>(value: &T) -> Result<usize, String> {
+    let bytes = protocol::json::to_json_string(value).len();
+    if bytes > PLAYBOOK_STORE_MAXIMUM_BYTES {
+        return Err("Playbook retained Store value exceeds its fixed envelope".to_string());
     }
-    let mut counter = Counter(0);
-    serde_json::to_writer(&mut counter, value).map_err(|error| error.to_string())?;
-    Ok(counter.0)
+    Ok(bytes)
 }
 
 fn playbook_one_item_edit<M>(forward: M, inverse: Vec<M>, description: Option<String>, authority: &store::ArtifactStoreOneItemLiveAuthority) -> protocol::Edit<M> {
@@ -237,8 +235,8 @@ fn playbook_one_item_edit<M>(forward: M, inverse: Vec<M>, description: Option<St
 
 impl<P, M> store::ArtifactStoreOneItemPreparationFactory<P, M> for PlaybookOneItemPreparationFactory<P, M>
 where
-    P: Clone + serde::Serialize + Send + Sync + 'static,
-    M: protocol::Mutation<P> + serde::Serialize + Send + Sync + 'static,
+    P: Clone + protocol::ToValue + Send + Sync + 'static,
+    M: protocol::Mutation<P> + protocol::ToValue + Send + Sync + 'static,
     M::Diff: protocol::MutationDiff<P>,
 {
     fn preflight(&self, mutation: &M, description: Option<&str>, lane: store::HistoryLane) -> Result<store::ArtifactStoreOneItemFootprint, String> {
@@ -261,8 +259,8 @@ where
 
 impl<P, M> store::ArtifactStoreOneItemPreparation<P, M> for PlaybookOneItemPreparation<P, M>
 where
-    P: Clone + serde::Serialize + Send + Sync + 'static,
-    M: protocol::Mutation<P> + serde::Serialize + Send + 'static,
+    P: Clone + protocol::ToValue + Send + Sync + 'static,
+    M: protocol::Mutation<P> + protocol::ToValue + Send + 'static,
     M::Diff: protocol::MutationDiff<P>,
 {
     fn advance(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::ArtifactStoreOneItemPreparationStep, String> {
@@ -437,7 +435,7 @@ impl ArtifactEditor for PlaybookPlayApp {
         let MediaPayload::Structured { json, .. } = &media.payload else {
             return Err(MediaError::Payload(port.to_string(), "chapters:in importer only accepts a Structured payload".into()));
         };
-        let chapter: PlaybookChapterPayload = serde_json::from_str(json).map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?;
+        let chapter: PlaybookChapterPayload = protocol::json::from_json_str(json).map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?;
         let spec = doc.snapshot;
         let mut operations = Vec::new();
         if !spec.steps().iter().any(|step| step.id == PLAYBOOK_IMPORTED_STEP_ID) {
@@ -752,7 +750,7 @@ mod tests {
 
     fn chapter_media(text: &str, title: &str) -> Media {
         let payload = PlaybookChapterPayload { id: "jack".into(), title: title.into(), text: text.into(), language_id: "jack".into() };
-        Media { media_type: semio_framework_plugin::MediaType { class: MediaClass::Text, form: MediaForm::Document }, payload: MediaPayload::Structured { schema: "text.document".into(), json: serde_json::to_string(&payload).unwrap() } }
+        Media { media_type: semio_framework_plugin::MediaType { class: MediaClass::Text, form: MediaForm::Document }, payload: MediaPayload::Structured { schema: "text.document".into(), json: protocol::json::to_json_string(&payload) } }
     }
 
     #[semio_framework_async_macros::async_test]

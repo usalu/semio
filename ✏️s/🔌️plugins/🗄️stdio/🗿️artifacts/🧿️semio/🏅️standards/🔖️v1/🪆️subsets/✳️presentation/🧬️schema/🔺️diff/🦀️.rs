@@ -16,8 +16,8 @@
 //! This is honest per the recipe's weak/strong-entity split: from this subset's point of view
 //! `DocBlock` is a value struct it does not own the internals of, so it is never sub-diffed here.
 
-use crate::artifacts::semio::standards::v1::subsets::any::schema::geometry::SemioPoint2;
-use crate::artifacts::semio::standards::v1::subsets::any::schema::triples::{split_top_level, strip_brackets, IndexAdded, IndexModified, IndexedTripleDiff, NamedModified, NamedTripleDiff};
+use crate::artifacts::semio::standards::v1::subsets::base::schema::geometry::SemioPoint2;
+use crate::artifacts::semio::standards::v1::subsets::base::schema::triples::{split_top_level, strip_brackets, IndexAdded, IndexModified, IndexedTripleDiff, NamedModified, NamedTripleDiff};
 /// 🧱️ REUSE, don't reinvent — `document::DocBlock`'s own real, already-tested text codec
 /// (`ws-codec-document-report.md`), re-exported here so both this file's own leaf encoders AND
 /// the sibling `🧬️mutations`/`📸️snapshot` facets can import `{enc_block, dec_block}` from THIS
@@ -887,15 +887,15 @@ impl MutationDiff<SemioPresentationSnapshot> for SemioPresentationDiff {
     fn apply(&self, base: &SemioPresentationSnapshot) -> protocol::MutationApplyResult<SemioPresentationSnapshot> {
         let mut next = base.clone();
         if let Some(d) = &self.masters {
-            crate::artifacts::semio::standards::v1::subsets::any::schema::triples::validate_named_triple(&next.masters, d, |item| item.id.clone(), |item| item.id.clone(), ["masters"])?;
+            crate::artifacts::semio::standards::v1::subsets::base::schema::triples::validate_named_triple(&next.masters, d, |item| item.id.clone(), |item| item.id.clone(), ["masters"])?;
             apply_named(&mut next.masters, d, |m| m.id.clone(), apply_master);
         }
         if let Some(d) = &self.layouts {
-            crate::artifacts::semio::standards::v1::subsets::any::schema::triples::validate_named_triple(&next.layouts, d, |item| item.id.clone(), |item| item.id.clone(), ["layouts"])?;
+            crate::artifacts::semio::standards::v1::subsets::base::schema::triples::validate_named_triple(&next.layouts, d, |item| item.id.clone(), |item| item.id.clone(), ["layouts"])?;
             apply_named(&mut next.layouts, d, |l| l.id.clone(), apply_layout);
         }
         if let Some(d) = &self.slides {
-            crate::artifacts::semio::standards::v1::subsets::any::schema::triples::validate_indexed_triple(d, next.slides.len(), ["slides"])?;
+            crate::artifacts::semio::standards::v1::subsets::base::schema::triples::validate_indexed_triple(d, next.slides.len(), ["slides"])?;
             apply_indexed(&mut next.slides, d, apply_slide);
         }
         Ok(next)

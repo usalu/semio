@@ -9,7 +9,7 @@ pub fn register() {}
 
 pub fn serialize(snapshot: &LowpolySnapshot) -> Result<JsonSnapshot, store::TextError> {
     let _ = STDIO_JSON_DOCUMENT_SCHEMA;
-    let value = serde_json::to_value(snapshot).map_err(|e| store::TextError::new(e.to_string(), dsl::TextSpan::at(1, 1)))?;
+    let value: serde_json::Value = dsl::ToValue::to_value(snapshot).into();
     Ok(JsonSnapshot::from_value(value))
 }
 

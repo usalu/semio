@@ -11,7 +11,7 @@ comment none
 # shape field-for-field (`declaration`/`doctype`/`root`, same `Element`/`Text`/`Replace`
 # `SvgNodeDiff` tree) -- per Phase 1's explicit design decision svg declares its OWN diff types even
 # though it reuses xml's node model (`../🦀️.rs`'s own doc comment) -- so this grammar
-# restates `📰xml`'s own diff grammar's shape verbatim (not `use`d, cross-artifact `use` doesn't
+# restates `📰️xml`'s own diff grammar's shape verbatim (not `use`d, cross-artifact `use` doesn't
 # resolve at recognize time yet, `📖️grammar-recipe.md` §2.1), with only the `grammar`/`extension`
 # ids differing.
 #

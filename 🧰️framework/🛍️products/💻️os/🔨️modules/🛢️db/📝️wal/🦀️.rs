@@ -298,8 +298,8 @@ impl WalBytes {
         db_storage::db_io_prepare_platform(&self.pages)?.await
     }
 
-    pub fn hash(&self) -> [u8; 32] {
-        db_storage::db_io_hash_pages(&self.pages).0
+    pub async fn hash(&self) -> [u8; 32] {
+        db_storage::db_io_hash_pages(&self.pages).await.0
     }
 
     pub fn close_step(&mut self) -> Result<Option<usize>, DbError> {

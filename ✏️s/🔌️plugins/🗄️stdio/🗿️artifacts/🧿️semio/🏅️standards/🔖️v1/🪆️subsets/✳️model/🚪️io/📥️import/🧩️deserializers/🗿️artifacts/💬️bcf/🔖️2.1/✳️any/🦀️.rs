@@ -36,7 +36,7 @@
 
 use crate::artifacts::bcf::schema::snapshot::{BcfComponents, BcfTopic};
 use crate::artifacts::bcf::BcfSnapshot;
-use crate::artifacts::semio::standards::v1::subsets::any::schema::geometry::SemioTransform;
+use crate::artifacts::semio::standards::v1::subsets::base::schema::geometry::SemioTransform;
 use crate::artifacts::semio::standards::v1::subsets::model::schema::snapshot::{ElementClass, GeometryRef, ModelRelation, Property, PropertySet, PsetValue, RelationKind, SemioModelElement, SemioModelSnapshot, STDIO_SEMIOMODEL_DOCUMENT_SCHEMA};
 use semio_framework_plugin::{ArtifactDeserializer, Dialect, StandardId, SubsetId};
 

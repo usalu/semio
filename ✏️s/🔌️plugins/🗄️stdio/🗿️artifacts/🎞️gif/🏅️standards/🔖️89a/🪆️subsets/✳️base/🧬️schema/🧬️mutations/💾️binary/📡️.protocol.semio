@@ -25,7 +25,7 @@ start op
 # `repeat` primitives as they stand today (no dynamic per-field TAG dispatch keyed by a
 # runtime field-id, no symbol-table back-reference resolution) — the same
 # `txt-opbinary-record-body-wire-is-framework-generic` gap txt's own sibling protocol file
-# documents (`📄txt/…/🧬️mutations/💾️binary/📡️.protocol.semio`) and 87a's own sibling
+# documents (`📄️txt/…/🧬️mutations/💾️binary/📡️.protocol.semio`) and 87a's own sibling
 # protocol file, copied verbatim per its own "copy the shape" instruction. Modeled honestly:
 # `format`/`ordinal` are genuinely, individually byte-walked and validated; the remaining
 # record-body bytes are one opaque tail.

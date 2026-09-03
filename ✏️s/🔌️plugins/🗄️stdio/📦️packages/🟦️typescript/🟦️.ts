@@ -1,9 +1,9 @@
 /** 🗄️ Stdio plugin TypeScript facade. */
 
 export * as binary from "../../🗿️artifacts/💾️binary/🟦️.ts";
-export * as txt from "../../🗿️artifacts/📄txt/🟦️.ts";
+export * as txt from "../../🗿️artifacts/📄️txt/🟦️.ts";
 export * as json from "../../🗿️artifacts/🔣️json/🟦️.ts";
-export * as xml from "../../🗿️artifacts/📰xml/🟦️.ts";
+export * as xml from "../../🗿️artifacts/📰️xml/🟦️.ts";
 export * as csv from "../../🗿️artifacts/📊️csv/🟦️.ts";
 export * as md from "../../🗿️artifacts/📝️md/🟦️.ts";
 export * as deflate from "../../🗿️artifacts/🗜️deflate/🟦️.ts";

@@ -7,12 +7,12 @@
 //! rather than assuming one never occurs.
 
 use crate::artifacts::playbook::{PlaybookExpr, PlaybookStep};
-use serde::{Deserialize, Serialize};
+use semio_framework_value_derive::{FromValue, ToValue};
 use std::collections::{BTreeMap, BTreeSet, HashMap, HashSet, VecDeque};
 
 //#region 🔖️Topology
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct PlaybookTopology {
     pub topo_order: Vec<String>,
     pub depth: BTreeMap<String, u32>,

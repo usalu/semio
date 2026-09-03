@@ -10,8 +10,17 @@ use semio_framework_plugin::{
     build_world_3d_scene, world3d_mesh_id_from_url, world3d_meshes_json_from_kinds_and_urls, world3d_scene, world3d_selection_json, LocalizedLabel, SurfaceKind, UiNode, WindowEngagement, WindowEngagementInput, WindowEngagementPossible,
     WindowEngagementStatus, WindowKindDefinition, WindowMeasure, WindowOptions, World3dScene, WorldSunConfig,
 };
-use serde_json::{json, Value};
+use dsl::json;
+use dsl::os_pack::json::{parse, Value};
 use std::collections::HashSet;
+
+fn vec3(v: [f64; 3]) -> Value {
+    Value::from(v.iter().map(|c| Value::from(*c)).collect::<Vec<Value>>())
+}
+
+fn vec4(v: [f64; 4]) -> Value {
+    Value::from(v.iter().map(|c| Value::from(*c)).collect::<Vec<Value>>())
+}
 
 //#region 🔖️Constants
 pub const SHOOTING_PLAY_WINDOW_SCENE: &str = "shooting-scene";
@@ -82,7 +91,10 @@ pub async fn engagement(snapshot: &ShootingSnapshot, config: &ShootingConfig, la
                     id: format!("shooting.camera.{}", saved.id),
                     label: saved.label.clone(),
                     detail: Some(labels.load_camera.into()),
-                    action: Some(crate::editor::shooting::shooting_action("loadSavedCamera", Some(json!({ "id": saved.id })))),
+                    action: Some(crate::editor::shooting::shooting_action(
+                        "loadSavedCamera",
+                        Some(crate::editor::shooting::ui_value_map([("id", crate::editor::shooting::ui_value_text(&saved.id).expect("saved camera id fits ui text capacity"))]).expect("single-entry args fit ui map capacity")),
+                    )),
                 })
                 .collect(),
         ),
@@ -93,14 +105,14 @@ pub async fn engagement(snapshot: &ShootingSnapshot, config: &ShootingConfig, la
 //#region 🔖️Render
 async fn camera_json(camera: &crate::artifacts::shooting::ShootingCamera) -> String {
     let mut value = json!({
-        "position": camera.position,
-        "target": camera.target,
+        "position": vec3(camera.position),
+        "target": vec3(camera.target),
         "fov": camera.fov,
         "zoom": camera.zoom,
         "projection": camera.projection.clone().unwrap_or_else(|| "perspective".into()),
     });
     if let (Some(object), Some(up)) = (value.as_object_mut(), camera.up) {
-        object.insert("up".into(), json!(up));
+        object.insert("up", vec3(up));
     }
     value.to_string()
 }
@@ -139,23 +151,23 @@ async fn world_instances_json(snapshot: &ShootingSnapshot) -> String {
             let hovered = false;
             let mesh_id = resolve_asset_mesh_url(asset).map_or_else(|| SHOOTING_FALLBACK_MESH_KIND.into(), |url| world3d_mesh_id_from_url(&url));
             json!({
-                "id": asset.id,
+                "id": asset.id.as_str(),
                 "meshId": mesh_id,
-                "position": [
+                "position": vec3([
                     asset.origin.first().copied().unwrap_or(0.0),
                     asset.origin.get(1).copied().unwrap_or(0.0),
                     asset.origin.get(2).copied().unwrap_or(0.0),
-                ],
-                "rotation": asset.orientation.unwrap_or([0.0, 0.0, 0.0, 1.0]),
-                "scale": shooting_asset_scale(asset),
-                "label": asset.name,
+                ]),
+                "rotation": vec4(asset.orientation.unwrap_or([0.0, 0.0, 0.0, 1.0])),
+                "scale": vec3(shooting_asset_scale(asset)),
+                "label": asset.name.as_str(),
                 "color": if selected { "#9aa0ab" } else { "#6b7280" },
                 "selected": selected,
                 "hovered": hovered,
             })
         })
         .collect();
-    serde_json::to_string(&instances).unwrap_or_else(|_| "[]".into())
+    Value::from(instances).to_string()
 }
 
 async fn world_meshes_json(snapshot: &ShootingSnapshot) -> String {
@@ -169,11 +181,11 @@ async fn world_meshes_json(snapshot: &ShootingSnapshot) -> String {
 /// window kind (client-side hit-testing against the mesh instance ids already in this payload) — it no
 /// longer needs `selectionMethod`/`selectionMode`/`targets` from this payload either.
 async fn world_selection_json(snapshot: &ShootingSnapshot, cfg: &ShootingConfig) -> String {
-    let mut value: Value = serde_json::from_str(&world3d_selection_json("pick", &[], None)).unwrap_or_else(|_| json!({}));
+    let mut value: Value = parse(&world3d_selection_json("pick", &[], None)).unwrap_or_else(|_| json!({}));
     if let Some(object) = value.as_object_mut() {
-        object.insert("transformMode".into(), json!(cfg.active_utility_id));
-        object.insert("activeObjectId".into(), json!(snapshot.active_asset_id));
-        object.insert("gumballActive".into(), json!(false));
+        object.insert("transformMode", json!(cfg.active_utility_id.as_str()));
+        object.insert("activeObjectId", json!(snapshot.active_asset_id.as_str()));
+        object.insert("gumballActive", json!(false));
     }
     value.to_string()
 }
@@ -181,21 +193,21 @@ async fn world_selection_json(snapshot: &ShootingSnapshot, cfg: &ShootingConfig)
 async fn shooting_environment_json(snapshot: &ShootingSnapshot) -> String {
     let scene = &snapshot.scene;
     let mut value = json!({
-        "ambient": { "intensity": scene.ambient.intensity, "color": scene.ambient.color },
-        "sun": { "enabled": scene.sun.enabled, "azimuth": scene.sun.azimuth, "elevation": scene.sun.elevation, "intensity": scene.sun.intensity, "color": scene.sun.color },
+        "ambient": { "intensity": scene.ambient.intensity, "color": scene.ambient.color.as_str() },
+        "sun": { "enabled": scene.sun.enabled, "azimuth": scene.sun.azimuth, "elevation": scene.sun.elevation, "intensity": scene.sun.intensity, "color": scene.sun.color.as_str() },
         "shadow": { "enabled": scene.shadow.enabled, "opacity": scene.shadow.opacity, "softness": scene.shadow.softness },
-        "material": { "color": scene.material.color, "metalness": scene.material.metalness, "roughness": scene.material.roughness, "emissive": scene.material.emissive, "emissiveIntensity": scene.material.emissive_intensity },
+        "material": { "color": scene.material.color.as_str(), "metalness": scene.material.metalness, "roughness": scene.material.roughness, "emissive": scene.material.emissive.as_str(), "emissiveIntensity": scene.material.emissive_intensity },
     });
     if let Some(object) = value.as_object_mut() {
         if !is_transparent_shooting_background(&scene.background) {
-            object.insert("background".into(), json!(scene.background));
+            object.insert("background", json!(scene.background.as_str()));
         }
     }
     value.to_string()
 }
 
 async fn shooting_frame_json(shot: &ShootingShot) -> String {
-    json!({ "width": shot.width, "height": shot.height, "shape": shot.shape, "badge": true }).to_string()
+    json!({ "width": shot.width, "height": shot.height, "shape": shot.shape.as_str(), "badge": true }).to_string()
 }
 
 async fn shooting_fit_json(cfg: &ShootingConfig) -> String {
@@ -230,16 +242,16 @@ mod tests {
         let node = app.render(BODY_SCENE, None, &ViewModel::default()).expect("render");
         let json = serde_json::to_string(&node).unwrap();
         assert!(json.contains("world-3d"));
-        let payload: Value = serde_json::from_str(&json).unwrap();
-        let environment: Value = serde_json::from_str(payload["world3d"]["environmentJson"].as_str().unwrap()).unwrap();
+        let payload: Value = parse(&json).unwrap();
+        let environment: Value = parse(payload["world3d"]["environmentJson"].as_str().unwrap()).unwrap();
         assert_eq!(environment["sun"]["azimuth"], json!(45.0));
         assert_eq!(environment["material"]["roughness"], json!(1.0));
-        let frame: Value = serde_json::from_str(payload["world3d"]["frameJson"].as_str().unwrap()).unwrap();
+        let frame: Value = parse(payload["world3d"]["frameJson"].as_str().unwrap()).unwrap();
         assert_eq!(frame["width"], json!(256));
         assert_eq!(frame["shape"], json!("rectangle"));
-        let fit: Value = serde_json::from_str(payload["world3d"]["fitJson"].as_str().unwrap()).unwrap();
+        let fit: Value = parse(payload["world3d"]["fitJson"].as_str().unwrap()).unwrap();
         assert_eq!(fit["enabled"], json!(true));
-        let camera: Value = serde_json::from_str(payload["world3d"]["cameraJson"].as_str().unwrap()).unwrap();
+        let camera: Value = parse(payload["world3d"]["cameraJson"].as_str().unwrap()).unwrap();
         assert_eq!(camera["zoom"], json!(1.0));
         assert_eq!(camera["projection"], json!("perspective"));
     }

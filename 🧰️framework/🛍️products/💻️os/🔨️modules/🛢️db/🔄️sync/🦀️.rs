@@ -27,6 +27,7 @@
 //! is fully real: `ResumeToken::encode` is public and exercised end to end.
 use crate::db_durability::Frontier;
 use crate::*;
+use db_storage::SnapshotStorage;
 /// @emoji ✉️ This crate's own convention for `db_wal::WalRecord::Command`'s payload bytes:
 /// `protocol_causal::encode_envelope`'s binary record — the same primitive codec `protocol_wire`
 /// uses for `ClientFrame::Commands`/`ServerFrame::Commands`, so a WAL command's bytes are
@@ -142,7 +143,7 @@ pub async fn replay_sync_state(storage: &impl db_storage::WalStorage, document: 
         match &mut record {
             db_wal::WalRecord::Command(bytes) => {
                 commands.push(decode_retained_command_envelope(bytes, &mut decode_control).await?);
-                chain.update(&bytes.hash());
+                chain.update(&bytes.hash().await);
             }
             db_wal::WalRecord::TxCommit { .. } => commit_seq += 1,
             // 🎯️ Overwritten on every occurrence rather than max()'d: `WalRecord`s replay in
@@ -712,7 +713,7 @@ async fn database_sync_hello_opportunity(cancelled: &std::sync::atomic::AtomicBo
 
 fn database_sync_hello_control(cancelled: &std::sync::atomic::AtomicBool, expired: &std::sync::atomic::AtomicBool) -> Result<(), DbError> {
     if expired.load(std::sync::atomic::Ordering::Acquire) {
-        return Err(DbError::Timeout("database sync hello deadline"));
+        return Err(DbError::Timeout("database sync hello deadline".to_string()));
     }
     if cancelled.load(std::sync::atomic::Ordering::Acquire) {
         return Err(DbError::Closed);
@@ -981,7 +982,7 @@ async fn replay_sync_state_retained(
                     progress.store(DatabaseSyncHelloProgress::Decode as u8, std::sync::atomic::Ordering::Release);
                     let envelope = database_sync_hello_decode_envelope(bytes, &mut decode_control, ledger, &cancelled, &expired).await?;
                     commands.push(envelope);
-                    chain.update(&bytes.hash());
+                    chain.update(&bytes.hash().await);
                 }
                 db_wal::WalRecord::TxCommit { .. } => commit_seq = commit_seq.checked_add(1).ok_or(DbError::LimitExceeded("database sync hello commit sequence"))?,
                 db_wal::WalRecord::SnapshotPub { frontier, .. } => floor_head_seq = frontier.head_seq,
@@ -1046,7 +1047,7 @@ impl DatabaseSyncHelloGrant {
         database_sync_hello_control(cancelled, expired)?;
         self.checks = self.checks.saturating_add(1);
         if self.forced_expiry_check != 0 && self.checks >= self.forced_expiry_check || std::time::Instant::now() >= self.deadline {
-            return Err(DbError::Timeout("database sync hello 8 ms grant"));
+            return Err(DbError::Timeout("database sync hello 8 ms grant".to_string()));
         }
         Ok(())
     }
@@ -2790,7 +2791,8 @@ mod tests {
         seed_wal(&storage, &document, 5).await;
         let floor_frontier = Frontier { document: document.clone(), head_seq: 4, commit_seq: 4, chain_hash: [3u8; 32], epoch: 0 };
         publish_snapshot_marker(&storage, &document, 7, floor_frontier).await;
-        db_actor::block_on(db_storage::SnapshotStorage::write_generation(&storage, &document, 7, b"snapshot-bytes")).unwrap();
+        let pages = db_storage::db_io_copy_pages(b"snapshot-bytes").unwrap().await.unwrap();
+        db_storage::SnapshotStorage::write_generation(&storage, &document, 7, pages).await.unwrap();
         let state = db_actor::block_on(replay_sync_state(&storage, document.clone())).unwrap();
 
         let stale_replica = Frontier { document, head_seq: 0, commit_seq: 0, chain_hash: [0u8; 32], epoch: 0 };
@@ -2876,7 +2878,8 @@ mod tests {
         let floor_frontier = Frontier { document: document.clone(), head_seq: 4, commit_seq: 4, chain_hash: [1u8; 32], epoch: 0 };
         publish_snapshot_marker(&storage, &document, 9, floor_frontier).await;
         let big_snapshot = vec![7u8; 10];
-        db_actor::block_on(db_storage::SnapshotStorage::write_generation(&storage, &document, 9, &big_snapshot)).unwrap();
+        let pages = db_storage::db_io_copy_pages(&big_snapshot).unwrap().await.unwrap();
+        db_storage::SnapshotStorage::write_generation(&storage, &document, 9, pages).await.unwrap();
         let storage = std::sync::Arc::new(db_storage::DbBackend::Memory(storage));
 
         let stale_hello_frontier = protocol::RuntimeFrontierSummary { document_id: protocol::ArtifactId(document.0.clone()), head_edit_ordinal: 0, head_edit_id: String::new(), last_commit_seq: 0, chain_hash: [0u8; 32] };
@@ -2943,7 +2946,8 @@ mod tests {
                 }
             }),
         )
-        .unwrap();
+        .ok()
+        .expect("sync hello blocker admission");
         while !entered.load(std::sync::atomic::Ordering::Acquire) {
             std::thread::yield_now();
         }
@@ -3173,7 +3177,7 @@ mod tests {
         let mut follow_up = DatabaseSyncHelloFollowUp::Snapshot { pages, chunk_bytes: DATABASE_SYNC_HELLO_MAX_BYTES, offset: 0, page: 0, page_offset: 0, seq: 0, chunk: None, done: false };
         let mut ledger = DatabaseSyncHelloBackingLedger::default();
         let mut before_copy = DatabaseSyncHelloGrant::expiring_at(3);
-        assert!(matches!(follow_up.drive_one_with_grant(&mut ledger, &cancelled, &expired, &mut before_copy), Err(DbError::Timeout("database sync hello 8 ms grant"))));
+        assert!(matches!(follow_up.drive_one_with_grant(&mut ledger, &cancelled, &expired, &mut before_copy), Err(DbError::Timeout(ref message)) if message == "database sync hello 8 ms grant"));
         assert!(matches!(&follow_up, DatabaseSyncHelloFollowUp::Snapshot { chunk: Some(chunk), offset: 0, seq: 0, .. } if chunk.is_empty() && chunk.backing_bytes() == DATABASE_SYNC_HELLO_FRAME_UNIT_BYTES));
         assert_eq!(ledger.items, 1);
         assert!(ledger.bytes <= DATABASE_SYNC_HELLO_FRAME_UNIT_BYTES);
@@ -3185,7 +3189,7 @@ mod tests {
         let mut follow_up = DatabaseSyncHelloFollowUp::Snapshot { pages, chunk_bytes: DATABASE_SYNC_HELLO_MAX_BYTES, offset: 0, page: 0, page_offset: 0, seq: 0, chunk: None, done: false };
         let mut ledger = DatabaseSyncHelloBackingLedger::default();
         let mut before_publication = DatabaseSyncHelloGrant::expiring_at(5);
-        assert!(matches!(follow_up.drive_one_with_grant(&mut ledger, &cancelled, &expired, &mut before_publication), Err(DbError::Timeout("database sync hello 8 ms grant"))));
+        assert!(matches!(follow_up.drive_one_with_grant(&mut ledger, &cancelled, &expired, &mut before_publication), Err(DbError::Timeout(ref message)) if message == "database sync hello 8 ms grant"));
         assert!(matches!(&follow_up, DatabaseSyncHelloFollowUp::Snapshot { chunk: Some(chunk), offset, seq: 0, .. } if chunk.len() == DATABASE_SYNC_HELLO_FRAME_UNIT_BYTES && *offset == DATABASE_SYNC_HELLO_FRAME_UNIT_BYTES));
         assert_eq!(ledger.items, 1);
         assert!(ledger.bytes <= DATABASE_SYNC_HELLO_FRAME_UNIT_BYTES);
@@ -3194,7 +3198,7 @@ mod tests {
         assert!(follow_up.terminal_is_empty() && ledger.terminal_is_empty());
 
         let independently_expired = std::sync::atomic::AtomicBool::new(true);
-        assert!(matches!(database_sync_hello_control(&cancelled, &independently_expired), Err(DbError::Timeout("database sync hello deadline"))));
+        assert!(matches!(database_sync_hello_control(&cancelled, &independently_expired), Err(DbError::Timeout(ref message)) if message == "database sync hello deadline"));
         assert_eq!(document.0, "p1z-grant-deadline");
     }
 
@@ -3349,7 +3353,7 @@ mod tests {
         drop(future);
         assert!(state.expired.load(std::sync::atomic::Ordering::Acquire));
         assert!(state.cancelled.load(std::sync::atomic::Ordering::Acquire));
-        assert!(matches!(database_sync_hello_control(&state.cancelled, &state.expired), Err(DbError::Timeout("database sync hello deadline"))));
+        assert!(matches!(database_sync_hello_control(&state.cancelled, &state.expired), Err(DbError::Timeout(ref message)) if message == "database sync hello deadline"));
         assert!(state.admission.lock().unwrap_or_else(std::sync::PoisonError::into_inner).is_some());
         assert!(database_sync_hello_registry().lock().unwrap_or_else(std::sync::PoisonError::into_inner)[state.slot].is_some());
         held.store(false, std::sync::atomic::Ordering::Release);

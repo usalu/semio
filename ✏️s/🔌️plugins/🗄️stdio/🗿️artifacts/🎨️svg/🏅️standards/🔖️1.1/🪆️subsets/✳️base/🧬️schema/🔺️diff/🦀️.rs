@@ -3,7 +3,7 @@
 //! the recursive `SvgNodeDiff` tree, itself shaped like the `XmlNode` it targets
 //! (`XmlNode::Element` <-> `SvgElementDiff`, `XmlNode::Text` <-> `Text{text}`, everything else --
 //! CData/Comment/ProcessingInstruction, plus any node-KIND change -- via the `Replace` fallback).
-//! Builds on the xml/svg node-diff pattern originated by `📰xml`'s own `XmlDiff`
+//! Builds on the xml/svg node-diff pattern originated by `📰️xml`'s own `XmlDiff`
 //! (`.🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️10/ARTIFACT-SYSTEM-OVERHAUL-REAL-CODECS-RUNTIME-REUSE-EVOLUTION/
 //! 🧬️schema-design.md`) but declares its OWN diff types (per the spec-mandated-reuse rule: svg
 //! embeds xml's *node* model, never xml's *diff* model).
@@ -821,9 +821,9 @@ pub(crate) fn dec_prolog(s: &str) -> Result<Vec<XmlNode>, String> {
 /// 🧪️ P2-FG3: real LEB128-varint-framed binary primitives (length-prefixed bytes/utf8) backing
 /// the upgraded `DiffCodec` frame below (and, via re-export, `../🧬️mutations/🦀️.rs`'s own
 /// upgraded `OpBinary`) — reuses `store::pack_rt::write_varint_u64`/`store::ByteReader` rather than
-/// reinventing varint encode/decode, same shape `📰xml`'s own sibling `XmlDiff` codec uses (svg's
+/// reinventing varint encode/decode, same shape `📰️xml`'s own sibling `XmlDiff` codec uses (svg's
 /// copies stay `pub(crate)` to this artifact's own crate-visibility scope, not reachable from
-/// `📰xml`, matching that file's own established duplication convention).
+/// `📰️xml`, matching that file's own established duplication convention).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn write_bytes_lp(out: &mut Vec<u8>, bytes: &[u8]) {
     store::pack_rt::write_varint_u64(out, bytes.len() as u64);
@@ -1022,7 +1022,7 @@ pub(crate) fn dec_xml_node(s: &str) -> Result<XmlNode, String> {
 /// that many recursively-encoded elements for `Element`'s attrs/children -- genuinely recursive,
 /// not text-as-bytes). Backs the upgraded `DiffCodec` frame below and, via `../🧬️mutations/
 /// 🦀️.rs`'s own `pub(crate)` re-export, the upgraded `OpBinary` frame (same intra-artifact
-/// reuse convention `📰xml`'s own sibling module already establishes).
+/// reuse convention `📰️xml`'s own sibling module already establishes).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn enc_attr_bin(a: &XmlAttr, out: &mut Vec<u8>) {
     write_str_lp(out, &a.name);

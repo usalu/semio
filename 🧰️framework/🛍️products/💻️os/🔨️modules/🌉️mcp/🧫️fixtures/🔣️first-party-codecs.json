@@ -1,0 +1,21 @@
+{
+  "catalog": {
+    "capabilityId": "cad.editor.translateSelection",
+    "properties": {
+      "objectIds": { "type": "array", "items": { "type": "string" } },
+      "dx": { "type": "number", "default": 0.0 },
+      "dy": { "type": "number", "default": 0.0 },
+      "dz": { "type": "number", "default": 0.0 }
+    }
+  },
+  "guestFault": {
+    "wire": {
+      "code": "mutation.fixture-rejected",
+      "message": "fixture rejection"
+    },
+    "expected": {
+      "code": "mutation.fixture-rejected",
+      "message": "fixture rejection"
+    }
+  }
+}

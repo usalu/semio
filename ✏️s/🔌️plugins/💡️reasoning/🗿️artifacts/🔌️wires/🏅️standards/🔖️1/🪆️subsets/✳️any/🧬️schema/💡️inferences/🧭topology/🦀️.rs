@@ -6,7 +6,6 @@
 //! matching how the artifact's own tests already probe `board_fixture` (`empty_snapshot_has_empty_fixtures`).
 
 use dsl::DslValue;
-use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, BTreeSet};
 
 //#region 🔖️Topology
@@ -14,8 +13,8 @@ use std::collections::{BTreeMap, BTreeSet};
 /// caching: recomputing a spanning-forest pass over the board's node/edge graph on every read is
 /// cheap at pilot scale, and an undirected mindmap board has no natural per-entity
 /// dependency-hash boundary the way puzzle3d's flatten chain does).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct WiresTopology {
     pub node_count: u32,
     pub edge_count: u32,

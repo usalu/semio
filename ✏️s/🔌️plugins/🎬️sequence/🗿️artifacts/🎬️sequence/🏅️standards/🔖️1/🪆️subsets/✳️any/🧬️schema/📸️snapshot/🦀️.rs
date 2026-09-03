@@ -2,7 +2,6 @@
 
 use crate::artifacts::sequence::{require_sequence_working_scene, sequence_content_child_with_owner, SequenceContentChild, SequenceEdge, SequenceStep, SEQUENCE_DOCUMENT_SCHEMA};
 use schema::ArtifactSchema;
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️Snapshot
 /// 📸️ Persisted sequence document snapshot. Ticket `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM`
@@ -10,8 +9,10 @@ use serde::{Deserialize, Serialize};
 /// fields are replaced by a fixed composed `s.stdio.semio.flow` CHILD slot — the sequence plugin no
 /// longer defines its own step-DAG content model, it composes stdio's `flow` subset instead.
 /// `#[child(...)]` drives `#[derive(ArtifactSchema)]`'s slot-table emission; never hand-written.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ArtifactSchema)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, ArtifactSchema)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[artifact_schema(id = "s.sequence.sequence")]
 pub struct SequenceSnapshot {
     #[state(artifact)]
@@ -61,8 +62,10 @@ pub fn default_snapshot() -> SequenceSnapshot {
 /// analog of `flow::FlowFixture`: the live editing representation `SequenceHost` and the WASM
 /// bridge operate on, and the JSON wire contract `SequenceHost::to_json`/`load_json` still speak.
 /// Bridges to/from the composed-child `SequenceSnapshot` via `to_fixture`/`from_fixture` below.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct SequenceFixture {
     pub schema: String,
     pub steps: Vec<SequenceStep>,

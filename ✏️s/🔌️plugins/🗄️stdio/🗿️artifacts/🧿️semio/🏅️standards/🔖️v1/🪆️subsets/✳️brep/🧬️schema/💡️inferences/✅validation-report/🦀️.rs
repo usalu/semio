@@ -246,7 +246,7 @@ pub fn validate_body(body: &Body) -> Vec<ValidationIssue> {
 //#region 🧪️Tests
 mod tests {
     use super::*;
-    use crate::artifacts::semio::standards::v1::subsets::any::schema::geometry::SemioPoint3;
+    use crate::artifacts::semio::standards::v1::subsets::base::schema::geometry::SemioPoint3;
     use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::{BrepCurve, BrepEdge, BrepFace, BrepLoop, BrepLoopEdge, BrepShell, BrepShellFace, BrepSolid, BrepSolidShell, BrepSurface, BrepVertex};
     use store::{InferenceCache, InferenceCacheConfig};
 

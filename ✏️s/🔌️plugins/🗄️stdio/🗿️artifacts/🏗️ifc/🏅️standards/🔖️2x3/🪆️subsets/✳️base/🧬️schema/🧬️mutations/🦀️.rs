@@ -2,11 +2,11 @@
 //! per-instance vocabulary (`UpsertInstance`/`RemoveInstance`/`SetHeader`) matching `Ifc2x3Diff`'s
 //! own id-keyed shape.
 
-use crate::artifacts::ifc::standards::v2x3::subsets::any::schema::diff::{
+use crate::artifacts::ifc::standards::v2x3::subsets::base::schema::diff::{
     dec_edm_preamble_bin, dec_instance_list, dec_optional_edm_preamble, dec_part21_header, dec_part21_header_bin, dec_part21_instance, dec_part21_instance_bin, dec_str, enc_edm_preamble_bin, enc_instance_list_into, enc_optional_edm_preamble,
     enc_part21_header, enc_part21_header_bin, enc_part21_instance, enc_part21_instance_bin, enc_str, read_str_bin, split_top_level, strip_brackets, write_str_bin, Ifc2x3Diff,
 };
-use crate::artifacts::ifc::standards::v2x3::subsets::any::schema::snapshot::Ifc2x3Snapshot;
+use crate::artifacts::ifc::standards::v2x3::subsets::base::schema::snapshot::Ifc2x3Snapshot;
 #[cfg(test)]
 use crate::artifacts::step::engine::part21::Part21Value;
 use crate::artifacts::step::engine::part21::{Part21Document, Part21Header, Part21Instance};
@@ -66,7 +66,7 @@ pub(crate) fn agg_diff(this: &Ifc2x3Mutation, base: &Ifc2x3Snapshot) -> protocol
     let mut next = base.clone();
     match this {
         Ifc2x3Mutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot }) => {
-            crate::artifacts::ifc::standards::v2x3::subsets::any::schema::snapshot::validate_ifc2x3_snapshot(snapshot).expect("IFC2X3 SetSnapshot must carry a valid logical model");
+            crate::artifacts::ifc::standards::v2x3::subsets::base::schema::snapshot::validate_ifc2x3_snapshot(snapshot).expect("IFC2X3 SetSnapshot must carry a valid logical model");
             return protocol::MutationOutcome::new(Ifc2x3Diff::between(base, snapshot));
         }
         Ifc2x3Mutation::UpsertInstance(upsert_instance::UpsertInstance { instance }) => match next.document.instances.iter_mut().find(|candidate| candidate.id == instance.id) {

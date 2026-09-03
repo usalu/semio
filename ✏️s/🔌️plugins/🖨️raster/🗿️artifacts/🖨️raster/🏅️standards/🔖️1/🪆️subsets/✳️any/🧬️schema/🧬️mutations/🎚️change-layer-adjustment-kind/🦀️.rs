@@ -3,17 +3,15 @@
 //! `Pixel`/`Group` layer is a graceful no-op.
 
 pub mod mutation {
-use serde::{Deserialize, Serialize};
 use crate::artifacts::raster::diff::{diff_patch_layer, RasterDiff};
 use crate::artifacts::raster::mutations::RasterMutation;
 use crate::artifacts::raster::schema::find_layer;
 use crate::artifacts::raster::{RasterLayerNode, RasterLayerPatch, RasterSnapshot};
 
 //#region 🔖️ChangeLayerAdjustmentKind
-#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::MutationLeaf, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
 #[value(rename_all = "camelCase")]
-#[serde(rename_all = "camelCase")]
 pub struct ChangeLayerAdjustmentKind {
     pub layer_id: String,
     pub new_adjustment_kind: String,

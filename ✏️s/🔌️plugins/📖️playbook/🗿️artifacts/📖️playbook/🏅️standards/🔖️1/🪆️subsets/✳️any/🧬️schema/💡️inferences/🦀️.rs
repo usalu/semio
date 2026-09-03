@@ -7,15 +7,15 @@
 use crate::artifacts::playbook::PlaybookSnapshot;
 use schema::ArtifactSchema;
 use semio_framework_plugin::ArtifactInferrer;
-use serde::{Deserialize, Serialize};
+use semio_framework_value_derive::{FromValue, ToValue};
 
 use super::topology::{compute_playbook_topology, PlaybookTopology};
 
 //#region 🔖️Inference
 /// 💡️ Everything inferable from a playbook snapshot. One field per named inference under
 /// `💡️inferences/` (currently: `topology`, backed by the `🧭topology/` slug dir).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ArtifactSchema)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, ArtifactSchema)]
+#[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.playbook.playbook.inference")]
 pub struct PlaybookInference {
     #[derived]

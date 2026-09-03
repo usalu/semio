@@ -7,10 +7,9 @@ use crate::artifacts::playground::standards::v1::subsets::any::schema::mutations
 use crate::artifacts::playground::standards::v1::subsets::any::schema::mutations::PlaygroundMutation;
 use crate::artifacts::playground::standards::v1::subsets::any::schema::snapshot::PlaygroundSnapshot;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, NoConfig, NoConfigMutation};
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️Payload
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
 #[dsl(keyword = "change-schema")]
 pub struct ChangeSchema {
     pub new_schema: String,

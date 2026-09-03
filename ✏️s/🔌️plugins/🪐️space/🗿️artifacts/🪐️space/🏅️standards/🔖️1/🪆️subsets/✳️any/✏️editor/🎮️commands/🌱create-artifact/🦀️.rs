@@ -41,7 +41,7 @@ pub fn handle(payload: &CreateArtifact, doc: &ArtifactView<'_, SSpaceSnapshot>, 
         updated_by: payload.actor.clone(),
     };
     let artifact_ref = format!("{}@{}/{}", known.dialect_artifact_kind, known.standard, known.subset);
-    let relay = Effect::ReplayShellCommand { action_id: "os.open-artifact".into(), args: Some(pack::json_to_dsl_value(&pack::json!({ "artifactRef": artifact_ref, "role": "editor", "documentId": id, "spaceId": doc.snapshot.space_id.clone() }))) };
+    let relay = Effect::ReplayShellCommand { action_id: "os.open-artifact".into(), args: Some(pack::json_to_dsl_value(&pack::json!({ "artifactRef": artifact_ref, "role": "editor", "documentId": id, "spaceId": doc.snapshot.space_id.clone(), "schema": known.schema }))) };
     Ok(Emit { artifact_mutations: vec![create_artifact(row)], effects: vec![relay], ..Default::default() })
 }
 
@@ -68,6 +68,7 @@ mod tests {
                 let args = pack::json_from_dsl_value(&args.clone().expect("args"));
                 assert_eq!(args.get("documentId").and_then(|v| v.as_str()), Some(row.id.as_str()));
                 assert_eq!(args.get("spaceId").and_then(|v| v.as_str()), Some(""));
+                assert_eq!(args.get("schema").and_then(|v| v.as_str()), Some("s.draw.draw"));
             }
             other => panic!("expected ReplayShellCommand, got {other:?}"),
         }

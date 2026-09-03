@@ -1,7 +1,7 @@
 //! 🧰️ `set-active` command.
 
 use crate::editor::puzzle5d::{Puzzle5dActionCtx, PUZZLE5D_PLAY_WINDOWS};
-use serde_json::Value;
+use dsl::os_pack::json::Value;
 
 /// 🧰️ B1: this Command IS the utility switch now (was host-applied ambient
 /// `view_state.active_utility_id`/`active_utility_by_window_id` — the host no longer owns that state,

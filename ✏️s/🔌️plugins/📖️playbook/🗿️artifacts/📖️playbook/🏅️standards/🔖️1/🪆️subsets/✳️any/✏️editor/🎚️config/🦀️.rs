@@ -10,19 +10,19 @@
 //! longer carries any selection.
 
 use protocol::Mutation;
-use serde::{Deserialize, Serialize};
+use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️Config
 /// 🧮️ `PlaybookPlayApp::Config` — the pure-trait `ArtifactEditor::Config` for the playbook app.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslArtifact)]
-#[serde(rename_all = "camelCase", default)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslArtifact)]
+#[value(rename_all = "camelCase", default)]
 #[dsl(extension = "playbookcfg")]
 #[dsl(layout = "lines")]
 pub struct PlaybookConfig {
     /// 🗣️ BCP-47 locale tag — was read off `view_state.locale`.
     pub locale: String,
     /// 🧩️ Host-pushed `ProgramContributionEntry[]` JSON for `playbook.blockKind` hot-swap installs.
-    #[serde(default = "default_contributions_json")]
+    #[value(default = "default_contributions_json")]
     pub contributions_json: String,
 }
 
@@ -90,7 +90,7 @@ store::impl_whole_record_config!(PlaybookConfig);
 /// (see either's doc comment for the whole-config-snapshot inverse rationale). Lives here, not in the
 /// kernel `playbook` crate, since `PlaybookConfig` is this app's own config artifact, not shared domain
 /// state.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslOps)]
 pub enum PlaybookConfigMutation {
     #[dsl(key = "snapshot")]
     Snapshot {

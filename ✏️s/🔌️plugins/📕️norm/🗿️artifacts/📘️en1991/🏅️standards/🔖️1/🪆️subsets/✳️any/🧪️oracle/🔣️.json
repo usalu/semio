@@ -15,15 +15,46 @@
       ],
       "license": "AGPL-3.0-only",
       "testOnly": true,
-      "rationale": "🐍️ No third-party library in any ecosystem reads or writes `s.norm.en1991` — checked against PyPI, which serves no `en1991`, `eurocode`, `vdi3805` or `iso16757` distribution, and whose nearest real packages (`structuralcodes`, `concreteproperties`, `anastruct`) implement design-code formulae and speak no interchange format — so this subset's reference is a SECOND IMPLEMENTATION rather than a third-party distribution. That is why `package` is empty: the entry links no external library and contributes nothing to the dependency ratchet. The implementation is `../../../../../🧪️tests/mutate-en1991-1/🐍️component.py`, all 32 kinds of `En1991Mutation` written in Python from `26/08/12/SEMANTIC-MUTATIONS-OVERHAUL`'s `📓️taxonomy.md` (verb table, the `new_<field>` naming mechanic, the addressing convention) and `📓️derivation-rules.md` (shape rules), plus this manifest's own catalog for the closed list of kinds. It imports nothing from the Rust it judges and transliterates none of it — the field a `new*` argument names is resolved by normalised spelling against the document's own keys, exactly as the naming mechanic states. Its reading is pinned by reaching every committed handcrafted `(before, mutation, after, outcome)` vector and by re-emitting the committed `.dsl.semio` artifact byte for byte, neither of which a misreading could do.\n\nUNDER PROTOCOL V2 this registration is classified `cross-semio-implementation` — a required SUPPLEMENTAL oracle that does not discharge `en1991-1-mutate`'s external-oracle requirement for its 32-kind mutation vocabulary; a qualifying third-party reference (`third-party-library` / `third-party-cli` / `standards-reference-tool`) is still owed.",
-      "kind": "cross-semio-implementation",
+      "rationale": "🐍️ No third-party library in any ecosystem reads or writes `s.norm.en1991` — checked against PyPI, which serves no `en1991`, `eurocode`, `vdi3805` or `iso16757` distribution, and whose nearest real packages (`structuralcodes`, `concreteproperties`, `anastruct`) implement design-code formulae and speak no interchange format — so this subset's reference is a SECOND IMPLEMENTATION rather than a third-party distribution. That is why `package` is empty: the entry links no external library and contributes nothing to the dependency ratchet. The implementation is `../../../../../🧪️tests/mutate-en1991-1/🐍️component.py`, all 32 kinds of `En1991Mutation` written in Python from `26/08/12/SEMANTIC-MUTATIONS-OVERHAUL`'s `📓️taxonomy.md` (verb table, the `new_<field>` naming mechanic, the addressing convention) and `📓️derivation-rules.md` (shape rules), plus this manifest's own catalog for the closed list of kinds. It imports nothing from the Rust it judges and transliterates none of it — the field a `new*` argument names is resolved by normalised spelling against the document's own keys, exactly as the naming mechanic states. Its reading is pinned by reaching every committed handcrafted `(before, mutation, after, outcome)` vector and by re-emitting the committed `.dsl.semio` artifact byte for byte, neither of which a misreading could do.\n\nUNDER PROTOCOL V2 this registration is classified `cross-semio-implementation` — a required SUPPLEMENTAL oracle that does not discharge `en1991-1-mutate`'s external-oracle requirement for its 32-kind mutation vocabulary; a qualifying third-party reference (`third-party-library` / `third-party-cli` / `standards-reference-tool`) is still owed.\n\n[2026-09-02, D1 — SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION] Promoted from cross-semio-implementation to verified-native-second-implementation: this artifact is semio-native (isSemioNativeArtifact), this reference's own third-party survey above (kept verbatim) already names what was checked and declined, its python implementation differs from the Rust subject, and it covers 100% of this manifest's 1 capability/capabilities with 32 committed fixture vector(s). See .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION/📓️d1-native-oracle-discharge.md.",
+      "kind": "verified-native-second-implementation",
       "engine": {
         "family": "none",
         "implementation": "in-repository second implementation",
         "version": "0"
       },
       "productionReachable": false,
-      "networkDuringExecution": false
+      "networkDuringExecution": false,
+      "nativeSecondImplementation": {
+        "format": "s.norm.en1991",
+        "noThirdPartySurvey": {
+          "ecosystemsSearched": [
+            "python/pypi"
+          ],
+          "candidatesConsidered": [
+            {
+              "package": "structuralcodes",
+              "reason": "implement design-code formulae and speak no interchange format — so this subset's reference is a SECOND IMPLEMENTATION rather than a third-party distribution."
+            },
+            {
+              "package": "concreteproperties",
+              "reason": "implement design-code formulae and speak no interchange format — so this subset's reference is a SECOND IMPLEMENTATION rather than a third-party distribution."
+            },
+            {
+              "package": "anastruct",
+              "reason": "implement design-code formulae and speak no interchange format — so this subset's reference is a SECOND IMPLEMENTATION rather than a third-party distribution."
+            }
+          ]
+        },
+        "subjectImplementationLanguage": "rust",
+        "secondImplementationLanguage": "python",
+        "specificationSource": "📓️taxonomy.md; 📓️derivation-rules.md; .dsl.semio",
+        "fixtureCoverage": {
+          "vectors": 32,
+          "capabilitiesCovered": [
+            "en1991-1-mutate"
+          ]
+        }
+      }
     }
   ],
   "noOracleDecisions": [],
@@ -447,7 +478,7 @@
           "oracleRequirements": [
             {
               "capability": "en1991-1-mutate",
-              "qualifyingKind": "third-party-library"
+              "qualifyingKind": "verified-native-second-implementation"
             }
           ]
         },
@@ -466,7 +497,7 @@
           "oracleRequirements": [
             {
               "capability": "en1991-1-mutate",
-              "qualifyingKind": "third-party-library"
+              "qualifyingKind": "verified-native-second-implementation"
             }
           ]
         },
@@ -485,7 +516,7 @@
           "oracleRequirements": [
             {
               "capability": "en1991-1-mutate",
-              "qualifyingKind": "third-party-library"
+              "qualifyingKind": "verified-native-second-implementation"
             }
           ]
         },
@@ -504,7 +535,7 @@
           "oracleRequirements": [
             {
               "capability": "en1991-1-mutate",
-              "qualifyingKind": "third-party-library"
+              "qualifyingKind": "verified-native-second-implementation"
             }
           ]
         },
@@ -523,7 +554,7 @@
           "oracleRequirements": [
             {
               "capability": "en1991-1-mutate",
-              "qualifyingKind": "third-party-library"
+              "qualifyingKind": "verified-native-second-implementation"
             }
           ]
         },
@@ -542,7 +573,7 @@
           "oracleRequirements": [
             {
               "capability": "en1991-1-mutate",
-              "qualifyingKind": "third-party-library"
+              "qualifyingKind": "verified-native-second-implementation"
             }
           ]
         },
@@ -561,7 +592,7 @@
           "oracleRequirements": [
             {
               "capability": "en1991-1-mutate",
-              "qualifyingKind": "third-party-library"
+              "qualifyingKind": "verified-native-second-implementation"
             }
           ]
         },
@@ -580,7 +611,7 @@
           "oracleRequirements": [
             {
               "capability": "en1991-1-mutate",
-              "qualifyingKind": "third-party-library"
+              "qualifyingKind": "verified-native-second-implementation"
             }
           ]
         },
@@ -599,7 +630,7 @@
           "oracleRequirements": [
             {
               "capability": "en1991-1-mutate",
-              "qualifyingKind": "third-party-library"
+              "qualifyingKind": "verified-native-second-implementation"
             }
           ]
         },
@@ -618,7 +649,7 @@
           "oracleRequirements": [
             {
               "capability": "en1991-1-mutate",
-              "qualifyingKind": "third-party-library"
+              "qualifyingKind": "verified-native-second-implementation"
             }
           ]
         },
@@ -637,7 +668,7 @@
           "oracleRequirements": [
             {
               "capability": "en1991-1-mutate",
-              "qualifyingKind": "third-party-library"
+              "qualifyingKind": "verified-native-second-implementation"
             }
           ]
         },
@@ -656,7 +687,7 @@
           "oracleRequirements": [
             {
               "capability": "en1991-1-mutate",
-              "qualifyingKind": "third-party-library"
+              "qualifyingKind": "verified-native-second-implementation"
             }
           ]
         },
@@ -675,7 +706,7 @@
           "oracleRequirements": [
             {
               "capability": "en1991-1-mutate",
-              "qualifyingKind": "third-party-library"
+              "qualifyingKind": "verified-native-second-implementation"
             }
           ]
         },
@@ -694,7 +725,7 @@
           "oracleRequirements": [
             {
               "capability": "en1991-1-mutate",
-              "qualifyingKind": "third-party-library"
+              "qualifyingKind": "verified-native-second-implementation"
             }
           ]
         },
@@ -713,7 +744,7 @@
           "oracleRequirements": [
             {
               "capability": "en1991-1-mutate",
-              "qualifyingKind": "third-party-library"
+              "qualifyingKind": "verified-native-second-implementation"
             }
           ]
         },
@@ -732,7 +763,7 @@
           "oracleRequirements": [
             {
               "capability": "en1991-1-mutate",
-              "qualifyingKind": "third-party-library"
+              "qualifyingKind": "verified-native-second-implementation"
             }
           ]
         },
@@ -751,7 +782,7 @@
           "oracleRequirements": [
             {
               "capability": "en1991-1-mutate",
-              "qualifyingKind": "third-party-library"
+              "qualifyingKind": "verified-native-second-implementation"
             }
           ]
         },
@@ -770,7 +801,7 @@
           "oracleRequirements": [
             {
               "capability": "en1991-1-mutate",
-              "qualifyingKind": "third-party-library"
+              "qualifyingKind": "verified-native-second-implementation"
             }
           ]
         },
@@ -789,7 +820,7 @@
           "oracleRequirements": [
             {
               "capability": "en1991-1-mutate",
-              "qualifyingKind": "third-party-library"
+              "qualifyingKind": "verified-native-second-implementation"
             }
           ]
         },
@@ -808,7 +839,7 @@
           "oracleRequirements": [
             {
               "capability": "en1991-1-mutate",
-              "qualifyingKind": "third-party-library"
+              "qualifyingKind": "verified-native-second-implementation"
             }
           ]
         },
@@ -827,7 +858,7 @@
           "oracleRequirements": [
             {
               "capability": "en1991-1-mutate",
-              "qualifyingKind": "third-party-library"
+              "qualifyingKind": "verified-native-second-implementation"
             }
           ]
         },
@@ -846,7 +877,7 @@
           "oracleRequirements": [
             {
               "capability": "en1991-1-mutate",
-              "qualifyingKind": "third-party-library"
+              "qualifyingKind": "verified-native-second-implementation"
             }
           ]
         },
@@ -865,7 +896,7 @@
           "oracleRequirements": [
             {
               "capability": "en1991-1-mutate",
-              "qualifyingKind": "third-party-library"
+              "qualifyingKind": "verified-native-second-implementation"
             }
           ]
         },
@@ -884,7 +915,7 @@
           "oracleRequirements": [
             {
               "capability": "en1991-1-mutate",
-              "qualifyingKind": "third-party-library"
+              "qualifyingKind": "verified-native-second-implementation"
             }
           ]
         },
@@ -903,7 +934,7 @@
           "oracleRequirements": [
             {
               "capability": "en1991-1-mutate",
-              "qualifyingKind": "third-party-library"
+              "qualifyingKind": "verified-native-second-implementation"
             }
           ]
         },
@@ -922,7 +953,7 @@
           "oracleRequirements": [
             {
               "capability": "en1991-1-mutate",
-              "qualifyingKind": "third-party-library"
+              "qualifyingKind": "verified-native-second-implementation"
             }
           ]
         },
@@ -941,7 +972,7 @@
           "oracleRequirements": [
             {
               "capability": "en1991-1-mutate",
-              "qualifyingKind": "third-party-library"
+              "qualifyingKind": "verified-native-second-implementation"
             }
           ]
         },
@@ -960,7 +991,7 @@
           "oracleRequirements": [
             {
               "capability": "en1991-1-mutate",
-              "qualifyingKind": "third-party-library"
+              "qualifyingKind": "verified-native-second-implementation"
             }
           ]
         },
@@ -979,7 +1010,7 @@
           "oracleRequirements": [
             {
               "capability": "en1991-1-mutate",
-              "qualifyingKind": "third-party-library"
+              "qualifyingKind": "verified-native-second-implementation"
             }
           ]
         },
@@ -998,7 +1029,7 @@
           "oracleRequirements": [
             {
               "capability": "en1991-1-mutate",
-              "qualifyingKind": "third-party-library"
+              "qualifyingKind": "verified-native-second-implementation"
             }
           ]
         },
@@ -1017,7 +1048,7 @@
           "oracleRequirements": [
             {
               "capability": "en1991-1-mutate",
-              "qualifyingKind": "third-party-library"
+              "qualifyingKind": "verified-native-second-implementation"
             }
           ]
         },
@@ -1036,7 +1067,7 @@
           "oracleRequirements": [
             {
               "capability": "en1991-1-mutate",
-              "qualifyingKind": "third-party-library"
+              "qualifyingKind": "verified-native-second-implementation"
             }
           ]
         }

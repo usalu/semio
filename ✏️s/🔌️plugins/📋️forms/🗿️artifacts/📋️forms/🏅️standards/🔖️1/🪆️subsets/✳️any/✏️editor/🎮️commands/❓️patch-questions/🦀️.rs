@@ -5,7 +5,7 @@ use crate::artifacts::forms::{op::FormMutation, FormQuestion, FormVectorField, F
 use crate::editor::forms::config::{FormsConfig, FormsConfigMutation};
 use crate::editor::forms::{parse_value_json, reset_try_config_mutations};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
-use serde_json::{json, Value};
+use dsl::os_pack::json::{object, Value};
 use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️Shell
@@ -51,7 +51,7 @@ pub async fn default_question_for_kind(kind: &str, id: String) -> FormQuestion {
         }
         "number" => {
             let mut question = question_shell(id, "Number".into(), "number".into());
-            question.default = Some(value_to_dsl(&json!(0)));
+            question.default = Some(value_to_dsl(&Value::from(0)));
             question.min = Some(0.0);
             question.max = Some(100.0);
             question.step = Some(1.0);
@@ -59,7 +59,7 @@ pub async fn default_question_for_kind(kind: &str, id: String) -> FormQuestion {
         }
         "slider" => {
             let mut question = question_shell(id, "Slider".into(), "slider".into());
-            question.default = Some(value_to_dsl(&json!(50)));
+            question.default = Some(value_to_dsl(&Value::from(50)));
             question.min = Some(0.0);
             question.max = Some(100.0);
             question.step = Some(1.0);
@@ -67,12 +67,12 @@ pub async fn default_question_for_kind(kind: &str, id: String) -> FormQuestion {
         }
         "boolean" => {
             let mut question = question_shell(id, "Boolean".into(), "boolean".into());
-            question.default = Some(value_to_dsl(&json!(false)));
+            question.default = Some(value_to_dsl(&Value::from(false)));
             question
         }
         "single" | "multi" => {
             let mut question = question_shell(id, if kind == "single" { "Single Select" } else { "Multi Select" }.into(), kind.into());
-            question.default = if kind == "multi" { Some(value_to_dsl(&json!([]))) } else { None };
+            question.default = if kind == "multi" { Some(value_to_dsl(&Value::Array(vec![]))) } else { None };
             question.options = Some(vec![crate::artifacts::forms::FormQuestionOption { value: "a".into(), label: "Option A".into() }, crate::artifacts::forms::FormQuestionOption { value: "b".into(), label: "Option B".into() }]);
             question
         }
@@ -83,12 +83,12 @@ pub async fn default_question_for_kind(kind: &str, id: String) -> FormQuestion {
         }
         "date" => {
             let mut question = question_shell(id, "Date".into(), "date".into());
-            question.default = Some(value_to_dsl(&json!("2026-01-01")));
+            question.default = Some(value_to_dsl(&Value::from("2026-01-01")));
             question
         }
         "color" => {
             let mut question = question_shell(id, "Color".into(), "color".into());
-            question.default = Some(value_to_dsl(&json!("#336699")));
+            question.default = Some(value_to_dsl(&Value::from("#336699")));
             question
         }
         "image" => question_shell(id, "Image".into(), "image".into()),
@@ -111,7 +111,7 @@ pub async fn default_question_for_kind(kind: &str, id: String) -> FormQuestion {
         "buildingComponent" => {
             let mut question = question_shell(id, "Building Component".into(), "buildingComponent".into());
             question.fixture_slug = Some("hexagonal-mushroom-column".into());
-            question.params = Some(value_to_dsl(&json!({ "height": 6.0, "radius": 0.5, "sides": 6.0 })));
+            question.params = Some(value_to_dsl(&object([("height".to_string(), Value::from(6.0)), ("radius".to_string(), Value::from(0.5)), ("sides".to_string(), Value::from(6.0))])));
             question
         }
         _ => question_shell(id, kind.into(), kind.into()),

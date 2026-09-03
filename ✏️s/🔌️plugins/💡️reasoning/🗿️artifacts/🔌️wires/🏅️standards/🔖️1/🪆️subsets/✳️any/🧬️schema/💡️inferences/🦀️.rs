@@ -8,7 +8,6 @@ use crate::artifacts::wires::WiresSnapshot;
 use dsl::DslValue;
 use schema::ArtifactSchema;
 use semio_framework_plugin::ArtifactInferrer;
-use serde::{Deserialize, Serialize};
 
 use super::topology::{compute_wires_topology, WiresTopology};
 
@@ -16,8 +15,8 @@ use super::topology::{compute_wires_topology, WiresTopology};
 /// 💡️ Everything inferable from a wires snapshot. One field per named inference under
 /// `💡️inferences/` (currently: `topology`, backed by the `🧭topology/` slug dir, read off the
 /// `board_fixture`'s `nodes`/`edges` — the actual graph a wires board renders).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ArtifactSchema)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, ArtifactSchema)]
+#[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.reasoning.wires.inference")]
 pub struct WiresInference {
     #[derived]

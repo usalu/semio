@@ -608,7 +608,8 @@ mod tests {
             let (mut wal, _report) = db_actor::block_on(db_wal::ArtifactWal::open(&leader, document.clone(), db_wal::GroupCommitPolicy::default(), 1_000)).unwrap();
             submit_record(&leader, &mut wal, db_wal::WalRecord::SnapshotPub { generation: 9, frontier: floor_frontier }, 1_000).await;
         }
-        db_actor::block_on(db_storage::SnapshotStorage::write_generation(&leader, &document, 9, b"snapshot-bytes")).unwrap();
+        let pages = db_storage::db_io_copy_pages(b"snapshot-bytes").unwrap().await.unwrap();
+        db_storage::SnapshotStorage::write_generation(&leader, &document, 9, pages).await.unwrap();
         let leader: db_storage::DbBackend = db_storage::DbBackend::Memory(leader);
         let follower: db_storage::DbBackend = db_storage::DbBackend::Memory(follower);
 

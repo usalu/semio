@@ -10,7 +10,7 @@
 //! was mounted into the crate's module tree — verified byte-exact with `wc -c`/`xxd`.
 //!
 //! Named "wires" (not "graph") to avoid confusion with the unrelated existing `value`-subset
-//! example already at `✳️any/📚️examples/🕸️graph/`.
+//! example already at `✳️base/📚️examples/🕸️graph/`.
 
 use semio_framework_plugin::{ExampleSource, LocalizedLabel};
 

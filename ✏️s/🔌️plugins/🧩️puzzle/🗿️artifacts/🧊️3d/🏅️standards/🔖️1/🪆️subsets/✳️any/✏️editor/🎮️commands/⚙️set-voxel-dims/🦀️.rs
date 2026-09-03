@@ -1,7 +1,7 @@
 //! ⚙️ `set-voxel-dims` command.
 
 use crate::editor::puzzle3d::Puzzle3dActionCtx;
-use serde_json::Value;
+use dsl::os_pack::json::Value;
 
 pub fn set_voxel_dims(ctx: &mut Puzzle3dActionCtx<'_>, args: Option<&Value>) {
     let axis = args.and_then(|value| value.get("axis")).and_then(|value| value.as_str()).unwrap_or("");

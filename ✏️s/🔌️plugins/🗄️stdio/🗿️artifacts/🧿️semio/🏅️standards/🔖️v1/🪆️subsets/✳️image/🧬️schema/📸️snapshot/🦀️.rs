@@ -8,7 +8,7 @@
 //! NEUTRAL semio type, not itself an on-disk file format — real per-format bytes for png/gif/bmp/
 //! jpg/tiff are produced by the semio↔format `🚪️io` leaves, W4).
 
-use crate::artifacts::semio::standards::v1::subsets::any::schema::triples::{split_top_level, strip_brackets};
+use crate::artifacts::semio::standards::v1::subsets::base::schema::triples::{split_top_level, strip_brackets};
 use schema::ArtifactSchema;
 
 //#region 🔖️Ids

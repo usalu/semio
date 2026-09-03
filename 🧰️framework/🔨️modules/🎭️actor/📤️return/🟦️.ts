@@ -53,9 +53,11 @@ class ReturnWriter {
 }
 
 class ReturnReader {
+  readonly bytes: Uint8Array;
   offset = 0;
-  constructor(readonly bytes: Uint8Array, maximum: number) {
+  constructor(bytes: Uint8Array, maximum: number) {
     if (!(bytes instanceof Uint8Array) || bytes.length < 1 || bytes.length > maximum) throw new Error("actor-return.envelope");
+    this.bytes = bytes;
   }
   byte(): number {
     const byte = this.bytes[this.offset++];
@@ -300,6 +302,53 @@ if (import.meta.vitest) {
       }
     };
   };
+
+  it("ActorReturn codecs load natively in Node strip-only mode and preserve every shared vector", async () => {
+    const { spawnSync } = await import("node:child_process");
+    const source = new URL(import.meta.url).href;
+    const fixture = new URL("./🧪️fixture/🔣️.json", source).href;
+    const page = new URL("../📄️page/🟦️.ts", source).href;
+    const program = `
+      import assert from "node:assert/strict";
+      import { readFileSync } from "node:fs";
+      import { fileURLToPath } from "node:url";
+      const api = await import(${JSON.stringify(source)});
+      const pageApi = await import(${JSON.stringify(page)});
+      const fixture = JSON.parse(readFileSync(fileURLToPath(${JSON.stringify(fixture)}), "utf8"));
+      const hydrate = value => JSON.parse(JSON.stringify(value), (key, item) => ["activationGeneration", "returnSequence", "pageSequence"].includes(key) ? BigInt(item) : item);
+      for (const row of fixture.wireVectors) {
+        const value = hydrate(row.value);
+        const bytes = api.encodeActorReturnDrive(value);
+        assert.equal(Buffer.from(bytes).toString("hex"), row.hex);
+        assert.deepStrictEqual(api.decodeActorReturnDrive(bytes), value);
+      }
+      for (const row of fixture.resultVectors) {
+        const value = hydrate(row.value);
+        const bytes = api.encodeActorReturnResult(value);
+        assert.equal(Buffer.from(bytes).toString("hex"), row.hex);
+        assert.deepStrictEqual(api.decodeActorReturnResult(bytes), value);
+      }
+      for (const row of fixture.pageResultVectors) {
+        const payload = Uint8Array.from({ length: row.pageLength }, (_, index) => row.pattern === "mod37plus11" ? (index * 37 + 11) % 256 : 0);
+        const receipt = hydrate(row.receipt);
+        const value = { kind: "page", receipt, page: pageApi.createActorBytePage(payload) };
+        const bytes = api.encodeActorReturnResult(value);
+        const expectedPage = Buffer.alloc(fixture.maximumPageBytes);
+        expectedPage.set(payload);
+        const expected = Buffer.concat([Buffer.from(row.prefixHex, "hex"), expectedPage]);
+        assert.equal(bytes.length, row.wireBytes);
+        assert.deepStrictEqual(Buffer.from(bytes), expected);
+        const decoded = api.decodeActorReturnResult(bytes);
+        assert.equal(decoded.kind, "page");
+        assert.deepStrictEqual(decoded.receipt, receipt);
+        assert.deepStrictEqual(pageApi.readActorBytePage(decoded.page), payload);
+      }
+    `;
+    const environment = { ...process.env }; delete environment.NO_COLOR;
+    const child = spawnSync("node", ["--experimental-strip-types", "--input-type=module", "--eval", program], { encoding: "utf8", env: environment });
+    if (child.status !== 0) throw new Error(child.stderr);
+    expect({ status: child.status, signal: child.signal, stdout: child.stdout }).toEqual({ status: 0, signal: null, stdout: "" });
+  });
 
   it("ActorReturnDrive matches the shared canonical vectors and independent LEB128 bytes", async () => {
     const { default: fixture } = await import("./🧪️fixture/🔣️.json");

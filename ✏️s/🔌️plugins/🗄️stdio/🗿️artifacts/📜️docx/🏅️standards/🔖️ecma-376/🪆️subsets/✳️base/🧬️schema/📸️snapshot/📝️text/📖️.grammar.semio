@@ -13,7 +13,7 @@ string single raw
 # instead models the real TEXT syntax of the XML parts an OPC docx package carries --
 # `[Content_Types].xml`, `_rels/.rels` (+ any per-part `*.rels`), this format's own
 # `word/document.xml` body, and `word/styles.xml` -- restated from xml's own real FG1 grammar
-# (`📰xml/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📝️text/📖️.grammar.semio`,
+# (`📰️xml/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📝️text/📖️.grammar.semio`,
 # cited verbatim wherever the shape is identical) since cross-artifact `use` does not resolve at
 # walk time (`📖️grammar-recipe.md` §2.1/§3) -- the SAME honest-restatement precedent every OPC
 # family member has used since zip's own P2 pilot. This is the pattern the wave's sibling agents
@@ -112,7 +112,7 @@ style-based-on = LT "w" ":" "basedOn" "w" ":" "val" "=" TEXT "/" GT
 
 # ── Raw-retained extension content (`extra_*_properties: Vec<XmlNode>`) ──────────────────────────
 # Restated (not `use`d) from xml's own generic recursive element/content grammar -- the SAME
-# `📰xml/…/📸️snapshot/📝️text/📖️.grammar.semio` productions this file cites above,
+# `📰️xml/…/📸️snapshot/📝️text/📖️.grammar.semio` productions this file cites above,
 # `x-`-prefixed to stay a distinct namespace from this file's own docx-specific productions. Covers
 # any future/unmodeled `w:rPr`/`w:pPr`/`w:trPr`/`w:tcPr`/`w:tblPr` child this typed model doesn't
 # interpret but must still round-trip verbatim.

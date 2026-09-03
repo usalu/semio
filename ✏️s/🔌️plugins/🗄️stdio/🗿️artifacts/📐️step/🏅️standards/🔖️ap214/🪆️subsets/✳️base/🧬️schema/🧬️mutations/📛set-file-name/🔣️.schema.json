@@ -1,0 +1,50 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "file_name"
+  ],
+  "properties": {
+    "file_name": {
+      "$ref": "#/$defs/StepFileName"
+    }
+  },
+  "$defs": {
+    "StepFileName": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [],
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "timestamp": {
+          "type": "string"
+        },
+        "author": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "organization": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "preprocessorVersion": {
+          "type": "string"
+        },
+        "originatingSystem": {
+          "type": "string"
+        },
+        "authorization": {
+          "type": "string"
+        }
+      }
+    }
+  },
+  "title": "SetFileName"
+}

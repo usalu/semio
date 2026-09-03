@@ -7,20 +7,60 @@ framing record
 header fixed 16
 field format u8
 field ordinal varint
-record CreateObject tag 1
-record DeleteObject tag 2
-record ReorderObjects tag 3
-record RenameObject tag 4
-record ChangeObjectSmoothShading tag 5
-record MoveObject tag 6
-record RotateObject tag 7
-record ScaleObject tag 8
-record CreateMesh tag 9
-record InsertPaintLayer tag 10
-record RemovePaintLayer tag 11
-record RenamePaintLayer tag 12
-record ChangePaintLayerVisible tag 13
-record ChangePaintLayerOpacity tag 14
-record ChangePaintLayerBlendMode tag 15
-record EditPaintLayer tag 16
-record DeleteMesh tag 17
+record create-object tag=1
+field index varint
+field object bytes
+record delete-object tag=2
+field id utf8
+record reorder-objects tag=3
+field id utf8
+field to-index varint
+record rename-object tag=4
+field id utf8
+field new-name utf8
+record change-object-smooth-shading tag=5
+field id utf8
+field new-smooth-shading u8
+record move-object tag=6
+field id utf8
+field new-position array f32
+record rotate-object tag=7
+field id utf8
+field new-rotation array f32
+record scale-object tag=8
+field id utf8
+field new-scale array f32
+record create-mesh tag=9
+field id utf8
+field child-id utf8
+field target utf8
+field mesh-workspace utf8
+record insert-paint-layer tag=10
+field object-id utf8
+field index varint
+field layer bytes
+record remove-paint-layer tag=11
+field object-id utf8
+field index varint
+record rename-paint-layer tag=12
+field object-id utf8
+field index varint
+field new-name utf8
+record change-paint-layer-visible tag=13
+field object-id utf8
+field index varint
+field new-visible u8
+record change-paint-layer-opacity tag=14
+field object-id utf8
+field index varint
+field new-opacity f32
+record change-paint-layer-blend-mode tag=15
+field object-id utf8
+field index varint
+field new-blend-mode utf8
+record edit-paint-layer tag=16
+field object-id utf8
+field layer-index varint
+field runs bytes
+record delete-mesh tag=17
+field id utf8

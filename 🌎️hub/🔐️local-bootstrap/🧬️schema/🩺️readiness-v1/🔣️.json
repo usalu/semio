@@ -1,0 +1,73 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://semio.tech/schemas/hub/readiness-v1.json",
+  "title": "HubReadinessV1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "status", "runId", "mode", "bindScope", "authentication", "directory", "storage", "artifactAuthority", "adminAssets", "features"],
+  "properties": {
+    "schema": { "const": "semio.hub.readiness/v1" },
+    "status": { "enum": ["ready", "not-ready"] },
+    "runId": { "type": "string", "pattern": "^(?:[0-9a-f]{32}|production)$", "maxLength": 32 },
+    "mode": { "enum": ["development", "production"] },
+    "bindScope": { "const": "loopback" },
+    "authentication": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "bootstrapReady", "publicSessionIssuance"],
+      "properties": {
+        "kind": { "enum": ["local-bootstrap-pipe-v1", "identity-assertion-verifier"] },
+        "bootstrapReady": { "type": "boolean" },
+        "publicSessionIssuance": { "const": false }
+      }
+    },
+    "directory": { "$ref": "#/$defs/ReadyComponent" },
+    "storage": { "$ref": "#/$defs/ReadyComponent" },
+    "artifactAuthority": { "$ref": "#/$defs/ReadyComponent" },
+    "adminAssets": { "$ref": "#/$defs/ReadyComponent" },
+    "features": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["openPlan", "rebootstrap", "mcpWorkspace", "inference"],
+      "properties": {
+        "openPlan": { "type": "boolean" },
+        "rebootstrap": { "type": "boolean" },
+        "mcpWorkspace": { "type": "boolean" },
+        "inference": { "type": "boolean" }
+      }
+    }
+  },
+  "allOf": [
+    {
+      "if": { "type": "object", "properties": { "status": { "const": "ready" } }, "required": ["status"] },
+      "then": {
+        "type": "object",
+        "properties": {
+          "authentication": { "type": "object", "properties": { "bootstrapReady": { "const": true } } },
+          "directory": { "type": "object", "properties": { "ready": { "const": true } } },
+          "storage": { "type": "object", "properties": { "ready": { "const": true } } },
+          "artifactAuthority": { "type": "object", "properties": { "ready": { "const": true } } },
+          "adminAssets": { "type": "object", "properties": { "ready": { "const": true } } }
+        }
+      },
+      "else": {
+        "type": "object",
+        "anyOf": [
+          { "type": "object", "properties": { "authentication": { "type": "object", "properties": { "bootstrapReady": { "const": false } } } } },
+          { "type": "object", "properties": { "directory": { "type": "object", "properties": { "ready": { "const": false } } } },
+          { "type": "object", "properties": { "storage": { "type": "object", "properties": { "ready": { "const": false } } } },
+          { "type": "object", "properties": { "artifactAuthority": { "type": "object", "properties": { "ready": { "const": false } } } },
+          { "type": "object", "properties": { "adminAssets": { "type": "object", "properties": { "ready": { "const": false } } } }
+        ]
+      }
+    }
+  ],
+  "$defs": {
+    "ReadyComponent": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["ready"],
+      "properties": { "ready": { "type": "boolean" } }
+    }
+  }
+}

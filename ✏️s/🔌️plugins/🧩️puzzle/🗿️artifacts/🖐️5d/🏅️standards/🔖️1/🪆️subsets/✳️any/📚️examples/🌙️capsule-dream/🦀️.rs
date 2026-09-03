@@ -32,7 +32,7 @@ pub const GOLDEN_POSES_JSON: &str = include_str!("🖼️assets/🔣️.json");
 
 fn document_json() -> String {
     let projection = crate::artifacts::puzzle5d::dsl::parse_dsl(DSL_TEXT).unwrap_or_else(|error| panic!("{ID} example dsl parses: {error}"));
-    serde_json::to_string(&projection).expect("serialize example")
+    dsl::json::to_json_string(&projection)
 }
 
 /// 📚️ Canonical example source for `App::example_source`.

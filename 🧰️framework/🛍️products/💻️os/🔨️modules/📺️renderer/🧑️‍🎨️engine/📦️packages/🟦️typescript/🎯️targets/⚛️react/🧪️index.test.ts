@@ -17,8 +17,8 @@ import actionSemanticsSchema from "../../../../../../../../../../🧰️framewor
 import actionSemanticsFixture from "../../../../../../../../../../🧰️framework/🔨️modules/🛂️manifest/🧪️fixtures/🔣️action-semantics.json";
 import tutorialDocumentFixture from "../../../../../../../../../../🧰️framework/🔨️modules/🛂️manifest/🧪️fixtures/🔣️tutorial-document-track.json";
 import tutorialDocumentSchema from "../../../../../../../../../../🧰️framework/🔨️modules/🛂️manifest/🧪️fixtures/🔣️tutorial-document-track.schema.json";
-import boardSessionFixture from "../../../../../../../../../../✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🌉️wasm/🧪️fixtures/🔣️session-factory.json";
-import boardSessionSchema from "../../../../../../../../../../✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🌉️wasm/🧪️fixtures/🔣️.schema.json";
+import boardSessionFixture from "../../../../../../../../../../✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🌉️wasm/🧪️fixtures/🔣️session-factory.json";
+import boardSessionSchema from "../../../../../../../../../../✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🌉️wasm/🧪️fixtures/🔣️.schema.json";
 import { tutorialSlice, validateTutorial } from "@semio-tech/ui-react";
 import type { TutorialDefinition } from "@semio-tech/framework";
 import presenceOverlayFixture from "../../../../../../../../../../🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧪️fixtures/🔣️presence-overlay.json";
@@ -2544,7 +2544,7 @@ describe("framework renderer hosts", () => {
 
   // 🎯️ A world-3d window bound to an interaction domain must speak the SAME framework verbs the node
   // graph does, so hovering geometry in the 3D view and hovering its node in the graph land on one
-  // shared hover state — the two halves of procedural3d's bidirectional hover.
+  // shared hover state — the two halves of generation3d's bidirectional hover.
   it("encodes world3d interaction dispatch args the same way the node graph does", () => {
     expect(WORLD3D_DEFAULT_INTERACTION_GRANULARITY).toBe("handle");
     expect(world3dHoverActionArgs("graph", "handle", "extrude@solid")).toEqual({
@@ -2565,7 +2565,7 @@ describe("framework renderer hosts", () => {
     });
   });
 
-  // 🎯️ Several rendered instances can stand for ONE interaction target — procedural3d renders one
+  // 🎯️ Several rendered instances can stand for ONE interaction target — generation3d renders one
   // instance per geometry item of a channel and every one of them resolves to that channel's port,
   // which is the id its interaction topology actually declares.
   it("collapses world instance ids onto the interaction targets they stand for", () => {
@@ -2674,7 +2674,7 @@ describe("framework renderer hosts", () => {
       expect(validate(malformed)).toBe(false);
       expect(command({ widgetId: "radius", value: 3, [extra]: "{}" })).toBe(false);
     }
-    expect(new Set(graphParameterFixture.cases.map((value) => value.app))).toEqual(new Set(["flow", "procedural2d", "procedural3d"]));
+    expect(new Set(graphParameterFixture.cases.map((value) => value.app))).toEqual(new Set(["flow", "generation2d", "generation3d"]));
     for (const value of graphParameterFixture.cases) expect(command({ widgetId: value.widgetId, value: value.request, surfaceId: value.surfaceId })).toBe(true);
   });
 

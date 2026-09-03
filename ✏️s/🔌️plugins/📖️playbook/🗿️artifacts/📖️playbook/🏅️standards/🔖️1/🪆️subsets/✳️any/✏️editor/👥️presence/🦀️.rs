@@ -7,14 +7,13 @@
 //! Playbook has no other shareable live state.
 
 use protocol::Mutation;
-use serde::{Deserialize, Serialize};
 use store::ArtifactPack;
 
 //#region 🔖️Presence
 /// 👥️ Shareable live subset of playbook view state (none — all peer selection now broadcasts via the
 /// framework's typed `PresenceInteraction`).
-#[derive(Clone, Debug, PartialEq, Default, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, Default, dsl::ToValue, dsl::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct PlaybookPresence {}
 
 impl store::ArtifactDsl for PlaybookPresence {
@@ -48,8 +47,8 @@ impl protocol::MutationDiff<PlaybookPresence> for PlaybookPresence {
 //#endregion 🔖️Presence
 
 //#region 🔖️PresenceMutation
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslOps)]
+#[value(rename_all = "camelCase")]
 pub enum PlaybookPresenceMutation {
     Noop,
 }

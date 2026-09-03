@@ -137,6 +137,7 @@ const NATIVE_BOOTSTRAP_DIR = join(WORKSPACE_ROOT, "./🧰️framework/🛍️pro
 const REPO_CLIENT_DIR = join("🧰️framework", "🛍️products", "🦑️repo", "🔨️modules", "💻️client");
 const REPO_CLIENT_GO = join(REPO_CLIENT_DIR, "⌨️cli");
 const REPO_MCP_GO = join(REPO_CLIENT_DIR, "🔌️mcp");
+const REPO_MCP_PROFILE_ENV = "SEMIO_REPO_MCP_CLIENT";
 process.env.NX_ISOLATE_PLUGINS = "false";
 
 /** 🦑️Builds the repo MCP client from the current source before execution. */
@@ -665,12 +666,15 @@ export class DevScript extends Script {
   }
 
   private runMcpStdioRepo(slugs: string[]): void {
-    const slug = (slugs[0] ?? "client").trim().toLowerCase();
-    const extra = slugs.slice(1);
+    if (slugs.length > 1) {
+      console.error("[dev] `dev mcp stdio` accepts one repo client profile.");
+      process.exit(1);
+    }
+    const profile = (slugs[0] ?? "client").trim().toLowerCase();
     const bin = buildRepoMcpClient(this.root);
-    runCmd(bin, ["mcp", slug, ...extra], {
+    runCmd(bin, [], {
       cwd: this.root,
-      env: { ...process.env, GOWORK: join(this.root, "go.work") },
+      env: { ...process.env, GOWORK: join(this.root, "go.work"), [REPO_MCP_PROFILE_ENV]: profile },
       ...daemonBudgetOpts(),
     });
   }
@@ -2522,9 +2526,9 @@ export function proceduralGenerationRootSelfTests(): number {
   const wire = JSON.stringify(fixture.generation);
   if (Buffer.byteLength(wire) <= 16384 || JSON.stringify(JSON.parse(wire)) !== wire) throw new Error("generation root independent JSON oracle lost large nested content");
   const source = readFileSync(join(base, "🧬️generation/🦀️.rs"), "utf8");
-  const modelPath = "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️procedural3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs";
+  const modelPath = "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs";
   const snapshot = readFileSync(join(WORKSPACE_ROOT, modelPath), "utf8");
-  const second = readFileSync(join(WORKSPACE_ROOT, modelPath.replace("🧊️procedural3d", "🌀️procedural2d")), "utf8");
+  const second = readFileSync(join(WORKSPACE_ROOT, modelPath.replace("🧊️generation3d", "🌀️generation2d")), "utf8");
   const exact = (root: string, model: string) => root.includes("struct GenerationPlayRoot(ManuallyDrop<Option<Arc<GenerationPlayState>>>)")
     && root.includes("Arc::get_mut(self.0.as_mut()") && root.includes("Arc::into_inner(root)")
     && root.includes("owned: ManuallyDrop<GenerationRetirementState>") && root.includes("!std::thread::panicking()")
@@ -10148,7 +10152,7 @@ function toolJobCoverageRun(root: string): ToolJobCoverageReport {
   const pluginHost = policyReadFileSafe(root, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🦀️.rs");
   const mcpWorkspace = policyReadFileSafe(root, "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🏠️workspace/🦀️.rs");
   const runHost = policyReadFileSafe(root, "🧰️framework/🛍️products/💻️os/🔨️modules/🏃️run/🦀️.rs");
-  const wgpuHost = policyReadFileSafe(root, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️.rs");
+  const wgpuHost = policyReadFileSafe(root, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/🧊️renderer/🦀️.rs");
   const nativeIo = policyReadFileSafe(root, "🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/🦀️native_io.rs");
   const shardHost = policyReadFileSafe(root, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🧵️shard/🦀️.rs");
   const jobRuntime = policyReadFileSafe(root, "🧰️framework/🔨️modules/🧵️job/🦀️.rs");
@@ -10160,9 +10164,9 @@ function toolJobCoverageRun(root: string): ToolJobCoverageReport {
   const reactorRequests = policyReadFileSafe(root, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/📮️requests/🦀️.rs");
   const reactorExecutor = policyReadFileSafe(root, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🧵️executor/🦀️.rs");
   const reactorJobs = policyReadFileSafe(root, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/💼️jobs/🦀️.rs");
-  const fem2dSession = policyReadFileSafe(root, "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧵️session/🦀️.rs");
-  const fem2dEditor = policyReadFileSafe(root, "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs");
-  const fem2dModel = policyReadFileSafe(root, "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🧱️model/🦀️.rs");
+  const fem2dSession = policyReadFileSafe(root, "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧵️session/🦀️.rs");
+  const fem2dEditor = policyReadFileSafe(root, "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs");
+  const fem2dModel = policyReadFileSafe(root, "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🧱️model/🦀️.rs");
   const femPluginRoot = policyReadFileSafe(root, "✏️s/🔌️plugins/🏗️fem/🦀️.rs");
   const femGlue = policyReadFileSafe(root, "✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/🦀️.rs");
   const femAnalyses = policyReadFileSafe(root, "✏️s/🔨️modules/🏗️fem/⚙️engine/🧮️analyses/🦀️.rs");
@@ -10738,7 +10742,7 @@ export class VerifyScript extends Script {
       policyReadFileSafe(this.root, INTERACTIVITY_AUDIT_ENGINE_CANVAS_FILE),
       policyReadFileSafe(this.root, INTERACTIVITY_AUDIT_RENDERER_HOST_FILE),
       policyReadFileSafe(this.root, INTERACTIVITY_AUDIT_WINIT_HOST_FILE),
-      policyReadFileSafe(this.root, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️browser_worker.rs"),
+      policyReadFileSafe(this.root, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/🧵️browser-worker/🦀️.rs"),
       policyReadFileSafe(this.root, INTERACTIVITY_AUDIT_RENDERER_GLUE_FILE),
       policyReadFileSafe(this.root, "🧰️framework/🔨️modules/🗺️surface/🕸️node-graph/🦀️.rs"),
       policyReadFileSafe(this.root, "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/🦀️.rs"),
@@ -10768,7 +10772,7 @@ export class VerifyScript extends Script {
       const actor = policyReadFileSafe(this.root, "🧰️framework/🔨️modules/🎭️actor/🦀️.rs");
       const shard = policyReadFileSafe(this.root, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🧵️shard/🦀️.rs");
       const executor = policyReadFileSafe(this.root, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🧵️shard/🧵️executor/🦀️.rs");
-      const wgpu = policyReadFileSafe(this.root, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️.rs");
+      const wgpu = policyReadFileSafe(this.root, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/🧊️renderer/🦀️.rs");
       const actionBus = policyReadFileSafe(this.root, "🧰️framework/🔨️modules/🎯️action-bus/🦀️.rs");
       const pluginApp = policyReadFileSafe(this.root, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️.rs");
       const pluginHost = policyReadFileSafe(this.root, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🦀️.rs");
@@ -10786,8 +10790,8 @@ export class VerifyScript extends Script {
       return;
     }
     if (args.includes("--p6i-only")) {
-      const fem2dModel = policyReadFileSafe(this.root, "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🧱️model/🦀️.rs");
-      const fem2dSession = policyReadFileSafe(this.root, "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧵️session/🦀️.rs");
+      const fem2dModel = policyReadFileSafe(this.root, "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🧱️model/🦀️.rs");
+      const fem2dSession = policyReadFileSafe(this.root, "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧵️session/🦀️.rs");
       const fem3dSession = policyReadFileSafe(this.root, "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧵️session/🦀️.rs");
       const fem3dEditor = policyReadFileSafe(this.root, "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs");
       const fem3dModel = policyReadFileSafe(this.root, "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🧱️model/🦀️.rs");
@@ -10813,7 +10817,7 @@ export class VerifyScript extends Script {
       return;
     }
     if (args.includes("--p6h-only")) {
-      const session = policyReadFileSafe(this.root, "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧵️session/🦀️.rs");
+      const session = policyReadFileSafe(this.root, "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧵️session/🦀️.rs");
       const sparse = policyReadFileSafe(this.root, "✏️s/🔨️modules/🏗️fem/⚙️engine/🔢️sparse/🦀️.rs");
       const mesh = policyReadFileSafe(this.root, "✏️s/🔨️modules/🏗️fem/⚙️engine/🕸️mesh/🦀️.rs");
       const analyses = policyReadFileSafe(this.root, "✏️s/🔨️modules/🏗️fem/⚙️engine/🧮️analyses/🦀️.rs");
@@ -11149,7 +11153,7 @@ export class VerifyScript extends Script {
 
   /** @emoji 🎨️ Discovers every app-level Tailwind entry (`globals.css` / `🎨️.css`), validates
    * relative `@import`/`@source` literals resolve on disk, and asserts each entry's import chain reaches
-   * the shared UI react stylesheet that owns the framework class sources. */
+   * the shared UI stylesheet that owns the framework class sources. */
   private checkAppTailwindEntries(offenders: string[]): void {
     const uiGlobalsRel = this.findSharedUiGlobalsRel();
     if (!uiGlobalsRel) {
@@ -11207,16 +11211,16 @@ export class VerifyScript extends Script {
     return found.filter((abs) => {
       const rel = relative(this.root, abs).replace(/\\/g, "/");
       // Shared module stylesheets are sources in the chain, not app entries that must import themselves.
-      if (rel.includes("/🎯️targets/⚛️react/🎨️.css")) return false;
+      if (rel === "🧰️framework/🔨️modules/🖱️ui/🎨️.css") return false;
       if (rel.includes("/🎨️styling/")) return false;
       return true;
     });
   }
 
-  /** @emoji 🎨️ Relative path of the shared UI react `🎨️.css` from the workspace root. */
+  /** @emoji 🎨️ Relative path of the shared UI `🎨️.css` from the workspace root. */
   private findSharedUiGlobalsRel(): string | null {
     const candidates = [
-      "🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/🎨️.css",
+      "🧰️framework/🔨️modules/🖱️ui/🎨️.css",
     ];
     for (const rel of candidates) {
       if (existsSync(join(this.root, rel))) return rel;
@@ -11457,7 +11461,7 @@ function interactivityAllAppLaunchCoverageFailures(descriptors: readonly Interac
     const launcher = value && typeof value === "object" ? value as Record<string, unknown> : undefined;
     const prefix = typeof launcher?.namePrefix === "string" ? launcher.namePrefix : `🧩️${playground.variant}`;
     const browserCommand = typeof launcher?.command === "string" ? launcher.command : `bun ./📜️script.ts dev ${playground.variant}`;
-    const nativeCommand = `bun ./🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/📜️script.ts native ${playground.variant}`;
+    const nativeCommand = `bun ./🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/📜️script.ts native ${playground.variant}`;
     const expected = [
       { name: `🛠️dev${prefix}⚛️react`, command: browserCommand, renderer: "react" },
       { name: `🛠️dev${prefix}🧊️wgpu🌐️wasm`, command: browserCommand, renderer: "wgpu" },
@@ -11616,7 +11620,7 @@ async function interactivityAllAppDiscoverySelfTests(): Promise<number> {
   const fixtureLaunches = [
     { name: "🛠️dev🧪️fixture⚛️react", command: "bun ./📜️script.ts dev fixture", cwd: "${workspaceFolder}", env: { SEMIO_RENDERER: "react" } },
     { name: "🛠️dev🧪️fixture🧊️wgpu🌐️wasm", command: "bun ./📜️script.ts dev fixture", cwd: "${workspaceFolder}", env: { SEMIO_RENDERER: "wgpu" } },
-    { name: "🛠️dev🧪️fixture🧊️wgpu🖥️native", command: "bun ./🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/📜️script.ts native fixture", cwd: "${workspaceFolder}", env: {} },
+    { name: "🛠️dev🧪️fixture🧊️wgpu🖥️native", command: "bun ./🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/📜️script.ts native fixture", cwd: "${workspaceFolder}", env: {} },
   ];
   if (interactivityAllAppLaunchCoverageFailures([fixtureDescriptor], fixturePlayground, fixtureSeed, fixtureLaunches).length !== 0) throw new Error("[verify interactivity apps] complete owner-qualified launch self-test was falsely rejected");
   if (!interactivityAllAppLaunchCoverageFailures([fixtureDescriptor], fixturePlayground, fixtureSeed, fixtureLaunches.slice(0, 2)).some((failure) => failure.includes("WGPU native"))) throw new Error("[verify interactivity apps] missing native launch self-test was falsely accepted");
@@ -11693,16 +11697,16 @@ const INTERACTIVITY_AUDIT_KERNEL_FILE = "🧰️framework/🔨️modules/🎠️
 const INTERACTIVITY_AUDIT_SHARD_FILE = "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🧵️shard/🦀️.rs";
 const INTERACTIVITY_AUDIT_RUN_FILE = "🧰️framework/🛍️products/💻️os/🔨️modules/🏃️run/🦀️.rs";
 const INTERACTIVITY_AUDIT_OS_ACTIVATION_FILE = "🧰️framework/🛍️products/💻️os/🖥️host/🎠️activation/🦀️.rs";
-const INTERACTIVITY_AUDIT_RENDERER_RUNTIME_FILE = "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🎠️runtime.rs";
+const INTERACTIVITY_AUDIT_RENDERER_RUNTIME_FILE = "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/🎠️runtime/🦀️.rs";
 const INTERACTIVITY_AUDIT_PLUGIN_CENTRAL_FILE = "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️.rs";
 const INTERACTIVITY_AUDIT_PREPARED_RASTER_DRAW_FILE = "🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️draw.rs";
 const INTERACTIVITY_AUDIT_PREPARED_RASTER_GPU_FILE = "🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️gpu.rs";
 const INTERACTIVITY_AUDIT_CANVAS_RASTER_FILE = "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/Scenes/🎯️targets/🧊️wgpu/🦀️.rs";
 const INTERACTIVITY_AUDIT_INTERPRETER_RASTER_FILE = "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/Interpreter/🎯️targets/🧊️wgpu/🦀️.rs";
-const INTERACTIVITY_AUDIT_RENDERER_GLUE_FILE = "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️.rs";
-const INTERACTIVITY_AUDIT_RENDERER_HOST_FILE = "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️os_host.rs";
-const INTERACTIVITY_AUDIT_SURFACE_LANE_FILE = "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️surface_lane.rs";
-const INTERACTIVITY_AUDIT_WINIT_HOST_FILE = "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️winit_app.rs";
+const INTERACTIVITY_AUDIT_RENDERER_GLUE_FILE = "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/🧊️renderer/🦀️.rs";
+const INTERACTIVITY_AUDIT_RENDERER_HOST_FILE = "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/🏠️os-host/🦀️.rs";
+const INTERACTIVITY_AUDIT_SURFACE_LANE_FILE = "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/📐️surface-lane/🦀️.rs";
+const INTERACTIVITY_AUDIT_WINIT_HOST_FILE = "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/🪟️winit-app/🦀️.rs";
 const INTERACTIVITY_AUDIT_UI_ENGINE_FILE = "🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️engine.rs";
 const INTERACTIVITY_AUDIT_WINDOW_MEASURE_FILE = "🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️component.rs";
 const INTERACTIVITY_AUDIT_SHELL_FILE = "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/Shell/🎯️targets/🧊️wgpu/🦀️.rs";
@@ -11771,7 +11775,7 @@ type InteractivityAllowlistEntry = { file: string; lineHint: number; pattern: "b
  */
 const INTERACTIVITY_AUDIT_ALLOWLIST: readonly InteractivityAllowlistEntry[] = [
   {
-    file: "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/📦️bin.rs",
+    file: "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/⌨️native-entrypoint/🦀️.rs",
     lineHint: 15,
     pattern: "block_on",
     reason: "Native process entry point — the single owned async driver for scale and headless smoke modes; never called by renderer/UI callbacks.",
@@ -12083,9 +12087,9 @@ function interactivityAuditRun(repoRoot: string): InteractivityAuditReport {
   const mountedInterpreter = policyReadFileSafe(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/Interpreter/🎯️targets/🧊️wgpu/🦀️.rs");
   for (const failure of interactivityMountedLayoutTextFailures(mountedLayout, mountedEngine, mountedTree, mountedPaint, mountedEvents, mountedSlots, mountedInterpreter, rendererGlue)) findings.push({ category: "blocking-bridge", file: "🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️mounted_layout.rs", line: 0, text: failure });
   interactivityMountedFrameTransactionSelfTests(repoRoot);
-  const mountedFrameJob = policyReadFileSafe(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️frame_job.rs");
-  const mountedFrameHost = policyReadFileSafe(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️winit_app.rs");
-  const mountedFrameSnapshot = policyReadFileSafe(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️render_snapshot.rs");
+  const mountedFrameJob = policyReadFileSafe(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/🧵️frame-job/🦀️.rs");
+  const mountedFrameHost = policyReadFileSafe(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/🪟️winit-app/🦀️.rs");
+  const mountedFrameSnapshot = policyReadFileSafe(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/📸️render-snapshot/🦀️.rs");
   const headlessUiRuntimeGlue = policyReadFileSafe(repoRoot, "🧰️framework/🔨️modules/🖱️ui/🧠️runtime/📦️packages/🦀️rust/🦀️.rs");
   const mountedFrameShell = policyReadFileSafe(repoRoot, INTERACTIVITY_AUDIT_SHELL_FILE);
   const mountedFrameServices = policyReadFileSafe(repoRoot, INTERACTIVITY_AUDIT_OS_SERVICES_FILE);
@@ -13566,7 +13570,7 @@ export function interactivityMountedLayoutTextSelfTests(repoRoot: string): void 
     "🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️events.rs",
     "🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️scene_slots.rs",
     "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/Interpreter/🎯️targets/🧊️wgpu/🦀️.rs",
-    "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️.rs",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/🧊️renderer/🦀️.rs",
   ] as const;
   const clean = paths.map((path) => policyReadFileSafe(repoRoot, path));
   const mutations: [string, number, string, string][] = [
@@ -14223,10 +14227,10 @@ export function interactivityMountedFrameTransactionFailures(
 
 export function interactivityMountedFrameTransactionSelfTests(repoRoot: string): void {
   const files = [
-    "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️.rs",
-    "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️frame_job.rs",
-    "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️winit_app.rs",
-    "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️render_snapshot.rs",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/🧊️renderer/🦀️.rs",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/🧵️frame-job/🦀️.rs",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/🪟️winit-app/🦀️.rs",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/📸️render-snapshot/🦀️.rs",
     "🧰️framework/🔨️modules/🖱️ui/🧠️runtime/📦️packages/🦀️rust/🦀️.rs",
     INTERACTIVITY_AUDIT_SHELL_FILE,
     INTERACTIVITY_AUDIT_ENGINE_CANVAS_FILE,
@@ -14537,7 +14541,7 @@ export function interactivityMountedEngineSurfaceLifetimeSelfTests(repoRoot: str
     INTERACTIVITY_AUDIT_ENGINE_CANVAS_FILE,
     INTERACTIVITY_AUDIT_RENDERER_HOST_FILE,
     INTERACTIVITY_AUDIT_WINIT_HOST_FILE,
-    "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️browser_worker.rs",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/🧵️browser-worker/🦀️.rs",
     INTERACTIVITY_AUDIT_RENDERER_GLUE_FILE,
     "🧰️framework/🔨️modules/🗺️surface/🕸️node-graph/🦀️.rs",
     "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/🦀️.rs",
@@ -19005,6 +19009,7 @@ export class TestScript extends Script {
       return;
     }
     if (rest[0] === "repo-mcp") {
+      await this.runRepoGoTest(`./${REPO_MCP_GO}`, level, rest.slice(1));
       const clientOut = resolveCliBin(this.root);
       runCmd("go", ["build", "-o", clientOut, `./${REPO_MCP_GO}`], {
         cwd: this.root,
@@ -23128,7 +23133,7 @@ const POLICY_COMMAND_ENVELOPE_COMPLETENESS_ALLOWLIST = new Set<string>([
   "os/workflow",
   "animate/presentation/spr",
   "gis/artifact",
-  "mathematical/artifact",
+  "mathematical/equation/artifact",
   "note/artifact",
   "raster/artifact",
   "reasoning/artifact",
@@ -23213,7 +23218,7 @@ const POLICY_DIFF_COMPLETENESS_ALLOWLIST = new Set<string>([
   "architect/artifact",
   "architect/spine",
   "shooting/op",
-  "mathematical/op",
+  "mathematical/equation/op",
   "layout/op",
   "puzzle/3d/op",
   "puzzle/5d/op",
@@ -28206,7 +28211,7 @@ function policyOpGrammarStartMutationBreaches(repoRoot: string): BreachRecord[] 
  * Held at `"medium"` (advisory) rather than `"high"`: this rule was silently inert until its scan
  * depth was fixed (it walked the nonexistent `<artifact>/🧬️mutations` shape), and activating it at
  * gate strength would immediately red four facets whose collisions are semantically coherent —
- * `🏗️fem/🧊️3d` and `🏗️fem/◻2d` (`🌱`create-*, `🔁`replace-*, `🗑`delete-*), `📐️cad` (7 prefixes) and
+ * `🏗️fem/🧊️3d` and `🏗️fem/◻️2d` (`🌱`create-*, `🔁`replace-*, `🗑`delete-*), `📐️cad` (7 prefixes) and
  * `🌊️flow` (`🔀️`reorder-*). Deliberately NOT seeded into a shrink-only allowlist: an allowlist is a
  * timestamp too, and this tree moves faster than a constant can track. Graduate to `"high"` once
  * those four dedup — the rule derives its population at run time, so no constant needs updating.
@@ -29590,9 +29595,9 @@ const POLICY_SCHEMA_FACET_RELS = ["🧬️schema", "📸️snapshot/🧬️schem
 /** 🏷️§10 prefix table keyed by `policyStripEmoji(plugin)/policyStripEmoji(artifact)`. */
 const POLICY_ARTIFACT_SCHEMA_PREFIXES: Readonly<Record<string, string>> = {
   "writer/writer": "Writer",
-  "mathematical/mathematical": "Mathematical",
-  "procedural/procedural2d": "Procedural2d",
-  "procedural/procedural3d": "Procedural3d",
+  "mathematical/equation": "Equation",
+  "procedural/generation2d": "Generation2d",
+  "procedural/generation3d": "Generation3d",
   "flow/flow": "Flow",
   "gis/gisterrain": "GisTerrain",
   "gis/gismap": "GisMap",
@@ -32209,7 +32214,7 @@ const POLICY_ROUND_TRIP_TEST_ALLOWLIST = new Set<string>([
   "writer/standards#1-engine-component",
   "animate/presentation/standards#1-engine-component",
   "space/home/standards#1-engine-component",
-  "procedural/procedural2d/standards#1-engine-component",
+  "procedural/generation2d/standards#1-engine-component",
   "vcs/standards#1-engine-component",
   "gis/gismap/standards#1-engine-component",
   "gis/gisterrain/standards#1-engine-component",
@@ -32476,9 +32481,9 @@ export function policyStdioArtifactsBreaches(repoRoot: string): BreachRecord[] {
  */
 const POLICY_SNIFF_REALITY_ALLOWLIST = new Set<string>([
   "writer/standards#1-subsets-any-analyzer-component",
-  "mathematical/standards#1-subsets-any-analyzer-component",
-  "procedural/procedural2d/standards#1-subsets-any-analyzer-component",
-  "procedural/procedural3d/standards#1-subsets-any-analyzer-component",
+  "mathematical/equation/standards#1-subsets-any-analyzer-component",
+  "procedural/generation2d/standards#1-subsets-any-analyzer-component",
+  "procedural/generation3d/standards#1-subsets-any-analyzer-component",
   "flow/standards#1-subsets-any-analyzer-component",
   "gis/gisterrain/standards#1-subsets-any-analyzer-component",
   "gis/gismap/standards#1-subsets-any-analyzer-component",
@@ -34065,7 +34070,7 @@ const POLICY_DISSOLVED_ENGINE_CACHE_ALLOWED_DIRS = ["🧰️framework/🛍️pro
 const POLICY_DISSOLVED_REP_ESCAPE_ALLOWLIST = new Set<string>([
   "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/⚙️engine/🦀️.rs",
   "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/⚙️engine/🦀️.rs",
-  "🧰️framework/🔨️modules/◻2d/🗄️store/🦀️.rs",
+  "🧰️framework/🔨️modules/◻️2d/🗄️store/🦀️.rs",
   "🧰️framework/🔨️modules/🧊️3d/📐️brep/⚙️engine/🖥️host/🦀️.rs",
 ]);
 

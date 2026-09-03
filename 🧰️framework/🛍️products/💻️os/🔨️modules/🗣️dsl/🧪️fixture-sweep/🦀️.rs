@@ -58,10 +58,10 @@ mod tests {
     use gis::artifacts::gismap::GisMapSnapshot as GisMapDocument;
     use gis::artifacts::gisterrain::GisTerrainSnapshot as Gis3dTerrainDocument;
     use home::artifacts::home::SHomeSnapshot as SHomeDocument;
-    use imperative::artifacts::imperative::ImperativeSnapshot as ImperativeDocument;
+    use imperative::artifacts::procedure::ProcedureSnapshot as ImperativeDocument;
     use layout::artifacts::layout::LayoutSnapshot as LayoutDocument;
     use lowpoly::artifacts::lowpoly::LowpolySnapshot;
-    use mathematical::artifacts::mathematical::MathematicalSnapshot;
+    use mathematical::artifacts::equation::EquationSnapshot;
     use norm::artifacts::iso16757::Iso16757Snapshot as Iso16757Document;
     use norm::artifacts::vdi3805::Vdi3805Snapshot as Vdi3805Document;
     use note_app::artifacts::note::NoteSnapshot as NoteDocument;
@@ -71,8 +71,8 @@ mod tests {
     use flow_app::playbook::PlaybookSpec as FormSpec;
     use flow_app::playbook::PlaybookSpec;
     use presentation::artifacts::presentation::PresentationSnapshot as PresentationDeck;
-    use procedural::artifacts::procedural2d::Procedural2dSnapshot as Procedural2dDocument;
-    use procedural::artifacts::procedural3d::Procedural3dSnapshot as Procedural3dDocument;
+    use procedural::artifacts::generation2d::Generation2dSnapshot as Generation2dDocument;
+    use procedural::artifacts::generation3d::Generation3dSnapshot as Generation3dDocument;
     use process_3d::artifacts::process3d::Process3dSnapshot as Process3dDocument;
     use puzzle::artifacts::puzzle2d::Puzzle2dSnapshot;
     use puzzle::artifacts::puzzle3d::Puzzle3dSnapshot;
@@ -101,9 +101,9 @@ mod tests {
     fn registry() -> Vec<(&'static str, &'static str, CheckFn)> {
         vec![
             ("writer", <WriterSnapshot as crate::os_store::ArtifactDsl>::envelope_id(), crate::os_store::test_support::check_dsl_fixture_text_laws::<WriterSnapshot>),
-            ("mathematical", <MathematicalSnapshot as crate::os_store::ArtifactDsl>::envelope_id(), crate::os_store::test_support::check_dsl_fixture_text_laws::<MathematicalSnapshot>),
-            ("procedural_2d", <Procedural2dDocument as crate::os_store::ArtifactDsl>::envelope_id(), crate::os_store::test_support::check_dsl_fixture_text_laws::<Procedural2dDocument>),
-            ("procedural_3d", <Procedural3dDocument as crate::os_store::ArtifactDsl>::envelope_id(), crate::os_store::test_support::check_dsl_fixture_text_laws::<Procedural3dDocument>),
+            ("equation", <EquationSnapshot as crate::os_store::ArtifactDsl>::envelope_id(), crate::os_store::test_support::check_dsl_fixture_text_laws::<EquationSnapshot>),
+            ("generation_2d", <Generation2dDocument as crate::os_store::ArtifactDsl>::envelope_id(), crate::os_store::test_support::check_dsl_fixture_text_laws::<Generation2dDocument>),
+            ("generation_3d", <Generation3dDocument as crate::os_store::ArtifactDsl>::envelope_id(), crate::os_store::test_support::check_dsl_fixture_text_laws::<Generation3dDocument>),
             ("flow_app", <FlowFixture as crate::os_store::ArtifactDsl>::envelope_id(), crate::os_store::test_support::check_dsl_fixture_text_laws::<FlowFixture>),
             ("gis2d", "gis.gismap", crate::os_store::test_support::check_dsl_fixture_text_laws::<GisMapDocument>),
             ("gis3d", "gis.gisterrain", crate::os_store::test_support::check_dsl_fixture_text_laws::<Gis3dTerrainDocument>),
@@ -705,7 +705,7 @@ mod m5_auto_discovery {
         "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad",
         "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1992",
         "✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note",
-        "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻2d",
+        "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d",
     ];
 
     async fn discovery_roots(repo_root: &Path) -> Vec<PathBuf> {
@@ -866,15 +866,15 @@ mod m5_auto_discovery {
         ("🎒️zip", "🔖️2.0", ConformanceFacet::ProtocolPack),
         ("📷️png", "🔖️1.2", ConformanceFacet::Grammar),
         ("📷️png", "🔖️1.2", ConformanceFacet::ProtocolPack),
-        ("📄txt", "🔖️utf-8", ConformanceFacet::Grammar),
-        ("📄txt", "🔖️utf-8", ConformanceFacet::ProtocolPack),
-        ("📄txt", "🔖️utf-8", ConformanceFacet::ProtocolSpr),
+        ("📄️txt", "🔖️utf-8", ConformanceFacet::Grammar),
+        ("📄️txt", "🔖️utf-8", ConformanceFacet::ProtocolPack),
+        ("📄️txt", "🔖️utf-8", ConformanceFacet::ProtocolSpr),
         ("💾️binary", "🔖️raw", ConformanceFacet::Grammar),
         ("💾️binary", "🔖️raw", ConformanceFacet::ProtocolPack),
         ("📝️md", "🔖️commonmark", ConformanceFacet::Grammar),
         ("📝️md", "🔖️commonmark", ConformanceFacet::ProtocolPack),
-        ("📰xml", "🔖️1.0", ConformanceFacet::Grammar),
-        ("📰xml", "🔖️1.0", ConformanceFacet::ProtocolPack),
+        ("📰️xml", "🔖️1.0", ConformanceFacet::Grammar),
+        ("📰️xml", "🔖️1.0", ConformanceFacet::ProtocolPack),
         ("🧊️obj", "🔖️3.0", ConformanceFacet::Grammar),
         ("🧊️obj", "🔖️3.0", ConformanceFacet::ProtocolPack),
         ("🟪️stl", "🔖️ascii", ConformanceFacet::Grammar),

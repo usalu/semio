@@ -69,7 +69,7 @@ const KINDS: &[&str] = &[
 mod subject {
     use semio_repo_test_host::{digest, parse_json, Context, Json, Outcome};
     use semio_s_plugin_stdio_test_oracle::law::carrier_is_exact;
-    use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::any::schema::mutations::semio_mutation_refusals;
+    use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::base::schema::mutations::semio_mutation_refusals;
     use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::drawing::schema::mutations::{apply_semio_drawing_mutation, decode_semio_drawing_mutation_json, inverse_semio_drawing_mutation, SemioDrawingMutation};
     use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::drawing::schema::snapshot::{
         decode_semio_drawing_pack, decode_semio_drawing_snapshot_json, encode_semio_drawing_pack, encode_semio_drawing_snapshot_json, parse_semio_drawing_dsl, print_semio_drawing_dsl, SemioDrawingSnapshot,

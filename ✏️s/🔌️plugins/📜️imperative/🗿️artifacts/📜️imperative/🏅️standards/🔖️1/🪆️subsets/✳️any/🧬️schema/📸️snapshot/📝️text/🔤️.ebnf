@@ -1,3 +1,0 @@
-(* ebnf imperative.imperative.snapshot *)
-document = header, body ;
-header = 'schema', space, 'imperative.imperative.snapshot', newline ;

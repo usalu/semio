@@ -500,7 +500,7 @@ const PROCEDURAL_MAIN_WINDOW_ID = "procedural-main";
 const CAD_SHAPE_WINDOW_ID = "cad-play-shape";
 
 //#region 🏷️EntwerfenMitBestandGeneratorBrand
-/** 🏷️ Generator (procedural3d): parametric flow editor for reuse-oriented component generation. */
+/** 🏷️ Generator (generation3d): parametric flow editor for reuse-oriented component generation. */
 export const ENTWERFEN_MIT_BESTAND_GENERATOR_BRAND: ShellBrand = {
   id: "entwerfen-mit-bestand-generator",
   windowTitle: "Entwerfen mit Bestand · Generator",
@@ -776,7 +776,7 @@ export type DemonstratorPaneSpec = {
 
 /** @emoji 🔌️ Resolves the runtime playground variant behind a branded demonstrator pane. */
 export function demonstratorPaneRuntimeVariant(variant: string): string {
-  return variant === "generator" ? "procedural3d" : variant;
+  return variant === "generator" ? "generation3d" : variant;
 }
 
 /** @emoji 🧭️ Separates the module-owning runtime variant from the branded pane's manifest row.
@@ -828,7 +828,7 @@ if (import.meta.vitest) {
 
   describe("demonstratorPaneBootVariants", () => {
     it("keeps Generator's branded app id while loading the standalone procedural module", () => {
-      expect(demonstratorPaneBootVariants("generator")).toEqual({ runtime: "procedural3d", manifest: "generator" });
+      expect(demonstratorPaneBootVariants("generator")).toEqual({ runtime: "generation3d", manifest: "generator" });
       expect(demonstratorPaneBootVariants("koordinator")).toEqual({ runtime: "koordinator", manifest: "koordinator" });
     });
   });

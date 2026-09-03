@@ -42,7 +42,6 @@ mod run_bytes_base64 {
 
 //#region 🔖️Mutations
 #[derive(Clone, Debug, PartialEq, dsl::Mutations, value_derive::ToValue, value_derive::FromValue)]
-#[cfg_attr(test, derive(Serialize, Deserialize))]
 #[mutations(snapshot = LowpolySnapshot, diff = LowpolyDiff, schema = "s.lowpoly.lowpoly")]
 pub enum LowpolyMutation {
     CreateObject(super::create_object::CreateObject),

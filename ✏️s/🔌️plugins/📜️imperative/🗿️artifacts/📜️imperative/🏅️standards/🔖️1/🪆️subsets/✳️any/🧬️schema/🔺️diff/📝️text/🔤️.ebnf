@@ -1,3 +1,0 @@
-(* ebnf imperative.imperative.diff *)
-document = header, body ;
-header = 'schema', space, 'imperative.imperative.diff', newline ;

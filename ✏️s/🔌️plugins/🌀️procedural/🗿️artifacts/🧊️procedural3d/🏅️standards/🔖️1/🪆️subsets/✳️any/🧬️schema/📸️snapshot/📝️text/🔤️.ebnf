@@ -1,3 +1,0 @@
-(* ebnf procedural.procedural3d.snapshot *)
-document = header, body ;
-header = 'schema', space, 'procedural.procedural3d.snapshot', newline ;

@@ -3,7 +3,7 @@
 use crate::editor::puzzle5d::mesh_selection_ids;
 use crate::editor::puzzle5d::part_scale_json;
 use crate::editor::puzzle5d::Puzzle5dActionCtx;
-use serde_json::{json, Value};
+use dsl::os_pack::json::Value;
 
 pub fn scale_selection(ctx: &mut Puzzle5dActionCtx<'_>, args: Option<&Value>) {
     let ids = mesh_selection_ids(args, &ctx.selected_part_ids());
@@ -13,7 +13,7 @@ pub fn scale_selection(ctx: &mut Puzzle5dActionCtx<'_>, args: Option<&Value>) {
     for part in &mut ctx.scene.document.parts {
         if ids.contains(&part.id) {
             let current = part_scale_json(part);
-            part.part_3d.scale = Some(json!([current[0] * sx, current[1] * sy, current[2] * sz]));
+            part.part_3d.scale = Some(serde_json::json!([current[0] * sx, current[1] * sy, current[2] * sz]));
         }
     }
 }

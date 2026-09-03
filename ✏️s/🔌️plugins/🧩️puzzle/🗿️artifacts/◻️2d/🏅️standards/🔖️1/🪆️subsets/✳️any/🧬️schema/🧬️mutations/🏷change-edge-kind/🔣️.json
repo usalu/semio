@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 1,
+  "owner": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏷change-edge-kind",
+  "semanticKind": "change-edge-kind",
+  "displayName": "Change Edge Kind",
+  "emoji": "🏷",
+  "aggregateVariant": "ChangeEdgeKind",
+  "payloadSchema": "🔣️.schema.json",
+  "textOpcode": "change-edge-kind",
+  "binaryTag": null,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "detect",
+  "outcomeClasses": [
+    "error",
+    "applied"
+  ],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": [
+    "rust",
+    "json-schema",
+    "text",
+    "binary"
+  ]
+}

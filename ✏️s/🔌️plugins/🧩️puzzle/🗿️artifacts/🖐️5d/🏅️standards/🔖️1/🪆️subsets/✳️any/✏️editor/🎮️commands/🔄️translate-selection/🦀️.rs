@@ -2,7 +2,7 @@
 
 use crate::editor::puzzle5d::mesh_selection_ids;
 use crate::editor::puzzle5d::Puzzle5dActionCtx;
-use serde_json::Value;
+use dsl::os_pack::json::Value;
 
 pub fn translate_selection(ctx: &mut Puzzle5dActionCtx<'_>, args: Option<&Value>) {
     let ids = mesh_selection_ids(args, &ctx.selected_part_ids());

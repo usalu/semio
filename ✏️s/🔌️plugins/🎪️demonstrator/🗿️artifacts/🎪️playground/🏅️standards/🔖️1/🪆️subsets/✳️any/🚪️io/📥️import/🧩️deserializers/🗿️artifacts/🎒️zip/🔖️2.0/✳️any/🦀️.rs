@@ -4,8 +4,8 @@ use semio_s_plugin_stdio::artifacts::zip::{ZipSnapshot, STDIO_ZIP_DOCUMENT_SCHEM
 
 pub fn deserialize(from: &ZipSnapshot) -> Result<PlaygroundSnapshot, store::TextError> {
     let _ = STDIO_ZIP_DOCUMENT_SCHEMA;
-    let value = serde_json::to_value(from).map_err(|e| store::TextError::new(e.to_string(), dsl::TextSpan::at(1, 1)))?;
-    serde_json::from_value(value).map_err(|e| store::TextError::new(format!("playground<-zip: {e}"), dsl::TextSpan::at(1, 1)))
+    let value = dsl::ToValue::to_value(from);
+    dsl::FromValue::from_value(value).map_err(|e| store::TextError::new(format!("playground<-zip: {e}"), dsl::TextSpan::at(1, 1)))
 }
 
 pub fn deserialize_bytes(bytes: &[u8]) -> Result<PlaygroundSnapshot, store::TextError> {

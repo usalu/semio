@@ -890,7 +890,7 @@ impl MockGuestRuntime {
     /// 🏁️ A plain `Idle`, no-effects, no-patches turn result — convenience for tests that only
     /// care about scheduling/backpressure, not turn content.
     pub async fn idle_turn() -> TurnResult {
-        TurnResult { ui_patches: semio_framework::kernel::UiTurnPatches::default(), effects: Vec::new(), presence: Vec::new(), next_wake: None, status: TurnStatus::Idle, fuel_used: 0, lifecycle_receipt: None, command_ingress: semio_framework::kernel::CommandIngressStatus::Idle }
+        TurnResult { ui_patches: semio_framework::kernel::UiTurnPatches::default(), effects: Vec::new(), presence: Vec::new(), next_wake: None, status: TurnStatus::Idle, fuel_used: 0, lifecycle_receipt: None, ui_patch_receipt: None, command_ingress: semio_framework::kernel::CommandIngressStatus::Idle }
     }
 
     /// 📼️ Every `events` slice `execute_turn` has been called with for `actor`, flattened across
@@ -3484,9 +3484,12 @@ struct GuestColdRelayJob {
 }
 
 impl GuestColdRelayJob {
-    fn register_wake(&self, waker: &std::task::Waker) {
+    fn register_wake(&self, waker: &std::task::Waker) -> bool {
         if let Some(slot) = self.pending.as_ref() {
             slot.register_wake(waker);
+            false
+        } else {
+            true
         }
     }
 
@@ -3775,6 +3778,12 @@ enum GuestRelayMountedTerminal {
     HostFault(PluginHostError),
 }
 
+enum GuestRelayMountedClose {
+    Complete,
+    Pending,
+    Blocked,
+}
+
 enum GuestRelayMountedSlot {
     Empty,
     Reserved { generation: u64, output: GuestRelayMountedOutput },
@@ -3782,13 +3791,13 @@ enum GuestRelayMountedSlot {
 }
 
 struct GuestRelayMountedRegistry {
-    slots: [Mutex<GuestRelayMountedSlot>; GUEST_RELAY_MOUNTED_SLOTS],
+    slots: Box<[Mutex<GuestRelayMountedSlot>]>,
     next_generation: std::sync::atomic::AtomicU64,
 }
 
 impl GuestRelayMountedRegistry {
     fn new() -> Self {
-        Self { slots: std::array::from_fn(|_| Mutex::new(GuestRelayMountedSlot::Empty)), next_generation: std::sync::atomic::AtomicU64::new(1) }
+        Self { slots: std::iter::repeat_with(|| Mutex::new(GuestRelayMountedSlot::Empty)).take(GUEST_RELAY_MOUNTED_SLOTS).collect(), next_generation: std::sync::atomic::AtomicU64::new(1) }
     }
 
     fn reserve(&self) -> Option<(usize, u64)> {
@@ -3849,44 +3858,54 @@ impl GuestRelayMountedRegistry {
             if !session.close_requested {
                 continue;
             }
-            if Self::pump_close(session) {
+            if matches!(Self::pump_close(session, None), GuestRelayMountedClose::Complete) {
                 *slot = GuestRelayMountedSlot::Empty;
             }
             break;
         }
     }
 
-    fn pump_close(session: &mut GuestRelayMountedSession) -> bool {
+    fn pump_close(session: &mut GuestRelayMountedSession, waker: Option<&std::task::Waker>) -> GuestRelayMountedClose {
         if let Some(outcome) = session.outcome.as_mut() {
             let _ = outcome.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
             if outcome.terminal_is_empty() {
                 session.outcome = None;
             }
-            return false;
+            return GuestRelayMountedClose::Pending;
         }
         if let Some(owner) = session.checked_out.take() {
             owner.begin_close();
-            return false;
+            return GuestRelayMountedClose::Pending;
         }
         match &mut session.owner {
             GuestRelayMountedOwner::Session(owner) => match owner.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES) {
                 semio_framework_job::WorkerJobCloseStep::Complete => {
                     session.owner = GuestRelayMountedOwner::Empty;
-                    true
+                    GuestRelayMountedClose::Complete
                 }
-                _ => false,
+                semio_framework_job::WorkerJobCloseStep::Pending { .. } => GuestRelayMountedClose::Pending,
+                semio_framework_job::WorkerJobCloseStep::Blocked => {
+                    if let Some(waker) = waker {
+                        let _ = owner.register_wake(waker);
+                    }
+                    GuestRelayMountedClose::Blocked
+                }
             },
             GuestRelayMountedOwner::Rejected(owner) => {
                 owner.begin_close();
-                let _ = owner.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
+                let step = owner.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
                 if owner.terminal_is_empty() {
                     session.owner = GuestRelayMountedOwner::Empty;
-                    true
+                    GuestRelayMountedClose::Complete
                 } else {
-                    false
+                    match step {
+                        semio_framework_job::InteractiveJobCloseStep::Pending { .. } => GuestRelayMountedClose::Pending,
+                        semio_framework_job::InteractiveJobCloseStep::Blocked => GuestRelayMountedClose::Blocked,
+                        semio_framework_job::InteractiveJobCloseStep::Complete => GuestRelayMountedClose::Pending,
+                    }
                 }
             }
-            GuestRelayMountedOwner::Empty => true,
+            GuestRelayMountedOwner::Empty => GuestRelayMountedClose::Complete,
         }
     }
 
@@ -3913,16 +3932,19 @@ impl GuestRelayMountedRegistry {
             });
             session.checked_out.take().expect("terminal relay owner remains checked out").begin_close();
             session.close_requested = true;
+            waker.wake_by_ref();
         } else {
             session.outcome = None;
             let owner = session.checked_out.take().expect("resumable relay owner remains checked out");
+            let wake_after_resume = owner.job().register_wake(waker);
             if let Err(owner) = owner.resume() {
                 owner.begin_close();
                 session.terminal = Some(GuestRelayMountedTerminal::HostFault(PluginHostError::Plugin("plugin cold relay resume rejected".into())));
                 session.close_requested = true;
+            } else if wake_after_resume {
+                waker.wake_by_ref();
             }
         }
-        waker.wake_by_ref();
     }
 
     fn pump(&self, index: usize, generation: u64, waker: &std::task::Waker) -> std::task::Poll<Result<Vec<u8>, PluginHostError>> {
@@ -3935,17 +3957,21 @@ impl GuestRelayMountedRegistry {
             return std::task::Poll::Ready(Err(PluginHostError::Plugin("plugin cold relay generation is stale".into())));
         }
         if session.close_requested {
-            if Self::pump_close(session) {
-                let mounted = std::mem::replace(&mut *slot, GuestRelayMountedSlot::Empty);
-                let GuestRelayMountedSlot::Mounted(mut session) = mounted else { unreachable!("mounted relay slot remains mounted through close") };
-                let result = match session.terminal.take() {
-                    Some(GuestRelayMountedTerminal::Complete) => Ok(session.output.into_vec()),
-                    Some(GuestRelayMountedTerminal::Cancelled) => Err(PluginHostError::Plugin("plugin cold relay cancelled".into())),
-                    Some(GuestRelayMountedTerminal::Fault) => Err(PluginHostError::Plugin(String::from_utf8_lossy(session.output.bytes()).into_owned())),
-                    Some(GuestRelayMountedTerminal::HostFault(error)) => Err(error),
-                    None => Err(PluginHostError::Plugin("plugin cold relay closed".into())),
-                };
-                return std::task::Poll::Ready(result);
+            match Self::pump_close(session, Some(waker)) {
+                GuestRelayMountedClose::Complete => {
+                    let mounted = std::mem::replace(&mut *slot, GuestRelayMountedSlot::Empty);
+                    let GuestRelayMountedSlot::Mounted(mut session) = mounted else { unreachable!("mounted relay slot remains mounted through close") };
+                    let result = match session.terminal.take() {
+                        Some(GuestRelayMountedTerminal::Complete) => Ok(session.output.into_vec()),
+                        Some(GuestRelayMountedTerminal::Cancelled) => Err(PluginHostError::Plugin("plugin cold relay cancelled".into())),
+                        Some(GuestRelayMountedTerminal::Fault) => Err(PluginHostError::Plugin(String::from_utf8_lossy(session.output.bytes()).into_owned())),
+                        Some(GuestRelayMountedTerminal::HostFault(error)) => Err(error),
+                        None => Err(PluginHostError::Plugin("plugin cold relay closed".into())),
+                    };
+                    return std::task::Poll::Ready(result);
+                }
+                GuestRelayMountedClose::Pending => waker.wake_by_ref(),
+                GuestRelayMountedClose::Blocked => {}
             }
             return std::task::Poll::Pending;
         }
@@ -3992,10 +4018,11 @@ impl GuestRelayMountedRegistry {
                 let checked = owner.take_outcome(ticket).map_err(|_| PluginHostError::Plugin("plugin cold relay outcome unavailable".into()));
                 match checked {
                     Ok(mut checked) => {
-                        checked.job().register_wake(waker);
+                        let _ = checked.job().register_wake(waker);
                         session.outcome = Some(checked.take_outcome());
                         session.checked_out = Some(checked);
                         session.outcome_page = 0;
+                        waker.wake_by_ref();
                     }
                     Err(error) => return std::task::Poll::Ready(Err(error)),
                 }
@@ -4005,6 +4032,7 @@ impl GuestRelayMountedRegistry {
                     session.outcome = Some(checked.take_outcome());
                     session.checked_out = Some(checked);
                     session.outcome_page = 0;
+                    waker.wake_by_ref();
                 }
                 Err(_) => return std::task::Poll::Ready(Err(PluginHostError::Plugin("plugin cold relay terminal unavailable".into()))),
             },
@@ -4114,7 +4142,7 @@ impl PluginInstanceHandle {
     /// parameters into the one JSON `(source, target, IoPayload)` tuple `jobs.wit`'s doc comment
     /// specifies, since a job only carries one opaque `list<u8>`.
     pub async fn io_run(&self, from: &str, into: &str, payload: Vec<u8>) -> Result<Vec<u8>, PluginHostError> {
-        #[derive(serde::Serialize, ToValue)]
+        #[derive(ToValue)]
         struct IoRunInputWire<'a> {
             source: &'a str,
             target: &'a str,
@@ -4130,7 +4158,7 @@ impl PluginInstanceHandle {
     /// `semio.io-sniff`. Returns the raw `io_schema::Confidence::rank()` byte (`0`=None..`3`=High),
     /// mirroring the deleted `WasmPluginRuntime::io_sniff`'s return shape exactly.
     pub async fn io_sniff(&self, from: &str, into: &str, payload: &[u8]) -> Result<u8, PluginHostError> {
-        #[derive(serde::Serialize, ToValue)]
+        #[derive(ToValue)]
         struct IoRunInputWire<'a> {
             source: &'a str,
             target: &'a str,
@@ -4212,6 +4240,21 @@ impl std::fmt::Debug for PluginInstanceHandle {
 #[cfg(test)]
 mod guest_cold_relay_tests {
     use super::*;
+
+    /// 🧵️ Keeps fixed mounted capacity on the heap while every one-opportunity owner remains small
+    /// enough for the native test stack on every supported architecture.
+    #[test]
+    fn mounted_relay_stack_authority_matches_the_neutral_fixture() {
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("🧫️fixtures/🔣️stack-authority.json")).expect("stack authority fixture");
+        let maximum = fixture["maximumInlineBytes"].as_u64().expect("maximum inline bytes") as usize;
+        let registry = fixture["registries"].as_array().expect("registry rows").iter().find(|row| row["id"] == "guest-relay-mounted").expect("mounted relay row");
+        assert_eq!(fixture["schemaVersion"], 1);
+        assert_eq!(registry["capacity"].as_u64(), Some(GUEST_RELAY_MOUNTED_SLOTS as u64));
+        assert_eq!(registry["storage"], "heap");
+        assert_eq!(GuestRelayMountedRegistry::new().slots.len(), GUEST_RELAY_MOUNTED_SLOTS);
+        assert!(std::mem::size_of::<GuestRelayMountedSlot>() <= maximum);
+        assert!(std::mem::size_of::<GuestRelayMountedRegistry>() <= maximum);
+    }
 
     #[derive(Debug, PartialEq, Eq)]
     enum TestRelayOutcome {
@@ -4965,7 +5008,7 @@ mod runtime_metrics_publisher_tests {
     }
 
     async fn ok_turn() -> TurnResult {
-        TurnResult { ui_patches: vec![], effects: vec![], lifecycle_receipt: None, command_ingress: vec![], next_wake: None, status: TurnStatus::Idle, usage: Usage { fuel: 10, wall_us: 5, memory_bytes: 512 } }
+        TurnResult { ui_patches: vec![], effects: vec![], lifecycle_receipt: None, ui_patch_receipt: None, command_ingress: vec![], next_wake: None, status: TurnStatus::Idle, usage: Usage { fuel: 10, wall_us: 5, memory_bytes: 512 } }
     }
 
     /// 📈️ Drives a real `Kernel` (not a fake) through one turn, confirms the 2Hz gate (500ms), and
@@ -5088,7 +5131,7 @@ mod runtime_metrics_publisher_tests {
         kernel.submit(&env(crash_actor, Lane::UserVisible, 1).await).await;
         kernel.tick(1).await;
         let faulted =
-            TurnResult { ui_patches: vec![], effects: vec![], lifecycle_receipt: None, command_ingress: vec![], next_wake: None, status: TurnStatus::Faulted { detail: b"scale-fixture crash profile".to_vec() }, usage: Usage { fuel: 5, wall_us: 3, memory_bytes: 256 } };
+            TurnResult { ui_patches: vec![], effects: vec![], lifecycle_receipt: None, ui_patch_receipt: None, command_ingress: vec![], next_wake: None, status: TurnStatus::Faulted { detail: b"scale-fixture crash profile".to_vec() }, usage: Usage { fuel: 5, wall_us: 3, memory_bytes: 256 } };
         kernel.complete(crash_actor, &faulted, 2).await.unwrap();
 
         let mut publisher = RuntimeMetricsPublisher::new();
@@ -6451,8 +6494,7 @@ pub struct HostArtifactMutationPlanRequest {
     pub payload: Vec<u8>,
 }
 
-#[derive(Clone, Debug, PartialEq, serde::Serialize, ToValue, serde::Deserialize, FromValue)]
-#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 pub struct HostArtifactMutationPlanResult {
     pub artifact_kind: String,
@@ -8383,7 +8425,7 @@ mod tests {
         let stdio_compiled = stdio_mock.compile(&PackageRef { package: PackageId("stdio".to_string()), hash: PackageHash([3u8; 32]) }, &[]).await.expect("stdio mock compile");
         let stdio_instance = stdio_mock.instantiate(&stdio_compiled, stdio_actor, &[], &budget).await.expect("stdio mock instantiate");
         let midpoint = semio_framework::io_schema::IoPayload::Text("midpoint".to_string());
-        stdio_mock.script_job_step(stdio_actor, JobStep::Done { output: serde_json::to_vec(&midpoint).expect("encode midpoint") }).await;
+        stdio_mock.script_job_step(stdio_actor, JobStep::Done { output: dsl::os_pack::json::to_json_string(&midpoint).into_bytes() }).await;
         let stdio_handle = Arc::new(PluginInstanceHandle::new(stdio_actor, Arc::new(GuestRuntimes::Mock(stdio_mock)), stdio_instance).await);
 
         let gif_mock = Arc::new(MockGuestRuntime::new().await);
@@ -8391,7 +8433,7 @@ mod tests {
         let gif_compiled = gif_mock.compile(&PackageRef { package: PackageId("gif".to_string()), hash: PackageHash([4u8; 32]) }, &[]).await.expect("gif mock compile");
         let gif_instance = gif_mock.instantiate(&gif_compiled, gif_actor, &[], &budget).await.expect("gif mock instantiate");
         let final_payload = semio_framework::io_schema::IoPayload::Text("final".to_string());
-        gif_mock.script_job_step(gif_actor, JobStep::Done { output: serde_json::to_vec(&final_payload).expect("encode final") }).await;
+        gif_mock.script_job_step(gif_actor, JobStep::Done { output: dsl::os_pack::json::to_json_string(&final_payload).into_bytes() }).await;
         let gif_handle = Arc::new(PluginInstanceHandle::new(gif_actor, Arc::new(GuestRuntimes::Mock(gif_mock)), gif_instance).await);
 
         let binary_raw = io_dialect("s.stdio.binary", "raw", "*").await;
@@ -8454,7 +8496,7 @@ mod tests {
             format_standard: "1".to_string(),
             format_subset: "*".to_string(),
         };
-        let key_bytes = serde_json::to_vec(&key).expect("encode io key");
+        let key_bytes = dsl::os_pack::json::to_json_string(&key).into_bytes();
         let result = router.compose("stdio", &key_bytes, b"sources").await.expect("compose must resolve ownership AND drive the job to completion, not hard-error");
         assert_eq!(result, b"composed", "the SCRIPTED job outcome must be what comes out, proving real start-job/step-job dispatch reached the resolved owner's handle");
     }
@@ -8486,7 +8528,7 @@ mod tests {
             format_standard: "1".to_string(),
             format_subset: "*".to_string(),
         };
-        let key_bytes = serde_json::to_vec(&key).expect("encode io key");
+        let key_bytes = dsl::os_pack::json::to_json_string(&key).into_bytes();
         let error = router.compose("cad", &key_bytes, b"sources").await.expect_err("a plugin routing to its own key must be refused, not dispatched");
         assert!(error.to_string().contains("routing to itself"), "unexpected message: {error}");
     }

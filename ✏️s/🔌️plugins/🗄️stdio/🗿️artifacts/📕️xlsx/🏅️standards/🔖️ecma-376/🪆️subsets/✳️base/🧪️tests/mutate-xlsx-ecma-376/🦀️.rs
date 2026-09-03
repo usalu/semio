@@ -9,7 +9,7 @@
 //! oracle-only run never compiles the local implementation — see §5.3 of the fleet brief.
 
 use semio_repo_test_host::{Adapter, Context, Json, Outcome};
-use semio_s_plugin_stdio_test_oracle::artifacts::xlsx::standards::v_ecma_376::subsets::any::{oracle_apply_mutation, oracle_round_trip, project_shared_string_pool, project_xlsx_workbook, shared_string_inverse_spec};
+use semio_s_plugin_stdio_test_oracle::artifacts::xlsx::standards::v_ecma_376::subsets::base::{oracle_apply_mutation, oracle_round_trip, project_shared_string_pool, project_xlsx_workbook, shared_string_inverse_spec};
 
 //#region 🔖️Kinds
 /// 🧾️ Test-case-local mirror of the `xlsx-ecma-376-base` catalog. Duplicated, not imported, from
@@ -284,12 +284,12 @@ fn round_trip_oracle(ctx: &Context) -> Result<Outcome, String> {
 mod subject {
     use super::{inverse_spec, is_pool_kind, mutable_input};
     use semio_repo_test_host::{Context, Json, Outcome};
-    use semio_s_plugin_stdio::artifacts::xlsx::standards::v_ecma_376::subsets::any::io::export::serializers::{build_minimal_xlsx, encode_xlsx};
-    use semio_s_plugin_stdio::artifacts::xlsx::standards::v_ecma_376::subsets::any::io::import::deserializers::decode_xlsx;
-    use semio_s_plugin_stdio::artifacts::xlsx::standards::v_ecma_376::subsets::any::schema::mutations::apply_xlsx_mutation;
-    use semio_s_plugin_stdio::artifacts::xlsx::standards::v_ecma_376::subsets::any::schema::snapshot::{XlsxCell, XlsxCellValue, XlsxSheet, XlsxWorkbook};
+    use semio_s_plugin_stdio::artifacts::xlsx::standards::v_ecma_376::subsets::base::io::export::serializers::{build_minimal_xlsx, encode_xlsx};
+    use semio_s_plugin_stdio::artifacts::xlsx::standards::v_ecma_376::subsets::base::io::import::deserializers::decode_xlsx;
+    use semio_s_plugin_stdio::artifacts::xlsx::standards::v_ecma_376::subsets::base::schema::mutations::apply_xlsx_mutation;
+    use semio_s_plugin_stdio::artifacts::xlsx::standards::v_ecma_376::subsets::base::schema::snapshot::{XlsxCell, XlsxCellValue, XlsxSheet, XlsxWorkbook};
     use semio_s_plugin_stdio::artifacts::xlsx::{XlsxMutation, XlsxSnapshot};
-    use semio_s_plugin_stdio_test_oracle::artifacts::xlsx::standards::v_ecma_376::subsets::any::{project_shared_string_pool, project_xlsx_workbook};
+    use semio_s_plugin_stdio_test_oracle::artifacts::xlsx::standards::v_ecma_376::subsets::base::{project_shared_string_pool, project_xlsx_workbook};
 
     /// 📑️ The SAME projector choice the oracle half makes for the same scenario id, and it has to
     /// be the same or the two roles are not comparable at all. `insert-shared-string`/
@@ -353,22 +353,22 @@ mod subject {
             _ => None,
         };
         Ok(match spec.str("kind").as_str() {
-            "no-mutation" => XlsxMutation::SetSnapshot(semio_s_plugin_stdio::artifacts::xlsx::standards::v_ecma_376::subsets::any::schema::mutations::set_snapshot::SetSnapshot { snapshot: base.clone() }),
+            "no-mutation" => XlsxMutation::SetSnapshot(semio_s_plugin_stdio::artifacts::xlsx::standards::v_ecma_376::subsets::base::schema::mutations::set_snapshot::SetSnapshot { snapshot: base.clone() }),
             "set-snapshot" => {
                 let sheets = xlsx_sheets_from_json(&params, "sheets")?;
                 // 🩹 Always an EMPTY shared-string pool — this case's `set-snapshot` targets never
                 // carry one through the JSON `sheets` shape (see `shared_string_count_after`'s doc
                 // comment), matching the oracle's own honest limit.
-                XlsxMutation::SetSnapshot(semio_s_plugin_stdio::artifacts::xlsx::standards::v_ecma_376::subsets::any::schema::mutations::set_snapshot::SetSnapshot { snapshot: build_minimal_xlsx(XlsxWorkbook { sheets, shared_strings: vec![] }) })
+                XlsxMutation::SetSnapshot(semio_s_plugin_stdio::artifacts::xlsx::standards::v_ecma_376::subsets::base::schema::mutations::set_snapshot::SetSnapshot { snapshot: build_minimal_xlsx(XlsxWorkbook { sheets, shared_strings: vec![] }) })
             }
-            "insert-sheet" => XlsxMutation::InsertSheet(semio_s_plugin_stdio::artifacts::xlsx::standards::v_ecma_376::subsets::any::schema::mutations::insert_sheet::InsertSheet { sheet: XlsxSheet { name: params.str("name"), cells: xlsx_cells_from_json(&params, "cells")? } }),
-            "remove-sheet" => XlsxMutation::RemoveSheet(semio_s_plugin_stdio::artifacts::xlsx::standards::v_ecma_376::subsets::any::schema::mutations::remove_sheet::RemoveSheet { name: params.str("name") }),
-            "rename-sheet" => XlsxMutation::RenameSheet(semio_s_plugin_stdio::artifacts::xlsx::standards::v_ecma_376::subsets::any::schema::mutations::rename_sheet::RenameSheet { name: params.str("name"), new_name: params.str("newName") }),
-            "set-cell" => XlsxMutation::SetCell(semio_s_plugin_stdio::artifacts::xlsx::standards::v_ecma_376::subsets::any::schema::mutations::set_cell::SetCell { sheet_name: params.str("sheetName"), row: number("row").ok_or("set-cell: missing `row`")? as u32, col: number("col").ok_or("set-cell: missing `col`")? as u32, value: xlsx_cell_value_from_json(params.get("value").ok_or("set-cell: missing `value`")?)? }),
-            "remove-cell" => XlsxMutation::RemoveCell(semio_s_plugin_stdio::artifacts::xlsx::standards::v_ecma_376::subsets::any::schema::mutations::remove_cell::RemoveCell { sheet_name: params.str("sheetName"), row: number("row").ok_or("remove-cell: missing `row`")? as u32, col: number("col").ok_or("remove-cell: missing `col`")? as u32 }),
-            "insert-shared-string" => XlsxMutation::InsertSharedString(semio_s_plugin_stdio::artifacts::xlsx::standards::v_ecma_376::subsets::any::schema::mutations::insert_shared_string::InsertSharedString { value: params.str("value") }),
-            "remove-shared-string" => XlsxMutation::RemoveSharedString(semio_s_plugin_stdio::artifacts::xlsx::standards::v_ecma_376::subsets::any::schema::mutations::remove_shared_string::RemoveSharedString { index: number("index").ok_or("remove-shared-string: missing `index`")? as usize }),
-            "set-shared-string" => XlsxMutation::SetSharedString(semio_s_plugin_stdio::artifacts::xlsx::standards::v_ecma_376::subsets::any::schema::mutations::set_shared_string::SetSharedString { index: number("index").ok_or("set-shared-string: missing `index`")? as usize, value: params.str("value") }),
+            "insert-sheet" => XlsxMutation::InsertSheet(semio_s_plugin_stdio::artifacts::xlsx::standards::v_ecma_376::subsets::base::schema::mutations::insert_sheet::InsertSheet { sheet: XlsxSheet { name: params.str("name"), cells: xlsx_cells_from_json(&params, "cells")? } }),
+            "remove-sheet" => XlsxMutation::RemoveSheet(semio_s_plugin_stdio::artifacts::xlsx::standards::v_ecma_376::subsets::base::schema::mutations::remove_sheet::RemoveSheet { name: params.str("name") }),
+            "rename-sheet" => XlsxMutation::RenameSheet(semio_s_plugin_stdio::artifacts::xlsx::standards::v_ecma_376::subsets::base::schema::mutations::rename_sheet::RenameSheet { name: params.str("name"), new_name: params.str("newName") }),
+            "set-cell" => XlsxMutation::SetCell(semio_s_plugin_stdio::artifacts::xlsx::standards::v_ecma_376::subsets::base::schema::mutations::set_cell::SetCell { sheet_name: params.str("sheetName"), row: number("row").ok_or("set-cell: missing `row`")? as u32, col: number("col").ok_or("set-cell: missing `col`")? as u32, value: xlsx_cell_value_from_json(params.get("value").ok_or("set-cell: missing `value`")?)? }),
+            "remove-cell" => XlsxMutation::RemoveCell(semio_s_plugin_stdio::artifacts::xlsx::standards::v_ecma_376::subsets::base::schema::mutations::remove_cell::RemoveCell { sheet_name: params.str("sheetName"), row: number("row").ok_or("remove-cell: missing `row`")? as u32, col: number("col").ok_or("remove-cell: missing `col`")? as u32 }),
+            "insert-shared-string" => XlsxMutation::InsertSharedString(semio_s_plugin_stdio::artifacts::xlsx::standards::v_ecma_376::subsets::base::schema::mutations::insert_shared_string::InsertSharedString { value: params.str("value") }),
+            "remove-shared-string" => XlsxMutation::RemoveSharedString(semio_s_plugin_stdio::artifacts::xlsx::standards::v_ecma_376::subsets::base::schema::mutations::remove_shared_string::RemoveSharedString { index: number("index").ok_or("remove-shared-string: missing `index`")? as usize }),
+            "set-shared-string" => XlsxMutation::SetSharedString(semio_s_plugin_stdio::artifacts::xlsx::standards::v_ecma_376::subsets::base::schema::mutations::set_shared_string::SetSharedString { index: number("index").ok_or("set-shared-string: missing `index`")? as usize, value: params.str("value") }),
             other => return Err(format!("no subject rule for kind {other:?}")),
         })
     }

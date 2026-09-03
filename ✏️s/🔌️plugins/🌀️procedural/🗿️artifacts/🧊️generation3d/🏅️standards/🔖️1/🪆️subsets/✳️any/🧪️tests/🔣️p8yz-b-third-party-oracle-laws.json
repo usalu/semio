@@ -1,0 +1,15 @@
+{
+  "schema": "semio.phase8.generation3d-small-feature-oracle/v1",
+  "feature": "move-one-mounted-generation3d-widget",
+  "oracle": {"library": "serde_json", "scope": "test-only-existing-dependency", "ownedInterface": "Generation3dSemanticOracle", "runtimeDependency": false},
+  "input": {
+    "widgets": [
+      {"kind": "neuron", "id": "source", "inputPorts": ["in"], "outputPorts": ["solid"]},
+      {"kind": "output-preview", "id": "preview"}
+    ],
+    "synapses": [{"id": "source-preview", "from": "source", "fromPort": "solid", "to": "preview", "toPort": ""}],
+    "layout": {"source": {"x": 1.0, "y": 2.0}, "preview": {"x": 8.0, "y": 3.0}}
+  },
+  "mutation": {"kind": "move-widget", "id": "source", "layout": {"x": 12.5, "y": -8.25}},
+  "expected": {"widgetCount": 2, "synapseCount": 1, "layoutCount": 2, "movedId": "source", "x": 12.5, "y": -8.25, "synapseId": "source-preview", "fromPort": "solid", "toPort": ""}
+}

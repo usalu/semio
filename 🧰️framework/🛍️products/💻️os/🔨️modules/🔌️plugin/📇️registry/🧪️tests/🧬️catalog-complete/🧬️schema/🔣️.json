@@ -1,0 +1,73 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "semio://plugin-catalog/verification-plan/v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "nodes", "expectedOrder", "parentFailure", "expectedProgress", "expectedResult"],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "nodes": { "type": "array", "minItems": 1, "maxItems": 256, "items": { "$ref": "#/$defs/node" } },
+    "expectedOrder": { "type": "array", "items": { "type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$" } },
+    "parentFailure": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["failedPluginId", "statuses", "publication"],
+      "properties": {
+        "failedPluginId": { "type": "string" },
+        "statuses": { "type": "object", "additionalProperties": { "enum": ["verified", "failed", "blocked", "cancelled"] } },
+        "publication": { "const": "withheld" }
+      }
+    },
+    "expectedProgress": { "type": "array", "items": { "$ref": "#/$defs/progress" } },
+    "expectedResult": { "$ref": "#/$defs/result" }
+  },
+  "$defs": {
+    "node": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["pluginId", "role", "dependsOn"],
+      "properties": {
+        "pluginId": { "type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$" },
+        "role": { "enum": ["plugin", "extension"] },
+        "dependsOn": { "type": "array", "maxItems": 128, "uniqueItems": true, "items": { "type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$" } }
+      }
+    },
+    "progress": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schemaVersion", "completed", "total", "pluginId", "status"],
+      "properties": {
+        "schemaVersion": { "const": 1 },
+        "completed": { "type": "integer", "minimum": 1, "maximum": 256 },
+        "total": { "type": "integer", "minimum": 1, "maximum": 256 },
+        "pluginId": { "type": "string" },
+        "status": { "enum": ["verified", "failed", "blocked", "cancelled"] }
+      }
+    },
+    "result": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schemaVersion", "order", "results", "publication"],
+      "properties": {
+        "schemaVersion": { "const": 1 },
+        "order": { "type": "array", "maxItems": 256, "items": { "type": "string" } },
+        "results": {
+          "type": "array",
+          "maxItems": 256,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["pluginId", "status"],
+            "properties": {
+              "pluginId": { "type": "string" },
+              "status": { "enum": ["verified", "failed", "blocked", "cancelled"] },
+              "diagnostic": { "type": "string", "maxLength": 4096 }
+            }
+          }
+        },
+        "publication": { "enum": ["committed", "withheld", "failed", "not-requested"] },
+        "publicationDiagnostic": { "type": "string", "maxLength": 4096 }
+      }
+    }
+  }
+}

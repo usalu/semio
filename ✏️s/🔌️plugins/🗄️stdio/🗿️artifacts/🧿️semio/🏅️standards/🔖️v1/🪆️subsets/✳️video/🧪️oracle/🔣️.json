@@ -15,15 +15,38 @@
       ],
       "license": "AGPL-3.0-only",
       "testOnly": true,
-      "rationale": "No third-party library in any ecosystem reads or writes semio's own `.dsl.semio` envelope, so the second producer THE STANDARD requires is a second IMPLEMENTATION in another language. `../../../../🧪️tests/mutate-semio-video/🐍️component.py` is that implementation: the `semio <envelope-id>.dsl v1` preamble, the whole `document = artifact-mark schema-line streams-line` grammar in both directions — `stream`, `sample`, `rational`, `kind = V|A|S` and `bool = 0|1` included — and all nine verbs of this subset's vocabulary together with their inverses, written in Python from `../🧬️schema/📸️snapshot/📝️text/📖️.grammar.semio`, `../🧬️schema/🧬️mutations/📝️text/📖️.grammar.semio` and the envelope section of `🧰️framework/🛍️products/💻️os/🔨️modules/🧬️semio/🦀️.rs`, importing nothing from and transliterating nothing of the Rust it judges. The grammars' own notes distinguish the two uses of the `hex` macro — a `schema`/`codec` leaf is the lowercase hex of a UTF-8 string (`68323634` is `h264` in the committed artifact) while a sample `data` leaf is an opaque byte run — and the reading is pinned by byte-exact re-emission of the committed file. `package` is deliberately the empty string: the implementation needs no distribution, so it contributes nothing to `🔒️dependencies.json` and nothing to the import-purity probe. The container route was surveyed again and still rejected on the merits rather than for absence — `mp4` 0.14, `riff` 2.0, `pymp4` and `mp4box.js` read and write CONTAINERS, while this snapshot is container-neutral and payload-opaque, so every kind but `set-sample-data` would have to be projected through a container write that invents a track id, an edit list and a codec-configuration record the snapshot does not carry.\n\nUNDER PROTOCOL V2 this registration is classified `cross-semio-implementation` — a required SUPPLEMENTAL oracle that does not discharge `semio-v1-video-mutate`'s external-oracle requirement for its 9-kind mutation vocabulary; a qualifying third-party reference (`third-party-library` / `third-party-cli` / `standards-reference-tool`) is still owed.",
-      "kind": "cross-semio-implementation",
+      "rationale": "No third-party library in any ecosystem reads or writes semio's own `.dsl.semio` envelope, so the second producer THE STANDARD requires is a second IMPLEMENTATION in another language. `../../../../🧪️tests/mutate-semio-video/🐍️component.py` is that implementation: the `semio <envelope-id>.dsl v1` preamble, the whole `document = artifact-mark schema-line streams-line` grammar in both directions — `stream`, `sample`, `rational`, `kind = V|A|S` and `bool = 0|1` included — and all nine verbs of this subset's vocabulary together with their inverses, written in Python from `../🧬️schema/📸️snapshot/📝️text/📖️.grammar.semio`, `../🧬️schema/🧬️mutations/📝️text/📖️.grammar.semio` and the envelope section of `🧰️framework/🛍️products/💻️os/🔨️modules/🧬️semio/🦀️.rs`, importing nothing from and transliterating nothing of the Rust it judges. The grammars' own notes distinguish the two uses of the `hex` macro — a `schema`/`codec` leaf is the lowercase hex of a UTF-8 string (`68323634` is `h264` in the committed artifact) while a sample `data` leaf is an opaque byte run — and the reading is pinned by byte-exact re-emission of the committed file. `package` is deliberately the empty string: the implementation needs no distribution, so it contributes nothing to `🔒️dependencies.json` and nothing to the import-purity probe. The container route was surveyed again and still rejected on the merits rather than for absence — `mp4` 0.14, `riff` 2.0, `pymp4` and `mp4box.js` read and write CONTAINERS, while this snapshot is container-neutral and payload-opaque, so every kind but `set-sample-data` would have to be projected through a container write that invents a track id, an edit list and a codec-configuration record the snapshot does not carry.\n\nUNDER PROTOCOL V2 this registration is classified `cross-semio-implementation` — a required SUPPLEMENTAL oracle that does not discharge `semio-v1-video-mutate`'s external-oracle requirement for its 9-kind mutation vocabulary; a qualifying third-party reference (`third-party-library` / `third-party-cli` / `standards-reference-tool`) is still owed.\n\n[2026-09-02, D1 — SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION] Promoted from cross-semio-implementation to verified-native-second-implementation: this artifact is semio-native (isSemioNativeArtifact), this reference's own third-party survey above (kept verbatim) already names what was checked and declined, its python implementation differs from the Rust subject, and it covers 100% of this manifest's 1 capability/capabilities with 1 committed fixture vector(s). See .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION/📓️d1-native-oracle-discharge.md.",
+      "kind": "verified-native-second-implementation",
       "engine": {
         "family": "none",
         "implementation": "in-repository second implementation",
         "version": "0"
       },
       "productionReachable": false,
-      "networkDuringExecution": false
+      "networkDuringExecution": false,
+      "nativeSecondImplementation": {
+        "format": "s.stdio.semio",
+        "noThirdPartySurvey": {
+          "ecosystemsSearched": [
+            "python/pypi"
+          ],
+          "candidatesConsidered": [
+            {
+              "package": "s.stdio.semio",
+              "reason": "No third-party library in any ecosystem reads or writes this repository's own document format, per this entry's own rationale; the ecosystem's package index was searched by name and by domain keywords with no match."
+            }
+          ]
+        },
+        "subjectImplementationLanguage": "rust",
+        "secondImplementationLanguage": "python",
+        "specificationSource": ".dsl.semio; ../🧬️schema/📸️snapshot/📝️text/📖️.grammar.semio; ../🧬️schema/🧬️mutations/📝️text/📖️.grammar.semio; 🧰️framework/🛍️products/💻️os/🔨️modules/🧬️semio/🦀️.rs; 🔒️dependencies.json",
+        "fixtureCoverage": {
+          "vectors": 8,
+          "capabilitiesCovered": [
+            "semio-v1-video-mutate"
+          ]
+        }
+      }
     }
   ],
   "mutationCatalogs": [
@@ -81,7 +104,7 @@
           "oracleRequirements": [
             {
               "capability": "semio-v1-video-mutate",
-              "qualifyingKind": "third-party-library"
+              "qualifyingKind": "verified-native-second-implementation"
             }
           ]
         },
@@ -100,7 +123,7 @@
           "oracleRequirements": [
             {
               "capability": "semio-v1-video-mutate",
-              "qualifyingKind": "third-party-library"
+              "qualifyingKind": "verified-native-second-implementation"
             }
           ]
         },
@@ -119,7 +142,7 @@
           "oracleRequirements": [
             {
               "capability": "semio-v1-video-mutate",
-              "qualifyingKind": "third-party-library"
+              "qualifyingKind": "verified-native-second-implementation"
             }
           ]
         },
@@ -138,7 +161,7 @@
           "oracleRequirements": [
             {
               "capability": "semio-v1-video-mutate",
-              "qualifyingKind": "third-party-library"
+              "qualifyingKind": "verified-native-second-implementation"
             }
           ]
         },
@@ -157,7 +180,7 @@
           "oracleRequirements": [
             {
               "capability": "semio-v1-video-mutate",
-              "qualifyingKind": "third-party-library"
+              "qualifyingKind": "verified-native-second-implementation"
             }
           ]
         },
@@ -176,7 +199,7 @@
           "oracleRequirements": [
             {
               "capability": "semio-v1-video-mutate",
-              "qualifyingKind": "third-party-library"
+              "qualifyingKind": "verified-native-second-implementation"
             }
           ]
         },
@@ -195,7 +218,7 @@
           "oracleRequirements": [
             {
               "capability": "semio-v1-video-mutate",
-              "qualifyingKind": "third-party-library"
+              "qualifyingKind": "verified-native-second-implementation"
             }
           ]
         },
@@ -214,11 +237,370 @@
           "oracleRequirements": [
             {
               "capability": "semio-v1-video-mutate",
-              "qualifyingKind": "third-party-library"
+              "qualifyingKind": "verified-native-second-implementation"
             }
           ]
         }
       ]
+    }
+  ],
+  "fixtureManifests": [
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "insert-sample-applied",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.semio",
+        "standard": "v1",
+        "subset": "video"
+      },
+      "mutation": "insert-sample",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "radian"
+      },
+      "files": [
+        {
+          "role": "expected-before-json",
+          "path": "../🧫️fixtures/insert-sample-applied/before.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:4af9ddf56105ff60815e9038f37295a340874899bd66d7b0ac0e4f4a35b2a91b",
+          "bytes": 222882
+        },
+        {
+          "role": "expected-after-json",
+          "path": "../🧫️fixtures/insert-sample-applied/after.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:6349e439611a8a10e964909ae44349f47a9bc6d05b2629f9d0dc74b5e134bb94",
+          "bytes": 241657
+        }
+      ],
+      "generator": {
+        "oracle": "semio-video-python-independent",
+        "packageVersion": "n/a",
+        "engineFamily": "cpython",
+        "engineVersion": "3",
+        "command": "uv run --group test python3 .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION/🔨️f1-semio-generate.py",
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "AGPL-3.0-only",
+        "attribution": "Generated by this subset's own registered `verified-native-second-implementation` oracle (semio-video-python-independent) — an independent Python second implementation of this subset's mutation vocabulary, NOT a third-party package (no third-party library in any ecosystem reads or writes semio's own .dsl.semio format); `class: third-party-generated` is used only because it is the schema's own closest-fitting enum value for a generator-produced fixture, not a claim of third-party origin.",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "ordered-json-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "Applied insert-sample (payload {\"kind\": \"insert-sample\", \"params\": {\"streamIndex\": 0, \"index\": 8, \"sample\": {\"pts\": 0, \"key\": true, \"data\": \"ffd8ffe000104a46494600010200000100010000fffe00104c61766336322e32382e31303100ffdb004300080c0c0e0c0e1010101010101312131414141313131314141415151519191915151514141515181819191b1c1b1a1a191a1c1c1e1e1e242422222a2a2b33333effc400a00001000203010101000000000000000000000304020501060708010100030101010000000000000000000000010203040506100002010203040703090606030101000000010211210331120441516171910581d122a1b1f01314c13253e13372d215f152422354622434a2734344b2638292c21101000201020405040203010100000000000102110321125131417113046191a132b18142145222f1c1e1ffc000110801b001e003012200021100031100ffda000c03010002110311003f00fcfe00000f73b36c7b34f030a52c28b6e29b77bfa923d8b66afdd47ae5e27647a6bcc6735fab0f36239bc103dfc762d96bf751eb978933d8764dd811e9acbc49feadf9d7ea8f36394be740fa1fc8366fa98f5cbc4d961f63ecb673c28f4565e244fa7b47f2afd53e647297ca81f62fd2761fe9e1d72fcc65fa4ec1fd3c3ae7f98cbca9e70bf1fb3e360fb37e93b07f4f0eb9fe632fd2360fe9a1d73fcc3ca9e709e27c5c1f69fd23b3ff00a6875cff003192ec8ecffe9a1d73fcc47973ce13c4f8a03ed9fa3f677f4d0eb9fe62297657672ffad0eb9fe61e54fb1c50f8c03eb12eced857fd7875cbf31425d9fb26ec18f5cbc4bf916e70af1c3e6c0fa27c8365faa8ff00abc4e7c8365faa8faf897febdb9c7d55f323ddf3c07d13f4fd97eaa3d72f11f20d97ea63feaf11fd6b73afd51e6c7bbe760fa1fc87644abf0a3d72f13981b26caaade061cb565a9cecb951af33a5ab632d4d29d38cccc2d5bc5b9be7a0fa3cf61d8eb6c182ef93f9ca7f22d95bfbb8aef9789cf969978407d221d9fb235f731eb97899beced8d7fc31eb97893ef8465f3407d1fe41b1fd4c7ae5e24d1eced89ffc51eb9789194e5f3207d497666c7f5317df2f1227d9bb2aff00821d72f135e1da2731f55789f3207d2bf4ed97ea61d72f1307d9fb22ff008a3feaf1325b2f9c03e85fa7ecdf551eb97891bd8366fab5d72f119465e041eda5b1602cb0e3ebe241f25c05ff001af5f1194713c803d57c9b07ead7af8922d97037e1aeb7e211c70f220f62f66d9fea975bf13ab65d9fead75bf109e2878d07b3f926cf5fbb5d6fc493e45b3fd52eb7e211c70f100f7cb61d9beaa3d6fc4c368d8b668e062c9614538c24d3f359a5d24ad9784000580000000000000000000000000001f44d93fcb60fe044e54d97fcb60fe045a47d0d3edaf843ccb759f1671ccb54a90a45cc384a6eca9cc58859c0c349d5ddfb0d990c20a089ce3b4eee8ac32323032464d1999a23244425d3a0c808a4e840cecbe918b34852654a7128b46cf357b152692358525419ca13b46343666c0344942b62cafa56652d78a4664c650e23b516ff0043352505154ad159bdd7f7457a393a6e42526acd357b5bd3a0f235752752dedd9d158c24d49493e25a9c634fa372be1616a95f2a17d61a4eb77f319444cce21720dc2375428cf15ca5951167126e94b15eb1df99d1ab78c4563b755615be25eea9d04df1964bd86138d8a393bdce65b2da3c7a73f698bc7935635cfad91a9c95ab52d19c6dfb465b0f8d3542ca9eaa2de6a936dd4bd87c5bb9532b742064b46c8644255e4cab244d29103259b06eb6a1192ab9cd3d010233b6642ac5a8d280757ede44e918a44e905f09228c36b5fe1b1bfda97b091323da5d766c7ff6a5ec272d61f310012b00000000000000000000000000003e85b226f67c1a7ee22e3c29adc49d9f48ecb82ffb117a15c593fdde3e07b916c447843826b999f167818364d9b5544ac60950c1cd3b194db2d22309aa61a91af9632d5a55defe47149ca5459712bc23689d4ccab0c89148ae165844c8a75a96625709ca62394e96392950a2e576c44194b538d981c66b85183a90344d5a15a5565e1560c8ccd981ab366a0f11a8c6ee4e9454afa9962e14767a6a49ff0072cbba4b577a74c8ab07574ab4eb4ac5e4b8db711e3cb4f9235a478dd33c3bda6d3397646d04ad556b51ad3bfbf329b4dbe243af2bfec3373a2e2cc459862d257b256a1b876479b834e494b236d3c68a8ba33d0f4f1139e6a4caa62cfcf756cd146588dbaee337353959a76de7561eb9a8c6e736a622f6c73442e56b87a9daa8a71c1a26def36934bcb04ab4ea2b622a672222b6c671385d49c4854353cbbcb52924e971aaf6b2233c33b4aa95434d3232f2ac9a2094b3a5086a973f42896ce189ab23988cd524ddd6ef42d61e26ab37720cab34a597d8124f99c71cfa7226d305cb730a206d70e9147aad9927c271a5abed55e44cedba8f2a84e1577d1acf26723e595097123abb8870df9c0bf12748c522649d436887345cc7698d364da1bfab97b0babcc8836e5fe171f82c397b02f87c9c005c00000000000000000000000000007d3f61839ecb80b25a11e8609455158d5f67516c780fff005a2e62cfcb6df63d6ce6223da1c8c7171d2f2c73de5373971ccca30f86b5495782e2f995d55c9b79d6dde6b15857261f9a4f82cd9b182af41af94946896fcc9658da70edbedf68944366e497951da9add9d5b549e7922e4a56a2de6730be5763993ca6a08d7bc551a2aee2ae2636aa91816f171d4acbac8a322826598b348aab95e73a22acf174abd2a7252b5cd6c9d567efc0e6d6b4d3a775ebbb61a9ce9bbe73aca98789293b93b799b694c5ab9dff006cedb39531a98d4c19bb363b362ca0b11e4b9d2ee86bb127293bfa16a75556afc881438e67931a17b5a6318f7eceae38c2ab745dfef731afec2c4a2b5538904a3182b49b6da55fb0c6d4e1b5ab33d119d9228d3e93cb76f3add669533f45e262a9b9b7967e05a518c3a5ef3a3434e6d3c5da254b4a17811e322ce14a183592acde598238477d723b352bda958cf3e4a44b378b26e52ea45694dbb9d4ce5351e54ded6da6665aa37fb4c379615d32b198cd54ca51a5eb511a3ccc9bdcbda02d4a327c2c34ebc5105634a34f2e667852a57dec1308a69b9bb5ccd6152faba332cb79393fa5915daba92aae3fb0099c9bb779811caf9d6f44676642f053895249c25eb52fc6fde6528a7609c278de8cb69153062e2a9d45e5ea1bc33a2457dbadb263ff00b52f61b14ab4296df1ff00098ffed4bd82177c7c0068c80000000000000000000000000001f56d82b2d930382c35d65cc48bb6f2bf6753e4981feda27c6c5692a23d6af671ca29349284a556eefc0a5277b67ec5c4928e7dd9b30f8748b93e847433449fd84ba5cd579d3a122bfd1b2265256ae5c02a9e0f436b3e2f8137c5a42bbeb6219492c275b391afa918ccaf9c2d55c992696761644b534c2997231e24ce6a240d90caece0d6d7f2e66b11bf35e2169cf52b6655a533b99c550eb8ae061a9c57d38bcc639f8787bad13894d176334ea9a2ac6c4f0951f1b33b74678b4eb3f8527ab067390a34aa60d9ba8320ad73c96ee24aee632aab5eaf87b4e2f517b566b58db3d7feaf108251aacff614d54bb77c2875e13956d6f674fd861ad8bde387af49f15eaaf1a2a2df5ea27bea11c350243af4b4e6b5c5b9e5599612c88629afa3996254dfc42ad7e6393d45ed5d48c4e364d615697a5fbccdbd25a6e957c08171670aeab5ae6604f44f2fb469cb35efd212e2ee4cc94a8eb62275e83349539819b8eae5d2774359ab3e648ac632a6f232961572aab5b2e4633dd99d5fc5d2644258c6e9d5e55b7da588c52b2304abdfec2ec62835ac23a12c62fbccf364cae435c2348b51a2ef1425515efc885b09e1957815fb46af63da1d29fc9965d05b8a21dbdc65b0ed3475a60cfd9f6931d532f88000d9900000000000000000000000000003e93b1e23f93e05f4a586bbc9e5895cb235bb2df030bf0236a9430ef9bdc8f7623111e10e099de5228d63aa6da5b96f6559626b7c12c970309cdcdd595db2f8532c9ccc2a4670b6154d3c47377391756884e8c0d93912a6518d4b91c891dd47123a0f2e7d2daf699b5e3aafc496a635b1819e76dc67ea35273c11988c6f98fc2f563155b99abd6f419733164fa5bc466bce76f82d0e54e1d476cb357af13bb5356ba58e2cefc99c465811cd5ebc38136a49e444db3ccd5d68bdab311d39b588c225e5b5fa0c934eab2e276b66fd0e35af934f265ebea22b3f6edf5c9876a9730aaf998cb3a7bf76e25d2a2f3a71e7de44fa9bcce6368e498ab1d3aab5eee4585a737c29538e2d64c4571bf49c96b4de732b630895255e1c48a4e32f2c7bd92ca69e7bad65bfa8afad528d751099614d3dd7e6fdf9126ae1bfda45555f299d53ad699d7767c68421851bb72cfdf3108debddfb4932e1711545ea12c8e191c212c0ea47512c6350bc4328aa35ccbd4dc4318dd74fcc5d8c75112de2114617de5850b56e4da5327587aa3915cb4c23a2e82449569ccce13c394b466d5da25d295d5bede046460f0f5563c6d4e35b6e29edbb3417676d0e2a2b4e14ed1b28ba654df62fca328c5e8559c56a56fe24ea97a15fb4b123f26da5ab2c4c09caef7b864f996aa93d5f0b001ba80000000000000000000000000000f7db24b4ecf85f8113b654d9bee30bf02273e86bd23c21e64f59f165522664c8d96438000074c4c8816e2f22d9a82e614d64d816c0000eea60928b91c17f4f59fbaf6cccf75e251c5f141dce509e28c7fd7d37498bccfd3f2bfdc8b223cf7b666e51cac44b1235c9d38fd8705ef3a9399ff8b44619d28ab4227282cf8d2a47a1eacf899ea49b6ead6fa6e335923dcf9982dfe5ddeecc94e2d6e4b764489269ba3bd0b25861453757f3afb3d0b74a66998c2956bcdde764e8f27ed0b38ef655f4f4316a9532dd55bb2e921d6d6756de6b2fb084abca49b4925630d55e1ec27ac5df238e8ef7eea0554f37eff31dd4d677b9634d328f5b5f35453a0919330671ca8ef7e847534f7fcc5470191c2538749e3990a2552a65dc1a42de97249a74bdbd84d1ac7fbfa68a4ba324c822f4c52f7b9345956f0b309c64ecefc37ae9599afdaf69b3c28cb7f9a9cb25525da26961a74ab5bf8741e76b5b9d3a148b5f33d996a5b118e6bfb2392c78e94e5c69774de7bab2b52ecd27655161c93835596ad5a5f99704f7f51bb92d52aae8a3b6faf129ea2d1379c474d96d289c258d353679fed88bf93e3cbf81e14adce8f35ea99bf8ddb3cff6a6361bc2da7024a5afe4f2c48bdcf3af57339ead65f16001d2c40000000000000000000000000001ee766fb8c2fc0899906cff00e5f0bf02263e8abf6c7847e1e64f59f12a6074c684aae1d3b53077212c8c88f233002b43870817f0f153b3b32c33526c612d4889de26398cc953a18455593d381e1eaf1e9cf04da663ac36aeec6edfa995e99fbf48ab82ad1b7c0c54b5f9a8973395a31c486a49b57ee2170b5bacb126d952526da8aeff009c09134e15846faa9d2bc0c94546297590a956726b2564965cd92254cbf612946ef4ad3c0bb87277e1e040d468d3bf7fce761071aa8dd53de848b75ac5d88e2b4d9d5ef5c49e0d52993f7b9d717a5bdf4b22576b658aeae9d1ccaef16d5a3e9b33928b54ab6bc7b89a3054baaaa6fad6fec21544a69be0fdf22c2c8a78b85a6947d1fb4431649d25dec855769539433460d5485f0c4e1d2551257c21b655bf039426a28c7825994e5372e4bdf337d3d39d49f6ef2899c2d38b54aefbf4ae4629986bac557356af2dcbb8c6a52f1116988edb2b599c6ebb19244e99add4588ccc9b44a5da255c379ee5ea690dc4a76cf79aec48baa7b9fbee3bbd35b19afed96a6fbafecbb7e26cf2556e5874517177a2fede143d461f6860e3bd10ada3a9b6b4a5cba7d0f004b8588f0a55a5534e2d714cdb5346b7dfa4ab4d49afbc3e830c78622d517a96555c8a1da124f63da72afc1c4e9fa26bb61c1c48b8e23938c295a27f4adfba8b7da17d8f68b3fba9eedda4f2ed58adb113975d666d5ccc61f14001b280000000000000000000000000000f6fb3ff0097c2fc289483677fc8c2fc2898fa1af48f08fc3cc9eb2548db3230250e838748406746b33145993a84b0516ce38b45c8ba2476baacee73db5695b70cce257c4a9245bc38aaef3250496f26c28b97d17434cf78dcc25587479d399b37b3d16a4d7ba2ba9b8aa489618b549275b51ae8de799eaa7335fdb7a429bd5164326e5bf2b177128d26b235f2be9e4eace05a61dd548b75f74574f7d684f249c234af25c7df792e141457c4945ddee9a837d166fd84185570969ab8e94ef576af4224583392b3dcdbbab2f7e449fcf9cdc93e3694ab6e979f791e24e724e2e0eb5ad528f45adc7992b61c861ff16b8bfedd57e8b46857ad259d7df89656049a5abcab85bf6157122b0ed57c135befcc942ee12a5f2a9b0a371b75b29e0fd154f7f616d3cd57b89594e4ae6145bf7123cd91cbe8bbe9e65055d7add37fb483130f8654eafb0c54b4de9575cbe7e067f12b7d2fac9669b0a4f4a8ef8ba665ba6f2a60c65af5b5454eea5299979b695b2eba5bb834854c47bbacc612715a62d46b9bb57ac8abbd91b91ec534abc11131bf5de3bb09b4e5b89bf26994b5456fb7cc6a5e949aab6eb9e4bc481c9b5a7756be870cf4f4e6b33999c67a2d36cf666f1772497b3da432c59f1f03943116f4f59e9989572bb1d6f72e9d49224945afa389872e55bf732824b36654527e555e976382fa7349dda44e533fa5e695697d2ae8b3ab52b52bbd5335cc89688cbcf14f8695f3265dae0c9595f83adfa0cd7856f82e49b8c64ffb77fa66539269d1ee373852d0eca9d0e9734ca0e973d1d1bcdb39ecced186e765dbf45218afc8a34b46af3cddf71b2ed3a4763c451df832af51e4f4d0daed7b62c4d8250deb0dc5f4d0e7d6d38898b477eade96ed2f98800c9600000000000000000000000000007b2d9fee70ff000a2c95767fb9c3fc289ea7d057a47847e1e64f59f11981da9d250c0c8e1901d448991a2d61c6aee4256946d533d2ebd2e95395f325cab4e66db0946aaad3ca88f035adc5a969f77752bb431f914e8a4b27be9f365d47147130d3d51cb7d2dd67a19d6cdb6e34bd3f84d44a1892c5d7833b354952f4a6e74f2f598d6f68e9330d669081d271ca9bccb0b0e3aaeaed7136d283c4c38cb2e36b2a70a1a2c68ace5ce9a5d2bf332d6b4db79dd4e1c26c5868e17ddf39abd0e4ecac973bf225c3c7f324e558bcab1d4d3e8f031c6c76ef57dd975646ba7a53a99c4c461499c329c126a8eba62b765cbacee249554dd3275df4aee4be7283da2aaf5ee2acb1252e48d23d36a4ce368f7538e30bef6856a4173ab7f616b0f16125c0d3e19729074aaf33b55e44eb68469c44c4ccf356b6cafcd524ba0a78b1d54af41341382d33ab8f1e1d1b8ec9696e39f3e28d34a6b7ac567ad532ad1ae1e7bbd0b4a697b6bc7812274c3a4ae965c915edfc2fa4e4b52d49dfe5786726b3afbf495b11a706c992ad994ee9b52cb274c919259e1e1d635c8b2a118e6aa55526a54549537786664f19e5a5f8758364ed984a7e46b891294e4ea924b8b6bd38f410cdb6e954ec6da55e2bd7c73f04ce211ca54b11662870f69cce9da1d49fb09e3875ad353caf656e34cf3392daf589c6f3e0d22b32aacc332de26134dab57a52ea4670c06d5652a2eef4657fb15c7495b8254d2d4d4566cd8c30b425bebc8d861e1420ac9578f144da550e1d4d49d496f1a7855f830925c5aa5b24caf89b34b0b4e7454babd17a9b3c292c4abc3755174aa76af42f765b8d5fd2a65bab7309cc34c435b2c1738dbcaf3befe9e052a246f671f89c23efbcd74f012964dd777f0be7c7b8df4efc3956d468a72529702c2c34f65daa6d59614945f7666e70b638a6dd12e34c913edef4ec5b42cff973bf1b16beaf16208a6377c70005400000000000000000000000000007b0d9fee70ff0a2721d9fee70ff000a2c50fa0afdb1e11f87993d67c581924768675459028f12367598903957b8daeced4ed2a569cbe7359e5dcea6c707752ef918eafd96df1b4af5eb0bd182d7a92e49664948c6f4a742a32494928d61e9bbdf813fc6c392bb49b59354bf71f3af4213e0e07c754f8baa29fd155f5fb4cf1b0decc9ce0a30a3593f33e8a10ec73c386257551aca9f6e68ddcd436a4e35d2eb7cabd3d0572de2365386d11c251956b1c4dd5f327c97a1aec4da2aeaa36956f28df2fddaa5decaf89150d4ab27f0dab359dbd9f31add726f79dba3a3e66f3d1cfa97e1d89cd6a4e3aad5ce9e8ba0a8e77bdd169c5caae9967c8a738d1e753d5a52b4dabfb71da66511c336919c235cf2366427644b19d1fa3e68ece34c8a7a8e6a70deb6fe51369696da61b37f46ab2af7b25fdd49d6965beabc4d6e1e23cadde5d4d56baab2e0b7ae9386da56d1b715778fafedac4e56a538c6d2dfbb7904744b274f7de4b6c4f2cacf9d9952587285e37e66fa7a94d4dadb4f2ec4c4c259453e1caed1c93aa49e956e1523c275746489353525b9e5bdfdbc8e3d6ac52d885e272c2787a256fe259532ae5c9155624f0eab4c5f4e7c3b8bf48c5c94aadd97456ad3e48ab3c56dd2ca8f3495f9bcd54a529379dbe7b267109a0d49c5359f0b5f80c7c1c35e64f44b9e52eecc894e755775dd5bf51c54c4951ea6d5b3cbd0d274fcbb4715bdf6ea6730aee2bf7a3cddfe748e686dd2357dc97b685a8aabf2c527babe67d2efd46e30610d54956324aa9b6d2fc4b4e97bf7917d6b4ff29c7ebff131451c0d9e4be943ff00d675e34cba0d83c38ff0469c72af2be7d46c9c6ad51d72f7b9d943e149a747bd3e553932e98ae1a98e1b94e8e2fda9b65b583a5e555d165d26df64d93176bc49461284294729c9b51826d2557cdba24b3370fb2f547fcf6c344bf7e4d52f9f97fb5f513bca76878a9e777eaa91e5b8c52d4acede87aa7d8139b4d6dbb038b928afe64ef276a574bbd72245d857d0f6dd86324f4b8ac49d9d5aa5e2af5189e48cc3c8d7e1ad31545c952e649bfe2fd87b57d8718a75db364b6759496e8bfddae528bef29ed3d8d3c3c19634317031e3049cd61c9b94555c7534d2b5535dcc6e9cc3cf45a6d12c92b235fa5a77b06d10b26d528bb2fd9c686af6d9d767c7cef873e4b2362a5de53db5a7b2e3d52afc39d3a8ba1f27001ab100000000000000000000000000007b2d9fee70ff000a2720d9fee70ff0a273e82bf6c7847e1e64f59f17530e8620943a2dbfd0e020624d06d1112440dae1634a3255755bd3baa741e87fc3ebd2d424ff000aeeeb3cb61c5ca896f269c5c5da4df3c9fa7a1e6ebe945ef58898acce5d5a779889ceef4fa709d3f9784a2ec9d2ee992b65de30706182d4e389adef6a292dd6abdcb87ce79458b3c379d794ae9f59cc7dab131a2a0d28acda8d557856eeb4dc63fd4b67ee8c73ff00e35f3a393d06ddb44233a52b2ce5754cad966efc4f3ff196e29e9143d1d3d38d3ae21cd6b4da52bc695d45b55cf990a7c4c4335c33c95b9755286bcc848bf8d4a59d6aaeb834fa11aecf7d0b4d37bcebc3a47e8f79969d3cbae3aaf339548b49ad591bd8e2c74d9c62b8a352b0a53c91cf86d3bd85b13fca3e531b766e2b16f529f7dbdee6b5cde1cab57775cf3ea27826a37a2a71f00d424f56a4f95acba0e6ad622d6c4470cb4eb0a9aa4dea4ba8b0f135f99ba3b75fbf0258b8c722069575556796e1ab48d48f78e846cb12941c1bbd56fe0fd9429a64b18d1d138d79fbe4652716a9469d7ff97df7661a1331b75dfb765ed082b7e7c8b3854d3e6cb2f9d7bdea54763909d1ddb36d6a4dabb7656b3896f30f0e0edbde6ef5bf26594fe12a56d659ab2793f9e869218c93a2a53bfdd9776994218306dd5d6eabe6e4fd97679789ce1d51318cb6f878dab3a3b3e55e9e05e9c97c3d4d4691abbdddb7e478dc1db145d251aa74ab79aa7069afb4b18db5bc48fc38569c7ddb2fe4df38c613e6461e93b33b4f0b61c5c696d2a789878d1845fc3a6b8689eb8d13f2bbfd247af8f68765e2df56de9b54d5a30352aebdeaf56f11b67c628d347add8a759e55965ea69ab5f2b18dd149e37d0e18dd958989f174ed9369a77861452719ea8afe1ae9c952ab4d89f1b1fb3b1f54673db3cdf4a3a70afe794dbad1e7277a3ca291e79b695d22b4af777e1f61c5e6cba634e1eb63b4765c2586ebb5394151574d6515f0fcad568d530e3bb235bb4f6a6c2b67c55b2471b125b542386e726b4795c9eafa4fccf53ad11a2d49bc972e3d66bf1f06917a53b79925a63155cec92abde5a2f944d30c6783aa8f9147130f4abad5d062b5b8d6adc55e9530d6e73a6a7a63baf4bab27cd12a89796a8d7ed72ff0d8ebff005cbd8678db57c25a34ea9d2dc15f7efc8afb4ce389b2e34a3f573aadeadece66bc338ce365330f99000bb300000000000000000000000000007b2d9fee70ff000a2cd0d760ed1831c2c34f1126a2aaaf6f427f95e07d62f5f03ddadeb88ff68e91de1e7cd6733b4ac8a107caf666bef157a191fcab03eb17af813c74ff0028f985786dca572863420f956cff005abd7c07caf67afde2ea7e0471d3fcabf3070cf295ec2c3736a8aaf72e26dbe4ae2aada5c95fd9bcc3b3f6becd4f5636d118dec9a9654cecb33772ed4ec94b4fc7c36b9466bffe3d879dadea6d13c34edd67afc3ae9a31319b7c2961e128275cde4daa12460b7b8d37d7d8ea413ed5d81b4be2e1db27e7a7fe2d9b0c1dbfb27453136bc3d4ef2694e9ff0085fd11e75ad7b4e673974c52236d97713b293c3724b4cf965ca8b7d7b8d23d85c25fcca2ef5a9fb4f45fac7633493db1349254fe651d38ad062fb5fb1aaffc4602aff64ff2168f51ab5898cdbe32d3c9d39e5f2d6616c782a49b55e1aaeba6dfb095ec6b1bcb0c3c3b64d4a8fd94eb267da5d8b5aadab0f8e589f949a3db3d91076dab0fab13d9a4ca7535277cdfea98d3a472fa29fe958bfbb1e345a1fab57284fb2715bbf95f3a2f4a9bcfd7bb35cbfcd61a4b8a9d5f547233fd6bb266bf99b560cbff009c4b74796a4c6a6a46f9b7d559d3a7b7d1e5a7d99387d9fb4ab2d9251793efa53aea6e5f6b6c3f128b69c2716f396b745cbca9dfd0b2fb5fb3525fe2a1beb695ff00d06f1afabcecca74abedf2d3e16ccde69f37c08e717879e79d0de2ed5eccb3f9561f43d76ff41a0dabb4b635895c3c78622955d692b3ef46fa3ab69b4f15a7f6cada788d951e2b52b5b93cba8b70c684ad4d2f9e4fc0d5cb6ed9259ca1d52f0305b66c9f589746af03aaf5d3d4eb8cf3898cb1de1b0924a526ddb71af96336da5448ab8bb5e0c9fdea6bbfc08be3e059ac48aebf03489aff00947cc189e4b71938e7ed0ddea507b4e0dfcebd7c0cbe5383f58bd7c09e2af38f9313c9b18e2714faf3335c8d3bda306b6c45ebe05986d780be94ebd7e0671c15ccc4c6fee9de5b06ec579330f96ec94fa52afbf22acb6bc16ed24970bf8168bc73fac231299bf32a6ef6f12caa3bc9ea357f28c2fdf5ebe066b6ac15fc6bd7c066bce3e60c4fbb6545d65c538c1512849fef2d56f67750d1fcab07f7d7af80f956157ef23ebe05266b3fcbeab6fc9b8ccf6db0c70f0d3793a5e4fdec7cfa1b5ecc9afe6c68b8a7e06e7076fd974df6c82afd28b53cba8e1f51be31bbab4b6cbdcb956f9a22a9e6b0fb53618a69ed31ea9fe52c2ed6ecf5ff00661d53fca79b359e52ee8b47386f5a156693f57ecffea61d53fca71f6bf67ff530ea9fe52386dca53c51ce1b5f870dd14ba08e5049515178f71aafd5f60fea21d53fca60fb5b617ff621d52fca6919e52ca71ce1e6b688cf0b166a6955baa6b26b9147166e385897ce124fa1a3d3636ddd9b8ca93c684a995a555d1e53cb6d13d93f991c3c5d4b43a6777a5db2e343d38d48b5713189c3866bc32f2800305c000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001ffd9\"}}}) to this subset's own real committed base document via its own, unmodified apply_mutation — every field touched is content already present in the real document (cloned or swapped between two real existing members), never an invented id or enum value. D3 registered only this subset's set-snapshot vector; this fixture discharges one of the remaining kinds its already-complete second implementation was never given evidence for."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "insert-stream-applied",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.semio",
+        "standard": "v1",
+        "subset": "video"
+      },
+      "mutation": "insert-stream",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "radian"
+      },
+      "files": [
+        {
+          "role": "expected-before-json",
+          "path": "../🧫️fixtures/insert-stream-applied/before.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:4af9ddf56105ff60815e9038f37295a340874899bd66d7b0ac0e4f4a35b2a91b",
+          "bytes": 222882
+        },
+        {
+          "role": "expected-after-json",
+          "path": "../🧫️fixtures/insert-stream-applied/after.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:5be9afbc56e2976acbb94584883e4d8783796bbc112bd4d57a112f16837b3975",
+          "bytes": 245250
+        }
+      ],
+      "generator": {
+        "oracle": "semio-video-python-independent",
+        "packageVersion": "n/a",
+        "engineFamily": "cpython",
+        "engineVersion": "3",
+        "command": "uv run --group test python3 .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION/🔨️f1-semio-generate.py",
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "AGPL-3.0-only",
+        "attribution": "Generated by this subset's own registered `verified-native-second-implementation` oracle (semio-video-python-independent) — an independent Python second implementation of this subset's mutation vocabulary, NOT a third-party package (no third-party library in any ecosystem reads or writes semio's own .dsl.semio format); `class: third-party-generated` is used only because it is the schema's own closest-fitting enum value for a generator-produced fixture, not a claim of third-party origin.",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "ordered-json-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "Applied insert-stream (payload {\"kind\": \"insert-stream\", \"params\": {\"index\": 2, \"stream\": {\"kind\": \"A\", \"codec\": \"mp3\", \"width\": 0, \"height\": 0, \"rate\": {\"num\": 44100, \"den\": 1152}, \"samples\": [{\"pts\": 0, \"key\": true, \"data\": \"fffb90c40000000000000000000000000000000000496e666f0000000f000001cd0002f248000305070b0d0f1215171a1c1f212426292c2e303436383a3e404245484a4d4f525457595c5f616367696b6d717375797b7d808385878a8d8f9294979a9c9ea1a4a6a8acaeb0b3b6b8babdc0c2c5c7cacdcfd1d4d7d9dbdfe1e3e7e9ebedf1f3f5f8fbfd000000394c414d45332e31303001cd000000002e7e00001480240510420000800002f24899e6311f000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000\"}, {\"pts\": 1152, \"key\": true, \"data\": \"fffb90c4000014f0cf5a14f4800b3eb16eb7353002054098210bb2de3d63d62de26e12010c258a0d5fb021800c0181b04c1304c130dc8564f220140605028404e8e739cd1a327140a09102084102027468d1a3468d1b681884210408186e73468d1a36f7f82881031084e739ce739cd0206200000061e1e1e1e00000000061e1e1e3f0000000030f0f0f0f00000000030f0f0f0f0000000013987878780000000230f0f0f1e00000000061e3fe3800000003ba1e1e7b0000001f9878f44a50a52529c6ec8d269a04a2893901cc3012b3de4d03d2b6c770c5959741b6124f030f1473c8683754f160c44f03381c71b04022086a086c0aa49b1cf173062f0454386202e91b2a3a0d8095c5923502db0b201bce6e5c15b0073091268be2422cf270d0ba1ec174c49d6507909c5d480e50ecac5703210ec334c4241bc5610aa4f1d441450a03026343419e27ccea2205f522a37e6de5669c5ea4492d45066e8dd4b27c9dd66ed4a990d5bce9e665183ba2b1cf7a94c79f2c25acb8fab7c9e6d459c12a77db5ffadf475f96af6515aa643956550946330740fb7c2d1b0d86c03445d037\"}, {\"pts\": 2304, \"key\": true, \"data\": \"fffb92c40a0018897975f9b900031dc5e6b73d400220c60e4d7bc5405022849515cf664200ef18303a22ff8020082ac33aa58db0789131649324ef16310a037a0a5c751703e21efca65c220066c3c8e7281ba41f09316494e4108e0c681854b86645c9e0f445b48a9a7e40031497d1299f2285f1670f45d312e977f9aaa2bc4216c9816b4924cd51323e5e254667fe440c48d1721c275ce1144cd1146438f975680e518b7ff64c683a0602b62ba4643286ee81848690542e39264b2c18a8cacff92a76ffe5401106c5603160b0084311810040af803caf803cf8500d0c01809f7ffa304b021300101cfde34e604c01e60a2056f4980d98d0101ba786c000a142c2975e8ba000c70112102c5c01866a7f7805181499b11057efada38031589b82fa0c70481fff6c2c5c140e270104c618a00886afaf57e3607d08001ca11e44c830e111ffff6f5fc4a63a85281f512710404f82e72b90a4cfffffedfc5c62371722c8a8c70728163832e6c491688392e7bfffffffffffffc9f1cf268820d82b1042004c8e314ba06e6f4d3384e5006af11acc06072580c060301000e1d90366f6cde0\"}, {\"pts\": 3456, \"key\": true, \"data\": \"fffb92c40a8018ed5f83b9ba901316aef07f358003ebb369ce96c6be84f1a9416eee57653d03018280c160e59728019604807344c01209a455ad18360206040d81878b00803b98736606c90b8006ef030b8140701b59bf30670b4806c7405c3c063005084c1b9d6debe02c0c03348142f213600b8100c2018014165baab7f828181be0da600003030781c56c1ba01e210242feaebff5b001030960b3e00a2903088082e48b48a006982c06161eaffd5fca02402703433507c627d2b1a118553028167fd7bbfce50886ccc8810cc866c8badb25b24120b409ada73f0611548d0d86fcc089312483013b7a0a9c7580035025fe6a518040c18585843c8ba0a3c2d3bd634b6ad5e5f5032c75a7b5e91282caabe395d81d9435b106d289dea88732d35afca66ae162da4fca3794f4ad74daa6e6f7adffb242f46b297503a10a5dd565d5dfd8aef7fffffaf92401633af83db8e17eb536557088fffffffffd8e4d4076697fb5ea6bbab5669b3dfca7ffffffffffffe22e9c3fae4c33698c6ab817f2b743c8666b7abefed2e133f5af8d000521c30600080118601209c5e9c0ae2f4f038c12\"}, {\"pts\": 4608, \"key\": true, \"data\": \"fffb92c40a8018022f2759fa80032aabb0f739b20260238043dfff3004000e05011dfbfd8400d8601a803eb4b03198fc0c263e3a6287032a0980d242e031088d3a4bf0b700e1985018060d00ad4b5abe0db312905d406142f7ff85d40b984001cf1c419dfffe17dc879134077122337abfd5f86fe328785289a05d2685c1f5ffff93c2ec319874e4011160321c05b2eff6fffdbf9072d11772a1ba030c881171ecb899e4bfffffffffffffcd0932e8e3171960a83c13429410009b7ad33e749f0079393f5e4f4bc7c0e0f0301401208caa11ef979a283868e09d05cfb273bcb9c1c7306760be985821870cd355fae7370e7982e450d4347f768fcc7830c4040cd5fcd9457fe6edffd25f2207040129d997092227f392cadcdd7a3e3b61c3265e8e67216c94b2fffbeffffff7fd7c1c5b08723cbcb40080c31c08fc3fff5f9effff5e080452d47f3252531b0d120347b1c1231c00ffffffffe7ffffffebcbe12c54838001c10cedd97f9b447c8efffefffffffffffffffffff25deefcbe9e007526af69d88ac3f766bbff4271db935ad48b8edadc6e48db0e422a3d3d028bb02e8613\"}, {\"pts\": 5760, \"key\": true, \"data\": \"fffb92c40b8015117383b9a7801ab2c5e4f73f40007943154438217792a94c27961d9a67c601be3f44ddf276863e88c408b8ffd8ee7858dd8ea22339ae1ce013401e08e78d8a400027ee212798a3fbbe4bfc59bd10e736eb0750b1b713e31aa624666b70d6258b06bac7f88d97aa081aa2e16ab9c313376e624bffffffe71e0af4f9ce71bdef15dc4dfdc2b6fffffffff0616ffc47c7cc9bffd579cf1f6c117b7be2b14a3fedd0020086436050a02820020100401717a6305717a780c5e52f543f5bfc0400c0900299e3fe0a004c140004bb8020408538fa322f700a36014ac41423486954c7c42e44c8f1c6626a644d1bfc4fe398b1e08e42c929ff0f505809a170072866b5b7ff8d820e5c9995faffff18a2d217dc2deca833634cc483ead7fffe28e488b8c4fe450cd6a40d357dbfffff665bb9d27c9f2c138440ccdc9f297fffffffffffff9101d86e69d946869ecc708855007ebd1f3fd7c7d5f0f4783c1d884f64df26f47304b25d54dffd9d31863e6124fa5bf138160869eac3e403422c5882140062460ca940f4880e32307013a4503c81f26b96c758b8ccc8b9b9323506\"}, {\"pts\": 6912, \"key\": true, \"data\": \"fffb92c4270015d15d8db99a0012a72faeb732b00081575e4f9010c8e2971c0893a6229027d653fe0dc61cb9f1cb1659f1da2902716624892dfd22182740c665e270a41e80800f744bb52cbfff193384e0f6450d0b879322e7d09820b473053fff62e13068b489c19b20e5f26c9f72e1a35083f062d28db5c76d0ca51369b5196adaa52692f0f912d1f661dad05dc4af585804985979a222d472688b0924921dd26034d87901ea5c5ca409a473754522e6a2775e4dcb8d0d8a4547ccf6b76c4104201b9a2209e065ec6e89df3a1e9bb934411c9e4d72e3682623f3f152e24f5725d4e5876c2aaa651eeff6b52cadec3cb4206ae2e92408cfb6124fcdfba1d70efd8a32b955fcba3dcd5d264941b0ee5b426987f05769e0688d04e59abcefe49500000848320c0b28c000000f3ae004cbb8579d6791ceaab2521d80ff83800f12003dc86effb020004e688e473301b4005b26edc37f11b8b909a384f0c6f9d1e48309d059a3e8534391198f8718336450828e713e4c9486a8ca919f86d823c15f14b86330e40a66282dabf6c88138532b95cd135a26495548a3ff3e5920e3bcb8b6cb\"}, {\"pts\": 8064, \"key\": true, \"data\": \"fffb92c4410017ca2b2199f9000cf22f707f3bc442a79d4ebea5fff4112f9ba98f3a079252b5e8a2a49d7ff6fe68689facc89c2a273e8fad4b454bea5a9259cfffffffff93e7cd1375a67d0d69a6a343c3c001d9dd49e15d89dcff7aaf4e86c1190e47668880c879f2f33085e33b55d31346230104f5a0dd0e2faa4e5b484cf4058c370694da90acc06655998243660328db8a1abc86669409a6cfe55451d10788d36da0f828de6762418351a6bb30ac0a2b19515e63f177e984529a58c46401b18a0086b437040b4101905054c0057243a84017bde4196d0dc100e3211d8cfc38030de084c54aa3048f00c4562116ffb7399fad31e679990e463e0318141c6341c189000b30c761e88b88d61d41a126acf3fffd8c981c1694661d1298b43e3c072d9980c1a0a0fd2c79651755c2a3be80b409ffef2ffffe2d7d6093e60d05a07a822e8a2010419a38d1d7bc400357f168c451bd7f63ffffafffffffa75d8ea672f5e09a99431385dc2f0368b0e8af65b837987c49e3946a23129ba2ab34964f59487d6f5bee3443cb56c59195ad04a440841e6043c5579c2a0096b97043c8d72196\"}, {\"pts\": 9216, \"key\": true, \"data\": \"fffb92c40a00d4520d649da680026722e996baf000970018222c92131ba4250931f8953e6a914420c1ac48126a7413522ce60471a86b242a3c9a99d9cf1b8d2504d04ce2dd96b3424cd02ea6848a083a5b2682c7e1bca2c7ce2df5a074d1e8cc9d25d49a0bad16aaad365a04f181cc9d2d4f4932617cc1fd4b6ae81fffadce189c4d157aecb31257fd6b4a5e75b7fa9664b47fd969122c8ffbce9ad5fd5741dffd559c61087510b261c09460502c50042b955ca66c75813b0a0ca1aba11c9395a43df2d84a578cd59590b90ae9665e0e261d5b6f6163309b5e2a93b01ca16e2dbe74f9b61cd6f9d5b3aef589bdd2b9b6246c5b3fe3332b9b9fb8b1439ad9d7ce33ab6756c6fff6cead8dd6d9fbae31ffb571bafffffed060c09e2918a01488487af2c130c8490f68148849ff2c48f0dd80b11e062415af8afd21202f809501492456d6d4addb1b91c4642d92668870988652456b9a2418e0d19113984964e080306860be66791a0e660aa4388ee030c4fc0b90d7d04ec901c2424034901eaf4b0a8d77278bc10a00da2c469078860bc7905889b76ddc9671c4b0ddd1341049903b4d\"}, {\"pts\": 10368, \"key\": true, \"data\": \"fffb92c43200221ddf6fb9bc801296baaca3b5100052fa88033b41262b8ca1a646e1c944460a06a30d559ab70c881b4f3ef258a09026e3149609453a516bb1996bb0ac2ca004052cbf3771e477259c7139f310e731c695d3b7ccad334fc2f4437be60f2bb97b3944533b1bee151e19c8a1728bd36de39bce8b2efe70df2feff3c70e4b39dd54b149fff87e1c8eb5f9361d89351867b49044a797f1e497987370ba98f2e5cfd61ffffffffffffffffffffffffffff87ffeaf7c3dd1e5dc51d08c94400aa1800476820b1884b96f74011480dfb7de077a13d04234984bab3758e315ca4d2648b88400560c52150a09ba9475cb439a1f3170ddd1375209d3303422049982cc8d5fa65c2c9362b837d24d34196a59b20991c374aa83276d575178d5353abb982cddcdc9d47bb294f488c20e54657d15d121a58a69368ae85d6dd97aea6299206d551fa96512713ad6dda83992d6deb56b59e7ffd2385b3d76fe91c372ca4b2e35ea60f50140c0023c40e4c4c1604031b03017d59d3acadb0334964a954cbd4d5e293d98b549b9513c07a0b0d003e3726f16dfb35302183c9209d26ca9d7\"}, {\"pts\": 11520, \"key\": true, \"data\": \"fffb92c41d001341695515c5800421332e7737b0023b4561b8c0ccedb62db5a2a1386d34272a776ff68b07718171aaceb6fceedb493cd65bc5b58791b469dff15172d48f9ac55fcd5fb9e752b6eee36eedbfff3ba5b6d63a6bffea1c8b0d8444b14241576e3c127f920a80bca91b4f3a4434ff111320b96553555cb25b3379ca6552a269cc438564250697dc75fe050e2a862ba62ca92a9daf08d4318a12453080cc0018084b4a9ed6e7f01d223d51b081911080b0f4569e868e58c992a0c98e86025db768c1c4192cb2865f17d2c09540c46046060c818a250202040c002d067ec57ef34e0930398a089a893a6fb58ce2e420c9752c9661637ffae1868d99aa8982880f063f0b991f576a873bf6eeb8102d8fe61ac399586f59c32b3110b52e7258a830392b71fece61aed68bd8fe6fb861bb76f4a130fc368a2a0cf8d7725bb5c687533c9a44e616edcfd26785ecfbde679f7f5ccfba80494155ae81f08e00831ff93e4c29a6ba15a17da4bfccefc5e933d4c61cb573fffd9bfff4c5550496408000c609005608cc3effe50035c88438cf1730f1a160ad76ed31b1812a434a490d\"}, {\"pts\": 12672, \"key\": true, \"data\": \"fffb92c41200d5ee09669da6800a60b72ae2b8d00005c002d0f6a2c5296f4d45d3e4b05f497659d7419d2636248a640376476a29981a14816e357324517529d238e6423274d59077a54ce3b9e7497a9d96e84bc5d53dab7b34e8e253aaba4ea5266c490e13164516494fd1459d9d1454aa2a65924bf535d166269933235d27b5c9c9ad9aa459fcba8a4ecb6557b1b924b5b6b5ab4123a6ae8b2bf5257bff79ace0a0181d586e62a00181000aa4e734b6930874a1db0b495891b54f2ee9fa53a6a491ba289223b015e0930a42327a924b355b178ac788ee29174bae626a93eb35244d0d9149d7cc4f0e2298e53036d5a932ea049203d8dcba8a92e92da8a9cc5d1ea4966ab454fe8d1a8c932e9c36a56d4e89d3c5e4d1fff7ffa4b4527fd68cc932ea99fedad925a3f7f4bebd2d259a877c442512fcf7ac24f5003d2f1fc744c6f3b8980e370282b0d7860663c4c00fb1602c3d3252ed744357e587f9ac82944c76d39efa8d0630e31fba4cede0668a19060021b06351fcfbf9930e6d8c0a30c6fdce8a7f3cb0b1d0c040e3065cb9ac006308739769b0c2f7799dc57a65429a0c87a9\"}, {\"pts\": 13824, \"key\": true, \"data\": \"fffb92c434801c9d7f75b9cd00128c41acd3b4d000503871105ffb939ff861ffffe62c48102840f954405000b00c67bbff539ffffffffe44200a1d458de9b4030288226181626ec9fffefffeedae6fbfffffcc3d8db948a06840ae877dc10481070759af46bfeef7fff7bffffffffffffffffbcbb131213157d8b88b7a76daa4866171a713ea3adb3fffeb7ffeaaf234560d4d04c009109b0ac0d71211c097b86d7e0e89c06db9871ceac032f9f2fcb882ec560eb018e36128d532d35a6718981e8a9dd375214d031279a908b29bb358f991513841c8278ebbf4cc8c1c8a241d24de85937a2c8b19b3a55a6e68ce3baca7d6abad4990149b752dd55a23d8c92a2ce85774524352ad5ad1a46e6add6b6556a592ca47db7a4649a7656f6d49a2ef5feb44a29adb5eda271353fdac92d99dbfd6c60c05108000381094587834106991a64cd3a7a52ed394d797ca0abc0cbafe29974f179272710c12519616920a5a492d25a2643d8ac9564568b2925a8bc99796c92d16e897501ec5a5d416fe74d4c8bc489812c6ce8a2d53a28b522f24a49f597594626aa492f524e89897502f1b7eb4\"}, {\"pts\": 14976, \"key\": true, \"data\": \"fffb92c437001279675b15c68003ee3270ff37b2436a598a3ba4f492a28a34bead6924b47fd4ea7313a4bac4425c926bf8943bf09050f7a3eb0938000da5dd95e4d5c1de7fbe1b8d07a2d2b14f121585c23bde9900d1b18b99f0e9981ddae1a6401ae0b19a32b2bcee16a8506da08305b0c3cc4c2cd80994c42ad66084298dfffe24266004c6c51871079138818d808d0ef7fffcc7400045059336e4e163c795d80a800d1cccffffef262661a326465264206061c551a6bc4226f2ba937ffffffe5af32608715c75874a405080c0b99780b1d7b232dd14d3ffffffffc880d39192028319fc0eb0edf22873b6e0defee53077ffffffffff91052826265c6410800a0326053010b12072f1b0abddc9e29c9fee5bcbfffffffffffffffdf8701f8dd57fedd9b52c9eb19c5203befbc0b5f755c5de3f5325aa0e24c06808052052b5ae3f8dd19c390e435c75e1b91c363849b685cbe8cc4e97cc0e1b1364e0e6003c3904e192483568189d4c7f124364d05d4854a40b83f1a2670bc833a74dcb8622da499f6b7a081a11a3985e641d3bdd48b9913a81d523d064ceacb84f3b3d06aa89c2\"}, {\"pts\": 16128, \"key\": true, \"data\": \"fffb92c435805375d5677da80002723aab62b8d00080e94537eebab7245eb757b74d267fd6b915fbd1d53849dddfaeb79c5d3debbec9b27fea528bf5b7fce979b795c9fd20c832040038109ca08a3421445455602d668a3ce0b395ca5dd63889cb5a5d99f4491255144911851c004d4374c92492322f1b2925934614d07b3a912e9ab73212e254c8db51b24f59751407112c8a91eb459232244a292491792a35b24b64924992ea2f179e925d1a4dad1270f63e8a5525f5a2a4927fd492493ff49fa4f7ff48bcb2ea5adbe8a9249fd27adab468b7d55178d968a3dfd2598bfe55df0dd5000dc69b7ba8db6bb41a8d0682b2b2cf164997bc96bfccec54ee360cc4a08027fcf6a6821c00a7b1fee262c2862c5085a481d9e7a338183e39f35321624029a4d6ffff031199001269b9f0b66e638444c17fbcfba473a77d100c614112890b325fca5bffffcd2661889099a9f99985a29ab7c9a0790a576106fffffff8381cd9918c90383810c3c44c440dbf4fd0685bdd023b2cca4bffffffffede492521818bcd4bcc0808c20500451674f4bcd28d46db832dfffffffffff72de76206262\"}, {\"pts\": 17280, \"key\": true, \"data\": \"fffb92c45f8020859981b9bd9212c72d6fbf332000a6322e102e61404921818781a61e37e06726c769a65fea3dfffffffffffffffc5e75db91cfc06e3d576dfb484560a7bd73294dbadf8d25beea82675ca9fff9778219fffd9519b54c1225ccb2aa325f126dd20928824c2da460e86ca98ef622e5940c2ff850a46cd0043810688978db0d98c468085432306e03343b422427022808401552abb0b516944d85f31442e30d5332d3178b84d92640c6684c0b478ba5e20e60a58f874d91406e1514c9a64713ac91707c2ab3c82886a07135a87249a2f209a2401b344f53f5bea377a95d33eb5cc1ebbbf45d0d692a69514d6d41937d7acbfefe73cc33d524c0016cbf7daed7e8adfffdebd9d600360800000100f400041c168fd133857a27983a1f0b033475bfcc29140c4d0c3bbff0c6c02442d1c0d7d600d28065401c49f858500f04004383d6eaf19513681822633a366eb5fe2ce06e880705122149082dffe18884da1f29505742c242d17fff72e0724404ba1c880f0000c1852dfeaff9a92a16046a85848a2932685f2f10d57ffffc734870cd13c3a8311002841c9274e0ea0c\"}, {\"pts\": 18432, \"key\": true, \"data\": \"fffb92c44b001781bf4a99da000439326ef739b2428c18083f506fbfffffff8182124d1b10210842e1452a438658311226a70748b9442a4d0e7116006f477fdf9ff3783b198c454292b37794351762b476c607442b1b4d0460c15981c3dfe796e11cf8ec63d14acca3b26441869f92c3c001f2f9fb06ee5e7732e6da7a38141028eb67fab018ae618946d89c0e017a9880244d98f3b8736744e46803ca44e1168cc051cd6989f3175d9fffffe10206cebe44f46582c61e126121718aa810578efc37ffffffeac66c43862a4e243e64c2c2c090fbfe5cd8bc3f61bca5fffffffff3060830c0a468081c5cf3c15053131b0513d4def3a9f7abd1fffffffffffbf6fa4e1950e0f04974cc38116aa97abb87e5fda1a77f7bba5a4bfdfffffffffffffff8b8182dad2d4b8c2d35e4cedc5df4712bbf8c335ab9cefd2739f72c5ffffcb9fcfff4316fa144e5ea43487733455634534592b6ca65204a285c2bc250d762e95a10ca7203090c661119e4870d2839a66025cde1ac6680572aed32c2184122b24e143948df8482c9cc9fcde443829ea65caf349694946a8b510e661a0923116e0e\"}, {\"pts\": 19584, \"key\": true, \"data\": \"fffb92c42c001bf1937ff9ac80139d3829573b50003bc504e34b9b4c7f15b1943297d90034b0cc2e1316af6ea286c0b5f57e54aafd8f527245aef6e5e9a6a16fb9c7a7e329af16ca91ba59c75ab3de6b747495abcd6f1ad76e6b0ab29cbb52ac9b5fbbbbffd73bfde7293bfcd57e7f79aa0e7fe37f0fd492732cf0cf1ffd5bef3fbae7ff72d7eab7ffff69e937cad8fd8deafceffafd6e5bbffee92ea1040000003c289e319c420da35f82bd13cc1d0dcc4928a2757fcc8d1e09876bd57fc0c12160010c98ab03282540c564a02c3f21a4c9a7030807c5bc0c1821030f04ceadbe1fb07cc0120c0080480a017495f86ad18e14b0c70a0430375292fc1bdc50a17021914088000c16080c4eb5fa3fc1b9428e06041381824340881c17f441601013031008d151898b2fffcb62811220f641b243a50fd42c844140cba4b2ffa497ff864200c048120287444c00902018443417445c042872427e1488c70f6a57abfffff85889061c90bfa18d8588868ea1e88c16687c21f28e916493a43865831b7c5d6daa0019650630760620751e0f076331d8ad463c9c4bcaf65b9f4dd34ffdcaa3\"}, {\"pts\": 20736, \"key\": true, \"data\": \"fffb92c40f001a058983f99a021b06b5aee730f000190aff9a261dc80d0cd07033c00058c036643d2e00c700db0e00d0e3962a0878221e065418340402830738422010083c3f0db09922620a8366cf10c1c04547c7e36c2cd0160017060485858c138470eb19418abfe1be07ca17bc3e42260382007144c688efacd8a3ff014202118b181206214352910517193a8180e4175d0299b7ff0c4e3b888134330c308500787d8c9910cc16e8244e2ffffe450ba44cb85d2264f9c3427113727dd32912148ba7e8618e57fa3fc5fff5d7755d93274508d13923395bab4d9d52fed1a5b54210cb3116169e5c77aedc8f531ee8909b72b3617e5441a92375b6d548ffd5273962c795126bedb358399c7cc6eb0d6df691bdf14c1daab6eed6b72572a482e949ac3c6cddcfd65897b304d3bf637d4cf5447cd4fc7ba82b88b6dedb77a86dcf9d7dc78ded78d9f7c40837d5311b3e4f1b2e5adde4a6647f98fa8ecb2da9e99acf0a58f8f466c7ddf58dd2cad66ac1c38df51e07adaf6ffe31fe657299679d5108952599f84dcbaa1000000003ce1f8021d07f45a015f93cc3020313095de957f9\"}, {\"pts\": 21888, \"key\": true, \"data\": \"fffb92c40c801845bf52b9ca000330332f7739500283450241eaf53fc07010ccb17b022340c5980b1f21a62dc39a200818d4401ca92d5e2f431281100b0b11d6a7f86d220a8091c01c58b24eabff9907241938609351018120757aff8ee0f846813039e34042a1c506ab45924aab98ffc4ec2b50c4216e82c593382b619722e1f2a2dfad6dffc450800626254a42030b18ad89b274b03345e2025c492ab5affffff377621c2bc23e2045d2683511c432a400b433440911670a4ffe2e3195800282f1b8dc4c2f178983a2f0315823cac11e8e353ffef0240a823ff7ee306ccaa1b00118e03a141400b8979b938740c66090386aa40b07bdd4b370bab01801818347a0046ff9bbb1a2c0182401c20030882c0c4627030680ff73ec9a6b0da803858064334822338e30302817fb9bb78592018c86c028111331dc40091fff6f8b02c56e1d91f43ac59a1001806031ffd9481a3a1b3405028390012070171682c3613e8281c0c6c16b01a00c7fffffffe20b8068143230a20b3838d03048040b0403d01f21e10c564b8c60ccd58aa5aa6aaaaaaaaaaa22c4fa8c602d896d788f2b7da212\"}, {\"pts\": 23040, \"key\": true, \"data\": \"fffb92c40b801891937539878002f7b7eb93374000d9101322cdb6967b58f4bbd1451cc01d5306d1d0eb12a923d2e4c9b32d8be8c896aeed3518a1bd8966093146f6c5b9b74864620ea6cce5d965972a33fde6a8d50180c08b482a46f5d0f989bcae199fedfb3d236204481ad2c4f3d6123e06a0da25e0b5209f6f5056f72d5b6988b578765e6fa42f1edfb33dbf56d66bda0de9f2eb3ed026b7dd95ae5a8758fbf7850be61cf89779cb65b123546000e628752391fa5e44f249717f2b157a8954f150024000e000000e90f830940fd2d00afbbcc642cc149d65a94ff941c2e28a46bfc3ea16f64f0b27085901961a2c426e18e24f9a126004045946b2f11be34c5b42dc83794448c59d66bf3116001a0c2041a26c5232312c191ffc51c0c28a15f322262c02cf264c5475153ff5ac6602e14812a887a5632324db47fe6c82631a48178e17c9c1f444ffeafff622c6c4c9749a1094aa6c889e859e4416791f992b53a3ffff1e8b6542b8ae8e413e91322323c5f385e3c6d2684dbe54e8bba29d4a400706e370e8bc4c37178986e0693795845e1014c2bff3b660e0182a1e7fc63672\"}, {\"pts\": 24192, \"key\": true, \"data\": \"fffb92c410801a3d99a3b9da06d3172b70b737c20213f068e08d9001d217680859d337400cf1800b4e01443d682dc014481a83c06fb301f271f4d4c84184430401850a0710708e3f74d4684e1d032418109e0380d81b190518036bff4cdfdc058101a878031202e6c2e60010a01a825ff7dbe0b0f11e06470b3216cca0c03c280517ffe82d3375774d400224110306e00344e00d6040b87032000356036381cb05c07ffffffe21710945bd10fdc00458012304400860b201bd0018610516c207ffffffe893dc09fb52bc5928d74eb59b65449809e17dcdf6a1e14302dc390d39c067879f6618baf97abab01506980c5d6a51da800941b48880618bd4ad1f6da0e112798c1e2d41dcf6fac8ff27c3d550be46272298991a1c10e7ee45cc7b52c6dd97a02c6030001228e4fe124813bbefcdce7f98041462c2aa5033c50e250a2225987bffeb5ead09ffd54fa3f8cc350458a1a344affeeffff797ff35cffbbc782410da6baf5819d884c1f13b5afe6f3ffffffdffd4efff7ffe89785abd3f8b28b1ab524cbb286fffebadff5d733870440770330550b4482d168b45a0efa420ca01b8\"}, {\"pts\": 25344, \"key\": true, \"data\": \"fffb92c40b0019056b7df9d90013003371b73550921c86abd2b20bccb4230c08140c1f1088408ff30f835819409fbff04d02d14740363d835317e5d21ab478851607a402804e94456a433c40616111c00508d844e0cb1489ef9588602090e692e792291b901ff10785a70a109f22c278301c921a55323140817f1912282a626d2589b1d21a382c8a3631d1721a4effc7111c5d0b263a41876ac5c699d5b193191b191b18d7ffcae21389c0dcc8be0de11a25d288d61739a144d499289aa96c4d034060295ffdd680028361b0946c2e1b0780c05023e5e5703c336b8fffce1a71e69077fd3e074311d839950c82cc818245bd0348188c1e06b43a001173fb85f403008142c380c1c00fe9bc1107c0c000a0020e00713c00005fa6f73e885940000c00ca858031e03031a008007fbfc0c280803248bc0c3e091ca03038043e2014007fffe00c0706db86de4b1041cf03028140c1e210312827fffff0b4c19f0f5c31b8b1c31406a82d10f227fffffffb85c209c1640c407139b970d08e1050760cd997ffffffddcbaa096f695b4cceab47416530200c04808b230fa3070c309cc0d198\"}, {\"pts\": 26496, \"key\": true, \"data\": \"fffb92c40d0018195985b9ba901332af70bf3780027b66cdb81dac70d363a3b566f1718382025321c5726c212c81dc866058821a98a54d87f1ed41734014050015501824005c2344071db448d4c3fc18a80044006110503610f264609c0d5699f2fa44707140611148071043a517dafe75f149028095205323054166ff409cd4718788cc87cc434ac90978ca7fb757b10730228160056c5318e10106c9101caeaffd7fcb8490a8170d4ba32c5e59f19c2c9f07bfdb4f928929cfffa18d21c154218110154361a8d86a361b03e0021d091a85774ae0bccc4a4cd978c5894c34c3fc54f58e2039e9ff3b911f1f56b3fea2a1d2795d98062bfff9bfc828242a5b8e135effff5b4bf502814263729c33c70fffff8798d27082a4e9375dd67fa5dbabfffffececb2ee9ca1d278d031396ebfb2dd69f6fffffff9ab504be6d8ecbc0928a53bc65396597ca9cafffffffff5e92e8f3505378eccc15199fdebb8bed16defeb634bffffffffffefb412d5e412b7f52e2fd68930879e2f2876619ad771ab2d9ade3f2a87a9b54d5000dc6e371f8fc7e3f178180c05060da0c1b41c652634cdc0d\"}]}}}) to this subset's own real committed base document via its own, unmodified apply_mutation — every field touched is content already present in the real document (cloned or swapped between two real existing members), never an invented id or enum value. D3 registered only this subset's set-snapshot vector; this fixture discharges one of the remaining kinds its already-complete second implementation was never given evidence for."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "remove-sample-applied",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.semio",
+        "standard": "v1",
+        "subset": "video"
+      },
+      "mutation": "remove-sample",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "radian"
+      },
+      "files": [
+        {
+          "role": "expected-before-json",
+          "path": "../🧫️fixtures/remove-sample-applied/before.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:4af9ddf56105ff60815e9038f37295a340874899bd66d7b0ac0e4f4a35b2a91b",
+          "bytes": 222882
+        },
+        {
+          "role": "expected-after-json",
+          "path": "../🧫️fixtures/remove-sample-applied/after.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:645d919eda793f255bcefb5c7dd23ab8351439dd81f0959dbfbe500a118966cf",
+          "bytes": 182959
+        }
+      ],
+      "generator": {
+        "oracle": "semio-video-python-independent",
+        "packageVersion": "n/a",
+        "engineFamily": "cpython",
+        "engineVersion": "3",
+        "command": "uv run --group test python3 .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION/🔨️f1-semio-generate.py",
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "AGPL-3.0-only",
+        "attribution": "Generated by this subset's own registered `verified-native-second-implementation` oracle (semio-video-python-independent) — an independent Python second implementation of this subset's mutation vocabulary, NOT a third-party package (no third-party library in any ecosystem reads or writes semio's own .dsl.semio format); `class: third-party-generated` is used only because it is the schema's own closest-fitting enum value for a generator-produced fixture, not a claim of third-party origin.",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "ordered-json-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "Applied remove-sample (payload {\"kind\": \"remove-sample\", \"params\": {\"streamIndex\": 0, \"index\": 7}}) to this subset's own real committed base document via its own, unmodified apply_mutation — every field touched is content already present in the real document (cloned or swapped between two real existing members), never an invented id or enum value. D3 registered only this subset's set-snapshot vector; this fixture discharges one of the remaining kinds its already-complete second implementation was never given evidence for."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "remove-stream-applied",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.semio",
+        "standard": "v1",
+        "subset": "video"
+      },
+      "mutation": "remove-stream",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "radian"
+      },
+      "files": [
+        {
+          "role": "expected-before-json",
+          "path": "../🧫️fixtures/remove-stream-applied/before.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:4af9ddf56105ff60815e9038f37295a340874899bd66d7b0ac0e4f4a35b2a91b",
+          "bytes": 222882
+        },
+        {
+          "role": "expected-after-json",
+          "path": "../🧫️fixtures/remove-stream-applied/after.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:2b52be03da05ea6f54e7fddf6d828bcf09ddc875dc1749aada1aa56e868eafe9",
+          "bytes": 200514
+        }
+      ],
+      "generator": {
+        "oracle": "semio-video-python-independent",
+        "packageVersion": "n/a",
+        "engineFamily": "cpython",
+        "engineVersion": "3",
+        "command": "uv run --group test python3 .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION/🔨️f1-semio-generate.py",
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "AGPL-3.0-only",
+        "attribution": "Generated by this subset's own registered `verified-native-second-implementation` oracle (semio-video-python-independent) — an independent Python second implementation of this subset's mutation vocabulary, NOT a third-party package (no third-party library in any ecosystem reads or writes semio's own .dsl.semio format); `class: third-party-generated` is used only because it is the schema's own closest-fitting enum value for a generator-produced fixture, not a claim of third-party origin.",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "ordered-json-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "Applied remove-stream (payload {\"kind\": \"remove-stream\", \"params\": {\"index\": 1}}) to this subset's own real committed base document via its own, unmodified apply_mutation — every field touched is content already present in the real document (cloned or swapped between two real existing members), never an invented id or enum value. D3 registered only this subset's set-snapshot vector; this fixture discharges one of the remaining kinds its already-complete second implementation was never given evidence for."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "set-sample-data-applied",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.semio",
+        "standard": "v1",
+        "subset": "video"
+      },
+      "mutation": "set-sample-data",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "radian"
+      },
+      "files": [
+        {
+          "role": "expected-before-json",
+          "path": "../🧫️fixtures/set-sample-data-applied/before.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:4af9ddf56105ff60815e9038f37295a340874899bd66d7b0ac0e4f4a35b2a91b",
+          "bytes": 222882
+        },
+        {
+          "role": "expected-after-json",
+          "path": "../🧫️fixtures/set-sample-data-applied/after.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:bc3cc427df24b01d98cedf74498a13d7698cfbf421d1d70ae7b6326e7dff3d60",
+          "bytes": 222882
+        }
+      ],
+      "generator": {
+        "oracle": "semio-video-python-independent",
+        "packageVersion": "n/a",
+        "engineFamily": "cpython",
+        "engineVersion": "3",
+        "command": "uv run --group test python3 .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION/🔨️f1-semio-generate.py",
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "AGPL-3.0-only",
+        "attribution": "Generated by this subset's own registered `verified-native-second-implementation` oracle (semio-video-python-independent) — an independent Python second implementation of this subset's mutation vocabulary, NOT a third-party package (no third-party library in any ecosystem reads or writes semio's own .dsl.semio format); `class: third-party-generated` is used only because it is the schema's own closest-fitting enum value for a generator-produced fixture, not a claim of third-party origin.",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "ordered-json-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "Applied set-sample-data (payload {\"kind\": \"set-sample-data\", \"params\": {\"streamIndex\": 0, \"index\": 0, \"data\": \"d8ffe000104a46494600010200000100010000fffe00104c61766336322e32382e31303100ffdb004300080c0c0e0c0e1010101010101312131414141313131314141415151519191915151514141515181819191b1c1b1a1a191a1c1c1e1e1e242422222a2a2b33333effc400a00001000203010101000000000000000000000304020501060708010100030101010000000000000000000000010203040506100002010203040703090606030101000000010211210331120441516171910581d122a1b1f01314c13253e13372d215f152422354622434a2734344b2638292c21101000201020405040203010100000000000102110321125131417113046191a132b18142145222f1c1e1ffc000110801b001e003012200021100031100ffda000c03010002110311003f00fcfe00000f73b36c7b34f030a52c28b6e29b77bfa923d8b66afdd47ae5e27647a6bcc6735fab0f36239bc103dfc762d96bf751eb978933d8764dd811e9acbc49feadf9d7ea8f36394be740fa1fc8366fa98f5cbc4d961f63ecb673c28f4565e244fa7b47f2afd53e647297ca81f62fd2761fe9e1d72fcc65fa4ec1fd3c3ae7f98cbca9e70bf1fb3e360fb37e93b07f4f0eb9fe632fd2360fe9a1d73fcc3ca9e709e27c5c1f69fd23b3ff00a6875cff003192ec8ecffe9a1d73fcc47973ce13c4f8a03ed9fa3f677f4d0eb9fe62297657672ffad0eb9fe61e54fb1c50f8c03eb12eced857fd7875cbf31425d9fb26ec18f5cbc4bf916e70af1c3e6c0fa27c8365faa8ff00abc4e7c8365faa8faf897febdb9c7d55f323ddf3c07d13f4fd97eaa3d72f11f20d97ea63feaf11fd6b73afd51e6c7bbe760fa1fc87644abf0a3d72f13981b26caaade061cb565a9cecb951af33a5ab632d4d29d38cccc2d5bc5b9be7a0fa3cf61d8eb6c182ef93f9ca7f22d95bfbb8aef9789cf969978407d221d9fb235f731eb97899beced8d7fc31eb97893ef8465f3407d1fe41b1fd4c7ae5e24d1eced89ffc51eb9789194e5f3207d497666c7f5317df2f1227d9bb2aff00821d72f135e1da2731f55789f3207d2bf4ed97ea61d72f1307d9fb22ff008a3feaf1325b2f9c03e85fa7ecdf551eb97891bd8366fab5d72f119465e041eda5b1602cb0e3ebe241f25c05ff001af5f1194713c803d57c9b07ead7af8922d97037e1aeb7e211c70f220f62f66d9fea975bf13ab65d9fead75bf109e2878d07b3f926cf5fbb5d6fc493e45b3fd52eb7e211c70f100f7cb61d9beaa3d6fc4c368d8b668e062c9614538c24d3f359a5d24ad9784000580000000000000000000000000001f44d93fcb60fe044e54d97fcb60fe045a47d0d3edaf843ccb759f1671ccb54a90a45cc384a6eca9cc58859c0c349d5ddfb0d990c20a089ce3b4eee8ac32323032464d1999a23244425d3a0c808a4e840cecbe918b34852654a7128b46cf357b152692358525419ca13b46343666c0344942b62cafa56652d78a4664c650e23b516ff0043352505154ad159bdd7f7457a393a6e42526acd357b5bd3a0f235752752dedd9d158c24d49493e25a9c634fa372be1616a95f2a17d61a4eb77f319444cce21720dc2375428cf15ca5951167126e94b15eb1df99d1ab78c4563b755615be25eea9d04df1964bd86138d8a393bdce65b2da3c7a73f698bc7935635cfad91a9c95ab52d19c6dfb465b0f8d3542ca9eaa2de6a936dd4bd87c5bb9532b742064b46c8644255e4cab244d29103259b06eb6a1192ab9cd3d010233b6642ac5a8d280757ede44e918a44e905f09228c36b5fe1b1bfda97b091323da5d766c7ff6a5ec272d61f310012b00000000000000000000000000003e85b226f67c1a7ee22e3c29adc49d9f48ecb82ffb117a15c593fdde3e07b916c447843826b999f167818364d9b5544ac60950c1cd3b194db2d22309aa61a91af9632d5a55defe47149ca5459712bc23689d4ccab0c89148ae165844c8a75a96625709ca62394e96392950a2e576c44194b538d981c66b85183a90344d5a15a5565e1560c8ccd981ab366a0f11a8c6ee4e9454afa9962e14767a6a49ff0072cbba4b577a74c8ab07574ab4eb4ac5e4b8db711e3cb4f9235a478dd33c3bda6d3397646d04ad556b51ad3bfbf329b4dbe243af2bfec3373a2e2cc459862d257b256a1b876479b834e494b236d3c68a8ba33d0f4f1139e6a4caa62cfcf756cd146588dbaee337353959a76de7561eb9a8c6e736a622f6c73442e56b87a9daa8a71c1a26def36934bcb04ab4ea2b622a672222b6c671385d49c4854353cbbcb52924e971aaf6b2233c33b4aa95434d3232f2ac9a2094b3a5086a973f42896ce189ab23988cd524ddd6ef42d61e26ab37720cab34a597d8124f99c71cfa7226d305cb730a206d70e9147aad9927c271a5abed55e44cedba8f2a84e1577d1acf26723e595097123abb8870df9c0bf12748c522649d436887345cc7698d364da1bfab97b0babcc8836e5fe171f82c397b02f87c9c005c00000000000000000000000000007d3f61839ecb80b25a11e8609455158d5f67516c780fff005a2e62cfcb6df63d6ce6223da1c8c7171d2f2c73de5373971ccca30f86b5495782e2f995d55c9b79d6dde6b15857261f9a4f82cd9b182af41af94946896fcc9658da70edbedf68944366e497951da9add9d5b549e7922e4a56a2de6730be5763993ca6a08d7bc551a2aee2ae2636aa91816f171d4acbac8a322826598b348aab95e73a22acf174abd2a7252b5cd6c9d567efc0e6d6b4d3a775ebbb61a9ce9bbe73aca98789293b93b799b694c5ab9dff006cedb39531a98d4c19bb363b362ca0b11e4b9d2ee86bb127293bfa16a75556afc881438e67931a17b5a6318f7eceae38c2ab745dfef731afec2c4a2b5538904a3182b49b6da55fb0c6d4e1b5ab33d119d9228d3e93cb76f3add669533f45e262a9b9b7967e05a518c3a5ef3a3434e6d3c5da254b4a17811e322ce14a183592acde598238477d723b352bda958cf3e4a44b378b26e52ea45694dbb9d4ce5351e54ded6da6665aa37fb4c379615d32b198cd54ca51a5eb511a3ccc9bdcbda02d4a327c2c34ebc5105634a34f2e667852a57dec1308a69b9bb5ccd6152faba332cb79393fa5915daba92aae3fb0099c9bb779811caf9d6f44676642f053895249c25eb52fc6fde6528a7609c278de8cb69153062e2a9d45e5ea1bc33a2457dbadb263ff00b52f61b14ab4296df1ff00098ffed4bd82177c7c0068c80000000000000000000000000001f56d82b2d930382c35d65cc48bb6f2bf6753e4981feda27c6c5692a23d6af671ca29349284a556eefc0a5277b67ec5c4928e7dd9b30f8748b93e847433449fd84ba5cd579d3a122bfd1b2265256ae5c02a9e0f436b3e2f8137c5a42bbeb6219492c275b391afa918ccaf9c2d55c992696761644b534c2997231e24ce6a240d90caece0d6d7f2e66b11bf35e2169cf52b6655a533b99c550eb8ae061a9c57d38bcc639f8787bad13894d176334ea9a2ac6c4f0951f1b33b74678b4eb3f8527ab067390a34aa60d9ba8320ad73c96ee24aee632aab5eaf87b4e2f517b566b58db3d7feaf108251aacff614d54bb77c2875e13956d6f674fd861ad8bde387af49f15eaaf1a2a2df5ea27bea11c350243af4b4e6b5c5b9e5599612c88629afa3996254dfc42ad7e6393d45ed5d48c4e364d615697a5fbccdbd25a6e957c08171670aeab5ae6604f44f2fb469cb35efd212e2ee4cc94a8eb62275e83349539819b8eae5d2774359ab3e648ac632a6f232961572aab5b2e4633dd99d5fc5d2644258c6e9d5e55b7da588c52b2304abdfec2ec62835ac23a12c62fbccf364cae435c2348b51a2ef1425515efc885b09e1957815fb46af63da1d29fc9965d05b8a21dbdc65b0ed3475a60cfd9f6931d532f88000d9900000000000000000000000000003e93b1e23f93e05f4a586bbc9e5895cb235bb2df030bf0236a9430ef9bdc8f7623111e10e099de5228d63aa6da5b96f6559626b7c12c970309cdcdd595db2f8532c9ccc2a4670b6154d3c47377391756884e8c0d93912a6518d4b91c891dd47123a0f2e7d2daf699b5e3aafc496a635b1819e76dc67ea35273c11988c6f98fc2f563155b99abd6f419733164fa5bc466bce76f82d0e54e1d476cb357af13bb5356ba58e2cefc99c465811cd5ebc38136a49e444db3ccd5d68bdab311d39b588c225e5b5fa0c934eab2e276b66fd0e35af934f265ebea22b3f6edf5c9876a9730aaf998cb3a7bf76e25d2a2f3a71e7de44fa9bcce6368e498ab1d3aab5eee4585a737c29538e2d64c4571bf49c96b4de732b630895255e1c48a4e32f2c7bd92ca69e7bad65bfa8afad528d751099614d3dd7e6fdf9126ae1bfda45555f299d53ad699d7767c68421851bb72cfdf3108debddfb4932e1711545ea12c8e191c212c0ea47512c6350bc4328aa35ccbd4dc4318dd74fcc5d8c75112de2114617de5850b56e4da5327587aa3915cb4c23a2e82449569ccce13c394b466d5da25d295d5bede046460f0f5563c6d4e35b6e29edbb3417676d0e2a2b4e14ed1b28ba654df62fca328c5e8559c56a56fe24ea97a15fb4b123f26da5ab2c4c09caef7b864f996aa93d5f0b001ba80000000000000000000000000000f7db24b4ecf85f8113b654d9bee30bf02273e86bd23c21e64f59f165522664c8d96438000074c4c8816e2f22d9a82e614d64d816c0000eea60928b91c17f4f59fbaf6cccf75e251c5f141dce509e28c7fd7d37498bccfd3f2bfdc8b223cf7b666e51cac44b1235c9d38fd8705ef3a9399ff8b44619d28ab4227282cf8d2a47a1eacf899ea49b6ead6fa6e335923dcf9982dfe5ddeecc94e2d6e4b764489269ba3bd0b25861453757f3afb3d0b74a66998c2956bcdde764e8f27ed0b38ef655f4f4316a9532dd55bb2e921d6d6756de6b2fb084abca49b4925630d55e1ec27ac5df238e8ef7eea0554f37eff31dd4d677b9634d328f5b5f35453a0919330671ca8ef7e847534f7fcc5470191c2538749e3990a2552a65dc1a42de97249a74bdbd84d1ac7fbfa68a4ba324c822f4c52f7b9345956f0b309c64ecefc37ae9599afdaf69b3c28cb7f9a9cb25525da26961a74ab5bf8741e76b5b9d3a148b5f33d996a5b118e6bfb2392c78e94e5c69774de7bab2b52ecd27655161c93835596ad5a5f99704f7f51bb92d52aae8a3b6faf129ea2d1379c474d96d289c258d353679fed88bf93e3cbf81e14adce8f35ea99bf8ddb3cff6a6361bc2da7024a5afe4f2c48bdcf3af57339ead65f16001d2c40000000000000000000000000001ee766fb8c2fc0899906cff00e5f0bf02263e8abf6c7847e1e64f59f12a6074c684aae1d3b53077212c8c88f233002b43870817f0f153b3b32c33526c612d4889de26398cc953a18455593d381e1eaf1e9cf04da663ac36aeec6edfa995e99fbf48ab82ad1b7c0c54b5f9a8973395a31c486a49b57ee2170b5bacb126d952526da8aeff009c09134e15846faa9d2bc0c94546297590a956726b2564965cd92254cbf612946ef4ad3c0bb87277e1e040d468d3bf7fce761071aa8dd53de848b75ac5d88e2b4d9d5ef5c49e0d52993f7b9d717a5bdf4b22576b658aeae9d1ccaef16d5a3e9b33928b54ab6bc7b89a3054baaaa6fad6fec21544a69be0fdf22c2c8a78b85a6947d1fb4431649d25dec855769539433460d5485f0c4e1d2551257c21b655bf039426a28c7825994e5372e4bdf337d3d39d49f6ef2899c2d38b54aefbf4ae4629986bac557356af2dcbb8c6a52f1116988edb2b599c6ebb19244e99add4588ccc9b44a5da255c379ee5ea690dc4a76cf79aec48baa7b9fbee3bbd35b19afed96a6fbafecbb7e26cf2556e5874517177a2fede143d461f6860e3bd10ada3a9b6b4a5cba7d0f004b8588f0a55a5534e2d714cdb5346b7dfa4ab4d49afbc3e830c78622d517a96555c8a1da124f63da72afc1c4e9fa26bb61c1c48b8e23938c295a27f4adfba8b7da17d8f68b3fba9eedda4f2ed58adb113975d666d5ccc61f14001b280000000000000000000000000000f6fb3ff0097c2fc289483677fc8c2fc2898fa1af48f08fc3cc9eb2548db3230250e838748406746b33145993a84b0516ce38b45c8ba2476baacee73db5695b70cce257c4a9245bc38aaef3250496f26c28b97d17434cf78dcc25587479d399b37b3d16a4d7ba2ba9b8aa489618b549275b51ae8de799eaa7335fdb7a429bd5164326e5bf2b177128d26b235f2be9e4eace05a61dd548b75f74574f7d684f249c234af25c7df792e141457c4945ddee9a837d166fd84185570969ab8e94ef576af4224583392b3dcdbbab2f7e449fcf9cdc93e3694ab6e979f791e24e724e2e0eb5ad528f45adc7992b61c861ff16b8bfedd57e8b46857ad259d7df89656049a5abcab85bf6157122b0ed57c135befcc942ee12a5f2a9b0a371b75b29e0fd154f7f616d3cd57b89594e4ae6145bf7123cd91cbe8bbe9e65055d7add37fb483130f8654eafb0c54b4de9575cbe7e067f12b7d2fac9669b0a4f4a8ef8ba665ba6f2a60c65af5b5454eea5299979b695b2eba5bb834854c47bbacc612715a62d46b9bb57ac8abbd91b91ec534abc11131bf5de3bb09b4e5b89bf26994b5456fb7cc6a5e949aab6eb9e4bc481c9b5a7756be870cf4f4e6b33999c67a2d36cf666f1772497b3da432c59f1f03943116f4f59e9989572bb1d6f72e9d49224945afa389872e55bf732824b36654527e555e976382fa7349dda44e533fa5e695697d2ae8b3ab52b52bbd5335cc89688cbcf14f8695f3265dae0c9595f83adfa0cd7856f82e49b8c64ffb77fa66539269d1ee373852d0eca9d0e9734ca0e973d1d1bcdb39ecced186e765dbf45218afc8a34b46af3cddf71b2ed3a4763c451df832af51e4f4d0daed7b62c4d8250deb0dc5f4d0e7d6d38898b477eade96ed2f98800c9600000000000000000000000000007b2d9fee70ff000a2c95767fb9c3fc289ea7d057a47847e1e64f59f11981da9d250c0c8e1901d448991a2d61c6aee4256946d533d2ebd2e95395f325cab4e66db0946aaad3ca88f035adc5a969f77752bb431f914e8a4b27be9f365d47147130d3d51cb7d2dd67a19d6cdb6e34bd3f84d44a1892c5d7833b354952f4a6e74f2f598d6f68e9330d669081d271ca9bccb0b0e3aaeaed7136d283c4c38cb2e36b2a70a1a2c68ace5ce9a5d2bf332d6b4db79dd4e1c26c5868e17ddf39abd0e4ecac973bf225c3c7f324e558bcab1d4d3e8f031c6c76ef57dd975646ba7a53a99c4c461499c329c126a8eba62b765cbacee249554dd3275df4aee4be7283da2aaf5ee2acb1252e48d23d36a4ce368f7538e30bef6856a4173ab7f616b0f16125c0d3e19729074aaf33b55e44eb68469c44c4ccf356b6cafcd524ba0a78b1d54af41341382d33ab8f1e1d1b8ec9696e39f3e28d34a6b7ac567ad532ad1ae1e7bbd0b4a697b6bc7812274c3a4ae965c915edfc2fa4e4b52d49dfe5786726b3afbf495b11a706c992ad994ee9b52cb274c919259e1e1d635c8b2a118e6aa55526a54549537786664f19e5a5f8758364ed984a7e46b891294e4ea924b8b6bd38f410cdb6e954ec6da55e2bd7c73f04ce211ca54b11662870f69cce9da1d49fb09e3875ad353caf656e34cf3392daf589c6f3e0d22b32aacc332de26134dab57a52ea4670c06d5652a2eef4657fb15c7495b8254d2d4d4566cd8c30b425bebc8d861e1420ac9578f144da550e1d4d49d496f1a7855f830925c5aa5b24caf89b34b0b4e7454babd17a9b3c292c4abc3755174aa76af42f765b8d5fd2a65bab7309cc34c435b2c1738dbcaf3befe9e052a246f671f89c23efbcd74f012964dd777f0be7c7b8df4efc3956d468a72529702c2c34f65daa6d59614945f7666e70b638a6dd12e34c913edef4ec5b42cff973bf1b16beaf16208a6377c70005400000000000000000000000000007b0d9fee70ff0a2721d9fee70ff000a2c50fa0afdb1e11f87993d67c581924768675459028f12367598903957b8daeced4ed2a569cbe7359e5dcea6c707752ef918eafd96df1b4af5eb0bd182d7a92e49664948c6f4a742a32494928d61e9bbdf813fc6c392bb49b59354bf71f3af4213e0e07c754f8baa29fd155f5fb4cf1b0decc9ce0a30a3593f33e8a10ec73c386257551aca9f6e68ddcd436a4e35d2eb7cabd3d0572de2365386d11c251956b1c4dd5f327c97a1aec4da2aeaa36956f28df2fddaa5decaf89150d4ab27f0dab359dbd9f31add726f79dba3a3e66f3d1cfa97e1d89cd6a4e3aad5ce9e8ba0a8e77bdd169c5caae9967c8a738d1e753d5a52b4dabfb71da66511c336919c235cf2366427644b19d1fa3e68ece34c8a7a8e6a70deb6fe51369696da61b37f46ab2af7b25fdd49d6965beabc4d6e1e23cadde5d4d56baab2e0b7ae9386da56d1b715778fafedac4e56a538c6d2dfbb7904744b274f7de4b6c4f2cacf9d9952587285e37e66fa7a94d4dadb4f2ec4c4c259453e1caed1c93aa49e956e1523c275746489353525b9e5bdfdbc8e3d6ac52d885e272c2787a256fe259532ae5c9155624f0eab4c5f4e7c3b8bf48c5c94aadd97456ad3e48ab3c56dd2ca8f3495f9bcd54a529379dbe7b267109a0d49c5359f0b5f80c7c1c35e64f44b9e52eecc894e755775dd5bf51c54c4951ea6d5b3cbd0d274fcbb4715bdf6ea6730aee2bf7a3cddfe748e686dd2357dc97b685a8aabf2c527babe67d2efd46e30610d54956324aa9b6d2fc4b4e97bf7917d6b4ff29c7ebff131451c0d9e4be943ff00d675e34cba0d83c38ff0469c72af2be7d46c9c6ad51d72f7b9d943e149a747bd3e553932e98ae1a98e1b94e8e2fda9b65b583a5e555d165d26df64d93176bc49461284294729c9b51826d2557cdba24b3370fb2f547fcf6c344bf7e4d52f9f97fb5f513bca76878a9e777eaa91e5b8c52d4acede87aa7d8139b4d6dbb038b928afe64ef276a574bbd72245d857d0f6dd86324f4b8ac49d9d5aa5e2af5189e48cc3c8d7e1ad31545c952e649bfe2fd87b57d8718a75db364b6759496e8bfddae528bef29ed3d8d3c3c19634317031e3049cd61c9b94555c7534d2b5535dcc6e9cc3cf45a6d12c92b235fa5a77b06d10b26d528bb2fd9c686af6d9d767c7cef873e4b2362a5de53db5a7b2e3d52afc39d3a8ba1f27001ab100000000000000000000000000007b2d9fee70ff000a2720d9fee70ff0a273e82bf6c7847e1e64f59f17530e8620943a2dbfd0e020624d06d1112440dae1634a3255755bd3baa741e87fc3ebd2d424ff000aeeeb3cb61c5ca896f269c5c5da4df3c9fa7a1e6ebe945ef58898acce5d5a779889ceef4fa709d3f9784a2ec9d2ee992b65de30706182d4e389adef6a292dd6abdcb87ce79458b3c379d794ae9f59cc7dab131a2a0d28acda8d557856eeb4dc63fd4b67ee8c73ff00e35f3a393d06ddb44233a52b2ce5754cad966efc4f3ff196e29e9143d1d3d38d3ae21cd6b4da52bc695d45b55cf990a7c4c4335c33c95b9755286bcc848bf8d4a59d6aaeb834fa11aecf7d0b4d37bcebc3a47e8f79969d3cbae3aaf339548b49ad591bd8e2c74d9c62b8a352b0a53c91cf86d3bd85b13fca3e531b766e2b16f529f7dbdee6b5cde1cab57775cf3ea27826a37a2a71f00d424f56a4f95acba0e6ad622d6c4470cb4eb0a9aa4dea4ba8b0f135f99ba3b75fbf0258b8c722069575556796e1ab48d48f78e846cb12941c1bbd56fe0fd9429a64b18d1d138d79fbe4652716a9469d7ff97df7661a1331b75dfb765ed082b7e7c8b3854d3e6cb2f9d7bdea54763909d1ddb36d6a4dabb7656b3896f30f0e0edbde6ef5bf26594fe12a56d659ab2793f9e869218c93a2a53bfdd9776994218306dd5d6eabe6e4fd97679789ce1d51318cb6f878dab3a3b3e55e9e05e9c97c3d4d4691abbdddb7e478dc1db145d251aa74ab79aa7069afb4b18db5bc48fc38569c7ddb2fe4df38c613e6461e93b33b4f0b61c5c696d2a789878d1845fc3a6b8689eb8d13f2bbfd247af8f68765e2df56de9b54d5a30352aebdeaf56f11b67c628d347add8a759e55965ea69ab5f2b18dd149e37d0e18dd958989f174ed9369a77861452719ea8afe1ae9c952ab4d89f1b1fb3b1f54673db3cdf4a3a70afe794dbad1e7277a3ca291e79b695d22b4af777e1f61c5e6cba634e1eb63b4765c2586ebb5394151574d6515f0fcad568d530e3bb235bb4f6a6c2b67c55b2471b125b542386e726b4795c9eafa4fccf53ad11a2d49bc972e3d66bf1f06917a53b79925a63155cec92abde5a2f944d30c6783aa8f9147130f4abad5d062b5b8d6adc55e9530d6e73a6a7a63baf4bab27cd12a89796a8d7ed72ff0d8ebff005cbd8678db57c25a34ea9d2dc15f7efc8afb4ce389b2e34a3f573aadeadece66bc338ce365330f99000bb300000000000000000000000000007b2d9fee70ff000a2cd0d760ed1831c2c34f1126a2aaaf6f427f95e07d62f5f03ddadeb88ff68e91de1e7cd6733b4ac8a107caf666bef157a191fcab03eb17af813c74ff0028f985786dca572863420f956cff005abd7c07caf67afde2ea7e0471d3fcabf3070cf295ec2c3736a8aaf72e26dbe4ae2aada5c95fd9bcc3b3f6becd4f5636d118dec9a9654cecb33772ed4ec94b4fc7c36b9466bffe3d879dadea6d13c34edd67afc3ae9a31319b7c2961e128275cde4daa12460b7b8d37d7d8ea413ed5d81b4be2e1db27e7a7fe2d9b0c1dbfb27453136bc3d4ef2694e9ff0085fd11e75ad7b4e673974c52236d97713b293c3724b4cf965ca8b7d7b8d23d85c25fcca2ef5a9fb4f45fac7633493db1349254fe651d38ad062fb5fb1aaffc4602aff64ff2168f51ab5898cdbe32d3c9d39e5f2d6616c782a49b55e1aaeba6dfb095ec6b1bcb0c3c3b64d4a8fd94eb267da5d8b5aadab0f8e589f949a3db3d91076dab0fab13d9a4ca7535277cdfea98d3a472fa29fe958bfbb1e345a1fab57284fb2715bbf95f3a2f4a9bcfd7bb35cbfcd61a4b8a9d5f547233fd6bb266bf99b560cbff009c4b74796a4c6a6a46f9b7d559d3a7b7d1e5a7d99387d9fb4ab2d9251793efa53aea6e5f6b6c3f128b69c2716f396b745cbca9dfd0b2fb5fb3525fe2a1beb695ff00d06f1afabcecca74abedf2d3e16ccde69f37c08e717879e79d0de2ed5eccb3f9561f43d76ff41a0dabb4b635895c3c78622955d692b3ef46fa3ab69b4f15a7f6cada788d951e2b52b5b93cba8b70c684ad4d2f9e4fc0d5cb6ed9259ca1d52f0305b66c9f589746af03aaf5d3d4eb8cf3898cb1de1b0924a526ddb71af96336da5448ab8bb5e0c9fdea6bbfc08be3e059ac48aebf03489aff00947cc189e4b71938e7ed0ddea507b4e0dfcebd7c0cbe5383f58bd7c09e2af38f9313c9b18e2714faf3335c8d3bda306b6c45ebe05986d780be94ebd7e0671c15ccc4c6fee9de5b06ec579330f96ec94fa52afbf22acb6bc16ed24970bf8168bc73fac231299bf32a6ef6f12caa3bc9ea357f28c2fdf5ebe066b6ac15fc6bd7c066bce3e60c4fbb6545d65c538c1512849fef2d56f67750d1fcab07f7d7af80f956157ef23ebe05266b3fcbeab6fc9b8ccf6db0c70f0d3793a5e4fdec7cfa1b5ecc9afe6c68b8a7e06e7076fd974df6c82afd28b53cba8e1f51be31bbab4b6cbdcb956f9a22a9e6b0fb53618a69ed31ea9fe52c2ed6ecf5ff00661d53fca79b359e52ee8b47386f5a156693f57ecffea61d53fca71f6bf67ff530ea9fe52386dca53c51ce1b5f870dd14ba08e5049515178f71aafd5f60fea21d53fca60fb5b617ff621d52fca6919e52ca71ce1e6b688cf0b166a6955baa6b26b9147166e385897ce124fa1a3d3636ddd9b8ca93c684a995a555d1e53cb6d13d93f991c3c5d4b43a6777a5db2e343d38d48b5713189c3866bc32f2800305c000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001ffd9ff\"}}) to this subset's own real committed base document via its own, unmodified apply_mutation — every field touched is content already present in the real document (cloned or swapped between two real existing members), never an invented id or enum value. D3 registered only this subset's set-snapshot vector; this fixture discharges one of the remaining kinds its already-complete second implementation was never given evidence for."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "set-sample-flags-applied",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.semio",
+        "standard": "v1",
+        "subset": "video"
+      },
+      "mutation": "set-sample-flags",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "radian"
+      },
+      "files": [
+        {
+          "role": "expected-before-json",
+          "path": "../🧫️fixtures/set-sample-flags-applied/before.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:4af9ddf56105ff60815e9038f37295a340874899bd66d7b0ac0e4f4a35b2a91b",
+          "bytes": 222882
+        },
+        {
+          "role": "expected-after-json",
+          "path": "../🧫️fixtures/set-sample-flags-applied/after.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:c27bb4737ba080e7f21afdccd1a460cc0da1e03e5ae246a7b3a19d2c75978630",
+          "bytes": 222883
+        }
+      ],
+      "generator": {
+        "oracle": "semio-video-python-independent",
+        "packageVersion": "n/a",
+        "engineFamily": "cpython",
+        "engineVersion": "3",
+        "command": "uv run --group test python3 .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION/🔨️f1-semio-generate.py",
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "AGPL-3.0-only",
+        "attribution": "Generated by this subset's own registered `verified-native-second-implementation` oracle (semio-video-python-independent) — an independent Python second implementation of this subset's mutation vocabulary, NOT a third-party package (no third-party library in any ecosystem reads or writes semio's own .dsl.semio format); `class: third-party-generated` is used only because it is the schema's own closest-fitting enum value for a generator-produced fixture, not a claim of third-party origin.",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "ordered-json-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "Applied set-sample-flags (payload {\"kind\": \"set-sample-flags\", \"params\": {\"streamIndex\": 0, \"index\": 0, \"pts\": 1, \"key\": false}}) to this subset's own real committed base document via its own, unmodified apply_mutation — every field touched is content already present in the real document (cloned or swapped between two real existing members), never an invented id or enum value. D3 registered only this subset's set-snapshot vector; this fixture discharges one of the remaining kinds its already-complete second implementation was never given evidence for."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "set-stream-meta-applied",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.semio",
+        "standard": "v1",
+        "subset": "video"
+      },
+      "mutation": "set-stream-meta",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "radian"
+      },
+      "files": [
+        {
+          "role": "expected-before-json",
+          "path": "../🧫️fixtures/set-stream-meta-applied/before.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:4af9ddf56105ff60815e9038f37295a340874899bd66d7b0ac0e4f4a35b2a91b",
+          "bytes": 222882
+        },
+        {
+          "role": "expected-after-json",
+          "path": "../🧫️fixtures/set-stream-meta-applied/after.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:8c0047827e4600299b31fdd9ca8b6d851ac3a892b2e7f6ec239706855cdec1fd",
+          "bytes": 222882
+        }
+      ],
+      "generator": {
+        "oracle": "semio-video-python-independent",
+        "packageVersion": "n/a",
+        "engineFamily": "cpython",
+        "engineVersion": "3",
+        "command": "uv run --group test python3 .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION/🔨️f1-semio-generate.py",
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "AGPL-3.0-only",
+        "attribution": "Generated by this subset's own registered `verified-native-second-implementation` oracle (semio-video-python-independent) — an independent Python second implementation of this subset's mutation vocabulary, NOT a third-party package (no third-party library in any ecosystem reads or writes semio's own .dsl.semio format); `class: third-party-generated` is used only because it is the schema's own closest-fitting enum value for a generator-produced fixture, not a claim of third-party origin.",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "ordered-json-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "Applied set-stream-meta (payload {\"kind\": \"set-stream-meta\", \"params\": {\"index\": 0, \"kind\": \"V\", \"codec\": \"MJPG\", \"width\": 481, \"height\": 433, \"rate\": {\"num\": 15, \"den\": 1}}}) to this subset's own real committed base document via its own, unmodified apply_mutation — every field touched is content already present in the real document (cloned or swapped between two real existing members), never an invented id or enum value. D3 registered only this subset's set-snapshot vector; this fixture discharges one of the remaining kinds its already-complete second implementation was never given evidence for."
     }
   ]
 }

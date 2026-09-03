@@ -8,5 +8,5 @@ export const PUZZLE5D_PLAY_MODE_EDIT = "edit" as const;
 
 // 🪟️ Namespaced (not `export *`): each window is free to grow its own same-named view-model shape
 // over time, and a blanket re-export from more than one would risk an ambiguous name collision.
-export * as board2dWindow from "./🎭️modes/✏️edit/🪟️windows/◻2d/🟦️";
+export * as board2dWindow from "./🎭️modes/✏️edit/🪟️windows/◻️2d/🟦️";
 export * as world3dWindow from "./🎭️modes/✏️edit/🪟️windows/🧊️3d/🟦️";

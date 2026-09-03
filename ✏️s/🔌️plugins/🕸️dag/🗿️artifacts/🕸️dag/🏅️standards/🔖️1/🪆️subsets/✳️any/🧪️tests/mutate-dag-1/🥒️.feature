@@ -1,29 +1,33 @@
 @capability-dag-1-mutate
-@no-oracle-dag-1-port-directed-graph-mutation-semantics
+@oracle-dag-1-python-independent
 @comparison-ordered-json-v1
 @mutations-dag-1-any
-Feature: Apply every typed DAG mutation to the real committed pipeline and to its rejection vectors
+Feature: Apply every typed DAG mutation to the real committed pipeline, to its rejection vectors, and against an independent Python implementation
   `dag.dag` is a semio-NATIVE port-directed computation graph. Nothing third-party reads
   `.dag.dsl.semio`, and no graph format holds an opinion about an edge whose endpoints are named
-  PORTS owned by two nodes, so no reference library is registered — recorded as the
-  `dag-1-port-directed-graph-mutation-semantics` no-oracle decision in
-  `../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️oracle/🔣️.json`.
+  PORTS owned by two nodes. The second producer a differential comparison needs is therefore a second
+  IMPLEMENTATION, and `🐍️component.py` beside this file is it: written in Python from this subset's
+  own committed `🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🔣️.json` and each mutation's
+  own payload schema, and from
+  `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-DIRECT-LEAF-OVERHAUL/📓️taxonomy.md`'s
+  `create`/`delete`/`rename`/`change`/`move`/`resize`/`replace`/`connect`/`disconnect`/`reorder` verb
+  entries. It imports nothing from the Rust it judges and transliterates none of it. The no-oracle
+  decision this replaces (`dag-1-port-directed-graph-mutation-semantics`) is narrowed to an empty
+  `capabilities` list rather than deleted, because its own investigation remains the honest record of
+  what was checked.
 
-  ⚠️ THIS NO-ORACLE DECISION IS A DEBT, NOT A VERDICT, and is recorded as one. Declining a third-party
-  LIBRARY is a different judgement from declining a SECOND IMPLEMENTATION, and only the first was ever
-  made here. `mutate-puzzle-2d-1` and `mutate-puzzle-3d-1` took Python second
-  implementations over this same `.dsl.semio` carrier in this wave, so the same is writable for this
-  subset from `🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🔣️.json`, the rules of
-  `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/📓️derivation-rules.md` and the
-  committed vectors this feature already replays. What blocks it TODAY is stated in the decision and
-  is one edit: this case's vectors are not declared as `asset://` fixtures — the `Examples` table
-  carries the payloads inline and the adapter reads the committed files through `include_str!` — so
-  the plan pins none of their digests and a Python reference cannot read them at all. Separately, `identity-round-trip` would still be refused: this subset's committed
-  snapshot text grammar is the repository-wide placeholder `payload = OCTET+`, whose header production
-  declares `"schema" SP "stdio.json"` against an artifact whose own first line says otherwise.
-  Until that is done, every assertion below still lives in the SUBJECT role, and the ceiling is the
-  one this decision has always had: no second producer runs beside it, so a mistake shared by the
-  handcrafted vector and the production code passes unseen.
+  ⚠️ Honest boundary. `DagSnapshot` persists neither nodes nor edges — one content-addressed child
+  handle only — so no committed fixture carries a decodable graph, and the REAL committed pipeline
+  this feature's own Rust adapter additionally exercises is reached only by parsing the real
+  `.dsl.semio` example through PRODUCTION's own `parse_dag_dsl`, which this Python reference does not
+  reimplement. What the Python side DOES cover, and cross-checks against a real committed fixture, is
+  the REJECTION half every one of this vocabulary's fourteen kinds commits to: every `(before,
+  mutation, outcome)` triad below is now a declared `asset://` fixture rather than an
+  `include_str!`-only literal, for BOTH `@id-mutate` (its own committed rejection vector) and
+  `@id-inverse` (the SAME rejection vector, restated — a rejection has nothing to invert, so
+  `taxonomy.md`'s "Missing target ⇒ inverse returns `Vec::new()`" is what both implementations assert
+  there). The real-pipeline halves of both scenarios (`the real application moves the handle`, `the
+  document equals the pipeline again`) stay exactly as they were, asserted by the Rust subject alone.
 
   What distinguishes this subset from every node-and-edge vocabulary in the repository is that
   `DagSnapshot` PERSISTS NEITHER NODES NOR EDGES. It carries `schema` plus one composed
@@ -55,63 +59,71 @@ Feature: Apply every typed DAG mutation to the real committed pipeline and to it
   are `node@port` strings this plugin splits itself; `rename-node` on `scale` is in the table
   precisely because it has to rewrite the `e1` target and the `e2` source as well as the node.
 
-  Because this case records a no-oracle decision the runner executes NO oracle role, so every
-  assertion lives inside the subject handler. A handler that merely ran the mutation and returned
-  would report a pass having checked nothing.
+  `mutate-<kind>`/`inverse-<kind>` now dispatch BOTH an oracle role (the Python implementation,
+  reached through this plugin's `oracleHostPackages` entry, checking the REJECTION half) and a
+  subject role (this repository's own real dispatch, unaffected — the same real-pipeline assertions
+  as before). A handler that merely ran the mutation and returned would report a pass having checked
+  nothing.
 
   @id-mutate
   @level-exhaustive
-  @mode-conformance
+  @mode-differential
   Scenario Outline: Apply <id> to its committed rejection vector and to the real pipeline
-    Given the committed rejection vector for the <id> kind and the real committed example pipeline
+    Given the committed before-snapshot asset://🧬️schema/🧬️mutations/<dir>/🧪️tests/<fixture>/📸️snapshot/⬅️before/🔣️.json
+    And the committed mutation payload asset://🧬️schema/🧬️mutations/<dir>/🧪️tests/<fixture>/🦠️mutation/🔣️.json
+    And the committed outcome asset://🧬️schema/🧬️mutations/<dir>/🧪️tests/<fixture>/🎯️outcome/🔣️.json
+    And the committed rejection vector for the <id> kind and the real committed example pipeline
     When <id> is replayed against its vector and then applied to the pipeline
       """
       {"kind": "<id>", "code": "<code>", "params": <params>}
       """
-    Then the vector is refused with exactly <code>, its content handle is untouched, and the real application moves the handle
+    Then the vector is refused with exactly <code>, its content handle is untouched, the real application moves the handle, and the two implementations agree on the rejection
     Examples:
-      | id                        | code                    | params                                                                                                                                                                                            |
-      | create-node               | mutation.duplicate-id   | {"mutation": "createNode", "node": {"id": "gain", "name": "Gain", "abbreviation": "Gain", "icon": "", "x": -260.0, "y": 180.0, "width": 104.0, "height": 14.0, "properties": {}, "kind": "computation", "inputs": [], "outputs": [], "variadicInputs": false, "variadicOutputs": false}} |
-      | delete-node               | mutation.target-missing | {"mutation": "deleteNode", "id": "mode"}                                                                                                                                                          |
-      | rename-node               | mutation.target-missing | {"mutation": "renameNode", "id": "scale", "newId": "gain"}                                                                                                                                        |
-      | change-node-name          | mutation.target-missing | {"mutation": "changeNodeName", "id": "combine", "newName": "Merge"}                                                                                                                               |
-      | move-node                 | mutation.target-missing | {"mutation": "moveNode", "id": "screen", "x": 520.0, "y": 40.0}                                                                                                                                   |
-      | resize-node               | mutation.target-missing | {"mutation": "resizeNode", "id": "screen", "width": 240.0, "height": 160.0}                                                                                                                       |
-      | change-node-icon          | mutation.target-missing | {"mutation": "changeNodeIcon", "id": "slider", "newIcon": "emoji:spark"}                                                                                                                          |
-      | change-node-abbreviation  | mutation.target-missing | {"mutation": "changeNodeAbbreviation", "id": "slider", "newAbbreviation": "Amt"}                                                                                                                   |
-      | change-node-operator-kind | mutation.target-missing | {"mutation": "changeNodeOperatorKind", "id": "combine", "newOperatorKind": "sum"}                                                                                                                  |
-      | replace-node-kind         | mutation.target-missing | {"mutation": "replaceNodeKind", "id": "scale", "newKind": {"kind": "computation", "inputs": [], "outputs": [], "variadicInputs": true, "variadicOutputs": false}}                                  |
-      | replace-node-properties   | mutation.target-missing | {"mutation": "replaceNodeProperties", "id": "scale", "newProperties": {"units": "mm"}}                                                                                                             |
-      | reorder-nodes             | mutation.invariant      | {"mutation": "reorderNodes", "order": ["screen", "combine", "scale", "mode", "slider"]}                                                                                                            |
-      | connect-nodes             | mutation.target-missing | {"mutation": "connectNodes", "id": "e5", "source": "slider@out", "target": "combine@a", "routeStyle": "bezier", "properties": {}}                                                                   |
-      | disconnect-nodes          | mutation.target-missing | {"mutation": "disconnectNodes", "id": "e3"}                                                                                                                                                       |
+      | id                        | dir                          | fixture                                                       | code                    | params                                                                                                                                                                                            |
+      | create-node               | 🌱create-node                | rejects-a-duplicate-node-id                               | mutation.duplicate-id   | {"mutation": "createNode", "node": {"id": "gain", "name": "Gain", "abbreviation": "Gain", "icon": "", "x": -260.0, "y": 180.0, "width": 104.0, "height": 14.0, "properties": {}, "kind": "computation", "inputs": [], "outputs": [], "variadicInputs": false, "variadicOutputs": false}} |
+      | delete-node               | 🗑️delete-node               | rejects-deleting-a-missing-node                           | mutation.target-missing | {"mutation": "deleteNode", "id": "mode"}                                                                                                                                                          |
+      | rename-node               | 🏷️rename-node               | rejects-renaming-a-missing-node                           | mutation.target-missing | {"mutation": "renameNode", "id": "scale", "newId": "gain"}                                                                                                                                        |
+      | change-node-name          | 🔤change-node-name           | rejects-renaming-the-label-of-a-missing-node              | mutation.target-missing | {"mutation": "changeNodeName", "id": "combine", "newName": "Merge"}                                                                                                                               |
+      | move-node                 | ↔️move-node                 | rejects-moving-a-missing-node                             | mutation.target-missing | {"mutation": "moveNode", "id": "screen", "x": 520.0, "y": 40.0}                                                                                                                                   |
+      | resize-node               | 📐resize-node                | rejects-resizing-a-missing-node                           | mutation.target-missing | {"mutation": "resizeNode", "id": "screen", "width": 240.0, "height": 160.0}                                                                                                                       |
+      | change-node-icon          | 🖼️change-node-icon          | rejects-reiconing-a-missing-node                          | mutation.target-missing | {"mutation": "changeNodeIcon", "id": "slider", "newIcon": "emoji:spark"}                                                                                                                          |
+      | change-node-abbreviation  | 🔡change-node-abbreviation   | rejects-reabbreviating-a-missing-node                     | mutation.target-missing | {"mutation": "changeNodeAbbreviation", "id": "slider", "newAbbreviation": "Amt"}                                                                                                                   |
+      | change-node-operator-kind | 🧮change-node-operator-kind  | rejects-rebinding-the-operator-of-a-missing-node          | mutation.target-missing | {"mutation": "changeNodeOperatorKind", "id": "combine", "newOperatorKind": "sum"}                                                                                                                  |
+      | replace-node-kind         | 🔁replace-node-kind          | rejects-rekinding-a-missing-node                          | mutation.target-missing | {"mutation": "replaceNodeKind", "id": "scale", "newKind": {"kind": "computation", "inputs": [], "outputs": [], "variadicInputs": true, "variadicOutputs": false}}                                  |
+      | replace-node-properties   | 🗃️replace-node-properties   | rejects-repropertying-a-missing-node                      | mutation.target-missing | {"mutation": "replaceNodeProperties", "id": "scale", "newProperties": {"units": "mm"}}                                                                                                             |
+      | reorder-nodes             | 🔀reorder-nodes              | rejects-a-duplicate-id-in-the-order                       | mutation.invariant      | {"mutation": "reorderNodes", "order": ["screen", "combine", "scale", "mode", "slider"]}                                                                                                            |
+      | connect-nodes             | 🔗connect-nodes              | rejects-a-missing-source-node                             | mutation.target-missing | {"mutation": "connectNodes", "id": "e5", "source": "slider@out", "target": "combine@a", "routeStyle": "bezier", "properties": {}}                                                                   |
+      | disconnect-nodes          | ✂️disconnect-nodes          | rejects-disconnecting-a-missing-edge                      | mutation.target-missing | {"mutation": "disconnectNodes", "id": "e3"}                                                                                                                                                       |
 
   @id-inverse
   @level-exhaustive
-  @mode-property
+  @mode-differential
   Scenario Outline: Undoing <id> restores the real committed pipeline
-    Given the real committed example pipeline
+    Given the committed before-snapshot asset://🧬️schema/🧬️mutations/<dir>/🧪️tests/<fixture>/📸️snapshot/⬅️before/🔣️.json
+    And the committed mutation payload asset://🧬️schema/🧬️mutations/<dir>/🧪️tests/<fixture>/🦠️mutation/🔣️.json
+    And the committed outcome asset://🧬️schema/🧬️mutations/<dir>/🧪️tests/<fixture>/🎯️outcome/🔣️.json
+    And the real committed example pipeline
     When <id> is applied to it and then its own computed inverse steps are applied
       """
       {"kind": "<id>", "code": "<code>", "params": <params>}
       """
-    Then the document equals the pipeline again, content handle included — which for a content-addressed child means the whole scene came back
+    Then the document equals the pipeline again, content handle included — which for a content-addressed child means the whole scene came back — and, on the same kind's own committed rejection vector, both implementations agree there is nothing to invert
     Examples:
-      | id                        | code                    | params                                                                                                                                                                                            |
-      | create-node               | mutation.duplicate-id   | {"mutation": "createNode", "node": {"id": "gain", "name": "Gain", "abbreviation": "Gain", "icon": "", "x": -260.0, "y": 180.0, "width": 104.0, "height": 14.0, "properties": {}, "kind": "computation", "inputs": [], "outputs": [], "variadicInputs": false, "variadicOutputs": false}} |
-      | delete-node               | mutation.target-missing | {"mutation": "deleteNode", "id": "mode"}                                                                                                                                                          |
-      | rename-node               | mutation.target-missing | {"mutation": "renameNode", "id": "scale", "newId": "gain"}                                                                                                                                        |
-      | change-node-name          | mutation.target-missing | {"mutation": "changeNodeName", "id": "combine", "newName": "Merge"}                                                                                                                               |
-      | move-node                 | mutation.target-missing | {"mutation": "moveNode", "id": "screen", "x": 520.0, "y": 40.0}                                                                                                                                   |
-      | resize-node               | mutation.target-missing | {"mutation": "resizeNode", "id": "screen", "width": 240.0, "height": 160.0}                                                                                                                       |
-      | change-node-icon          | mutation.target-missing | {"mutation": "changeNodeIcon", "id": "slider", "newIcon": "emoji:spark"}                                                                                                                          |
-      | change-node-abbreviation  | mutation.target-missing | {"mutation": "changeNodeAbbreviation", "id": "slider", "newAbbreviation": "Amt"}                                                                                                                   |
-      | change-node-operator-kind | mutation.target-missing | {"mutation": "changeNodeOperatorKind", "id": "combine", "newOperatorKind": "sum"}                                                                                                                  |
-      | replace-node-kind         | mutation.target-missing | {"mutation": "replaceNodeKind", "id": "scale", "newKind": {"kind": "computation", "inputs": [], "outputs": [], "variadicInputs": true, "variadicOutputs": false}}                                  |
-      | replace-node-properties   | mutation.target-missing | {"mutation": "replaceNodeProperties", "id": "scale", "newProperties": {"units": "mm"}}                                                                                                             |
-      | reorder-nodes             | mutation.invariant      | {"mutation": "reorderNodes", "order": ["screen", "combine", "scale", "mode", "slider"]}                                                                                                            |
-      | connect-nodes             | mutation.target-missing | {"mutation": "connectNodes", "id": "e5", "source": "slider@out", "target": "combine@a", "routeStyle": "bezier", "properties": {}}                                                                   |
-      | disconnect-nodes          | mutation.target-missing | {"mutation": "disconnectNodes", "id": "e3"}                                                                                                                                                       |
+      | id                        | dir                          | fixture                                                       | code                    | params                                                                                                                                                                                            |
+      | create-node               | 🌱create-node                | rejects-a-duplicate-node-id                               | mutation.duplicate-id   | {"mutation": "createNode", "node": {"id": "gain", "name": "Gain", "abbreviation": "Gain", "icon": "", "x": -260.0, "y": 180.0, "width": 104.0, "height": 14.0, "properties": {}, "kind": "computation", "inputs": [], "outputs": [], "variadicInputs": false, "variadicOutputs": false}} |
+      | delete-node               | 🗑️delete-node               | rejects-deleting-a-missing-node                           | mutation.target-missing | {"mutation": "deleteNode", "id": "mode"}                                                                                                                                                          |
+      | rename-node               | 🏷️rename-node               | rejects-renaming-a-missing-node                           | mutation.target-missing | {"mutation": "renameNode", "id": "scale", "newId": "gain"}                                                                                                                                        |
+      | change-node-name          | 🔤change-node-name           | rejects-renaming-the-label-of-a-missing-node              | mutation.target-missing | {"mutation": "changeNodeName", "id": "combine", "newName": "Merge"}                                                                                                                               |
+      | move-node                 | ↔️move-node                 | rejects-moving-a-missing-node                             | mutation.target-missing | {"mutation": "moveNode", "id": "screen", "x": 520.0, "y": 40.0}                                                                                                                                   |
+      | resize-node               | 📐resize-node                | rejects-resizing-a-missing-node                           | mutation.target-missing | {"mutation": "resizeNode", "id": "screen", "width": 240.0, "height": 160.0}                                                                                                                       |
+      | change-node-icon          | 🖼️change-node-icon          | rejects-reiconing-a-missing-node                          | mutation.target-missing | {"mutation": "changeNodeIcon", "id": "slider", "newIcon": "emoji:spark"}                                                                                                                          |
+      | change-node-abbreviation  | 🔡change-node-abbreviation   | rejects-reabbreviating-a-missing-node                     | mutation.target-missing | {"mutation": "changeNodeAbbreviation", "id": "slider", "newAbbreviation": "Amt"}                                                                                                                   |
+      | change-node-operator-kind | 🧮change-node-operator-kind  | rejects-rebinding-the-operator-of-a-missing-node          | mutation.target-missing | {"mutation": "changeNodeOperatorKind", "id": "combine", "newOperatorKind": "sum"}                                                                                                                  |
+      | replace-node-kind         | 🔁replace-node-kind          | rejects-rekinding-a-missing-node                          | mutation.target-missing | {"mutation": "replaceNodeKind", "id": "scale", "newKind": {"kind": "computation", "inputs": [], "outputs": [], "variadicInputs": true, "variadicOutputs": false}}                                  |
+      | replace-node-properties   | 🗃️replace-node-properties   | rejects-repropertying-a-missing-node                      | mutation.target-missing | {"mutation": "replaceNodeProperties", "id": "scale", "newProperties": {"units": "mm"}}                                                                                                             |
+      | reorder-nodes             | 🔀reorder-nodes              | rejects-a-duplicate-id-in-the-order                       | mutation.invariant      | {"mutation": "reorderNodes", "order": ["screen", "combine", "scale", "mode", "slider"]}                                                                                                            |
+      | connect-nodes             | 🔗connect-nodes              | rejects-a-missing-source-node                             | mutation.target-missing | {"mutation": "connectNodes", "id": "e5", "source": "slider@out", "target": "combine@a", "routeStyle": "bezier", "properties": {}}                                                                   |
+      | disconnect-nodes          | ✂️disconnect-nodes          | rejects-disconnecting-a-missing-edge                      | mutation.target-missing | {"mutation": "disconnectNodes", "id": "e3"}                                                                                                                                                       |
 
   @id-identity-round-trip
   @level-long

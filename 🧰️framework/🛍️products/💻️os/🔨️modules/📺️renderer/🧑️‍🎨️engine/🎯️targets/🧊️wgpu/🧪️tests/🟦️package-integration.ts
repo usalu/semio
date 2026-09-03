@@ -5,7 +5,7 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 import { assertPinnedBunVersion, decodeAstralEscapes, renderBrowserEntry, renderFrameWorker } from "../📦️packages/🦀️rust/📜️script";
-import { pluginHandleForBridge, type WgpuPluginHandle } from "./🟦️typescript/🐚️plugin-bridge.ts";
+import { pluginHandleForBridge, type WgpuPluginHandle } from "../📦️packages/🦀️rust/🟦️typescript/🐚️plugin-bridge.ts";
 
 function fakeHandle(overrides: Partial<WgpuPluginHandle> = {}): WgpuPluginHandle {
   return {
@@ -65,7 +65,7 @@ describe("framework renderer wgpu generated worker", () => {
   });
 
   it("renders identical bytes twice with matching independent SHA-256 implementations", async () => {
-    const bundleRoot = dirname(fileURLToPath(import.meta.url));
+    const bundleRoot = join(dirname(fileURLToPath(import.meta.url)), "../📦️packages/🦀️rust");
     const first = await renderFrameWorker(bundleRoot);
     const second = await renderFrameWorker(bundleRoot);
     const subtle = Buffer.from(await crypto.subtle.digest("SHA-256", Buffer.from(first.content))).toString("hex");
@@ -102,7 +102,7 @@ describe("framework renderer wgpu generated worker", () => {
 
   it("renders an astral-emoji-bearing browser entry (🟦️.ts, which references the \"🟨️frame-worker.js\" filename by URL) with the emoji as literal UTF-8, not Bun's astral \\uXXXX surrogate-pair escapes — otherwise the reference scanner cannot see or rewrite it", async () => {
     const bundleRoot = dirname(fileURLToPath(import.meta.url));
-    const content = await renderBrowserEntry(join(bundleRoot, "🟦️typescript/🟦️.ts"));
+    const content = await renderBrowserEntry(join(bundleRoot, "../🧵️browser-boot/🟦️.ts"));
     expect(content).toContain("🟨️frame-worker.js");
     expect(content).not.toMatch(/\\u[Dd][89abAB][0-9a-fA-F]{2}/);
   });

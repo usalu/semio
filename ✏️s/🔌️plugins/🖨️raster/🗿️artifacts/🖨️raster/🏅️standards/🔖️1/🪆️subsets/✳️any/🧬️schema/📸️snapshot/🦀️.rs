@@ -19,13 +19,11 @@
 
 use crate::artifacts::raster::{RasterAssetChild, RasterLayerMask, RasterLayerNode, RasterOwnedMap, RasterTransform, RASTER_DOCUMENT_SCHEMA};
 use schema::ArtifactSchema;
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️Snapshot
 /// 📸️ Persisted raster document snapshot (persistent fields of the artifact).
-#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, ArtifactSchema, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, ArtifactSchema)]
 #[value(rename_all = "camelCase")]
-#[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.raster.raster")]
 pub struct RasterSnapshot {
     #[state(artifact)]
@@ -34,14 +32,11 @@ pub struct RasterSnapshot {
     pub id: String,
     #[state(artifact)]
     #[value(skip_serializing_if = "Option::is_none")]
-    #[serde(skip_serializing_if = "Option::is_none")]
     pub title: Option<String>,
     #[state(artifact)]
     pub layers: Vec<RasterLayerNode>,
     #[state(artifact)]
-    #[serde(serialize_with = "crate::artifacts::raster::serialize_empty_owned_map")]
     #[value(default, skip_serializing_if = "RasterOwnedMap::is_empty")]
-    #[serde(default, skip_serializing_if = "RasterOwnedMap::is_empty")]
     pub assets: RasterOwnedMap<RasterAssetChild>,
 }
 
@@ -76,7 +71,7 @@ pub(crate) fn dec_str(s: &str) -> Result<String, String> {
     String::from_utf8(hex_decode(s)?).map_err(|e| e.to_string())
 }
 
-use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::any::schema::triples::{split_top_level, strip_brackets};
+use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::base::schema::triples::{split_top_level, strip_brackets};
 
 pub(crate) fn enc_option<T>(opt: &Option<T>, enc: impl Fn(&T) -> String) -> String {
     match opt {
@@ -173,7 +168,7 @@ pub(crate) fn dec_params(s: &str) -> Result<RasterOwnedMap<dsl::DslValue>, Strin
         let parts = split_top_level(strip_brackets(entry)?, ',');
         let [key, value] = parts.as_slice() else { return Err(format!("params entry: expected 2 fields, got {}", parts.len())) };
         let bytes = hex_decode(value)?;
-        let dsl_value: dsl::DslValue = serde_json::from_slice(&bytes).map_err(|e| e.to_string())?;
+        let dsl_value: dsl::DslValue = dsl::os_pack::json::parse_bytes(&bytes).map(|value| dsl::os_pack::json::to_dsl_value(&value)).map_err(|e| e.to_string())?;
         out.insert(dec_str(key)?, dsl_value).map_err(|rejected| rejected.reason.to_string())?;
     }
     Ok(out)
@@ -413,7 +408,7 @@ fn read_params(reader: &mut store::ByteReader<'_>) -> Result<RasterOwnedMap<dsl:
     for _ in 0..count {
         let k = read_str_lp(reader)?;
         let bytes = read_bytes_lp(reader)?;
-        let v: dsl::DslValue = serde_json::from_slice(&bytes).map_err(|e| e.to_string())?;
+        let v: dsl::DslValue = dsl::os_pack::json::parse_bytes(&bytes).map(|value| dsl::os_pack::json::to_dsl_value(&value)).map_err(|e| e.to_string())?;
         out.insert(k, v).map_err(|rejected| rejected.reason.to_string())?;
     }
     Ok(out)

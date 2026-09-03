@@ -2,7 +2,7 @@
   "artifact": "s.stdio.semio",
   "standard": "v1",
   "subsets": {
-    "*": { "name": "Semio envelope" },
+    "base": { "name": "Semio envelope — the shared substrate every subset's typed document wraps" },
     "brep": { "name": "Boundary-representation solid geometry", "schema": "s.stdio.semio.brep" },
     "mesh": {
       "name": "Discrete mesh geometry",

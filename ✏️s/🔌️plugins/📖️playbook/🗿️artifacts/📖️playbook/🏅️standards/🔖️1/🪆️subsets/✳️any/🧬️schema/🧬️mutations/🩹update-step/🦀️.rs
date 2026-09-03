@@ -10,18 +10,23 @@ use crate::artifacts::playbook::mutations::PlaybookMutation;
 use crate::artifacts::playbook::schema::diff::text::diff_replace_content;
 use crate::artifacts::playbook::{PlaybookDiff, PlaybookSnapshot};
 use semio_framework_value_derive::{FromValue, ToValue};
+// 🔬️ `Serialize`/`Deserialize` survive ONLY as a `#[cfg(test)]` differential oracle — committed
+// `🧪️tests/<fixture>/🦀️.rs` fixture vectors decode/re-encode through them — never a production
+// dependency of this crate.
+#[cfg(test)]
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Mutation
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, dsl::DslRecord, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord, dsl::MutationLeaf)]
+#[cfg_attr(test, derive(Serialize, Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[mutation_leaf(contract = ::protocol)]
-#[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 #[dsl(keyword = "update-step")]
 pub struct UpdateStep {
     pub step_id: String,
     pub title: String,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(test, serde(skip_serializing_if = "Option::is_none"))]
     #[value(skip_serializing_if = "Option::is_none")]
     pub description: Option<String>,
 }

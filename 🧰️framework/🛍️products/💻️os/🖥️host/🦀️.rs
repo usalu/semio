@@ -3435,7 +3435,7 @@ pub mod media_export_simple {
     // #region media_export_simple
     //! 🖼️ Lightweight SVG builders for simple document exports.
 
-    use serde_json::Value;
+    use semio_framework_os_kernel::json::Value;
 
     fn escape_svg_text(value: &str) -> String {
         value.replace('&', "&amp;").replace('<', "&lt;").replace('>', "&gt;")
@@ -3857,8 +3857,11 @@ pub mod workflow {
                     "targetNodeId": edge.target_node_id,
                     "targetPortId": edge.target_port_id,
                     // 🏷️ Data plumbing only (no renderer changes here) — lets a later ticket badge/dash
-                    // conversion edges without re-deriving the contract client-side.
-                    "contract": edge.contract,
+                    // conversion edges without re-deriving the contract client-side. `MediaContract`
+                    // dropped `Serialize` (RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS,
+                    // 26/09/02) — route through its `ToValue` impl and the permanent `DslValue` →
+                    // `serde_json::Value` bridge instead of deriving.
+                    "contract": serde_json::Value::from(edge.contract.to_value()),
                     "isConversion": edge.contract.conversion.is_some(),
                 })
             })

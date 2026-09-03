@@ -3,7 +3,7 @@
 //! diff is the sparse field-by-field `SemioBrepDiff::between(base, next)`.
 //!
 //! All 6 collections (`vertices`/`edges`/`loops`/`faces`/`shells`/`solids`) are id-keyed and
-//! diffed via the SHARED `crate::artifacts::semio::standards::v1::subsets::any::schema::triples::NamedTripleDiff`
+//! diffed via the SHARED `crate::artifacts::semio::standards::v1::subsets::base::schema::triples::NamedTripleDiff`
 //! (per `w1b-type-ownership.md`: "Use 🧰️triples ... instead of reinventing it"). The generic
 //! `apply_named`/`between_named`/`inverse_named`/`absorb_named` algebra functions below are this
 //! artifact's OWN copy of the small helper set bcf/docx each keep locally (no shared "diff
@@ -14,8 +14,8 @@
 //! reusing the shared `enc_named_triple`/`dec_named_triple`/`split_top_level`/`strip_brackets`
 //! codec primitives from `🧰️triples` rather than re-deriving them.
 
-use crate::artifacts::semio::standards::v1::subsets::any::schema::geometry::SemioPoint3;
-use crate::artifacts::semio::standards::v1::subsets::any::schema::triples::{dec_named_triple, enc_named_triple, split_top_level, strip_brackets, NamedModified, NamedTripleDiff};
+use crate::artifacts::semio::standards::v1::subsets::base::schema::geometry::SemioPoint3;
+use crate::artifacts::semio::standards::v1::subsets::base::schema::triples::{dec_named_triple, enc_named_triple, split_top_level, strip_brackets, NamedModified, NamedTripleDiff};
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::{BrepCurve, BrepEdge, BrepFace, BrepLoop, BrepLoopEdge, BrepShell, BrepShellFace, BrepSolid, BrepSolidShell, BrepSurface, BrepVertex, SemioBrepSnapshot};
 use protocol::command::DiffAlgebra;
 use protocol::MutationDiff;
@@ -437,27 +437,27 @@ impl MutationDiff<SemioBrepSnapshot> for SemioBrepDiff {
     fn apply(&self, base: &SemioBrepSnapshot) -> protocol::MutationApplyResult<SemioBrepSnapshot> {
         let mut next = base.clone();
         if let Some(d) = &self.vertices {
-            crate::artifacts::semio::standards::v1::subsets::any::schema::triples::validate_named_triple(&next.vertices, d, |item| item.id.clone(), |item| item.id.clone(), ["vertices"])?;
+            crate::artifacts::semio::standards::v1::subsets::base::schema::triples::validate_named_triple(&next.vertices, d, |item| item.id.clone(), |item| item.id.clone(), ["vertices"])?;
             apply_named(&mut next.vertices, d, |v: &BrepVertex| v.id.clone(), apply_vertex);
         }
         if let Some(d) = &self.edges {
-            crate::artifacts::semio::standards::v1::subsets::any::schema::triples::validate_named_triple(&next.edges, d, |item| item.id.clone(), |item| item.id.clone(), ["edges"])?;
+            crate::artifacts::semio::standards::v1::subsets::base::schema::triples::validate_named_triple(&next.edges, d, |item| item.id.clone(), |item| item.id.clone(), ["edges"])?;
             apply_named(&mut next.edges, d, |e: &BrepEdge| e.id.clone(), apply_edge);
         }
         if let Some(d) = &self.loops {
-            crate::artifacts::semio::standards::v1::subsets::any::schema::triples::validate_named_triple(&next.loops, d, |item| item.id.clone(), |item| item.id.clone(), ["loops"])?;
+            crate::artifacts::semio::standards::v1::subsets::base::schema::triples::validate_named_triple(&next.loops, d, |item| item.id.clone(), |item| item.id.clone(), ["loops"])?;
             apply_named(&mut next.loops, d, |l: &BrepLoop| l.id.clone(), apply_loop);
         }
         if let Some(d) = &self.faces {
-            crate::artifacts::semio::standards::v1::subsets::any::schema::triples::validate_named_triple(&next.faces, d, |item| item.id.clone(), |item| item.id.clone(), ["faces"])?;
+            crate::artifacts::semio::standards::v1::subsets::base::schema::triples::validate_named_triple(&next.faces, d, |item| item.id.clone(), |item| item.id.clone(), ["faces"])?;
             apply_named(&mut next.faces, d, |f: &BrepFace| f.id.clone(), apply_face);
         }
         if let Some(d) = &self.shells {
-            crate::artifacts::semio::standards::v1::subsets::any::schema::triples::validate_named_triple(&next.shells, d, |item| item.id.clone(), |item| item.id.clone(), ["shells"])?;
+            crate::artifacts::semio::standards::v1::subsets::base::schema::triples::validate_named_triple(&next.shells, d, |item| item.id.clone(), |item| item.id.clone(), ["shells"])?;
             apply_named(&mut next.shells, d, |s: &BrepShell| s.id.clone(), apply_shell);
         }
         if let Some(d) = &self.solids {
-            crate::artifacts::semio::standards::v1::subsets::any::schema::triples::validate_named_triple(&next.solids, d, |item| item.id.clone(), |item| item.id.clone(), ["solids"])?;
+            crate::artifacts::semio::standards::v1::subsets::base::schema::triples::validate_named_triple(&next.solids, d, |item| item.id.clone(), |item| item.id.clone(), ["solids"])?;
             apply_named(&mut next.solids, d, |s: &BrepSolid| s.id.clone(), apply_solid);
         }
         Ok(next)

@@ -9,7 +9,7 @@
 
 pub use crate::artifacts::semio::standards::v1::subsets::table::schema::mutations::SemioTableMutation;
 
-use crate::artifacts::semio::standards::v1::subsets::any::schema::triples::split_top_level;
+use crate::artifacts::semio::standards::v1::subsets::base::schema::triples::split_top_level;
 use crate::artifacts::semio::standards::v1::subsets::table::schema::mutations::{
     create_column::CreateColumn, delete_column::DeleteColumn, edit_cell::EditCell, insert_row::InsertRow, remove_row::RemoveRow, rename_column::RenameColumn,
     reorder_columns::ReorderColumns, reorder_rows::ReorderRows,

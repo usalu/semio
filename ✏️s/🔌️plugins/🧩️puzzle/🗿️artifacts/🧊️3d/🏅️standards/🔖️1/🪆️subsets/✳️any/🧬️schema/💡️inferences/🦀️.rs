@@ -15,7 +15,7 @@ use super::flat_position::{Puzzle3dFlatCenter, Puzzle3dFlatPlane};
 //#region 🔖️Inference
 /// 💡️ Everything inferable from a puzzle3d snapshot. One field per named inference under
 /// `💡️inferences/` (currently: `flatPositions`, backed by the `🎛flat-position/` slug dir).
-#[derive(Clone, Debug, Default, PartialEq, ArtifactSchema)]
+#[derive(Clone, Debug, Default, PartialEq, ArtifactSchema, value_derive::ToValue, value_derive::FromValue)]
 #[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.puzzle.puzzle3d.inference")]
 pub struct Puzzle3dInference {

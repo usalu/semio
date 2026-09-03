@@ -7,7 +7,6 @@
 use crate::artifacts::layout::LayoutSnapshot;
 use schema::ArtifactSchema;
 use semio_framework_plugin::ArtifactInferrer;
-use serde::{Deserialize, Serialize};
 
 use super::topology::{compute_layout_topology, LayoutTopology};
 use semio_framework_value_derive::{FromValue, ToValue};

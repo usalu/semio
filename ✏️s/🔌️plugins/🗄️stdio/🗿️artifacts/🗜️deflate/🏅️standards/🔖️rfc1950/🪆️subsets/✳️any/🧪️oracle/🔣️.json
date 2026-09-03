@@ -144,5 +144,136 @@
         }
       ]
     }
+  ],
+  "fixtureManifests": [
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "set-preset-dictionary-applied",
+      "class": "handcrafted",
+      "target": {
+        "artifact": "s.stdio.deflate",
+        "standard": "rfc1950",
+        "subset": "any"
+      },
+      "mutation": "set-preset-dictionary",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before",
+          "path": "../🧫️fixtures/set-preset-dictionary/before.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:7c20feff002488a20155e7b5ef9daa37b76c04529289a3b96f16aff035175f5a",
+          "bytes": 211
+        },
+        {
+          "role": "expected-after",
+          "path": "../🧫️fixtures/set-preset-dictionary/after.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:46d3b5f421e2f79158d7e622ca43460de061a098ca643987d36d8c1bae2d57ae",
+          "bytes": 216
+        }
+      ],
+      "provenance": {
+        "source": "authored",
+        "license": "public-domain (handcrafted by this repository)",
+        "attribution": "Handcrafted before/after vector authored directly against this subset's own documented schema — Law 2's handcrafted-vector category.",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "ordered-json-v1",
+      "reproducible": true,
+      "family": "deflate-carrier",
+      "notes": "SetPresetDictionary{dictId:Some(0x12345678)} sets FDICT and the DICTID trailer, RFC1950 §2.2's own preset-dictionary mechanism."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "set-payload-applied",
+      "class": "handcrafted",
+      "target": {
+        "artifact": "s.stdio.deflate",
+        "standard": "rfc1950",
+        "subset": "any"
+      },
+      "mutation": "set-payload",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before",
+          "path": "../🧫️fixtures/set-payload/before.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:7c20feff002488a20155e7b5ef9daa37b76c04529289a3b96f16aff035175f5a",
+          "bytes": 211
+        },
+        {
+          "role": "expected-after",
+          "path": "../🧫️fixtures/set-payload/after.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:096ee10a06cd31711493d313511f6698f1563bc1525d926fdd300b9f653fdb18",
+          "bytes": 222
+        }
+      ],
+      "provenance": {
+        "source": "authored",
+        "license": "public-domain (handcrafted by this repository)",
+        "attribution": "Handcrafted before/after vector authored directly against this subset's own documented schema — Law 2's handcrafted-vector category.",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "ordered-json-v1",
+      "reproducible": true,
+      "family": "deflate-carrier",
+      "notes": "SetPayload replaces the decompressed RFC1951 payload bytes in place."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "set-compression-params-applied",
+      "class": "handcrafted",
+      "target": {
+        "artifact": "s.stdio.deflate",
+        "standard": "rfc1950",
+        "subset": "any"
+      },
+      "mutation": "set-compression-params",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before",
+          "path": "../🧫️fixtures/set-compression-params/before.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:7c20feff002488a20155e7b5ef9daa37b76c04529289a3b96f16aff035175f5a",
+          "bytes": 211
+        },
+        {
+          "role": "expected-after",
+          "path": "../🧫️fixtures/set-compression-params/after.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:f7074731bea074eadd64046397e11a2cfbb009f6e9858483da226ea6e92d7fd7",
+          "bytes": 211
+        }
+      ],
+      "provenance": {
+        "source": "authored",
+        "license": "public-domain (handcrafted by this repository)",
+        "attribution": "Handcrafted before/after vector authored directly against this subset's own documented schema — Law 2's handcrafted-vector category.",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "ordered-json-v1",
+      "reproducible": true,
+      "family": "deflate-carrier",
+      "notes": "SetCompressionParams{method:8,windowBits:6,levelHint:maximum} overwrites the CMF/FLG header fields — window size (CINFO) and the FLEVEL hint — leaving `method` unchanged (still 8, deflate)."
+    }
   ]
 }

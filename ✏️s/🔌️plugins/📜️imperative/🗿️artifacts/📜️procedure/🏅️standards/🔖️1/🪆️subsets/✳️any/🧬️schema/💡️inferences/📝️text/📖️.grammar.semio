@@ -1,0 +1,9 @@
+dialect grammar
+grammar imperative.procedure.inference
+extension procedure.inference
+start document
+
+document = header body
+header = "schema" SP "imperative.procedure.inference" NL
+body = payload NL?
+payload = OCTET+

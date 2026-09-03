@@ -1,0 +1,6 @@
+"""🔀 Direct reorder-steps payload."""
+input ReorderStepsInput {
+  pathRef: ProcedurePathRefInput!
+  id: String!
+  toIndex: Int!
+}

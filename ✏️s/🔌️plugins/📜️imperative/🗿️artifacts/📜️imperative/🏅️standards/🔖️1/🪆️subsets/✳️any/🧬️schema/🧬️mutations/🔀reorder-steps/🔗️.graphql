@@ -1,6 +1,0 @@
-"""🔀 Direct reorder-steps payload."""
-input ReorderStepsInput {
-  pathRef: ImperativePathRefInput!
-  id: String!
-  toIndex: Int!
-}

@@ -62,6 +62,8 @@ CREATE TABLE IF NOT EXISTS db_io_stage (
     //#region 🔖️Authority
     const MAX_BLOB_BYTES: u64 = 496 * 1024;
     const SQLITE_OPERATION_OWNERS: usize = 64;
+    const STAGE_APPEND_SQL: &str = "UPDATE db_io_stage SET bytes = CAST(bytes || ?2 AS BLOB) WHERE operation = ?1";
+    const WAL_APPEND_STAGE_SQL: &str = "UPDATE wal_segment SET bytes = CAST(bytes || (SELECT bytes FROM db_io_stage WHERE operation = ?3) AS BLOB) WHERE document = ?1 AND segment_index = ?2";
 
     fn sqlite_err(error: rusqlite::Error) -> DbError {
         DbError::Io(error.to_string())
@@ -112,7 +114,7 @@ CREATE TABLE IF NOT EXISTS db_io_stage (
             Self::ensure_write_stage(connection, operation)?;
             let Some(fragment) = input.page(0) else { return Ok(true) };
             let fragment_len = fragment.len();
-            connection.execute("UPDATE db_io_stage SET bytes = bytes || ?2 WHERE operation = ?1", params![operation, fragment]).map_err(sqlite_err)?;
+            connection.execute(STAGE_APPEND_SQL, params![operation, fragment]).map_err(sqlite_err)?;
             input.advance(fragment_len)?;
             Ok(false)
         }
@@ -158,7 +160,7 @@ CREATE TABLE IF NOT EXISTS db_io_stage (
             let (_, hasher) = state.get_or_insert_with(|| (operation, semio_framework_hash::Hasher::new()));
             if let Some(fragment) = input.page(0) {
                 let fragment_len = fragment.len();
-                connection.execute("UPDATE db_io_stage SET bytes = bytes || ?2 WHERE operation = ?1", params![sql_operation, fragment]).map_err(sqlite_err)?;
+                connection.execute(STAGE_APPEND_SQL, params![sql_operation, fragment]).map_err(sqlite_err)?;
                 hasher.update(fragment);
                 input.advance(fragment_len)?;
                 return Ok(None);
@@ -240,9 +242,7 @@ CREATE TABLE IF NOT EXISTS db_io_stage (
                         Some(1) => return Err(DbError::InvalidArgument("cannot append to sealed WAL segment".to_string())),
                         _ => {}
                     }
-                    transaction
-                        .execute("UPDATE wal_segment SET bytes = bytes || (SELECT bytes FROM db_io_stage WHERE operation = ?3) WHERE document = ?1 AND segment_index = ?2", params![document.as_str(), index, sql_operation])
-                        .map_err(sqlite_err)?;
+                    transaction.execute(WAL_APPEND_STAGE_SQL, params![document.as_str(), index, sql_operation]).map_err(sqlite_err)?;
                     let length: i64 = transaction.query_row("SELECT length(bytes) FROM wal_segment WHERE document = ?1 AND segment_index = ?2", params![document.as_str(), index], |row| row.get(0)).map_err(sqlite_err)?;
                     transaction.execute("DELETE FROM db_io_stage WHERE operation = ?1", params![sql_operation]).map_err(sqlite_err)?;
                     transaction.commit().map_err(sqlite_err)?;
@@ -791,8 +791,68 @@ CREATE TABLE IF NOT EXISTS db_io_stage (
     mod tests {
         use super::*;
 
+        #[derive(serde::Deserialize)]
+        struct PageLifecycleFixture {
+            pattern_modulo: usize,
+            pattern_addend: usize,
+            lengths: Vec<usize>,
+        }
+
         async fn pages(bytes: &[u8]) -> DbIoPages {
             crate::db_storage::db_io_copy_pages(bytes).unwrap().await.unwrap()
+        }
+
+        async fn assert_payload_roundtrip(storage: &SqliteStorage, bytes: Vec<u8>) {
+            let expected_hash = ContentHash(*semio_framework_hash::hash(&bytes).as_bytes());
+            assert!(matches!(storage.get(&expected_hash).await, Err(DbError::NotFound(_))));
+            let hash = storage.put(pages(&bytes).await).await.unwrap();
+            assert_eq!(hash, expected_hash);
+            assert!(storage.contains(&hash).await.unwrap());
+            assert_eq!(storage.len(&hash).await.unwrap(), bytes.len() as u64);
+            let mut fetched = storage.get(&hash).await.unwrap();
+            assert_eq!(fetched, bytes);
+            while fetched.close_step().unwrap().is_some() {}
+            storage.delete(&hash).await.unwrap();
+            assert!(!storage.contains(&hash).await.unwrap());
+            assert!(matches!(storage.get(&hash).await, Err(DbError::NotFound(_))));
+        }
+
+        #[test]
+        fn sqlite_blob_append_preserves_storage_class_length_and_hex() {
+            let connection = Connection::open_in_memory().unwrap();
+            init_connection(&connection).unwrap();
+            connection.execute("INSERT INTO db_io_stage (operation, bytes, number) VALUES (1, x'', NULL)", []).unwrap();
+            connection.execute(STAGE_APPEND_SQL, params![1, &[0x00_u8, 0xff, 0x80][..]]).unwrap();
+            connection.execute(STAGE_APPEND_SQL, params![1, &[0xc3_u8, 0x28][..]]).unwrap();
+            let stage: (String, i64, String) = connection.query_row("SELECT typeof(bytes), length(bytes), hex(bytes) FROM db_io_stage WHERE operation = 1", [], |row| Ok((row.get(0)?, row.get(1)?, row.get(2)?))).unwrap();
+            assert_eq!(stage, ("blob".to_string(), 5, "00FF80C328".to_string()));
+
+            connection.execute("INSERT INTO wal_segment (document, segment_index, bytes, sealed) VALUES ('oracle', 0, x'7F', 0)", []).unwrap();
+            connection.execute(WAL_APPEND_STAGE_SQL, params!["oracle", 0, 1]).unwrap();
+            let wal: (String, i64, String) = connection.query_row("SELECT typeof(bytes), length(bytes), hex(bytes) FROM wal_segment WHERE document = 'oracle' AND segment_index = 0", [], |row| Ok((row.get(0)?, row.get(1)?, row.get(2)?))).unwrap();
+            assert_eq!(wal, ("blob".to_string(), 6, "7F00FF80C328".to_string()));
+
+            connection.execute("INSERT INTO payload (hash, bytes, len) SELECT 'oracle', bytes, length(bytes) FROM db_io_stage WHERE operation = 1", []).unwrap();
+            let payload: (String, i64, String) = connection.query_row("SELECT typeof(bytes), len, hex(bytes) FROM payload WHERE hash = 'oracle'", [], |row| Ok((row.get(0)?, row.get(1)?, row.get(2)?))).unwrap();
+            assert_eq!(payload, ("blob".to_string(), 5, "00FF80C328".to_string()));
+        }
+
+        #[semio_framework_async_macros::async_test]
+        async fn payload_roundtrip_obeys_neutral_page_boundaries_and_arbitrary_bytes() {
+            let fixture: PageLifecycleFixture = serde_json::from_str(include_str!("../🧪️fixtures/🧬️page-lifecycle/🔣️.json")).unwrap();
+            let storage = SqliteStorage::open_in_memory(crate::db_storage::db_io_test_pool()).await.unwrap();
+
+            assert_payload_roundtrip(&storage, Vec::new()).await;
+            for length in fixture.lengths {
+                let bytes = (0..length).map(|index| (index % fixture.pattern_modulo + fixture.pattern_addend) as u8).collect();
+                assert_payload_roundtrip(&storage, bytes).await;
+            }
+            let mut arbitrary = (0..DB_IO_PAGE_BYTES + 1).map(|index| (index % 251 + 1) as u8).collect::<Vec<_>>();
+            arbitrary[..5].copy_from_slice(&[0x00, 0xff, 0x80, 0xc3, 0x28]);
+            arbitrary[DB_IO_PAGE_BYTES - 1] = 0;
+            assert_payload_roundtrip(&storage, arbitrary).await;
+
+            drop(storage);
         }
 
         #[semio_framework_async_macros::async_test]

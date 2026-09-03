@@ -161,6 +161,41 @@
       ],
       "homepage": "https://github.com/elalish/manifold",
       "rationale": "🏭️ THE GENERATOR PAIR, DISTINCT FROM THE TWO RUNTIME-COMPARISON ORACLES ABOVE. `manifold-mesh-measure` and `three-carrier-reader` judge a mutation already applied by this subset's own code; this entry is the tool that PRODUCED the expected fixture files in the first place — manifold-3d computes the boolean/primitive geometry (the same engine and version `manifold-mesh-measure` uses to judge it later), and three.js's exporters/loaders round-trip that geometry through all four committed carrier formats so every fixture ships STL, OBJ, PLY and glTF built by the same real pipeline this subset's mutations claim to produce. Registered separately from `manifold-mesh-measure` because a fixture's authority is the tool that GENERATED it, and that tool is this pair used together, not either library alone."
+    },
+    {
+      "id": "serde-json-semio-mesh-carrier-reader",
+      "kind": "third-party-library",
+      "ecosystem": "rust",
+      "package": "serde_json",
+      "version": "1",
+      "source": {
+        "repository": "https://github.com/serde-rs/json",
+        "license": "MIT OR Apache-2.0"
+      },
+      "engine": {
+        "family": "serde-json",
+        "implementation": "serde_json 1 value tree",
+        "version": "1"
+      },
+      "capabilities": [
+        "semio-v1-mesh-mutate"
+      ],
+      "comparisonProfiles": [
+        "ordered-json-v1"
+      ],
+      "license": "MIT OR Apache-2.0",
+      "testOnly": true,
+      "productionReachable": false,
+      "networkDuringExecution": false,
+      "platforms": [
+        "darwin-arm64",
+        "darwin-x64",
+        "linux-x64",
+        "linux-arm64",
+        "win32-x64"
+      ],
+      "homepage": "https://docs.rs/serde_json",
+      "rationale": "📖️ A READER over this subset's own JSON export, covering exactly the one kind whose full forward semantics reduces to a pure structural edit.\n\ncreate-material's production diff appends a caller-supplied SemioMaterial to SemioMeshSnapshot::materials (an id-keyed append); create-material/🦀️.rs's own doc comment states a duplicate id already present in base is a no-op. No computed field, no cross-reference.\n\n`SemioMeshSnapshot::materials` is an INLINE `Vec<SemioMaterial>` carrying its full content directly in this subset's own JSON export (`✳️mesh/🧬️schema/📸️snapshot/🦀️.rs`), so a genuinely fresh, unique-keyed `create-material` payload is a carrier-level fact a third-party JSON implementation witnesses in full — the identical inline-versus-composed discriminator `serde-json-semio-document-carrier-reader`'s own rationale already applies to `document`'s `insert-image`/`remove-image`/`set-image-bytes` (`✳️document/🧪️oracle/🔣️.json`).\n\nThe reading tool is `✳️mesh/🏭generator/🦀️json-engine` — its own standalone crate (own `[workspace]`, `[dependencies] serde_json = \"1\"` and nothing else), which builds a deterministic seed document, applies `create-material` as a domain-blind edit to the JSON tree (never through this repository's own mutation engine), and refuses to write a pair whose projection does not move. Scoped HONESTLY to this one kind: the other kinds this subset's own `semio-v1-mesh-mutate` capability names are NOT claimed by this oracle — most carry computed fields, cross-references or binary payloads this generic reader does not attempt (mirroring `dxf-crate-cad-r12-read`'s own partial-coverage precedent in this same file, which likewise reuses the shared capability id rather than declaring a new one for a subset of kinds)."
     }
   ],
   "comparisonProfiles": [

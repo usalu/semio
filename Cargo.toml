@@ -39,7 +39,7 @@ members = [
     "🧰️framework/🔨️modules/🖱️ui/🖥️host/📦️packages/🦀️rust",
     "🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust",
     "🧰️framework/🛍️products/🦑️repo/🔨️modules/⌨️cli/📦️packages/🦀️rust",
-    "🧰️framework/🔨️modules/◻2d/📦️packages/🦀️rust",
+    "🧰️framework/🔨️modules/◻️2d/📦️packages/🦀️rust",
     "🧰️framework/🔨️modules/🗺️surface/📦️packages/🦀️rust",
     "✏️s/🔌️plugins/🌊️flow/📦️packages/🦀️rust",
     "✏️s/🔌️plugins/📋️forms/📦️packages/🦀️rust",
@@ -223,7 +223,7 @@ semio-framework-ui = { path = "🧰️framework/🔨️modules/🖱️ui/📦️
 semio-framework-surface = { path = "🧰️framework/🔨️modules/🗺️surface/📦️packages/🦀️rust" }
 
 # ---- plugin (62) ----
-semio-framework-2d = { path = "🧰️framework/🔨️modules/◻2d/📦️packages/🦀️rust" }
+semio-framework-2d = { path = "🧰️framework/🔨️modules/◻️2d/📦️packages/🦀️rust" }
 semio-framework-3d = { path = "🧰️framework/🔨️modules/🧊️3d/📦️packages/🦀️rust" }
 semio-s-imperative = { path = "✏️s/🔨️modules/📜️imperative/📦️packages/🦀️rust" }
 semio-s-plugin-animate = { path = "✏️s/🔌️plugins/🎞️animate/📦️packages/🦀️rust" }

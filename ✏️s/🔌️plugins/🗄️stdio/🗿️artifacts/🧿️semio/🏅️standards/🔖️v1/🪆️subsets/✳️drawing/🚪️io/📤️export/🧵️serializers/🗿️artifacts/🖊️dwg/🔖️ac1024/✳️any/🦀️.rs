@@ -16,7 +16,7 @@
 
 use crate::artifacts::dwg::schema::snapshot::DwgLogicalDrawing;
 use crate::artifacts::dwg::{paths_to_dwg_drawing, DwgColor, DwgDrawing, DwgEntity, DwgGeometry, DwgPathSegment, DwgSnapshot};
-use crate::artifacts::semio::standards::v1::subsets::any::schema::geometry::SemioPoint2;
+use crate::artifacts::semio::standards::v1::subsets::base::schema::geometry::SemioPoint2;
 use crate::artifacts::semio::standards::v1::subsets::drawing::schema::snapshot::{DrawNode, PathSegment, SemioDrawingSnapshot};
 use semio_framework_plugin::{ArtifactSerializer, Dialect, StandardId, SubsetId};
 
@@ -100,7 +100,7 @@ impl ArtifactSerializer for SemioDrawingToDwg {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::semio::standards::v1::subsets::any::schema::geometry::SemioTransform;
+    use crate::artifacts::semio::standards::v1::subsets::base::schema::geometry::SemioTransform;
     use crate::artifacts::semio::standards::v1::subsets::drawing::io::import::deserializers::artifacts::dwg::v_ac1024::any::SemioDrawingFromDwg;
     use crate::artifacts::semio::standards::v1::subsets::drawing::schema::snapshot::DrawLayer;
     use semio_framework_plugin::ArtifactDeserializer;

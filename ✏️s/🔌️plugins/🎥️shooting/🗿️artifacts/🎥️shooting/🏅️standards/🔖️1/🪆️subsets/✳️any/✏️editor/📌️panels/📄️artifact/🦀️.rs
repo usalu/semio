@@ -29,8 +29,7 @@ pub async fn definition() -> PanelTabDefinition {
 /// click action is built manually instead, one target per click (`"replace"` merge, matching the old
 /// `setSelection` row-click semantics).
 fn asset_select_action(asset_id: &str) -> semio_framework_plugin::UiAssemblyResult<(semio_framework_plugin::ActionId, Option<semio_framework_plugin::UiValue>)> {
-    let targets = serde_json::to_string(&[semio_framework_plugin::InteractionTarget { granularity: "asset".into(), id: asset_id.into() }])
-        .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.action.targets", "selection target encoding failed"))?;
+    let targets = dsl::os_pack::json::to_json_string(&[semio_framework_plugin::InteractionTarget { granularity: "asset".into(), id: asset_id.into() }]);
     let args = crate::editor::shooting::ui_value_map([
         ("domainId", crate::editor::shooting::ui_value_text(SHOOTING_INTERACTION_DOMAIN)?),
         ("merge", crate::editor::shooting::ui_value_text("replace")?),

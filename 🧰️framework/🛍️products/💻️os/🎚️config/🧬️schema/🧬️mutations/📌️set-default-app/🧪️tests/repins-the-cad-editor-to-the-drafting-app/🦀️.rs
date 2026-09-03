@@ -24,13 +24,16 @@ const DIFF: &str = include_str!("🔺️diff/🔣️.json");
 const OUTCOME: &str = include_str!("🎯️outcome/🔣️.json");
 
 fn before() -> OpeningPreferences {
-    serde_json::from_str(BEFORE).expect("before opening preferences decode")
+    dsl::os_pack::json::from_json_str(BEFORE).expect("before opening preferences decode")
 }
 fn expected_after() -> OpeningPreferences {
-    serde_json::from_str(AFTER).expect("after opening preferences decode")
+    dsl::os_pack::json::from_json_str(AFTER).expect("after opening preferences decode")
 }
 fn mutation() -> OpeningConfigMutation {
-    serde_json::from_str(MUTATION).expect("set-default-app mutation decodes")
+    dsl::os_pack::json::from_json_str(MUTATION).expect("set-default-app mutation decodes")
+}
+fn json_value<T: dsl::ToValue>(value: &T) -> serde_json::Value {
+    serde_json::from_str(&dsl::os_pack::json::to_json_string(value)).expect("canonical JSON parses in the independent serde_json oracle")
 }
 
 /// ▶️ Re-pinning the cad editor to the drafting plugin replaces that one entry and leaves the
@@ -68,12 +71,12 @@ fn repinning_the_prior_app_restores_before() {
 #[test]
 fn committed_json_is_canonical() {
     for (label, text) in [("before", BEFORE), ("after", AFTER)] {
-        let decoded: OpeningPreferences = serde_json::from_str(text).expect("opening preferences decode");
-        let reencoded = serde_json::to_value(&decoded).expect("opening preferences encode");
+        let decoded: OpeningPreferences = dsl::os_pack::json::from_json_str(text).expect("opening preferences decode");
+        let reencoded = json_value(&decoded);
         let original: serde_json::Value = serde_json::from_str(text).expect("opening preferences reparse");
         assert_eq!(reencoded, original, "set-default-app/repins-the-cad-editor-to-the-drafting-app: committed {label} preferences JSON is not canonical");
     }
-    let reencoded = serde_json::to_value(mutation()).expect("setDefaultApp payload encodes");
+    let reencoded = json_value(&mutation());
     let original: serde_json::Value = serde_json::from_str(MUTATION).expect("setDefaultApp payload reparses");
     assert_eq!(reencoded, original, "set-default-app/repins-the-cad-editor-to-the-drafting-app: committed setDefaultApp JSON is not canonical");
 }
@@ -94,7 +97,7 @@ fn declared_outcome_holds() {
 #[test]
 fn produces_committed_diff() {
     let outcome = <OpeningConfigMutation as protocol::Mutation<OpeningPreferences>>::diff(&mutation(), &before());
-    let produced = serde_json::to_value(outcome.diff()).expect("produced set-default-app diff encodes");
+    let produced = json_value(outcome.diff());
     let committed: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff decodes");
     assert_eq!(produced, committed, "set-default-app/repins-the-cad-editor-to-the-drafting-app: produced diff differs from the committed 🔺️diff/🔣️.json");
 }
@@ -102,9 +105,9 @@ fn produces_committed_diff() {
 /// 🔣️ The committed diff decodes to `OpeningPreferences` and re-encodes unchanged.
 #[test]
 fn committed_diff_is_canonical() {
-    let decoded: OpeningPreferences = serde_json::from_str(DIFF).expect("committed set-default-app diff decodes");
+    let decoded: OpeningPreferences = dsl::os_pack::json::from_json_str(DIFF).expect("committed set-default-app diff decodes");
     assert_eq!(decoded.defaults.len(), 2, "set-default-app/repins-the-cad-editor-to-the-drafting-app: the whole-record diff must restate every surviving pin, not just the changed one");
-    let reencoded = serde_json::to_value(&decoded).expect("committed diff re-encodes");
+    let reencoded = json_value(&decoded);
     let original: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff reparses");
     assert_eq!(reencoded, original, "set-default-app/repins-the-cad-editor-to-the-drafting-app: committed diff JSON is not canonical");
 }
@@ -113,7 +116,7 @@ fn committed_diff_is_canonical() {
 /// `apply` ignores `base` outright, the diff IS the after-record.
 #[test]
 fn committed_diff_applies_to_after() {
-    let decoded: OpeningPreferences = serde_json::from_str(DIFF).expect("committed set-default-app diff decodes");
+    let decoded: OpeningPreferences = dsl::os_pack::json::from_json_str(DIFF).expect("committed set-default-app diff decodes");
     let produced = protocol::MutationDiff::apply(&decoded, &before()).expect("committed diff applies to the before-preferences");
     assert_eq!(produced, expected_after(), "set-default-app/repins-the-cad-editor-to-the-drafting-app: committed diff did not carry before to after");
 }

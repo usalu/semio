@@ -1,3 +1,0 @@
-(* ebnf mathematical.mathematical.diff *)
-document = header, body ;
-header = 'schema', space, 'mathematical.mathematical.diff', newline ;

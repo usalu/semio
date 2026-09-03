@@ -5,7 +5,6 @@
 //! Kahn's algorithm so `cycleFree` genuinely reports whether those refs ever form a cycle.
 
 use crate::artifacts::layout::{Page, ParentPage, Spread};
-use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, BTreeSet, HashMap, VecDeque};
 use semio_framework_value_derive::{FromValue, ToValue};
 

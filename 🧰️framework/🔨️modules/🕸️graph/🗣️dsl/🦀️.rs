@@ -12,7 +12,7 @@
 #[derive(Debug)]
 pub enum GraphDslError {
     /// 🧾️ Fixture or query-result JSON failed to parse or serialize.
-    Json(serde_json::Error),
+    Json(dsl_core::json::JsonError),
     /// 🔤️ A string literal was never closed (Jack's own dual-quote pre-scan, `dsl_core` only
     /// natively lexes `"..."`).
     UnterminatedString,
@@ -72,8 +72,8 @@ impl std::error::Error for GraphDslError {
     }
 }
 
-impl From<serde_json::Error> for GraphDslError {
-    fn from(error: serde_json::Error) -> Self {
+impl From<dsl_core::json::JsonError> for GraphDslError {
+    fn from(error: dsl_core::json::JsonError) -> Self {
         Self::Json(error)
     }
 }
@@ -97,7 +97,7 @@ pub mod queryable {
 
     use crate::dsl::GraphDslError;
     use crate::manifest::{manifest_by_id, GraphManifest, PropertyBag, PropertyValue};
-    use serde_json::Value;
+    use dsl_core::json::Value;
     use std::collections::{BTreeMap, BTreeSet};
 
     // #region 🔖️QueryableEdge
@@ -192,7 +192,10 @@ pub mod queryable {
 
     // #region 🔖️BoardQueryableGraph
     fn json_to_property_bag(value: &Value) -> PropertyBag {
-        serde_json::from_value(value.clone()).unwrap_or_default()
+        let dsl_core::DslValue::Object(entries) = dsl_core::json::to_dsl_value(value) else {
+            return PropertyBag::default();
+        };
+        entries.into_iter().filter_map(|(k, v)| dsl_core::FromValue::from_value(v).ok().map(|pv| (k, pv))).collect()
     }
 
     fn split_endpoint(endpoint: &str, handle_to_node: &BTreeMap<String, String>) -> (String, Option<String>) {
@@ -226,7 +229,7 @@ pub mod queryable {
 
     impl BoardQueryableGraph {
         pub fn from_fixture_json(json: &str, manifest_id: Option<&str>) -> Result<Self, GraphDslError> {
-            let raw: Value = serde_json::from_str(json)?;
+            let raw: Value = dsl_core::json::parse(json)?;
             let manifest = manifest_id.and_then(manifest_by_id).or_else(|| raw.get("manifestId").and_then(|v| v.as_str()).and_then(manifest_by_id)).or_else(|| raw.get("manifest_id").and_then(|v| v.as_str()).and_then(manifest_by_id));
             let mut nodes = BTreeMap::new();
             let mut handle_to_node = BTreeMap::new();
@@ -241,11 +244,11 @@ pub mod queryable {
                         None => PropertyBag::default(),
                     };
                     for (key, value) in obj.iter() {
-                        if matches!(key.as_str(), "id" | "nodeKind" | "node_kind" | "kind" | "text" | "name" | "label" | "handles" | "x" | "y" | "shape" | "radius" | "width" | "height" | "userData" | "user_data") {
+                        if matches!(key, "id" | "nodeKind" | "node_kind" | "kind" | "text" | "name" | "label" | "handles" | "x" | "y" | "shape" | "radius" | "width" | "height" | "userData" | "user_data") {
                             continue;
                         }
-                        if let Ok(prop) = serde_json::from_value::<PropertyValue>(value.clone()) {
-                            properties.insert(key.clone(), prop);
+                        if let Ok(prop) = <PropertyValue as dsl_core::FromValue>::from_value(dsl_core::json::to_dsl_value(value)) {
+                            properties.insert(key.to_string(), prop);
                         }
                     }
                     nodes.insert(id.to_string(), (kind, name, properties));
@@ -287,7 +290,7 @@ pub mod queryable {
         }
 
         pub fn from_puzzle3d_fixture_json(json: &str) -> Result<Self, GraphDslError> {
-            let raw: Value = serde_json::from_str(json)?;
+            let raw: Value = dsl_core::json::parse(json)?;
             let mut fixture = raw.clone();
             if fixture.get("nodes").and_then(|v| v.as_array()).is_none() {
                 if let Some(objects) = raw.get("objects").and_then(|v| v.as_array()) {
@@ -298,17 +301,15 @@ pub mod queryable {
                             let id = obj.get("id").and_then(|v| v.as_str())?;
                             let kind = obj.get("objectKind").or_else(|| obj.get("kind")).and_then(|v| v.as_str()).unwrap_or("Object");
                             let name = obj.get("name").or_else(|| obj.get("label")).and_then(|v| v.as_str()).unwrap_or(id);
-                            Some(serde_json::json!({
-                                "id": id,
-                                "nodeKind": kind,
-                                "text": name,
-                            }))
+                            Some(Value::Object(dsl_core::json::Object::from_iter([("id".to_string(), Value::from(id)), ("nodeKind".to_string(), Value::from(kind)), ("text".to_string(), Value::from(name))])))
                         })
                         .collect();
-                    fixture["nodes"] = Value::Array(nodes);
+                    if let Some(object) = fixture.as_object_mut() {
+                        object.insert("nodes", Value::Array(nodes));
+                    }
                 }
             }
-            Self::from_fixture_json(&serde_json::to_string(&fixture)?, Some("puzzle3d-default"))
+            Self::from_fixture_json(&dsl_core::json::to_string(&fixture), Some("puzzle3d-default"))
         }
 
         pub fn from_puzzle5d_fixture_json(json: &str) -> Result<Self, GraphDslError> {
@@ -356,7 +357,7 @@ pub mod queryable {
             if let Some(edges) = fixture.get_mut("edges").and_then(|v| v.as_array_mut()) {
                 edges.retain(|row| row.get("id").and_then(|v| v.as_str()).is_some_and(|id| edge_ids.contains(id)));
             }
-            serde_json::to_string(&fixture).ok()
+            Some(dsl_core::json::to_string(&fixture))
         }
     }
     // #endregion 🔖️BoardQueryableGraph
@@ -739,7 +740,6 @@ pub use queryable::{manifest_edge_kinds, manifest_node_kinds, manifest_port_kind
 pub use wire::{dag_from_wire_literal, wire_literal_from_dag, WireEdge, WireNode};
 
 use crate::manifest::PropertyValue;
-use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, BTreeSet};
 
 // #region jack_impl
@@ -827,8 +827,7 @@ pub enum Expr {
     Or(Box<Expr>, Box<Expr>),
 }
 
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[value(rename_all = "camelCase")]
 pub enum QueryResultKind {
     #[default]
@@ -836,16 +835,13 @@ pub enum QueryResultKind {
     Graph,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[value(rename_all = "camelCase")]
 pub struct QueryResult {
-    #[serde(default)]
     #[value(default)]
     pub kind: QueryResultKind,
     pub columns: Vec<String>,
     pub rows: Vec<Vec<PropertyValue>>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub graph_fixture_json: Option<String>,
 }
@@ -862,8 +858,7 @@ impl QueryResult {
 // #endregion 🔖️Ast
 
 // #region 🔖️Lexer
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[value(rename_all = "camelCase")]
 pub enum TokenClass {
     Keyword,
@@ -875,8 +870,7 @@ pub enum TokenClass {
     Error,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[value(rename_all = "camelCase")]
 pub struct TokenSpan {
     pub class: TokenClass,
@@ -1149,13 +1143,11 @@ pub fn tokenize(input: &str) -> Vec<TokenSpan> {
 // #endregion 🔖️Lexer
 
 // #region 🔖️Language
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[value(rename_all = "camelCase")]
 pub struct Completion {
     pub label: String,
     pub kind: String,
-    #[serde(skip_serializing_if = "Option::is_none")]
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub detail: Option<String>,
     pub insert: String,
@@ -1366,8 +1358,7 @@ pub fn complete<G: QueryableGraph>(graph: &G, source: &str, cursor: usize) -> Ve
 // #endregion 🔖️Language
 
 // #region 🔖️LanguageService
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[value(rename_all = "camelCase")]
 pub enum DiagnosticSeverity {
     Error,
@@ -1376,15 +1367,13 @@ pub enum DiagnosticSeverity {
     Info,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[value(rename_all = "camelCase")]
 pub struct Diagnostic {
     pub start: usize,
     pub end: usize,
     pub severity: DiagnosticSeverity,
     pub message: String,
-    #[serde(skip_serializing_if = "Option::is_none")]
     // 🌉️ `default` added even though the serde attribute list only carries `skip_serializing_if`:
     // serde treats an `Option<T>` field as implicitly optional on deserialize with no explicit
     // `default`, but `#[derive(ToValue, FromValue)]` has no such special case — a genuinely omitted
@@ -1393,8 +1382,7 @@ pub struct Diagnostic {
     pub code: Option<String>,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[value(rename_all = "camelCase")]
 pub struct Hover {
     pub start: usize,
@@ -1402,8 +1390,7 @@ pub struct Hover {
     pub contents: String,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[value(rename_all = "camelCase")]
 pub struct SemanticToken {
     pub start: usize,
@@ -2203,7 +2190,7 @@ pub fn run_query<G: QueryableGraph>(graph: &G, source: &str) -> Result<QueryResu
 
 /// ▶️ Execute jack and return JSON result.
 pub fn run_query_json<G: QueryableGraph>(graph: &G, source: &str) -> Result<String, GraphDslError> {
-    Ok(serde_json::to_string(&run_query(graph, source)?)?)
+    Ok(dsl_core::json::to_json_string(&run_query(graph, source)?))
 }
 
 fn match_patterns<G: QueryableGraph>(graph: &G, patterns: &[Pattern]) -> Result<Vec<Binding>, GraphDslError> {
@@ -2871,7 +2858,7 @@ mod tests {
             let node_ids = BTreeSet::from(["a".to_string(), "b".to_string()]);
             let edge_ids = BTreeSet::from(["e1".to_string()]);
             let json = graph.subgraph_fixture_json(&node_ids, &edge_ids).unwrap();
-            let value: serde_json::Value = serde_json::from_str(&json).unwrap();
+            let value: dsl_core::json::Value = dsl_core::json::parse(&json).unwrap();
             assert_eq!(value["nodes"].as_array().unwrap().len(), 2);
             assert_eq!(value["edges"].as_array().unwrap().len(), 1);
         });
@@ -3445,7 +3432,7 @@ mod tests {
         block_on_test(async {
             let graph = BoardQueryableGraph::from_fixture_json(split_endpoint_fixture(), None).unwrap();
             let json = run_query_json(&graph, "MATCH (a:computation) RETURN a.name").unwrap();
-            let value: serde_json::Value = serde_json::from_str(&json).unwrap();
+            let value: dsl_core::json::Value = dsl_core::json::parse(&json).unwrap();
             assert_eq!(value["columns"][0], "a.name");
         });
     }

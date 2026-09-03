@@ -1,7 +1,7 @@
 //! Serialize stdio.ifc.2x3 to stdio.binary.
 
 use crate::artifacts::binary::{BinarySnapshot, STDIO_BINARY_DOCUMENT_SCHEMA};
-use crate::artifacts::ifc::standards::v2x3::subsets::any::schema::snapshot::Ifc2x3Snapshot;
+use crate::artifacts::ifc::standards::v2x3::subsets::base::schema::snapshot::Ifc2x3Snapshot;
 
 //#region Codec
 /// Register serializer hooks.

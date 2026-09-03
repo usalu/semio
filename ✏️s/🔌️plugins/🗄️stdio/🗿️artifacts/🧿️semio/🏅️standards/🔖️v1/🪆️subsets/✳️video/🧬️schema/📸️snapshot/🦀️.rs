@@ -12,7 +12,7 @@
 //! deep, the SAME `derive-nested-multi-buffer-record` wall mesh's own report first named. Hand-rolled
 //! instead — see this wave's report `mechanism_gaps`.
 
-use crate::artifacts::semio::standards::v1::subsets::any::schema::triples::{split_top_level, strip_brackets};
+use crate::artifacts::semio::standards::v1::subsets::base::schema::triples::{split_top_level, strip_brackets};
 use schema::ArtifactSchema;
 
 //#region 🔖️VideoModel

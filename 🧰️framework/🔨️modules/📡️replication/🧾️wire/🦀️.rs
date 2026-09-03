@@ -173,7 +173,7 @@ pub fn frame_flags(compressed: bool, critical: bool, codec: u8) -> u8 {
 // `Conflict` (`📡️spr/⚔️conflict`).
 
 /// @emoji ↩️ How an undo of this operation kind should be computed.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum UndoPolicy {
     ExactBaseOnly,
     TransformAgainstConcurrent,
@@ -216,7 +216,7 @@ impl crate::value::FromValue for UndoPolicy {
 /// given `crate::diagnostic::Severity`. Local/authority state only — never wire-carried, never part of
 /// an artifact's shared history (see the region doc above). `Normal` is the default: the
 /// least-surprising choice for a fresh authority that has never been configured.
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
 pub enum MergePolicy {
     LaissezFaire,
     #[default]
@@ -298,7 +298,7 @@ impl MergePolicy {
 /// Draftness is a LANE property — which store a record lives in — never a field annotation, so a
 /// draft artifact's fields are still [`StateClass::Artifact`]. Derivation travels on its own axis
 /// (`#[derived]` / `x-semio-derived`), never as a state class: a derived field is not state at all.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum StateClass {
     Artifact,
     Config,

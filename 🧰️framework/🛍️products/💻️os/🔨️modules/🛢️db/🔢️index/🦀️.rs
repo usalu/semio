@@ -153,6 +153,14 @@ pub struct IndexBytes {
     pages: db_storage::DbIoPages,
 }
 
+impl PartialEq for IndexBytes {
+    fn eq(&self, expected: &Self) -> bool {
+        self.pages == expected.pages
+    }
+}
+
+impl Eq for IndexBytes {}
+
 #[derive(Debug)]
 pub struct IndexBytesRejected {
     source: Option<Vec<u8>>,
@@ -374,6 +382,7 @@ fn index_bytes_compare_prefix(value: &IndexBytes, prefix: &IndexBytes) -> bool {
     prefix.is_empty()
 }
 
+#[derive(Debug)]
 pub enum RunValue {
     Put(IndexBytes),
     Tombstone,

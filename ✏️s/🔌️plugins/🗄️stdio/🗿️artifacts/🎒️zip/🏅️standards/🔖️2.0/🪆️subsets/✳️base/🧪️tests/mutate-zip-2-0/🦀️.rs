@@ -15,7 +15,7 @@
 //! false when anything moves, so measurements live in the dated ticket record instead.)
 
 use semio_repo_test_host::{Adapter, Context, Json, Outcome};
-use semio_s_plugin_stdio_test_oracle::artifacts::zip::standards::v2_0::subsets::any::{oracle_apply_inverse, oracle_apply_mutation, oracle_round_trip, project_zip_mutation};
+use semio_s_plugin_stdio_test_oracle::artifacts::zip::standards::v2_0::subsets::base::{oracle_apply_inverse, oracle_apply_mutation, oracle_round_trip, project_zip_mutation};
 use semio_s_plugin_stdio_test_oracle::law::{carrier_is_exact, inverse_restores, mutation_is_observable, round_trip_preserves, unordered};
 
 //#region 🔖️Input
@@ -95,17 +95,17 @@ fn round_trip_oracle(ctx: &Context) -> Result<Outcome, String> {
 mod subject {
     use super::{mutable_input, spec};
     use semio_repo_test_host::{Context, Json, Outcome};
-    use semio_s_plugin_stdio::artifacts::zip::standards::v2_0::subsets::any::io::{decode_zip, encode_zip};
-    use semio_s_plugin_stdio::artifacts::zip::standards::v2_0::subsets::any::schema::mutations::add_entry::AddEntry;
-    use semio_s_plugin_stdio::artifacts::zip::standards::v2_0::subsets::any::schema::mutations::apply_zip_mutation;
-    use semio_s_plugin_stdio::artifacts::zip::standards::v2_0::subsets::any::schema::mutations::remove_entry::RemoveEntry;
-    use semio_s_plugin_stdio::artifacts::zip::standards::v2_0::subsets::any::schema::mutations::rename_entry::RenameEntry;
-    use semio_s_plugin_stdio::artifacts::zip::standards::v2_0::subsets::any::schema::mutations::set_archive_comment::SetArchiveComment;
-    use semio_s_plugin_stdio::artifacts::zip::standards::v2_0::subsets::any::schema::mutations::set_entry_data::SetEntryData;
-    use semio_s_plugin_stdio::artifacts::zip::standards::v2_0::subsets::any::schema::mutations::set_snapshot::SetSnapshot;
-    use semio_s_plugin_stdio::artifacts::zip::standards::v2_0::subsets::any::schema::snapshot::ZipEntry;
+    use semio_s_plugin_stdio::artifacts::zip::standards::v2_0::subsets::base::io::{decode_zip, encode_zip};
+    use semio_s_plugin_stdio::artifacts::zip::standards::v2_0::subsets::base::schema::mutations::add_entry::AddEntry;
+    use semio_s_plugin_stdio::artifacts::zip::standards::v2_0::subsets::base::schema::mutations::apply_zip_mutation;
+    use semio_s_plugin_stdio::artifacts::zip::standards::v2_0::subsets::base::schema::mutations::remove_entry::RemoveEntry;
+    use semio_s_plugin_stdio::artifacts::zip::standards::v2_0::subsets::base::schema::mutations::rename_entry::RenameEntry;
+    use semio_s_plugin_stdio::artifacts::zip::standards::v2_0::subsets::base::schema::mutations::set_archive_comment::SetArchiveComment;
+    use semio_s_plugin_stdio::artifacts::zip::standards::v2_0::subsets::base::schema::mutations::set_entry_data::SetEntryData;
+    use semio_s_plugin_stdio::artifacts::zip::standards::v2_0::subsets::base::schema::mutations::set_snapshot::SetSnapshot;
+    use semio_s_plugin_stdio::artifacts::zip::standards::v2_0::subsets::base::schema::snapshot::ZipEntry;
     use semio_s_plugin_stdio::artifacts::zip::{ZipMutation, ZipSnapshot, STDIO_ZIP_DOCUMENT_SCHEMA};
-    use semio_s_plugin_stdio_test_oracle::artifacts::zip::standards::v2_0::subsets::any::project_zip_mutation;
+    use semio_s_plugin_stdio_test_oracle::artifacts::zip::standards::v2_0::subsets::base::project_zip_mutation;
 
     //#region 🔖️Spec
     /// 🦠️ Builds the real typed `ZipMutation` this scenario's `{"kind", "params"}` spec describes —

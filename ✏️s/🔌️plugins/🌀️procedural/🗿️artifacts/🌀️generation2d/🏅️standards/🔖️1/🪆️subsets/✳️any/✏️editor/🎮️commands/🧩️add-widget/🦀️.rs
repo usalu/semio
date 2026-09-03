@@ -1,0 +1,55 @@
+//! 🧩️ 🧩️ Generation2d play app commands command — `add-widget`.
+
+use crate::artifacts::generation2d::op::{generation2d_fixture_operations, Generation2dMutation};
+use crate::artifacts::generation2d::schema::host_from_fixture;
+use crate::artifacts::generation2d::Generation2dSnapshot;
+use crate::editor::generation2d::config::{Generation2dConfig, Generation2dConfigMutation};
+use flow::FlowEvalSession;
+use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
+use semio_framework_value_derive::{FromValue, ToValue};
+
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
+#[dsl(keyword = "add-widget")]
+pub struct AddWidget {
+    pub kind: String,
+    pub neuron_kind: Option<String>,
+    pub x: Option<f64>,
+    pub y: Option<f64>,
+}
+
+/// 🕹️ No longer auto-selects the newly-added widget — no `Emit` channel writes `graph`'s selection
+/// directly anymore (the framework owns it exclusively; ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM).
+pub fn handle(payload: &AddWidget, doc: &ArtifactView<'_, Generation2dSnapshot>, _cfg: &ConfigView<'_, Generation2dConfig>, _session: &mut FlowEvalSession) -> Result<Emit<Generation2dMutation, Generation2dConfigMutation>, Fault> {
+    let fixture = &doc.snapshot.fixture;
+    let descriptor = match payload.kind.as_str() {
+        "neuron" => dsl::json::to_json_string(&dsl::DslValue::object([
+            ("kind".to_string(), dsl::DslValue::String("neuron".to_string())),
+            ("neuronKind".to_string(), dsl::DslValue::String(payload.neuron_kind.clone().unwrap_or_else(|| "math.add".into()))),
+        ])),
+        "inputSlider" => dsl::json::to_json_string(&dsl::DslValue::object([("kind".to_string(), dsl::DslValue::String("inputSlider".to_string())), ("label".to_string(), dsl::DslValue::String(String::new()))])),
+        other => dsl::json::to_json_string(&dsl::DslValue::object([("kind".to_string(), dsl::DslValue::String(other.to_string()))])),
+    };
+    let mut host = host_from_fixture(fixture);
+    let baseline = host.fixture.clone();
+    if host.add_widget(&descriptor, payload.x.unwrap_or(120.0), payload.y.unwrap_or(120.0)).is_ok() {
+        return Ok(Emit { artifact_mutations: generation2d_fixture_operations(&baseline, &host.fixture), ..Default::default() });
+    }
+    Ok(Emit::default())
+}
+
+//#region 🧪️Tests
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::editor::generation2d::testkit::{app, dispatch};
+    use crate::editor::generation2d::Generation2dCommand;
+
+    #[test]
+    fn add_widget_emits_op_and_grows_document() {
+        let mut app = app();
+        let before = app.snapshot().expect("snapshot").fixture.widgets.len();
+        dispatch(&mut app, Generation2dCommand::AddWidget(AddWidget { kind: "inputNote".into(), neuron_kind: None, x: None, y: None }));
+        assert_eq!(app.snapshot().expect("snapshot").fixture.widgets.len(), before + 1);
+    }
+}
+//#endregion 🧪️Tests

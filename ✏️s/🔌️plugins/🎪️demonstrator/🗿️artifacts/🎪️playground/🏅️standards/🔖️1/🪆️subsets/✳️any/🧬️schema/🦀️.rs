@@ -1,12 +1,11 @@
 //! 🧬️ Playground artifact schema — every field of the artifact with its state class.
 
 use schema::ArtifactSchema;
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️Artifact
 /// 🧬️ Full playground artifact state (artifact-lane fields only today).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ArtifactSchema)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
+#[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.demonstrator.playground")]
 pub struct PlaygroundArtifact {
     #[state(artifact)]

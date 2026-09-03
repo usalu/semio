@@ -81,11 +81,11 @@ fn f64_array_value(values: &[f64]) -> DslValue {
     DslValue::Array(values.iter().map(|v| DslValue::float(*v)).collect())
 }
 
-/// 🌉️ `MeshData` (`semio_framework_plugin`) still derives `serde::Serialize`/`Deserialize`, not
-/// `ToValue`/`FromValue` — a genuine framework boundary out of this plugin's write scope. Bridged
-/// once, here, at the point each mesh payload is assembled.
+/// 🌉️ `MeshData` (`semio_framework_plugin`) carries its own first-party `From<MeshData> for
+/// pack::json::Value` — reached here through `protocol`'s `os_pack` re-export of the same `pack`
+/// crate, never `serde_json`. Bridged once, here, at the point each mesh payload is assembled.
 fn mesh_data_to_dsl(data: &semio_framework_plugin::MeshData) -> DslValue {
-    serde_json::to_value(data).map(|value| DslValue::from(&value)).unwrap_or(DslValue::Null)
+    protocol::os_pack::json::to_dsl_value(&protocol::os_pack::json::Value::from(data.clone()))
 }
 
 pub(crate) fn world_instances_json(objects: &[CadObject], runtime: &CadPlayRuntime) -> String {
@@ -243,10 +243,8 @@ pub fn build_world_scene_for_pane(envelope: &CadPlayView, pane: CadPaneId, _surf
 //#endregion 🔖️WorldScene
 
 //#region 🔖️Engagement
-/// 🌉️ `semio_framework::optional_json_to_dsl` is a genuine framework boundary (`🎯️action-bus/🦀️.rs`)
-/// still typed `Option<serde_json::Value> -> Option<DslValue>` — bridged once, here, at the call.
 fn cad_action(action: &str, args: Option<DslValue>) -> ActionDescriptor {
-    ActionDescriptor { controller_id: CAD_PLAY_APP_ID.into(), action: action.into(), args: semio_framework::optional_json_to_dsl(args.map(|value| serde_json::Value::from(&value))) }
+    ActionDescriptor { controller_id: CAD_PLAY_APP_ID.into(), action: action.into(), args }
 }
 
 pub fn cad_window_engagement(envelope: &CadPlayView, pane: CadPaneId, labels: &CadLabels) -> WindowEngagement {

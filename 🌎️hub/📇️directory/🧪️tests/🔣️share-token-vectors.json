@@ -1,0 +1,17 @@
+{
+  "encoding": [
+    {
+      "bytes": [0, 1, 15, 16, 127, 128, 254, 255],
+      "hex": "00010f107f80feff"
+    },
+    {
+      "bytes": [222, 173, 190, 239],
+      "hex": "deadbeef"
+    }
+  ],
+  "scope": {
+    "grant": { "spaceId": "space-a", "documentId": "shared" },
+    "allowed": { "spaceId": "space-a", "documentId": "shared" },
+    "denied": { "spaceId": "space-b", "documentId": "shared" }
+  }
+}

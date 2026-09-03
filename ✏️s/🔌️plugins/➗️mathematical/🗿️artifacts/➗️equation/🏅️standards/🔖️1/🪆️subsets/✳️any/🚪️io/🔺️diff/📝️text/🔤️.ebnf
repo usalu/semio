@@ -1,0 +1,3 @@
+(* ebnf mathematical.equation.diff *)
+document = header, body ;
+header = 'schema', space, 'mathematical.equation.diff', newline ;

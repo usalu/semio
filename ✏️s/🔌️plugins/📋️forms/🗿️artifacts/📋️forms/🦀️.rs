@@ -370,7 +370,7 @@ pub struct FormsWorkingScene {
 
 async fn forms_scene_id(steps: &[FormStep]) -> String {
     use std::hash::{Hash, Hasher};
-    let content_json = serde_json::to_string(steps).unwrap_or_default();
+    let content_json = dsl::os_pack::json::to_json_string(&steps.to_vec());
     let mut hasher = std::collections::hash_map::DefaultHasher::new();
     content_json.hash(&mut hasher);
     format!("forms-scene-{:016x}", hasher.finish())

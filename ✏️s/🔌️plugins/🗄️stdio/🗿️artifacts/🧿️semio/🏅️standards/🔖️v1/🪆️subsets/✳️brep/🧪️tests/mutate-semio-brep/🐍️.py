@@ -88,7 +88,7 @@ SURFACE_FIELDS = {
 #: ONCE from the real committed Rhino BIM export by `🐍️derive-brep-fixture.py` in the ticket folder.
 FOREST_DSL = "local://🗣️hexagonal-cut-concrete-forest-left.dsl.semio"
 FOREST_PACK = "local://🎒️.pack.semio"
-#: 🧊️ The tiny committed `✳️any` solid, kept for the BYTE half of the identity law: its two files
+#: 🧊️ The tiny committed `✳️base` solid, kept for the BYTE half of the identity law: its two files
 #: were written by the RUST codec, so this implementation reproducing them is a cross-language byte
 #: agreement the forest pair — written by this implementation — cannot restate.
 SOLID_DSL = "asset://📚️examples/🧊️solid/🖼️assets/🗣️.dsl.semio"
@@ -923,7 +923,7 @@ def carrier_pair(ctx: Context, dsl_uri: str, pack_uri: str, what: str) -> dict:
 def identity_round_trip(ctx: Context) -> Outcome:
     """🔁️ Both documents, in both encodings — four files, all four reproduced byte for byte.
 
-    The committed `✳️any` solid's two files were written by the RUST codec, so this implementation
+    The committed `✳️base` solid's two files were written by the RUST codec, so this implementation
     reproducing them is a cross-language byte agreement, not a codec agreeing with itself. The
     concrete forest's two files were written by THIS implementation from the grammar and the
     protocol, so the Rust codec has to reproduce THOSE — 2 466 real `f64` among them, 98 of which

@@ -7,7 +7,7 @@
 //! `snapshot: Option<SemioTableSnapshot>` full-replace slot anywhere — whole-document replace is
 //! `ArtifactStore::reset`, outside history.
 
-use crate::artifacts::semio::standards::v1::subsets::any::schema::triples::split_top_level;
+use crate::artifacts::semio::standards::v1::subsets::base::schema::triples::split_top_level;
 use crate::artifacts::semio::standards::v1::subsets::table::schema::snapshot::{SemioTableColumn, SemioTableRow, SemioTableSnapshot};
 use protocol::MutationDiff;
 use schema::ArtifactSchema;
@@ -73,7 +73,7 @@ impl MutationDiff<SemioTableSnapshot> for SemioTableDiff {
     }
 }
 
-/// 🧮️ `table`'s own `DiffAlgebra` — required by the `✳️any` envelope's own dispatch (`SemioDiff`
+/// 🧮️ `table`'s own `DiffAlgebra` — required by the `✳️base` envelope's own dispatch (`SemioDiff`
 /// delegates `between`/`inverse`/`is_empty` straight through to every wrapped subset's own impl).
 /// Whole-list `between`/`inverse` are honest here (not apply-then-capture): a change is fully
 /// described by "the new/old `columns`/`rows` value", same shape every mutation triad's own
@@ -106,7 +106,7 @@ fn enc_columns(list: &SemioTableColumnList) -> String {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn dec_columns(s: &str) -> Result<SemioTableColumnList, String> {
-    use crate::artifacts::semio::standards::v1::subsets::any::schema::triples::strip_brackets;
+    use crate::artifacts::semio::standards::v1::subsets::base::schema::triples::strip_brackets;
     let values = split_top_level(strip_brackets(s)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_column).collect::<Result<Vec<_>, String>>()?;
     Ok(SemioTableColumnList { values })
 }
@@ -116,7 +116,7 @@ fn enc_rows(list: &SemioTableRowList) -> String {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn dec_rows(s: &str) -> Result<SemioTableRowList, String> {
-    use crate::artifacts::semio::standards::v1::subsets::any::schema::triples::strip_brackets;
+    use crate::artifacts::semio::standards::v1::subsets::base::schema::triples::strip_brackets;
     let values = split_top_level(strip_brackets(s)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_row).collect::<Result<Vec<_>, String>>()?;
     Ok(SemioTableRowList { values })
 }

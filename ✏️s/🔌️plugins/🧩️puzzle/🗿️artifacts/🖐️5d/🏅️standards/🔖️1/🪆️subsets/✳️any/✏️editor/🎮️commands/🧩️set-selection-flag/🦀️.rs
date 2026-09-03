@@ -1,7 +1,7 @@
 //! 🧩️ `set-selection-flag` command.
 
 use crate::editor::puzzle5d::Puzzle5dActionCtx;
-use serde_json::Value;
+use dsl::os_pack::json::Value;
 
 /// 👁️ Sets `hidden`/`locked` on every selected part.
 pub fn set_selection_flag(ctx: &mut Puzzle5dActionCtx<'_>, args: Option<&Value>) {

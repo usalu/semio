@@ -1,0 +1,9 @@
+dialect grammar
+grammar equation.snapshot
+extension equation
+start document
+
+document = header body
+header = "schema" SP "mathematical.equation.snapshot" NL
+body = payload NL?
+payload = OCTET+

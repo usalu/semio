@@ -65,7 +65,8 @@ futures = "0.3"
 # (`💻️os/📦️packages/🦀️rust/🦀️.rs`'s own `#[cfg(feature = "sync")] pub mod sync;`), same crate
 # `🏃️run`'s own Cargo.toml depends on. Relative path identical to `🏃️run`'s (same directory depth:
 # both are `🔨️modules/<X>/📦️packages/🦀️rust`).
-semio-framework-os-kernel = { path = "../../../../📦️packages/🦀️rust", package = "semio-framework-os-kernel", features = ["sync"] }
+semio-framework-os-kernel = { path = "../../../../📦️packages/🦀️rust", package = "semio-framework-os-kernel", features = ["sync", "ureq"] }
+semio-framework-os-services = { workspace = true }
 # 🎫️ P7-headless-workspace: `semio_framework_actor::ActorId` (aliased `RuntimeActorId` everywhere
 # else in this tree) — needed directly because `semio-framework-plugin-host` only `use`s it
 # internally, never `pub use`s it (verified: only `PackageId`/`PackageHash`/`PackageRef` are

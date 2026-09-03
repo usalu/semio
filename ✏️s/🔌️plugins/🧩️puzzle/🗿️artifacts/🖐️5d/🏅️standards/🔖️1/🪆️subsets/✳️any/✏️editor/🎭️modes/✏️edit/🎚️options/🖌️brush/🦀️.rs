@@ -13,7 +13,7 @@ use crate::editor::puzzle5d::{
     PUZZLE5D_SUGGESTION_OFFSET_STEP,
 };
 use semio_framework_plugin::{MeasureSelectItem, WindowMeasure};
-use serde_json::json;
+use dsl::json;
 use std::collections::HashMap;
 
 //#region 🔖️Distribution
@@ -33,7 +33,7 @@ fn kind_weight_measures(prefix: &str, action: &str, ids: &[String], weights: &Ha
                 waiting: None,
                 disabled: None,
                 reveal: None,
-                on_change: puzzle5d_action(action, Some(json!({ "kindId": kind_id }))),
+                on_change: puzzle5d_action(action, Some(json!({ "kindId": kind_id.as_str() }))),
             }
         })
         .collect()

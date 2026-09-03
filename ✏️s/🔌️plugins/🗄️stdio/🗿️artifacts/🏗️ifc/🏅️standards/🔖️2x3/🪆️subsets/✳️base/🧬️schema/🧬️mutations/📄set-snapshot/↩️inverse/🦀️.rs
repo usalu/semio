@@ -1,5 +1,5 @@
-use crate::artifacts::ifc::standards::v2x3::subsets::any::schema::mutations::Ifc2x3Mutation;
-use crate::artifacts::ifc::standards::v2x3::subsets::any::schema::snapshot::Ifc2x3Snapshot;
+use crate::artifacts::ifc::standards::v2x3::subsets::base::schema::mutations::Ifc2x3Mutation;
+use crate::artifacts::ifc::standards::v2x3::subsets::base::schema::snapshot::Ifc2x3Snapshot;
 use protocol::Mutation;
 
 /// ↩️ Inverse of set-snapshot.

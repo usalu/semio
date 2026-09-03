@@ -1,7 +1,7 @@
 //! 👁️ Pptx viewer — the `view` mode: the read-only twin of the mutation-capable surface's single
 //! full-pane Document window, same page-per-slide content, no edit affordances.
 
-use crate::viewer::pptx::standards::v_ecma_376::subsets::any::modes::view::windows::main;
+use crate::viewer::pptx::standards::v_ecma_376::subsets::base::modes::view::windows::main;
 use semio_framework_plugin::{LocalizedLabel, ModeDefinition, WindowLayout, WindowLayoutRoot, WindowLayoutStackNode, WindowLayoutWindowNode};
 
 pub const PPTX_VIEW_MODE_ID: &str = "view";

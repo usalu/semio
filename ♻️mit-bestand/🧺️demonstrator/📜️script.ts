@@ -190,7 +190,7 @@ if (import.meta.vitest) {
     });
 
     it("builds one additional artifact for six pane runtime variants", () => {
-      expect(demonstratorRuntimeBuildVariants("generator")).toEqual(["procedural3d"]);
+      expect(demonstratorRuntimeBuildVariants("generator")).toEqual(["generation3d"]);
     });
 
     it("publishes plugins, the shared shard, and consumed extensions at their catalog URL roots", () => {

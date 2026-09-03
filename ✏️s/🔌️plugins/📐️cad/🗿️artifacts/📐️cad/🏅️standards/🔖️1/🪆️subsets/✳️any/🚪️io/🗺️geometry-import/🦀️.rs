@@ -24,7 +24,7 @@ use std::collections::HashMap;
 // same real mesh→OBJ encoder `⚙️engine/🦀️.rs`'s `export_solids_as` now uses, no
 // reimplementation.
 use semio_s_plugin_stdio::artifacts::obj::standards::v3_0::engine::encode_obj;
-use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::any::schema::geometry::{SemioPoint3, SemioQuaternion, SemioTransform};
+use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::base::schema::geometry::{SemioPoint3, SemioQuaternion, SemioTransform};
 use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::mesh::io::export::serializers::artifacts::obj::v3_0::any::SemioMeshToObj;
 use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::mesh::schema::snapshot::{SemioMesh, SemioMeshSnapshot, SemioPrimitive, SemioTopology, STDIO_SEMIOMESH_DOCUMENT_SCHEMA};
 use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::model::schema::snapshot::{ElementClass, GeometryRef, SemioModelElement, SemioModelSnapshot, STDIO_SEMIOMODEL_DOCUMENT_SCHEMA};
@@ -678,8 +678,8 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn forest_wire_chains_reversed_edges_by_vertex_id() {
         let source = include_str!("../../📚️examples/🖼️assets/🎮️play/🔣️.json");
-        let root: serde_json::Value = serde_json::from_str(source).expect("fixture");
-        let geometry_value = root.pointer("/models/0/model/geometry").map(protocol::DslValue::from);
+        let root: protocol::os_pack::json::Value = protocol::json::parse(source).expect("fixture");
+        let geometry_value = root.pointer("/models/0/model/geometry").map(protocol::json::to_dsl_value);
         let geometry = parse_geometry(geometry_value.as_ref());
         let edges = edge_map(&geometry);
         let wire = geometry.wires.iter().find(|wire| wire.id == "hexagonal-cut-concrete-forest-left-wire-103").expect("wire");
@@ -699,10 +699,10 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn forest_shape_geometry_imports_solid_handle() {
         let source = include_str!("../../📚️examples/🖼️assets/🎮️play/🔣️.json");
-        let root: serde_json::Value = serde_json::from_str(source).expect("fixture");
-        let geometry_value = root.pointer("/models/0/model/geometry").map(protocol::DslValue::from);
+        let root: protocol::os_pack::json::Value = protocol::json::parse(source).expect("fixture");
+        let geometry_value = root.pointer("/models/0/model/geometry").map(protocol::json::to_dsl_value);
         let geometry = parse_geometry(geometry_value.as_ref());
-        let objects: Vec<protocol::DslValue> = root.pointer("/models/0/model/objects").and_then(|value| value.as_array()).map(|entries| entries.iter().map(protocol::DslValue::from).collect()).unwrap_or_default();
+        let objects: Vec<protocol::DslValue> = root.pointer("/models/0/model/objects").and_then(|value| value.as_array()).map(|entries| entries.iter().map(protocol::json::to_dsl_value).collect()).unwrap_or_default();
         let mut kernel = Brep::new();
         let imported = objects_from_fixture_model(&mut kernel, &objects, &geometry);
         assert_eq!(imported.len(), 1);
@@ -719,10 +719,10 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn forest_energy_surface_tessellates_at_authored_height() {
         let source = include_str!("../../📚️examples/🖼️assets/🎮️play/🔣️.json");
-        let root: serde_json::Value = serde_json::from_str(source).expect("fixture");
-        let geometry_value = root.pointer("/models/2/model/geometry").map(protocol::DslValue::from);
+        let root: protocol::os_pack::json::Value = protocol::json::parse(source).expect("fixture");
+        let geometry_value = root.pointer("/models/2/model/geometry").map(protocol::json::to_dsl_value);
         let geometry = parse_geometry(geometry_value.as_ref());
-        let objects: Vec<protocol::DslValue> = root.pointer("/models/2/model/objects").and_then(|value| value.as_array()).map(|entries| entries.iter().map(protocol::DslValue::from).collect()).unwrap_or_default();
+        let objects: Vec<protocol::DslValue> = root.pointer("/models/2/model/objects").and_then(|value| value.as_array()).map(|entries| entries.iter().map(protocol::json::to_dsl_value).collect()).unwrap_or_default();
         let mut kernel = Brep::new();
         let imported = objects_from_fixture_model(&mut kernel, &objects, &geometry);
         assert_eq!(imported.len(), 1);
@@ -738,10 +738,10 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn forest_structure_surface_tessellates_at_authored_height() {
         let source = include_str!("../../📚️examples/🖼️assets/🎮️play/🔣️.json");
-        let root: serde_json::Value = serde_json::from_str(source).expect("fixture");
-        let geometry_value = root.pointer("/models/3/model/geometry").map(protocol::DslValue::from);
+        let root: protocol::os_pack::json::Value = protocol::json::parse(source).expect("fixture");
+        let geometry_value = root.pointer("/models/3/model/geometry").map(protocol::json::to_dsl_value);
         let geometry = parse_geometry(geometry_value.as_ref());
-        let objects: Vec<protocol::DslValue> = root.pointer("/models/3/model/objects").and_then(|value| value.as_array()).map(|entries| entries.iter().map(protocol::DslValue::from).collect()).unwrap_or_default();
+        let objects: Vec<protocol::DslValue> = root.pointer("/models/3/model/objects").and_then(|value| value.as_array()).map(|entries| entries.iter().map(protocol::json::to_dsl_value).collect()).unwrap_or_default();
         let mut kernel = Brep::new();
         let imported = objects_from_fixture_model(&mut kernel, &objects, &geometry);
         let slab = imported.iter().find(|object| object.primitives.iter().any(|primitive| primitive.kind == "surface")).expect("surface object");
@@ -753,10 +753,10 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn forest_structure_curve_wires_tessellate_as_centerlines() {
         let source = include_str!("../../📚️examples/🖼️assets/🎮️play/🔣️.json");
-        let root: serde_json::Value = serde_json::from_str(source).expect("fixture");
-        let geometry_value = root.pointer("/models/3/model/geometry").map(protocol::DslValue::from);
+        let root: protocol::os_pack::json::Value = protocol::json::parse(source).expect("fixture");
+        let geometry_value = root.pointer("/models/3/model/geometry").map(protocol::json::to_dsl_value);
         let geometry = parse_geometry(geometry_value.as_ref());
-        let objects: Vec<protocol::DslValue> = root.pointer("/models/3/model/objects").and_then(|value| value.as_array()).map(|entries| entries.iter().map(protocol::DslValue::from).collect()).unwrap_or_default();
+        let objects: Vec<protocol::DslValue> = root.pointer("/models/3/model/objects").and_then(|value| value.as_array()).map(|entries| entries.iter().map(protocol::json::to_dsl_value).collect()).unwrap_or_default();
         let mut kernel = Brep::new();
         let imported = objects_from_fixture_model(&mut kernel, &objects, &geometry);
         assert!(!imported.is_empty());

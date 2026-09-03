@@ -2276,14 +2276,19 @@ export function runViteBuild(bundleRoot: string, segments: string[], config: str
  * `Profiler.startPreciseCoverage`, which Bun's `node:inspector` shim doesn't implement (observed: "Coverage
  * APIs are not supported"); non-coverage runs keep using bun for its faster startup.
  */
-export async function runVitest(bundleRoot: string, segments: string[], config = "🧪️tests/🟦️.ts"): Promise<void> {
-  const collectingCoverage = coverageEnabled();
+/** 🧪️ Builds Vitest argv without overriding the owning config's no-test policy. */
+export function vitestRunArguments(bundleRoot: string, segments: string[], config: string, collectingCoverage = coverageEnabled()): string[] {
   const coverageArgs = collectingCoverage
     ? ["--coverage.enabled", "--coverage.provider=v8", "--coverage.reporter=lcovonly", `--coverage.reportsDirectory=${join(coverageDir(findRepoRoot(bundleRoot), "js"), coverageSlug(bundleRoot))}`]
     : [];
   const vitestBin = join(findRepoRoot(bundleRoot), "node_modules", "vitest", "vitest.mjs");
+  return [vitestBin, "run", "--config", config, ...vitestLevelArgs(), ...coverageArgs, ...segments];
+}
+
+export async function runVitest(bundleRoot: string, segments: string[], config = "🧪️tests/🟦️.ts"): Promise<void> {
+  const collectingCoverage = coverageEnabled();
   const runtime = collectingCoverage ? "node" : process.execPath;
-  await runTestBudgeted(runtime, [vitestBin, "run", "--config", config, "--passWithNoTests", ...vitestLevelArgs(), ...coverageArgs, ...segments], { cwd: bundleRoot, env: devToolingEnv() });
+  await runTestBudgeted(runtime, vitestRunArguments(bundleRoot, segments, config, collectingCoverage), { cwd: bundleRoot, env: devToolingEnv() });
 }
 
 //#region 🔌️PlaygroundDevPorts
@@ -3290,6 +3295,57 @@ export function countJsonKeys(text: string): number {
   }
 }
 
+type JsonUlocUnits = Map<string, string>;
+
+function jsonUlocUnitFingerprint(value: unknown): string {
+  if (value === null || typeof value !== "object") return JSON.stringify(value);
+  if (Array.isArray(value)) {
+    return `array:${value.map((item) => item !== null && typeof item === "object" ? Array.isArray(item) ? "[]" : "{}" : JSON.stringify(item)).join("\\u0000")}`;
+  }
+  return `object:${Object.keys(value as Record<string, unknown>).map((key) => JSON.stringify(key)).join("\\u0000")}`;
+}
+
+function collectJsonUlocUnits(value: unknown, path: string, units: JsonUlocUnits): void {
+  if (Array.isArray(value)) {
+    for (const [index, item] of value.entries()) collectJsonUlocUnits(item, `${path}/${index}`, units);
+    return;
+  }
+  if (value === null || typeof value !== "object") return;
+  for (const [key, item] of Object.entries(value as Record<string, unknown>)) {
+    const nextPath = `${path}/${JSON.stringify(key)}`;
+    units.set(nextPath, jsonUlocUnitFingerprint(item));
+    collectJsonUlocUnits(item, nextPath, units);
+  }
+}
+
+function jsonUlocUnits(text: string): JsonUlocUnits | null {
+  try {
+    const value: unknown = JSON.parse(text);
+    const units: JsonUlocUnits = new Map();
+    collectJsonUlocUnits(value, "", units);
+    return units.size > 0 ? units : null;
+  } catch {
+    return null;
+  }
+}
+
+/** 🧮️Counts JSON additions, semantic edits, and removals in the same key-based ULOC unit as totals. */
+export function diffJsonUloc(before: string | null, after: string | null): { added: number; removed: number; edited: number } | null {
+  const beforeUnits = before === null ? new Map() : jsonUlocUnits(before);
+  const afterUnits = after === null ? new Map() : jsonUlocUnits(after);
+  if (beforeUnits === null || afterUnits === null) return null;
+  let added = 0;
+  let removed = 0;
+  let edited = 0;
+  for (const [path, fingerprint] of afterUnits) {
+    const previous = beforeUnits.get(path);
+    if (previous === undefined) added++;
+    else if (previous !== fingerprint) edited++;
+  }
+  for (const path of beforeUnits.keys()) if (!afterUnits.has(path)) removed++;
+  return { added, removed, edited };
+}
+
 function physicalLineCount(text: string): number {
   if (!text.length) return 0;
   return text.split(/\r?\n/).length;
@@ -3520,13 +3576,19 @@ function parseGitNumstatZ(stdout: Buffer | string): { path: string; added: numbe
   const raw = typeof stdout === "string" ? stdout : stdout.toString("utf8");
   if (!raw) return [];
   const out: { path: string; added: number; removed: number }[] = [];
-  for (const entry of raw.split("\0")) {
+  const entries = raw.split("\0");
+  for (let index = 0; index < entries.length; index++) {
+    const entry = entries[index]!;
     if (!entry) continue;
     const parts = entry.split("\t");
     if (parts.length < 3) continue;
     const added = parts[0] === "-" ? 0 : Number(parts[0]) || 0;
     const removed = parts[1] === "-" ? 0 : Number(parts[1]) || 0;
-    out.push({ path: parts.slice(2).join("\t"), added, removed });
+    let path = parts.slice(2).join("\t");
+    if (!path && entries[index + 1] && entries[index + 2]) {
+      path = `${entries[++index]!}\t${entries[++index]!}`;
+    }
+    if (path) out.push({ path, added, removed });
   }
   return out;
 }
@@ -3535,6 +3597,12 @@ function gitCachedNumstat(root: string): { path: string; added: number; removed:
   const r = spawnCapturedSync("git", ["diff", "--cached", "--numstat", "-z"], { cwd: gitRepoRoot(root), env: gitSpawnEnv() });
   if (r.status !== 0) return [];
   return parseGitNumstatZ(r.stdout);
+}
+
+function isJsonMetricsPath(path: string | null | undefined): boolean {
+  if (!path) return false;
+  const ext = path.slice(path.lastIndexOf(".")).toLowerCase();
+  return ext === ".json" || ext === ".jsonc";
 }
 
 /** 📂️Whether a repo-relative path lies under any normalized prefix. */
@@ -3585,23 +3653,192 @@ function accumulateGitDeltas(root: string): Map<string, { added: number; removed
 function gitObjectSizesAtSpecs(root: string, specs: string[]): Map<string, number> {
   const unique = [...new Set(specs)];
   if (unique.length === 0) return new Map();
-  const result = spawnCapturedSync("git", ["cat-file", "--batch-check=%(objectname)%x09%(objecttype)%x09%(objectsize)%x09%(rest)"], {
+  const result = spawnCapturedSync("git", ["cat-file", "--batch-check=%(objectname)\t%(objecttype)\t%(objectsize)\t%(rest)"], {
     cwd: gitRepoRoot(root),
     env: gitSpawnEnv(),
     input: `${unique.join("\n")}\n`,
   });
   if (result.status !== 0) return new Map();
   const sizes = new Map<string, number>();
-  for (const line of result.stdout.toString("utf8").split("\n")) {
+  const lines = result.stdout.toString("utf8").split("\n");
+  for (let index = 0; index < unique.length; index++) {
+    const line = lines[index] ?? "";
     const first = line.indexOf("\t");
     const second = first < 0 ? -1 : line.indexOf("\t", first + 1);
     const third = second < 0 ? -1 : line.indexOf("\t", second + 1);
     if (third < 0) continue;
     const type = line.slice(first + 1, second);
     const size = Number(line.slice(second + 1, third));
-    if (type === "blob" && Number.isSafeInteger(size) && size >= 0) sizes.set(line.slice(third + 1), size);
+    if (type === "blob" && Number.isSafeInteger(size) && size >= 0) sizes.set(unique[index]!, size);
   }
   return sizes;
+}
+
+const METRICS_BLOB_BATCH_BYTES = 16 * 1024 * 1024;
+
+function gitBlobTextsAtSpecs(root: string, specs: string[]): Map<string, string | null> {
+  const unique = [...new Set(specs)];
+  const sizes = gitObjectSizesAtSpecs(root, unique);
+  const texts = new Map<string, string | null>();
+  let batch: string[] = [];
+  let batchBytes = 0;
+  const flush = (): void => {
+    if (batch.length === 0) return;
+    const result = spawnCapturedSync("git", ["cat-file", "--batch"], {
+      cwd: gitRepoRoot(root),
+      env: gitSpawnEnv(),
+      input: `${batch.join("\n")}\n`,
+    });
+    if (result.status !== 0) {
+      for (const spec of batch) texts.set(spec, null);
+      batch = [];
+      batchBytes = 0;
+      return;
+    }
+    const output = result.stdout;
+    let offset = 0;
+    for (const spec of batch) {
+      const lineEnd = output.indexOf(0x0a, offset);
+      if (lineEnd < 0) {
+        texts.set(spec, null);
+        continue;
+      }
+      const header = output.subarray(offset, lineEnd).toString("utf8");
+      offset = lineEnd + 1;
+      const match = /^[0-9a-f]+ blob (\d+)$/u.exec(header);
+      if (!match) {
+        texts.set(spec, null);
+        continue;
+      }
+      const size = Number(match[1]);
+      if (!Number.isSafeInteger(size) || size < 0 || offset + size > output.length) {
+        texts.set(spec, null);
+        continue;
+      }
+      const bytes = output.subarray(offset, offset + size);
+      offset += size;
+      if (output[offset] === 0x0a) offset++;
+      texts.set(spec, bytes.includes(0) ? null : bytes.toString("utf8"));
+    }
+    batch = [];
+    batchBytes = 0;
+  };
+  for (const spec of unique) {
+    const size = sizes.get(spec);
+    if (size === undefined || size > MAX_METRICS_FILE_BYTES) {
+      texts.set(spec, null);
+      continue;
+    }
+    if (batch.length > 0 && batchBytes + size > METRICS_BLOB_BATCH_BYTES) flush();
+    batch.push(spec);
+    batchBytes += size;
+  }
+  flush();
+  return texts;
+}
+
+type MetricsPathPair = { oldPath: string | null; newPath: string | null };
+
+function metricsPathPair(row: { path: string }): MetricsPathPair | null {
+  const paths = pathsFromNumstatRow(row.path);
+  if (paths.length === 0) return null;
+  if (paths.length === 1) return { oldPath: paths[0]!, newPath: paths[0]! };
+  return { oldPath: paths[0]!, newPath: paths[1]! };
+}
+
+function addLanguageDelta(
+  deltas: Map<string, { added: number; removed: number; edited: number }>,
+  language: string,
+  delta: { added: number; removed: number; edited: number },
+): void {
+  const current = deltas.get(language) ?? { added: 0, removed: 0, edited: 0 };
+  current.added += delta.added;
+  current.removed += delta.removed;
+  current.edited += delta.edited;
+  deltas.set(language, current);
+}
+
+type UlocDeltaEntry = { index: number; row: { path: string; added: number; removed: number }; pair: MetricsPathPair };
+
+function ulocDeltaEntries(root: string, rows: { path: string; added: number; removed: number }[], pathPrefixes?: string[]): UlocDeltaEntry[] {
+  return rows
+    .map((row, index) => ({ index, row, pair: metricsPathPair(row) }))
+    .filter((entry): entry is UlocDeltaEntry => entry.pair !== null)
+    .filter(({ pair }) => {
+      const paths = [pair.oldPath, pair.newPath].filter((path): path is string => path !== null);
+      return paths.some((path) => !shouldSkipPathForUloc(root, path) && (!pathPrefixes || pathUnderPrefixes(path, pathPrefixes)));
+    });
+}
+
+function ulocBlobSpecs(entries: UlocDeltaEntry[], oldRev: string, newRev: string): string[] {
+  return entries.flatMap(({ pair }) => [
+    ...(isJsonMetricsPath(pair.oldPath) ? [`${oldRev}:${pair.oldPath}`] : []),
+    ...(isJsonMetricsPath(pair.newPath) ? [`${newRev}:${pair.newPath}`] : []),
+  ]);
+}
+
+function ulocDeltaForEntry(root: string, entry: UlocDeltaEntry, oldRev: string, newRev: string, blobs: Map<string, string | null>): Map<string, { added: number; removed: number; edited: number }> {
+  const { row, pair } = entry;
+  const deltas = new Map<string, { added: number; removed: number; edited: number }>();
+  const oldLanguage = pair.oldPath && !shouldSkipPathForUloc(root, pair.oldPath) ? classifyPathForMetrics(pair.oldPath) : "";
+  const newLanguage = pair.newPath && !shouldSkipPathForUloc(root, pair.newPath) ? classifyPathForMetrics(pair.newPath) : "";
+  const oldJson = isJsonMetricsPath(pair.oldPath) ? blobs.get(`${oldRev}:${pair.oldPath}`) ?? null : null;
+  const newJson = isJsonMetricsPath(pair.newPath) ? blobs.get(`${newRev}:${pair.newPath}`) ?? null : null;
+  if (oldLanguage === "JSON" && newLanguage === "JSON") {
+    const delta = diffJsonUloc(oldJson, newJson);
+    if (delta !== null) {
+      addLanguageDelta(deltas, "JSON", delta);
+      return deltas;
+    }
+  }
+  if (oldLanguage && oldLanguage === newLanguage && oldLanguage !== "JSON") {
+    addLanguageDelta(deltas, oldLanguage, splitGitNumstatDelta(row.added, row.removed));
+    return deltas;
+  }
+  if (oldLanguage === "JSON") {
+    const delta = diffJsonUloc(oldJson, null);
+    if (delta !== null) addLanguageDelta(deltas, oldLanguage, delta);
+    else if (oldLanguage === newLanguage) addLanguageDelta(deltas, oldLanguage, splitGitNumstatDelta(row.added, row.removed));
+  } else if (oldLanguage) {
+    addLanguageDelta(deltas, oldLanguage, splitGitNumstatDelta(0, row.removed));
+  }
+  if (newLanguage === "JSON") {
+    const delta = diffJsonUloc(null, newJson);
+    if (delta !== null) addLanguageDelta(deltas, newLanguage, delta);
+    else if (oldLanguage !== newLanguage) addLanguageDelta(deltas, newLanguage, splitGitNumstatDelta(row.added, 0));
+  } else if (newLanguage) {
+    addLanguageDelta(deltas, newLanguage, splitGitNumstatDelta(row.added, 0));
+  }
+  return deltas;
+}
+
+function accumulateUlocDeltasByRow(
+  root: string,
+  rows: { path: string; added: number; removed: number }[],
+  oldRev: string,
+  newRev: string,
+  pathPrefixes?: string[],
+): Map<string, { added: number; removed: number; edited: number }>[] {
+  const deltas = rows.map(() => new Map<string, { added: number; removed: number; edited: number }>());
+  const entries = ulocDeltaEntries(root, rows, pathPrefixes);
+  const blobs = gitBlobTextsAtSpecs(root, ulocBlobSpecs(entries, oldRev, newRev));
+  for (const entry of entries) deltas[entry.index] = ulocDeltaForEntry(root, entry, oldRev, newRev, blobs);
+  return deltas;
+}
+
+/** 🧩️Accumulates per-language ULOC deltas from revision blobs, retaining JSON's key-based unit. */
+export function accumulateUlocDeltasFromPaths(
+  root: string,
+  rows: { path: string; added: number; removed: number }[],
+  oldRev: string,
+  newRev: string,
+  pathPrefixes?: string[],
+): Map<string, { added: number; removed: number; edited: number }> {
+  const deltas = new Map<string, { added: number; removed: number; edited: number }>();
+  for (const rowDeltas of accumulateUlocDeltasByRow(root, rows, oldRev, newRev, pathPrefixes)) {
+    for (const [language, delta] of rowDeltas) addLanguageDelta(deltas, language, delta);
+  }
+  return deltas;
 }
 
 /** ➕️Accumulates per-language byte deltas from path size changes between two git revisions. */
@@ -3638,8 +3875,16 @@ function accumulateStagedSizeDeltas(root: string): Map<string, { added: number; 
   return accumulateSizeDeltasFromPaths(root, gitCachedNumstat(root), "HEAD", ":0");
 }
 
+function accumulateStagedUlocDeltas(root: string): Map<string, { added: number; removed: number; edited: number }> {
+  return accumulateUlocDeltasFromPaths(root, gitCachedNumstat(root), "HEAD", ":0");
+}
+
 function accumulateRangeSizeDeltas(root: string, base: string, head: string, pathPrefixes?: string[]): Map<string, { added: number; removed: number; edited: number }> {
   return accumulateSizeDeltasFromPaths(root, gitRangeNumstat(root, base, head), base, head, pathPrefixes);
+}
+
+function accumulateRangeUlocDeltas(root: string, base: string, head: string, pathPrefixes?: string[]): Map<string, { added: number; removed: number; edited: number }> {
+  return accumulateUlocDeltasFromPaths(root, gitRangeNumstat(root, base, head), base, head, pathPrefixes);
 }
 
 /** ➕️Sums git delta counters across all languages. */
@@ -3968,7 +4213,7 @@ export type CommitMetricsBundle = {
 /** 📊️Builds uloc + size metrics for staged changes. */
 export function buildCommitMetrics(root: string, runner: MetricsRunner = createDefaultMetricsRunner()): CommitMetricsBundle {
   const repoRoot = gitRepoRoot(root);
-  const ulocDeltas = accumulateGitDeltas(repoRoot);
+  const ulocDeltas = accumulateStagedUlocDeltas(repoRoot);
   const sizeDeltas = accumulateStagedSizeDeltas(repoRoot);
   const ulocByLang = runner.countRepoUlocByLanguage(repoRoot);
   const sizeByLang = runner.countRepoSizeByLanguage(repoRoot);
@@ -3988,7 +4233,7 @@ export function buildCommitMetricsForRange(
 ): CommitMetricsBundle {
   const repoRoot = gitRepoRoot(root);
   const numstat = gitRangeNumstat(repoRoot, base, head);
-  const ulocDeltas = accumulateGitDeltasFromNumstat(repoRoot, numstat, pathPrefixes);
+  const ulocDeltas = accumulateUlocDeltasFromPaths(repoRoot, numstat, base, head, pathPrefixes);
   const sizeDeltas = accumulateRangeSizeDeltas(repoRoot, base, head, pathPrefixes);
   const ulocByLang = runner.countRepoUlocByLanguage(repoRoot);
   const sizeByLang = runner.countRepoSizeByLanguage(repoRoot);
@@ -4001,7 +4246,7 @@ export function buildCommitMetricsForRange(
 /** 📊️Builds micro-commit uloc metrics: repo uloc per language + staged git deltas. */
 export function buildMicroCommitMetrics(root: string, ulocRunner: UlocRunner = createDefaultUlocRunner()): MicroCommitLangMetrics[] {
   const repoRoot = gitRepoRoot(root);
-  const deltas = accumulateGitDeltas(repoRoot);
+  const deltas = accumulateStagedUlocDeltas(repoRoot);
   const codeByLang = ulocRunner.countRepoByLanguage(repoRoot);
   return buildMicroCommitMetricsFromDeltas(codeByLang, deltas);
 }
@@ -4009,7 +4254,7 @@ export function buildMicroCommitMetrics(root: string, ulocRunner: UlocRunner = c
 /** 📊️Builds uloc metrics for a git revision range (optional path prefixes). */
 export function buildMicroCommitMetricsForRange(root: string, base: string, head = "HEAD", pathPrefixes?: string[], ulocRunner: UlocRunner = createDefaultUlocRunner()): MicroCommitLangMetrics[] {
   const repoRoot = gitRepoRoot(root);
-  const deltas = accumulateGitDeltasFromNumstat(repoRoot, gitRangeNumstat(repoRoot, base, head), pathPrefixes);
+  const deltas = accumulateRangeUlocDeltas(repoRoot, base, head, pathPrefixes);
   const codeByLang = ulocRunner.countRepoByLanguage(repoRoot);
   return buildMicroCommitMetricsFromDeltas(codeByLang, deltas);
 }
@@ -5259,8 +5504,8 @@ export function pathsFromNumstatRow(pathField: string): string[] {
     if (brace) {
       const a = brace[2]!.trim();
       const b = brace[3]!.trim();
-      if (a) out.add(a);
-      if (b) out.add(b);
+      if (a) out.add(`${brace[1]}${a}${brace[4]}`);
+      if (b) out.add(`${brace[1]}${b}${brace[4]}`);
       continue;
     }
     const arrow = /\s*=>\s*/u.exec(part);
@@ -5331,8 +5576,7 @@ function gitCommitShasInRange(root: string, base: string, head: string): string[
   return r.out.split("\n").filter(Boolean);
 }
 
-function addNumstatRowToBundleDateMap(map: BundleDateDeltasMap, row: { path: string; added: number; removed: number }, dateLine: string, bi: number, root: string): void {
-  const chunk = sumGitLangDeltas(accumulateGitDeltasFromNumstat(root, [{ path: row.path, added: row.added, removed: row.removed }]));
+function addUlocDeltaToBundleDateMap(map: BundleDateDeltasMap, chunk: GitDeltaSum, dateLine: string, bi: number): void {
   if (gitDeltaLineTotal(chunk) === 0) return;
   const bundleMap = map.get(bi)!;
   const prev = bundleMap.get(dateLine) ?? { added: 0, removed: 0, edited: 0 };
@@ -5351,7 +5595,9 @@ export function buildBundleDateDeltasMap(root: string, base: string, head: strin
     const body = git(root, ["log", "-1", "--format=%B", sha]).out;
     const dateLine = extractBundleDateLineFromCommit(subject, body);
     if (!dateLine) continue;
-    for (const row of gitRangeNumstat(root, parent, sha)) {
+    const rows = gitRangeNumstat(root, parent, sha);
+    const rowDeltas = accumulateUlocDeltasByRow(root, rows, parent, sha);
+    for (const [index, row] of rows.entries()) {
       const rowPaths = pathsFromNumstatRow(row.path);
       if (rowPaths.length === 0 || rowPaths.every((p) => shouldSkipPathForUloc(root, p))) continue;
       const owners = resolveBundleIndicesForNumstatRow(row.path, prefixSets, bundles);
@@ -5362,7 +5608,7 @@ export function buildBundleDateDeltasMap(root: string, base: string, head: strin
         const names = owners.map((i) => bundles[i]!.label).join(", ");
         throw new Error(`commit: changed path matches multiple bundles (${names}) — ${row.path}`);
       }
-      addNumstatRowToBundleDateMap(map, row, dateLine, owners[0]!, root);
+      addUlocDeltaToBundleDateMap(map, sumGitLangDeltas(rowDeltas[index]!), dateLine, owners[0]!);
     }
   }
   return map;
@@ -5406,9 +5652,7 @@ export function buildBundleDateSizeDeltasMap(root: string, base: string, head: s
 }
 
 function bundleGitDeltasForPaths(root: string, base: string, head: string, pathPrefixes: string[]): { added: number; removed: number; edited: number } {
-  const rows = gitRangeNumstat(root, base, head);
-  const assigned = pathPrefixes.length > 0 ? rows.filter((r) => pathsFromNumstatRow(r.path).some((p) => pathUnderPrefixes(p, pathPrefixes))) : [];
-  return sumGitLangDeltas(accumulateGitDeltasFromNumstat(root, assigned));
+  return sumGitLangDeltas(accumulateRangeUlocDeltas(root, base, head, pathPrefixes));
 }
 
 function bundleSizeDeltasForPaths(root: string, base: string, head: string, pathPrefixes: string[]): GitDeltaSum {
@@ -5567,17 +5811,19 @@ export function resolveBundleIndicesForNumstatRow(pathField: string, prefixSets:
 }
 
 function rangeGitDeltaTotal(root: string, base: string, head: string): GitDeltaSum {
-  return sumGitLangDeltas(accumulateGitDeltasFromNumstat(root, gitRangeNumstat(root, base, head)));
+  return sumGitLangDeltas(accumulateRangeUlocDeltas(root, base, head));
 }
 
 /** 📊️Partition WIP-range numstat across bundles (one bundle per row). */
 export function partitionRangeDeltasByBundle(root: string, base: string, head: string, bundles: CommitBundleSection[], prefixSets: string[][]): { bundleTotals: GitDeltaSum[]; rangeTotal: GitDeltaSum } {
   const bundleTotals = bundles.map(() => ({ added: 0, removed: 0, edited: 0 }));
   let rangeTotal: GitDeltaSum = { added: 0, removed: 0, edited: 0 };
-  for (const row of gitRangeNumstat(root, base, head)) {
+  const rows = gitRangeNumstat(root, base, head);
+  const rowDeltas = accumulateUlocDeltasByRow(root, rows, base, head);
+  for (const [index, row] of rows.entries()) {
     const rowPaths = pathsFromNumstatRow(row.path);
     if (rowPaths.length === 0 || rowPaths.every((p) => shouldSkipPathForUloc(root, p))) continue;
-    const chunk = sumGitLangDeltas(accumulateGitDeltasFromNumstat(root, [{ path: row.path, added: row.added, removed: row.removed }]));
+    const chunk = sumGitLangDeltas(rowDeltas[index]!);
     if (gitDeltaLineTotal(chunk) === 0) continue;
     rangeTotal = addGitDeltaSums(rangeTotal, chunk);
     const owners = resolveBundleIndicesForNumstatRow(row.path, prefixSets, bundles);

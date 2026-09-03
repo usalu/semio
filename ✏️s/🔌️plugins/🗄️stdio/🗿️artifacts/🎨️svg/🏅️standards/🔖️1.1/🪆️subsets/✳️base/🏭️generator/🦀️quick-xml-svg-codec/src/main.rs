@@ -9,7 +9,7 @@
 //! `🦀️oracle.rs` (the `cross-semio-implementation` oracle that COMPUTES what a
 //! mutation should produce): every type, parser and writer below is a fresh implementation built
 //! directly against quick-xml's own event API, never imported from that module. It is also
-//! independent of the sibling 📰xml 1.0 `✳️base` subset's own `quick-xml`-backed oracle-probe
+//! independent of the sibling 📰️xml 1.0 `✳️base` subset's own `quick-xml`-backed oracle-probe
 //! crate — same underlying library, disjoint code, per this subset's own header docstring.
 //!
 //! quick-xml has NO knowledge of SVG semantics: it has never heard of `viewBox` or `transform`

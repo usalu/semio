@@ -4,7 +4,7 @@
   "owners": [
     {
       "owner": "Puzzle2dPlayApp",
-      "source": "🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+      "source": "🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
       "groups": [
         {
           "status": "BatchOnlyPendingRewrite",
@@ -26,7 +26,12 @@
         {
           "status": "Migrated",
           "lanes": ["Config"],
-          "routes": ["setLocale", "setTerminology"]
+          "routes": ["setFillCount", "setLocale", "setTerminology"]
+        },
+        {
+          "status": "Migrated",
+          "lanes": ["Artifact", "Config"],
+          "routes": ["setActiveExample"]
         },
         {
           "status": "BatchOnlyPendingRewrite",
@@ -37,13 +42,13 @@
         {
           "status": "BatchOnlyPendingRewrite",
           "lanes": ["Artifact", "Config"],
-          "routes": ["acceptSuggestion", "addBrushObject", "addObjectKind", "createAttraction", "deleteAttraction", "deleteSelection", "deleteTargetVolume", "duplicateSelection", "patchInspector", "rotateSelection", "scaleSelection", "setActiveExample", "setFillCountStep", "setFixtureJson", "setSelectionFlag", "setTargetVolumeFlag", "translateSelection", "worldRelocate"],
+          "routes": ["acceptSuggestion", "addBrushObject", "addObjectKind", "createAttraction", "deleteAttraction", "deleteSelection", "deleteTargetVolume", "duplicateSelection", "patchInspector", "rotateSelection", "scaleSelection", "setFillCountStep", "setFixtureJson", "setSelectionFlag", "setTargetVolumeFlag", "translateSelection", "worldRelocate"],
           "blocker": "artifact/config completion has neither app-owned retained preparation factory nor bounded root retirement"
         },
         {
           "status": "BatchOnlyPendingRewrite",
           "lanes": ["Config"],
-          "routes": ["closeVortexSuggestions", "cycleBrushCandidate", "cycleBrushCandidateBack", "engagementAbort", "engagementControlSelect", "engagementInput", "engagementSubmit", "focusSelection", "hoverSuggestion", "openVortexSuggestions", "relocateTargetVolume", "selectSameKindSelection", "setBrushPlacementOverlapBudget", "setCamera", "setChunkSize", "setFillCount", "setGridSnapEnabled", "setGridSpacing", "setGridVisible", "setLodAutomatic", "setLodDepthVariable", "setLodManual", "setObjectKindWeight", "setProjection", "setProjectionParam", "setProximityRadius", "setSelectableKind", "setSunAzimuth", "setSunElevation", "setSunIntensity", "setTransformGumballFlag", "setVortexDirection", "setVortexKindWeight", "setVortexShow", "setVoxelDims", "toggleSun"],
+          "routes": ["closeVortexSuggestions", "cycleBrushCandidate", "cycleBrushCandidateBack", "engagementAbort", "engagementControlSelect", "engagementInput", "engagementSubmit", "focusSelection", "hoverSuggestion", "openVortexSuggestions", "relocateTargetVolume", "selectSameKindSelection", "setBrushPlacementOverlapBudget", "setCamera", "setChunkSize", "setGridSnapEnabled", "setGridSpacing", "setGridVisible", "setLodAutomatic", "setLodDepthVariable", "setLodManual", "setObjectKindWeight", "setProjection", "setProjectionParam", "setProximityRadius", "setSelectableKind", "setSunAzimuth", "setSunElevation", "setSunIntensity", "setTransformGumballFlag", "setVortexDirection", "setVortexKindWeight", "setVortexShow", "setVoxelDims", "toggleSun"],
           "blocker": "config-lane completion has no app-owned retained preparation and root-retirement factory"
         },
         {

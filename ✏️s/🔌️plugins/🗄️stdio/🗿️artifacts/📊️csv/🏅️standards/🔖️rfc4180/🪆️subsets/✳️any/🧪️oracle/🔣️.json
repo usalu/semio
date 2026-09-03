@@ -162,5 +162,179 @@
         }
       ]
     }
+  ],
+  "fixtureManifests": [
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "insert-record-applied",
+      "class": "handcrafted",
+      "target": {
+        "artifact": "s.stdio.csv",
+        "standard": "rfc4180",
+        "subset": "any"
+      },
+      "mutation": "insert-record",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before",
+          "path": "../🧫️fixtures/insert-record/before.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:15fbfd59c897c6f11567f461f9d0ac5c66c72083efb306c6506ad8140a80dd2c",
+          "bytes": 437
+        },
+        {
+          "role": "expected-after",
+          "path": "../🧫️fixtures/insert-record/after.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:618ee1957e972ed23be8527f7838414228204bad7d02e592f70636899f951d94",
+          "bytes": 622
+        }
+      ],
+      "provenance": {
+        "source": "authored",
+        "license": "public-domain (handcrafted by this repository)",
+        "attribution": "Handcrafted before/after vector authored directly against this subset's own documented schema — Law 2's handcrafted-vector category.",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "ordered-json-v1",
+      "reproducible": true,
+      "family": "csv-carrier",
+      "notes": "InsertRecord{index:2,record} appends a real RFC 4180 record."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "remove-record-applied",
+      "class": "handcrafted",
+      "target": {
+        "artifact": "s.stdio.csv",
+        "standard": "rfc4180",
+        "subset": "any"
+      },
+      "mutation": "remove-record",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before",
+          "path": "../🧫️fixtures/remove-record/before.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:15fbfd59c897c6f11567f461f9d0ac5c66c72083efb306c6506ad8140a80dd2c",
+          "bytes": 437
+        },
+        {
+          "role": "expected-after",
+          "path": "../🧫️fixtures/remove-record/after.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:cb65c034d35df218908dcd201f181d3a6cadfb59820d0b71b6bb3ddfb41696e7",
+          "bytes": 252
+        }
+      ],
+      "provenance": {
+        "source": "authored",
+        "license": "public-domain (handcrafted by this repository)",
+        "attribution": "Handcrafted before/after vector authored directly against this subset's own documented schema — Law 2's handcrafted-vector category.",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "ordered-json-v1",
+      "reproducible": true,
+      "family": "csv-carrier",
+      "notes": "RemoveRecord{index:1} drops the data record, leaving the header."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "set-field-applied",
+      "class": "handcrafted",
+      "target": {
+        "artifact": "s.stdio.csv",
+        "standard": "rfc4180",
+        "subset": "any"
+      },
+      "mutation": "set-field",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before",
+          "path": "../🧫️fixtures/set-field/before.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:15fbfd59c897c6f11567f461f9d0ac5c66c72083efb306c6506ad8140a80dd2c",
+          "bytes": 437
+        },
+        {
+          "role": "expected-after",
+          "path": "../🧫️fixtures/set-field/after.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:d044873d07b86503b1cbdbd96193fd78740b516012529ca12616f2b740335e65",
+          "bytes": 444
+        }
+      ],
+      "provenance": {
+        "source": "authored",
+        "license": "public-domain (handcrafted by this repository)",
+        "attribution": "Handcrafted before/after vector authored directly against this subset's own documented schema — Law 2's handcrafted-vector category.",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "ordered-json-v1",
+      "reproducible": true,
+      "family": "csv-carrier",
+      "notes": "SetField{recordIndex:1,fieldIndex:1,value:\"renamed-widget\",quoted:true} overwrites one field in place and marks it quoted, RFC 4180 rule 5's own lossless quoting record."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "set-has-header-applied",
+      "class": "handcrafted",
+      "target": {
+        "artifact": "s.stdio.csv",
+        "standard": "rfc4180",
+        "subset": "any"
+      },
+      "mutation": "set-has-header",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before",
+          "path": "../🧫️fixtures/set-has-header/before.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:15fbfd59c897c6f11567f461f9d0ac5c66c72083efb306c6506ad8140a80dd2c",
+          "bytes": 437
+        },
+        {
+          "role": "expected-after",
+          "path": "../🧫️fixtures/set-has-header/after.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:f4f93f532e392c1d4b55e2bf5593cec7db3bdccf0c8b2010f22029c027885b8b",
+          "bytes": 438
+        }
+      ],
+      "provenance": {
+        "source": "authored",
+        "license": "public-domain (handcrafted by this repository)",
+        "attribution": "Handcrafted before/after vector authored directly against this subset's own documented schema — Law 2's handcrafted-vector category.",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "ordered-json-v1",
+      "reproducible": true,
+      "family": "csv-carrier",
+      "notes": "SetHasHeader{hasHeader:false} flips RFC 4180's own optional header-row convention without touching any record."
+    }
   ]
 }

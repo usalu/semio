@@ -1,0 +1,22 @@
+type Generation3dConfig {
+  lodMode: String! @state(class: CONFIG)
+  showMode: String! @state(class: CONFIG)
+  camera: CameraJson! @state(class: CONFIG)
+  previewCamera: Generation3dPreviewCamera! @state(class: CONFIG)
+  sunJson: String! @state(class: CONFIG)
+  selectedGenerationId: String @state(class: CONFIG)
+  generationPreviewText: String @state(class: CONFIG)
+  activeUtilityId: String! @state(class: CONFIG)
+  locale: String! @state(class: CONFIG)
+  previewEvalText: String @state(class: CONFIG)
+}
+type CameraJson {
+  x: Float!
+  y: Float!
+  zoom: Float!
+}
+type Generation3dPreviewCamera {
+  position: [Float!]!
+  target: [Float!]!
+  fov: Float!
+}

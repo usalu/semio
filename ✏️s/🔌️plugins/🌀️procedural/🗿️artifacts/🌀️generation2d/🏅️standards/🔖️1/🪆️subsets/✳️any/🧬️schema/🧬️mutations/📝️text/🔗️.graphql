@@ -1,0 +1,3 @@
+# procedural.generation2d.mutations text grammar schema
+scalar Bytes
+type Document { schema: String! payload: String! }

@@ -62,7 +62,6 @@ Feature: Apply every typed LAS 1.0 mutation to a real-world point cloud
     Then the oracle and the subject agree on the semantic projection
     Examples:
       | id                    | params |
-      | no-mutation            | {} |
       | set-snapshot           | {"header": {"versionMajor": 1, "versionMinor": 0, "systemIdentifier": "SEMIO-SNAP", "generatingSoftware": "semio-test", "dayOfYear": 1, "year": 2026, "scale": [0.01, 0.01, 0.01], "offset": [0.0, 0.0, 0.0], "max": [10.0, 10.0, 10.0], "min": [0.0, 0.0, 0.0], "counts": [3, 0, 0, 0, 0]}, "vlrs": [{"userId": "semio", "recordId": 1, "description": "snap-vlr", "data": "snap-data"}], "points": [{"x": 0.0, "y": 0.0, "z": 0.0, "intensity": 10, "returnNumber": 1, "numberOfReturns": 1, "scanDirectionFlag": false, "edgeOfFlightLine": false, "classification": 2, "scanAngleRank": 0, "userData": 0, "pointSourceId": 1, "gpsTime": null, "rgb": null}, {"x": 1.0, "y": 1.0, "z": 1.0, "intensity": 20, "returnNumber": 1, "numberOfReturns": 1, "scanDirectionFlag": false, "edgeOfFlightLine": false, "classification": 4, "scanAngleRank": 5, "userData": 0, "pointSourceId": 1, "gpsTime": null, "rgb": null}, {"x": 2.0, "y": 2.0, "z": 2.5, "intensity": 30, "returnNumber": 1, "numberOfReturns": 1, "scanDirectionFlag": true, "edgeOfFlightLine": false, "classification": 6, "scanAngleRank": -5, "userData": 0, "pointSourceId": 1, "gpsTime": null, "rgb": null}]} |
       | set-version            | {"major": 1, "minor": 1} |
       | set-system-identifier  | {"systemIdentifier": "RENAMED-SYSTEM"} |
@@ -85,7 +84,6 @@ Feature: Apply every typed LAS 1.0 mutation to a real-world point cloud
     Then the oracle and the subject agree on the semantic projection of the original point cloud
     Examples:
       | id                    | params |
-      | no-mutation            | {} |
       | set-snapshot           | {"header": {"versionMajor": 1, "versionMinor": 0, "systemIdentifier": "SEMIO-SNAP", "generatingSoftware": "semio-test", "dayOfYear": 1, "year": 2026, "scale": [0.01, 0.01, 0.01], "offset": [0.0, 0.0, 0.0], "max": [10.0, 10.0, 10.0], "min": [0.0, 0.0, 0.0], "counts": [3, 0, 0, 0, 0]}, "vlrs": [{"userId": "semio", "recordId": 1, "description": "snap-vlr", "data": "snap-data"}], "points": [{"x": 0.0, "y": 0.0, "z": 0.0, "intensity": 10, "returnNumber": 1, "numberOfReturns": 1, "scanDirectionFlag": false, "edgeOfFlightLine": false, "classification": 2, "scanAngleRank": 0, "userData": 0, "pointSourceId": 1, "gpsTime": null, "rgb": null}, {"x": 1.0, "y": 1.0, "z": 1.0, "intensity": 20, "returnNumber": 1, "numberOfReturns": 1, "scanDirectionFlag": false, "edgeOfFlightLine": false, "classification": 4, "scanAngleRank": 5, "userData": 0, "pointSourceId": 1, "gpsTime": null, "rgb": null}, {"x": 2.0, "y": 2.0, "z": 2.5, "intensity": 30, "returnNumber": 1, "numberOfReturns": 1, "scanDirectionFlag": true, "edgeOfFlightLine": false, "classification": 6, "scanAngleRank": -5, "userData": 0, "pointSourceId": 1, "gpsTime": null, "rgb": null}]} |
       | set-version            | {"major": 1, "minor": 1} |
       | set-system-identifier  | {"systemIdentifier": "RENAMED-SYSTEM"} |

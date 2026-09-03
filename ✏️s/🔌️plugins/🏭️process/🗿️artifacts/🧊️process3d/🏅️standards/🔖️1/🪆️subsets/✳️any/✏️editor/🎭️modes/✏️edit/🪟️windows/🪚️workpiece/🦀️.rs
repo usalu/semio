@@ -2,7 +2,7 @@
 //! process-timeline engagement (cursor stepper + command-line input).
 
 use crate::artifacts::process3d::schema::inferences::processed_mesh;
-use crate::artifacts::process3d::Process3dSnapshot;
+use crate::artifacts::process3d::{Process3dSnapshot, ProcessWorkingScene};
 use crate::editor::process3d::config::Process3dConfig;
 use crate::editor::process3d::modes::edit::windows::workpiece::options;
 use semio_framework_plugin::app::WindowKit;
@@ -84,15 +84,12 @@ fn process3d_window_action(action: &str, args: Option<semio_framework::DslValue>
 //#endregion 🔖️Selection
 
 //#region 🔖️PreviewCache
-/// 🖼️ Ticket 26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM wave 4: `fixture.stock_solid` is a
-/// composed `s.stdio.semio.brep` CHILD HANDLE now, with no resolvable content without a
-/// `LinkResolver` (see `ProcessWorkingScene`'s doc comment) — so the `WorkingSolid::ImportedMesh`
-/// mesh-url fast path (which needed to inspect the resolved solid kind) can no longer trigger, and
-/// `processed_mesh` degrades to the empty working scene (falls back to
-/// `PROCESS3D_FALLBACK_MESH_KIND`), a documented gap.
-fn evaluated_preview_payload(fixture: &Process3dSnapshot) -> (String, String) {
-    let scene = crate::artifacts::process3d::process_working_scene_from_snapshot(fixture);
-    let mesh = processed_mesh(&scene, fixture.resolved_up_to).unwrap_or_else(|| mesh_from_kind(PROCESS3D_FALLBACK_MESH_KIND));
+/// 🖼️ Builds the world scene from the snapshot's INLINE authoritative records — `stock_payload` and
+/// `step_payloads` (`process_working_scene_from_snapshot`) — so a real stock and a real timeline
+/// tessellate into a real mesh; only a document that carries neither falls back to
+/// `PROCESS3D_FALLBACK_MESH_KIND`.
+fn evaluated_preview_payload(fixture: &Process3dSnapshot, scene: &ProcessWorkingScene) -> (String, String) {
+    let mesh = processed_mesh(scene, fixture.resolved_up_to).unwrap_or_else(|| mesh_from_kind(PROCESS3D_FALLBACK_MESH_KIND));
     let meshes = json::Value::Array(vec![json::object([("id".to_string(), json::Value::String("processed".to_string())), ("data".to_string(), json::Value::from(mesh))])]);
     let floats = |values: [f64; 3]| json::Value::Array(values.into_iter().map(json::Value::from).collect());
     let instances = json::Value::Array(vec![json::object([
@@ -108,8 +105,49 @@ fn evaluated_preview_payload(fixture: &Process3dSnapshot) -> (String, String) {
     (json::to_string(&meshes), json::to_string(&instances))
 }
 
+/// 🗃️ One memoized preview per distinct scene. `processed_mesh` builds a fresh kernel session,
+/// replays every enabled step as a real CSG boolean, tessellates and remaps face groups — and
+/// `processed_volume` replays the identical sequence again for the engagement readout, so an
+/// uncached turn pays for the whole process TWICE. The host settles a turn by re-driving the plugin
+/// until every requested surface publishes (`PLUGIN_UI_CONTINUATION_LIMIT`), which multiplies that
+/// cost by every continuation. `ProcessWorkingScene` derives `PartialEq`, so the guard is a cheap
+/// structural compare against the last scene rendered.
+struct Process3dPreviewCache {
+    scene: ProcessWorkingScene,
+    resolved_up_to: Option<usize>,
+    label: String,
+    payload: (String, String),
+    volume: f64,
+}
+
+fn with_preview_cache<T>(fixture: &Process3dSnapshot, read: impl Fn(&Process3dPreviewCache) -> T) -> T {
+    static CACHE: std::sync::OnceLock<std::sync::Mutex<Option<Process3dPreviewCache>>> = std::sync::OnceLock::new();
+    let scene = crate::artifacts::process3d::process_working_scene_from_snapshot(fixture);
+    let cell = CACHE.get_or_init(|| std::sync::Mutex::new(None));
+    let Ok(mut slot) = cell.lock() else {
+        let entry = build_preview_cache(fixture, scene);
+        return read(&entry);
+    };
+    let fresh = slot.as_ref().is_some_and(|entry| entry.scene == scene && entry.resolved_up_to == fixture.resolved_up_to && entry.label == fixture.stock_label);
+    if !fresh {
+        *slot = Some(build_preview_cache(fixture, scene));
+    }
+    read(slot.as_ref().expect("preview cache populated"))
+}
+
+fn build_preview_cache(fixture: &Process3dSnapshot, scene: ProcessWorkingScene) -> Process3dPreviewCache {
+    let payload = evaluated_preview_payload(fixture, &scene);
+    let volume = crate::artifacts::process3d::schema::inferences::processed_volume(&scene, fixture.resolved_up_to).unwrap_or(0.0);
+    Process3dPreviewCache { scene, resolved_up_to: fixture.resolved_up_to, label: fixture.stock_label.clone(), payload, volume }
+}
+
 fn preview_payload_cached(fixture: &Process3dSnapshot) -> (String, String) {
-    evaluated_preview_payload(fixture)
+    with_preview_cache(fixture, |entry| entry.payload.clone())
+}
+
+/// 📐️ The replayed solid's volume, served from the same memo as the mesh.
+fn processed_volume_cached(fixture: &Process3dSnapshot) -> f64 {
+    with_preview_cache(fixture, |entry| entry.volume)
 }
 //#endregion 🔖️PreviewCache
 
@@ -128,13 +166,9 @@ pub fn render(fixture: &Process3dSnapshot, config: &Process3dConfig) -> UiAssemb
 //#region 🔖️Engagement
 pub fn engagement(fixture: &Process3dSnapshot, config: &Process3dConfig, labels: &crate::editor::process3d::terminology::Process3dLabels) -> WindowEngagement {
     let active_utility = config.active_utility();
-    // 🌉️ Ticket 26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM wave 4: `steps` is a composed CHILD
-    // HANDLE now (no `.len()` — see `ProcessWorkingScene`'s doc comment), so the stepper's `max`
-    // degrades to the empty working scene's length (0), a documented gap.
-    let scene = crate::artifacts::process3d::process_working_scene_from_snapshot(fixture);
-    let len = scene.steps.len();
+    let len = fixture.step_payloads.len();
     let cursor = fixture.resolved_up_to.unwrap_or(len);
-    let volume = crate::artifacts::process3d::schema::inferences::processed_volume(&scene, fixture.resolved_up_to).unwrap_or(0.0);
+    let volume = processed_volume_cached(fixture);
     WindowEngagement {
         session_active: Some(active_utility != "select"),
         // 🧰️ The select/cut/drill/attach switcher lives in the framework utility bar (declared via

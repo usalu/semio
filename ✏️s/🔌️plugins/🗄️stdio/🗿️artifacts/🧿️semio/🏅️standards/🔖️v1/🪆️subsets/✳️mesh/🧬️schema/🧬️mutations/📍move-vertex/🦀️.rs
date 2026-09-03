@@ -1,6 +1,6 @@
 //! 📍 `move-vertex` — absolute spatial reposition of ONE vertex inside a primitive's `positions` buffer, addressed by BASE-state index (`positions` only ever changes wholesale via `replace-primitive-geometry`, so an index stays valid for the lifetime of one geometry \"epoch\"). Present in the vocabulary because `computed-normals` (deliberately OMITTED from this subset's own inference facet, see its module doc comment) would have presumed raw per-vertex position edits are a first-class gesture; `move-vertex` is authored on its own independent merits — a real address (`mesh_id`+`primitive_id`+`vertex_index`) and one field (`new_point`) — matching taxonomy's `move` verb exactly, same shape as brep's own approved `move-vertex`.
 
-use crate::artifacts::semio::standards::v1::subsets::any::schema::geometry::SemioPoint3;
+use crate::artifacts::semio::standards::v1::subsets::base::schema::geometry::SemioPoint3;
 use crate::artifacts::semio::standards::v1::subsets::mesh::schema::mutations::SemioMeshMutation;
 use crate::artifacts::semio::standards::v1::subsets::mesh::schema::snapshot::SemioMeshSnapshot;
 

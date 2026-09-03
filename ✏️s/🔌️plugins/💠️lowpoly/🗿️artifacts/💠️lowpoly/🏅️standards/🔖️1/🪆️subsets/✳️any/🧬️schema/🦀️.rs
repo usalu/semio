@@ -4,14 +4,10 @@ use crate::artifacts::lowpoly::{LowpolyObject, LowpolyPaintLayer, LowpolySelecti
 use schema::ArtifactSchema;
 use semio_framework_3d::mesh::HalfedgeMesh;
 use semio_framework_plugin::MeshData;
-use serde::{Deserialize, Serialize};
-use serde_json::Value;
 
 //#region 🔖️Artifact
 /// 🧬️ Full lowpoly artifact state across the artifact, presence and config lanes.
 #[derive(Clone, Debug, PartialEq, ArtifactSchema, value_derive::ToValue, value_derive::FromValue)]
-#[cfg_attr(test, derive(Serialize, Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.lowpoly.lowpoly")]
 pub struct LowpolyArtifact {
@@ -241,15 +237,16 @@ pub fn artifact_schema_registered() -> bool {
 //#endregion 🔖️DocumentHelpers
 
 //#region 🔖️MediaConversion
-/// @emoji 🧵️ Builds a `MeshData` transfer payload from a raw tessellation-transfer JSON value (as
+/// @emoji 🧵️ Builds a `MeshData` transfer payload from a raw tessellation-transfer `DslValue` (as
 /// produced by the app's `LowpolyDocument::tessellate_transfer_json`), attaching a composited paint
 /// texture when one is supplied. Shared by the app's live 3D scene builder and media export. Relocated
 /// from `⚙️engine/🧵️media` (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES): a pure
-/// `Value` → `MeshData` conversion, not engine behaviour.
-pub fn mesh_data_from_transfer(transfer: &Value, paint_texture: Option<String>) -> MeshData {
-    let read_f32 = |key: &str| -> Vec<f32> { transfer.get(key).and_then(|value| serde_json::from_value(value.clone()).ok()).unwrap_or_default() };
-    let read_u32 = |key: &str| -> Vec<u32> { transfer.get(key).and_then(|value| serde_json::from_value(value.clone()).ok()).unwrap_or_default() };
-    let read_u8 = |key: &str| -> Vec<u8> { transfer.get(key).and_then(|value| serde_json::from_value(value.clone()).ok()).unwrap_or_default() };
+/// `Value` → `MeshData` conversion, not engine behaviour. Every field read routes through
+/// `dsl::FromValue` directly — no `serde_json` bridge anywhere in this call chain.
+pub fn mesh_data_from_transfer(transfer: &dsl::DslValue, paint_texture: Option<String>) -> MeshData {
+    let read_f32 = |key: &str| -> Vec<f32> { transfer.get(key).and_then(|value| dsl::FromValue::from_value(value.clone()).ok()).unwrap_or_default() };
+    let read_u32 = |key: &str| -> Vec<u32> { transfer.get(key).and_then(|value| dsl::FromValue::from_value(value.clone()).ok()).unwrap_or_default() };
+    let read_u8 = |key: &str| -> Vec<u8> { transfer.get(key).and_then(|value| dsl::FromValue::from_value(value.clone()).ok()).unwrap_or_default() };
     MeshData {
         positions: read_f32("positions"),
         normals: read_f32("normals"),
@@ -273,7 +270,7 @@ pub fn mesh_data_from_transfer(transfer: &Value, paint_texture: Option<String>) 
 /// (ticket `26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS`) — `dsl::ToValue`
 /// stays available unconditionally, and the `DslValue`→`serde_json::Value` bridge (`🌱️value/🦀️.rs`)
 /// yields the identical JSON shape.
-pub fn lowpoly_document_from_mesh(mesh: &MeshData) -> Result<Value, String> {
+pub fn lowpoly_document_from_mesh(mesh: &MeshData) -> Result<serde_json::Value, String> {
     let halfedge = HalfedgeMesh::from_indexed_triangles(&mesh.positions, &mesh.indices).map_err(|err| format!("{err:?}"))?;
     let mesh_json = halfedge.to_json().map_err(|err| format!("{err:?}"))?;
     let snapshot = crate::artifacts::lowpoly::snapshot_from_mesh_json(&mesh_json, "obj-1", "Imported Mesh");
@@ -284,14 +281,14 @@ pub fn lowpoly_document_from_mesh(mesh: &MeshData) -> Result<Value, String> {
 /// from `⚙️engine/🧵️media`. `MeshData` implements `dsl::ToValue` first-party (hand-written in
 /// `🔺️mesh-engine/🦀️.rs`, since `serde`'s `Serialize` on it is `#[cfg(test)]`-only per the same
 /// ticket), so this bridges through that instead of `serde_json::to_value(mesh)`.
-pub fn mesh_document_from_mesh(mesh: &MeshData) -> Result<Value, String> {
-    let mesh_value: Value = dsl::ToValue::to_value(mesh).into();
-    Ok(serde_json::json!({ "schema": "mesh.document", "mesh": mesh_value }))
+pub fn mesh_document_from_mesh(mesh: &MeshData) -> Result<serde_json::Value, String> {
+    let document = dsl::DslValue::object([("schema".to_string(), dsl::DslValue::String("mesh.document".to_string())), ("mesh".to_string(), dsl::ToValue::to_value(mesh))]);
+    Ok(document.into())
 }
 
 /// 🔺️ Relocated from `⚙️engine/🧵️media`. Mirrors `mesh_document_from_mesh`'s `dsl::ToValue` bridge in
 /// reverse (`dsl::FromValue`), since `MeshData: Deserialize` is likewise `#[cfg(test)]`-only.
-pub fn mesh_from_mesh_document(doc: &Value) -> Result<MeshData, String> {
+pub fn mesh_from_mesh_document(doc: &serde_json::Value) -> Result<MeshData, String> {
     doc.get("mesh")
         .and_then(|value| dsl::FromValue::from_value(dsl::DslValue::from(value.clone())).ok())
         .filter(|mesh: &MeshData| !mesh.positions.is_empty() && !mesh.indices.is_empty())
@@ -583,8 +580,8 @@ mod tests {
         let mut projection = default_snapshot();
         projection.objects[0].paint_layers[0].pixels[0] = 7;
         projection.objects[0].paint_layers[0].pixels[1] = 9;
-        let json = serde_json::to_string(&projection).unwrap();
-        let restored: crate::artifacts::lowpoly::LowpolySnapshot = serde_json::from_str(&json).unwrap();
+        let json = serde_json::to_string(&Into::<serde_json::Value>::into(dsl::ToValue::to_value(&projection))).unwrap();
+        let restored: crate::artifacts::lowpoly::LowpolySnapshot = dsl::FromValue::from_value(dsl::DslValue::from(serde_json::from_str::<serde_json::Value>(&json).unwrap())).unwrap();
         assert_eq!(restored, projection);
     }
 
@@ -689,7 +686,6 @@ mod export_concrete_forest_mesh_tests {
     use cad_plugin::artifacts::cad::io::geometry_import::{objects_from_fixture_model, parse_geometry};
     use semio_framework_3d::mesh::{FaceId, HalfedgeMesh, Vec3 as MeshVec3, VertexId};
     use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::schema::engine::{Brep, GeometryHandle};
-    use serde_json::Value;
     use std::collections::HashMap;
 
     /// Asserts every directed edge (by vertex id, after welding) has an opposite-winding counterpart, i.e. the
@@ -748,7 +744,7 @@ mod export_concrete_forest_mesh_tests {
             return;
         }
         let source = include_str!("../../../../../../../../📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🎮️play/🔣️.json");
-        let root: Value = serde_json::from_str(source).expect("fixture");
+        let root: serde_json::Value = serde_json::from_str(source).expect("fixture");
         let geometry = parse_geometry(root.pointer("/models/0/model/geometry"));
         let objects = root.pointer("/models/0/model/objects").and_then(|value| value.as_array()).cloned().unwrap_or_default();
         let mut kernel = Brep::new();

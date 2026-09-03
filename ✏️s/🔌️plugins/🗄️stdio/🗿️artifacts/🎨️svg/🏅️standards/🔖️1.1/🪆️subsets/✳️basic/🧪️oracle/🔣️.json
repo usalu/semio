@@ -27,6 +27,30 @@
       },
       "productionReachable": false,
       "networkDuringExecution": false
+    },
+    {
+      "id": "lxml-svg-1-1-basic-mutate-reader",
+      "kind": "third-party-library",
+      "ecosystem": "python",
+      "package": "lxml",
+      "version": "6.1.3",
+      "engine": {
+        "family": "lxml",
+        "implementation": "lxml/libxml2 XML reader",
+        "version": "6.1.3"
+      },
+      "capabilities": [
+        "svg-1-1-basic-mutate"
+      ],
+      "license": "BSD-3-Clause",
+      "testOnly": true,
+      "productionReachable": false,
+      "networkDuringExecution": false,
+      "homepage": "https://lxml.de",
+      "rationale": "📖️ A READER, registered separately from this file's existing `cross-semio-implementation` entry, which COMPUTES what a mutation should produce from this repository's own reading of the spec and therefore cannot discharge this requirement — both halves would descend from one reading of it. lxml 6.1.3 wraps libxml2, a from-scratch C XML engine entirely independent of this repository's own `quick-xml`-based reimplementation. `etree.parse(path).getroot()` exposes the real parsed SVG element tree — tag, namespace, every attribute (viewBox, width/height, path `d`, transform, style) and child order — which is exactly what this subset's SVG Basic document vocabulary mutates. Verified against this subset's own committed `shared://🎨️semio-brand-and-onboarding.svg`: `root.tag` reports the real `{http://www.w3.org/2000/svg}svg` qualified name and `root.nsmap` the real default SVG namespace.",
+      "comparisonProfiles": [
+        "semantic-svg-basic-1-1-v1"
+      ]
     }
   ],
   "noOracleDecisions": [],
@@ -55,7 +79,7 @@
     {
       "id": "semantic-svg-basic-1-1-v1",
       "description": "SVG Basic 1.1 mutation round trips compared structurally: element/text/CDATA/comment/PI tree shape and content exact, attributes compared as a name-sorted set (attribute order is real writer freedom), and the viewBox/transform attribute values decomposed into typed numeric geometry rather than compared as raw strings, with a small absolute tolerance for cross-implementation float formatting. The clip-path attribute is deliberately NOT decomposed and NOT ignored: its exact url(#id) string is what the profile's clip-to-text rule is evaluated against, so it is compared verbatim. Self-closing versus explicit empty open/close tags are equivalent by construction and never distinguished by either side.",
-      "tolerance": 1e-9,
+      "tolerance": 1e-09,
       "ignoreKeys": []
     }
   ],
@@ -84,7 +108,8 @@
           "oracleRequirements": [
             {
               "capability": "svg-1-1-basic-mutate",
-              "qualifyingKind": "third-party-library"
+              "qualifyingKind": "third-party-library",
+              "oracle": "lxml-svg-1-1-basic-mutate-reader"
             }
           ]
         },
@@ -104,7 +129,8 @@
           "oracleRequirements": [
             {
               "capability": "svg-1-1-basic-mutate",
-              "qualifyingKind": "third-party-library"
+              "qualifyingKind": "third-party-library",
+              "oracle": "lxml-svg-1-1-basic-mutate-reader"
             }
           ]
         },
@@ -123,7 +149,8 @@
           "oracleRequirements": [
             {
               "capability": "svg-1-1-basic-mutate",
-              "qualifyingKind": "third-party-library"
+              "qualifyingKind": "third-party-library",
+              "oracle": "lxml-svg-1-1-basic-mutate-reader"
             }
           ]
         },
@@ -143,7 +170,8 @@
           "oracleRequirements": [
             {
               "capability": "svg-1-1-basic-mutate",
-              "qualifyingKind": "third-party-library"
+              "qualifyingKind": "third-party-library",
+              "oracle": "lxml-svg-1-1-basic-mutate-reader"
             }
           ]
         },
@@ -163,7 +191,8 @@
           "oracleRequirements": [
             {
               "capability": "svg-1-1-basic-mutate",
-              "qualifyingKind": "third-party-library"
+              "qualifyingKind": "third-party-library",
+              "oracle": "lxml-svg-1-1-basic-mutate-reader"
             }
           ]
         },
@@ -182,7 +211,8 @@
           "oracleRequirements": [
             {
               "capability": "svg-1-1-basic-mutate",
-              "qualifyingKind": "third-party-library"
+              "qualifyingKind": "third-party-library",
+              "oracle": "lxml-svg-1-1-basic-mutate-reader"
             }
           ]
         },
@@ -201,7 +231,8 @@
           "oracleRequirements": [
             {
               "capability": "svg-1-1-basic-mutate",
-              "qualifyingKind": "third-party-library"
+              "qualifyingKind": "third-party-library",
+              "oracle": "lxml-svg-1-1-basic-mutate-reader"
             }
           ]
         },
@@ -220,7 +251,8 @@
           "oracleRequirements": [
             {
               "capability": "svg-1-1-basic-mutate",
-              "qualifyingKind": "third-party-library"
+              "qualifyingKind": "third-party-library",
+              "oracle": "lxml-svg-1-1-basic-mutate-reader"
             }
           ]
         },
@@ -239,7 +271,8 @@
           "oracleRequirements": [
             {
               "capability": "svg-1-1-basic-mutate",
-              "qualifyingKind": "third-party-library"
+              "qualifyingKind": "third-party-library",
+              "oracle": "lxml-svg-1-1-basic-mutate-reader"
             }
           ]
         },
@@ -258,11 +291,524 @@
           "oracleRequirements": [
             {
               "capability": "svg-1-1-basic-mutate",
-              "qualifyingKind": "third-party-library"
+              "qualifyingKind": "third-party-library",
+              "oracle": "lxml-svg-1-1-basic-mutate-reader"
             }
           ]
         }
       ]
+    }
+  ],
+  "fixtureManifests": [
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "insert-basic-element-applied",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.svg",
+        "standard": "1.1",
+        "subset": "basic"
+      },
+      "mutation": "insert-basic-element",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before-svg",
+          "path": "../🧫️fixtures/insert-basic-element-applied/before.svg",
+          "mediaType": "image/svg+xml",
+          "sha256": "sha256:88e8ca3d7eaac75dd34ff9350132b81e160812cd11aa0a891f3fcb6d06369184",
+          "bytes": 213
+        },
+        {
+          "role": "expected-after-svg",
+          "path": "../🧫️fixtures/insert-basic-element-applied/after.svg",
+          "mediaType": "image/svg+xml",
+          "sha256": "sha256:2da1326ce031142b48e08f3a4e62d3b99c0f4a475ee1f02276a07c567da2dccc",
+          "bytes": 256
+        }
+      ],
+      "generator": {
+        "oracle": "lxml-svg-1-1-basic-mutate-reader",
+        "packageVersion": "6.1.3",
+        "engineFamily": "lxml",
+        "engineVersion": "6.1.3",
+        "command": "uv run python3 🔨️f2-gen-svg-fixtures.py (lxml.etree.parse -> lxml.etree.tostring round-trip)",
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "MIT (lxml, wraps libxml2 MIT/libxml2-license)",
+        "attribution": "Serialized by lxml 6.1.3's own etree.tostring after an lxml.etree.parse round-trip",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "utf8-text-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "A new <circle> element inserted as the last child of the root <svg>."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "insert-clip-path-shape-applied",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.svg",
+        "standard": "1.1",
+        "subset": "basic"
+      },
+      "mutation": "insert-clip-path-shape",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before-svg",
+          "path": "../🧫️fixtures/insert-clip-path-shape-applied/before.svg",
+          "mediaType": "image/svg+xml",
+          "sha256": "sha256:4ce90d2a0811d4f6bf9d8dfa399f7d5110288f234daeeab33da30cf5859b3f1c",
+          "bytes": 236
+        },
+        {
+          "role": "expected-after-svg",
+          "path": "../🧫️fixtures/insert-clip-path-shape-applied/after.svg",
+          "mediaType": "image/svg+xml",
+          "sha256": "sha256:7a1041f43d245b90da523748f75828642653630f8a79059b20e6b26e15cd6497",
+          "bytes": 288
+        }
+      ],
+      "generator": {
+        "oracle": "lxml-svg-1-1-basic-mutate-reader",
+        "packageVersion": "6.1.3",
+        "engineFamily": "lxml",
+        "engineVersion": "6.1.3",
+        "command": "uv run python3 🔨️f2-gen-svg-fixtures.py (lxml.etree.parse -> lxml.etree.tostring round-trip)",
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "MIT (lxml, wraps libxml2 MIT/libxml2-license)",
+        "attribution": "Serialized by lxml 6.1.3's own etree.tostring after an lxml.etree.parse round-trip",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "utf8-text-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "A clipping shape (<rect>) inserted as a child of the empty <clipPath>."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "remove-element-applied",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.svg",
+        "standard": "1.1",
+        "subset": "basic"
+      },
+      "mutation": "remove-element",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before-svg",
+          "path": "../🧫️fixtures/remove-element-applied/before.svg",
+          "mediaType": "image/svg+xml",
+          "sha256": "sha256:2da1326ce031142b48e08f3a4e62d3b99c0f4a475ee1f02276a07c567da2dccc",
+          "bytes": 256
+        },
+        {
+          "role": "expected-after-svg",
+          "path": "../🧫️fixtures/remove-element-applied/after.svg",
+          "mediaType": "image/svg+xml",
+          "sha256": "sha256:88e8ca3d7eaac75dd34ff9350132b81e160812cd11aa0a891f3fcb6d06369184",
+          "bytes": 213
+        }
+      ],
+      "generator": {
+        "oracle": "lxml-svg-1-1-basic-mutate-reader",
+        "packageVersion": "6.1.3",
+        "engineFamily": "lxml",
+        "engineVersion": "6.1.3",
+        "command": "uv run python3 🔨️f2-gen-svg-fixtures.py (lxml.etree.parse -> lxml.etree.tostring round-trip)",
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "MIT (lxml, wraps libxml2 MIT/libxml2-license)",
+        "attribution": "Serialized by lxml 6.1.3's own etree.tostring after an lxml.etree.parse round-trip",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "utf8-text-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "The <circle> element removed from the root, inverse of insert-basic-element."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "set-basic-attribute-applied",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.svg",
+        "standard": "1.1",
+        "subset": "basic"
+      },
+      "mutation": "set-basic-attribute",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before-svg",
+          "path": "../🧫️fixtures/set-basic-attribute-applied/before.svg",
+          "mediaType": "image/svg+xml",
+          "sha256": "sha256:88e8ca3d7eaac75dd34ff9350132b81e160812cd11aa0a891f3fcb6d06369184",
+          "bytes": 213
+        },
+        {
+          "role": "expected-after-svg",
+          "path": "../🧫️fixtures/set-basic-attribute-applied/after.svg",
+          "mediaType": "image/svg+xml",
+          "sha256": "sha256:a4a850f36983bc3239111c4c9ea99a67d752ff0c810c64b6697a2766c65d5093",
+          "bytes": 213
+        }
+      ],
+      "generator": {
+        "oracle": "lxml-svg-1-1-basic-mutate-reader",
+        "packageVersion": "6.1.3",
+        "engineFamily": "lxml",
+        "engineVersion": "6.1.3",
+        "command": "uv run python3 🔨️f2-gen-svg-fixtures.py (lxml.etree.parse -> lxml.etree.tostring round-trip)",
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "MIT (lxml, wraps libxml2 MIT/libxml2-license)",
+        "attribution": "Serialized by lxml 6.1.3's own etree.tostring after an lxml.etree.parse round-trip",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "utf8-text-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "The x presentation attribute of <rect id=\"r1\"> replaced, 10 -> 30."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "set-clip-path-reference-applied",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.svg",
+        "standard": "1.1",
+        "subset": "basic"
+      },
+      "mutation": "set-clip-path-reference",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before-svg",
+          "path": "../🧫️fixtures/set-clip-path-reference-applied/before.svg",
+          "mediaType": "image/svg+xml",
+          "sha256": "sha256:7a1041f43d245b90da523748f75828642653630f8a79059b20e6b26e15cd6497",
+          "bytes": 288
+        },
+        {
+          "role": "expected-after-svg",
+          "path": "../🧫️fixtures/set-clip-path-reference-applied/after.svg",
+          "mediaType": "image/svg+xml",
+          "sha256": "sha256:7509abaacd459d0b1f4f38ea94cb13d67180ef6c6968c99df566f1e948553462",
+          "bytes": 310
+        }
+      ],
+      "generator": {
+        "oracle": "lxml-svg-1-1-basic-mutate-reader",
+        "packageVersion": "6.1.3",
+        "engineFamily": "lxml",
+        "engineVersion": "6.1.3",
+        "command": "uv run python3 🔨️f2-gen-svg-fixtures.py (lxml.etree.parse -> lxml.etree.tostring round-trip)",
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "MIT (lxml, wraps libxml2 MIT/libxml2-license)",
+        "attribution": "Serialized by lxml 6.1.3's own etree.tostring after an lxml.etree.parse round-trip",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "utf8-text-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "The clip-path attribute of <rect id=\"r1\"> set to reference #cp1."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "set-snapshot-applied",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.svg",
+        "standard": "1.1",
+        "subset": "basic"
+      },
+      "mutation": "set-snapshot",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before-svg",
+          "path": "../🧫️fixtures/set-snapshot-applied/before.svg",
+          "mediaType": "image/svg+xml",
+          "sha256": "sha256:88e8ca3d7eaac75dd34ff9350132b81e160812cd11aa0a891f3fcb6d06369184",
+          "bytes": 213
+        },
+        {
+          "role": "expected-after-svg",
+          "path": "../🧫️fixtures/set-snapshot-applied/after.svg",
+          "mediaType": "image/svg+xml",
+          "sha256": "sha256:6acc1b0ca3d797dcaed9bef2ba3e8f191cd1c39e34a98cc4a16eb9c9723452c1",
+          "bytes": 235
+        }
+      ],
+      "generator": {
+        "oracle": "lxml-svg-1-1-basic-mutate-reader",
+        "packageVersion": "6.1.3",
+        "engineFamily": "lxml",
+        "engineVersion": "6.1.3",
+        "command": "uv run python3 🔨️f2-gen-svg-fixtures.py (lxml.etree.parse -> lxml.etree.tostring round-trip)",
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "MIT (lxml, wraps libxml2 MIT/libxml2-license)",
+        "attribution": "Serialized by lxml 6.1.3's own etree.tostring after an lxml.etree.parse round-trip",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "utf8-text-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "Whole-document snapshot replace: an unrelated valid document substituted wholesale."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "set-text-applied",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.svg",
+        "standard": "1.1",
+        "subset": "basic"
+      },
+      "mutation": "set-text",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before-svg",
+          "path": "../🧫️fixtures/set-text-applied/before.svg",
+          "mediaType": "image/svg+xml",
+          "sha256": "sha256:3cc9176bf7a9c952127089103879a9ad9cfd514aee83eb3875295a542f033c70",
+          "bytes": 187
+        },
+        {
+          "role": "expected-after-svg",
+          "path": "../🧫️fixtures/set-text-applied/after.svg",
+          "mediaType": "image/svg+xml",
+          "sha256": "sha256:80f5fa660ccc6c9eabcd25f623f1f2266292d296def5fec3e936e3a2314d4995",
+          "bytes": 187
+        }
+      ],
+      "generator": {
+        "oracle": "lxml-svg-1-1-basic-mutate-reader",
+        "packageVersion": "6.1.3",
+        "engineFamily": "lxml",
+        "engineVersion": "6.1.3",
+        "command": "uv run python3 🔨️f2-gen-svg-fixtures.py (lxml.etree.parse -> lxml.etree.tostring round-trip)",
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "MIT (lxml, wraps libxml2 MIT/libxml2-license)",
+        "attribution": "Serialized by lxml 6.1.3's own etree.tostring after an lxml.etree.parse round-trip",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "utf8-text-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "Character content of <text id=\"t1\"> replaced, Hello -> World."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "set-transform-applied",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.svg",
+        "standard": "1.1",
+        "subset": "basic"
+      },
+      "mutation": "set-transform",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before-svg",
+          "path": "../🧫️fixtures/set-transform-applied/before.svg",
+          "mediaType": "image/svg+xml",
+          "sha256": "sha256:88e8ca3d7eaac75dd34ff9350132b81e160812cd11aa0a891f3fcb6d06369184",
+          "bytes": 213
+        },
+        {
+          "role": "expected-after-svg",
+          "path": "../🧫️fixtures/set-transform-applied/after.svg",
+          "mediaType": "image/svg+xml",
+          "sha256": "sha256:78f380a94057db8b7427073adadff241d370e81bbc6e75d5171ce509e5e00434",
+          "bytes": 242
+        }
+      ],
+      "generator": {
+        "oracle": "lxml-svg-1-1-basic-mutate-reader",
+        "packageVersion": "6.1.3",
+        "engineFamily": "lxml",
+        "engineVersion": "6.1.3",
+        "command": "uv run python3 🔨️f2-gen-svg-fixtures.py (lxml.etree.parse -> lxml.etree.tostring round-trip)",
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "MIT (lxml, wraps libxml2 MIT/libxml2-license)",
+        "attribution": "Serialized by lxml 6.1.3's own etree.tostring after an lxml.etree.parse round-trip",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "utf8-text-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "A transform attribute set on <rect id=\"r1\">, none -> translate(10,10)."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "set-view-box-applied",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.svg",
+        "standard": "1.1",
+        "subset": "basic"
+      },
+      "mutation": "set-view-box",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before-svg",
+          "path": "../🧫️fixtures/set-view-box-applied/before.svg",
+          "mediaType": "image/svg+xml",
+          "sha256": "sha256:88e8ca3d7eaac75dd34ff9350132b81e160812cd11aa0a891f3fcb6d06369184",
+          "bytes": 213
+        },
+        {
+          "role": "expected-after-svg",
+          "path": "../🧫️fixtures/set-view-box-applied/after.svg",
+          "mediaType": "image/svg+xml",
+          "sha256": "sha256:5568387e74efbda2d277e848518fa5f9fdce2b335db428fa41d2c0aac8360d95",
+          "bytes": 213
+        }
+      ],
+      "generator": {
+        "oracle": "lxml-svg-1-1-basic-mutate-reader",
+        "packageVersion": "6.1.3",
+        "engineFamily": "lxml",
+        "engineVersion": "6.1.3",
+        "command": "uv run python3 🔨️f2-gen-svg-fixtures.py (lxml.etree.parse -> lxml.etree.tostring round-trip)",
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "MIT (lxml, wraps libxml2 MIT/libxml2-license)",
+        "attribution": "Serialized by lxml 6.1.3's own etree.tostring after an lxml.etree.parse round-trip",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "utf8-text-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "The root <svg>'s viewBox replaced, \"0 0 100 100\" -> \"0 0 200 200\"."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "stamp-base-profile-applied",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.svg",
+        "standard": "1.1",
+        "subset": "basic"
+      },
+      "mutation": "stamp-base-profile",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before-svg",
+          "path": "../🧫️fixtures/stamp-base-profile-applied/before.svg",
+          "mediaType": "image/svg+xml",
+          "sha256": "sha256:4b4b7270235de14015b052e566cf2f0c35777e254622b5fc11211180a56fe2bf",
+          "bytes": 193
+        },
+        {
+          "role": "expected-after-svg",
+          "path": "../🧫️fixtures/stamp-base-profile-applied/after.svg",
+          "mediaType": "image/svg+xml",
+          "sha256": "sha256:88e8ca3d7eaac75dd34ff9350132b81e160812cd11aa0a891f3fcb6d06369184",
+          "bytes": 213
+        }
+      ],
+      "generator": {
+        "oracle": "lxml-svg-1-1-basic-mutate-reader",
+        "packageVersion": "6.1.3",
+        "engineFamily": "lxml",
+        "engineVersion": "6.1.3",
+        "command": "uv run python3 🔨️f2-gen-svg-fixtures.py (lxml.etree.parse -> lxml.etree.tostring round-trip)",
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "MIT (lxml, wraps libxml2 MIT/libxml2-license)",
+        "attribution": "Serialized by lxml 6.1.3's own etree.tostring after an lxml.etree.parse round-trip",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "utf8-text-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "The root <svg>'s baseProfile attribute stamped, absent -> \"basic\"."
     }
   ]
 }

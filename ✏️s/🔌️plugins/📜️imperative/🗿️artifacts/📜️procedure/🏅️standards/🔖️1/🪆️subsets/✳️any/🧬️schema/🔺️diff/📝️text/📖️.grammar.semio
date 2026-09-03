@@ -1,0 +1,9 @@
+dialect grammar
+grammar procedure.diff
+extension procedure
+start document
+
+document = header body
+header = "schema" SP "imperative.procedure.diff" NL
+body = payload NL?
+payload = OCTET+

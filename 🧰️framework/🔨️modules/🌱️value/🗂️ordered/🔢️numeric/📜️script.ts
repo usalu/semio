@@ -1,6 +1,7 @@
 #!/usr/bin/env bun
 //#region 🧪️NumericIndexTests
 import { strict as assert } from "node:assert";
+import { spawnSync } from "node:child_process";
 import { runInNewContext } from "node:vm";
 import Ajv from "ajv";
 import { enableMapSet, produce } from "immer";
@@ -171,6 +172,114 @@ function stressLaws(): number {
   return fixture.stress.rounds * fixture.stress.size;
 }
 
+function nativeStripOnlyLaws(): { laws: number; operations: number; cancellations: number; concurrency: number } {
+  const sourceUrl = new URL("./🟦️.ts", import.meta.url).href;
+  const fixtureUrl = new URL("./🧪️fixtures/🔣️numeric-index.json", import.meta.url).href;
+  const program = `
+    import assert from "node:assert/strict";
+    import { readFileSync } from "node:fs";
+    import { fileURLToPath } from "node:url";
+    const api = await import(${JSON.stringify(sourceUrl)});
+    const fixture = JSON.parse(readFileSync(fileURLToPath(${JSON.stringify(fixtureUrl)}), "utf8"));
+    const close = (owner, bytes, retired) => {
+      for (let turns = 0; turns < 100000; turns++) {
+        const step = owner.advance({ maxItems: 1, maxBytes: bytes });
+        assert.ok(step.items <= 1 && step.bytes <= bytes);
+        if (step.kind === "retired") retired.push(step.value);
+        if (step.kind === "complete") { assert.equal(owner.terminalIsEmpty(), true); return; }
+        assert.notEqual(step.kind, "blocked");
+      }
+      assert.fail("native retirement did not terminate");
+    };
+    const apply = (cursor, bytes, retired) => {
+      for (let turns = 0; turns < 100000; turns++) {
+        const step = cursor.advance({ maxItems: 1, maxBytes: bytes });
+        assert.ok(step.items <= 1 && step.bytes <= bytes);
+        if (step.kind === "retired") retired.push(step.value);
+        if (step.kind === "ready") {
+          const result = cursor.takeResult();
+          assert.ok(result);
+          close(cursor.beginClose(), bytes, retired);
+          assert.equal(cursor.terminalIsEmpty(), true);
+          return result;
+        }
+        assert.notEqual(step.kind, "blocked");
+      }
+      assert.fail("native edit did not terminate");
+    };
+    const edit = (index, operation) => operation.op === "set" ? index.beginSet(operation.id, operation.value) : index.beginRemove(operation.id);
+    let laws = 0;
+    let operations = 0;
+    let cancellations = 0;
+    for (const bytes of fixture.grants) for (const vector of fixture.cases) {
+      let index = api.NumericIndex.empty();
+      const oracle = new Map();
+      const retired = [];
+      let sets = 0;
+      for (const operation of vector.operations) {
+        const before = [...oracle];
+        const cancelled = edit(index, operation);
+        const cancellationStep = cancelled.advance({ maxItems: 1, maxBytes: bytes });
+        assert.ok(cancellationStep.items <= 1 && cancellationStep.bytes <= bytes);
+        close(cancelled.beginClose(), bytes, retired);
+        assert.deepStrictEqual([...index], before);
+        cancellations++;
+        const captured = index.capture();
+        const next = apply(edit(index, operation), bytes, retired);
+        if (operation.op === "set") { oracle.set(operation.id, operation.value); sets++; }
+        else oracle.delete(operation.id);
+        assert.deepStrictEqual([...captured], before);
+        assert.deepStrictEqual([...next], [...oracle]);
+        close(captured.beginClose(), bytes, retired);
+        close(index.beginClose(), bytes, retired);
+        index = next;
+        operations++;
+      }
+      assert.deepStrictEqual([...index], vector.expected);
+      assert.deepStrictEqual([...index], [...oracle]);
+      const reader = index.beginSortedRead();
+      const sorted = [];
+      for (let turns = 0; turns < 1000; turns++) {
+        const step = reader.advance({ maxItems: 1, maxBytes: bytes });
+        if (step.kind === "value") sorted.push([step.id, step.value]);
+        if (step.kind === "complete") break;
+      }
+      assert.deepStrictEqual(sorted, [...oracle].sort((left, right) => left[0] - right[0]));
+      close(reader.beginClose(), bytes, retired);
+      close(index.beginClose(), bytes, retired);
+      assert.equal(retired.length, sets * 2);
+      laws++;
+    }
+    const retired = [];
+    let empty = api.NumericIndex.empty();
+    const base = apply(empty.beginSet(1, "base"), 256, retired);
+    close(empty.beginClose(), 256, retired);
+    const winner = base.beginSet(1, "winner");
+    const loser = base.beginSet(1, "loser");
+    loser.advance({ maxItems: 1, maxBytes: 256 });
+    const result = apply(winner, 256, retired);
+    close(loser.beginClose(), 256, retired);
+    assert.equal(result.get(1), "winner");
+    assert.deepStrictEqual([...base], [[1, "base"]]);
+    close(base.beginClose(), 256, retired);
+    close(result.beginClose(), 256, retired);
+    process.stdout.write(JSON.stringify({ laws, operations, cancellations, concurrency: 1 }));
+  `;
+  const environment = { ...process.env };
+  delete environment.NO_COLOR;
+  const child = spawnSync("node", ["--experimental-strip-types", "--input-type=module", "--eval", program], { encoding: "utf8", env: environment });
+  assert.equal(child.status, 0, child.stderr);
+  assert.equal(child.signal, null);
+  const result = JSON.parse(child.stdout) as { laws: number; operations: number; cancellations: number; concurrency: number };
+  assert.deepEqual(result, {
+    laws: fixture.grants.length * fixture.cases.length,
+    operations: fixture.grants.length * fixture.cases.reduce((count, vector) => count + vector.operations.length, 0),
+    cancellations: fixture.grants.length * fixture.cases.reduce((count, vector) => count + vector.operations.length, 0),
+    concurrency: 1,
+  });
+  return result;
+}
+
 class TestScript extends BundleScript {
   async run(): Promise<void> {
     enableMapSet();
@@ -230,6 +339,7 @@ class TestScript extends BundleScript {
     const lifecycle = lifecycleLaws();
     const ordinals = ordinalLaws();
     const stress = stressLaws();
+    const native = nativeStripOnlyLaws();
     assert(new Ajv({ strict: true, allErrors: true }).compile(referenceSchema)(referenceFixture));
     const source = await Bun.file(`${import.meta.dir}/🟦️.ts`).text();
     const probe = ts.transpileModule(`${source}\nnumericReferenceSaturation();`, { compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.CommonJS } }).outputText;
@@ -239,7 +349,7 @@ class TestScript extends BundleScript {
     const program = ts.createProgram([`${import.meta.dir}/🟦️.ts`], { strict: true, noEmit: true, target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.ESNext, moduleResolution: ts.ModuleResolutionKind.Bundler, types: [], lib: ["lib.es2022.d.ts"] });
     const diagnostics = ts.getPreEmitDiagnostics(program);
     assert.equal(diagnostics.length, 0, ts.formatDiagnosticsWithColorAndContext(diagnostics, { getCanonicalFileName: (name) => name, getCurrentDirectory: () => import.meta.dir, getNewLine: () => "\n" }));
-    console.log(`[DEBUG] Numeric-index laws=${laws} lifecycle=${lifecycle} ordinals=${ordinals} stress=${stress} references=${references.length} invalidIds=5 oracle=Immer+Map grants=256,4096 strictTS=0`);
+    console.log(`[DEBUG] Numeric-index laws=${laws} lifecycle=${lifecycle} ordinals=${ordinals} stress=${stress} references=${references.length} invalidIds=5 nativeLaws=${native.laws} nativeOperations=${native.operations} nativeCancellations=${native.cancellations} nativeConcurrency=${native.concurrency} oracle=Immer+Map+NodeAssert grants=256,4096 strictTS=0`);
   }
 }
 //#endregion 🧪️NumericIndexTests

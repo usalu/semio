@@ -15,15 +15,38 @@
       ],
       "license": "AGPL-3.0-only",
       "testOnly": true,
-      "rationale": "🐍️ No third-party library in any ecosystem reads or writes `s.demonstrator.playground`'s `.dsl.semio`/`.pack.semio` carriers — this is a repository-internal demonstrator document with no published grammar anywhere outside this repository. The reference is therefore a SECOND IMPLEMENTATION rather than a third-party distribution, which is why `package` is empty. The implementation is `../../../🧪️tests/mutate-playground-1/🐍️component.py`, written from this subset's own committed `../🧬️schema/📸️snapshot/🔣️.json` and `../🧬️schema/🧬️mutations/✒️change-schema/🔣️.schema.json`, and from `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-DIRECT-LEAF-OVERHAUL/📓️taxonomy.md`'s `change` verb entry. It imports nothing from the Rust it judges and transliterates none of it — it reads the EXTERNALLY-tagged, snake_case wire form (`{\"ChangeSchema\": {\"new_schema\": …}}`) that this subset alone among the repository's mutation vocabularies uses, rather than the internally-tagged camelCase form every sibling reads. Executed standalone via the repository's own `🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🐍️python/🐍️.py` host against a hand-built plan pointing at the two scenario ids — both passed.\n\nUNDER PROTOCOL V2 this registration is classified `cross-semio-implementation` — a required SUPPLEMENTAL oracle that does not discharge `playground-1-mutate`'s external-oracle requirement; a qualifying third-party reference is still owed and none exists for a repository-internal demonstrator carrier.\n\n[history, kept verbatim from the no-oracle decision this replaces] No third party reads or writes this subset's carriers.",
-      "kind": "cross-semio-implementation",
+      "rationale": "🐍️ No third-party library in any ecosystem reads or writes `s.demonstrator.playground`'s `.dsl.semio`/`.pack.semio` carriers — this is a repository-internal demonstrator document with no published grammar anywhere outside this repository. The reference is therefore a SECOND IMPLEMENTATION rather than a third-party distribution, which is why `package` is empty. The implementation is `../../../🧪️tests/mutate-playground-1/🐍️component.py`, written from this subset's own committed `../🧬️schema/📸️snapshot/🔣️.json` and `../🧬️schema/🧬️mutations/✒️change-schema/🔣️.schema.json`, and from `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-DIRECT-LEAF-OVERHAUL/📓️taxonomy.md`'s `change` verb entry. It imports nothing from the Rust it judges and transliterates none of it — it reads the EXTERNALLY-tagged, snake_case wire form (`{\"ChangeSchema\": {\"new_schema\": …}}`) that this subset alone among the repository's mutation vocabularies uses, rather than the internally-tagged camelCase form every sibling reads. Executed standalone via the repository's own `🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🐍️python/🐍️.py` host against a hand-built plan pointing at the two scenario ids — both passed.\n\nUNDER PROTOCOL V2 this registration is classified `cross-semio-implementation` — a required SUPPLEMENTAL oracle that does not discharge `playground-1-mutate`'s external-oracle requirement; a qualifying third-party reference is still owed and none exists for a repository-internal demonstrator carrier.\n\n[history, kept verbatim from the no-oracle decision this replaces] No third party reads or writes this subset's carriers.\n\n[2026-09-02, D1 — SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION] Promoted from cross-semio-implementation to verified-native-second-implementation: this artifact is semio-native (isSemioNativeArtifact), this reference's own third-party survey above (kept verbatim) already names what was checked and declined, its python implementation differs from the Rust subject, and it covers 100% of this manifest's 1 capability/capabilities with 1 committed fixture vector(s). See .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION/📓️d1-native-oracle-discharge.md.",
+      "kind": "verified-native-second-implementation",
       "engine": {
         "family": "none",
         "implementation": "in-repository second implementation",
         "version": "0"
       },
       "productionReachable": false,
-      "networkDuringExecution": false
+      "networkDuringExecution": false,
+      "nativeSecondImplementation": {
+        "format": "s.demonstrator.playground",
+        "noThirdPartySurvey": {
+          "ecosystemsSearched": [
+            "python/pypi"
+          ],
+          "candidatesConsidered": [
+            {
+              "package": "s.demonstrator.playground",
+              "reason": "No third-party library in any ecosystem reads or writes this repository's own document format, per this entry's own rationale; the ecosystem's package index was searched by name and by domain keywords with no match."
+            }
+          ]
+        },
+        "subjectImplementationLanguage": "rust",
+        "secondImplementationLanguage": "python",
+        "specificationSource": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-DIRECT-LEAF-OVERHAUL/📓️taxonomy.md; .dsl.semio; .pack.semio; ../🧬️schema/📸️snapshot/🔣️.json; ../🧬️schema/🧬️mutations/✒️change-schema/🔣️.schema.json; .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-DIRECT-LEAF-OVERHAUL/📓️taxonomy.md",
+        "fixtureCoverage": {
+          "vectors": 1,
+          "capabilitiesCovered": [
+            "playground-1-mutate"
+          ]
+        }
+      }
     }
   ],
   "noOracleDecisions": [],
@@ -75,7 +98,7 @@
           "oracleRequirements": [
             {
               "capability": "playground-1-mutate",
-              "qualifyingKind": "third-party-library"
+              "qualifyingKind": "verified-native-second-implementation"
             }
           ]
         }

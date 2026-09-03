@@ -1,0 +1,42 @@
+{
+  "cargoPackage": "semio-framework-os-mcp",
+  "cargoBinary": "semio-os-mcp",
+  "profile": "debug",
+  "pathCases": [
+    {
+      "name": "posix workspace default",
+      "platform": "linux",
+      "repoRoot": "/workspace/semio",
+      "environment": {},
+      "expected": "/workspace/semio/target/debug/semio-os-mcp"
+    },
+    {
+      "name": "posix relative cargo target",
+      "platform": "darwin",
+      "repoRoot": "/workspace/semio",
+      "environment": { "CARGO_TARGET_DIR": "scratch/cargo" },
+      "expected": "/workspace/semio/scratch/cargo/debug/semio-os-mcp"
+    },
+    {
+      "name": "posix relative explicit binary",
+      "platform": "linux",
+      "repoRoot": "/workspace/semio",
+      "environment": { "SEMIO_OS_MCP_BIN": "artifacts/semio-os-mcp" },
+      "expected": "/workspace/semio/artifacts/semio-os-mcp"
+    },
+    {
+      "name": "windows workspace default",
+      "platform": "win32",
+      "repoRoot": "C:\\workspace\\semio",
+      "environment": {},
+      "expected": "C:\\workspace\\semio\\target\\debug\\semio-os-mcp.exe"
+    },
+    {
+      "name": "windows relative cargo target",
+      "platform": "win32",
+      "repoRoot": "C:\\workspace\\semio",
+      "environment": { "CARGO_TARGET_DIR": "scratch\\cargo" },
+      "expected": "C:\\workspace\\semio\\scratch\\cargo\\debug\\semio-os-mcp.exe"
+    }
+  ]
+}

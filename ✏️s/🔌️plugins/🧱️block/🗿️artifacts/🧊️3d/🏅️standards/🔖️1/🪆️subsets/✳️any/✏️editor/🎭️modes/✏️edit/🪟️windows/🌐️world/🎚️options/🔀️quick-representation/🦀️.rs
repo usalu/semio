@@ -4,7 +4,6 @@ use crate::artifacts::block3d::Block3dSnapshot;
 use crate::editor::block3d::config::{block3d_window_view, Block3dConfig};
 use crate::editor::block3d::terminology::Block3dLabels;
 use semio_framework_plugin::{MeasureSelectItem, WindowMeasure};
-use serde_json::json;
 
 pub async fn measure(definition: &Block3dSnapshot, config: &Block3dConfig, window_id: &str, labels: &Block3dLabels) -> WindowMeasure {
     let view = block3d_window_view(config, window_id);
@@ -16,6 +15,9 @@ pub async fn measure(definition: &Block3dSnapshot, config: &Block3dConfig, windo
         label: Some(labels.representation.as_str().to_string()),
         value: quick_value,
         items: quick_items,
-        on_change: crate::editor::block3d::block3d_action("setWindowRepresentations", Some(json!({ "windowId": window_id }))),
+        on_change: crate::editor::block3d::block3d_action(
+            "setWindowRepresentations",
+            Some(crate::editor::block3d::ui_value_map([("windowId", crate::editor::block3d::ui_value_text(window_id).expect("window id fits ui text capacity"))]).expect("single-entry args fit ui map capacity")),
+        ),
     }
 }

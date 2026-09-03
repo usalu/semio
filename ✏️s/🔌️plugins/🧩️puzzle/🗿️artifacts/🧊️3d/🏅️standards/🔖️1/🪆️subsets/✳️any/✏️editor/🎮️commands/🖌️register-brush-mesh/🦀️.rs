@@ -1,7 +1,7 @@
 //! 🖌️ `register-brush-mesh` command.
 
 use crate::editor::puzzle3d::Puzzle3dActionCtx;
-use serde_json::Value;
+use dsl::os_pack::json::Value;
 
 /// 🧊️ Real GLB geometry the browser round-tripped for one mesh url — installed into the collision
 /// engine and remembered for the mesh exporters.

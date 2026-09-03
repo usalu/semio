@@ -69,7 +69,7 @@ use std::sync::Arc;
 const MAX_READ_BYTES: u64 = 496 * 1024;
 
 async fn write_driver_bytes(reservation: DbIoDriverReservation, bytes: BoltBytes, offset: usize, length: usize, output: &mut DbIoPageWriter) -> Result<DbIoPages, DbError> {
-    db_io_write_observed_bytes_range(reservation, bytes.value, offset, length, output)?.await
+    db_io_write_observed_bytes_range(reservation, bytes.value.to_vec(), offset, length, output)?.await
 }
 
 /// @emoji 🔢️ Neo4j's `Integer` bolt type is a signed 64-bit value; the family's identity/sequence
@@ -417,7 +417,7 @@ impl WalStorage for Neo4jDbIoExecutor {
         let current_len = i64_to_u64(row.get("len").map_err(map_de_error)?, "wal segment length")?;
         check_len(current_len, MAX_READ_BYTES, "wal_storage::append current length")?;
         let current: BoltBytes = row.get("bytes").map_err(map_de_error)?;
-        let mut current = DbIoExternalBytes::new(current.value);
+        let mut current = DbIoExternalBytes::new(current.value.to_vec());
         current_reservation.observe_capacity(current.capacity()?)?;
         let sealed: bool = row.get("sealed").map_err(map_de_error)?;
         if sealed {
@@ -427,7 +427,7 @@ impl WalStorage for Neo4jDbIoExecutor {
         check_len(new_len as u64, MAX_READ_BYTES, "wal_storage::append result")?;
         let combined = db_io_prepare_platform_slices(self.active_operation, current.as_slice()?, prepared.as_slice()).await?;
         let write = txn
-            .run(query(CYPHER_WAL_WRITE_BYTES).param("document", document.0.clone()).param("index", idx).param("bytes", BoltBytes::new(combined.as_static_driver_slice().into())).param("len", u64_to_i64(new_len as u64, "wal segment length")?))
+            .run(query(CYPHER_WAL_WRITE_BYTES).param("document", document.0.clone()).param("index", idx).param("bytes", combined.as_static_driver_slice().to_vec()).param("len", u64_to_i64(new_len as u64, "wal segment length")?))
             .await
             .map_err(map_neo4rs_error);
         while !current.terminal_is_empty() {
@@ -499,7 +499,7 @@ impl WalStorage for Neo4jDbIoExecutor {
         let current_len = i64_to_u64(row.get("len").map_err(map_de_error)?, "wal segment length")?;
         check_len(current_len, MAX_READ_BYTES, "wal_storage::truncate_tail current length")?;
         let current: BoltBytes = row.get("bytes").map_err(map_de_error)?;
-        let mut current = DbIoExternalBytes::new(current.value);
+        let mut current = DbIoExternalBytes::new(current.value.to_vec());
         current_reservation.observe_capacity(current.capacity()?)?;
         let sealed: bool = row.get("sealed").map_err(map_de_error)?;
         if sealed {
@@ -510,7 +510,7 @@ impl WalStorage for Neo4jDbIoExecutor {
         }
         let truncated = db_io_prepare_platform_slices(self.active_operation, &current.as_slice()?[..new_len as usize], &[]).await?;
         let write = txn
-            .run(query(CYPHER_WAL_WRITE_BYTES).param("document", document.0.clone()).param("index", idx).param("bytes", BoltBytes::new(truncated.as_static_driver_slice().into())).param("len", u64_to_i64(new_len, "wal segment length")?))
+            .run(query(CYPHER_WAL_WRITE_BYTES).param("document", document.0.clone()).param("index", idx).param("bytes", truncated.as_static_driver_slice().to_vec()).param("len", u64_to_i64(new_len, "wal segment length")?))
             .await
             .map_err(map_neo4rs_error);
         while !current.terminal_is_empty() {
@@ -542,7 +542,7 @@ impl SnapshotStorage for Neo4jDbIoExecutor {
                 query(CYPHER_SNAPSHOT_WRITE)
                     .param("document", document.0.clone())
                     .param("generation", generation_param)
-                    .param("bytes", BoltBytes::new(prepared.as_static_driver_slice().into()))
+                    .param("bytes", prepared.as_static_driver_slice().to_vec())
                     .param("len", u64_to_i64(bytes.len() as u64, "snapshot generation length")?),
             )
             .await;
@@ -592,7 +592,7 @@ impl PayloadStorage for Neo4jDbIoExecutor {
         check_len(bytes.len() as u64, MAX_READ_BYTES, "payload_storage::put")?;
         let hash = db_io_hash_pages(&bytes).await;
         let prepared = db_io_prepare_platform(&bytes)?.await?;
-        let result = self.run(query(CYPHER_PAYLOAD_PUT).param("hash", hash.to_string()).param("bytes", BoltBytes::new(prepared.as_static_driver_slice().into())).param("len", u64_to_i64(bytes.len() as u64, "payload length")?)).await;
+        let result = self.run(query(CYPHER_PAYLOAD_PUT).param("hash", hash.to_string()).param("bytes", prepared.as_static_driver_slice().to_vec()).param("len", u64_to_i64(bytes.len() as u64, "payload length")?)).await;
         db_io_close_platform(prepared).await?;
         result?;
         Ok(hash)
@@ -653,7 +653,7 @@ impl CatalogStorage for Neo4jDbIoExecutor {
                 query(CYPHER_CATALOG_CAS)
                     .param("expected", u64_to_i64(expected.epoch, "catalog epoch")?)
                     .param("newEpoch", u64_to_i64(new_fence.epoch, "catalog epoch")?)
-                    .param("bytes", BoltBytes::new(prepared.as_static_driver_slice().into()))
+                    .param("bytes", prepared.as_static_driver_slice().to_vec())
                     .param("len", u64_to_i64(new_bytes.len() as u64, "catalog root length")?),
             )
             .await;
@@ -678,7 +678,7 @@ impl IndexStorage for Neo4jDbIoExecutor {
         let run_id_param = u64_to_i64(run_id, "index run id")?;
         let prepared = db_io_prepare_platform(&bytes)?.await?;
         let result = self
-            .run(query(CYPHER_INDEX_WRITE).param("document", document.0.clone()).param("runId", run_id_param).param("bytes", BoltBytes::new(prepared.as_static_driver_slice().into())).param("len", u64_to_i64(bytes.len() as u64, "index run length")?))
+            .run(query(CYPHER_INDEX_WRITE).param("document", document.0.clone()).param("runId", run_id_param).param("bytes", prepared.as_static_driver_slice().to_vec()).param("len", u64_to_i64(bytes.len() as u64, "index run length")?))
             .await;
         db_io_close_platform(prepared).await?;
         result
@@ -959,6 +959,7 @@ impl DbIoTaskExecutor for Neo4jDbIoExecutor {
             let mut executor = self;
             let mut task = task;
             let terminal = executor.drive_task(operation, &mut task).await;
+            let executor: Box<dyn DbIoTaskExecutor> = executor;
             (executor, task, terminal)
         })
     }

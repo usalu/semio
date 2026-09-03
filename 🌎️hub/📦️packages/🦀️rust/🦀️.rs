@@ -12,3 +12,12 @@
 
 #[path = "../../📇️directory/🦀️.rs"]
 pub mod directory;
+
+#[path = "../../🗿️artifact-authority/🦀️.rs"]
+pub mod artifact_authority;
+
+#[path = "../../🛰️lag-rebootstrap/🦀️.rs"]
+pub mod lag_rebootstrap;
+
+#[path = "../../🔐️local-bootstrap/🦀️.rs"]
+pub mod local_bootstrap;

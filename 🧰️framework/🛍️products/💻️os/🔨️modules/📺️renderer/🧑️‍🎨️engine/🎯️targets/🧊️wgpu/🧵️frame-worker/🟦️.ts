@@ -1,10 +1,10 @@
 /// <reference lib="webworker" />
 
 import { pluginGraphErrorMessage, resolvePlaygroundBoot } from "@semio-tech/framework";
-import { PLUGIN_CATALOG } from "../🧵️browser-frame-transport/🟦️";
+import { PLUGIN_CATALOG } from "../../../../../🔌️plugin/📇️registry/🟦️.ts";
 import type { BrowserFrameUiMessage, BrowserFrameWorkerMessage } from "../🧵️browser-frame-transport/🟦️";
-import { INTERACTIVE_WORKER_DESCRIPTORS, InteractiveWorkerScheduler } from "../🧵️browser-frame-transport/🟦️";
-import { loadPluginModule, pluginHandleForBridge } from "../🧵️browser-frame-transport/🟦️";
+import { INTERACTIVE_WORKER_DESCRIPTORS, InteractiveWorkerScheduler } from "../🧵️interactive-job-registry/🟦️";
+import { loadPluginModule, pluginHandleForBridge } from "../📦️packages/🦀️rust/🟦️typescript/🐚️plugin-bridge.ts";
 
 //#region 🔖️Bindings
 type BrowserRendererWorkerHandle = {

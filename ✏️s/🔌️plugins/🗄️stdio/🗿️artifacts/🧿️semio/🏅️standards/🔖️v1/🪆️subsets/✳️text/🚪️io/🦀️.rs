@@ -195,8 +195,8 @@ pub mod derived_composition {
             /// GENUINE `print_dsl`/`encode_pack` output of `snapshot::demo_text_snapshot()`.
             #[semio_framework_async_macros::async_test]
             async fn fixture_honesty_law() {
-                const FIXTURE_DSL: &str = include_str!("../../✳️any/📚️examples/📃️note/🖼️assets/🗣️.dsl.semio");
-                const FIXTURE_PACK: &[u8] = include_bytes!("../../✳️any/📚️examples/📃️note/🖼️assets/🎒️.pack.semio");
+                const FIXTURE_DSL: &str = include_str!("../../✳️base/📚️examples/📃️note/🖼️assets/🗣️.dsl.semio");
+                const FIXTURE_PACK: &[u8] = include_bytes!("../../✳️base/📚️examples/📃️note/🖼️assets/🎒️.pack.semio");
 
                 let demo = snapshot::demo_text_snapshot();
 

@@ -7,7 +7,7 @@ use crate::editor::puzzle3d::puzzle3d_brush_target_vortex;
 use crate::editor::puzzle3d::puzzle3d_rederive_all_attractions;
 use crate::editor::puzzle3d::resolve_puzzle3d_attractions;
 use crate::editor::puzzle3d::Puzzle3dActionCtx;
-use serde_json::Value;
+use dsl::os_pack::json::Value;
 
 /// ✅️ Accepts the hovered (or explicitly indexed) candidate. Always dismisses the one-shot picker
 /// FIRST — a failed preview/place must not leave `suggestionMenu.open` gating every split pane's

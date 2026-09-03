@@ -1,6 +1,10 @@
 //! 🔷️ Half-edge mesh kernel for low-poly editing. **Host authority:** `HalfedgeMesh` is a value
 //! document/engine payload — not a process-global mesh store.
 
+// 🔬️ `serde`/`serde_json` survive ONLY as a `#[cfg(test)]` differential oracle now that these
+// types have their own first-party `ToValue`/`FromValue` codec — never a production dependency
+// of this crate. Ticket 26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS.
+#[cfg(test)]
 use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, HashSet};
 
@@ -22,7 +26,8 @@ mod u32_hashset_bridge {
 // 🧬️ `value_derive::{ToValue, FromValue}` additive (RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS,
 // 26/09/01) — newtype tuple struct, `#[value(transparent)]` forwards straight to the `[f32; 3]`
 // array's own (blanket) `ToValue`/`FromValue`, matching serde's own newtype-struct default.
-#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Copy, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[cfg_attr(test, derive(Serialize, Deserialize))]
 #[value(crate = "::protocol::value", transparent)]
 pub struct Vec3(pub [f32; 3]);
 
@@ -83,19 +88,23 @@ impl Vec3 {
 }
 
 // 🧬️ `value_derive::{ToValue, FromValue}` additive, see `Vec3` above for the `transparent` newtype pattern.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, value_derive::ToValue, value_derive::FromValue)]
+#[cfg_attr(test, derive(Serialize, Deserialize))]
 #[value(crate = "::protocol::value", transparent)]
 pub struct VertexId(pub u32);
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, value_derive::ToValue, value_derive::FromValue)]
+#[cfg_attr(test, derive(Serialize, Deserialize))]
 #[value(crate = "::protocol::value", transparent)]
 pub struct HalfEdgeId(pub u32);
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, value_derive::ToValue, value_derive::FromValue)]
+#[cfg_attr(test, derive(Serialize, Deserialize))]
 #[value(crate = "::protocol::value", transparent)]
 pub struct FaceId(pub u32);
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, value_derive::ToValue, value_derive::FromValue)]
+#[cfg_attr(test, derive(Serialize, Deserialize))]
 #[value(crate = "::protocol::value", transparent)]
 pub struct EdgeId(pub u32);
 
@@ -148,7 +157,8 @@ impl std::error::Error for MeshKernelError {}
 pub type MeshResult<T> = Result<T, MeshKernelError>;
 
 // 🧬️ `value_derive::{ToValue, FromValue}` additive (RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS, 26/09/01).
-#[derive(Clone, Debug, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, value_derive::ToValue, value_derive::FromValue)]
+#[cfg_attr(test, derive(Serialize, Deserialize))]
 #[value(crate = "::protocol::value")]
 pub struct MeshVertex {
     pub position: [f32; 3],
@@ -162,51 +172,54 @@ fn default_uv() -> [f32; 2] {
     [0.0, 0.0]
 }
 
-#[derive(Clone, Debug, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, value_derive::ToValue, value_derive::FromValue)]
+#[cfg_attr(test, derive(Serialize, Deserialize))]
 #[value(crate = "::protocol::value")]
 struct HalfEdge {
     vertex: u32,
     twin: Option<u32>,
     next: u32,
     face: Option<u32>,
-    #[serde(default = "default_uv")]
+    #[cfg_attr(test, serde(default = "default_uv"))]
     #[value(default = "default_uv")]
     uv: [f32; 2],
 }
 
-#[derive(Clone, Debug, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, value_derive::ToValue, value_derive::FromValue)]
+#[cfg_attr(test, derive(Serialize, Deserialize))]
 #[value(crate = "::protocol::value")]
 struct MeshFace {
     halfedge: u32,
     smooth: bool,
-    #[serde(default)]
+    #[cfg_attr(test, serde(default))]
     #[value(default)]
     flipped: bool,
 }
 
-#[derive(Clone, Debug, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, value_derive::ToValue, value_derive::FromValue)]
+#[cfg_attr(test, derive(Serialize, Deserialize))]
 #[value(crate = "::protocol::value")]
 pub struct MeshTransfer {
     pub positions: Vec<f32>,
     pub normals: Vec<f32>,
     pub indices: Vec<u32>,
     pub edge_positions: Vec<f32>,
-    #[serde(default)]
+    #[cfg_attr(test, serde(default))]
     #[value(default)]
     pub face_ids: Vec<u32>,
-    #[serde(default)]
+    #[cfg_attr(test, serde(default))]
     #[value(default)]
     pub vertex_ids: Vec<u32>,
-    #[serde(default)]
+    #[cfg_attr(test, serde(default))]
     #[value(default)]
     pub edge_ids: Vec<u32>,
-    #[serde(default)]
+    #[cfg_attr(test, serde(default))]
     #[value(default)]
     pub uvs: Vec<f32>,
-    #[serde(default)]
+    #[cfg_attr(test, serde(default))]
     #[value(default)]
     pub edge_uvs: Vec<f32>,
-    #[serde(default)]
+    #[cfg_attr(test, serde(default))]
     #[value(default)]
     pub edge_is_seam: Vec<u8>,
 }
@@ -215,13 +228,14 @@ pub struct MeshTransfer {
 
 //#region HalfedgeMesh
 
-#[derive(Clone, Debug, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, value_derive::ToValue, value_derive::FromValue)]
+#[cfg_attr(test, derive(Serialize, Deserialize))]
 #[value(crate = "::protocol::value")]
 pub struct HalfedgeMesh {
     vertices: Vec<MeshVertex>,
     halfedges: Vec<HalfEdge>,
     faces: Vec<MeshFace>,
-    #[serde(default)]
+    #[cfg_attr(test, serde(default))]
     #[value(default, with = "u32_hashset_bridge")]
     uv_seams: HashSet<u32>,
 }
@@ -2122,11 +2136,11 @@ impl HalfedgeMesh {
     }
 
     pub fn to_json(&self) -> MeshResult<String> {
-        serde_json::to_string(self).map_err(|e| MeshKernelError::InvalidInput(e.to_string()))
+        Ok(pack::json::to_json_string(self))
     }
 
     pub fn from_json(json: &str) -> MeshResult<Self> {
-        serde_json::from_str(json).map_err(|e| MeshKernelError::InvalidInput(e.to_string()))
+        pack::json::from_json_str(json).map_err(|e| MeshKernelError::InvalidInput(e.to_string()))
     }
 }
 

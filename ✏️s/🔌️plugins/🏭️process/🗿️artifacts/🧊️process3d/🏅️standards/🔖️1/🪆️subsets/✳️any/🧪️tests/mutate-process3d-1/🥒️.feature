@@ -1,29 +1,29 @@
 @capability-process3d-1-mutate
-@no-oracle-process3d-mutation-semantics
+@oracle-process3d-1-python-independent
 @comparison-ordered-json-v1
 @mutations-process3d-1-any
-Feature: Apply every typed process.process3d mutation to its committed specification vector
+Feature: Apply every typed process.process3d mutation to its committed specification vector and against an independent Python implementation
 
   `process.process3d` is a semio-NATIVE artifact and nothing outside this repository reads
-  `.dsl.semio`. That is recorded as the `process3d-mutation-semantics` no-oracle decision in
-  `🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️oracle/🔣️.json`, which also records why G-code parsers
-  and STEP/BREP kernels were surveyed and DECLINED.
+  `.dsl.semio` — G-code parsers and STEP/BREP kernels were surveyed and DECLINED. The second producer
+  a differential comparison needs is therefore a second IMPLEMENTATION, and `🐍️component.py` beside
+  this file is it: all sixteen kinds of this vocabulary, written in Python from this subset's own
+  committed `🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🔣️.json` and each mutation's own
+  payload schema, and from
+  `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-DIRECT-LEAF-OVERHAUL/📓️taxonomy.md`'s
+  `create`/`delete`/`rename`/`change`/`replace`/`move`/`reorder` verb entries. It imports nothing from
+  the Rust it judges and transliterates none of it. The no-oracle decision this replaces
+  (`process3d-mutation-semantics`) is narrowed to an empty `capabilities` list rather than deleted,
+  because its own investigation remains the honest record of what was checked.
 
-  ⚠️ THIS NO-ORACLE DECISION IS A DEBT, NOT A VERDICT, and is recorded as one. Declining a third-party
-  LIBRARY is a different judgement from declining a SECOND IMPLEMENTATION, and only the first was ever
-  made here. `mutate-assembly-1` and `mutate-cad-1` took Python second
-  implementations over this same `.dsl.semio` carrier in this wave, so the same is writable for this
-  subset from `🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🔣️.json`, the rules of
-  `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/📓️derivation-rules.md` and the
-  committed vectors this feature already replays. What blocks it TODAY is stated in the decision and
-  is one edit: this case's vectors are not declared as `asset://` fixtures — the `Examples` table
-  carries the payloads inline and the adapter reads the committed files through `include_str!` — so
-  the plan pins none of their digests and a Python reference cannot read them at all. Separately, `identity-round-trip` would still be refused: this subset's committed
-  snapshot text grammar is the repository-wide placeholder `payload = OCTET+`, whose header production
-  declares `"schema" SP "stdio.json"` against an artifact whose own first line says otherwise.
-  Until that is done, every assertion below still lives in the SUBJECT role, and the ceiling is the
-  one this decision has always had: no second producer runs beside it, so a mistake shared by the
-  handcrafted vector and the production code passes unseen.
+  ⚠️ Honest boundary. `steps` is a content-addressed CHILD HANDLE minting a NEW `childId` (and each
+  `toolSolids[]` entry its own) whenever `stepPayloads` changes, through a digest algorithm no schema
+  in this repository publishes. The seven STEP-scoped kinds below therefore have the Python side
+  verify `stepPayloads` itself — the real, computed content — without claiming to reproduce that
+  hash; the other nine kinds touch no content-addressed field (`replace-stock-solid`'s new handle is
+  supplied VERBATIM by the payload, never computed) and are verified as a full snapshot equality.
+  Both implementations now read the SAME committed bytes: every `(before, mutation, after, outcome)`
+  path is a declared `asset://` fixture rather than an `include_str!`-only literal.
 
   What distinguishes this subset is that one document carries three different collection shapes at
   once, and the vocabulary is derived from that difference rather than applied uniformly. `steps` is
@@ -56,67 +56,72 @@ Feature: Apply every typed process.process3d mutation to its committed specifica
   max-cut-depth rule and a table — the largest committed document in this plugin and the only one
   that exercises the capability-rule vocabulary at all.
 
-  Where the assertions live. This case records a no-oracle decision, so the runner dispatches NO
-  oracle role at all: `oracleDecision` resolves an oracle implementation from an `@oracle-` tag, this
-  feature has none, and the comparison profile therefore never receives two sides to compare. Every
-  law below is asserted INSIDE the adapter's handler, through the shared law module
-  `✏️s/🔌️plugins/🗄️stdio/🧪️oracle/⚖️law/🦀️component.rs` that the stdio subsets use — `divergence` for
-  a path-named first difference, `mutation_is_observable` for the forward law, `inverse_restores` for
-  the inverse law, `round_trip_preserves` and `carrier_is_exact` for the identity law. A handler that
-  applied the mutation and returned would report a pass having checked nothing, which is exactly the
-  failure this platform exists to prevent.
+  `mutate-<kind>`/`inverse-<kind>` now dispatch BOTH an oracle role (the Python implementation,
+  reached through this plugin's `oracleHostPackages` entry) and a subject role (this repository's own
+  `process3d_mutation_report_json`, unaffected by this change), each independently asserting the
+  forward/inverse laws in role through the shared law module
+  `✏️s/🔌️plugins/🗄️stdio/🧪️oracle/⚖️law/🦀️component.rs` that the stdio subsets use, before the two are
+  compared — on `stepPayloads` for the seven step-scoped kinds, on the whole snapshot for the other
+  nine. A handler that applied the mutation and returned would report a pass having checked nothing.
 
   @id-mutate
   @level-exhaustive
-  @mode-conformance
+  @mode-differential
   Scenario Outline: Apply <id> and land on the committed after-snapshot, diff and outcome
-    Given the committed <id> specification vector under 🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations
+    Given the committed before-snapshot asset://🧬️schema/🧬️mutations/<dir>/🧪️tests/<fixture>/📸️snapshot/⬅️before/🔣️.json
+    And the committed mutation payload asset://🧬️schema/🧬️mutations/<dir>/🧪️tests/<fixture>/🦠️mutation/🔣️.json
+    And the committed after-snapshot asset://🧬️schema/🧬️mutations/<dir>/🧪️tests/<fixture>/📸️snapshot/➡️after/🔣️.json
+    And the committed outcome asset://🧬️schema/🧬️mutations/<dir>/🧪️tests/<fixture>/🎯️outcome/🔣️.json
+    And the committed <id> specification vector under 🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations
     When <id> is applied to that vector's before-snapshot through process3d_mutation_report_json
-    Then the applied snapshot, the produced diff and the outcome's diagnostics are exactly what the vector commits, and a kind the vector declares observable really moved the projection
+    Then the applied snapshot, the produced diff and the outcome's diagnostics are exactly what the vector commits, a kind the vector declares observable really moved the projection, and the two implementations agree
     Examples:
-      | id                           |
-      | create-step                  |
-      | delete-step                  |
-      | rename-step                  |
-      | change-step-enabled          |
-      | change-step-origin           |
-      | replace-step-measure         |
-      | reorder-steps                |
-      | create-machine               |
-      | delete-machine               |
-      | rename-machine               |
-      | change-machine-icon          |
-      | replace-machine-capabilities |
-      | move-stock                   |
-      | change-stock-label           |
-      | replace-stock-solid          |
-      | change-cursor                |
+      | id                            | dir                           | fixture                                                       |
+      | create-step                   | 🌱create-step                  | accepts-a-rip-cut-step-and-inserts-it                      |
+      | delete-step                   | 🗑️delete-step                 | accepts-a-step-id-and-removes-it                           |
+      | rename-step                   | 🏷️rename-step                 | accepts-a-new-label-and-applies-it                         |
+      | change-step-enabled           | 🔘change-step-enabled          | accepts-a-disable-flag-and-applies-it                      |
+      | change-step-origin            | 🧷change-step-origin           | accepts-a-machine-provenance-and-applies-it                |
+      | replace-step-measure          | 📐replace-step-measure         | accepts-a-bore-measure-and-replaces-it                     |
+      | reorder-steps                 | 🔀reorder-steps                | accepts-a-target-index-and-reorders-them                   |
+      | create-machine                | 🏭create-machine               | adds-a-drill-press-to-the-workshop                         |
+      | delete-machine                | ❌delete-machine               | empties-the-workshop-of-the-saw                            |
+      | rename-machine                | 🔖rename-machine               | retitles-the-saw                                           |
+      | change-machine-icon           | 🎨change-machine-icon          | swaps-the-saw-icon                                         |
+      | replace-machine-capabilities  | 🔁replace-machine-capabilities | trades-the-blade-cut-for-a-gated-pocket-cut                |
+      | move-stock                    | 📍move-stock                   | lifts-and-tilts-the-stock                                  |
+      | change-stock-label            | 🔤change-stock-label           | relabels-the-oak-beam-as-planed                            |
+      | replace-stock-solid           | 🧊replace-stock-solid          | reissues-the-stock-brep-child-handle                       |
+      | change-cursor                 | ⏱️change-cursor               | pins-the-replay-cursor-to-two-steps                        |
 
   @id-inverse
   @level-exhaustive
-  @mode-property
+  @mode-differential
   Scenario Outline: Undoing <id> restores the committed before-snapshot
-    Given the committed <id> specification vector under 🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations
+    Given the committed before-snapshot asset://🧬️schema/🧬️mutations/<dir>/🧪️tests/<fixture>/📸️snapshot/⬅️before/🔣️.json
+    And the committed mutation payload asset://🧬️schema/🧬️mutations/<dir>/🧪️tests/<fixture>/🦠️mutation/🔣️.json
+    And the committed outcome asset://🧬️schema/🧬️mutations/<dir>/🧪️tests/<fixture>/🎯️outcome/🔣️.json
+    And the committed <id> specification vector under 🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations
     When <id> is applied and then its own computed inverse is applied through process3d_mutation_report_json
-    Then the snapshot's projection is the before-snapshot's projection again, and any divergence is reported by JSON path
+    Then the snapshot's projection is the before-snapshot's projection again, any divergence is reported by JSON path, and both implementations agree
     Examples:
-      | id                           |
-      | create-step                  |
-      | delete-step                  |
-      | rename-step                  |
-      | change-step-enabled          |
-      | change-step-origin           |
-      | replace-step-measure         |
-      | reorder-steps                |
-      | create-machine               |
-      | delete-machine               |
-      | rename-machine               |
-      | change-machine-icon          |
-      | replace-machine-capabilities |
-      | move-stock                   |
-      | change-stock-label           |
-      | replace-stock-solid          |
-      | change-cursor                |
+      | id                            | dir                           | fixture                                                       |
+      | create-step                   | 🌱create-step                  | accepts-a-rip-cut-step-and-inserts-it                      |
+      | delete-step                   | 🗑️delete-step                 | accepts-a-step-id-and-removes-it                           |
+      | rename-step                   | 🏷️rename-step                 | accepts-a-new-label-and-applies-it                         |
+      | change-step-enabled           | 🔘change-step-enabled          | accepts-a-disable-flag-and-applies-it                      |
+      | change-step-origin            | 🧷change-step-origin           | accepts-a-machine-provenance-and-applies-it                |
+      | replace-step-measure          | 📐replace-step-measure         | accepts-a-bore-measure-and-replaces-it                     |
+      | reorder-steps                 | 🔀reorder-steps                | accepts-a-target-index-and-reorders-them                   |
+      | create-machine                | 🏭create-machine               | adds-a-drill-press-to-the-workshop                         |
+      | delete-machine                | ❌delete-machine               | empties-the-workshop-of-the-saw                            |
+      | rename-machine                | 🔖rename-machine               | retitles-the-saw                                           |
+      | change-machine-icon           | 🎨change-machine-icon          | swaps-the-saw-icon                                         |
+      | replace-machine-capabilities  | 🔁replace-machine-capabilities | trades-the-blade-cut-for-a-gated-pocket-cut                |
+      | move-stock                    | 📍move-stock                   | lifts-and-tilts-the-stock                                  |
+      | change-stock-label            | 🔤change-stock-label           | relabels-the-oak-beam-as-planed                            |
+      | replace-stock-solid           | 🧊replace-stock-solid          | reissues-the-stock-brep-child-handle                       |
+      | change-cursor                 | ⏱️change-cursor               | pins-the-replay-cursor-to-two-steps                        |
 
   @id-identity-round-trip
   @level-long

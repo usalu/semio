@@ -21,7 +21,7 @@ use semio_framework_plugin::{
     AppOperationContext, ArtifactEditor, ArtifactOwnedToolJobRequest, ArtifactToolFactoryRegistry, ArtifactToolPublicationContract, ArtifactToolPublicationLane, ArtifactView, ComponentTree, ConfigView, Dialect, DraftView, Editor, EditorApp, Emit, Fault, InteractiveJobClassification, Label, LocalizedLabel,
     NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, UiAssemblyResult,
 };
-use serde_json::Value;
+use dsl::os_pack::json::{parse, Value};
 use store::EngineHandles;
 
 //#region 🔖️Commands
@@ -373,11 +373,11 @@ impl ArtifactEditor for PlaygroundEditor {
 
     /// 🗺️ Maps the manifest `changeSchema` action (declared via `.mutation(...)` below) to the one
     /// typed command row — the same shape `gis2d`'s `command_from_action` uses for its own rows.
-    fn command_from_action(action: &str, args: Option<&Value>) -> Result<PlaygroundCommand, Fault> {
-        let args = args.cloned().unwrap_or(Value::Null);
+    fn command_from_action(action: &str, args: Option<&dsl::DslValue>) -> Result<PlaygroundCommand, Fault> {
+        let args = args.cloned().unwrap_or(dsl::DslValue::Null);
         match action {
             "changeSchema" => {
-                let new_schema = args.get("newSchema").or_else(|| args.get("new_schema")).and_then(Value::as_str).unwrap_or_default();
+                let new_schema = args.get("newSchema").or_else(|| args.get("new_schema")).and_then(dsl::DslValue::as_str).unwrap_or_default();
                 if new_schema.len() > PLAYGROUND_RETAINED_RAW_BYTES {
                     return Err(Fault::from("playground-command-payload-too-large"));
                 }
@@ -473,7 +473,7 @@ mod tests {
 
     #[test]
     fn change_schema_admission_matches_the_language_neutral_limit_oracle() {
-        let fixture: Value = serde_json::from_str(RETAINED_LIMITS).expect("retained command limits decode through serde_json");
+        let fixture: Value = parse(RETAINED_LIMITS).expect("retained command limits decode");
         let maximum = fixture.get("maximumSchemaBytes").and_then(Value::as_u64).expect("maximumSchemaBytes") as usize;
         let additional = fixture.get("rejectedAdditionalBytes").and_then(Value::as_u64).expect("rejectedAdditionalBytes") as usize;
         let expected_items = fixture.get("expectedWorkItems").and_then(Value::as_u64).expect("expectedWorkItems") as usize;
@@ -485,8 +485,8 @@ mod tests {
         let interaction = protocol::InteractionState::default();
         assert_eq!(playground_retained_extent(&accepted, &snapshot, &interaction), Some(expected_items));
         assert_eq!(playground_retained_extent(&rejected, &snapshot, &interaction), None);
-        assert!(semio_framework_plugin::resolve_ready(PlaygroundEditor::command_from_action("changeSchema", Some(&serde_json::json!({ "newSchema": "s".repeat(maximum) })))).is_ok());
-        assert!(semio_framework_plugin::resolve_ready(PlaygroundEditor::command_from_action("changeSchema", Some(&serde_json::json!({ "newSchema": "s".repeat(maximum + additional) })))).is_err());
+        assert!(semio_framework_plugin::resolve_ready(PlaygroundEditor::command_from_action("changeSchema", Some(&dsl::DslValue::object([("newSchema".to_string(), dsl::DslValue::String("s".repeat(maximum)))])))).is_ok());
+        assert!(semio_framework_plugin::resolve_ready(PlaygroundEditor::command_from_action("changeSchema", Some(&dsl::DslValue::object([("newSchema".to_string(), dsl::DslValue::String("s".repeat(maximum + additional)))])))).is_err());
     }
 
     #[semio_framework_async_macros::async_test]

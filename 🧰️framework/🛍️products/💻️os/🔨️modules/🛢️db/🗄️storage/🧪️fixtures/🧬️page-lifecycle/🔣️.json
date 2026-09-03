@@ -1,0 +1,22 @@
+{
+  "pattern_modulo": 251,
+  "pattern_addend": 1,
+  "lengths": [1, 4096, 4097],
+  "fault_categories": [
+    { "category": "io" },
+    { "category": "not_found" },
+    { "category": "already_exists" },
+    { "category": "invalid_argument" },
+    { "category": "conflict" },
+    { "category": "fenced", "expected": 41, "actual": 42 },
+    { "category": "stale_generation", "expected": 51, "actual": 52 },
+    { "category": "limit_exceeded" },
+    { "category": "unavailable" },
+    { "category": "timeout" },
+    { "category": "corrupt" },
+    { "category": "closed" },
+    { "category": "unauthorized" },
+    { "category": "unimplemented" },
+    { "category": "internal" }
+  ]
+}

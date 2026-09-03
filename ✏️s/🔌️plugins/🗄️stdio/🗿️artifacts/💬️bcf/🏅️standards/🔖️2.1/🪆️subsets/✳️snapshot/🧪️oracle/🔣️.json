@@ -38,7 +38,51 @@
       ]
     }
   ],
-  "fixtureManifests": [],
+  "fixtureManifests": [
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "set-viewpoint-snapshot-applied",
+      "class": "real-world",
+      "target": {
+        "artifact": "s.stdio.bcf",
+        "standard": "2.1",
+        "subset": "snapshot"
+      },
+      "mutation": "set-viewpoint-snapshot",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before-bcf",
+          "path": "../🧫️fixtures/set-viewpoint-snapshot/before.bcf",
+          "mediaType": "application/octet-stream",
+          "sha256": "sha256:5856aad67464af8cb15f39b1fc55015a5dcdb980e9fbf65d75dc3b732d922f77",
+          "bytes": 248124
+        },
+        {
+          "role": "expected-after-bcf",
+          "path": "../🧫️fixtures/set-viewpoint-snapshot/after.bcf",
+          "mediaType": "application/octet-stream",
+          "sha256": "sha256:421a51c554896183c0bbe42a0b167bfd2869dce0064a28b253ddde7b8b0a17dd",
+          "bytes": 248569
+        }
+      ],
+      "provenance": {
+        "source": "authored",
+        "license": "public-domain (handcrafted by this repository)",
+        "attribution": "before is an unmodified copy of this subset's own real-world shared fixture wellness-center-coordination-review.bcf; after replaces exactly one zip entry (topic 3b1f6a1e…f11's viewpoint 3b1f6a1e…f14.png) with the real PNG bytes this subset's own mutate-bcf-2-1-snapshot differential feature already applies via SetViewpointSnapshot{topicGuid,guid,snapshot} — same document, same parameters, same real evidence, packaged as a v2 fixture pair instead of only a Gherkin-level reference.",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "semantic-bcf-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "The only byte-different zip entry between before and after is the target viewpoint's snapshot PNG; every other topic/markup/bcfv entry is byte-identical, matching what SetViewpointSnapshot alone should change."
+    }
+  ],
   "mutationCatalogs": [
     {
       "id": "bcf-2.1-snapshot",

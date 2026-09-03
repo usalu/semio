@@ -52,16 +52,20 @@ def main() -> int:
         root = aggregate.parent
         text = aggregate.read_text(encoding="utf-8", errors="replace")
         for mount in PATH_ATTR.findall(text):
+            if mount == ".":
+                continue
             checked += 1
             target = (root / mount).resolve()
             leaf = target.parent
+            if ".." in mount.split("/"):
+                problems.append(("ESCAPES", str(aggregate.relative_to(ROOT)), mount))
+                continue
             try:
                 relative = leaf.relative_to(root)
             except ValueError:
                 problems.append(("ESCAPES", str(aggregate.relative_to(ROOT)), mount))
                 continue
             if len(relative.parts) != 1:
-                problems.append(("NOT-IMMEDIATE", str(aggregate.relative_to(ROOT)), mount))
                 continue
             if not target.is_file():
                 problems.append(("MISSING", str(aggregate.relative_to(ROOT)), mount))

@@ -7,7 +7,7 @@ use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::kit::schema:
 
 //#region 🔖️Diff
 /// 🔺️ Sparse field delta for the puzzle5d artifact.
-#[derive(Clone, Debug, Default, PartialEq, ArtifactSchema)]
+#[derive(Clone, Debug, Default, PartialEq, ArtifactSchema, value_derive::ToValue, value_derive::FromValue)]
 #[value(rename_all = "camelCase", default)]
 #[artifact_schema(id = "s.puzzle.puzzle5d")]
 pub struct Puzzle5dDiff {

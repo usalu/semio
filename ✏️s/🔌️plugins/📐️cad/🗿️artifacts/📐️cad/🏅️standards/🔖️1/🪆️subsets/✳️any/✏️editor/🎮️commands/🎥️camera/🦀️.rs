@@ -56,15 +56,15 @@ pub mod set_projection {
         let mut camera = cad_pane_camera_runtime(&runtime, pane_id).clone();
         let mut projection_config = cad_camera_projection_config(&camera);
         // 🌉️ `world3d_projection_action_moves_pose`/`apply_world3d_projection_action` (framework
-        // `🔌️plugin/🦀️.rs`) still take `Option<&serde_json::Value>` — a genuine framework
-        // boundary, bridged once here.
+        // `🔌️plugin/🦀️.rs`) take `Option<&dsl::os_pack::json::Value>` — a genuine framework
+        // boundary, bridged once here from a `DslValue` built the normal way.
         let value = payload.value_str.clone().map(DslValue::String).or_else(|| payload.value_num.map(DslValue::float)).unwrap_or(DslValue::Null);
         let dsl_args = DslValue::object([
             ("field".to_string(), payload.field.clone().map(DslValue::String).unwrap_or(DslValue::Null)),
             ("value".to_string(), value),
             ("param".to_string(), payload.param.clone().map(DslValue::String).unwrap_or(DslValue::Null)),
         ]);
-        let args_value = serde_json::Value::from(&dsl_args);
+        let args_value = protocol::json::from_dsl_value(&dsl_args);
         let args = Some(&args_value);
         let moves_pose = world3d_projection_action_moves_pose("setProjection", args);
         apply_world3d_projection_action(&mut projection_config, "setProjection", args);
@@ -100,15 +100,15 @@ pub mod set_projection_param {
         let mut camera = cad_pane_camera_runtime(&runtime, pane_id).clone();
         let mut projection_config = cad_camera_projection_config(&camera);
         // 🌉️ `world3d_projection_action_moves_pose`/`apply_world3d_projection_action` (framework
-        // `🔌️plugin/🦀️.rs`) still take `Option<&serde_json::Value>` — a genuine framework
-        // boundary, bridged once here.
+        // `🔌️plugin/🦀️.rs`) take `Option<&dsl::os_pack::json::Value>` — a genuine framework
+        // boundary, bridged once here from a `DslValue` built the normal way.
         let value = payload.value_str.clone().map(DslValue::String).or_else(|| payload.value_num.map(DslValue::float)).unwrap_or(DslValue::Null);
         let dsl_args = DslValue::object([
             ("field".to_string(), payload.field.clone().map(DslValue::String).unwrap_or(DslValue::Null)),
             ("value".to_string(), value),
             ("param".to_string(), payload.param.clone().map(DslValue::String).unwrap_or(DslValue::Null)),
         ]);
-        let args_value = serde_json::Value::from(&dsl_args);
+        let args_value = protocol::json::from_dsl_value(&dsl_args);
         let args = Some(&args_value);
         let moves_pose = world3d_projection_action_moves_pose("setProjectionParam", args);
         apply_world3d_projection_action(&mut projection_config, "setProjectionParam", args);

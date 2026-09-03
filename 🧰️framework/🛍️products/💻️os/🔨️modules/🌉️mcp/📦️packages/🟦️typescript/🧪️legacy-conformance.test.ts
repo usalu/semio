@@ -5,9 +5,7 @@
  * proof that a real MCP client library — the same one every IDE extension in this repo embeds —
  * can actually hold a conversation with it.
  *
- * Skips with a clear console message (never silently green) when the binary hasn't been built yet
- * — see `resolveMcpBinaryPath` in `../../🟦️.ts`. Build it first:
- * `CARGO_TARGET_DIR=<ticket>/🎯️target cargo build -p semio-framework-os-mcp --bin semio-os-mcp`.
+ * The package test gate builds and requires the binary before Vitest starts.
  *
  * ⚠️ `tools/call` on an unregistered tool: the shipped `run_stdio` boots `McpServer::with_defaults()`
  * — EMPTY tool/resource/prompt registries (`🦀️.rs` `run_stdio`, confirmed live below and in
@@ -22,22 +20,16 @@
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
 import { LATEST_PROTOCOL_VERSION, McpError } from "@modelcontextprotocol/sdk/types.js";
-import { existsSync } from "node:fs";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { resolveMcpBinaryPath, spawnRawMcp } from "../../🟦️.ts";
+import { requireMcpBinary, spawnRawMcp } from "../../🟦️.ts";
 import { isValidJsonSchema2020_12 } from "./🧬️schema-validation.ts";
 import { getWorkspaceRoot } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 
 const repoRoot = getWorkspaceRoot();
-const bin = resolveMcpBinaryPath(repoRoot);
-const BIN_PRESENT = existsSync(bin);
+const bin = requireMcpBinary(repoRoot);
 const TOOL_NAME_RE = /^[a-zA-Z0-9_-]{1,64}$/;
 
-if (!BIN_PRESENT) {
-  console.warn(`[@semio-tech/framework-os-mcp] legacy conformance suite SKIPPED — binary not found at ${bin}. Build it first: CARGO_TARGET_DIR=<ticket>/🎯️target cargo build -p semio-framework-os-mcp --bin semio-os-mcp`);
-}
-
-describe.skipIf(!BIN_PRESENT)("semio-os-mcp — legacy era (@modelcontextprotocol/sdk 1.30.0)", () => {
+describe("semio-os-mcp — legacy era (@modelcontextprotocol/sdk 1.30.0)", () => {
   //#region 🔖️RawHandshake
   // The `Client` class never exposes the negotiated `protocolVersion` string it received (only
   // `getServerCapabilities()`/`getServerVersion()`/`getInstructions()` survive `connect()` —

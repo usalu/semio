@@ -94,7 +94,7 @@ mod tests {
         let step = PlaybookStep { id: "s1".into(), title: "Intro".into(), description: None, blocks: vec![sample_block("b1", "Name", "text")] };
         let spec = playbook_snapshot_with_steps("playbook.program", "playbook", "1", Some("Recipe".into()), vec![step]);
         let node = render(&spec);
-        let json = serde_json::to_string(&node).expect("tree json");
+        let json = protocol::json::to_json_string(&node);
         assert!(json.contains("Intro"), "step title must appear as a root node label: {json}");
         assert!(json.contains("Name (text)"), "block label+kind must appear as a leaf node label: {json}");
     }
@@ -104,7 +104,7 @@ mod tests {
         let step = PlaybookStep { id: "s1".into(), title: String::new(), description: None, blocks: Vec::new() };
         let spec = playbook_snapshot_with_steps("playbook.program", "playbook", "1", None, vec![step]);
         let node = render(&spec);
-        let json = serde_json::to_string(&node).expect("tree json");
+        let json = protocol::json::to_json_string(&node);
         assert!(json.contains("\"s1\""), "an empty step title must fall back to the step id: {json}");
     }
 }

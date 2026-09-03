@@ -367,7 +367,7 @@ impl OpBinary for SemioPresentationMutation {
 #[cfg(test)]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn demo_mutation_cases() -> Vec<SemioPresentationMutation> {
-    use crate::artifacts::semio::standards::v1::subsets::any::schema::geometry::SemioPoint2;
+    use crate::artifacts::semio::standards::v1::subsets::base::schema::geometry::SemioPoint2;
     use crate::artifacts::semio::standards::v1::subsets::presentation::schema::snapshot::{PlaceholderKind, SlidePictureImage, SlideTableCell, SlideTableRow};
 
     let frame = SlideFrame { origin: SemioPoint2 { x: 1.5, y: 2.5 }, width: 3.5, height: 4.5 };
@@ -399,8 +399,8 @@ pub(crate) fn demo_mutation_cases() -> Vec<SemioPresentationMutation> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::semio::standards::v1::subsets::any::schema::geometry::SemioPoint2;
-    use crate::artifacts::semio::standards::v1::subsets::any::schema::snapshot::DocRun;
+    use crate::artifacts::semio::standards::v1::subsets::base::schema::geometry::SemioPoint2;
+    use crate::artifacts::semio::standards::v1::subsets::base::schema::snapshot::DocRun;
     use crate::artifacts::semio::standards::v1::subsets::presentation::schema::snapshot::{PlaceholderKind, SlidePictureImage, SlideTableCell, SlideTableRow};
     use protocol::command::DiffAlgebra;
     use protocol::MutationDiff;

@@ -27,7 +27,7 @@ Feature: Apply every typed semio IMAGE mutation to a real animated raster, again
   `…/🧬️schema/🧬️mutations/📝️text/📖️component.grammar.semio`, `…/🧬️mutations/🔣️.json` and
   the committed per-kind specification vectors. It imports nothing from and transliterates nothing of
   the Rust it judges, and it was pinned before use: it reproduces the committed
-  `✳️any/📚️examples/🖼️swatch` artifact byte for byte in BOTH encodings and reaches all twelve
+  `✳️base/📚️examples/🖼️swatch` artifact byte for byte in BOTH encodings and reaches all twelve
   committed after-snapshots. It is registered as the oracle
   `semio-image-python-pillow-independent`; the recorded no-oracle decision it replaces is gone,
   because a reference now exists.

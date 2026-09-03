@@ -15,9 +15,9 @@
 //! `.pack.semio`/`.patch.semio` encodings are derived from it by `fixtures generate` and are
 //! asserted by the shared codec-matrix harness, not here.
 
-use crate::artifacts::pptx::standards::v_ecma_376::subsets::any::schema::diff::PptxDiff;
-use crate::artifacts::pptx::standards::v_ecma_376::subsets::any::schema::mutations::{apply_pptx_mutation, PptxMutation};
-use crate::artifacts::pptx::standards::v_ecma_376::subsets::any::schema::snapshot::PptxSnapshot;
+use crate::artifacts::pptx::standards::v_ecma_376::subsets::base::schema::diff::PptxDiff;
+use crate::artifacts::pptx::standards::v_ecma_376::subsets::base::schema::mutations::{apply_pptx_mutation, PptxMutation};
+use crate::artifacts::pptx::standards::v_ecma_376::subsets::base::schema::snapshot::PptxSnapshot;
 
 const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️.json");
 const AFTER: &str = include_str!("📸️snapshot/➡️after/🔣️.json");
@@ -43,7 +43,7 @@ async fn applies_to_committed_after() {
     assert!(outcome.messages().is_empty(), "set-snapshot/retitles-and-lowers-the-title-placeholder: set-snapshot raised diagnostics it should not have");
     assert_eq!(snapshot, expected_after(), "set-snapshot/retitles-and-lowers-the-title-placeholder: applied state differs from committed after-snapshot");
     match &snapshot.presentation.slides[0].shapes[0] {
-        crate::artifacts::pptx::standards::v_ecma_376::subsets::any::schema::snapshot::PptxShape::Placeholder { kind, text_frame, position } => {
+        crate::artifacts::pptx::standards::v_ecma_376::subsets::base::schema::snapshot::PptxShape::Placeholder { kind, text_frame, position } => {
             assert_eq!(kind, "title", "set-snapshot/retitles-and-lowers-the-title-placeholder: the placeholder type attribute is untouched");
             assert_eq!(text_frame[0].runs[0].text, "Nakagin Capsule Tower", "set-snapshot/retitles-and-lowers-the-title-placeholder: the title run must carry the full tower name");
             assert_eq!(position.y, 457200, "set-snapshot/retitles-and-lowers-the-title-placeholder: the placeholder must drop by half an inch in EMU");
@@ -136,7 +136,7 @@ async fn produces_committed_diff() {
     let shapes = slides.modified[0].diff.shapes.as_ref().expect("set-snapshot/retitles-and-lowers-the-title-placeholder: the shapes triple must be present");
     assert_eq!(shapes.modified.len(), 1, "set-snapshot/retitles-and-lowers-the-title-placeholder: only the title placeholder is patched — the picture must not appear");
     match &shapes.modified[0].diff {
-        crate::artifacts::pptx::standards::v_ecma_376::subsets::any::schema::diff::PptxShapeDiff::Placeholder(placeholder) => {
+        crate::artifacts::pptx::standards::v_ecma_376::subsets::base::schema::diff::PptxShapeDiff::Placeholder(placeholder) => {
             assert!(placeholder.kind.is_none(), "set-snapshot/retitles-and-lowers-the-title-placeholder: the placeholder type is unchanged");
             assert_eq!(placeholder.position.expect("position slot").y, 457200, "set-snapshot/retitles-and-lowers-the-title-placeholder: PptxTransform is a weak value entity — the delta carries the whole new rectangle, not just the moved axis");
             let runs = placeholder.text_frame.as_ref().expect("text frame triple").modified[0].diff.runs.as_ref().expect("runs triple");

@@ -1,0 +1,24 @@
+{
+  "control": {
+    "kind": "rebootstrap-required",
+    "control": {
+      "scope": { "spaceId": "space:α", "documentId": "doc:東京" },
+      "checkpointId": [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+      "descriptorDigestV1": [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2],
+      "baselineFrontier": {
+        "documentId": "doc:東京",
+        "headEditOrdinal": 7,
+        "headEditId": "edit:7",
+        "lastCommitSeq": 6,
+        "chainHash": [3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3]
+      }
+    }
+  },
+  "closeCode": 1013,
+  "closeReason": "rebootstrap-required",
+  "scopeMaximumBytes": 256,
+  "inlineMaximumBytes": 4096,
+  "chunkMaximumBytes": 4096,
+  "totalMaximumBytes": 67108864,
+  "chunkMaximumCount": 16384
+}

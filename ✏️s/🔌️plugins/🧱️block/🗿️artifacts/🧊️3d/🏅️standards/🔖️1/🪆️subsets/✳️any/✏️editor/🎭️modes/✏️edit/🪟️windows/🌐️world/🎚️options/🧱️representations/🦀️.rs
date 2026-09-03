@@ -4,7 +4,6 @@ use crate::artifacts::block3d::Block3dSnapshot;
 use crate::editor::block3d::config::{block3d_window_view, Block3dConfig};
 use crate::editor::block3d::terminology::Block3dLabels;
 use semio_framework_plugin::WindowMeasure;
-use serde_json::json;
 
 pub async fn measure(definition: &Block3dSnapshot, config: &Block3dConfig, window_id: &str, labels: &Block3dLabels) -> WindowMeasure {
     let view = block3d_window_view(config, window_id);
@@ -18,7 +17,17 @@ pub async fn measure(definition: &Block3dSnapshot, config: &Block3dConfig, windo
             label: Some(representation.name.clone()),
             pressed: visible_set.contains(representation.id.as_str()),
             text: None,
-            on_change: crate::editor::block3d::block3d_action("toggleWindowRepresentation", Some(json!({ "windowId": window_id, "representationId": representation.id, "visible": !visible_set.contains(representation.id.as_str()) }))),
+            on_change: crate::editor::block3d::block3d_action(
+                "toggleWindowRepresentation",
+                Some(
+                    crate::editor::block3d::ui_value_map([
+                        ("windowId", crate::editor::block3d::ui_value_text(window_id).expect("window id fits ui text capacity")),
+                        ("representationId", crate::editor::block3d::ui_value_text(representation.id.as_str()).expect("representation id fits ui text capacity")),
+                        ("visible", crate::editor::block3d::ui_value_bool(!visible_set.contains(representation.id.as_str()))),
+                    ])
+                    .expect("toggle-representation args fit ui map capacity"),
+                ),
+            ),
         })
         .collect();
     WindowMeasure::measure_group("block3d-representations", labels.representations.as_str(), rep_toggles)

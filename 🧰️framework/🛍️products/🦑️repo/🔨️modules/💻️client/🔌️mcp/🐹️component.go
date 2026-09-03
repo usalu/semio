@@ -27,26 +27,34 @@ import (
 // #region 🦀️Mcp
 // MCP process bootstrap.
 
-func main() {
-	if len(os.Args) > 1 {
-		if err := client.RunCLI(); err != nil {
-			var exitErr client.ExitError
-			if errors.As(err, &exitErr) {
-				os.Exit(exitErr.Code)
-			}
-			fmt.Fprintln(os.Stderr, err)
-			os.Exit(1)
-		}
-		return
+const MCPProfileEnvironment = "SEMIO_REPO_MCP_CLIENT"
+
+func resolveMCPProfile(arguments []string, lookupEnvironment func(string) (string, bool)) (client.McpClientKind, error) {
+	if len(arguments) != 0 {
+		return "", errors.New("repo MCP accepts no command arguments")
 	}
-	if _, err := runMCP(context.Background(), stdioTransport{reader: os.Stdin, writer: os.Stdout}, ClientRepository{}); err != nil {
+	raw, _ := lookupEnvironment(MCPProfileEnvironment)
+	return client.ParseMcpClientKind(raw)
+}
+
+func main() {
+	profile, err := resolveMCPProfile(os.Args[1:], os.LookupEnv)
+	if err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		os.Exit(1)
+	}
+	if _, err := runMCPForProfile(context.Background(), stdioTransport{reader: os.Stdin, writer: os.Stdout}, NewClientRepository(profile), profile); err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)
 	}
 }
 
 func runMCP(ctx context.Context, transport Transport, repository RepositoryHandlers) (*Server, error) {
-	server, err := NewRepositoryServer(repository)
+	return runMCPForProfile(ctx, transport, repository, client.McpClientGeneric)
+}
+
+func runMCPForProfile(ctx context.Context, transport Transport, repository RepositoryHandlers, profile client.McpClientKind) (*Server, error) {
+	server, err := NewRepositoryServerFor(repository, profile)
 	if err != nil {
 		return nil, err
 	}

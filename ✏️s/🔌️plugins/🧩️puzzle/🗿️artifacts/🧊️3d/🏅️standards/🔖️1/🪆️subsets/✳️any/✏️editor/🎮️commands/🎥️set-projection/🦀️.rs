@@ -3,7 +3,7 @@
 use crate::editor::puzzle3d::config::puzzle3d_camera_distance;
 use crate::editor::puzzle3d::Puzzle3dActionCtx;
 use semio_framework_plugin::{apply_world3d_projection_action, world3d_projection_action_moves_pose, world3d_projection_pose};
-use serde_json::Value;
+use dsl::os_pack::json::Value;
 
 /// 🧭️ `setProjection`/`setProjectionParam` share one arm — a projection change that also moves the
 /// camera pose re-derives position/up from the new orientation around the unchanged target.

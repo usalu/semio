@@ -7,7 +7,7 @@
 //! buildingSMART Coordination View 2.0-era Part-21 entity keyword IFC4 uses, since 2x3 rides the
 //! identical ISO 10303-21 syntax with an older EXPRESS schema).
 
-use crate::artifacts::ifc::standards::v2x3::subsets::any::schema::snapshot::Ifc2x3Snapshot;
+use crate::artifacts::ifc::standards::v2x3::subsets::base::schema::snapshot::Ifc2x3Snapshot;
 use schema::ArtifactSchema;
 use semio_framework_plugin::ArtifactInferrer;
 
@@ -57,7 +57,7 @@ impl protocol::InferenceSpec<Ifc2x3Snapshot> for Ifc2x3Inference {
 /// with no honest per-entity incremental decomposition (a merkle dep-chain over this flat
 /// instance list costs more than the fold it would cache) — the default `infer_cached`
 /// passthrough is exact.
-impl ArtifactInferrer for crate::artifacts::ifc::standards::v2x3::subsets::any::schema::Ifc2x3Builder {
+impl ArtifactInferrer for crate::artifacts::ifc::standards::v2x3::subsets::base::schema::Ifc2x3Builder {
     type Snapshot = Ifc2x3Snapshot;
     type Inference = Ifc2x3Inference;
 }

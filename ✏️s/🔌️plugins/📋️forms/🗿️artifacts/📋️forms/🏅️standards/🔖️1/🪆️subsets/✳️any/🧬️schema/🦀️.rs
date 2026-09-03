@@ -10,7 +10,7 @@ use crate::artifacts::forms::{forms_snapshot_with_state, forms_steps, FormQuesti
 use schema::ArtifactSchema;
 #[cfg(test)]
 use serde::{Deserialize, Serialize};
-use serde_json::Value;
+use dsl::os_pack::json::{Object, Value};
 use std::collections::BTreeMap;
 
 //#region 🔖️Artifact
@@ -105,8 +105,10 @@ pub use crate::playbook::{
     is_extension_block_kind as is_extension_question_kind, step_errors, visible_blocks as visible_questions,
 };
 
-pub async fn initial_try_values(spec: &FormsSnapshot, overrides: &serde_json::Map<String, Value>) -> serde_json::Map<String, Value> {
-    crate::playbook::initial_values(&crate::artifacts::forms::mutations::as_playbook_spec(spec), overrides)
+pub async fn initial_try_values(spec: &FormsSnapshot, overrides: &Object) -> Object {
+    let overrides_map: std::collections::HashMap<String, dsl::DslValue> = overrides.iter().map(|(key, value)| (key.to_string(), dsl::os_pack::json::to_dsl_value(value))).collect();
+    let result = crate::playbook::initial_values(&crate::artifacts::forms::mutations::as_playbook_spec(spec), &overrides_map);
+    result.into_iter().map(|(key, value)| (key, dsl::os_pack::json::from_dsl_value(&value))).collect()
 }
 //#endregion 🔖️PlaybookVocabulary
 
@@ -133,7 +135,7 @@ pub async fn default_example_spec() -> FormsSnapshot {
 /// 📄️ JSON re-serialization of [`default_example_spec`], for the framework-generic call sites that
 /// contractually require JSON text (`App::example`'s manifest `document_json`).
 pub async fn default_example_json() -> String {
-    serde_json::to_string(&default_example_spec()).expect("serialize default example document")
+    dsl::os_pack::json::to_json_string(&default_example_spec())
 }
 
 /// 📄️ The `onboarding` example, parsed once from `forms_dsl::ONBOARDING_EXAMPLE_TEXT`.
@@ -144,7 +146,7 @@ pub async fn onboarding_example_spec() -> FormsSnapshot {
 /// 📄️ JSON re-serialization of [`onboarding_example_spec`], for the framework-generic call sites that
 /// contractually require JSON text (`App::example`'s manifest `document_json`).
 pub async fn onboarding_example_json() -> String {
-    serde_json::to_string(&onboarding_example_spec()).expect("serialize onboarding example document")
+    dsl::os_pack::json::to_json_string(&onboarding_example_spec())
 }
 
 /// 🔠️ Every `(step title, question)` pair in document order — the empty-inspector diagnostic and every
@@ -205,15 +207,14 @@ pub async fn forms_play_step_tree_id(step_id: &str) -> String {
 //#endregion 🔖️Ids
 
 //#region 🔖️Values
-/// 🔄️ Converts a `serde_json::Value` to a `dsl::DslValue` — falls back to `Null` on an unsupported shape
-/// (never occurs for the plain JSON literals every question default carries).
+/// 🔄️ Converts a `dsl::os_pack::json::Value` to a `dsl::DslValue` — first-party, infallible.
 pub async fn value_to_dsl(value: &Value) -> dsl::DslValue {
-    dsl::to_dsl_value(value).unwrap_or(dsl::DslValue::Null)
+    dsl::os_pack::json::to_dsl_value(value)
 }
 
-/// 🔄️ Converts a `dsl::DslValue` back to a `serde_json::Value`.
+/// 🔄️ Converts a `dsl::DslValue` back to a `dsl::os_pack::json::Value` — first-party, infallible.
 pub async fn dsl_to_value(value: &dsl::DslValue) -> Value {
-    dsl::from_dsl_value(value.clone()).unwrap_or(Value::Null)
+    dsl::os_pack::json::from_dsl_value(value)
 }
 
 /// 🔤️ A `dsl::DslValue` rendered as a display string — the inspector's text-field representation of a
@@ -228,19 +229,21 @@ pub async fn dsl_f64_value(value: &dsl::DslValue) -> f64 {
     json_f64_value(&dsl_to_value(value))
 }
 
-/// 🔤️ A `serde_json::Value` rendered as a display string — shared by the inspector's editable fields and
+/// 🔤️ A `dsl::os_pack::json::Value` rendered as a display string — shared by the inspector's editable fields and
 /// the try wizard's current-answer rendering.
 pub async fn json_string_value(value: &Value) -> String {
     match value {
         Value::String(text) => text.clone(),
         Value::Bool(flag) => flag.to_string(),
-        Value::Number(number) => number.to_string(),
+        Value::Number(dsl::os_pack::json::Number::UInt(v)) => v.to_string(),
+        Value::Number(dsl::os_pack::json::Number::Int(v)) => v.to_string(),
+        Value::Number(dsl::os_pack::json::Number::Float(v)) => v.to_string(),
         Value::Null => String::new(),
         other => other.to_string(),
     }
 }
 
-/// 🔢️ A `serde_json::Value` rendered as `f64` (0.0 on a non-numeric shape).
+/// 🔢️ A `dsl::os_pack::json::Value` rendered as `f64` (0.0 on a non-numeric shape).
 pub async fn json_f64_value(value: &Value) -> f64 {
     value.as_f64().unwrap_or(0.0)
 }
@@ -294,7 +297,7 @@ pub type Construction = semio_framework_plugin::app::SnapshotBuilder<crate::arti
 #[cfg(test)]
 mod tests {
     use super::*;
-    use serde_json::json;
+    use dsl::os_pack::json::object;
 
     #[semio_framework_async_macros::async_test]
     async fn locate_question_finds_a_question_anywhere_in_the_document() {
@@ -340,10 +343,10 @@ mod tests {
         // `serde_json::Number` (`6`), which does not `==` the float-typed literal despite being numerically
         // equal — a `dsl` value-system characteristic, not something this conversion controls. Use a
         // fractional value here so the round-trip assertion is unambiguous.
-        let value = json!({ "height": 6.5 });
+        let value = object([("height".to_string(), Value::from(6.5))]);
         assert_eq!(dsl_to_value(&value_to_dsl(&value)), value);
-        assert_eq!(dsl_string_value(&value_to_dsl(&json!("hello"))), "hello");
-        assert_eq!(dsl_f64_value(&value_to_dsl(&json!(42.5))), 42.5);
+        assert_eq!(dsl_string_value(&value_to_dsl(&Value::from("hello"))), "hello");
+        assert_eq!(dsl_f64_value(&value_to_dsl(&Value::from(42.5))), 42.5);
     }
 
     #[semio_framework_async_macros::async_test]
@@ -354,10 +357,10 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn json_value_helpers_stringify_primitives() {
-        assert_eq!(json_string_value(&json!("a")), "a");
-        assert_eq!(json_string_value(&json!(true)), "true");
+        assert_eq!(json_string_value(&Value::from("a")), "a");
+        assert_eq!(json_string_value(&Value::from(true)), "true");
         assert_eq!(json_string_value(&Value::Null), "");
-        assert_eq!(json_f64_value(&json!(5)), 5.0);
+        assert_eq!(json_f64_value(&Value::from(5)), 5.0);
         assert_eq!(json_f64_value(&Value::Null), 0.0);
     }
 

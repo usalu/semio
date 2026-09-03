@@ -153,7 +153,7 @@ impl ArtifactSerializer for SemioMeshToPly {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::semio::standards::v1::subsets::any::schema::geometry::{SemioPoint3, SemioRgba};
+    use crate::artifacts::semio::standards::v1::subsets::base::schema::geometry::{SemioPoint3, SemioRgba};
     use crate::artifacts::semio::standards::v1::subsets::mesh::io::import::deserializers::artifacts::ply::v1_0::any::SemioMeshFromPly;
     use crate::artifacts::semio::standards::v1::subsets::mesh::schema::snapshot::SemioPrimitive;
     use semio_framework_plugin::ArtifactDeserializer;

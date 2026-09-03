@@ -1,31 +1,27 @@
 @capability-vcs-1-mutate
-@no-oracle-vcs-1-checkpoint-mutation-semantics
+@oracle-vcs-1-python-independent
 @comparison-ordered-json-v1
 @mutations-vcs-1-any
-Feature: Apply every typed VCS checkpoint mutation to its committed specification vectors
+Feature: Apply every typed VCS checkpoint mutation to its committed specification vectors and against an independent Python implementation
   `s.vcs.vcs` is a semio-NATIVE review-checkpoint document: its two wire forms are
   `.vcs.dsl.semio` and `.vcs.pack.semio`, grammars this repository defines and nobody else reads, so
-  no reference LIBRARY is registered — recorded as the `vcs-1-checkpoint-mutation-semantics`
-  no-oracle decision in `../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️oracle/🔣️.json`. Each of
-  the six kinds carries an independently handcrafted `(before, mutation, after, diff, outcome)`
-  specification fixture under its own triad leaf's `🧪️tests/` directory, and this feature re-exercises
-  those SAME committed bytes end to end through `apply_vcs_mutation_reporting`.
+  no reference LIBRARY exists. The second producer a differential comparison needs is therefore a
+  second IMPLEMENTATION, and `🐍️component.py` beside this file is it: all six kinds of this
+  vocabulary, written in Python from this subset's own committed
+  `🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🔣️.json` and each mutation's own payload
+  schema, and from
+  `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-DIRECT-LEAF-OVERHAUL/📓️taxonomy.md`'s
+  `change`/`rename`/`add`/`remove` verb entries. It imports nothing from the Rust it judges and
+  transliterates none of it. Each of the six kinds carries an independently handcrafted `(before,
+  mutation, after, diff, outcome)` specification fixture under its own triad leaf's `🧪️tests/`
+  directory, and this feature re-exercises those SAME committed bytes end to end through BOTH
+  `apply_vcs_mutation_reporting` and the Python reference. The no-oracle decision this replaces
+  (`vcs-1-checkpoint-mutation-semantics`) is narrowed to an empty `capabilities` list rather than
+  deleted, because its own investigation remains the honest record of what was checked.
 
-  ⚠️ THIS NO-ORACLE DECISION IS A DEBT, NOT A VERDICT, and is recorded as one. Declining a third-party
-  LIBRARY is a different judgement from declining a SECOND IMPLEMENTATION, and only the first was ever
-  made here. `mutate-writer-1` and `mutate-playbook-1` took Python second
-  implementations over this same `.dsl.semio` carrier in this wave, so the same is writable for this
-  subset from `🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🔣️.json`, the rules of
-  `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/📓️derivation-rules.md` and the
-  committed vectors this feature already replays. What blocks it TODAY is stated in the decision and
-  is one edit: this case's vectors are not declared as `asset://` fixtures — the `Examples` table
-  carries the payloads inline and the adapter reads the committed files through `include_str!` — so
-  the plan pins none of their digests and a Python reference cannot read them at all. Separately, `identity-round-trip` would still be refused: this subset's committed
-  snapshot text grammar is the repository-wide placeholder `payload = OCTET+`, whose header production
-  declares `"schema" SP "stdio.json"` against an artifact whose own first line says otherwise.
-  Until that is done, every assertion below still lives in the SUBJECT role, and the ceiling is the
-  one this decision has always had: no second producer runs beside it, so a mistake shared by the
-  handcrafted vector and the production code passes unseen.
+  Both implementations now read the SAME committed bytes: every `(before, mutation, after, diff,
+  outcome)` path is a declared `asset://` fixture rather than an `include_str!`-only literal, so the
+  plan pins its digest and a Python reference can resolve it.
 
   What distinguishes this vocabulary from every 🗄️stdio one is what it does NOT declare. There is
   no `no-mutation` and no `set-snapshot`: whole-document replace is banned vocabulary in this
@@ -44,50 +40,60 @@ Feature: Apply every typed VCS checkpoint mutation to its committed specificatio
   same pre-existing member: an implementation that re-sorted, de-duplicated or rebuilt the list
   fails both, and an inverse that re-appended rather than restoring position fails the second.
 
-  Because this case records a no-oracle decision the runner executes NO oracle role, so every
-  assertion lives inside the subject handler: `mutate-<kind>` compares the applied snapshot with
-  the committed after-snapshot and the reported diagnostic codes with the committed
-  `🎯️outcome/🔣️.json`, and `inverse-<kind>` compares the undone snapshot with the
-  committed before-snapshot. A handler that merely ran the mutation and returned would report a
-  pass having checked nothing.
+  `mutate-<kind>`/`inverse-<kind>` now dispatch BOTH an oracle role (the Python implementation,
+  reached through this plugin's `oracleHostPackages` entry) and a subject role (this repository's own
+  `apply_vcs_mutation_reporting`, unaffected by this change): `mutate-<kind>` compares the applied
+  snapshot with the committed after-snapshot and the reported diagnostic codes with the committed
+  `🎯️outcome/🔣️.json`, and `inverse-<kind>` compares the undone snapshot with the committed
+  before-snapshot — each side in role, then the two compared. A handler that merely ran the mutation
+  and returned would report a pass having checked nothing.
 
   @id-mutate
   @level-exhaustive
-  @mode-conformance
+  @mode-differential
   Scenario Outline: Apply <id> to its committed before-snapshot fixture
-    Given the committed before-snapshot, mutation and outcome fixtures for the <id> kind
+    Given the committed before-snapshot asset://🧬️schema/🧬️mutations/<dir>/🧪️tests/<fixture>/📸️snapshot/⬅️before/🔣️.json
+    And the committed mutation payload asset://🧬️schema/🧬️mutations/<dir>/🧪️tests/<fixture>/🦠️mutation/🔣️.json
+    And the committed after-snapshot asset://🧬️schema/🧬️mutations/<dir>/🧪️tests/<fixture>/📸️snapshot/➡️after/🔣️.json
+    And the committed diff asset://🧬️schema/🧬️mutations/<dir>/🧪️tests/<fixture>/🔺️diff/🔣️.json
+    And the committed outcome asset://🧬️schema/🧬️mutations/<dir>/🧪️tests/<fixture>/🎯️outcome/🔣️.json
+    And the committed before-snapshot, mutation and outcome fixtures for the <id> kind
     When <id> is applied through apply_vcs_mutation_reporting
       """
       {"kind": "<id>", "moves": "<moves>"}
       """
-    Then the resulting snapshot matches the committed after-snapshot, only <moves> moved, and the reported diagnostics match the committed outcome
+    Then the resulting snapshot matches the committed after-snapshot, only <moves> moved, the reported diagnostics match the committed outcome, and the two implementations agree
     Examples:
-      | id             | moves   |
-      | rename-vcs     | title   |
-      | change-counter | counter |
-      | change-notes   | notes   |
-      | change-status  | status  |
-      | add-tag        | tags    |
-      | remove-tag     | tags    |
+      | id             | dir              | fixture                    | moves   |
+      | rename-vcs     | ✏️rename-vcs      | retitles-the-document       | title   |
+      | change-counter | 🔢change-counter  | sets-counter-to-seven       | counter |
+      | change-notes   | 📝change-notes    | rewrites-the-notes          | notes   |
+      | change-status  | 🚦change-status   | draft-to-review             | status  |
+      | add-tag        | 🏷️add-tag         | appends-urgent-tag          | tags    |
+      | remove-tag     | 🗑️remove-tag      | detaches-the-review-tag     | tags    |
 
   @id-inverse
   @level-exhaustive
-  @mode-property
+  @mode-differential
   Scenario Outline: Undoing <id> restores the committed before-snapshot fixture
-    Given the committed before-snapshot and mutation fixtures for the <id> kind
+    Given the committed before-snapshot asset://🧬️schema/🧬️mutations/<dir>/🧪️tests/<fixture>/📸️snapshot/⬅️before/🔣️.json
+    And the committed mutation payload asset://🧬️schema/🧬️mutations/<dir>/🧪️tests/<fixture>/🦠️mutation/🔣️.json
+    And the committed after-snapshot asset://🧬️schema/🧬️mutations/<dir>/🧪️tests/<fixture>/📸️snapshot/➡️after/🔣️.json
+    And the committed outcome asset://🧬️schema/🧬️mutations/<dir>/🧪️tests/<fixture>/🎯️outcome/🔣️.json
+    And the committed before-snapshot and mutation fixtures for the <id> kind
     When <id> is applied and then its own computed inverse steps are applied
       """
       {"kind": "<id>", "moves": "<moves>"}
       """
-    Then the snapshot equals the committed before-snapshot again, member for member
+    Then the snapshot equals the committed before-snapshot again, member for member, and both implementations agree
     Examples:
-      | id             | moves   |
-      | rename-vcs     | title   |
-      | change-counter | counter |
-      | change-notes   | notes   |
-      | change-status  | status  |
-      | add-tag        | tags    |
-      | remove-tag     | tags    |
+      | id             | dir              | fixture                    | moves   |
+      | rename-vcs     | ✏️rename-vcs      | retitles-the-document       | title   |
+      | change-counter | 🔢change-counter  | sets-counter-to-seven       | counter |
+      | change-notes   | 📝change-notes    | rewrites-the-notes          | notes   |
+      | change-status  | 🚦change-status   | draft-to-review             | status  |
+      | add-tag        | 🏷️add-tag         | appends-urgent-tag          | tags    |
+      | remove-tag     | 🗑️remove-tag      | detaches-the-review-tag     | tags    |
 
   @id-identity-round-trip
   @level-long

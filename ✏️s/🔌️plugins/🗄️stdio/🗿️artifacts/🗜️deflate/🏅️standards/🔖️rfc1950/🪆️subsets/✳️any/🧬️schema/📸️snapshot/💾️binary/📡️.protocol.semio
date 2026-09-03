@@ -40,7 +40,7 @@ field flg u8
 # confirmed live -- `Cond`'s only operators compare a field's WHOLE value; see
 # `📖️grammar-recipe.md` §2.2's own `Cond` section). SAME mechanism gap already hit and
 # documented by this program's own prior wave for an analogous multi-bit `flags` byte
-# (`../../../../../../📰xml/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🧬️schema/🔺️diff/💾️binary/
+# (`../../../../../../📰️xml/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🧬️schema/🔺️diff/💾️binary/
 # 📡️.protocol.semio`'s own `format`/`flags` header comment) -- filed here as
 # `protocol-cond-no-bitmask` (this wave's report `mechanism_gaps`). Modeled honestly: `body`
 # below folds the (rare, optional) DICTID prefix into the SAME opaque boundary the compressed

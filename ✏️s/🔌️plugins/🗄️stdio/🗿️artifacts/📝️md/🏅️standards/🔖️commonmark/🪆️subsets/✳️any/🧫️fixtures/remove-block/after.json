@@ -1,0 +1,14 @@
+{
+  "schema": "stdio.md",
+  "blocks": [
+    {
+      "kind": "paragraph",
+      "inlines": [
+        {
+          "kind": "text",
+          "text": "First paragraph."
+        }
+      ]
+    }
+  ]
+}

@@ -13,7 +13,7 @@
 //! `OpText`/`OpBinary` hand-rolled below, reusing `SemioDocumentDiff`'s `pub(crate)` grammar
 //! primitives.
 
-use crate::artifacts::semio::standards::v1::subsets::any::schema::triples::{split_top_level, strip_brackets, IndexAdded, IndexModified, IndexedTripleDiff};
+use crate::artifacts::semio::standards::v1::subsets::base::schema::triples::{split_top_level, strip_brackets, IndexAdded, IndexModified, IndexedTripleDiff};
 use crate::artifacts::semio::standards::v1::subsets::document::schema::diff::{
     dec_bool, dec_f64, dec_image, dec_run_style, dec_str, dec_style, dec_u8, decode_option, diff_block, diff_set_snapshot, enc_bool, enc_f64, enc_image, enc_run_style, enc_str, enc_style, enc_u8, encode_option, hex_decode, hex_encode, BlocksDiff,
     DocBlockDiff, DocHeadingDiff, DocParagraphDiff, DocQuoteDiff, DocRunDiff, DocTableCellDiff, DocTableRowDiff, ListItemsDiff, RunsDiff, SemioDocumentDiff, TableCellsDiff, TableRowsDiff,
@@ -384,7 +384,7 @@ pub(crate) fn agg_diff(this: &SemioDocumentMutation, base: &SemioDocumentSnapsho
         SemioDocumentMutation::SetStyleName(set_style_name::SetStyleName { id, name }) => match style_at(base, id) {
             Some(old) if &old.name != name => SemioDocumentDiff {
                 styles: Some(crate::artifacts::semio::standards::v1::subsets::document::schema::diff::StylesDiff {
-                    modified: vec![crate::artifacts::semio::standards::v1::subsets::any::schema::triples::NamedModified {
+                    modified: vec![crate::artifacts::semio::standards::v1::subsets::base::schema::triples::NamedModified {
                         key: id.clone(),
                         diff: crate::artifacts::semio::standards::v1::subsets::document::schema::diff::DocStyleDiff { name: Some(name.clone()), based_on: None },
                     }],
@@ -398,7 +398,7 @@ pub(crate) fn agg_diff(this: &SemioDocumentMutation, base: &SemioDocumentSnapsho
         SemioDocumentMutation::SetStyleBasedOn(set_style_based_on::SetStyleBasedOn { id, based_on }) => match style_at(base, id) {
             Some(old) if &old.based_on != based_on => SemioDocumentDiff {
                 styles: Some(crate::artifacts::semio::standards::v1::subsets::document::schema::diff::StylesDiff {
-                    modified: vec![crate::artifacts::semio::standards::v1::subsets::any::schema::triples::NamedModified {
+                    modified: vec![crate::artifacts::semio::standards::v1::subsets::base::schema::triples::NamedModified {
                         key: id.clone(),
                         diff: crate::artifacts::semio::standards::v1::subsets::document::schema::diff::DocStyleDiff { name: None, based_on: Some(based_on.clone()) },
                     }],
@@ -419,7 +419,7 @@ pub(crate) fn agg_diff(this: &SemioDocumentMutation, base: &SemioDocumentSnapsho
             Some(old) if &old.mime != mime || &old.bytes != bytes => SemioDocumentDiff {
                 styles: None,
                 images: Some(crate::artifacts::semio::standards::v1::subsets::document::schema::diff::ImagesDiff {
-                    modified: vec![crate::artifacts::semio::standards::v1::subsets::any::schema::triples::NamedModified {
+                    modified: vec![crate::artifacts::semio::standards::v1::subsets::base::schema::triples::NamedModified {
                         key: id.clone(),
                         diff: crate::artifacts::semio::standards::v1::subsets::document::schema::diff::DocImageDiff { mime: Some(mime.clone()), bytes: Some(bytes.clone()) },
                     }],

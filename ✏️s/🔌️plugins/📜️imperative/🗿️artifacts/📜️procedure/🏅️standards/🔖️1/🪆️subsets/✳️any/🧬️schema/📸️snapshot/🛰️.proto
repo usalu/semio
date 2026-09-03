@@ -1,0 +1,29 @@
+syntax = "proto3";
+package semio.s.imperative.procedure.snapshot;
+
+// 🧬️ Imperative snapshot schema — artifact-lane fields only.
+
+message ProcedureSnapshot {
+  // @state artifact
+  string schema = 1;
+  // @state artifact
+  ProcedurePath path = 2;
+  // @state artifact
+  map<string, string> seed = 3;
+}
+
+message ProcedurePath {
+  repeated ProcedureStep steps = 1;
+}
+
+message ProcedureStep {
+  string id = 1;
+  string kind = 2;
+  string params_json = 3;
+  repeated ProcedureStepBodyEntry bodies = 4;
+}
+
+message ProcedureStepBodyEntry {
+  string slot = 1;
+  ProcedurePath path = 2;
+}

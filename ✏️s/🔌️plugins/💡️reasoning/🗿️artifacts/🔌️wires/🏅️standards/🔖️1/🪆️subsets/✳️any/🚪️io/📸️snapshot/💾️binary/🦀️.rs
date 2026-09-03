@@ -25,11 +25,11 @@ async fn read_str_lp(reader: &mut store::ByteReader<'_>) -> Result<String, Strin
 /// ⚠️ Same order-preserving direct `DslValue` (de)serialization as `📝️text`'s `enc_dsl`/`dec_dsl` —
 /// never via `fixture_json_string`/`dsl_to_json`'s `serde_json::Value` intermediate (key-order-losing).
 async fn write_dsl(out: &mut Vec<u8>, value: &DslValue) {
-    write_str_lp(out, &serde_json::to_string(value).unwrap_or_default());
+    write_str_lp(out, &dsl::os_pack::json::to_json_string(value));
 }
 async fn read_dsl(reader: &mut store::ByteReader<'_>) -> Result<DslValue, String> {
     let text = read_str_lp(reader)?;
-    serde_json::from_str::<DslValue>(&text).map_err(|e| e.to_string())
+    dsl::os_pack::json::from_json_str::<DslValue>(&text).map_err(|e| e.to_string())
 }
 async fn write_dsl_list(out: &mut Vec<u8>, values: &[DslValue]) {
     store::pack_rt::write_varint_u64(out, values.len() as u64);

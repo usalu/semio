@@ -77,7 +77,7 @@ pub async fn empty_wires_snapshot() -> WiresSnapshot {
 /// nodes/edges now live in this composed child rather than inline on `WiresSnapshot`.
 pub type WiresContentChild = store::ArtifactChild<SemioGraphSnapshot>;
 
-use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::any::schema::geometry::SemioPoint2;
+use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::base::schema::geometry::SemioPoint2;
 use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::graph::schema::snapshot::{GraphEdgeId as SemioGraphEdgeId, GraphNodeId as SemioGraphNodeId, SemioGraphEdge, SemioGraphNode, SemioGraphSnapshot, STDIO_SEMIOGRAPH_DOCUMENT_SCHEMA};
 use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::value::schema::snapshot::{SemioValue, SemioValueEntry};
 
@@ -110,10 +110,8 @@ async fn board_node_from_semio_node(node: &SemioGraphNode) -> DslValue {
     for property in &node.properties {
         if property.key == WIRES_NODE_JSON_PROPERTY {
             if let SemioValue::Str { value } = &property.value {
-                if let Ok(parsed) = serde_json::from_str::<serde_json::Value>(value) {
-                    if let Ok(restored) = dsl::to_dsl_value(&parsed) {
-                        return restored;
-                    }
+                if let Ok(restored) = dsl::os_pack::json::from_json_str::<DslValue>(value) {
+                    return restored;
                 }
             }
         }
@@ -147,10 +145,8 @@ async fn semio_edge_from_board_edge(edge: &DslValue) -> SemioGraphEdge {
 /// 🌉 Inverse of [`semio_edge_from_board_edge`] — falls back to a bare node-id edge if `label` isn't
 /// valid JSON (content authored outside this plugin) — never panics.
 async fn board_edge_from_semio_edge(edge: &SemioGraphEdge) -> DslValue {
-    if let Ok(parsed) = serde_json::from_str::<serde_json::Value>(&edge.label) {
-        if let Ok(restored) = dsl::to_dsl_value(&parsed) {
-            return restored;
-        }
+    if let Ok(restored) = dsl::os_pack::json::from_json_str::<DslValue>(&edge.label) {
+        return restored;
     }
     DslValue::object([("id".into(), DslValue::String(edge.id.value.clone())), ("source".into(), DslValue::String(edge.source.value.clone())), ("target".into(), DslValue::String(edge.target.value.clone()))])
 }
@@ -173,7 +169,7 @@ pub async fn scene_from_wires_content_snapshot(content: &SemioGraphSnapshot) -> 
 pub async fn wires_content_child_handle(nodes: &[DslValue], edges: &[DslValue]) -> WiresContentChild {
     use std::hash::{Hash, Hasher};
     let snapshot = wires_content_snapshot_from_scene(nodes, edges);
-    let content_json = serde_json::to_string(&snapshot).unwrap_or_default();
+    let content_json = dsl::os_pack::json::to_json_string(&snapshot);
     let mut hasher = std::collections::hash_map::DefaultHasher::new();
     content_json.hash(&mut hasher);
     let content_hash = hasher.finish();

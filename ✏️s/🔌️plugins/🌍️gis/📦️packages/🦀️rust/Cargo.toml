@@ -83,4 +83,5 @@ serde.workspace = true
 serde_json.workspace = true
 
 [dev-dependencies]
+geo = { version = "0.31.0", default-features = false }
 semio-framework-async-macros = { path = "../../../../../🧰️framework/🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust" }

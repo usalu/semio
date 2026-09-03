@@ -33,7 +33,7 @@
     {
       "id": "semantic-stl-ascii-v1",
       "description": "ASCII STL documents compared by the resolved corner positions of every facet in order, PLUS the two fields a triangle-soup reading cannot carry: the `solid <name>` header and the EXPLICIT per-facet normal. STL states its normals rather than deriving them from winding, so set-triangle-normal is a real change to the document even when every corner stays put; and set-solid-name's whole payload is the header name. The shared semantic-mesh-v1 profile treats both as writer freedom -- correct for mesh CREATION, where a producer picks its own solid name and recomputes normals, but it would leave 2 of this subset's 7 declared kinds unobservable, so this profile makes them normative. Byte length and decimal precision stay producer freedom: `stl_io` resolves coordinates through f32 while the committed fixture carries f64 decimals.",
-      "tolerance": 0.00001,
+      "tolerance": 1e-05,
       "ignoreKeys": [
         "byteLength",
         "fileSize",
@@ -194,6 +194,223 @@
           ]
         }
       ]
+    }
+  ],
+  "fixtureManifests": [
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "insert-triangle-applied",
+      "class": "handcrafted",
+      "target": {
+        "artifact": "s.stdio.stl",
+        "standard": "ascii",
+        "subset": "any"
+      },
+      "mutation": "insert-triangle",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before",
+          "path": "../🧫️fixtures/insert-triangle/before.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:815b9d630e1f992b6ba7195d3dab69879e1e670cc76a32b2e6592eaccb18f3fc",
+          "bytes": 681
+        },
+        {
+          "role": "expected-after",
+          "path": "../🧫️fixtures/insert-triangle/after.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:0c529a925d93712cc7fb5723aa8bc132e1992abe45593a36e56b48ca9f046e58",
+          "bytes": 981
+        }
+      ],
+      "provenance": {
+        "source": "authored",
+        "license": "public-domain (handcrafted by this repository)",
+        "attribution": "Handcrafted before/after vector authored directly against this subset's own documented schema — Law 2's handcrafted-vector category.",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "ordered-json-v1",
+      "reproducible": true,
+      "family": "stl-carrier",
+      "notes": "InsertTriangle{index:1,triangle} inserts a real facet (unit normal + 3 real vertices) between the two existing facets."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "remove-triangle-applied",
+      "class": "handcrafted",
+      "target": {
+        "artifact": "s.stdio.stl",
+        "standard": "ascii",
+        "subset": "any"
+      },
+      "mutation": "remove-triangle",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before",
+          "path": "../🧫️fixtures/remove-triangle/before.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:815b9d630e1f992b6ba7195d3dab69879e1e670cc76a32b2e6592eaccb18f3fc",
+          "bytes": 681
+        },
+        {
+          "role": "expected-after",
+          "path": "../🧫️fixtures/remove-triangle/after.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:b01bc81a9ffd95f8d0279d50f1d6707058dc61c2dbba8f0bf13f542c59b32d26",
+          "bytes": 381
+        }
+      ],
+      "provenance": {
+        "source": "authored",
+        "license": "public-domain (handcrafted by this repository)",
+        "attribution": "Handcrafted before/after vector authored directly against this subset's own documented schema — Law 2's handcrafted-vector category.",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "ordered-json-v1",
+      "reproducible": true,
+      "family": "stl-carrier",
+      "notes": "RemoveTriangle{index:0} drops the first facet."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "set-solid-name-applied",
+      "class": "handcrafted",
+      "target": {
+        "artifact": "s.stdio.stl",
+        "standard": "ascii",
+        "subset": "any"
+      },
+      "mutation": "set-solid-name",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before",
+          "path": "../🧫️fixtures/set-solid-name/before.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:815b9d630e1f992b6ba7195d3dab69879e1e670cc76a32b2e6592eaccb18f3fc",
+          "bytes": 681
+        },
+        {
+          "role": "expected-after",
+          "path": "../🧫️fixtures/set-solid-name/after.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:a97eb26635a1f38e9c1d77f3299f9d3672a52c1e31333cc5598535d9891d1299",
+          "bytes": 681
+        }
+      ],
+      "provenance": {
+        "source": "authored",
+        "license": "public-domain (handcrafted by this repository)",
+        "attribution": "Handcrafted before/after vector authored directly against this subset's own documented schema — Law 2's handcrafted-vector category.",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "ordered-json-v1",
+      "reproducible": true,
+      "family": "stl-carrier",
+      "notes": "SetSolidName{name:\"renamed-solid\"} overwrites the `solid <name>`/`endsolid <name>` header/footer name."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "set-triangle-vertices-applied",
+      "class": "handcrafted",
+      "target": {
+        "artifact": "s.stdio.stl",
+        "standard": "ascii",
+        "subset": "any"
+      },
+      "mutation": "set-triangle-vertices",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before",
+          "path": "../🧫️fixtures/set-triangle-vertices/before.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:815b9d630e1f992b6ba7195d3dab69879e1e670cc76a32b2e6592eaccb18f3fc",
+          "bytes": 681
+        },
+        {
+          "role": "expected-after",
+          "path": "../🧫️fixtures/set-triangle-vertices/after.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:e3a0fc2c880ce6de294af82ceeefdfc4b7869d52d8e00fdc39875aa499b2daaf",
+          "bytes": 681
+        }
+      ],
+      "provenance": {
+        "source": "authored",
+        "license": "public-domain (handcrafted by this repository)",
+        "attribution": "Handcrafted before/after vector authored directly against this subset's own documented schema — Law 2's handcrafted-vector category.",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "ordered-json-v1",
+      "reproducible": true,
+      "family": "stl-carrier",
+      "notes": "SetTriangleVertices{index:1,vertices} overwrites a facet's 3 vertex coordinates in place, leaving its normal untouched."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "set-triangle-normal-applied",
+      "class": "handcrafted",
+      "target": {
+        "artifact": "s.stdio.stl",
+        "standard": "ascii",
+        "subset": "any"
+      },
+      "mutation": "set-triangle-normal",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before",
+          "path": "../🧫️fixtures/set-triangle-normal/before.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:815b9d630e1f992b6ba7195d3dab69879e1e670cc76a32b2e6592eaccb18f3fc",
+          "bytes": 681
+        },
+        {
+          "role": "expected-after",
+          "path": "../🧫️fixtures/set-triangle-normal/after.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:690c99fc1303a105ac1fb6d7117dec48e6c2090af4de3dd24488bc6c8830b32a",
+          "bytes": 681
+        }
+      ],
+      "provenance": {
+        "source": "authored",
+        "license": "public-domain (handcrafted by this repository)",
+        "attribution": "Handcrafted before/after vector authored directly against this subset's own documented schema — Law 2's handcrafted-vector category.",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "ordered-json-v1",
+      "reproducible": true,
+      "family": "stl-carrier",
+      "notes": "SetTriangleNormal{index:0,normal:[0,1,0]} overwrites a facet's unit normal in place, leaving its vertices untouched."
     }
   ]
 }

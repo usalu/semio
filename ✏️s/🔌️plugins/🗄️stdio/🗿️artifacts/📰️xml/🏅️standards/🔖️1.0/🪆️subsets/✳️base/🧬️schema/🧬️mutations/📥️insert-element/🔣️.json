@@ -1,0 +1,26 @@
+{
+  "schemaVersion": 1,
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📰️xml/🏅️standards/🔖️1.0/🪆️subsets/✳️base/🧬️schema/🧬️mutations/📥️insert-element",
+  "semanticKind": "insert-element",
+  "displayName": "Insert Element",
+  "emoji": "📥️",
+  "aggregateVariant": "InsertElement",
+  "payloadSchema": "🔣️.schema.json",
+  "textOpcode": "insert-element",
+  "binaryTag": 3,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "detect",
+  "outcomeClasses": [
+    "applied"
+  ],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": [
+    "rust",
+    "typescript",
+    "graphql",
+    "protobuf",
+    "json-schema",
+    "text",
+    "binary"
+  ]
+}

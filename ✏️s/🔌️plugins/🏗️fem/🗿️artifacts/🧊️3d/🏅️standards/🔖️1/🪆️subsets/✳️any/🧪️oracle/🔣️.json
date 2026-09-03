@@ -16,7 +16,7 @@
       ],
       "license": "AGPL-3.0-only",
       "testOnly": true,
-      "rationale": "A second implementation of the `s.fem.fem3d` model and all twenty-five typed mutations, in Python, at `../../../../../🧪️tests/mutate-fem3d-1/🐍️component.py`. Written from `../🧬️schema/📸️snapshot/🔣️.json`, `../🧬️schema/🧬️mutations/📝️text/📖️.grammar.semio` and the twenty-five committed `(before, mutation, after, outcome)` specification vectors — which is also where the RECORD shapes and the cascade rules are actually written down, including the one only they state: an element is a `frame` carrying a `roll` about its own axis OR a `bar` carrying none. It imports nothing from this repository and transliterates none of its Rust. A third-party library was declined, not merely absent: `code_aster`, `OpenSees`, `anastruct` and `PyNite` compute displacements and forces FROM a model, while every one of the twenty-five kinds edits the model document itself, and none of them reads `.dsl.semio`. DEFECT FOUND WHILE WRITING IT, reported rather than worked around and identical to the `◻2d` sibling's: `../🧬️schema/🧬️mutations/🔣️.json` is a verbatim copy of the SNAPSHOT schema with the title changed, and in the snapshot schema every record `$def` is an EMPTY object with no properties. `package` is deliberately empty: the implementation needs no distribution, so this entry contributes nothing to `🔒️dependencies.json`.\n\nUNDER PROTOCOL V2 this registration is classified `cross-semio-implementation` — a required SUPPLEMENTAL oracle that does not discharge `fem3d-1-mutate`'s external-oracle requirement for its 25-kind mutation vocabulary; a qualifying third-party reference (`third-party-library` / `third-party-cli` / `standards-reference-tool`) is still owed.",
+      "rationale": "A second implementation of the `s.fem.fem3d` model and all twenty-five typed mutations, in Python, at `../../../../../🧪️tests/mutate-fem3d-1/🐍️component.py`. Written from `../🧬️schema/📸️snapshot/🔣️.json`, `../🧬️schema/🧬️mutations/📝️text/📖️.grammar.semio` and the twenty-five committed `(before, mutation, after, outcome)` specification vectors — which is also where the RECORD shapes and the cascade rules are actually written down, including the one only they state: an element is a `frame` carrying a `roll` about its own axis OR a `bar` carrying none. It imports nothing from this repository and transliterates none of its Rust. A third-party library was declined, not merely absent: `code_aster`, `OpenSees`, `anastruct` and `PyNite` compute displacements and forces FROM a model, while every one of the twenty-five kinds edits the model document itself, and none of them reads `.dsl.semio`. DEFECT FOUND WHILE WRITING IT, reported rather than worked around and identical to the `◻️2d` sibling's: `../🧬️schema/🧬️mutations/🔣️.json` is a verbatim copy of the SNAPSHOT schema with the title changed, and in the snapshot schema every record `$def` is an EMPTY object with no properties. `package` is deliberately empty: the implementation needs no distribution, so this entry contributes nothing to `🔒️dependencies.json`.\n\nUNDER PROTOCOL V2 this registration is classified `cross-semio-implementation` — a required SUPPLEMENTAL oracle that does not discharge `fem3d-1-mutate`'s external-oracle requirement for its 25-kind mutation vocabulary; a qualifying third-party reference (`third-party-library` / `third-party-cli` / `standards-reference-tool`) is still owed.",
       "kind": "cross-semio-implementation",
       "engine": {
         "family": "none",
@@ -131,7 +131,78 @@
       "rationale": "📖️ A READER over a DIFFERENT CARRIER, which is why it covers what the two mesh oracles cannot.\n\n`three-fem3d-mesh-reader` and `manifold-fem3d-mesh-measure` read the STL/OBJ export, so they witness GEOMETRY. A material's Young's modulus, a section's second moment of area, a support's restrained DOFs, a load case's self-weight flag and the analysis settings do not move a single triangle — which is exactly why 22 of this subset's kinds were recorded `-uncarried` against those two. That label was honest about the MESH carrier and does not generalise.\n\nThis subset's JSON export is not a stub. Unlike its csv/md/txt leaves, which wrap the DSL text in a single blob, its json leaf emits `serde_json::to_value(snapshot)` — the real structured tree, every snapshot field. So all nine collections are carrier-level facts and a third-party JSON implementation witnesses every one of them.\n\nThis is the same shape as the accepted `quick-xml`/svg and `burntsushi-csv`/mathematical readers: the judge is a third-party implementation of the CARRIER, and nothing in this repository predicts the answer it is judging. The expected state is the committed `after` half of each fixture."
     }
   ],
-  "mutationCatalogs": [],
+  "mutationCatalogs": [
+    {
+      "id": "fem3d-1-any-mesh",
+      "capability": "fem3d-1-mutate",
+      "standardDirectoryName": "🔖️1",
+      "subsetDirectoryName": "✳️any",
+      "kinds": [
+        "create-node",
+        "delete-node",
+        "create-element",
+        "delete-element",
+        "replace-element",
+        "create-section",
+        "delete-section",
+        "replace-section",
+        "create-solid",
+        "delete-solid",
+        "replace-solid"
+      ],
+      "vectors": []
+    },
+    {
+      "id": "fem3d-1-any-material",
+      "capability": "fem3d-1-mutate",
+      "standardDirectoryName": "🔖️1",
+      "subsetDirectoryName": "✳️any",
+      "kinds": [
+        "create-material",
+        "delete-material",
+        "replace-material"
+      ],
+      "vectors": []
+    },
+    {
+      "id": "fem3d-1-any-boundary",
+      "capability": "fem3d-1-mutate",
+      "standardDirectoryName": "🔖️1",
+      "subsetDirectoryName": "✳️any",
+      "kinds": [
+        "create-support",
+        "delete-support",
+        "replace-support"
+      ],
+      "vectors": []
+    },
+    {
+      "id": "fem3d-1-any-load",
+      "capability": "fem3d-1-mutate",
+      "standardDirectoryName": "🔖️1",
+      "subsetDirectoryName": "✳️any",
+      "kinds": [
+        "create-load-case",
+        "delete-load-case",
+        "add-load",
+        "remove-load",
+        "change-load-case-self-weight",
+        "create-combination",
+        "delete-combination"
+      ],
+      "vectors": []
+    },
+    {
+      "id": "fem3d-1-any-analysis",
+      "capability": "fem3d-1-mutate",
+      "standardDirectoryName": "🔖️1",
+      "subsetDirectoryName": "✳️any",
+      "kinds": [
+        "update-analysis-settings"
+      ],
+      "vectors": []
+    }
+  ],
   "noOracleDecisions": [
     {
       "id": "fem3d-non-geometry-mutation-semantics",
@@ -3266,7 +3337,7 @@
   "toleranceProfiles": [
     {
       "id": "fem-polygon-exact",
-      "description": "Straight-edged, flat-faced FEM solid meshes (a linear extrusion of a polygon outline+holes by the solid's own height, offset by baseZ — no curvature anywhere in `build_semio_mesh_snapshot`'s bridge), re-imported from float32 STL/OBJ and welded onto a `boundingBoxDiagonal × 1e-7` grid. Derived from THIS subset's own fixture corpus (15 `expected.metrics.json` files spanning `boundingBoxDiagonal` 4.48e-3 to 4.48e6, plus the paired ◻2d corpus at 1.42 to 4.48): the worst observed float32 round-trip noise across every fixture is `analyticVolumeRelativeError` 2.04e-6 and `minZRelativeError` 2.12e-8, both at the smallest (1e-3) scale fixture; the weld grid itself is `diagonal × 1e-7` at every single scale, by construction. `relativeLength`/`relativeArea`/`relativeVolume` are set to 1e-6/1e-5/1e-5 — a comfortable ≥10× margin over that measured noise floor. `absoluteLength`/`absoluteArea`/`absoluteVolume` floor at 1e-9 for near-zero references, matching the smallest fixture's own weld grid (1e-9, at the 1e-3 scale). A genuine defect sits nowhere near this floor: this subset's own carrier-oracle rationale (`three-fem3d-mesh-reader` entry, this same file) measures `relativeVolumeError` up to 7.083e-1 for a structurally different solid, and `normalizedSymmetricHausdorff` at 4.465e-1 even for the SUBTLEST real defect on record (same shape, wrong elevation — `solid-one-hole` vs `solid-one-hole-elevated-low` — where the elevation-invariant volume/area metrics read ~0) — so `normalizedHausdorffMax`/`normalizedCentroidDistanceMax` are set to 1e-4: roughly four thousand times below that smallest real signal, and roughly a hundred times above the representation noise floor. `maxOverrideFactor: 5` matches the CORE `mechanical-standard`/`large-coordinate` profiles' own headroom, reserved for a future fixture whose own measured baseline needs a documented, capped exception rather than a silently widened gate.",
+      "description": "Straight-edged, flat-faced FEM solid meshes (a linear extrusion of a polygon outline+holes by the solid's own height, offset by baseZ — no curvature anywhere in `build_semio_mesh_snapshot`'s bridge), re-imported from float32 STL/OBJ and welded onto a `boundingBoxDiagonal × 1e-7` grid. Derived from THIS subset's own fixture corpus (15 `expected.metrics.json` files spanning `boundingBoxDiagonal` 4.48e-3 to 4.48e6, plus the paired ◻️2d corpus at 1.42 to 4.48): the worst observed float32 round-trip noise across every fixture is `analyticVolumeRelativeError` 2.04e-6 and `minZRelativeError` 2.12e-8, both at the smallest (1e-3) scale fixture; the weld grid itself is `diagonal × 1e-7` at every single scale, by construction. `relativeLength`/`relativeArea`/`relativeVolume` are set to 1e-6/1e-5/1e-5 — a comfortable ≥10× margin over that measured noise floor. `absoluteLength`/`absoluteArea`/`absoluteVolume` floor at 1e-9 for near-zero references, matching the smallest fixture's own weld grid (1e-9, at the 1e-3 scale). A genuine defect sits nowhere near this floor: this subset's own carrier-oracle rationale (`three-fem3d-mesh-reader` entry, this same file) measures `relativeVolumeError` up to 7.083e-1 for a structurally different solid, and `normalizedSymmetricHausdorff` at 4.465e-1 even for the SUBTLEST real defect on record (same shape, wrong elevation — `solid-one-hole` vs `solid-one-hole-elevated-low` — where the elevation-invariant volume/area metrics read ~0) — so `normalizedHausdorffMax`/`normalizedCentroidDistanceMax` are set to 1e-4: roughly four thousand times below that smallest real signal, and roughly a hundred times above the representation noise floor. `maxOverrideFactor: 5` matches the CORE `mechanical-standard`/`large-coordinate` profiles' own headroom, reserved for a future fixture whose own measured baseline needs a documented, capped exception rather than a silently widened gate.",
       "absoluteLength": 1e-09,
       "relativeLength": 1e-06,
       "absoluteArea": 1e-09,

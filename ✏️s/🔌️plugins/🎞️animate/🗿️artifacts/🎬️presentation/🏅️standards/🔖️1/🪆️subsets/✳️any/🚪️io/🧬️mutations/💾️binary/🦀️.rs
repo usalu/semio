@@ -1637,8 +1637,8 @@ mod tests {
         let snapshot = empty_presentation_snapshot();
         let pack = <PresentationSnapshot as store::ArtifactPack>::encode_pack(&snapshot);
         let hex = pack.iter().map(|byte| format!("{byte:02x}")).collect::<String>();
-        let mutation_value: serde_json::Value = dsl::ToValue::to_value(&PresentationMutation::ReplaceTiles(replace_tiles::mutation::ReplaceTiles { new_tiles: Vec::new() })).into();
-        let mutation = mutation_value.to_string();
+        let mutation_value = dsl::os_pack::json::from_dsl_value(&dsl::ToValue::to_value(&PresentationMutation::ReplaceTiles(replace_tiles::mutation::ReplaceTiles { new_tiles: Vec::new() })));
+        let mutation = dsl::os_pack::json::to_string(&mutation_value);
         let json = format!(
             "{{\"schema\":\"{PRESENTATION_DOCUMENT_SCHEMA}\",\"id\":\"deck-history\",\"vcs\":{{\"initialSnapshot\":\"{hex}\",\"edits\":[{{\"id\":\"edit-1\",\"forwards\":[{mutation}],\"inverse\":[],\"sequenceNumber\":1,\"startedAt\":\"1\"}}],\"changes\":[],\"checkpoints\":[],\"alternatives\":[]}},\"editMessages\":[],\"conflicts\":[]}}"
         );

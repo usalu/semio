@@ -61,8 +61,8 @@ dyn_enum_close! {
         SemioTextViewer(VcsArtifactApp<ViewerApp<crate::viewer::semio_text::SemioTextViewer>>),
         SemioAnimationEditor(VcsArtifactApp<EditorApp<crate::editor::semio_animation::SemioAnimationEditor>>),
         SemioAnimationViewer(VcsArtifactApp<ViewerApp<crate::viewer::semio_animation::SemioAnimationViewer>>),
-        SemioAnyEditor(VcsArtifactApp<EditorApp<crate::editor::semio_any::SemioAnyEditor>>),
-        SemioAnyViewer(VcsArtifactApp<ViewerApp<crate::viewer::semio_any::SemioAnyViewer>>),
+        SemioAnyEditor(VcsArtifactApp<EditorApp<crate::editor::semio_base::SemioAnyEditor>>),
+        SemioAnyViewer(VcsArtifactApp<ViewerApp<crate::viewer::semio_base::SemioAnyViewer>>),
         SemioAudioEditor(VcsArtifactApp<EditorApp<crate::editor::semio_audio::SemioAudioEditor>>),
         SemioAudioViewer(VcsArtifactApp<ViewerApp<crate::viewer::semio_audio::SemioAudioViewer>>),
         SemioCadEditor(VcsArtifactApp<EditorApp<crate::editor::semio_cad::SemioCadEditor>>),
@@ -163,22 +163,22 @@ dyn_enum_close! {
         DocxStrictViewer(VcsArtifactApp<ViewerApp<crate::viewer::docx::standards::v_ecma_376::subsets::strict::DocxStrictViewer>>),
         DocxTransitionalEditor(VcsArtifactApp<EditorApp<crate::editor::docx::standards::v_ecma_376::subsets::transitional::DocxTransitionalEditor>>),
         DocxTransitionalViewer(VcsArtifactApp<ViewerApp<crate::viewer::docx::standards::v_ecma_376::subsets::transitional::DocxTransitionalViewer>>),
-        PptxEditor(VcsArtifactApp<EditorApp<crate::editor::pptx::standards::v_ecma_376::subsets::any::PptxEditor>>),
-        PptxViewer(VcsArtifactApp<ViewerApp<crate::viewer::pptx::standards::v_ecma_376::subsets::any::PptxViewer>>),
+        PptxEditor(VcsArtifactApp<EditorApp<crate::editor::pptx::standards::v_ecma_376::subsets::base::PptxEditor>>),
+        PptxViewer(VcsArtifactApp<ViewerApp<crate::viewer::pptx::standards::v_ecma_376::subsets::base::PptxViewer>>),
         PptxStrictEditor(VcsArtifactApp<EditorApp<crate::editor::pptx::standards::v_ecma_376::subsets::strict::PptxStrictEditor>>),
         PptxStrictViewer(VcsArtifactApp<ViewerApp<crate::viewer::pptx::standards::v_ecma_376::subsets::strict::PptxStrictViewer>>),
         PptxTransitionalEditor(VcsArtifactApp<EditorApp<crate::editor::pptx::standards::v_ecma_376::subsets::transitional::PptxTransitionalEditor>>),
         PptxTransitionalViewer(VcsArtifactApp<ViewerApp<crate::viewer::pptx::standards::v_ecma_376::subsets::transitional::PptxTransitionalViewer>>),
-        XlsxEditor(VcsArtifactApp<EditorApp<crate::editor::xlsx::standards::v_ecma_376::subsets::any::XlsxEditor>>),
-        XlsxViewer(VcsArtifactApp<ViewerApp<crate::viewer::xlsx::standards::v_ecma_376::subsets::any::XlsxViewer>>),
+        XlsxEditor(VcsArtifactApp<EditorApp<crate::editor::xlsx::standards::v_ecma_376::subsets::base::XlsxEditor>>),
+        XlsxViewer(VcsArtifactApp<ViewerApp<crate::viewer::xlsx::standards::v_ecma_376::subsets::base::XlsxViewer>>),
         XlsxStrictEditor(VcsArtifactApp<EditorApp<crate::editor::xlsx::standards::v_ecma_376::subsets::strict::XlsxStrictEditor>>),
         XlsxStrictViewer(VcsArtifactApp<ViewerApp<crate::viewer::xlsx::standards::v_ecma_376::subsets::strict::XlsxStrictViewer>>),
         XlsxTransitionalEditor(VcsArtifactApp<EditorApp<crate::editor::xlsx::standards::v_ecma_376::subsets::transitional::XlsxTransitionalEditor>>),
         XlsxTransitionalViewer(VcsArtifactApp<ViewerApp<crate::viewer::xlsx::standards::v_ecma_376::subsets::transitional::XlsxTransitionalViewer>>),
         EpwEditor(VcsArtifactApp<EditorApp<crate::editor::epw::EpwEditor>>),
         EpwViewer(VcsArtifactApp<ViewerApp<crate::viewer::epw::EpwViewer>>),
-        ZipAnyEditor(VcsArtifactApp<EditorApp<crate::editor::zip::any::ZipAnyEditor>>),
-        ZipAnyViewer(VcsArtifactApp<ViewerApp<crate::viewer::zip::any::ZipAnyViewer>>),
+        ZipAnyEditor(VcsArtifactApp<EditorApp<crate::editor::zip::base::ZipAnyEditor>>),
+        ZipAnyViewer(VcsArtifactApp<ViewerApp<crate::viewer::zip::base::ZipAnyViewer>>),
         ZipIso21320Editor(VcsArtifactApp<EditorApp<crate::editor::zip::iso21320::ZipIso21320Editor>>),
         ZipIso21320Viewer(VcsArtifactApp<ViewerApp<crate::viewer::zip::iso21320::ZipIso21320Viewer>>),
         DeflateEditor(VcsArtifactApp<EditorApp<crate::editor::deflate::DeflateEditor>>),
@@ -298,8 +298,8 @@ pub fn plugin() -> Result<Plugin<StdioApps>, PluginAssemblyError> {
     // no `_mutation_roster` call: they register and route, they just do not contribute a roster row.
     builder = builder.editor::<crate::editor::semio_animation::SemioAnimationEditor>(crate::editor::semio_animation::create_semio_animation_editor());
     builder = builder.viewer::<crate::viewer::semio_animation::SemioAnimationViewer>(crate::viewer::semio_animation::create_semio_animation_viewer());
-    builder = builder.editor::<crate::editor::semio_any::SemioAnyEditor>(crate::editor::semio_any::create_semio_any_editor());
-    builder = builder.viewer::<crate::viewer::semio_any::SemioAnyViewer>(crate::viewer::semio_any::create_semio_any_viewer());
+    builder = builder.editor::<crate::editor::semio_base::SemioAnyEditor>(crate::editor::semio_base::create_semio_base_editor());
+    builder = builder.viewer::<crate::viewer::semio_base::SemioAnyViewer>(crate::viewer::semio_base::create_semio_base_viewer());
     builder = builder.editor::<crate::editor::semio_audio::SemioAudioEditor>(crate::editor::semio_audio::create_semio_audio_editor());
     builder = builder.viewer::<crate::viewer::semio_audio::SemioAudioViewer>(crate::viewer::semio_audio::create_semio_audio_viewer());
     builder = builder.editor::<crate::editor::semio_cad::SemioCadEditor>(crate::editor::semio_cad::create_semio_cad_editor());
@@ -411,14 +411,14 @@ pub fn plugin() -> Result<Plugin<StdioApps>, PluginAssemblyError> {
     builder = builder.viewer::<crate::viewer::docx::standards::v_ecma_376::subsets::strict::DocxStrictViewer>(crate::viewer::docx::standards::v_ecma_376::subsets::strict::create_docx_strict_viewer());
     builder = builder.editor::<crate::editor::docx::standards::v_ecma_376::subsets::transitional::DocxTransitionalEditor>(crate::editor::docx::standards::v_ecma_376::subsets::transitional::create_docx_transitional_editor());
     builder = builder.viewer::<crate::viewer::docx::standards::v_ecma_376::subsets::transitional::DocxTransitionalViewer>(crate::viewer::docx::standards::v_ecma_376::subsets::transitional::create_docx_transitional_viewer());
-    builder = builder.editor::<crate::editor::pptx::standards::v_ecma_376::subsets::any::PptxEditor>(crate::editor::pptx::standards::v_ecma_376::subsets::any::create_pptx_editor());
-    builder = builder.viewer::<crate::viewer::pptx::standards::v_ecma_376::subsets::any::PptxViewer>(crate::viewer::pptx::standards::v_ecma_376::subsets::any::create_pptx_viewer());
+    builder = builder.editor::<crate::editor::pptx::standards::v_ecma_376::subsets::base::PptxEditor>(crate::editor::pptx::standards::v_ecma_376::subsets::base::create_pptx_editor());
+    builder = builder.viewer::<crate::viewer::pptx::standards::v_ecma_376::subsets::base::PptxViewer>(crate::viewer::pptx::standards::v_ecma_376::subsets::base::create_pptx_viewer());
     builder = builder.editor::<crate::editor::pptx::standards::v_ecma_376::subsets::strict::PptxStrictEditor>(crate::editor::pptx::standards::v_ecma_376::subsets::strict::create_pptx_strict_editor());
     builder = builder.viewer::<crate::viewer::pptx::standards::v_ecma_376::subsets::strict::PptxStrictViewer>(crate::viewer::pptx::standards::v_ecma_376::subsets::strict::create_pptx_strict_viewer());
     builder = builder.editor::<crate::editor::pptx::standards::v_ecma_376::subsets::transitional::PptxTransitionalEditor>(crate::editor::pptx::standards::v_ecma_376::subsets::transitional::create_pptx_transitional_editor());
     builder = builder.viewer::<crate::viewer::pptx::standards::v_ecma_376::subsets::transitional::PptxTransitionalViewer>(crate::viewer::pptx::standards::v_ecma_376::subsets::transitional::create_pptx_transitional_viewer());
-    builder = builder.editor::<crate::editor::xlsx::standards::v_ecma_376::subsets::any::XlsxEditor>(crate::editor::xlsx::standards::v_ecma_376::subsets::any::create_xlsx_editor());
-    builder = builder.viewer::<crate::viewer::xlsx::standards::v_ecma_376::subsets::any::XlsxViewer>(crate::viewer::xlsx::standards::v_ecma_376::subsets::any::create_xlsx_viewer());
+    builder = builder.editor::<crate::editor::xlsx::standards::v_ecma_376::subsets::base::XlsxEditor>(crate::editor::xlsx::standards::v_ecma_376::subsets::base::create_xlsx_editor());
+    builder = builder.viewer::<crate::viewer::xlsx::standards::v_ecma_376::subsets::base::XlsxViewer>(crate::viewer::xlsx::standards::v_ecma_376::subsets::base::create_xlsx_viewer());
     builder = builder.editor::<crate::editor::xlsx::standards::v_ecma_376::subsets::strict::XlsxStrictEditor>(crate::editor::xlsx::standards::v_ecma_376::subsets::strict::create_xlsx_strict_editor());
     builder = builder.viewer::<crate::viewer::xlsx::standards::v_ecma_376::subsets::strict::XlsxStrictViewer>(crate::viewer::xlsx::standards::v_ecma_376::subsets::strict::create_xlsx_strict_viewer());
     builder = builder.editor::<crate::editor::xlsx::standards::v_ecma_376::subsets::transitional::XlsxTransitionalEditor>(crate::editor::xlsx::standards::v_ecma_376::subsets::transitional::create_xlsx_transitional_editor());
@@ -430,8 +430,8 @@ pub fn plugin() -> Result<Plugin<StdioApps>, PluginAssemblyError> {
     // epw/zip(2)/deflate/binary, 5 subsets × {editor, viewer}.
     builder = builder.editor::<crate::editor::epw::EpwEditor>(crate::editor::epw::create_epw_editor());
     builder = builder.viewer::<crate::viewer::epw::EpwViewer>(crate::viewer::epw::create_epw_viewer());
-    builder = builder.editor::<crate::editor::zip::any::ZipAnyEditor>(crate::editor::zip::any::create_zip_any_editor());
-    builder = builder.viewer::<crate::viewer::zip::any::ZipAnyViewer>(crate::viewer::zip::any::create_zip_any_viewer());
+    builder = builder.editor::<crate::editor::zip::base::ZipAnyEditor>(crate::editor::zip::base::create_zip_any_editor());
+    builder = builder.viewer::<crate::viewer::zip::base::ZipAnyViewer>(crate::viewer::zip::base::create_zip_any_viewer());
     builder = builder.editor::<crate::editor::zip::iso21320::ZipIso21320Editor>(crate::editor::zip::iso21320::create_zip_iso21320_editor());
     builder = builder.viewer::<crate::viewer::zip::iso21320::ZipIso21320Viewer>(crate::viewer::zip::iso21320::create_zip_iso21320_viewer());
     builder = builder.editor::<crate::editor::deflate::DeflateEditor>(crate::editor::deflate::create_deflate_editor());

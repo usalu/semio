@@ -311,5 +311,480 @@
         }
       ]
     }
+  ],
+  "fixtureManifests": [
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "insert-record-applied",
+      "class": "handcrafted",
+      "target": {
+        "artifact": "s.stdio.epw",
+        "standard": "energyplus",
+        "subset": "any"
+      },
+      "mutation": "insert-record",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before",
+          "path": "../🧫️fixtures/insert-record/before.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:06189193ee62f0e3f3017bc8140b37bc776423678d25ad3dfa43d74ae138df48",
+          "bytes": 3217
+        },
+        {
+          "role": "expected-after",
+          "path": "../🧫️fixtures/insert-record/after.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:8d745e19082bdc0412b1bf98f7febd385908cac4ad1f74b8ef66ce9263cae286",
+          "bytes": 4443
+        }
+      ],
+      "provenance": {
+        "source": "authored",
+        "license": "public-domain (handcrafted by this repository)",
+        "attribution": "Handcrafted before/after vector authored directly against this subset's own documented schema — Law 2's handcrafted-vector category.",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "ordered-json-v1",
+      "reproducible": true,
+      "family": "epw-carrier",
+      "notes": "Handcrafted EpwSnapshot before/after pair, schema and base data taken from this subset's own committed set-snapshot leaf fixture (a real Hannover IWEC weather record). InsertRecord{index:1,record:hour-2-interpolated} inserts a real hourly EnergyPlus record between the existing two, matching the committed set-snapshot leaf's own Hannover IWEC fixture schema."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "remove-record-applied",
+      "class": "handcrafted",
+      "target": {
+        "artifact": "s.stdio.epw",
+        "standard": "energyplus",
+        "subset": "any"
+      },
+      "mutation": "remove-record",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before",
+          "path": "../🧫️fixtures/remove-record/before.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:06189193ee62f0e3f3017bc8140b37bc776423678d25ad3dfa43d74ae138df48",
+          "bytes": 3217
+        },
+        {
+          "role": "expected-after",
+          "path": "../🧫️fixtures/remove-record/after.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:b10516278f6fb70e57533242e4491c71907706135b42e249a99d2c46ba3d946c",
+          "bytes": 1991
+        }
+      ],
+      "provenance": {
+        "source": "authored",
+        "license": "public-domain (handcrafted by this repository)",
+        "attribution": "Handcrafted before/after vector authored directly against this subset's own documented schema — Law 2's handcrafted-vector category.",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "ordered-json-v1",
+      "reproducible": true,
+      "family": "epw-carrier",
+      "notes": "Handcrafted EpwSnapshot before/after pair, schema and base data taken from this subset's own committed set-snapshot leaf fixture (a real Hannover IWEC weather record). RemoveRecord{index:0} drops the first hourly record."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "set-comments1-applied",
+      "class": "handcrafted",
+      "target": {
+        "artifact": "s.stdio.epw",
+        "standard": "energyplus",
+        "subset": "any"
+      },
+      "mutation": "set-comments1",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before",
+          "path": "../🧫️fixtures/set-comments1/before.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:06189193ee62f0e3f3017bc8140b37bc776423678d25ad3dfa43d74ae138df48",
+          "bytes": 3217
+        },
+        {
+          "role": "expected-after",
+          "path": "../🧫️fixtures/set-comments1/after.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:86e19d47da17a7ef247be6b5b1b29a26e34e19b3ab8bd4515263b5895127f018",
+          "bytes": 3222
+        }
+      ],
+      "provenance": {
+        "source": "authored",
+        "license": "public-domain (handcrafted by this repository)",
+        "attribution": "Handcrafted before/after vector authored directly against this subset's own documented schema — Law 2's handcrafted-vector category.",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "ordered-json-v1",
+      "reproducible": true,
+      "family": "epw-carrier",
+      "notes": "Handcrafted EpwSnapshot before/after pair, schema and base data taken from this subset's own committed set-snapshot leaf fixture (a real Hannover IWEC weather record). SetComments1{value} overwrites the raw COMMENTS 1 header line."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "set-comments2-applied",
+      "class": "handcrafted",
+      "target": {
+        "artifact": "s.stdio.epw",
+        "standard": "energyplus",
+        "subset": "any"
+      },
+      "mutation": "set-comments2",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before",
+          "path": "../🧫️fixtures/set-comments2/before.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:06189193ee62f0e3f3017bc8140b37bc776423678d25ad3dfa43d74ae138df48",
+          "bytes": 3217
+        },
+        {
+          "role": "expected-after",
+          "path": "../🧫️fixtures/set-comments2/after.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:c36a954705a070c5f13ea8aa1a81f31af7d38f4d3651228833db702390db792f",
+          "bytes": 3230
+        }
+      ],
+      "provenance": {
+        "source": "authored",
+        "license": "public-domain (handcrafted by this repository)",
+        "attribution": "Handcrafted before/after vector authored directly against this subset's own documented schema — Law 2's handcrafted-vector category.",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "ordered-json-v1",
+      "reproducible": true,
+      "family": "epw-carrier",
+      "notes": "Handcrafted EpwSnapshot before/after pair, schema and base data taken from this subset's own committed set-snapshot leaf fixture (a real Hannover IWEC weather record). SetComments2{value} overwrites the raw COMMENTS 2 header line."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "set-data-periods-applied",
+      "class": "handcrafted",
+      "target": {
+        "artifact": "s.stdio.epw",
+        "standard": "energyplus",
+        "subset": "any"
+      },
+      "mutation": "set-data-periods",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before",
+          "path": "../🧫️fixtures/set-data-periods/before.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:06189193ee62f0e3f3017bc8140b37bc776423678d25ad3dfa43d74ae138df48",
+          "bytes": 3217
+        },
+        {
+          "role": "expected-after",
+          "path": "../🧫️fixtures/set-data-periods/after.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:c2a92cf9d6e3f3b1f3af215f8e6baa6add0e615b565e01596c34c8bf28fb2830",
+          "bytes": 3214
+        }
+      ],
+      "provenance": {
+        "source": "authored",
+        "license": "public-domain (handcrafted by this repository)",
+        "attribution": "Handcrafted before/after vector authored directly against this subset's own documented schema — Law 2's handcrafted-vector category.",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "ordered-json-v1",
+      "reproducible": true,
+      "family": "epw-carrier",
+      "notes": "Handcrafted EpwSnapshot before/after pair, schema and base data taken from this subset's own committed set-snapshot leaf fixture (a real Hannover IWEC weather record). SetDataPeriods replaces the whole DATA PERIODS header record (start weekday and date range), matching EpwDataPeriods's own nested shape."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "set-design-conditions-applied",
+      "class": "handcrafted",
+      "target": {
+        "artifact": "s.stdio.epw",
+        "standard": "energyplus",
+        "subset": "any"
+      },
+      "mutation": "set-design-conditions",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before",
+          "path": "../🧫️fixtures/set-design-conditions/before.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:06189193ee62f0e3f3017bc8140b37bc776423678d25ad3dfa43d74ae138df48",
+          "bytes": 3217
+        },
+        {
+          "role": "expected-after",
+          "path": "../🧫️fixtures/set-design-conditions/after.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:dd4ed211474b94c491b1510ac46a8c9b29cfc34fb6f8d3397f6207566c352fea",
+          "bytes": 3253
+        }
+      ],
+      "provenance": {
+        "source": "authored",
+        "license": "public-domain (handcrafted by this repository)",
+        "attribution": "Handcrafted before/after vector authored directly against this subset's own documented schema — Law 2's handcrafted-vector category.",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "ordered-json-v1",
+      "reproducible": true,
+      "family": "epw-carrier",
+      "notes": "Handcrafted EpwSnapshot before/after pair, schema and base data taken from this subset's own committed set-snapshot leaf fixture (a real Hannover IWEC weather record). SetDesignConditions{value} overwrites the raw DESIGN CONDITIONS header line with a real ASHRAE-style design-day record."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "set-ground-temperatures-applied",
+      "class": "handcrafted",
+      "target": {
+        "artifact": "s.stdio.epw",
+        "standard": "energyplus",
+        "subset": "any"
+      },
+      "mutation": "set-ground-temperatures",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before",
+          "path": "../🧫️fixtures/set-ground-temperatures/before.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:06189193ee62f0e3f3017bc8140b37bc776423678d25ad3dfa43d74ae138df48",
+          "bytes": 3217
+        },
+        {
+          "role": "expected-after",
+          "path": "../🧫️fixtures/set-ground-temperatures/after.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:3f783b139efe82a473a180241c26e7268fa1e8bcee0aac5f94a8a9ead769eb72",
+          "bytes": 3290
+        }
+      ],
+      "provenance": {
+        "source": "authored",
+        "license": "public-domain (handcrafted by this repository)",
+        "attribution": "Handcrafted before/after vector authored directly against this subset's own documented schema — Law 2's handcrafted-vector category.",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "ordered-json-v1",
+      "reproducible": true,
+      "family": "epw-carrier",
+      "notes": "Handcrafted EpwSnapshot before/after pair, schema and base data taken from this subset's own committed set-snapshot leaf fixture (a real Hannover IWEC weather record). SetGroundTemperatures{value} overwrites the raw GROUND TEMPERATURES header line with a real 12-month soil-temperature record at 0.5 m depth."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "set-holidays-dst-applied",
+      "class": "handcrafted",
+      "target": {
+        "artifact": "s.stdio.epw",
+        "standard": "energyplus",
+        "subset": "any"
+      },
+      "mutation": "set-holidays-dst",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before",
+          "path": "../🧫️fixtures/set-holidays-dst/before.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:06189193ee62f0e3f3017bc8140b37bc776423678d25ad3dfa43d74ae138df48",
+          "bytes": 3217
+        },
+        {
+          "role": "expected-after",
+          "path": "../🧫️fixtures/set-holidays-dst/after.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:58b35c28d127fa17ef5f55ef43681496073af26567ee75d00d0c3640fc491b78",
+          "bytes": 3218
+        }
+      ],
+      "provenance": {
+        "source": "authored",
+        "license": "public-domain (handcrafted by this repository)",
+        "attribution": "Handcrafted before/after vector authored directly against this subset's own documented schema — Law 2's handcrafted-vector category.",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "ordered-json-v1",
+      "reproducible": true,
+      "family": "epw-carrier",
+      "notes": "Handcrafted EpwSnapshot before/after pair, schema and base data taken from this subset's own committed set-snapshot leaf fixture (a real Hannover IWEC weather record). SetHolidaysDst{value} flips the leading DST-observed flag from No to Yes."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "set-location-applied",
+      "class": "handcrafted",
+      "target": {
+        "artifact": "s.stdio.epw",
+        "standard": "energyplus",
+        "subset": "any"
+      },
+      "mutation": "set-location",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before",
+          "path": "../🧫️fixtures/set-location/before.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:06189193ee62f0e3f3017bc8140b37bc776423678d25ad3dfa43d74ae138df48",
+          "bytes": 3217
+        },
+        {
+          "role": "expected-after",
+          "path": "../🧫️fixtures/set-location/after.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:5859cb8dcad5b450eec45b5c0e5b51c985b201c415eb699bb4b5fbba4027a879",
+          "bytes": 3216
+        }
+      ],
+      "provenance": {
+        "source": "authored",
+        "license": "public-domain (handcrafted by this repository)",
+        "attribution": "Handcrafted before/after vector authored directly against this subset's own documented schema — Law 2's handcrafted-vector category.",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "ordered-json-v1",
+      "reproducible": true,
+      "family": "epw-carrier",
+      "notes": "Handcrafted EpwSnapshot before/after pair, schema and base data taken from this subset's own committed set-snapshot leaf fixture (a real Hannover IWEC weather record). SetLocation replaces the whole LOCATION header record with a different real German WMO station (Berlin), matching EpwLocation's own field set."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "set-record-field-applied",
+      "class": "handcrafted",
+      "target": {
+        "artifact": "s.stdio.epw",
+        "standard": "energyplus",
+        "subset": "any"
+      },
+      "mutation": "set-record-field",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before",
+          "path": "../🧫️fixtures/set-record-field/before.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:06189193ee62f0e3f3017bc8140b37bc776423678d25ad3dfa43d74ae138df48",
+          "bytes": 3217
+        },
+        {
+          "role": "expected-after",
+          "path": "../🧫️fixtures/set-record-field/after.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:919aaf3a4eff4d972679e32949e68be6f73eb791de31d542412c0d64d18855ca",
+          "bytes": 3217
+        }
+      ],
+      "provenance": {
+        "source": "authored",
+        "license": "public-domain (handcrafted by this repository)",
+        "attribution": "Handcrafted before/after vector authored directly against this subset's own documented schema — Law 2's handcrafted-vector category.",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "ordered-json-v1",
+      "reproducible": true,
+      "family": "epw-carrier",
+      "notes": "Handcrafted EpwSnapshot before/after pair, schema and base data taken from this subset's own committed set-snapshot leaf fixture (a real Hannover IWEC weather record). SetRecordField{recordIndex:1,fieldIndex:<dryBulbTemp's ordinal in the fixed 35-field EnergyPlus data-record layout>,value:\"9.9\"} overwrites one field of one hourly record in place, leaving every other field and record untouched."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "set-typical-extreme-periods-applied",
+      "class": "handcrafted",
+      "target": {
+        "artifact": "s.stdio.epw",
+        "standard": "energyplus",
+        "subset": "any"
+      },
+      "mutation": "set-typical-extreme-periods",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before",
+          "path": "../🧫️fixtures/set-typical-extreme-periods/before.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:06189193ee62f0e3f3017bc8140b37bc776423678d25ad3dfa43d74ae138df48",
+          "bytes": 3217
+        },
+        {
+          "role": "expected-after",
+          "path": "../🧫️fixtures/set-typical-extreme-periods/after.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:c66923adfe6c6ce4737d8744d156bb9ccb796ea8be74714c2241bf2d27109818",
+          "bytes": 3284
+        }
+      ],
+      "provenance": {
+        "source": "authored",
+        "license": "public-domain (handcrafted by this repository)",
+        "attribution": "Handcrafted before/after vector authored directly against this subset's own documented schema — Law 2's handcrafted-vector category.",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "ordered-json-v1",
+      "reproducible": true,
+      "family": "epw-carrier",
+      "notes": "Handcrafted EpwSnapshot before/after pair, schema and base data taken from this subset's own committed set-snapshot leaf fixture (a real Hannover IWEC weather record). SetTypicalExtremePeriods{value} overwrites the raw TYPICAL/EXTREME PERIODS header line with a real named period record."
+    }
   ]
 }

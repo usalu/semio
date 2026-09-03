@@ -15,9 +15,9 @@
 //! `.pack.semio`/`.patch.semio` encodings are derived from it by `fixtures generate` and are
 //! asserted by the shared codec-matrix harness, not here.
 
-use crate::artifacts::step::standards::v_ap214::subsets::any::schema::diff::StepDiff;
-use crate::artifacts::step::standards::v_ap214::subsets::any::schema::mutations::{apply_step_mutation, StepMutation};
-use crate::artifacts::step::standards::v_ap214::subsets::any::schema::snapshot::StepSnapshot;
+use crate::artifacts::step::standards::v_ap214::subsets::base::schema::diff::StepDiff;
+use crate::artifacts::step::standards::v_ap214::subsets::base::schema::mutations::{apply_step_mutation, StepMutation};
+use crate::artifacts::step::standards::v_ap214::subsets::base::schema::snapshot::StepSnapshot;
 
 const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️.json");
 const AFTER: &str = include_str!("📸️snapshot/➡️after/🔣️.json");
@@ -44,7 +44,7 @@ async fn applies_to_committed_after() {
     assert_eq!(snapshot, expected_after(), "set-snapshot/restamps-the-product-long-name: applied state differs from committed after-snapshot");
     assert_eq!(
         snapshot.entities[0].args[1],
-        crate::artifacts::step::standards::v_ap214::subsets::any::schema::snapshot::StepValue::String("Capsule Unit A".into()),
+        crate::artifacts::step::standards::v_ap214::subsets::base::schema::snapshot::StepValue::String("Capsule Unit A".into()),
         "set-snapshot/restamps-the-product-long-name: the PRODUCT long name must land on 'Capsule Unit A'"
     );
     assert_eq!(snapshot.entities[0].name, "PRODUCT", "set-snapshot/restamps-the-product-long-name: the entity keyword is untouched");

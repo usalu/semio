@@ -14,7 +14,8 @@ use crate::artifacts::block3d::Block3dSnapshot;
 use schema::ArtifactSchema;
 use semio_framework_plugin::ArtifactInferrer;
 
-use serde_json::{json, Value};
+use dsl::json;
+use dsl::os_pack::json::{array, Value};
 
 use super::bounds::{compute_block3d_bounds, Block3dBounds};
 
@@ -74,16 +75,17 @@ pub async fn resolve_active_mesh_url<'a>(definition: &'a Block3dSnapshot, wanted
 /// through its `Kit×Type` media port. The active representation's mesh (first row, or the first
 /// matching `wanted_tags`) becomes the catalog row's `meshUrl`.
 pub async fn puzzle3d_catalog_fragment(definition: &Block3dSnapshot, wanted_tags: &[&str]) -> Value {
-    let vortices: Vec<Value> = definition.vortices.iter().map(|vortex| json!({ "id": vortex.id, "vortexKind": vortex.vortex_kind, "position": vortex.position, "direction": vortex.direction, "radius": vortex.radius })).collect();
+    let vec3 = |v: [f64; 3]| array(v.iter().map(|c| Value::from(*c)));
+    let vortices: Vec<Value> = definition.vortices.iter().map(|vortex| json!({ "id": vortex.id.as_str(), "vortexKind": vortex.vortex_kind.as_str(), "position": vec3(vortex.position), "direction": vec3(vortex.direction), "radius": vortex.radius })).collect();
     let object_kind = json!({
-        "id": definition.object_kind.id,
-        "name": definition.object_kind.name,
-        "label": definition.object_kind.label,
+        "id": definition.object_kind.id.as_str(),
+        "name": definition.object_kind.name.as_str(),
+        "label": definition.object_kind.label.as_str(),
         "meshUrl": resolve_active_mesh_url(definition, wanted_tags),
         "vortices": vortices,
     });
-    let vortex_kinds: Vec<Value> = crate::artifacts::block3d::vortex_kinds_of(definition).iter().map(|kind| json!({ "id": kind.id, "name": kind.name, "label": kind.label, "color": kind.color, "defaultCableKind": kind.default_cable_kind })).collect();
-    let kind_compatibility: Vec<Value> = definition.compatibility.iter().map(|rule| json!({ "source": rule.source, "target": rule.target, "bidirectional": rule.bidirectional })).collect();
+    let vortex_kinds: Vec<Value> = crate::artifacts::block3d::vortex_kinds_of(definition).iter().map(|kind| json!({ "id": kind.id.as_str(), "name": kind.name.as_str(), "label": kind.label.as_str(), "color": kind.color.as_str(), "defaultCableKind": kind.default_cable_kind.as_str() })).collect();
+    let kind_compatibility: Vec<Value> = definition.compatibility.iter().map(|rule| json!({ "source": rule.source.as_str(), "target": rule.target.as_str(), "bidirectional": rule.bidirectional })).collect();
     json!({
         "schema": "manifest",
         "objectKinds": [object_kind],

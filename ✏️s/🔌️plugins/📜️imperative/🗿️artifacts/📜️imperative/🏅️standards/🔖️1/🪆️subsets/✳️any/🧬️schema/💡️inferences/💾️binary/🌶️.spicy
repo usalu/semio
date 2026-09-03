@@ -1,4 +1,0 @@
-module Imperative_imperative_inference;
-type Document = unit {
-    payload: bytes &eod;
-};

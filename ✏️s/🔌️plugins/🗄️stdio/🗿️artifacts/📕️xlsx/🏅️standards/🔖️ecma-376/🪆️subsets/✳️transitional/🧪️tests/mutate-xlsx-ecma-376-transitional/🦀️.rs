@@ -89,8 +89,8 @@ fn round_trip_oracle(ctx: &Context) -> Result<Outcome, String> {
 mod subject {
     use super::{arranged_input, mutable_input};
     use semio_repo_test_host::{Context, Json, Outcome};
-    use semio_s_plugin_stdio::artifacts::xlsx::standards::v_ecma_376::subsets::any::io::export::serializers::encode_xlsx;
-    use semio_s_plugin_stdio::artifacts::xlsx::standards::v_ecma_376::subsets::any::io::import::deserializers::decode_xlsx;
+    use semio_s_plugin_stdio::artifacts::xlsx::standards::v_ecma_376::subsets::base::io::export::serializers::encode_xlsx;
+    use semio_s_plugin_stdio::artifacts::xlsx::standards::v_ecma_376::subsets::base::io::import::deserializers::decode_xlsx;
     use semio_s_plugin_stdio::artifacts::xlsx::standards::v_ecma_376::subsets::transitional::schema::mutations::{apply_xlsx_transitional_mutation, stamp_conformance_class, XlsxTransitionalMutation};
     use semio_s_plugin_stdio::artifacts::xlsx::XlsxSnapshot;
     use semio_s_plugin_stdio_test_oracle::artifacts::xlsx::standards::v_ecma_376::subsets::transitional::{oracle_inverse_spec, project_package};

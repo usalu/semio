@@ -1,0 +1,8 @@
+syntax = "proto3";
+package semio.imperative.v1;
+
+message EditStepParams {
+  ProcedurePathRef path_ref = 1;
+  string id = 2;
+  string new_params_json = 3;
+}

@@ -5,7 +5,7 @@
 //! Reference: `zip` (unzip/rezip the OPC container) composed with `quick-xml` (parse/edit/
 //! re-serialize `ppt/presentation.xml` + every `ppt/slides/slideN.xml`) — a PPTX is a ZIP of XML
 //! parts, and both crates are already linked and genuinely independent of this repository's own
-//! codec. This is the same composition the 📰xml subset's oracle uses for its `quick-xml` half and
+//! codec. This is the same composition the 📰️xml subset's oracle uses for its `quick-xml` half and
 //! the 🎒zip subset's for its archive half, written fresh here (PPTX has no shared family module to
 //! reach either through).
 //!

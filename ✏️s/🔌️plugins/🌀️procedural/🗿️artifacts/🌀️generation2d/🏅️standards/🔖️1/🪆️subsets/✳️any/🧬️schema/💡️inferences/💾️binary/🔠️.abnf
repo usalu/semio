@@ -1,0 +1,3 @@
+; abnf procedural.generation2d.inference
+document = payload
+payload = *OCTET

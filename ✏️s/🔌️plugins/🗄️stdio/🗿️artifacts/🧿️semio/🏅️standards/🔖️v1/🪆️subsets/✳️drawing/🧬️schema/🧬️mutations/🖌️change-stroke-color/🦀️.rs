@@ -4,7 +4,7 @@
 //! `style_name` (the real name-keyed collection this snapshot's stroke lives on), not `node_id` —
 //! `DrawStyle` is referenced BY NAME from `DrawNode.style`, it is not a per-node struct.
 
-use crate::artifacts::semio::standards::v1::subsets::any::schema::geometry::SemioRgba;
+use crate::artifacts::semio::standards::v1::subsets::base::schema::geometry::SemioRgba;
 use crate::artifacts::semio::standards::v1::subsets::drawing::schema::mutations::SemioDrawingMutation;
 use crate::artifacts::semio::standards::v1::subsets::drawing::schema::snapshot::SemioDrawingSnapshot;
 

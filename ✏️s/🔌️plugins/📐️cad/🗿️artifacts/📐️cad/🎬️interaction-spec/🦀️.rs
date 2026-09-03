@@ -583,7 +583,6 @@ impl InteractionSpec {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use serde_json::json;
 
     #[semio_framework_async_macros::async_test]
     async fn interaction_spec_parses_box_asset() {
@@ -664,31 +663,31 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn evaluate_expr_supports_path_const_var_and_boolean_combinators() {
         let mut context = std::collections::HashMap::new();
-        context.insert("height".to_string(), json!(2.5).into());
-        context.insert("origin".to_string(), json!([0.0, 0.0, 0.0]).into());
+        context.insert("height".to_string(), DslValue::float(2.5));
+        context.insert("origin".to_string(), DslValue::Array(vec![DslValue::float(0.0), DslValue::float(0.0), DslValue::float(0.0)]));
         let env = ExprEnv { context: &context, event: None };
         let vars = std::collections::HashMap::new();
 
         let path_expr = Expr::Path { root: ExprPathRoot::Context, segments: vec![ExprPathSegment::Field { name: "height".into() }] };
-        assert_eq!(evaluate_expr(&path_expr, &env, &vars), json!(2.5));
+        assert_eq!(evaluate_expr(&path_expr, &env, &vars), DslValue::float(2.5));
 
         let exists_expr = Expr::Exists { target: ExprPathTarget { root: ExprPathRoot::Context, segments: vec![ExprPathSegment::Field { name: "origin".into() }] } };
-        assert_eq!(evaluate_expr(&exists_expr, &env, &vars), json!(true));
+        assert_eq!(evaluate_expr(&exists_expr, &env, &vars), DslValue::Bool(true));
 
         let missing_exists_expr = Expr::Exists { target: ExprPathTarget { root: ExprPathRoot::Context, segments: vec![ExprPathSegment::Field { name: "missing".into() }] } };
-        assert_eq!(evaluate_expr(&missing_exists_expr, &env, &vars), json!(false));
+        assert_eq!(evaluate_expr(&missing_exists_expr, &env, &vars), DslValue::Bool(false));
 
-        let binop_expr = Expr::Binop { operation: ">".into(), left: Box::new(path_expr.clone()), right: Box::new(Expr::Const { value: json!(1.0).into() }) };
-        assert_eq!(evaluate_expr(&binop_expr, &env, &vars), json!(true));
+        let binop_expr = Expr::Binop { operation: ">".into(), left: Box::new(path_expr.clone()), right: Box::new(Expr::Const { value: DslValue::float(1.0) }) };
+        assert_eq!(evaluate_expr(&binop_expr, &env, &vars), DslValue::Bool(true));
 
         let all_expr = Expr::All { args: vec![exists_expr, binop_expr] };
-        assert_eq!(evaluate_expr(&all_expr, &env, &vars), json!(true));
+        assert_eq!(evaluate_expr(&all_expr, &env, &vars), DslValue::Bool(true));
 
         let let_expr = Expr::Let {
             bindings: vec![ExprBinding { name: "h".into(), value: Box::new(path_expr) }],
-            body: Box::new(Expr::Binop { operation: "*".into(), left: Box::new(Expr::Var { name: "h".into() }), right: Box::new(Expr::Const { value: json!(2.0).into() }) }),
+            body: Box::new(Expr::Binop { operation: "*".into(), left: Box::new(Expr::Var { name: "h".into() }), right: Box::new(Expr::Const { value: DslValue::float(2.0) }) }),
         };
-        assert_eq!(evaluate_expr(&let_expr, &env, &vars), json!(5.0));
+        assert_eq!(evaluate_expr(&let_expr, &env, &vars), DslValue::float(5.0));
     }
 
     #[semio_framework_async_macros::async_test]
@@ -698,7 +697,7 @@ mod tests {
         let mut context = std::collections::HashMap::new();
         let env_without = ExprEnv { context: &context, event: None };
         assert!(!spec.guard("hasConstructMode", &env_without));
-        context.insert("constructMode".to_string(), json!("2PointsAndHeight").into());
+        context.insert("constructMode".to_string(), DslValue::String("2PointsAndHeight".to_string()));
         let env_with = ExprEnv { context: &context, event: None };
         assert!(spec.guard("hasConstructMode", &env_with));
     }

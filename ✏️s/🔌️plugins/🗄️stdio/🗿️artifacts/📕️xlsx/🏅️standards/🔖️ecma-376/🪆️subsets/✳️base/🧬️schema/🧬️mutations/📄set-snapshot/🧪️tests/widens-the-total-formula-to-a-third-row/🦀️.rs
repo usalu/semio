@@ -18,9 +18,9 @@
 //! `.pack.semio`/`.patch.semio` encodings are derived from it by `fixtures generate` and are
 //! asserted by the shared codec-matrix harness, not here.
 
-use crate::artifacts::xlsx::standards::v_ecma_376::subsets::any::schema::diff::XlsxDiff;
-use crate::artifacts::xlsx::standards::v_ecma_376::subsets::any::schema::mutations::{apply_xlsx_mutation, XlsxMutation};
-use crate::artifacts::xlsx::standards::v_ecma_376::subsets::any::schema::snapshot::XlsxSnapshot;
+use crate::artifacts::xlsx::standards::v_ecma_376::subsets::base::schema::diff::XlsxDiff;
+use crate::artifacts::xlsx::standards::v_ecma_376::subsets::base::schema::mutations::{apply_xlsx_mutation, XlsxMutation};
+use crate::artifacts::xlsx::standards::v_ecma_376::subsets::base::schema::snapshot::XlsxSnapshot;
 
 const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️.json");
 const AFTER: &str = include_str!("📸️snapshot/➡️after/🔣️.json");
@@ -47,7 +47,7 @@ async fn applies_to_committed_after() {
     assert_eq!(snapshot, expected_after(), "set-snapshot/widens-the-total-formula-to-a-third-row: applied state differs from committed after-snapshot");
     let cells = &snapshot.workbook.sheets[0].cells;
     assert!(
-        matches!(&cells[0].value, crate::artifacts::xlsx::standards::v_ecma_376::subsets::any::schema::snapshot::XlsxCellValue::Formula { expr, cached } if expr == "SUM(B1:B3)" && cached.is_none()),
+        matches!(&cells[0].value, crate::artifacts::xlsx::standards::v_ecma_376::subsets::base::schema::snapshot::XlsxCellValue::Formula { expr, cached } if expr == "SUM(B1:B3)" && cached.is_none()),
         "set-snapshot/widens-the-total-formula-to-a-third-row: the total cell must carry the widened formula and still have no cached value"
     );
     assert_eq!((cells[0].row, cells[0].col), (4, 1), "set-snapshot/widens-the-total-formula-to-a-third-row: a cell's (row, col) pair is its identity and is never rewritten by a value edit");

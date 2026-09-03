@@ -1,0 +1,117 @@
+#!/usr/bin/env python3
+"""🔍️ E1 helper: builds a hand-built plan.json for one subset's `🐍️.py` oracle adapter (mutate-<kind>
+and inverse-<kind> scenarios, role "oracle") and runs it standalone through the repository's own
+dependency-free python host
+(`🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🐍️python/🐍️.py`), exactly the way D3
+did for its eleven artifacts. Reads `VECTORS` straight out of the target `🐍️.py` file (import, not
+transcription) so the fixture list can never drift from what the adapter itself declares.
+
+Usage: python3 🔍️e1-run-python-oracle.py <owner_dir> <adapter_py_path> <case_id> <out_jsonl>
+"""
+from __future__ import annotations
+
+import importlib.util
+import json
+import os
+import subprocess
+import sys
+
+REPO_ROOT = "/Users/ueli/Documents/semio"
+HOST = os.path.join(REPO_ROOT, "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🐍️python/🐍️.py")
+
+
+def load_vectors(adapter_path: str):
+    spec = importlib.util.spec_from_file_location("e1_target_adapter", adapter_path)
+    module = importlib.util.module_from_spec(spec)
+    # the adapter module does `from semio_repo_test import Adapter, Context, Outcome` — stub that
+    # out since we only need VECTORS, not a working adapter, to enumerate fixtures.
+    import types
+
+    stub = types.ModuleType("semio_repo_test")
+
+    class _Stub:
+        def __init__(self, *a, **k):
+            pass
+
+        def __getattr__(self, name):
+            return lambda *a, **k: self
+
+    stub.Adapter = _Stub
+    stub.Context = _Stub
+    stub.Outcome = _Stub
+    sys.modules["semio_repo_test"] = stub
+    spec.loader.exec_module(module)
+    return module.VECTORS
+
+
+def main(argv):
+    owner_dir, adapter_path, case_id, out_path = argv[1:5]
+    vectors = load_vectors(adapter_path)
+
+    fixtures = []
+    scenarios = []
+    for kind, (root_uri, _wire_tag) in vectors.items():
+        rel = root_uri[len("asset://"):]
+        for leaf in ("📸️snapshot/⬅️before", "🦠️mutation", "📸️snapshot/➡️after"):
+            uri = f"{root_uri}/{leaf}/🔣️.json"
+            path = os.path.join(owner_dir, rel, leaf, "🔣️.json")
+            assert os.path.isfile(path), f"missing fixture on disk: {path}"
+            fixtures.append({"uri": uri, "path": os.path.relpath(path, REPO_ROOT)})
+        scenarios.append({"id": f"mutate-{kind}", "level": "exhaustive"})
+        scenarios.append({"id": f"inverse-{kind}", "level": "exhaustive"})
+
+    work_dir = os.path.join(REPO_ROOT, ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION/🗑️generated", f"e1-{case_id}-work")
+    output_dir = os.path.join(work_dir, "out")
+    os.makedirs(work_dir, exist_ok=True)
+    os.makedirs(output_dir, exist_ok=True)
+
+    plan = {
+        "workDir": work_dir,
+        "outputDir": output_dir,
+        "owner": os.path.relpath(owner_dir, REPO_ROOT),
+        "case": case_id,
+        "implementation": "python",
+        "role": "oracle",
+        "baselineSha": "",
+        "featureHash": "",
+        "platform": "",
+        "fixtures": fixtures,
+        "scenarios": scenarios,
+    }
+    plan_path = os.path.join(work_dir, "plan.json")
+    with open(plan_path, "w", encoding="utf-8") as f:
+        json.dump(plan, f, ensure_ascii=False)
+
+    result = subprocess.run(
+        [sys.executable, HOST, "--plan", plan_path, "--out", out_path, "--adapter", adapter_path],
+        cwd=REPO_ROOT,
+        capture_output=True,
+        text=True,
+    )
+    print(result.stdout)
+    print(result.stderr, file=sys.stderr)
+    print(f"host exit code: {result.returncode}")
+
+    passed = failed = errored = 0
+    with open(out_path, encoding="utf-8") as f:
+        for line in f:
+            line = line.strip()
+            if not line:
+                continue
+            rec = json.loads(line)
+            status = rec["status"]
+            if status == "passed":
+                passed += 1
+            elif status == "failed":
+                failed += 1
+                print(f"FAILED {rec['scenario']}: {rec['diagnostics']}")
+            else:
+                errored += 1
+                print(f"ERRORED {rec['scenario']}: {rec['diagnostics']}")
+    total = passed + failed + errored
+    print(f"summary: {passed}/{total} passed, {failed} failed, {errored} errored")
+    return 0 if result.returncode == 0 else 1
+
+
+if __name__ == "__main__":
+    raise SystemExit(main(sys.argv))

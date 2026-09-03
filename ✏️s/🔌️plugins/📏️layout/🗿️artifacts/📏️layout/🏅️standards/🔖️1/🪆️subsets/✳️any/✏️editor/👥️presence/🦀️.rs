@@ -6,7 +6,6 @@
 
 use crate::artifacts::layout::{LayoutCamera, LayoutDropPreviewState};
 use protocol::Mutation;
-use serde::{Deserialize, Serialize};
 use store::ArtifactPack;
 use semio_framework_value_derive::{FromValue, ToValue};
 

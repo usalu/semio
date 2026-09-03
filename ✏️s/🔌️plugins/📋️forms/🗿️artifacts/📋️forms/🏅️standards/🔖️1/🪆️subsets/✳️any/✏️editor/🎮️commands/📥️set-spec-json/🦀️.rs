@@ -39,7 +39,7 @@ pub async fn handle(payload: &SetSpecJson, doc: &ArtifactView<'_, FormsSnapshot>
     // 26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM) so it no longer deserializes raw step/block
     // JSON directly; `flow::playbook::PlaybookSpec` is the SAME `{schema,id,version,title,steps}`
     // camelCase shape `FormsSnapshot` used before composition, so it stays the deserialize target.
-    let Ok(spec) = serde_json::from_str::<flow::playbook::PlaybookSpec>(&payload.json) else {
+    let Ok(spec) = dsl::os_pack::json::from_json_str::<flow::playbook::PlaybookSpec>(&payload.json) else {
         return Ok(Emit::default());
     };
     let next = crate::artifacts::forms::forms_snapshot_with_state(spec.schema, spec.id, spec.version, spec.title, spec.steps);
@@ -95,7 +95,7 @@ mod tests {
             title: onboarding_snapshot.title.clone(),
             steps: forms_steps(&onboarding_snapshot),
         };
-        let onboarding = serde_json::to_string(&onboarding_playbook).unwrap();
+        let onboarding = dsl::os_pack::json::to_json_string(&onboarding_playbook);
         dispatch(&mut app, FormsCommand::SetSpecJson(SetSpecJson { json: onboarding }));
         let spec = app.snapshot().expect("projection");
         assert_eq!(forms_steps(&spec).len(), 3);

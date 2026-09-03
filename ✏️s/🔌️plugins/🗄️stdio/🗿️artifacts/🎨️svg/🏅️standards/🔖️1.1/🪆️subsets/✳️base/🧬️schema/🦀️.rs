@@ -843,7 +843,7 @@ pub fn empty_svg_snapshot() -> SvgSnapshot {
 }
 
 /// 📄️ The demo `stdio.svg` document -- exercises every real-syntax construct the W0 census row
-/// names (svg's snapshot IS an `XmlDocument`, so this mirrors `📰xml`'s own `demo_xml_snapshot`
+/// names (svg's snapshot IS an `XmlDocument`, so this mirrors `📰️xml`'s own `demo_xml_snapshot`
 /// construct-for-construct): an XML declaration, a simple `<!DOCTYPE svg>`, a namespaced
 /// (`:`-qualified) attribute name (`xmlns:xlink`), entity decode (`Tom &amp; Jerry`), a
 /// self-closing element (carrying an attribute so its trailing `/` never fuses with the preceding

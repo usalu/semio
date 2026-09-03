@@ -1,0 +1,12 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://semio.tech/schema/imperative/1/any/mutation.json",
+  "title": "ProcedureMutation",
+  "oneOf": [
+    {"$ref": "./🌱create-step/🔣️.schema.json"},
+    {"$ref": "./🗑️delete-step/🔣️.schema.json"},
+    {"$ref": "./🔀reorder-steps/🔣️.schema.json"},
+    {"$ref": "./🔧edit-step-params/🔣️.schema.json"}
+  ],
+  "x-semio-mutationKinds": ["create-step", "delete-step", "reorder-steps", "edit-step-params"]
+}

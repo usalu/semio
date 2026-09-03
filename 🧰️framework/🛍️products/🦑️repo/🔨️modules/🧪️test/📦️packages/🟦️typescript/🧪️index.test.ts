@@ -14,7 +14,7 @@ import { join, relative, sep } from "node:path";
 
 /** 🧭️ Repo-relative, forward-slashed path — the shape every discovered record carries. */
 const relativeToRepo = (root: string, target: string): string => relative(root, target).split(sep).join("/");
-import { CORE_COMPARISON_PROFILES, dependencyEcosystemOf, externalOracleHostPackages, importProbe, oracleHostModule, oracleHostPackagesFor, oracleLinkedPackages, mutationCatalogProblems, mutationCoverageBreaches, mutationVectorRegistryBreaches, mutationVocabularyRequiresCatalog, resolveFixtures, discoverTestContributions, profileTable, coreProfileTable, canonicalize, oracleImportsInProduction, computeCoverageMetrics, enforceMetricGates, validateCaseContract, cleanTestOutputs, compareProjections, digest, discoverTestCases, fixtureUrisIn, isExcludedTestPath, loadMigrationBaseline, migrationStatusByOwner, loadOracleRegistry, markOutputDir, parseFeature, MIGRATION_STATUSES, projectionHash, ratchetDependencies, readOutputMarker, repoRootFromHere, setDigest, stubSerializerBreaches, surveyUnmanagedTests, testCacheDir, testFilenameForKind, testLocationPath, testProjectName, testTaxonomy, validateAllContracts, validateResult } from "./🟦️.ts";
+import { CORE_COMPARISON_PROFILES, dependencyEcosystemOf, externalOracleHostPackages, importProbe, oracleHostModule, oracleHostPackagesFor, oracleLinkedPackages, mutationCatalogProblems, mutationCoverageBreaches, mutationVectorRegistryBreaches, mutationVocabularyRequiresCatalog, resolveFixtures, discoverTestContributions, profileTable, coreProfileTable, canonicalize, oracleImportsInProduction, computeCoverageMetrics, enforceMetricGates, validateCaseContract, cleanTestOutputs, compareProjections, digest, discoverTestCases, fixtureUrisIn, isExcludedTestPath, loadMigrationBaseline, migrationStatusByOwner, loadOracleRegistry, markOutputDir, parseFeature, MIGRATION_STATUSES, projectionHash, ratchetDependencies, readOutputMarker, repoRootFromHere, setDigest, stubSerializerBreaches, surveyUnmanagedTests, testCacheDir, testFilenameForKind, testLocationPath, testProjectName, testTaxonomy, validateAllContracts, validateResult, isSemioNativeArtifact, isQualifyingOracleKind, nativeSecondImplementationBreaches, oracleRequirementBreaches, QUALIFYING_ORACLE_KINDS, caseAboveSubsetBreaches, mutationFixtureBreaches, reimplementationOracleBreaches } from "./🟦️.ts";
 //#endregion 🔌️Adapters
 
 const repoRoot = repoRootFromHere();
@@ -457,6 +457,296 @@ describe("🔮️ oracle evidence rules", () => {
   });
 });
 
+describe("🌱️ native second implementation", () => {
+  type Mutation = import("./🟦️.ts").ManifestMutation;
+  type Manifest = import("./🟦️.ts").MutationManifest;
+  type Entry = import("./🟦️.ts").OracleEntry;
+  type Evidence = import("./🟦️.ts").NativeSecondImplementationEvidence;
+  type Registry = import("./🟦️.ts").OracleRegistry;
+
+  /** 🧬️ A manifest with one mutation per given [id, capability] pair, standing in for a subset's own vocabulary. */
+  const nativeManifest = (artifact: string, pairs: readonly (readonly [string, string])[]): Manifest => ({
+    schema: "semio.repository-test.mutation-manifest/v2",
+    artifact,
+    standard: "1",
+    subset: "any",
+    mutations: pairs.map(
+      ([id, capability]): Mutation => ({
+        id,
+        capability,
+        outcomes: ["applied"],
+        productionDispatch: { operation: id, bridgeVersion: 1 },
+        oracleRequirements: [{ capability, qualifyingKind: "verified-native-second-implementation" as const }],
+      }),
+    ),
+  });
+
+  /** 🌱️ Evidence that clears every check — the baseline every negative test below mutates exactly one field of. */
+  const earnedEvidence = (format: string, capabilitiesCovered: readonly string[]): Evidence => ({
+    format,
+    noThirdPartySurvey: { ecosystemsSearched: ["python/pypi", "js/npm"], candidatesConsidered: [{ package: "unrelated-formulae-lib", reason: "implements design-code formulae, not the document interchange format" }] },
+    subjectImplementationLanguage: "rust",
+    secondImplementationLanguage: "python",
+    specificationSource: "26/00/00/TEST-TICKET 📓️taxonomy.md — verb table and derivation rules",
+    fixtureCoverage: { vectors: 3, capabilitiesCovered },
+  });
+
+  const entry = (id: string, capabilities: readonly string[], overrides: Partial<Entry> = {}): Entry => ({ id, kind: "verified-native-second-implementation", ecosystem: "python", package: "", capabilities, comparisonProfiles: ["ordered-json-v1"], license: "AGPL-3.0-only", testOnly: true, ...overrides });
+
+  const registryWith = (owner: string, oracles: readonly Entry[], mutationManifests: readonly Manifest[]): Registry =>
+    ({
+      schemaVersion: 2,
+      oracles,
+      probes: [],
+      noOracleDecisions: [],
+      comparisonProfiles: [...CORE_COMPARISON_PROFILES],
+      comparisonPipelines: [],
+      toleranceProfiles: [],
+      oracleHostPackages: [],
+      mutationCatalogs: [],
+      mutationManifests,
+      fixtureManifests: [],
+      contributions: [{ owner, manifestPath: `${owner}/🧪️oracle/🔣️.json`, oracles, noOracleDecisions: [], comparisonProfiles: [], comparisonPipelines: [], toleranceProfiles: [], oracleHostPackages: [], mutationCatalogs: [], mutationManifests, fixtureManifests: [], probes: [], problems: [] }],
+    }) as unknown as Registry;
+
+  test("isSemioNativeArtifact refuses every s.stdio.* interchange format except s.stdio.semio itself", () => {
+    for (const format of ["s.stdio.png", "s.stdio.pdf", "s.stdio.tiff", "s.stdio.gltf", "s.stdio.ifc", "s.stdio.step", "s.stdio.docx", "s.stdio.xlsx"]) expect(isSemioNativeArtifact(format), format).toBe(false);
+    for (const format of ["s.stdio.semio", "s.norm.din16798", "s.block.5d", "s.puzzle.3d", "s.cad.cad", "os.config"]) expect(isSemioNativeArtifact(format), format).toBe(true);
+    expect(isSemioNativeArtifact("")).toBe(false);
+  });
+
+  test("verified-native-second-implementation is a qualifying kind", () => {
+    expect(QUALIFYING_ORACLE_KINDS).toContain("verified-native-second-implementation");
+    expect(isQualifyingOracleKind("verified-native-second-implementation")).toBe(true);
+  });
+
+  test("a fully earned claim discharges the requirement and records no breach of its own", () => {
+    const manifest = nativeManifest("s.norm.test-code", [["change-a", "test-code-1-mutate"]]);
+    const registry = registryWith("test/owner", [entry("test-code-python-independent", ["test-code-1-mutate"], { nativeSecondImplementation: earnedEvidence("s.norm.test-code", ["test-code-1-mutate"]) })], [manifest]);
+    expect(nativeSecondImplementationBreaches(registry)).toEqual([]);
+    expect(oracleRequirementBreaches(registry, "scope", manifest, manifest.mutations[0]!)).toEqual([]);
+  });
+
+  test("the kind field alone, with no recorded evidence, still mechanically discharges — which is exactly why the claim must also be earned", () => {
+    const manifest = nativeManifest("s.norm.test-code", [["change-a", "test-code-1-mutate"]]);
+    const registry = registryWith("test/owner", [entry("unearned-claim", ["test-code-1-mutate"])], [manifest]);
+    // 🚫️Discharge is purely mechanical on `kind` — this is the gap `nativeSecondImplementationBreaches` exists to close.
+    expect(oracleRequirementBreaches(registry, "scope", manifest, manifest.mutations[0]!)).toEqual([]);
+    const breaches = nativeSecondImplementationBreaches(registry);
+    expect(breaches.length).toBe(1);
+    expect(breaches[0]!.id).toBe("native-second-implementation-unearned");
+  });
+
+  test("a real interchange format is refused however good the survey reads", () => {
+    const manifest = nativeManifest("s.stdio.png", [["change-a", "png-1-2-mutate"]]);
+    const registry = registryWith("test/owner", [entry("png-claims-native", ["png-1-2-mutate"], { nativeSecondImplementation: earnedEvidence("s.stdio.png", ["png-1-2-mutate"]) })], [manifest]);
+    const breaches = nativeSecondImplementationBreaches(registry);
+    expect(breaches.length).toBe(1);
+    expect(breaches[0]!.id).toBe("native-second-implementation-not-native");
+  });
+
+  test("format naming no manifest this owner actually owns cannot be verified", () => {
+    const manifest = nativeManifest("s.norm.test-code", [["change-a", "test-code-1-mutate"]]);
+    const registry = registryWith("test/owner", [entry("wrong-format", ["test-code-1-mutate"], { nativeSecondImplementation: earnedEvidence("s.norm.somewhere-else", ["test-code-1-mutate"]) })], [manifest]);
+    const breaches = nativeSecondImplementationBreaches(registry);
+    expect(breaches.length).toBe(1);
+    expect(breaches[0]!.id).toBe("native-second-implementation-unearned");
+  });
+
+  test("a partial second implementation must stay cross-semio-implementation — it cannot discharge the whole vocabulary", () => {
+    const manifest = nativeManifest("s.norm.test-code", [
+      ["change-a", "test-code-1-mutate"],
+      ["change-b", "test-code-2-mutate"],
+    ]);
+    const registry = registryWith("test/owner", [entry("partial-coverage", ["test-code-1-mutate"], { nativeSecondImplementation: earnedEvidence("s.norm.test-code", ["test-code-1-mutate"]) })], [manifest]);
+    const breaches = nativeSecondImplementationBreaches(registry);
+    expect(breaches.length).toBe(1);
+    expect(breaches[0]!.id).toBe("native-second-implementation-partial-coverage");
+  });
+
+  test("a rationale-free or candidate-free negative search is not credible", () => {
+    const manifest = nativeManifest("s.norm.test-code", [["change-a", "test-code-1-mutate"]]);
+    const base = earnedEvidence("s.norm.test-code", ["test-code-1-mutate"]);
+    for (const survey of [{ ecosystemsSearched: [], candidatesConsidered: base.noThirdPartySurvey.candidatesConsidered }, { ecosystemsSearched: base.noThirdPartySurvey.ecosystemsSearched, candidatesConsidered: [] }, { ecosystemsSearched: base.noThirdPartySurvey.ecosystemsSearched, candidatesConsidered: [{ package: "x", reason: "no" }] }]) {
+      const registry = registryWith("test/owner", [entry("bad-survey", ["test-code-1-mutate"], { nativeSecondImplementation: { ...base, noThirdPartySurvey: survey } })], [manifest]);
+      const breaches = nativeSecondImplementationBreaches(registry);
+      expect(breaches.length, JSON.stringify(survey)).toBe(1);
+      expect(breaches[0]!.id).toBe("native-second-implementation-unearned");
+    }
+  });
+
+  test("a same-language or transliterated reference is refused — it would catch a typo and nothing else", () => {
+    const manifest = nativeManifest("s.norm.test-code", [["change-a", "test-code-1-mutate"]]);
+    const base = earnedEvidence("s.norm.test-code", ["test-code-1-mutate"]);
+    const registry = registryWith("test/owner", [entry("same-language", ["test-code-1-mutate"], { nativeSecondImplementation: { ...base, secondImplementationLanguage: "Rust" } })], [manifest]);
+    const breaches = nativeSecondImplementationBreaches(registry);
+    expect(breaches.length).toBe(1);
+    expect(breaches[0]!.id).toBe("native-second-implementation-same-language");
+  });
+
+  test("an empty specificationSource cannot demonstrate the reference was read from a written specification", () => {
+    const manifest = nativeManifest("s.norm.test-code", [["change-a", "test-code-1-mutate"]]);
+    const base = earnedEvidence("s.norm.test-code", ["test-code-1-mutate"]);
+    const registry = registryWith("test/owner", [entry("no-spec", ["test-code-1-mutate"], { nativeSecondImplementation: { ...base, specificationSource: "" } })], [manifest]);
+    const breaches = nativeSecondImplementationBreaches(registry);
+    expect(breaches.length).toBe(1);
+    expect(breaches[0]!.id).toBe("native-second-implementation-unearned");
+  });
+
+  test("zero committed fixture vectors is not fixture-tested evidence, whatever else the entry claims", () => {
+    const manifest = nativeManifest("s.norm.test-code", [["change-a", "test-code-1-mutate"]]);
+    const base = earnedEvidence("s.norm.test-code", ["test-code-1-mutate"]);
+    const registry = registryWith("test/owner", [entry("no-fixtures", ["test-code-1-mutate"], { nativeSecondImplementation: { ...base, fixtureCoverage: { vectors: 0, capabilitiesCovered: [] } } })], [manifest]);
+    const breaches = nativeSecondImplementationBreaches(registry);
+    expect(breaches.length).toBe(1);
+    expect(breaches[0]!.id).toBe("native-second-implementation-unearned");
+  });
+
+  test("every registered verified-native-second-implementation entry in the live registry is earned", () => {
+    // 🔍️The real gate: whatever this shard (or a later one) actually registers under the new kind must
+    // pass its own checks — a regression here means a promoted entry in the committed registry is lying.
+    const registry = loadOracleRegistry(repoRoot);
+    const live = registry.oracles.filter((oracle) => oracle.kind === "verified-native-second-implementation");
+    expect(live.length).toBeGreaterThan(0);
+    expect(nativeSecondImplementationBreaches(registry).filter((b) => live.some((oracle) => b.scope.endsWith(`#${oracle.id}`)))).toEqual([]);
+    for (const oracle of live) expect(isSemioNativeArtifact(oracle.nativeSecondImplementation?.format ?? ""), oracle.id).toBe(true);
+  }, 30_000);
+});
+
+describe("🪆️ case above subset", () => {
+  const featureFilename = testFilenameForKind(testTaxonomy(repoRoot), testTaxonomy(repoRoot).testFeatureFileKindId);
+  const discoveredAt = (owner: string): import("./🟦️.ts").DiscoveredCase =>
+    ({ owner, ownerName: "📦️artifact", case: "mutate-thing", caseDir: `${owner}/🧪️tests/mutate-thing`, featurePath: `${owner}/🧪️tests/mutate-thing/${featureFilename}`, adapters: {}, sharedFixtureDir: null, localFixtureDir: null, projectName: "test-synthetic-000000-mutate-thing" } as unknown as import("./🟦️.ts").DiscoveredCase);
+  const catalog = { id: "thing-v1", capability: "thing-mutate", standardDirectoryName: "🔖️1", subsetDirectoryName: "✳️only", kinds: ["set-name"], vectors: [] };
+  const registry = { schemaVersion: 1, oracles: [], noOracleDecisions: [], comparisonProfiles: [], oracleHostPackages: [], mutationCatalogs: [catalog], contributions: [] } as unknown as import("./🟦️.ts").OracleRegistry;
+  const featureTagged = (tag: string): import("./🟦️.ts").ParsedFeature => parseFeature([`@capability-thing-mutate`, `@no-oracle-none`, tag, "Feature: Mutate a thing", "  @id-a", "  @level-quick", "  @mode-conformance", "  Scenario: a", "    Given a thing", "    Then it changed"].join("\n"));
+  const featureUntagged: import("./🟦️.ts").ParsedFeature = parseFeature(["@capability-thing-mutate", "@no-oracle-none", "Feature: Round trip", "  @id-a", "  @level-quick", "  @mode-conformance", "  Scenario: a", "    Given a thing", "    Then it round-trips"].join("\n"));
+
+  test("a case sitting above the one real subset its catalog names is a breach", () => {
+    const breaches = caseAboveSubsetBreaches(discoveredAt("🧪️synthetic/📦️artifact"), featureTagged("@mutations-thing-v1"), registry);
+    expect(breaches.length).toBe(1);
+    expect(breaches[0]!.id).toBe("case-above-subset");
+    expect(breaches[0]!.summary).toContain("only");
+  });
+
+  test("a case already living under the catalog's own subset is left alone", () => {
+    expect(caseAboveSubsetBreaches(discoveredAt("🧪️synthetic/📦️artifact/🏅️standards/🔖️1/🪆️subsets/✳️only"), featureTagged("@mutations-thing-v1"), registry)).toEqual([]);
+  });
+
+  // 🚫️Confirmed live: `gif/create-and-round-trip-gif`, `jpg/create-and-read-jpeg` and
+  // `zip/create-and-edit-archive` each import exactly one real subset's `io` from their adapter while
+  // C4 confirmed all three genuinely stay artifact-wide — a case with no `@mutations-` tag is never a
+  // mutation-catalog candidate at all, whatever its adapter happens to import.
+  test("a case with no @mutations- tag is never a candidate, whatever its adapter names", () => {
+    expect(caseAboveSubsetBreaches(discoveredAt("🧪️synthetic/📦️artifact"), featureUntagged, registry)).toEqual([]);
+  });
+
+  test("a catalog naming no subsetDirectoryName yields no verdict rather than a guess", () => {
+    const { subsetDirectoryName: _drop, ...unprofiled } = catalog;
+    const unprofiledRegistry = { ...registry, mutationCatalogs: [unprofiled] } as unknown as import("./🟦️.ts").OracleRegistry;
+    expect(caseAboveSubsetBreaches(discoveredAt("🧪️synthetic/📦️artifact"), featureTagged("@mutations-thing-v1"), unprofiledRegistry)).toEqual([]);
+  });
+
+  test("a catalog id the registry does not declare yields no verdict — unknown-mutation-catalog is that breach's own job", () => {
+    expect(caseAboveSubsetBreaches(discoveredAt("🧪️synthetic/📦️artifact"), featureTagged("@mutations-does-not-exist"), registry)).toEqual([]);
+  });
+
+  // 🔍️The real gate: the only live violation this rule should find, right now, is the one case C4's
+  // own write-up (📓️c4-relocation-completion.md) named and left in place deliberately — a pre-existing
+  // Rust adapter/feature mismatch, not a fixture-placement problem. A regression here means either a
+  // NEW case was left above its subset, or this named debt was finally paid off and the assertion
+  // below needs updating to match.
+  test("the only live case-above-subset violation is the one C4 documented as deliberately blocked", () => {
+    const liveRegistry = loadOracleRegistry(repoRoot);
+    const scopes = discoverTestCases(repoRoot)
+      .flatMap((discovered) => caseAboveSubsetBreaches(discovered, parseFeature(readFileSync(join(repoRoot, discovered.featurePath), "utf8")), liveRegistry))
+      .map((entry) => entry.scope);
+    expect(scopes).toEqual(["✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️obj/🧪️tests/mutate-obj-3-0-material"]);
+  }, 30_000);
+});
+
+describe("🧫️ mutation without fixture", () => {
+  type Mutation = import("./🟦️.ts").ManifestMutation;
+  type Manifest = import("./🟦️.ts").MutationManifest;
+  type Catalog = import("./🟦️.ts").MutationCatalog;
+  type Fixture = import("./🟦️.ts").FixtureManifest;
+  type Registry = import("./🟦️.ts").OracleRegistry;
+
+  const mutation = (id: string, capability: string): Mutation => ({ id, capability, outcomes: ["applied"], productionDispatch: { operation: id, bridgeVersion: 1 }, oracleRequirements: [{ capability, qualifyingKind: "third-party-library" as const }] });
+  const manifestWith = (mutations: readonly Mutation[]): Manifest => ({ schema: "semio.repository-test.mutation-manifest/v2", artifact: "s.norm.test-fixture", standard: "1", subset: "only", mutations });
+  const fixture = (mutationId: string, subset = "only"): Fixture =>
+    ({ schema: "semio.repository-test.fixture/v2", id: `${mutationId}-fixture`, class: "handcrafted", target: { artifact: "s.norm.test-fixture", standard: "1", subset }, mutation: mutationId, units: { length: "unitless", angle: "degree" }, files: [], provenance: { license: "MIT", source: "handcrafted" }, comparisonProfile: "ordered-json-v1", reproducible: true } as unknown as Fixture);
+  const catalog = (capability: string, mutationIds: readonly string[]): Catalog =>
+    ({ id: `${capability}-catalog`, capability, kinds: mutationIds, vectors: mutationIds.map((id) => ({ mutationId: id, sourceMutationDirectoryName: id, mutationDirectoryName: id, scenarios: [{ id: "direct-behavior", directoryName: "🧪️direct-behavior" }] })) } as unknown as Catalog);
+  const registryWith = (manifests: readonly Manifest[], fixtures: readonly Fixture[] = [], catalogs: readonly Catalog[] = []): Registry =>
+    ({
+      schemaVersion: 2,
+      oracles: [],
+      probes: [],
+      noOracleDecisions: [],
+      comparisonProfiles: [...CORE_COMPARISON_PROFILES],
+      comparisonPipelines: [],
+      toleranceProfiles: [],
+      oracleHostPackages: [],
+      mutationCatalogs: catalogs,
+      mutationManifests: manifests,
+      fixtureManifests: fixtures,
+      contributions: [{ owner: "test/owner", manifestPath: "test/owner/🧪️oracle/🔣️.json", oracles: [], noOracleDecisions: [], comparisonProfiles: [], comparisonPipelines: [], toleranceProfiles: [], oracleHostPackages: [], mutationCatalogs: catalogs, mutationManifests: manifests, fixtureManifests: fixtures, probes: [], problems: [] }],
+    }) as unknown as Registry;
+
+  test("a mutation with neither a v2 fixture nor a v1 vector is a breach", () => {
+    const breaches = mutationFixtureBreaches(registryWith([manifestWith([mutation("change-a", "test-fixture-1-mutate")])]));
+    expect(breaches.length).toBe(1);
+    expect(breaches[0]!.id).toBe("mutation-without-fixture");
+    expect(breaches[0]!.summary).toContain("change-a");
+  });
+
+  test("a registered v2 FixtureManifest naming this mutation and target discharges it", () => {
+    const manifest = manifestWith([mutation("change-a", "test-fixture-1-mutate")]);
+    expect(mutationFixtureBreaches(registryWith([manifest], [fixture("change-a")]))).toEqual([]);
+  });
+
+  // 🌱️`🏛️architect/🏛️program`'s own live shape: 266 mutations, zero v2 fixtures, 266 v1 vectors —
+  // the survey that shrank this rule's live count from 1,650 to 343 before it was even wired in.
+  test("a v1 physical vector sharing the mutation's own capability discharges it too", () => {
+    const manifest = manifestWith([mutation("change-a", "test-fixture-1-mutate")]);
+    expect(mutationFixtureBreaches(registryWith([manifest], [], [catalog("test-fixture-1-mutate", ["change-a"])]))).toEqual([]);
+  });
+
+  test("a fixture registered for a DIFFERENT mutation of the same target does not discharge this one", () => {
+    const manifest = manifestWith([mutation("change-a", "test-fixture-1-mutate"), mutation("change-b", "test-fixture-1-mutate")]);
+    const breaches = mutationFixtureBreaches(registryWith([manifest], [fixture("change-a")]));
+    expect(breaches.length).toBe(1);
+    expect(breaches[0]!.summary).toContain("change-b");
+  });
+
+  test("a vector registered under a DIFFERENT catalog's capability does not discharge it — capability is the only correlation this rule trusts", () => {
+    const manifest = manifestWith([mutation("change-a", "test-fixture-1-mutate")]);
+    expect(mutationFixtureBreaches(registryWith([manifest], [], [catalog("unrelated-capability", ["change-a"])])).length).toBe(1);
+  });
+
+  test("a fixture registered for the same mutation id but a DIFFERENT subset does not discharge it", () => {
+    const manifest = manifestWith([mutation("change-a", "test-fixture-1-mutate")]);
+    expect(mutationFixtureBreaches(registryWith([manifest], [fixture("change-a", "elsewhere")])).length).toBe(1);
+  });
+
+  test("a malformed manifest is skipped here — mutation-manifest-invalid is that breach's own job", () => {
+    const malformed = { schema: "semio.repository-test.mutation-manifest/v2", artifact: "", standard: "1", subset: "only", mutations: [] } as unknown as Manifest;
+    expect(mutationFixtureBreaches(registryWith([malformed]))).toEqual([]);
+  });
+
+  // 🔍️The real gate: every live mutation-without-fixture instance, right now, is a real `s.stdio.*`
+  // interchange format — the same bucket A10/D1 already documented as owed a genuine third-party
+  // reference — never one of the artifacts D1 promoted or that already carries v1 vectors.
+  test("the live registry's debt is real, concentrated in s.stdio.* formats, and never fires on png/change-background or architect/program", () => {
+    const liveRegistry = loadOracleRegistry(repoRoot);
+    const breaches = mutationFixtureBreaches(liveRegistry);
+    expect(breaches.length).toBeGreaterThan(0);
+    expect(breaches.every((entry) => / of s\./.test(entry.summary))).toBe(true);
+    expect(breaches.some((entry) => entry.summary.includes("s.stdio.png"))).toBe(false);
+    expect(breaches.some((entry) => entry.summary.includes("s.architect.program"))).toBe(false);
+  }, 30_000);
+});
 
 describe("🚫️ oracle purity", () => {
   test("no production source imports a registered oracle", () => {
@@ -589,6 +879,83 @@ describe("🫥️ hidden serializer stubs", () => {
     } finally {
       rmSync(root, { recursive: true, force: true });
     }
+  });
+});
+
+describe("🎯 reimplementation-registered-as-third-party is entry-granular, not file-granular", () => {
+  type Entry = import("./🟦️.ts").OracleEntry;
+  type Registry = import("./🟦️.ts").OracleRegistry;
+
+  /** 🧬️ One oracle entry, defaulting to the minimal shape the detector reads; override per test. */
+  const entry = (id: string, ecosystem: string, overrides: Partial<Entry> = {}): Entry => ({ id, kind: "third-party-library", ecosystem, package: "some-package", capabilities: ["some-mutate"], comparisonProfiles: ["ordered-json-v1"], license: "MIT", testOnly: true, ...overrides });
+
+  /** 🧬️ A minimal registry naming exactly one contribution at `owner`, holding the given oracle entries. */
+  const registryWith = (owner: string, oracles: readonly Entry[]): Registry =>
+    ({
+      schemaVersion: 2,
+      oracles,
+      probes: [],
+      noOracleDecisions: [],
+      comparisonProfiles: [...CORE_COMPARISON_PROFILES],
+      comparisonPipelines: [],
+      toleranceProfiles: [],
+      oracleHostPackages: [],
+      mutationCatalogs: [],
+      mutationManifests: [],
+      fixtureManifests: [],
+      contributions: [{ owner, manifestPath: `${owner}/🧪️oracle/🔣️.json`, oracles, noOracleDecisions: [], comparisonProfiles: [], comparisonPipelines: [], toleranceProfiles: [], oracleHostPackages: [], mutationCatalogs: [], mutationManifests: [], fixtureManifests: [], probes: [], problems: [] }],
+    }) as unknown as Registry;
+
+  /** 🦀️ A `match kind { … }` catch-all whose exact wording is what the detector's `predicts` regex looks
+   *  for — the real shape found in `ruststep`/`quick-xml`/`html5ever`/`steputils`-adjacent owners this
+   *  rule was written against (see `📓️g1-oracle-detector-granularity.md`). Every genuine-reimplementation
+   *  fixture below uses it verbatim. */
+  const predictingRustText = 'pub fn apply_kind(kind: &str) -> Result<Vec<u8>, String> {\n    match kind {\n        other => Err(format!("mutation kind {other:?} has no oracle implementation")),\n    }\n}\n';
+
+  const withOracleFile = (owner: string, text: string, run: (root: string) => void): void => {
+    const root = mkdtempSync(join(tmpdir(), "reimplementation-entry-granular-"));
+    try {
+      const rsPath = join(root, owner, "🧪️oracle", "🦀️.rs");
+      mkdirSync(join(rsPath, ".."), { recursive: true });
+      writeFileSync(rsPath, text);
+      run(root);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  };
+
+  test("POSITIVE — a genuine re-implementation registered as third-party still fires", () => {
+    withOracleFile("test/owner-positive", predictingRustText, (root) => {
+      // 🎯 ecosystem "rust": this entry's own claimed code IS this file — exactly the `ruststep`/
+      // `quick-xml` shape A10 found and reclassified. The gate must still catch it.
+      const registry = registryWith("test/owner-positive", [entry("mislabelled-rust-reimplementation", "rust")]);
+      const breaches = reimplementationOracleBreaches(root, registry);
+      expect(breaches.length).toBe(1);
+      expect(breaches[0]!.id).toBe("reimplementation-registered-as-third-party");
+      expect(breaches[0]!.summary).toContain("mislabelled-rust-reimplementation");
+    });
+  });
+
+  test("NEGATIVE — a real third-party wrapper sharing a file with re-implementation code does not fire", () => {
+    withOracleFile("test/owner-negative", predictingRustText, (root) => {
+      // 🎯 ecosystem "python": this entry's own claimed code runs in a Python venv the file never
+      // touches — exactly `python-pptx`/`ifcopenshell`/`yauzl` sitting beside a predicting `🦀️.rs`.
+      const registry = registryWith("test/owner-negative", [entry("genuine-python-reader", "python")]);
+      expect(reimplementationOracleBreaches(root, registry)).toEqual([]);
+    });
+  });
+
+  test("BOUNDARY — a genuine non-Rust reader is never named even when a Rust sibling in the SAME contribution is correctly caught", () => {
+    withOracleFile("test/owner-boundary", predictingRustText, (root) => {
+      // 🎯 One owner, one shared file, two qualifying entries — the exact shape every one of this
+      // ticket's 20 flagged owners actually has. Entry granularity means the verdict must differ
+      // per entry even though both entries share everything else: owner, file, contribution.
+      const registry = registryWith("test/owner-boundary", [entry("mislabelled-rust-reimplementation", "rust"), entry("genuine-python-reader", "python")]);
+      const breaches = reimplementationOracleBreaches(root, registry);
+      expect(breaches.length).toBe(1);
+      expect(breaches[0]!.summary).toContain("mislabelled-rust-reimplementation");
+      expect(breaches[0]!.summary).not.toContain("genuine-python-reader");
+    });
   });
 });
 

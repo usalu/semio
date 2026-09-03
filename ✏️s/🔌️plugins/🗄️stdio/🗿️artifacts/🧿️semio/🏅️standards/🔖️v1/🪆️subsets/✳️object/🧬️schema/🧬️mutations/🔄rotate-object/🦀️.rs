@@ -1,6 +1,6 @@
 //! 🔄️ `rotate-object` — sets the object's `transform.rotation`, keeping translation/scale.
 
-use crate::artifacts::semio::standards::v1::subsets::any::schema::geometry::SemioQuaternion;
+use crate::artifacts::semio::standards::v1::subsets::base::schema::geometry::SemioQuaternion;
 use crate::artifacts::semio::standards::v1::subsets::object::schema::mutations::SemioObjectMutation;
 use crate::artifacts::semio::standards::v1::subsets::object::schema::snapshot::SemioObjectSnapshot;
 

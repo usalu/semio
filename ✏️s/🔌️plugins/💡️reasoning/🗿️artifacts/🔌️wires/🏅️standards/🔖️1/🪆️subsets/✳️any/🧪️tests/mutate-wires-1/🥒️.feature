@@ -1,30 +1,25 @@
 @capability-wires-1-mutate
-@no-oracle-wires-1-argument-board-mutation-semantics
+@oracle-wires-1-python-independent
 @comparison-ordered-json-v1
 @mutations-wires-1-any
-Feature: Apply every typed wires mutation to its committed vector and to a real-effect payload
+Feature: Apply every typed wires mutation to its committed vector, to a real-effect payload, and against an independent Python implementation
   `s.reasoning.wires` is a semio-NATIVE argument board. Its five-line `.wires.dsl.semio` body is
   hex-encoded `DslValue`, nothing third-party reads it, and the thing being mutated is an UNTYPED
   value tree — `wiresFixture` holding `identities`, `relationships` and a nested `board` — edited one
-  scalar key at a time through this facet's own `set_node_field`. No reference library is registered
-  — recorded as the `wires-1-argument-board-mutation-semantics` no-oracle decision in
-  `../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️oracle/🔣️.json`.
+  scalar key at a time through this facet's own `set_node_field`. No reference LIBRARY exists. The
+  second producer a differential comparison needs is therefore a second IMPLEMENTATION, and
+  `🐍️component.py` beside this file is it: all ten kinds of this vocabulary, written in Python from
+  this subset's own committed `🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🔣️.json` and each
+  mutation's own payload schema, and from
+  `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-DIRECT-LEAF-OVERHAUL/📓️taxonomy.md`'s
+  `create`/`delete`/`move`/`resize`/`change`/`edit`/`set`/`connect`/`disconnect` verb entries. It
+  imports nothing from the Rust it judges and transliterates none of it. The no-oracle decision this
+  replaces (`wires-1-argument-board-mutation-semantics`) is narrowed to an empty `capabilities` list
+  rather than deleted, because its own investigation remains the honest record of what was checked.
 
-  ⚠️ THIS NO-ORACLE DECISION IS A DEBT, NOT A VERDICT, and is recorded as one. Declining a third-party
-  LIBRARY is a different judgement from declining a SECOND IMPLEMENTATION, and only the first was ever
-  made here. `mutate-puzzle-2d-1` and `mutate-puzzle-3d-1` took Python second
-  implementations over this same `.dsl.semio` carrier in this wave, so the same is writable for this
-  subset from `🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🔣️.json`, the rules of
-  `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/📓️derivation-rules.md` and the
-  committed vectors this feature already replays. What blocks it TODAY is stated in the decision and
-  is one edit: this case's vectors are not declared as `asset://` fixtures — the `Examples` table
-  carries the payloads inline and the adapter reads the committed files through `include_str!` — so
-  the plan pins none of their digests and a Python reference cannot read them at all. Separately, `identity-round-trip` would still be refused: this subset's committed
-  snapshot text grammar is the repository-wide placeholder `payload = OCTET+`, whose header production
-  declares `"schema" SP "stdio.json"` against an artifact whose own first line says otherwise.
-  Until that is done, every assertion below still lives in the SUBJECT role, and the ceiling is the
-  one this decision has always had: no second producer runs beside it, so a mistake shared by the
-  handcrafted vector and the production code passes unseen.
+  Both implementations now read the SAME committed bytes: every `(before, mutation, after, outcome)`
+  path — and, for the six no-op kinds, `🔺️diff` — is a declared `asset://` fixture rather than an
+  `include_str!`-only literal, so the plan pins its digest and a Python reference can resolve it.
 
   What genuinely distinguishes this vocabulary is the shape of its committed evidence. Ten kinds,
   ten handcrafted specification vectors under
@@ -46,55 +41,64 @@ Feature: Apply every typed wires mutation to its committed vector and to a real-
   because its own vector's base deliberately holds only the TARGET node so that the missing SOURCE
   is what gets reported; the `base` column names it.
 
-  Because this case records a no-oracle decision the runner executes NO oracle role, so every
-  assertion lives inside the subject handler. A handler that merely ran the mutation and returned
-  would report a pass having checked nothing.
+  `mutate-<kind>`/`inverse-<kind>` now dispatch BOTH an oracle role (the Python implementation,
+  reached through this plugin's `oracleHostPackages` entry, comparing the OUTCOME each kind's own
+  committed vector commits to) and a subject role (this repository's own real dispatch, unaffected by
+  this change — the same `Given`/`When`/`Then` and the same docstring payload as before). A handler
+  that merely ran the mutation and returned would report a pass having checked nothing.
 
   @id-mutate
   @level-exhaustive
-  @mode-conformance
+  @mode-differential
   Scenario Outline: Apply <id> to its committed vector and then for real
-    Given the committed specification vector for the <id> kind and the committed <base> board
+    Given the committed before-snapshot asset://🧬️schema/🧬️mutations/<dir>/🧪️tests/<fixture>/📸️snapshot/⬅️before/🔣️.json
+    And the committed mutation payload asset://🧬️schema/🧬️mutations/<dir>/🧪️tests/<fixture>/🦠️mutation/🔣️.json
+    And the committed after-snapshot asset://🧬️schema/🧬️mutations/<dir>/🧪️tests/<fixture>/📸️snapshot/➡️after/🔣️.json
+    And the committed outcome asset://🧬️schema/🧬️mutations/<dir>/🧪️tests/<fixture>/🎯️outcome/🔣️.json
+    And the committed specification vector for the <id> kind and the committed <base> board
     When <id> is replayed against its vector and then applied for real
       """
       {"kind": "<id>", "base": "<base>", "code": "<code>", "level": "<level>", "params": <params>}
       """
-    Then the vector produces exactly <code> at <level> and leaves the committed after-snapshot, and the real payload moves the board
+    Then the vector produces exactly <code> at <level> and leaves the committed after-snapshot, the real payload moves the board, and the two implementations agree on the committed vector's outcome
     Examples:
-      | id                | base             | code                    | level   | params                                                                                                                                                                                                              |
-      | create-node       | create-node      | mutation.duplicate-id   | Fatal   | {"mutation": "createNode", "node": {"id": "node-gamma", "nodeKind": "topic", "shape": "rectangle", "x": 80.0, "y": 40.0, "radius": 24.0, "text": "Gamma", "handles": []}}                                            |
-      | delete-node       | delete-node      | mutation.target-missing | Error   | {"mutation": "deleteNode", "nodeId": "node-anchor"}                                                                                                                                                                 |
-      | move-node         | move-node        | mutation.no-op          | Warning | {"mutation": "moveNode", "nodeId": "node-drifter", "newX": 48.0, "newY": 36.0}                                                                                                                                       |
-      | resize-node       | resize-node      | mutation.no-op          | Warning | {"mutation": "resizeNode", "nodeId": "node-nucleus", "newRadius": 40.0}                                                                                                                                              |
-      | change-node-kind  | change-node-kind | mutation.no-op          | Warning | {"mutation": "changeNodeKind", "nodeId": "node-metabolism", "newNodeKind": "identity"}                                                                                                                               |
-      | change-node-shape | change-node-shape| mutation.no-op          | Warning | {"mutation": "changeNodeShape", "nodeId": "node-orbit", "newShape": "rectangle"}                                                                                                                                     |
-      | edit-node-text    | edit-node-text   | mutation.no-op          | Warning | {"mutation": "editNodeText", "nodeId": "node-thesis", "newText": "Antithesis"}                                                                                                                                       |
-      | set-node-root     | set-node-root    | mutation.no-op          | Warning | {"mutation": "setNodeRoot", "nodeId": "node-leaf", "newRoot": true}                                                                                                                                                  |
-      | connect-nodes     | disconnect-nodes | mutation.target-missing | Error   | {"mutation": "connectNodes", "edge": {"id": "edge-mentions", "edgeKind": "wires.owns", "source": "node-source", "target": "node-sink"}, "relationship": {"relationshipId": 2.0, "kind": "owns", "sourceIdentityId": 1.0, "targetIdentityId": 2.0, "edgeId": "edge-mentions"}} |
-      | disconnect-nodes  | disconnect-nodes | mutation.target-missing | Error   | {"mutation": "disconnectNodes", "edgeId": "edge-owns"}                                                                                                                                                               |
+      | id                | dir               | fixture                                                     | base             | code                    | level   | params                                                                                                                                                                                                              |
+      | create-node       | 🌱create-node      | rejects-a-node-id-the-board-already-holds                   | create-node      | mutation.duplicate-id   | Fatal   | {"mutation": "createNode", "node": {"id": "node-gamma", "nodeKind": "topic", "shape": "rectangle", "x": 80.0, "y": 40.0, "radius": 24.0, "text": "Gamma", "handles": []}}                                            |
+      | delete-node       | 🗑️delete-node      | rejects-deleting-a-node-the-board-never-held                | delete-node      | mutation.target-missing | Error   | {"mutation": "deleteNode", "nodeId": "node-anchor"}                                                                                                                                                                 |
+      | move-node         | 🧭move-node        | reports-a-no-op-when-a-y-less-node-is-moved-to-y-zero       | move-node        | mutation.no-op          | Warning | {"mutation": "moveNode", "nodeId": "node-drifter", "newX": 48.0, "newY": 36.0}                                                                                                                                       |
+      | resize-node       | 📐resize-node      | reports-a-no-op-when-the-radius-already-matches             | resize-node      | mutation.no-op          | Warning | {"mutation": "resizeNode", "nodeId": "node-nucleus", "newRadius": 40.0}                                                                                                                                              |
+      | change-node-kind  | 🏷️change-node-kind | reports-a-no-op-when-the-kind-already-reads-topic           | change-node-kind | mutation.no-op          | Warning | {"mutation": "changeNodeKind", "nodeId": "node-metabolism", "newNodeKind": "identity"}                                                                                                                               |
+      | change-node-shape | 🔷change-node-shape| reports-a-no-op-when-the-shape-already-reads-circle         | change-node-shape| mutation.no-op          | Warning | {"mutation": "changeNodeShape", "nodeId": "node-orbit", "newShape": "rectangle"}                                                                                                                                     |
+      | edit-node-text    | ✏️edit-node-text   | reports-a-no-op-when-the-label-is-retyped-verbatim          | edit-node-text   | mutation.no-op          | Warning | {"mutation": "editNodeText", "nodeId": "node-thesis", "newText": "Antithesis"}                                                                                                                                       |
+      | set-node-root     | 🚩set-node-root    | reports-a-no-op-when-an-unflagged-node-is-set-to-not-root   | set-node-root    | mutation.no-op          | Warning | {"mutation": "setNodeRoot", "nodeId": "node-leaf", "newRoot": true}                                                                                                                                                  |
+      | connect-nodes     | 🔗connect-nodes    | rejects-an-edge-whose-source-node-is-absent                 | disconnect-nodes | mutation.target-missing | Error   | {"mutation": "connectNodes", "edge": {"id": "edge-mentions", "edgeKind": "wires.owns", "source": "node-source", "target": "node-sink"}, "relationship": {"relationshipId": 2.0, "kind": "owns", "sourceIdentityId": 1.0, "targetIdentityId": 2.0, "edgeId": "edge-mentions"}} |
+      | disconnect-nodes  | ✂️disconnect-nodes | rejects-cutting-an-edge-the-board-never-carried             | disconnect-nodes | mutation.target-missing | Error   | {"mutation": "disconnectNodes", "edgeId": "edge-owns"}                                                                                                                                                               |
 
   @id-inverse
   @level-exhaustive
-  @mode-property
+  @mode-differential
   Scenario Outline: Undoing <id> restores the committed <base> board
-    Given the committed <base> board
+    Given the committed before-snapshot asset://🧬️schema/🧬️mutations/<dir>/🧪️tests/<fixture>/📸️snapshot/⬅️before/🔣️.json
+    And the committed mutation payload asset://🧬️schema/🧬️mutations/<dir>/🧪️tests/<fixture>/🦠️mutation/🔣️.json
+    And the committed outcome asset://🧬️schema/🧬️mutations/<dir>/🧪️tests/<fixture>/🎯️outcome/🔣️.json
+    And the committed <base> board
     When the real <id> payload is applied to it and then its own computed inverse steps are applied
       """
       {"kind": "<id>", "base": "<base>", "code": "<code>", "level": "<level>", "params": <params>}
       """
-    Then the document equals the committed before-snapshot again, member for member
+    Then the document equals the committed before-snapshot again, member for member, and both implementations agree
     Examples:
-      | id                | base             | code                    | level   | params                                                                                                                                                                                                              |
-      | create-node       | create-node      | mutation.duplicate-id   | Fatal   | {"mutation": "createNode", "node": {"id": "node-gamma", "nodeKind": "topic", "shape": "rectangle", "x": 80.0, "y": 40.0, "radius": 24.0, "text": "Gamma", "handles": []}}                                            |
-      | delete-node       | delete-node      | mutation.target-missing | Error   | {"mutation": "deleteNode", "nodeId": "node-anchor"}                                                                                                                                                                 |
-      | move-node         | move-node        | mutation.no-op          | Warning | {"mutation": "moveNode", "nodeId": "node-drifter", "newX": 48.0, "newY": 36.0}                                                                                                                                       |
-      | resize-node       | resize-node      | mutation.no-op          | Warning | {"mutation": "resizeNode", "nodeId": "node-nucleus", "newRadius": 40.0}                                                                                                                                              |
-      | change-node-kind  | change-node-kind | mutation.no-op          | Warning | {"mutation": "changeNodeKind", "nodeId": "node-metabolism", "newNodeKind": "identity"}                                                                                                                               |
-      | change-node-shape | change-node-shape| mutation.no-op          | Warning | {"mutation": "changeNodeShape", "nodeId": "node-orbit", "newShape": "rectangle"}                                                                                                                                     |
-      | edit-node-text    | edit-node-text   | mutation.no-op          | Warning | {"mutation": "editNodeText", "nodeId": "node-thesis", "newText": "Antithesis"}                                                                                                                                       |
-      | set-node-root     | set-node-root    | mutation.no-op          | Warning | {"mutation": "setNodeRoot", "nodeId": "node-leaf", "newRoot": true}                                                                                                                                                  |
-      | connect-nodes     | disconnect-nodes | mutation.target-missing | Error   | {"mutation": "connectNodes", "edge": {"id": "edge-mentions", "edgeKind": "wires.owns", "source": "node-source", "target": "node-sink"}, "relationship": {"relationshipId": 2.0, "kind": "owns", "sourceIdentityId": 1.0, "targetIdentityId": 2.0, "edgeId": "edge-mentions"}} |
-      | disconnect-nodes  | disconnect-nodes | mutation.target-missing | Error   | {"mutation": "disconnectNodes", "edgeId": "edge-owns"}                                                                                                                                                               |
+      | id                | dir               | fixture                                                     | base             | code                    | level   | params                                                                                                                                                                                                              |
+      | create-node       | 🌱create-node      | rejects-a-node-id-the-board-already-holds                   | create-node      | mutation.duplicate-id   | Fatal   | {"mutation": "createNode", "node": {"id": "node-gamma", "nodeKind": "topic", "shape": "rectangle", "x": 80.0, "y": 40.0, "radius": 24.0, "text": "Gamma", "handles": []}}                                            |
+      | delete-node       | 🗑️delete-node      | rejects-deleting-a-node-the-board-never-held                | delete-node      | mutation.target-missing | Error   | {"mutation": "deleteNode", "nodeId": "node-anchor"}                                                                                                                                                                 |
+      | move-node         | 🧭move-node        | reports-a-no-op-when-a-y-less-node-is-moved-to-y-zero       | move-node        | mutation.no-op          | Warning | {"mutation": "moveNode", "nodeId": "node-drifter", "newX": 48.0, "newY": 36.0}                                                                                                                                       |
+      | resize-node       | 📐resize-node      | reports-a-no-op-when-the-radius-already-matches             | resize-node      | mutation.no-op          | Warning | {"mutation": "resizeNode", "nodeId": "node-nucleus", "newRadius": 40.0}                                                                                                                                              |
+      | change-node-kind  | 🏷️change-node-kind | reports-a-no-op-when-the-kind-already-reads-topic           | change-node-kind | mutation.no-op          | Warning | {"mutation": "changeNodeKind", "nodeId": "node-metabolism", "newNodeKind": "identity"}                                                                                                                               |
+      | change-node-shape | 🔷change-node-shape| reports-a-no-op-when-the-shape-already-reads-circle         | change-node-shape| mutation.no-op          | Warning | {"mutation": "changeNodeShape", "nodeId": "node-orbit", "newShape": "rectangle"}                                                                                                                                     |
+      | edit-node-text    | ✏️edit-node-text   | reports-a-no-op-when-the-label-is-retyped-verbatim          | edit-node-text   | mutation.no-op          | Warning | {"mutation": "editNodeText", "nodeId": "node-thesis", "newText": "Antithesis"}                                                                                                                                       |
+      | set-node-root     | 🚩set-node-root    | reports-a-no-op-when-an-unflagged-node-is-set-to-not-root   | set-node-root    | mutation.no-op          | Warning | {"mutation": "setNodeRoot", "nodeId": "node-leaf", "newRoot": true}                                                                                                                                                  |
+      | connect-nodes     | 🔗connect-nodes    | rejects-an-edge-whose-source-node-is-absent                 | disconnect-nodes | mutation.target-missing | Error   | {"mutation": "connectNodes", "edge": {"id": "edge-mentions", "edgeKind": "wires.owns", "source": "node-source", "target": "node-sink"}, "relationship": {"relationshipId": 2.0, "kind": "owns", "sourceIdentityId": 1.0, "targetIdentityId": 2.0, "edgeId": "edge-mentions"}} |
+      | disconnect-nodes  | ✂️disconnect-nodes | rejects-cutting-an-edge-the-board-never-carried             | disconnect-nodes | mutation.target-missing | Error   | {"mutation": "disconnectNodes", "edgeId": "edge-owns"}                                                                                                                                                               |
 
   @id-identity-round-trip
   @level-long

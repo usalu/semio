@@ -128,7 +128,8 @@ class TreeAllocation<V> {
   #reserved = false;
   #allocated = 0;
   #closed = false;
-  constructor(private readonly nodes: AllocationNode<V>[]) {}
+  private readonly nodes: AllocationNode<V>[];
+  constructor(nodes: AllocationNode<V>[]) { this.nodes = nodes; }
 
   advance(): number {
     if (!this.#reserved) {
@@ -205,8 +206,16 @@ class TreeEdit<V> {
   #work: Node<V> | null = null;
   #phase: "search" | "successor" | "successor-rebuild" | "rebuild" | "ready" | "closed" = "search";
   #allocation: TreeAllocation<V> | null = null;
+  private readonly key: Key;
+  private readonly entry: Entry<V> | null;
+  private readonly retirement: NumericIndexRetirement<V>;
 
-  constructor(root: Node<V> | null, private readonly key: Key, private readonly entry: Entry<V> | null, private readonly retirement: NumericIndexRetirement<V>) { this.#scan = root; }
+  constructor(root: Node<V> | null, key: Key, entry: Entry<V> | null, retirement: NumericIndexRetirement<V>) {
+    this.key = key;
+    this.entry = entry;
+    this.retirement = retirement;
+    this.#scan = root;
+  }
 
   #replaceWork(node: Node<V> | null): void {
     if (this.#work) queueTask(this.retirement, { kind: "node", node: this.#work });
@@ -418,10 +427,12 @@ export class NumericIndexReader<V> {
   #scan: Node<V> | null;
   #path: Frame<V> | null = null;
   #complete = false;
+  private readonly key: Key | null;
 
   static { beginRead = <T>(source: NumericIndex<T>, key: Key | null, ordered: boolean) => new NumericIndexReader(source, key, ordered); }
 
-  private constructor(source: NumericIndex<V>, private readonly key: Key | null, ordered: boolean) {
+  private constructor(source: NumericIndex<V>, key: Key | null, ordered: boolean) {
+    this.key = key;
     this.#source = source;
     const owners = ownersOf(source);
     this.#scan = ordered ? owners.order : owners.ids;
@@ -485,10 +496,12 @@ export class NumericIndexEdit<V> {
   #result: NumericIndex<V> | null = null;
   #retirement: NumericIndexRetirement<V> | null = new NumericIndexRetirement<V>();
   #phase: "lookup" | "entry" | "ids" | "order" | "publish" | "ready" | "rejected" | "closed" = "lookup";
+  private readonly key: Key;
 
   static { beginEdit = <T>(source: NumericIndex<T>, key: Key, input: { value: T } | null) => new NumericIndexEdit<T>(source, key, input); }
 
-  private constructor(source: NumericIndex<V>, private readonly key: Key, input: { value: V } | null) {
+  private constructor(source: NumericIndex<V>, key: Key, input: { value: V } | null) {
+    this.key = key;
     this.#source = source;
     this.#scan = ownersOf(source).ids;
     this.#input = input;

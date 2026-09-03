@@ -63,6 +63,340 @@ pub enum Bootstrap {
     None,
     Snapshot { pack_hash: [u8; 32], inline: Option<Vec<u8>> },
     Tail,
+    ArtifactBootstrap(ArtifactBootstrap),
+}
+
+pub const ARTIFACT_BOOTSTRAP_FORMAT_VERSION: u32 = 1;
+pub const ARTIFACT_BOOTSTRAP_CHUNK_BYTES: usize = 4 * 1024;
+pub const ARTIFACT_BOOTSTRAP_MAX_TOTAL_BYTES: u64 = 64 * 1024 * 1024;
+pub const ARTIFACT_BOOTSTRAP_MAX_CHUNKS: u32 = 16 * 1024;
+pub const REBOOTSTRAP_SCOPE_MAX_BYTES: usize = 256;
+
+/// @emoji 🧩️ The indivisible canonical artifact payload: pack state plus SPR history.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct ArtifactBootstrapPair {
+    pub pack: Vec<u8>,
+    pub spr: Vec<u8>,
+}
+
+/// @emoji 📦️ Descriptor-bound metadata and optional inline pair for one public artifact bootstrap.
+#[derive(Clone, Debug, PartialEq)]
+pub struct ArtifactBootstrap {
+    pub format_version: u32,
+    pub descriptor_hash: [u8; 32],
+    pub artifact_schema: String,
+    pub artifact_kind: String,
+    pub pack_schema_hash: [u8; 32],
+    pub baseline_frontier: crate::causal::FrontierSummary,
+    pub pack_hash: [u8; 32],
+    pub spr_hash: [u8; 32],
+    pub pack_length: u64,
+    pub spr_length: u64,
+    pub chunk_count: u32,
+    pub aggregate_hash: [u8; 32],
+    pub required_tail_frontier: crate::causal::FrontierSummary,
+    pub inline: Option<ArtifactBootstrapPair>,
+}
+
+/// @emoji 🛟️ Storage-key-free checkpoint identity sent before a lagged live stream closes.
+#[derive(Clone, Debug, PartialEq)]
+pub struct RebootstrapRequired {
+    pub space_id: String,
+    pub document_id: String,
+    pub checkpoint_id: [u8; 32],
+    pub descriptor_hash: [u8; 32],
+    pub baseline_frontier: crate::causal::FrontierSummary,
+}
+
+fn validate_rebootstrap_required(control: &RebootstrapRequired) -> Result<(), crate::ProtocolError> {
+    if control.space_id.is_empty()
+        || control.document_id.is_empty()
+        || control.space_id.len() > REBOOTSTRAP_SCOPE_MAX_BYTES
+        || control.document_id.len() > REBOOTSTRAP_SCOPE_MAX_BYTES
+        || !artifact_bootstrap_nonzero(&control.checkpoint_id)
+        || !artifact_bootstrap_nonzero(&control.descriptor_hash)
+        || control.baseline_frontier.document_id.0 != control.document_id
+        || control.baseline_frontier.head_edit_id.is_empty()
+    {
+        return Err(artifact_bootstrap_error("rebootstrap control identity is invalid"));
+    }
+    Ok(())
+}
+
+/// @emoji 🛡️ Caller-selected assembly ceilings, always constrained by the wire chunk maximum.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct ArtifactBootstrapLimits {
+    pub max_total_bytes: u64,
+    pub max_chunks: u32,
+    pub max_chunk_bytes: usize,
+}
+
+impl Default for ArtifactBootstrapLimits {
+    fn default() -> Self {
+        Self { max_total_bytes: ARTIFACT_BOOTSTRAP_MAX_TOTAL_BYTES, max_chunks: ARTIFACT_BOOTSTRAP_MAX_CHUNKS, max_chunk_bytes: ARTIFACT_BOOTSTRAP_CHUNK_BYTES }
+    }
+}
+
+/// @emoji 📈️ Observable transfer progress; byte and chunk counts never decrease within one assembler.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct ArtifactBootstrapProgress {
+    pub received_bytes: u64,
+    pub total_bytes: u64,
+    pub received_chunks: u32,
+    pub total_chunks: u32,
+}
+
+/// @emoji ⏱️ Host-provided cancellation, monotonic clock, and progress boundary.
+pub trait ArtifactBootstrapControl {
+    fn is_cancelled(&mut self) -> bool;
+    fn now_ms(&mut self) -> u64;
+    fn on_progress(&mut self, progress: ArtifactBootstrapProgress);
+}
+
+#[derive(Debug)]
+enum ArtifactBootstrapStorage {
+    Inline(ArtifactBootstrapPair),
+    Chunked(Vec<u8>),
+}
+
+/// @emoji 🧱️ Bounded, cancellable staging owner that yields a pair only after complete integrity validation.
+#[derive(Debug)]
+pub struct ArtifactBootstrapAssembler {
+    bootstrap: ArtifactBootstrap,
+    limits: ArtifactBootstrapLimits,
+    deadline_ms: Option<u64>,
+    storage: Option<ArtifactBootstrapStorage>,
+    received_bytes: u64,
+    next_index: u32,
+    inline: bool,
+}
+
+fn artifact_bootstrap_error(detail: impl Into<String>) -> crate::ProtocolError {
+    crate::ProtocolError::Malformed { what: "artifact bootstrap", offset: 0, detail: detail.into() }
+}
+
+fn artifact_bootstrap_nonzero(hash: &[u8; 32]) -> bool {
+    hash.iter().any(|byte| *byte != 0)
+}
+
+fn artifact_bootstrap_total(bootstrap: &ArtifactBootstrap) -> Result<u64, crate::ProtocolError> {
+    if bootstrap.pack_length == 0 || bootstrap.spr_length == 0 {
+        return Err(artifact_bootstrap_error("pack and SPR bytes must both be present"));
+    }
+    bootstrap.pack_length.checked_add(bootstrap.spr_length).ok_or_else(|| artifact_bootstrap_error("total bytes overflow"))
+}
+
+fn validate_artifact_bootstrap_header(bootstrap: &ArtifactBootstrap, inline: bool, limits: ArtifactBootstrapLimits) -> Result<u64, crate::ProtocolError> {
+    if limits.max_total_bytes == 0 || limits.max_chunks == 0 || limits.max_chunk_bytes == 0 || limits.max_chunk_bytes > ARTIFACT_BOOTSTRAP_CHUNK_BYTES {
+        return Err(artifact_bootstrap_error("assembler limits are invalid"));
+    }
+    if bootstrap.format_version != ARTIFACT_BOOTSTRAP_FORMAT_VERSION {
+        return Err(artifact_bootstrap_error(format!("version {} is unsupported", bootstrap.format_version)));
+    }
+    if !artifact_bootstrap_nonzero(&bootstrap.descriptor_hash) || !artifact_bootstrap_nonzero(&bootstrap.pack_schema_hash) || !artifact_bootstrap_nonzero(&bootstrap.pack_hash) || !artifact_bootstrap_nonzero(&bootstrap.spr_hash) || !artifact_bootstrap_nonzero(&bootstrap.aggregate_hash) {
+        return Err(artifact_bootstrap_error("required hash must be nonzero"));
+    }
+    if bootstrap.artifact_schema.is_empty() || bootstrap.artifact_schema.len() > 256 || bootstrap.artifact_kind.is_empty() || bootstrap.artifact_kind.len() > 256 {
+        return Err(artifact_bootstrap_error("artifact schema or kind length is invalid"));
+    }
+    if bootstrap.baseline_frontier.document_id.0.is_empty() || bootstrap.baseline_frontier.document_id != bootstrap.required_tail_frontier.document_id {
+        return Err(artifact_bootstrap_error("frontier document mismatch"));
+    }
+    if bootstrap.required_tail_frontier.head_edit_ordinal < bootstrap.baseline_frontier.head_edit_ordinal || bootstrap.required_tail_frontier.last_commit_seq < bootstrap.baseline_frontier.last_commit_seq {
+        return Err(artifact_bootstrap_error("required tail frontier precedes baseline"));
+    }
+    let total = artifact_bootstrap_total(bootstrap)?;
+    if total > limits.max_total_bytes || usize::try_from(total).is_err() {
+        return Err(artifact_bootstrap_error("total bytes exceed assembler budget"));
+    }
+    if inline {
+        if bootstrap.chunk_count != 0 {
+            return Err(artifact_bootstrap_error("inline pair must declare zero chunks"));
+        }
+    } else {
+        let chunk_count = u64::from(bootstrap.chunk_count);
+        if bootstrap.chunk_count == 0 || bootstrap.chunk_count > limits.max_chunks || chunk_count > total || total > chunk_count.saturating_mul(limits.max_chunk_bytes as u64) {
+            return Err(artifact_bootstrap_error("chunk count cannot cover declared bytes within budget"));
+        }
+    }
+    Ok(total)
+}
+
+fn validate_artifact_bootstrap(bootstrap: &ArtifactBootstrap, limits: ArtifactBootstrapLimits) -> Result<u64, crate::ProtocolError> {
+    let inline = bootstrap.inline.is_some();
+    let total = validate_artifact_bootstrap_header(bootstrap, inline, limits)?;
+    if let Some(pair) = &bootstrap.inline {
+        if pair.pack.len() as u64 != bootstrap.pack_length || pair.spr.len() as u64 != bootstrap.spr_length {
+            return Err(artifact_bootstrap_error("inline pair lengths do not match metadata"));
+        }
+    }
+    Ok(total)
+}
+
+/// @emoji 🔗️ SHA-256 over the exact declared `pack || spr` content stream.
+pub fn artifact_bootstrap_aggregate_hash(pack: &[u8], spr: &[u8]) -> [u8; 32] {
+    let mut hash = semio_framework_hash::Sha256::new();
+    hash.update(pack);
+    hash.update(spr);
+    hash.finalize()
+}
+
+impl ArtifactBootstrapAssembler {
+    /// @emoji 🆕️ Validates metadata and reserves no more than the caller's explicit budget.
+    pub fn new(mut bootstrap: ArtifactBootstrap, expected_descriptor_hash: [u8; 32], limits: ArtifactBootstrapLimits, deadline_ms: Option<u64>, control: &mut impl ArtifactBootstrapControl) -> Result<Self, crate::ProtocolError> {
+        let total = validate_artifact_bootstrap(&bootstrap, limits)?;
+        if !artifact_bootstrap_nonzero(&expected_descriptor_hash) || bootstrap.descriptor_hash != expected_descriptor_hash {
+            return Err(artifact_bootstrap_error("descriptor mismatch"));
+        }
+        if control.is_cancelled() {
+            return Err(artifact_bootstrap_error("cancelled"));
+        }
+        if deadline_ms.is_some_and(|deadline| control.now_ms() >= deadline) {
+            return Err(artifact_bootstrap_error("deadline exceeded"));
+        }
+        let inline_pair = bootstrap.inline.take();
+        let inline = inline_pair.is_some();
+        let storage = match inline_pair {
+            Some(mut pair) => {
+                pair.pack.shrink_to_fit();
+                pair.spr.shrink_to_fit();
+                if pair.pack.capacity().saturating_add(pair.spr.capacity()) as u64 > limits.max_total_bytes {
+                    return Err(artifact_bootstrap_error("inline allocation exceeds assembler budget"));
+                }
+                ArtifactBootstrapStorage::Inline(pair)
+            }
+            None => {
+                let storage = Vec::with_capacity(total as usize);
+                if storage.capacity() as u64 > limits.max_total_bytes {
+                    return Err(artifact_bootstrap_error("chunk allocation exceeds assembler budget"));
+                }
+                ArtifactBootstrapStorage::Chunked(storage)
+            }
+        };
+        let mut assembler = Self { bootstrap, limits, deadline_ms, storage: Some(storage), received_bytes: 0, next_index: 0, inline };
+        control.on_progress(assembler.progress());
+        if inline {
+            assembler.received_bytes = total;
+            control.on_progress(assembler.progress());
+        }
+        Ok(assembler)
+    }
+
+    /// @emoji 💾️ Exact payload allocation debit currently owned by the assembler.
+    pub fn retained_bytes(&self) -> usize {
+        match self.storage.as_ref() {
+            Some(ArtifactBootstrapStorage::Inline(pair)) => pair.pack.capacity().saturating_add(pair.spr.capacity()),
+            Some(ArtifactBootstrapStorage::Chunked(bytes)) => bytes.capacity(),
+            None => 0,
+        }
+    }
+
+    /// @emoji 📈️ Current monotonic progress snapshot.
+    pub fn progress(&self) -> ArtifactBootstrapProgress {
+        ArtifactBootstrapProgress { received_bytes: self.received_bytes, total_bytes: self.bootstrap.pack_length + self.bootstrap.spr_length, received_chunks: self.next_index, total_chunks: self.bootstrap.chunk_count }
+    }
+
+    /// @emoji 🧹️ Drops all staged bytes without producing a completion value.
+    pub fn abort(&mut self) {
+        self.storage = None;
+    }
+
+    fn fail<T>(&mut self, detail: impl Into<String>) -> Result<T, crate::ProtocolError> {
+        self.abort();
+        Err(artifact_bootstrap_error(detail))
+    }
+
+    fn guard(&mut self, control: &mut impl ArtifactBootstrapControl) -> Result<(), crate::ProtocolError> {
+        if control.is_cancelled() {
+            return self.fail("cancelled");
+        }
+        if self.deadline_ms.is_some_and(|deadline| control.now_ms() >= deadline) {
+            return self.fail("deadline exceeded");
+        }
+        if self.storage.is_none() {
+            return Err(artifact_bootstrap_error("is not active"));
+        }
+        Ok(())
+    }
+
+    /// @emoji 🧩️ Appends exactly the next descriptor-bound, nonempty bounded chunk.
+    pub fn push(&mut self, descriptor_hash: [u8; 32], index: u32, bytes: &[u8], control: &mut impl ArtifactBootstrapControl) -> Result<ArtifactBootstrapProgress, crate::ProtocolError> {
+        self.guard(control)?;
+        if self.inline {
+            return self.fail("inline transfer cannot accept chunks");
+        }
+        if descriptor_hash != self.bootstrap.descriptor_hash {
+            return self.fail("chunk descriptor mismatch");
+        }
+        if index != self.next_index {
+            return self.fail(format!("chunk index {index} does not equal expected {}", self.next_index));
+        }
+        if bytes.is_empty() || bytes.len() > self.limits.max_chunk_bytes {
+            return self.fail("chunk bytes exceed assembler budget");
+        }
+        if index >= self.bootstrap.chunk_count {
+            return self.fail("chunk index exceeds declared count");
+        }
+        let Some(end) = self.received_bytes.checked_add(bytes.len() as u64) else { return self.fail("received bytes overflow") };
+        if end > self.progress().total_bytes {
+            return self.fail("chunk bytes exceed declared total");
+        }
+        match self.storage.as_mut() {
+            Some(ArtifactBootstrapStorage::Chunked(storage)) => storage.extend_from_slice(bytes),
+            _ => return self.fail("chunk storage is unavailable"),
+        }
+        self.received_bytes = end;
+        self.next_index += 1;
+        let progress = self.progress();
+        control.on_progress(progress);
+        Ok(progress)
+    }
+
+    /// @emoji ✅️ Verifies completion and all hashes, transfers ownership of the pair, then retires staging.
+    pub fn finish(&mut self, done: Option<([u8; 32], u32)>, control: &mut impl ArtifactBootstrapControl) -> Result<ArtifactBootstrapPair, crate::ProtocolError> {
+        self.guard(control)?;
+        if !self.inline {
+            let Some((descriptor_hash, chunk_count)) = done else { return self.fail("is incomplete without done frame") };
+            if descriptor_hash != self.bootstrap.descriptor_hash {
+                return self.fail("done descriptor mismatch");
+            }
+            if chunk_count != self.bootstrap.chunk_count {
+                return self.fail("done chunk count mismatch");
+            }
+        } else if done.is_some_and(|(descriptor_hash, chunk_count)| descriptor_hash != self.bootstrap.descriptor_hash || chunk_count != 0) {
+            return self.fail("inline done metadata mismatch");
+        }
+        if self.next_index != self.bootstrap.chunk_count || self.received_bytes != self.progress().total_bytes {
+            return self.fail("is incomplete");
+        }
+        let (pack_hash, spr_hash, aggregate_hash) = match self.storage.as_ref() {
+            Some(ArtifactBootstrapStorage::Inline(pair)) => (semio_framework_hash::Sha256::digest(&pair.pack), semio_framework_hash::Sha256::digest(&pair.spr), artifact_bootstrap_aggregate_hash(&pair.pack, &pair.spr)),
+            Some(ArtifactBootstrapStorage::Chunked(bytes)) => {
+                let split = self.bootstrap.pack_length as usize;
+                let (pack, spr) = bytes.split_at(split);
+                (semio_framework_hash::Sha256::digest(pack), semio_framework_hash::Sha256::digest(spr), artifact_bootstrap_aggregate_hash(pack, spr))
+            }
+            None => return Err(artifact_bootstrap_error("is not active")),
+        };
+        self.guard(control)?;
+        if pack_hash != self.bootstrap.pack_hash {
+            return self.fail("pack hash mismatch");
+        }
+        if spr_hash != self.bootstrap.spr_hash {
+            return self.fail("SPR hash mismatch");
+        }
+        if aggregate_hash != self.bootstrap.aggregate_hash {
+            return self.fail("aggregate hash mismatch");
+        }
+        let storage = self.storage.take().ok_or_else(|| artifact_bootstrap_error("is not active"))?;
+        match storage {
+            ArtifactBootstrapStorage::Inline(pair) => Ok(pair),
+            ArtifactBootstrapStorage::Chunked(mut bytes) => {
+                let spr = bytes.split_off(self.bootstrap.pack_length as usize);
+                Ok(ArtifactBootstrapPair { pack: bytes, spr })
+            }
+        }
+    }
 }
 
 /// @emoji ⚖️ How the semio_hub resolved one submitted operation against concurrent history.
@@ -177,6 +511,9 @@ impl PartialEq for SnapshotChunkBytes {
 
 impl Eq for SnapshotChunkBytes {}
 
+/// @emoji 🧱️ Artifact-bootstrap name for the same fixed-capacity wire backing, without changing private snapshot bytes.
+pub type ArtifactBootstrapChunkBytes = SnapshotChunkBytes;
+
 /// @emoji 📬️ One frame the semio_hub sends to a client.
 #[derive(Clone, Debug, PartialEq)]
 pub enum ServerFrame {
@@ -227,6 +564,18 @@ pub enum ServerFrame {
     Session {
         actor: String,
         color: u8,
+    },
+    ArtifactBootstrapChunk {
+        descriptor_hash: [u8; 32],
+        index: u32,
+        bytes: ArtifactBootstrapChunkBytes,
+    },
+    ArtifactBootstrapDone {
+        descriptor_hash: [u8; 32],
+        chunk_count: u32,
+    },
+    RebootstrapRequired {
+        control: RebootstrapRequired,
     },
 }
 //#endregion 🔖️ServerFrame
@@ -320,6 +669,79 @@ async fn read_vec_envelope(bytes: &[u8], pos: &mut usize) -> Result<Vec<crate::c
 //#endregion 🔖️Combinators
 
 //#region 🔖️NestedEnums
+fn encode_artifact_bootstrap(bootstrap: &ArtifactBootstrap, out: &mut Vec<u8>) {
+    crate::wire::write_varint_u64(out, bootstrap.format_version as u64);
+    crate::write_hash32(out, &bootstrap.descriptor_hash);
+    crate::write_str(out, &bootstrap.artifact_schema);
+    crate::write_str(out, &bootstrap.artifact_kind);
+    crate::write_hash32(out, &bootstrap.pack_schema_hash);
+    crate::causal::encode_frontier(&bootstrap.baseline_frontier, out);
+    crate::write_hash32(out, &bootstrap.pack_hash);
+    crate::write_hash32(out, &bootstrap.spr_hash);
+    crate::wire::write_varint_u64(out, bootstrap.pack_length);
+    crate::wire::write_varint_u64(out, bootstrap.spr_length);
+    crate::wire::write_varint_u64(out, bootstrap.chunk_count as u64);
+    crate::write_hash32(out, &bootstrap.aggregate_hash);
+    crate::causal::encode_frontier(&bootstrap.required_tail_frontier, out);
+    crate::write_bool(out, bootstrap.inline.is_some());
+    if let Some(pair) = &bootstrap.inline {
+        crate::write_bytes(out, &pair.pack);
+        crate::write_bytes(out, &pair.spr);
+    }
+}
+
+fn read_artifact_bootstrap_string(bytes: &[u8], pos: &mut usize, name: &'static str) -> Result<String, crate::ProtocolError> {
+    let length = crate::wire::read_varint_u64(bytes, pos)?;
+    if length == 0 || length > 256 {
+        return Err(artifact_bootstrap_error(format!("{name} length is invalid")));
+    }
+    let length = length as usize;
+    let end = pos.checked_add(length).ok_or_else(|| artifact_bootstrap_error(format!("{name} length overflow")))?;
+    let value = bytes.get(*pos..end).ok_or_else(|| artifact_bootstrap_error(format!("{name} is truncated")))?;
+    let value = std::str::from_utf8(value).map_err(|_| artifact_bootstrap_error(format!("{name} is not UTF-8")))?.to_string();
+    *pos = end;
+    Ok(value)
+}
+
+fn read_artifact_bootstrap_bytes(bytes: &[u8], pos: &mut usize, expected: u64, name: &'static str) -> Result<Vec<u8>, crate::ProtocolError> {
+    let length = crate::wire::read_varint_u64(bytes, pos)?;
+    if length != expected || length > ARTIFACT_BOOTSTRAP_MAX_TOTAL_BYTES {
+        return Err(artifact_bootstrap_error(format!("{name} length does not match metadata")));
+    }
+    let length = length as usize;
+    let end = pos.checked_add(length).ok_or_else(|| artifact_bootstrap_error(format!("{name} length overflow")))?;
+    let value = bytes.get(*pos..end).ok_or_else(|| artifact_bootstrap_error(format!("{name} is truncated")))?.to_vec();
+    *pos = end;
+    Ok(value)
+}
+
+fn decode_artifact_bootstrap(bytes: &[u8], pos: &mut usize) -> Result<ArtifactBootstrap, crate::ProtocolError> {
+    let format_version = u32::try_from(crate::wire::read_varint_u64(bytes, pos)?).map_err(|_| artifact_bootstrap_error("format version exceeds u32"))?;
+    let mut bootstrap = ArtifactBootstrap {
+        format_version,
+        descriptor_hash: crate::read_hash32(bytes, pos)?,
+        artifact_schema: read_artifact_bootstrap_string(bytes, pos, "artifact schema")?,
+        artifact_kind: read_artifact_bootstrap_string(bytes, pos, "artifact kind")?,
+        pack_schema_hash: crate::read_hash32(bytes, pos)?,
+        baseline_frontier: crate::causal::decode_frontier(bytes, pos)?,
+        pack_hash: crate::read_hash32(bytes, pos)?,
+        spr_hash: crate::read_hash32(bytes, pos)?,
+        pack_length: crate::wire::read_varint_u64(bytes, pos)?,
+        spr_length: crate::wire::read_varint_u64(bytes, pos)?,
+        chunk_count: u32::try_from(crate::wire::read_varint_u64(bytes, pos)?).map_err(|_| artifact_bootstrap_error("chunk count exceeds u32"))?,
+        aggregate_hash: crate::read_hash32(bytes, pos)?,
+        required_tail_frontier: crate::causal::decode_frontier(bytes, pos)?,
+        inline: None,
+    };
+    let inline = crate::read_bool(bytes, pos)?;
+    validate_artifact_bootstrap_header(&bootstrap, inline, ArtifactBootstrapLimits::default())?;
+    if inline {
+        bootstrap.inline = Some(ArtifactBootstrapPair { pack: read_artifact_bootstrap_bytes(bytes, pos, bootstrap.pack_length, "inline pack")?, spr: read_artifact_bootstrap_bytes(bytes, pos, bootstrap.spr_length, "inline SPR")? });
+    }
+    validate_artifact_bootstrap(&bootstrap, ArtifactBootstrapLimits::default())?;
+    Ok(bootstrap)
+}
+
 async fn encode_bootstrap(bootstrap: &Bootstrap, out: &mut Vec<u8>) {
     match bootstrap {
         Bootstrap::None => out.push(0),
@@ -329,6 +751,10 @@ async fn encode_bootstrap(bootstrap: &Bootstrap, out: &mut Vec<u8>) {
             write_opt_bytes(out, inline).await;
         }
         Bootstrap::Tail => out.push(2),
+        Bootstrap::ArtifactBootstrap(bootstrap) => {
+            out.push(3);
+            encode_artifact_bootstrap(bootstrap, out);
+        }
     }
 }
 
@@ -346,6 +772,7 @@ async fn decode_bootstrap(bytes: &[u8], pos: &mut usize) -> Result<Bootstrap, cr
             Ok(Bootstrap::Snapshot { pack_hash, inline })
         }
         2 => Ok(Bootstrap::Tail),
+        3 => Ok(Bootstrap::ArtifactBootstrap(decode_artifact_bootstrap(bytes, pos)?)),
         other => Err(malformed("wire bootstrap tag", *pos as u64, &format!("unknown tag {other:#x}")).await),
     }
 }
@@ -561,6 +988,25 @@ pub async fn encode_server_frame(frame: &ServerFrame, lane: Lane) -> Vec<u8> {
             crate::write_str(&mut out, actor);
             out.push(*color);
         }
+        ServerFrame::ArtifactBootstrapChunk { descriptor_hash, index, bytes } => {
+            out.push(10);
+            crate::write_hash32(&mut out, descriptor_hash);
+            crate::wire::write_varint_u64(&mut out, *index as u64);
+            crate::write_bytes(&mut out, bytes.as_slice());
+        }
+        ServerFrame::ArtifactBootstrapDone { descriptor_hash, chunk_count } => {
+            out.push(11);
+            crate::write_hash32(&mut out, descriptor_hash);
+            crate::wire::write_varint_u64(&mut out, *chunk_count as u64);
+        }
+        ServerFrame::RebootstrapRequired { control } => {
+            out.push(12);
+            crate::write_str(&mut out, &control.space_id);
+            crate::write_str(&mut out, &control.document_id);
+            crate::write_hash32(&mut out, &control.checkpoint_id);
+            crate::write_hash32(&mut out, &control.descriptor_hash);
+            crate::causal::encode_frontier(&control.baseline_frontier, &mut out);
+        }
     }
     out
 }
@@ -576,6 +1022,14 @@ fn read_snapshot_chunk_bytes(bytes: &[u8], pos: &mut usize) -> Result<SnapshotCh
     let owner = SnapshotChunkBytes::try_from_slice(source).ok_or(crate::ProtocolError::LimitExceeded("snapshot chunk fixed backing"))?;
     *pos = end;
     Ok(owner)
+}
+
+fn read_artifact_bootstrap_chunk_bytes(bytes: &[u8], pos: &mut usize) -> Result<ArtifactBootstrapChunkBytes, crate::ProtocolError> {
+    let bytes = read_snapshot_chunk_bytes(bytes, pos)?;
+    if bytes.is_empty() {
+        return Err(artifact_bootstrap_error("chunk bytes must be nonempty"));
+    }
+    Ok(bytes)
 }
 
 /// @emoji 📥️ Decodes one `ServerFrame`, returning the `Lane` it was tagged with.
@@ -614,6 +1068,19 @@ pub async fn decode_server_frame(bytes: &[u8]) -> Result<(Lane, ServerFrame), cr
             let color = crate::read_u8(bytes, &mut pos)?;
             ServerFrame::Session { actor, color }
         }
+        10 => ServerFrame::ArtifactBootstrapChunk { descriptor_hash: crate::read_hash32(bytes, &mut pos)?, index: u32::try_from(crate::wire::read_varint_u64(bytes, &mut pos)?).map_err(|_| artifact_bootstrap_error("chunk index exceeds u32"))?, bytes: read_artifact_bootstrap_chunk_bytes(bytes, &mut pos)? },
+        11 => ServerFrame::ArtifactBootstrapDone { descriptor_hash: crate::read_hash32(bytes, &mut pos)?, chunk_count: u32::try_from(crate::wire::read_varint_u64(bytes, &mut pos)?).map_err(|_| artifact_bootstrap_error("done chunk count exceeds u32"))? },
+        12 => {
+            let control = RebootstrapRequired {
+                space_id: read_artifact_bootstrap_string(bytes, &mut pos, "rebootstrap space")?,
+                document_id: read_artifact_bootstrap_string(bytes, &mut pos, "rebootstrap document")?,
+                checkpoint_id: crate::read_hash32(bytes, &mut pos)?,
+                descriptor_hash: crate::read_hash32(bytes, &mut pos)?,
+                baseline_frontier: crate::causal::decode_frontier(bytes, &mut pos)?,
+            };
+            validate_rebootstrap_required(&control)?;
+            ServerFrame::RebootstrapRequired { control }
+        }
         other => return Err(malformed("wire server-frame tag", pos as u64, &format!("unknown tag {other:#x}")).await),
     };
     Ok((lane, frame))
@@ -640,6 +1107,87 @@ mod tests {
 
     async fn sample_frontier() -> crate::causal::FrontierSummary {
         crate::causal::FrontierSummary { document_id: crate::ids::ArtifactId("document-1".to_string()), head_edit_ordinal: 5, head_edit_id: "edit-5".to_string(), last_commit_seq: 2, chain_hash: [7u8; 32] }
+    }
+
+    fn artifact_bootstrap_fixture() -> serde_json::Value {
+        serde_json::from_str(include_str!("../🧫️fixtures/🧫️artifact-bootstrap/🔣️.json")).expect("artifact bootstrap fixture")
+    }
+
+    fn bytes_from_hex(hex: &str) -> Vec<u8> {
+        assert_eq!(hex.len() % 2, 0);
+        (0..hex.len()).step_by(2).map(|index| u8::from_str_radix(&hex[index..index + 2], 16).expect("hex byte")).collect()
+    }
+
+    fn hash_from_hex(hex: &str) -> [u8; 32] {
+        bytes_from_hex(hex).try_into().expect("32-byte hash")
+    }
+
+    fn fixture_frontier(value: &serde_json::Value) -> crate::causal::FrontierSummary {
+        crate::causal::FrontierSummary {
+            document_id: crate::ids::ArtifactId(value["documentId"].as_str().unwrap().to_string()),
+            head_edit_ordinal: value["headEditOrdinal"].as_u64().unwrap(),
+            head_edit_id: value["headEditId"].as_str().unwrap().to_string(),
+            last_commit_seq: value["lastCommitSeq"].as_u64().unwrap(),
+            chain_hash: hash_from_hex(value["chainHash"].as_str().unwrap()),
+        }
+    }
+
+    fn fixture_artifact_bootstrap(inline: bool) -> ArtifactBootstrap {
+        let fixture = artifact_bootstrap_fixture();
+        let payload = &fixture["payload"];
+        ArtifactBootstrap {
+            format_version: fixture["formatVersion"].as_u64().unwrap() as u32,
+            descriptor_hash: hash_from_hex(fixture["artifact"]["descriptorHash"].as_str().unwrap()),
+            artifact_schema: fixture["artifact"]["schema"].as_str().unwrap().to_string(),
+            artifact_kind: fixture["artifact"]["kind"].as_str().unwrap().to_string(),
+            pack_schema_hash: hash_from_hex(fixture["artifact"]["packSchemaHash"].as_str().unwrap()),
+            baseline_frontier: fixture_frontier(&fixture["artifact"]["baselineFrontier"]),
+            pack_hash: hash_from_hex(payload["packHash"].as_str().unwrap()),
+            spr_hash: hash_from_hex(payload["sprHash"].as_str().unwrap()),
+            pack_length: payload["packLength"].as_u64().unwrap(),
+            spr_length: payload["sprLength"].as_u64().unwrap(),
+            chunk_count: if inline { 0 } else { fixture["chunkByteLengths"].as_array().unwrap().len() as u32 },
+            aggregate_hash: hash_from_hex(payload["aggregateHash"].as_str().unwrap()),
+            required_tail_frontier: fixture_frontier(&fixture["artifact"]["requiredTailFrontier"]),
+            inline: inline.then(|| ArtifactBootstrapPair { pack: bytes_from_hex(payload["packHex"].as_str().unwrap()), spr: bytes_from_hex(payload["sprHex"].as_str().unwrap()) }),
+        }
+    }
+
+    fn fixture_artifact_chunks() -> Vec<Vec<u8>> {
+        let fixture = artifact_bootstrap_fixture();
+        let mut content = bytes_from_hex(fixture["payload"]["packHex"].as_str().unwrap());
+        content.extend_from_slice(&bytes_from_hex(fixture["payload"]["sprHex"].as_str().unwrap()));
+        let mut offset = 0usize;
+        fixture["chunkByteLengths"].as_array().unwrap().iter().map(|length| {
+            let end = offset + length.as_u64().unwrap() as usize;
+            let chunk = content[offset..end].to_vec();
+            offset = end;
+            chunk
+        }).collect()
+    }
+
+    #[derive(Default)]
+    struct TestBootstrapControl {
+        cancelled_after_progress: Option<usize>,
+        cancel_on_check: Option<usize>,
+        checks: usize,
+        now_ms: u64,
+        progress: Vec<ArtifactBootstrapProgress>,
+    }
+
+    impl ArtifactBootstrapControl for TestBootstrapControl {
+        fn is_cancelled(&mut self) -> bool {
+            self.checks += 1;
+            self.cancel_on_check.is_some_and(|check| self.checks >= check) || self.cancelled_after_progress.is_some_and(|count| self.progress.len() >= count)
+        }
+
+        fn now_ms(&mut self) -> u64 {
+            self.now_ms
+        }
+
+        fn on_progress(&mut self, progress: ArtifactBootstrapProgress) {
+            self.progress.push(progress);
+        }
     }
     //#endregion 🧸️Fixtures
 
@@ -741,6 +1289,127 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn server_frame_snapshot_done_round_trips() {
         assert_server_round_trips(&ServerFrame::SnapshotDone { seq_count: 4 }, Lane::Command).await;
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn artifact_bootstrap_hashes_match_neutral_fixture() {
+        let fixture = artifact_bootstrap_fixture();
+        let pack = bytes_from_hex(fixture["payload"]["packHex"].as_str().unwrap());
+        let spr = bytes_from_hex(fixture["payload"]["sprHex"].as_str().unwrap());
+        assert_eq!(semio_framework_hash::Sha256::digest(&pack), hash_from_hex(fixture["payload"]["packHash"].as_str().unwrap()));
+        assert_eq!(semio_framework_hash::Sha256::digest(&spr), hash_from_hex(fixture["payload"]["sprHash"].as_str().unwrap()));
+        assert_eq!(artifact_bootstrap_aggregate_hash(&pack, &spr), hash_from_hex(fixture["payload"]["aggregateHash"].as_str().unwrap()));
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn artifact_bootstrap_frames_match_neutral_vectors() {
+        let fixture = artifact_bootstrap_fixture();
+        let inline = fixture_artifact_bootstrap(true);
+        let chunked = fixture_artifact_bootstrap(false);
+        let welcome = |bootstrap: ArtifactBootstrap| ServerFrame::Welcome { session_id: "session-bootstrap-1".to_string(), resume_token: "resume-bootstrap-1".to_string(), server_frontier: bootstrap.required_tail_frontier.clone(), bootstrap: Bootstrap::ArtifactBootstrap(bootstrap) };
+        let inline_bytes = encode_server_frame(&welcome(inline), Lane::Command).await;
+        let chunked_bytes = encode_server_frame(&welcome(chunked.clone()), Lane::Command).await;
+        assert_eq!(inline_bytes, bytes_from_hex(fixture["wire"]["inlineWelcomeHex"].as_str().unwrap()));
+        assert_eq!(chunked_bytes, bytes_from_hex(fixture["wire"]["chunkedWelcomeHex"].as_str().unwrap()));
+        for (index, chunk) in fixture_artifact_chunks().iter().enumerate() {
+            let frame = ServerFrame::ArtifactBootstrapChunk { descriptor_hash: chunked.descriptor_hash, index: index as u32, bytes: ArtifactBootstrapChunkBytes::try_from_slice(chunk).unwrap() };
+            let bytes = encode_server_frame(&frame, Lane::Command).await;
+            assert_eq!(bytes, bytes_from_hex(fixture["wire"]["chunkHex"][index].as_str().unwrap()));
+            assert_eq!(decode_server_frame(&bytes).await.unwrap(), (Lane::Command, frame));
+        }
+        let done = ServerFrame::ArtifactBootstrapDone { descriptor_hash: chunked.descriptor_hash, chunk_count: chunked.chunk_count };
+        let done_bytes = encode_server_frame(&done, Lane::Command).await;
+        assert_eq!(done_bytes, bytes_from_hex(fixture["wire"]["doneHex"].as_str().unwrap()));
+        assert_eq!(decode_server_frame(&done_bytes).await.unwrap(), (Lane::Command, done));
+        assert_eq!(decode_server_frame(&inline_bytes).await.unwrap().1, welcome(fixture_artifact_bootstrap(true)));
+        assert_eq!(decode_server_frame(&chunked_bytes).await.unwrap().1, welcome(chunked));
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn artifact_bootstrap_rejects_malformed_transfers_atomically() {
+        let valid = fixture_artifact_bootstrap(false);
+        let chunks = fixture_artifact_chunks();
+        let limits = ArtifactBootstrapLimits { max_total_bytes: 64, max_chunks: 4, max_chunk_bytes: 12 };
+        let mut control = TestBootstrapControl::default();
+        let mut unknown_version = valid.clone();
+        unknown_version.format_version = 2;
+        assert!(ArtifactBootstrapAssembler::new(unknown_version.clone(), valid.descriptor_hash, limits, Some(100), &mut control).unwrap_err().to_string().contains("version"));
+        assert!(ArtifactBootstrapAssembler::new(valid.clone(), [9; 32], limits, Some(100), &mut control).unwrap_err().to_string().contains("descriptor"));
+        let mut oversize = valid.clone();
+        oversize.pack_length = 65;
+        assert!(ArtifactBootstrapAssembler::new(oversize, valid.descriptor_hash, limits, Some(100), &mut control).unwrap_err().to_string().contains("bytes"));
+        let mut backwards = valid.clone();
+        backwards.required_tail_frontier.head_edit_ordinal = 6;
+        assert!(ArtifactBootstrapAssembler::new(backwards, valid.descriptor_hash, limits, Some(100), &mut control).unwrap_err().to_string().contains("frontier"));
+        let mut expired = TestBootstrapControl { now_ms: 100, ..Default::default() };
+        assert!(ArtifactBootstrapAssembler::new(valid.clone(), valid.descriptor_hash, limits, Some(100), &mut expired).unwrap_err().to_string().contains("deadline"));
+        for indices in [vec![1usize], vec![0, 0]] {
+            let mut control = TestBootstrapControl::default();
+            let mut assembler = ArtifactBootstrapAssembler::new(valid.clone(), valid.descriptor_hash, limits, Some(100), &mut control).unwrap();
+            let error = indices.into_iter().find_map(|index| assembler.push(valid.descriptor_hash, index as u32, &chunks[index], &mut control).err()).unwrap();
+            assert!(error.to_string().contains("index"));
+            assert_eq!(assembler.retained_bytes(), 0);
+        }
+        let mut control = TestBootstrapControl::default();
+        let mut missing = ArtifactBootstrapAssembler::new(valid.clone(), valid.descriptor_hash, limits, Some(100), &mut control).unwrap();
+        missing.push(valid.descriptor_hash, 0, &chunks[0], &mut control).unwrap();
+        assert!(missing.finish(Some((valid.descriptor_hash, valid.chunk_count)), &mut control).unwrap_err().to_string().contains("incomplete"));
+        assert_eq!(missing.retained_bytes(), 0);
+        let mut control = TestBootstrapControl::default();
+        let mut oversized_chunk = ArtifactBootstrapAssembler::new(valid.clone(), valid.descriptor_hash, limits, Some(100), &mut control).unwrap();
+        assert!(oversized_chunk.push(valid.descriptor_hash, 0, &[1; 13], &mut control).unwrap_err().to_string().contains("chunk"));
+        assert_eq!(oversized_chunk.retained_bytes(), 0);
+        let mut control = TestBootstrapControl::default();
+        let mut wrong_descriptor = ArtifactBootstrapAssembler::new(valid.clone(), valid.descriptor_hash, limits, Some(100), &mut control).unwrap();
+        assert!(wrong_descriptor.push([9; 32], 0, &[1], &mut control).unwrap_err().to_string().contains("descriptor"));
+        assert_eq!(wrong_descriptor.retained_bytes(), 0);
+        for field in 0..3 {
+            let mut changed = valid.clone();
+            match field { 0 => changed.pack_hash = [0xaa; 32], 1 => changed.spr_hash = [0xaa; 32], _ => changed.aggregate_hash = [0xaa; 32] }
+            let mut control = TestBootstrapControl::default();
+            let mut assembler = ArtifactBootstrapAssembler::new(changed, valid.descriptor_hash, limits, Some(100), &mut control).unwrap();
+            for (index, chunk) in chunks.iter().enumerate() {
+                assembler.push(valid.descriptor_hash, index as u32, chunk, &mut control).unwrap();
+            }
+            assert!(assembler.finish(Some((valid.descriptor_hash, valid.chunk_count)), &mut control).unwrap_err().to_string().contains("hash"));
+            assert_eq!(assembler.retained_bytes(), 0);
+        }
+        let bytes = encode_server_frame(&ServerFrame::Welcome { session_id: "bad".to_string(), resume_token: "bad".to_string(), server_frontier: valid.required_tail_frontier.clone(), bootstrap: Bootstrap::ArtifactBootstrap(unknown_version) }, Lane::Command).await;
+        assert!(decode_server_frame(&bytes).await.unwrap_err().to_string().contains("version"));
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn artifact_bootstrap_cancellation_is_atomic_and_restartable() {
+        let fixture = artifact_bootstrap_fixture();
+        let bootstrap = fixture_artifact_bootstrap(false);
+        let chunks = fixture_artifact_chunks();
+        let limits = ArtifactBootstrapLimits { max_total_bytes: 64, max_chunks: 4, max_chunk_bytes: 12 };
+        let mut cancelled = TestBootstrapControl { cancelled_after_progress: Some(2), ..Default::default() };
+        let mut first = ArtifactBootstrapAssembler::new(bootstrap.clone(), bootstrap.descriptor_hash, limits, Some(100), &mut cancelled).unwrap();
+        first.push(bootstrap.descriptor_hash, 0, &chunks[0], &mut cancelled).unwrap();
+        assert!(first.push(bootstrap.descriptor_hash, 1, &chunks[1], &mut cancelled).unwrap_err().to_string().contains("cancel"));
+        assert_eq!(first.retained_bytes(), 0);
+        assert_eq!(first.progress().received_bytes, 12);
+        assert_eq!(cancelled.progress.iter().map(|progress| progress.received_bytes).collect::<Vec<_>>(), vec![0, 12]);
+        let mut late_control = TestBootstrapControl { cancel_on_check: Some(6), ..Default::default() };
+        let mut late = ArtifactBootstrapAssembler::new(bootstrap.clone(), bootstrap.descriptor_hash, limits, Some(100), &mut late_control).unwrap();
+        for (index, chunk) in chunks.iter().enumerate() {
+            late.push(bootstrap.descriptor_hash, index as u32, chunk, &mut late_control).unwrap();
+        }
+        assert!(late.finish(Some((bootstrap.descriptor_hash, bootstrap.chunk_count)), &mut late_control).unwrap_err().to_string().contains("cancel"));
+        assert_eq!(late.retained_bytes(), 0);
+        assert_eq!(late.progress().received_bytes, 33);
+        let mut resumed_control = TestBootstrapControl::default();
+        let mut resumed = ArtifactBootstrapAssembler::new(bootstrap.clone(), bootstrap.descriptor_hash, limits, Some(100), &mut resumed_control).unwrap();
+        for (index, chunk) in chunks.iter().enumerate() {
+            resumed.push(bootstrap.descriptor_hash, index as u32, chunk, &mut resumed_control).unwrap();
+        }
+        let pair = resumed.finish(Some((bootstrap.descriptor_hash, bootstrap.chunk_count)), &mut resumed_control).unwrap();
+        assert_eq!(pair.pack, bytes_from_hex(fixture["payload"]["packHex"].as_str().unwrap()));
+        assert_eq!(pair.spr, bytes_from_hex(fixture["payload"]["sprHex"].as_str().unwrap()));
+        assert_eq!(resumed.retained_bytes(), 0);
+        assert_eq!(resumed.progress().received_bytes, 33);
+        assert!(resumed_control.progress.windows(2).all(|pair| pair[0].received_bytes <= pair[1].received_bytes));
     }
 
     #[semio_framework_async_macros::async_test]

@@ -9,7 +9,6 @@
 use crate::artifacts::lowpoly::{LowpolyObject, LowpolyPaintLayer, LowpolySelection, LowpolySnapshot, LOWPOLY_PAINT_TEXTURE_SIZE};
 use semio_framework_3d::mesh::{EdgeId, FaceId, HalfedgeMesh, MeshKernelError, Vec3, VertexId};
 use semio_framework_plugin::MeshData;
-use serde_json::Value;
 use std::collections::HashMap;
 
 //#region ⚠️ Errors
@@ -17,7 +16,6 @@ use std::collections::HashMap;
 #[derive(Debug)]
 pub enum LowpolyCoreError {
     Mesh(MeshKernelError),
-    Json(serde_json::Error),
     UnknownPrimitive(String),
     LayerIndexOutOfRange,
     NoActiveObject,
@@ -35,7 +33,6 @@ impl std::fmt::Display for LowpolyCoreError {
     fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             Self::Mesh(error) => write!(formatter, "{error}"),
-            Self::Json(error) => write!(formatter, "{error}"),
             Self::UnknownPrimitive(primitive) => write!(formatter, "unknown primitive: {primitive}"),
             Self::LayerIndexOutOfRange => formatter.write_str("layer index out of range"),
             Self::NoActiveObject => formatter.write_str("no active object"),
@@ -50,7 +47,6 @@ impl std::error::Error for LowpolyCoreError {
     fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
         match self {
             Self::Mesh(error) => std::error::Error::source(error),
-            Self::Json(error) => std::error::Error::source(error),
             _ => None,
         }
     }
@@ -59,12 +55,6 @@ impl std::error::Error for LowpolyCoreError {
 impl From<MeshKernelError> for LowpolyCoreError {
     fn from(error: MeshKernelError) -> Self {
         Self::Mesh(error)
-    }
-}
-
-impl From<serde_json::Error> for LowpolyCoreError {
-    fn from(error: serde_json::Error) -> Self {
-        Self::Json(error)
     }
 }
 //#endregion ⚠️ Errors
@@ -333,38 +323,50 @@ impl LowpolyDocument {
         Ok(())
     }
 
-    pub fn tessellate_transfer_json(mesh: &HalfedgeMesh) -> Result<Value, LowpolyCoreError> {
+    /// 🌉️ Returns `dsl::DslValue` directly — every call site (the peer-owned
+    /// `mesh_data_from_transfer` in `🧬️schema/🦀️.rs`, the UV window, and the model window's
+    /// tessellation export) only ever reads keys off it through `dsl::FromValue`/`.get(...)`, so the
+    /// old `serde_json::Value` bridge at the end of this fn was pure overhead, not a real boundary.
+    pub fn tessellate_transfer_json(mesh: &HalfedgeMesh) -> Result<dsl::DslValue, LowpolyCoreError> {
         let transfer = mesh.tessellate()?;
-        Ok(serde_json::json!({
-            "positions": transfer.positions,
-            "normals": transfer.normals,
-            "indices": transfer.indices,
-            "edgePositions": transfer.edge_positions,
-            "faceIds": transfer.face_ids,
-            "vertexIds": transfer.vertex_ids,
-            "edgeIds": transfer.edge_ids,
-            "edgeUvs": transfer.edge_uvs,
-            "edgeIsSeam": transfer.edge_is_seam,
-            "uvs": transfer.uvs,
-        }))
+        Ok(dsl::DslValue::object([
+            ("positions".to_string(), dsl::ToValue::to_value(&transfer.positions)),
+            ("normals".to_string(), dsl::ToValue::to_value(&transfer.normals)),
+            ("indices".to_string(), dsl::ToValue::to_value(&transfer.indices)),
+            ("edgePositions".to_string(), dsl::ToValue::to_value(&transfer.edge_positions)),
+            ("faceIds".to_string(), dsl::ToValue::to_value(&transfer.face_ids)),
+            ("vertexIds".to_string(), dsl::ToValue::to_value(&transfer.vertex_ids)),
+            ("edgeIds".to_string(), dsl::ToValue::to_value(&transfer.edge_ids)),
+            ("edgeUvs".to_string(), dsl::ToValue::to_value(&transfer.edge_uvs)),
+            ("edgeIsSeam".to_string(), dsl::ToValue::to_value(&transfer.edge_is_seam)),
+            ("uvs".to_string(), dsl::ToValue::to_value(&transfer.uvs)),
+        ]))
     }
 
     pub fn tessellate_all_json(&self) -> Result<String, LowpolyCoreError> {
         let active = self.active_object_id.clone();
-        let mut items = Vec::new();
+        let mut items: Vec<dsl::DslValue> = Vec::new();
         for (idx, object) in self.snapshot.objects.iter().enumerate() {
             let mesh = self.meshes.get(idx).ok_or(LowpolyCoreError::MeshMissing)?;
-            items.push(serde_json::json!({
-                "id": object.id,
-                "index": idx,
-                "name": object.name,
-                "transform": { "position": object.transform.position, "rotation": object.transform.rotation, "scale": object.transform.scale },
-                "smoothShading": object.smooth_shading,
-                "active": object.id == active,
-                "tessellation": Self::tessellate_transfer_json(mesh)?,
-            }));
+            let tessellation: dsl::DslValue = Self::tessellate_transfer_json(mesh)?;
+            items.push(dsl::DslValue::object([
+                ("id".to_string(), dsl::DslValue::String(object.id.clone())),
+                ("index".to_string(), dsl::DslValue::uint(idx as u64)),
+                ("name".to_string(), dsl::DslValue::String(object.name.clone())),
+                (
+                    "transform".to_string(),
+                    dsl::DslValue::object([
+                        ("position".to_string(), dsl::ToValue::to_value(&object.transform.position)),
+                        ("rotation".to_string(), dsl::ToValue::to_value(&object.transform.rotation)),
+                        ("scale".to_string(), dsl::ToValue::to_value(&object.transform.scale)),
+                    ]),
+                ),
+                ("smoothShading".to_string(), dsl::DslValue::Bool(object.smooth_shading)),
+                ("active".to_string(), dsl::DslValue::Bool(object.id == active)),
+                ("tessellation".to_string(), tessellation),
+            ]));
         }
-        Ok(serde_json::to_string(&items)?)
+        Ok(dsl::json::to_json_string(&items))
     }
 
     pub fn composite_layers(&self, object_id: &str) -> Result<Vec<u8>, LowpolyCoreError> {
@@ -442,14 +444,14 @@ mod tests {
         let mut doc = LowpolyDocument::new(default_snapshot(), default_mesh_workspace()).unwrap();
         let _ = doc.add_primitive("box").unwrap();
         let json = doc.tessellate_all_json().unwrap();
-        let items: Vec<Value> = serde_json::from_str(&json).unwrap();
+        let items: Vec<serde_json::Value> = serde_json::from_str(&json).unwrap();
         assert_eq!(items.len(), 2);
     }
 
     #[semio_framework_async_macros::async_test]
     async fn projection_json_embeds_paint_pixels_as_base64() {
         let doc = LowpolyDocument::new(default_snapshot(), default_mesh_workspace()).unwrap();
-        let json = serde_json::to_string(&doc.snapshot).unwrap();
+        let json = serde_json::to_string(&Into::<serde_json::Value>::into(dsl::ToValue::to_value(&doc.snapshot))).unwrap();
         assert!(json.contains("\"pixels\""));
         // base64 white, never a raw integer array.
         assert!(!json.contains("255,255,255"));

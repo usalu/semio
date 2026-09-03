@@ -1,5 +1,5 @@
 //! 🚪️ presentation <- pptx — foreign `Deserializer<PresentationSnapshot>` (ticket
-//! 26/08/17/CLEAN-ARTIFACT-STANDARD-SUBSET-MECHANISM design.md §3). Structural `serde_json`
+//! 26/08/17/CLEAN-ARTIFACT-STANDARD-SUBSET-MECHANISM design.md §3). Structural `dsl::DslValue`
 //! coercion between `PptxSnapshot`'s and `PresentationSnapshot`'s (unrelated) field shapes — not a real
 //! pptx->presentation semantic mapping (unchanged behaviour, pre-dates this ticket) — `IoFidelity::Lossy`.
 
@@ -21,8 +21,7 @@ impl Deserializer<PresentationSnapshot> for PptxIntoPresentation {
             return Err(IoError { message: "PptxIntoPresentation: expected a binary pptx payload".to_string(), diagnostics: Vec::new() });
         };
         let wire = <PptxSnapshot as store::ArtifactPack>::decode_pack(bytes).map_err(|error| IoError { message: format!("PptxIntoPresentation: {error}"), diagnostics: Vec::new() })?;
-        let value = serde_json::to_value(&wire).map_err(|error| IoError { message: format!("PptxIntoPresentation: {error}"), diagnostics: Vec::new() })?;
-        let dsl_value: dsl::DslValue = value.into();
+        let dsl_value = dsl::ToValue::to_value(&wire);
         let snapshot: PresentationSnapshot = dsl::FromValue::from_value(dsl_value).map_err(|error| IoError { message: format!("PptxIntoPresentation: {error}"), diagnostics: Vec::new() })?;
         Ok(IoOutcome::clean(snapshot))
     }

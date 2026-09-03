@@ -49,7 +49,10 @@ pub async fn measure(definition: &Block3dSnapshot, config: &Block3dConfig, label
                 label: Some(labels.flip_normal.as_str().to_string()),
                 pressed: config.brush_flip,
                 text: None,
-                on_change: crate::editor::block3d::block3d_action("setBrushFlip", Some(serde_json::json!({ "flip": !config.brush_flip }))),
+                on_change: crate::editor::block3d::block3d_action(
+                    "setBrushFlip",
+                    Some(crate::editor::block3d::ui_value_map([("flip", crate::editor::block3d::ui_value_bool(!config.brush_flip))]).expect("single-entry args fit ui map capacity")),
+                ),
             },
         ],
     }

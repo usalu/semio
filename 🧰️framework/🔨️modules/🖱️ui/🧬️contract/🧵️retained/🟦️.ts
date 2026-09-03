@@ -28,8 +28,10 @@ class Table<V> {
   #reader: NumericIndexReader<V> | null = null;
   #retirement: NumericIndexRetirement<V> | null = null;
   #old: NumericIndex<V> | null = null;
+  readonly grant: () => NumericIndexGrant;
+  private readonly retired: (value: V) => void;
 
-  constructor(index: NumericIndex<V>, readonly grant: () => NumericIndexGrant, private readonly retired: (value: V) => void = () => {}) { this.#index = index; }
+  constructor(index: NumericIndex<V>, grant: () => NumericIndexGrant, retired: (value: V) => void = () => {}) { this.grant = grant; this.retired = retired; this.#index = index; }
 
   get index(): NumericIndex<V> { if (!this.#index) throw new Error("Retained table owner is closed"); return this.#index; }
   get size(): number { return this.index.size; }
@@ -177,7 +179,8 @@ type KeyCell = { key: string | null; collision: KeyCell | null; ownedNext: KeyCe
 class SiblingKeys {
   #table: Table<KeyCell> | null = null;
   #owned: KeyCell | null = null;
-  constructor(private readonly grant: () => NumericIndexGrant) {}
+  private readonly grant: () => NumericIndexGrant;
+  constructor(grant: () => NumericIndexGrant) { this.grant = grant; }
 
   *insert(key: string): Program<boolean> {
     this.#table ??= new Table(NumericIndex.empty<KeyCell>(), this.grant);

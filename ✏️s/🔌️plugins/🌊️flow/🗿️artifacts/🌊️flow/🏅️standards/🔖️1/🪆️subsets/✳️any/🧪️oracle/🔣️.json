@@ -2,18 +2,55 @@
   "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json",
   "schemaVersion": 2,
   "_comment": "🧩️ This subset's own contribution. The `kinds` are the kebab spelling of `FlowMutation`'s variants in declaration order; `../🧬️schema/🧬️mutations/🦀️.rs`'s `KINDS` const and its `kinds_match_the_enum_and_the_catalog` test keep this file, that const and the enum in agreement.",
-  "oracles": [],
-  "noOracleDecisions": [
+  "oracles": [
     {
-      "id": "flow-widget-graph-mutation-semantics",
-      "capabilities": [],
-      "rationale": "The survey this decision already carries is kept and is the best-argued of its family: this document's BODY is plain JSON and `json-rust` is already linked into the stdio oracle crate, and it is declined because a generic DOM reader knows nothing of a widget discriminant, a synapse port pair or the cascade `delete-widget` performs, so all ten semantics would still be hand-written on top of it. THAT SURVEY STANDS, AND IT IS NOT WHAT THIS DECISION NOW RESTS ON. Surveying and declining a third-party LIBRARY is a different judgement from declining a SECOND IMPLEMENTATION, and until this re-examination that is the only judgement this decision had ever made. The sentence it used to lean on — that this subset's own shape IS its specification and so not a fact an external implementation could confirm or refute — is refuted inside this repository: `mutate-procedural-2d-1`, whose `fixture` half is literally a `flow.fixture` widget/synapse graph with a camera and a sparse layout map, took Python second implementations over this same `.dsl.semio` carrier, from the same kind of committed material, and between them they surfaced findings no single-implementation case could produce. So THIS DECISION IS A DEBT, NOT A JUDGEMENT, and it is recorded as one here rather than left reading as a verdict.\n\nWHAT A SECOND IMPLEMENTATION HERE WOULD BE WRITTEN FROM: `../🧬️schema/📸️snapshot/🔣️.json` for the document's members, the rules of `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/📓️derivation-rules.md` that this vocabulary was derived by, and the ten committed `(before, mutation, after, outcome)` specification vectors under `../🧬️schema/🧬️mutations/<kind>/🧪️tests/<fixture>/`. The nearest transferable recipe is not merely near, it is the SAME DOCUMENT: `mutate-procedural-2d-1`'s `fixture` half is a `flow.fixture` widget/synapse graph with a camera and a sparse layout map, and its Python reference already models the widget discriminant, the port pair and the fact that `delete-widget` does NOT cascade.\n\nWHAT BLOCKS IT TODAY, precisely. This case's committed specification vectors are NOT declared as `asset://` fixtures. Its `Examples` table carries the payloads inline, and the Rust adapter reaches the committed `(before, mutation, after, outcome)` files through `include_str!` instead. Two consequences follow: the execution plan does not pin those files' digests, so a silently edited vector changes the result rather than the plan; and a Python reference cannot read them at all, because the Python host resolves a fixture only through the plan and raises on an undeclared URI. Declaring them — the shape `mutate-program-1`, `mutate-note-1` and `mutate-block-3d-1` already use — is the one edit that unblocks this case, and it strengthens the case whether or not a reference follows. AND, SEPARATELY, `identity-round-trip` WOULD STILL BE REFUSED. This subset's committed snapshot text grammar is the repository-wide PLACEHOLDER: its whole body is `payload = OCTET+` and its header production declares `\"schema\" SP \"stdio.json\"`, which the committed artifact contradicts on its own first line. A second reader cannot parse what no document describes — the finding `mutate-iso16757-1`, `mutate-vdi3805-1`, `mutate-program-1` and `mutate-writer-1` all report against their own subsets.\n\nWHAT IS ASSERTED IN THE MEANTIME is unchanged and is listed in `substitutes`: the committed specification vectors, replayed end to end through the platform, and the metamorphic laws the subject handler asserts in role. The ceiling on all of it is unchanged too and is worth restating: no second producer runs beside them, so a mistake shared by the handcrafted vector and the production code passes unseen.\n\n[C2 2026-09-02] Narrowed `capabilities` to remove 'flow-1-mutate': a mutation manifest already requires an external-oracle discharge for this capability (tracked honestly as `missing-external-oracle`), so a no-oracle decision claiming the same capability made that gap invisible to `no-oracle-covers-mutation` without discharging it. The rationale above is kept verbatim as the record of what was actually investigated; only the claim is withdrawn. See .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION/📓️c2-native-artifact-oracles.md.",
-      "substitutes": [
-        "specification-vectors",
-        "metamorphic-laws"
-      ]
+      "id": "flow-1-python-independent",
+      "ecosystem": "python",
+      "package": "",
+      "capabilities": [
+        "flow-1-mutate"
+      ],
+      "comparisonProfiles": [
+        "ordered-json-v1"
+      ],
+      "license": "AGPL-3.0-only",
+      "testOnly": true,
+      "rationale": "🐍️ No third-party library reads or writes s.flow.flow's .flow.dsl.semio carrier — the recorded survey already argues why a generic JSON/DOM reader, even though the body is plain JSON, is declined: it knows nothing of a widget discriminant, a synapse port pair or the cascade delete-widget performs. The reference is therefore a SECOND IMPLEMENTATION rather than a third-party distribution. The implementation is ../../../🧪️tests/mutate-flow-1/🐍️component.py, written from this subset's own committed ../🧬️schema/📸️snapshot/🔣️.json and from .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-DIRECT-LEAF-OVERHAUL/📓️taxonomy.md's create/delete/reorder/replace/connect/disconnect/update/move/duplicate verb entries and 📓️derivation-rules.md's per-ordered-collection recipe. It imports nothing from the Rust it judges and transliterates none of it. The ten payloads are transcribed verbatim from this feature's own committed Examples params column and applied to this case's own committed local://🔣️.json base graph, since this vocabulary's own scenario shape is a differs-from-base / inverse-restores-base property rather than a byte-for-byte match against a fourth committed value. All ten kinds' forward and inverse scenarios were executed standalone via the repository's own 🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🐍️python/🐍️.py host against a hand-built plan — all twenty passed on the first run.",
+      "kind": "verified-native-second-implementation",
+      "engine": {
+        "family": "none",
+        "implementation": "in-repository second implementation",
+        "version": "0"
+      },
+      "productionReachable": false,
+      "networkDuringExecution": false,
+      "nativeSecondImplementation": {
+        "format": "s.flow.flow",
+        "noThirdPartySurvey": {
+          "ecosystemsSearched": [
+            "rust/crates.io",
+            "python/pypi"
+          ],
+          "candidatesConsidered": [
+            {
+              "package": "json-rust (already linked into the stdio oracle crate)",
+              "reason": "A generic JSON/DOM reader knows nothing of a widget discriminant, a synapse port pair or the cascade delete-widget performs, per this subsets own recorded survey."
+            }
+          ]
+        },
+        "subjectImplementationLanguage": "rust",
+        "secondImplementationLanguage": "python",
+        "specificationSource": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-DIRECT-LEAF-OVERHAUL/📓️taxonomy.md; ../🧬️schema/📸️snapshot/🔣️.json; ../../../🧪️tests/mutate-flow-1/🧫️fixtures/🔣️.json",
+        "fixtureCoverage": {
+          "vectors": 10,
+          "capabilitiesCovered": [
+            "flow-1-mutate"
+          ]
+        }
+      }
     }
   ],
+  "noOracleDecisions": [],
   "mutationCatalogs": [
     {
       "id": "flow-1-any",
@@ -171,7 +208,7 @@
           "oracleRequirements": [
             {
               "capability": "flow-1-mutate",
-              "qualifyingKind": "third-party-library"
+              "qualifyingKind": "verified-native-second-implementation"
             }
           ]
         },
@@ -190,7 +227,7 @@
           "oracleRequirements": [
             {
               "capability": "flow-1-mutate",
-              "qualifyingKind": "third-party-library"
+              "qualifyingKind": "verified-native-second-implementation"
             }
           ]
         },
@@ -210,7 +247,7 @@
           "oracleRequirements": [
             {
               "capability": "flow-1-mutate",
-              "qualifyingKind": "third-party-library"
+              "qualifyingKind": "verified-native-second-implementation"
             }
           ]
         },
@@ -230,7 +267,7 @@
           "oracleRequirements": [
             {
               "capability": "flow-1-mutate",
-              "qualifyingKind": "third-party-library"
+              "qualifyingKind": "verified-native-second-implementation"
             }
           ]
         },
@@ -249,7 +286,7 @@
           "oracleRequirements": [
             {
               "capability": "flow-1-mutate",
-              "qualifyingKind": "third-party-library"
+              "qualifyingKind": "verified-native-second-implementation"
             }
           ]
         },
@@ -269,7 +306,7 @@
           "oracleRequirements": [
             {
               "capability": "flow-1-mutate",
-              "qualifyingKind": "third-party-library"
+              "qualifyingKind": "verified-native-second-implementation"
             }
           ]
         },
@@ -289,7 +326,7 @@
           "oracleRequirements": [
             {
               "capability": "flow-1-mutate",
-              "qualifyingKind": "third-party-library"
+              "qualifyingKind": "verified-native-second-implementation"
             }
           ]
         },
@@ -309,7 +346,7 @@
           "oracleRequirements": [
             {
               "capability": "flow-1-mutate",
-              "qualifyingKind": "third-party-library"
+              "qualifyingKind": "verified-native-second-implementation"
             }
           ]
         },
@@ -329,7 +366,7 @@
           "oracleRequirements": [
             {
               "capability": "flow-1-mutate",
-              "qualifyingKind": "third-party-library"
+              "qualifyingKind": "verified-native-second-implementation"
             }
           ]
         },
@@ -349,7 +386,7 @@
           "oracleRequirements": [
             {
               "capability": "flow-1-mutate",
-              "qualifyingKind": "third-party-library"
+              "qualifyingKind": "verified-native-second-implementation"
             }
           ]
         }

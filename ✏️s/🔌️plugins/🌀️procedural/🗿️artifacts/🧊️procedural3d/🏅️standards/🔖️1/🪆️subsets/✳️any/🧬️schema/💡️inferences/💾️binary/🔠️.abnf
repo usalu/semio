@@ -1,3 +1,0 @@
-; abnf procedural.procedural3d.inference
-document = payload
-payload = *OCTET

@@ -304,8 +304,8 @@ pub mod derived_composition {
             /// pack twin — so the fixtures can never silently drift back to a fake.
             #[semio_framework_async_macros::async_test]
             async fn fixture_honesty_law() {
-                const FIXTURE_DSL: &str = include_str!("../../✳️any/📚️examples/🎵️tone/🖼️assets/🗣️.dsl.semio");
-                const FIXTURE_PACK: &[u8] = include_bytes!("../../✳️any/📚️examples/🎵️tone/🖼️assets/🎒️.pack.semio");
+                const FIXTURE_DSL: &str = include_str!("../../✳️base/📚️examples/🎵️tone/🖼️assets/🗣️.dsl.semio");
+                const FIXTURE_PACK: &[u8] = include_bytes!("../../✳️base/📚️examples/🎵️tone/🖼️assets/🎒️.pack.semio");
 
                 let demo = snapshot::demo_audio_snapshot();
 

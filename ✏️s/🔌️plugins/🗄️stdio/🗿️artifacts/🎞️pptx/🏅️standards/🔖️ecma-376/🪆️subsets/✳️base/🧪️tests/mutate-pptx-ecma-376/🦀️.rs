@@ -23,7 +23,7 @@
 //! included — is dropped from the inverse law.
 
 use semio_repo_test_host::{Adapter, Context, Json, Outcome};
-use semio_s_plugin_stdio_test_oracle::artifacts::pptx::standards::v_ecma_376::subsets::any::{oracle_apply_mutation, oracle_apply_mutation_inverse, oracle_round_trip, project_pptx_mutation, KINDS};
+use semio_s_plugin_stdio_test_oracle::artifacts::pptx::standards::v_ecma_376::subsets::base::{oracle_apply_mutation, oracle_apply_mutation_inverse, oracle_round_trip, project_pptx_mutation, KINDS};
 use semio_s_plugin_stdio_test_oracle::law::{inverse_restores, mutation_is_observable, reparsed_not_copied, round_trip_preserves};
 
 //#region 🔖️Input
@@ -86,13 +86,13 @@ fn identity_round_trip_oracle(ctx: &Context) -> Result<Outcome, String> {
 mod subject {
     use super::{mutable_input, KINDS};
     use semio_repo_test_host::{Context, Json, Outcome};
-    use semio_s_plugin_stdio::artifacts::pptx::standards::v_ecma_376::subsets::any::io::export::serializers::{build_minimal_pptx, encode_pptx};
-    use semio_s_plugin_stdio::artifacts::pptx::standards::v_ecma_376::subsets::any::io::import::deserializers::decode_pptx;
-    use semio_s_plugin_stdio::artifacts::pptx::standards::v_ecma_376::subsets::any::schema::mutations::apply_pptx_mutation;
-    use semio_s_plugin_stdio::artifacts::pptx::standards::v_ecma_376::subsets::any::schema::mutations::{insert_shape, insert_slide, move_slide, remove_shape, remove_slide, set_shape_position, set_shape_text, set_snapshot};
-    use semio_s_plugin_stdio::artifacts::pptx::standards::v_ecma_376::subsets::any::schema::snapshot::{PptxParagraph, PptxPresentation, PptxShape, PptxSlide, PptxTransform};
+    use semio_s_plugin_stdio::artifacts::pptx::standards::v_ecma_376::subsets::base::io::export::serializers::{build_minimal_pptx, encode_pptx};
+    use semio_s_plugin_stdio::artifacts::pptx::standards::v_ecma_376::subsets::base::io::import::deserializers::decode_pptx;
+    use semio_s_plugin_stdio::artifacts::pptx::standards::v_ecma_376::subsets::base::schema::mutations::apply_pptx_mutation;
+    use semio_s_plugin_stdio::artifacts::pptx::standards::v_ecma_376::subsets::base::schema::mutations::{insert_shape, insert_slide, move_slide, remove_shape, remove_slide, set_shape_position, set_shape_text, set_snapshot};
+    use semio_s_plugin_stdio::artifacts::pptx::standards::v_ecma_376::subsets::base::schema::snapshot::{PptxParagraph, PptxPresentation, PptxShape, PptxSlide, PptxTransform};
     use semio_s_plugin_stdio::artifacts::pptx::{PptxMutation, PptxSnapshot};
-    use semio_s_plugin_stdio_test_oracle::artifacts::pptx::standards::v_ecma_376::subsets::any::project_pptx_mutation;
+    use semio_s_plugin_stdio_test_oracle::artifacts::pptx::standards::v_ecma_376::subsets::base::project_pptx_mutation;
 
     //#region 🔖️SpecCodec
     fn number_field(value: &Json, key: &str) -> f64 {

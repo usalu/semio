@@ -1982,14 +1982,14 @@ if (import.meta.vitest) {
   const { describe, expect, it } = import.meta.vitest;
 
   it("RendererResidentComposition never replaces a closing composition ledger", async () => {
-    const { execFileSync } = await import("node:child_process"); const { fileURLToPath, pathToFileURL } = await import("node:url"); const { dirname, resolve } = await import("node:path"); const { default: fixture } = await import("../../💾️resident/🟦️"); const moduleUrl = pathToFileURL(resolve(dirname(fileURLToPath(import.meta.url)), "../../💾️resident/🟦️.ts")).href;
+    const { execFileSync } = await import("node:child_process"); const { fileURLToPath, pathToFileURL } = await import("node:url"); const { dirname, resolve } = await import("node:path"); const { default: fixture } = await import("../../💾️resident/🧪️fixture/🔣️.json"); const moduleUrl = pathToFileURL(resolve(dirname(fileURLToPath(import.meta.url)), "../../💾️resident/🟦️.ts")).href;
     const source = `const { rendererResidentLedger } = await import(process.argv[1]); const first = rendererResidentLedger(); first.beginClose(); const result = first.closeStep({maxItems:1,maxBytes:256}); const second = rendererResidentLedger(); const admission = second.prepareAdmission({},'data',{maxItems:1,maxBytes:296}); process.stdout.write(JSON.stringify({same:first===second,terminal:first.terminalIsEmpty(),result:result.kind,admission:admission.kind}));`;
     const actual = JSON.parse(execFileSync("node", ["--experimental-transform-types", "--input-type=module", "--eval", source, moduleUrl], { encoding: "utf8", timeout: 10000 }));
     expect(actual).toEqual({ same: !fixture.replacesClosingLedger, terminal: true, result: "complete", admission: "rejected" });
   });
 
   it("RendererResidentComposition shares one exact ledger and preserves both consumers' charges", async () => {
-    const { rendererResidentLedger } = await import("../../💾️resident/🟦️.ts"); const { default: fixture } = await import("../../💾️resident/🟦️");
+    const { rendererResidentLedger } = await import("../../💾️resident/🟦️.ts"); const { default: fixture } = await import("../../💾️resident/🧪️fixture/🔣️.json");
     const { default: schema } = await import("../../💾️resident/🧬️schema.json"); const { default: resident } = await import("../../../../../../../🔨️modules/🌱️value/💾️resident/🧬️schema.json"); const { default: Ajv } = await import("ajv"); const { produce } = await import("immer");
     expect(new Ajv({ strict: true }).addSchema(resident).compile(schema)(fixture.capacity)).toBe(true);
     const react = rendererResidentLedger(); const wgpu = rendererResidentLedger(); expect(react === wgpu).toBe(fixture.sameLedger); expect(react.capacity).toEqual(fixture.capacity);

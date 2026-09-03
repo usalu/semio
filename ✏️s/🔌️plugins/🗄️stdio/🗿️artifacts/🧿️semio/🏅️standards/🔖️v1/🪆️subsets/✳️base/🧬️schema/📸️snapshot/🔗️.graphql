@@ -1,0 +1,44 @@
+# 🧬️ SemioSnapshot schema — real mirror of `🦀️.rs`. The envelope union over all 13
+# domain subsets — every semio artifact round-trips through this shape. `SemioSubsetSnapshot` is
+# serde-internally-tagged (`#[serde(tag = "subset", rename_all = "camelCase")]`): on the wire each
+# variant flattens the REFERENCED subset's own snapshot fields alongside the `subset` discriminator
+# directly (no nested `value` key). GraphQL cannot flatten a named type's fields into a union arm,
+# so — following the repo's established tagged-union convention (see the step ap214 ✳️base
+# `StepValue` union for the one-type-per-variant shape, and ✳️presentation's `DocBlock` reuse for
+# the cross-subset-reference-by-name convention) — this mirror uses one wrapper type per variant,
+# each carrying the `subset` tag plus a single field embedding the REFERENCED subset's own snapshot
+# type BY NAME (never redeclaring its internal fields — see that subset's own snapshot mirror).
+
+type SemioSubsetSnapshotBrep { subset: String!, brep: SemioBrepSnapshot! } # defined in ✳️brep's own snapshot mirror
+type SemioSubsetSnapshotMesh { subset: String!, mesh: SemioMeshSnapshot! } # defined in ✳️mesh's own snapshot mirror
+type SemioSubsetSnapshotModel { subset: String!, model: SemioModelSnapshot! } # defined in ✳️model's own snapshot mirror
+type SemioSubsetSnapshotValue { subset: String!, value: SemioValueSnapshot! } # defined in ✳️value's own snapshot mirror
+type SemioSubsetSnapshotDocument { subset: String!, document: SemioDocumentSnapshot! } # defined in ✳️document's own snapshot mirror
+type SemioSubsetSnapshotCad { subset: String!, cad: SemioCadSnapshot! } # defined in ✳️cad's own snapshot mirror
+type SemioSubsetSnapshotDrawing { subset: String!, drawing: SemioDrawingSnapshot! } # defined in ✳️drawing's own snapshot mirror
+type SemioSubsetSnapshotImage { subset: String!, image: SemioImageSnapshot! } # defined in ✳️image's own snapshot mirror
+type SemioSubsetSnapshotVideo { subset: String!, video: SemioVideoSnapshot! } # defined in ✳️video's own snapshot mirror
+type SemioSubsetSnapshotAudio { subset: String!, audio: SemioAudioSnapshot! } # defined in ✳️audio's own snapshot mirror
+type SemioSubsetSnapshotAnimation { subset: String!, animation: SemioAnimationSnapshot! } # defined in ✳️animation's own snapshot mirror
+type SemioSubsetSnapshotPresentation { subset: String!, presentation: SemioPresentationSnapshot! } # defined in ✳️presentation's own snapshot mirror
+type SemioSubsetSnapshotFlow { subset: String!, flow: SemioFlowSnapshot! } # defined in ✳️flow's own snapshot mirror
+
+union SemioSubsetSnapshot =
+    SemioSubsetSnapshotBrep
+  | SemioSubsetSnapshotMesh
+  | SemioSubsetSnapshotModel
+  | SemioSubsetSnapshotValue
+  | SemioSubsetSnapshotDocument
+  | SemioSubsetSnapshotCad
+  | SemioSubsetSnapshotDrawing
+  | SemioSubsetSnapshotImage
+  | SemioSubsetSnapshotVideo
+  | SemioSubsetSnapshotAudio
+  | SemioSubsetSnapshotAnimation
+  | SemioSubsetSnapshotPresentation
+  | SemioSubsetSnapshotFlow
+
+type SemioSnapshot {
+  schema: String! @state(class: ARTIFACT)
+  subset: SemioSubsetSnapshot! @state(class: ARTIFACT)
+}

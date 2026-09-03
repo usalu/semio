@@ -1,7 +1,7 @@
 MIME,Extension,Name,FullName,Neutral,Dir,Kind
 application/octet-stream,.bin,Binary,Raw Binary Bytes,Bytes,💾️binary,stdio.binary
-text/plain,.txt,Text,Plain Text,TextDoc,📄txt,stdio.txt
-application/xml,.xml,XML,Extensible Markup Language,XmlDoc,📰xml,stdio.xml
+text/plain,.txt,Text,Plain Text,TextDoc,📄️txt,stdio.txt
+application/xml,.xml,XML,Extensible Markup Language,XmlDoc,📰️xml,stdio.xml
 application/zlib,.zz,Deflate,Zlib Deflate Stream,DeflateStream,🗜️deflate,stdio.deflate
 application/zip,.zip,ZIP,Zip Archive,Archive,🎒️zip,stdio.zip
 application/json,.json,JSON,JavaScript Object Notation,Value,🔣️json,stdio.json

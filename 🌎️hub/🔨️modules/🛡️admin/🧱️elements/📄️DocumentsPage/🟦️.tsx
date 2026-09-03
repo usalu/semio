@@ -50,14 +50,14 @@ export function DocumentsPage(): React.ReactElement {
   React.useEffect(load, [load]);
 
   const columns: TableColumn<DocumentView>[] = [
-    { id: "id", header: t("admin.documents.id"), accessor: (row) => row.id },
+    { id: "id", header: t("admin.documents.id"), accessor: (row) => row.descriptor.documentId },
     { id: "headSeq", header: t("admin.documents.headSeq"), accessor: (row) => row.headSeq },
     { id: "commitSeq", header: t("admin.documents.commitSeq"), accessor: (row) => row.commitSeq },
     { id: "epoch", header: t("admin.documents.epoch"), accessor: (row) => row.epoch },
     {
       id: "connections",
       header: t("admin.documents.activeConnections"),
-      accessor: (row) => connectionCounts.get(spaceId === ALL_SPACES ? row.id : `${spaceId}:${row.id}`) ?? 0,
+      accessor: (row) => connectionCounts.get(`${row.descriptor.spaceId}:${row.descriptor.documentId}`) ?? 0,
     },
   ];
 
@@ -79,7 +79,7 @@ export function DocumentsPage(): React.ReactElement {
           </SelectContent>
         </Select>
       </div>
-      <Table columns={columns} data={documents} emptyMessage={uiDataLabel(t("admin.documents.empty"))} getRowId={(row) => `document:${row.id}`} />
+      <Table columns={columns} data={documents} emptyMessage={uiDataLabel(t("admin.documents.empty"))} getRowId={(row) => `document:${row.descriptor.spaceId}:${row.descriptor.documentId}`} />
     </div>
   );
 }

@@ -22,9 +22,9 @@
       }
     },
     {
-      "app": "procedural2d",
-      "controllerId": "s.procedural.procedural2d@1/*#editor",
-      "surfaceId": "procedural2d-graph",
+      "app": "generation2d",
+      "controllerId": "s.procedural.generation2d@1/*#editor",
+      "surfaceId": "generation2d-graph",
       "widgetId": "width",
       "label": "Breite",
       "before": {
@@ -42,9 +42,9 @@
       }
     },
     {
-      "app": "procedural3d",
-      "controllerId": "s.procedural.procedural3d@1/*#editor",
-      "surfaceId": "procedural3d-graph",
+      "app": "generation3d",
+      "controllerId": "s.procedural.generation3d@1/*#editor",
+      "surfaceId": "generation3d-graph",
       "widgetId": "depth",
       "label": "Tiefe",
       "before": {

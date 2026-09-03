@@ -57,6 +57,22 @@ pub struct AssetHandle(pub u128);
 #[serde(transparent)]
 pub struct CapabilityToken(pub u128);
 
+/// 🌉️ Hand-written, not derived — see [`ArtifactHandle`]'s impl doc above (same `u128`
+/// decimal-string mirror).
+impl dsl::ToValue for CapabilityToken {
+    fn to_value(&self) -> DslValue {
+        DslValue::String(self.0.to_string())
+    }
+}
+impl dsl::FromValue for CapabilityToken {
+    fn from_value(value: DslValue) -> Result<Self, dsl::ValueError> {
+        match value {
+            DslValue::String(s) => s.parse().map(CapabilityToken).map_err(|_| dsl::ValueError::new(format!("expected a u128 decimal string for CapabilityToken, found {s:?}"))),
+            other => Err(dsl::ValueError::new(format!("expected a string for CapabilityToken, found {other:?}"))),
+        }
+    }
+}
+
 #[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(transparent)]
 #[value(transparent)]
@@ -76,20 +92,24 @@ pub use protocol_core::{ActorId, ArtifactId, ArtifactVersion, MutationId, Schema
 
 /// 🪪️ Identifies one dispatched invocation — of an action *or* a command; both route through the same
 /// `KernelMutation`/`UndoGroup` history bookkeeping.
-#[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(transparent)]
+#[value(transparent)]
 pub struct InvocationId(pub String);
 
-#[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(transparent)]
+#[value(transparent)]
 pub struct ActionId(pub String);
 
-#[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(transparent)]
+#[value(transparent)]
 pub struct CommandId(pub String);
 
-#[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(transparent)]
+#[value(transparent)]
 pub struct AppInstanceId(pub String);
 
 #[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
@@ -157,8 +177,20 @@ pub struct CapabilityRequirement {
     pub scope: Scope,
 }
 
-#[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
+// 🚧️ BLOCKED (26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS): `artifact:
+// ArtifactId` below is `protocol_core::ArtifactId` — defined in the `semio-framework-replication`
+// crate (`📡️replication/🆔️ids/🦀️.rs`), which implements its OWN `crate::value::ToValue`
+// (`🌱️value/🦀️.rs`, separately path-mounted into that crate) — a structurally-identical but
+// nominally DISTINCT trait from this crate's `dsl::ToValue` (`os_dsl::schema::{ToValue,
+// FromValue}`, canonical definition per `🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/🦀️.rs`
+// L332-347). Confirmed via source inspection, not `cargo check` alone: `ArtifactId` does not
+// implement `dsl::ToValue`, so `#[derive(ToValue, FromValue)]` here would fail. Fixing it means
+// giving replication's frozen protocol newtypes a second, os-kernel-flavored `ToValue`/`FromValue`
+// impl — out of this pass's scope (replication is a frozen contract, not a named target of this
+// ticket). Left serde-only.
+#[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct Capability {
     pub subject: PluginInstanceId,
     pub artifact: ArtifactId,
@@ -166,8 +198,13 @@ pub struct Capability {
     pub scope: Scope,
 }
 
-#[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
+// 🤝️ Keeps pace with `Capability` above, exactly as that type's own note prescribes: both of this
+// struct's field types now carry `ToValue`/`FromValue` (`Capability` by derive, `CapabilityToken` by
+// the hand-written u128 decimal-string mirror at `🔖️Capability`'s head), so the blocker the previous
+// note described is discharged and the derive follows.
+#[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct CapabilityGrant {
     pub token: CapabilityToken,
     pub capability: Capability,
@@ -187,8 +224,9 @@ pub struct ActionDef {
     pub produces_operations: bool,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct ActionInvocation {
     pub id: InvocationId,
     pub app: AppInstanceId,
@@ -196,13 +234,15 @@ pub struct ActionInvocation {
     pub input: DslValue,
     pub actor: ActorId,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[value(default, skip_serializing_if = "Vec::is_empty")]
     pub causal_context: Vec<MutationId>,
 }
 
 /// @emoji 🎛️ A dispatched invocation of a `CommandDefinition` — the command mirror of `ActionInvocation`.
 /// No `causal_context`: commands are not chained off a prior operation the way an action's follow-up can be.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct CommandInvocation {
     pub id: InvocationId,
     pub app: AppInstanceId,
@@ -303,6 +343,16 @@ pub struct RequestId(pub u64);
 /// the awaiting future instead of a redispatch). The rest are new: messaging, blobs, documents,
 /// links, registry lookups, io composition, engine caches, jobs, storage, capability admin, and
 /// pub/sub — see `📓️design-abi.md` §2's table.
+// 🚧️ Both `Serialize` AND `Deserialize` stay unconditional (kept additive, not stripped):
+// `semio-framework-plugin`'s `RefreshResponse` (`🔌️plugin/🦀️.rs`, `requested_effects: Vec<Effect>`)
+// derives `Serialize` in production and needs `Effect: Serialize`; this file's own `TurnResult`
+// (`effects: Vec<Effect>`, above `🔖️Invocation`) derives `Deserialize` in production too — a real
+// consumer a first pass at `#[cfg_attr(test, derive(Deserialize))]` missed (confirmed the hard way:
+// `cargo check -p semio-framework` failed E0277 on `Effect: serde::Deserialize` at `TurnResult`'s
+// own derive site before this was reverted). `Effect` already carries `ToValue`/`FromValue`
+// alongside — this file's own 4 `#[cfg(test)]` round-trip oracles in `🛂️manifest/🦀️.rs` exercise
+// the same, still-production, serde derives; nothing further to move to `[dev-dependencies]`.
+// Ticket 26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase", rename_all_fields = "camelCase")]
 #[value(rename_all = "camelCase")]
@@ -639,8 +689,7 @@ pub struct IconRenderExportItem {
 }
 //#endregion 🔖️Effect
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
 #[value(rename_all = "camelCase")]
 pub struct AppEvent {
     pub kind: String,
@@ -660,19 +709,19 @@ pub use protocol::ArtifactDiff;
 // see `HybridLogicalTimestamp`'s doc above for the same reconciliation).
 pub use protocol_core::UndoPolicy;
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct InverseMutation {
     pub target_mutation: MutationId,
     pub inverse_diff: ArtifactDiff,
     pub base_version: ArtifactVersion,
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[value(default, skip_serializing_if = "Vec::is_empty")]
     pub dependencies: Vec<MutationId>,
     pub undo_policy: UndoPolicy,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct KernelMutation {
     pub id: MutationId,
     pub document: ArtifactHandle,
@@ -680,7 +729,7 @@ pub struct KernelMutation {
     pub invocation_id: InvocationId,
     pub diff: ArtifactDiff,
     pub inverse: InverseMutation,
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[value(default, skip_serializing_if = "Vec::is_empty")]
     pub dependencies: Vec<MutationId>,
     pub author: ActorId,
     pub timestamp: HybridLogicalTimestamp,
@@ -691,22 +740,22 @@ pub struct KernelMutation {
 /// group's own `invocation_id` target (composite/child-document dispatch, ticket
 /// 26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM `📓️design-full-plan.md` section "1. Kernel
 /// primitives" — grouping). Additive only: nothing in this wave constructs one yet.
-#[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, Eq, Hash, ToValue, FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct EditRef {
     pub document: ArtifactHandle,
     pub edit_id: String,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct UndoGroup {
     pub invocation_id: InvocationId,
     pub mutations: Vec<MutationId>,
     pub inverse_mutations: Vec<InverseMutation>,
     /// 🧩️ Cross-document member edits folded into this group's undo (composite dispatch across
     /// parent + child documents) — additive, empty for every group that isn't composite.
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[value(default, skip_serializing_if = "Vec::is_empty")]
     pub member_edits: Vec<EditRef>,
 }
 
@@ -809,41 +858,44 @@ pub struct HistoryPatch {
     pub command_filter: String,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct InvocationResult {
     pub output: DslValue,
     pub mutations: Vec<KernelMutation>,
     pub inverse_group: UndoGroup,
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[value(default, skip_serializing_if = "Vec::is_empty")]
     pub diagnostics: Vec<Diagnostic>,
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[value(default, skip_serializing_if = "Vec::is_empty")]
     pub requested_effects: Vec<Effect>,
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[value(default, skip_serializing_if = "Vec::is_empty")]
     pub events: Vec<AppEvent>,
-    #[serde(default)]
+    #[value(default)]
     pub ui_scope: UiDirtyScope,
     /// 🧾️ Incremental command-history delivery. It is independent from `ui_scope`: history must
     /// become visible before effects or an unrelated UI refresh can be queued.
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub history_patch: Option<HistoryPatch>,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct ActionContext {
     pub invocation: ActionInvocation,
     pub document_snapshot: DslValue,
     pub view_state: super::ViewModel,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[value(default, skip_serializing_if = "Vec::is_empty")]
     pub granted_capabilities: Vec<CapabilityGrant>,
 }
 
 /// @emoji 🎛️ Context for a dispatched `CommandInvocation` — the command mirror of `ActionContext`.
 /// No `document_snapshot`/`granted_capabilities`: `VcsArtifactApp` owns the store directly and
 /// commands don't yet carry a capability grant model (mirrors actions' current state).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct CommandContext {
     pub invocation: CommandInvocation,
     pub view_state: super::ViewModel,
@@ -855,21 +907,21 @@ pub use semio_framework_os_kernel::{decode_presence_peer, encode_presence_peer, 
 //#endregion 🔖️Presence
 
 //#region 🔖️Window
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct PhysicalSize {
     pub width: u32,
     pub height: u32,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct Appearance {
     pub mode: String,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct WindowEvent {
     pub kind: String,
     pub payload: DslValue,
@@ -893,13 +945,13 @@ pub struct WindowKindDef {
     pub capabilities: Vec<CapabilityRequirement>,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct WindowInput {
     pub window: WindowHandle,
     pub params: DslValue,
     pub document_snapshot: DslValue,
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[value(default, skip_serializing_if = "Vec::is_empty")]
     pub events: Vec<WindowEvent>,
     pub size: PhysicalSize,
     pub scale_factor: f64,

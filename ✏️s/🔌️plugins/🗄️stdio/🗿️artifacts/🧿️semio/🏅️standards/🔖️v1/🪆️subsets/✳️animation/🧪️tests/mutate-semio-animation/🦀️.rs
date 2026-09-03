@@ -12,7 +12,7 @@
 //!
 //! Every scenario drives this repository's own production entry points — `parse_semio_animation_dsl`/`print_semio_animation_dsl` for
 //! the carrier and `apply_semio_animation_mutation`/`inverse_semio_animation_mutation` for the vocabulary — over the real committed walk
-//! artifact `../../🏅️standards/🔖️v1/🪆️subsets/✳️any/📚️examples/🚶️walk/🖼️assets/🗣️.dsl.semio`, and projects the resulting snapshot as structural JSON for
+//! artifact `../../🏅️standards/🔖️v1/🪆️subsets/✳️base/📚️examples/🚶️walk/🖼️assets/🗣️.dsl.semio`, and projects the resulting snapshot as structural JSON for
 //! `ordered-json-v1` to compare against the Python side's.
 //!
 //! The mutation parameters and the specification-vector paths live in `component.feature`, so both
@@ -41,13 +41,13 @@ const KINDS: &[&str] = &["no-mutation", "set-snapshot", "insert-timeline", "remo
 mod subject {
     use semio_repo_test_host::{digest, Context, Json, Outcome};
     use semio_s_plugin_stdio_test_oracle::law::carrier_is_exact;
-    use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::any::schema::mutations::semio_mutation_refusals;
+    use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::base::schema::mutations::semio_mutation_refusals;
     use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::animation::schema::mutations::{
         apply_semio_animation_mutation, insert_channel, insert_keyframe, insert_timeline, inverse_semio_animation_mutation, remove_channel, remove_keyframe, remove_timeline, set_channel_interpolation, set_channel_target, set_keyframe_time,
         set_keyframe_value, set_snapshot, set_timeline_name, SemioAnimationMutation,
     };
     use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::animation::schema::snapshot::{parse_semio_animation_dsl, print_semio_animation_dsl, AnimChannel, AnimInterpolation, AnimKeyframe, AnimTarget, AnimTargetProperty, AnimTimeline, AnimValue, SemioAnimationSnapshot};
-    use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::any::schema::geometry::{SemioPoint3, SemioQuaternion};
+    use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::base::schema::geometry::{SemioPoint3, SemioQuaternion};
 
     //#region 🔖️JsonReaders
     fn text(value: &Json, key: &str) -> Result<String, String> {

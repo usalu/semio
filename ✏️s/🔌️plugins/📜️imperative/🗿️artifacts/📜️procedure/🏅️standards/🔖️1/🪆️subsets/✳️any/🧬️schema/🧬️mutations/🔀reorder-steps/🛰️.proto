@@ -1,0 +1,8 @@
+syntax = "proto3";
+package semio.imperative.v1;
+
+message ReorderSteps {
+  ProcedurePathRef path_ref = 1;
+  string id = 2;
+  uint64 to_index = 3;
+}

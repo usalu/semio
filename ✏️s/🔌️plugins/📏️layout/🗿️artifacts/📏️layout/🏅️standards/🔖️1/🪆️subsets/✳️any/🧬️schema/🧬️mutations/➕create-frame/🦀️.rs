@@ -6,12 +6,11 @@ use crate::artifacts::layout::{Frame, LayoutDiff, LayoutSnapshot, PageFrameAdded
 use crate::artifacts::layout::mutations::{LayoutMutation, delete_frame};
 use crate::artifacts::layout::schema::diff::{LayoutPagePatchEntry, LayoutPagesDelta};
 use protocol::{MutationKind, SemanticDescriptor};
-use serde::{Deserialize, Serialize};
 use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region ➕️CreateFrame
 #[derive(Clone, Debug, PartialEq, dsl::MutationLeaf, ToValue, FromValue)]
-#[cfg_attr(test, derive(Serialize, Deserialize))]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[mutation_leaf(contract = ::protocol)]
 pub struct CreateFrame {
     pub page_id: String,

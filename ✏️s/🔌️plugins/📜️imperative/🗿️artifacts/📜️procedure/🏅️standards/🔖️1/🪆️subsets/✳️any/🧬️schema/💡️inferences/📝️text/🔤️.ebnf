@@ -1,0 +1,3 @@
+(* ebnf imperative.procedure.inference *)
+document = header, body ;
+header = 'schema', space, 'imperative.procedure.inference', newline ;

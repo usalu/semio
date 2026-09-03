@@ -861,7 +861,7 @@
       "name": "🛠️dev🔧️procedural🩻️2d🧊️wgpu🖥️native",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun ./🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/📜️script.ts native procedural2d",
+      "command": "bun ./🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/📜️script.ts native generation2d",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "3_dev",
@@ -912,7 +912,7 @@
       "name": "🛠️dev🔧️procedural🏙️3d🧊️wgpu🖥️native",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun ./🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/📜️script.ts native procedural3d",
+      "command": "bun ./🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/📜️script.ts native generation3d",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "3_dev",
@@ -1065,7 +1065,7 @@
       "name": "🛠️dev🔧️procedural🏙️3d🧩️hexagonal🧱️column🧊️wgpu🖥️native",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun ./🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/📜️script.ts native procedural3d",
+      "command": "bun ./🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/📜️script.ts native generation3d",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "3_dev",
@@ -2205,10 +2205,10 @@
       "name": "🛠️dev🔺️trinity♻️rewriting⚛️react",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun run dev:trinity:rewrite",
+      "command": "bun run dev:trinity:rewriting",
       "cwd": "${workspaceFolder}",
       "env": {
-        "TRINITY_REWRITE_PLAY_PORT": "6056",
+        "TRINITY_REWRITING_PLAY_PORT": "6056",
         "SEMIO_RENDERER": "react"
       },
       "presentation": {
@@ -2225,10 +2225,10 @@
       "name": "🛠️dev🔺️trinity♻️rewriting🧊️wgpu🌐️wasm",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun run dev:trinity:rewrite",
+      "command": "bun run dev:trinity:rewriting",
       "cwd": "${workspaceFolder}",
       "env": {
-        "TRINITY_REWRITE_PLAY_PORT": "6156",
+        "TRINITY_REWRITING_PLAY_PORT": "6156",
         "SEMIO_RENDERER": "wgpu"
       },
       "presentation": {
@@ -5838,6 +5838,17 @@
       }
     },
     {
+      "name": "📦️catalog-complete🤖️plugin-registry",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/plugin-registry:catalog-complete -- --build-root \"${input:catalogFreshBuildRoot}\"",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 206.066
+      }
+    },
+    {
       "name": "📦️preview🤖️print-latex-tokens",
       "type": "node-terminal",
       "request": "launch",
@@ -7347,11 +7358,11 @@
         "S_OS_PORT": "6127",
         "SEMIO_PLUGIN": "demonstrator",
         "SEMIO_RENDERER": "wgpu",
-        "SEMIO_APP": "s.procedural.procedural3d@1/*#editor"
+        "SEMIO_APP": "s.procedural.generation3d@1/*#editor"
       },
       "presentation": {
         "group": "3_dev",
-        "order": 390.301
+        "order": 390.32099999999997
       },
       "serverReadyAction": {
         "action": "openExternally",
@@ -7367,11 +7378,11 @@
       "cwd": "${workspaceFolder}",
       "env": {
         "SEMIO_PLUGIN": "demonstrator",
-        "SEMIO_APP": "s.procedural.procedural3d@1/*#editor"
+        "SEMIO_APP": "s.procedural.generation3d@1/*#editor"
       },
       "presentation": {
         "group": "3_dev",
-        "order": 390.302
+        "order": 390.322
       }
     },
 {
@@ -7388,7 +7399,7 @@
       },
       "presentation": {
         "group": "3_dev",
-        "order": 390.34
+        "order": 390.36
       },
       "serverReadyAction": {
         "action": "openExternally",
@@ -7410,7 +7421,7 @@
       },
       "presentation": {
         "group": "3_dev",
-        "order": 390.34099999999995
+        "order": 390.361
       },
       "serverReadyAction": {
         "action": "openExternally",
@@ -7430,7 +7441,7 @@
       },
       "presentation": {
         "group": "3_dev",
-        "order": 390.342
+        "order": 390.362
       }
     },
 {
@@ -7447,7 +7458,7 @@
       },
       "presentation": {
         "group": "3_dev",
-        "order": 390.351
+        "order": 390.371
       },
       "serverReadyAction": {
         "action": "openExternally",
@@ -7467,7 +7478,7 @@
       },
       "presentation": {
         "group": "3_dev",
-        "order": 390.35200000000003
+        "order": 390.372
       }
     },
 {
@@ -7594,5 +7605,12 @@
         "group": "3_dev",
         "order": 386.16
       }
+    }
+  ],
+  "inputs": [
+    {
+      "id": "catalogFreshBuildRoot",
+      "type": "promptString",
+      "description": "Absolute fresh plugin catalog build root"
     }
   ]}

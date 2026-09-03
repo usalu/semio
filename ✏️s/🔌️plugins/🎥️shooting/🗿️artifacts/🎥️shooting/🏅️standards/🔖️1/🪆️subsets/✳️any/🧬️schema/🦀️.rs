@@ -2,11 +2,12 @@
 
 use crate::artifacts::shooting::{ShootingAsset, ShootingCamera, ShootingEmblemChild, ShootingSavedCamera, ShootingSceneLighting, ShootingShot, ShootingSnapshot};
 use schema::ArtifactSchema;
-use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::any::schema::geometry::{SemioPoint2, SemioRgba, SemioTransform};
+use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::base::schema::geometry::{SemioPoint2, SemioRgba, SemioTransform};
 use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::drawing::schema::snapshot::{DrawCanvas, DrawLayer, DrawNode, DrawStyle, PathSegment, SemioDrawingSnapshot, STDIO_SEMIODRAWING_DOCUMENT_SCHEMA};
 use semio_s_plugin_stdio::artifacts::svg::schema::snapshot::write_svg_xml;
 use semio_s_plugin_stdio::artifacts::svg::SvgSnapshot;
-use serde_json::{json, Value};
+use dsl::json;
+use dsl::os_pack::json::Value;
 
 //#region 🔖️Artifact
 /// 🧬️ Full shooting artifact state across the artifact, presence and config lanes.
@@ -149,8 +150,7 @@ pub async fn default_snapshot() -> ShootingSnapshot {
 /// for this migration) — derives the JSON from the DSL fixture rather than keeping a second, redundant
 /// JSON copy of it on disk.
 pub async fn default_snapshot_json() -> String {
-    let value: serde_json::Value = dsl::ToValue::to_value(&default_snapshot()).into();
-    value.to_string()
+    dsl::os_pack::json::to_json_string(&default_snapshot())
 }
 
 /// 📸️ The active shot — falls back to the first shot when `active_shot_id` names nothing (an empty
@@ -303,7 +303,7 @@ pub async fn shooting_scene_svg(snapshot: &ShootingSnapshot) -> Result<(String, 
 
 /// 🌉️ `shooting_scene_svg` over an already-deserialized document `Value`.
 pub async fn shooting_document_json_to_svg(value: &Value) -> Result<(String, u32, u32), String> {
-    let dsl_value: dsl::DslValue = value.clone().into();
+    let dsl_value: dsl::DslValue = dsl::os_pack::json::to_dsl_value(value);
     let snapshot: ShootingSnapshot = dsl::FromValue::from_value(dsl_value).map_err(|error| error.to_string())?;
     shooting_scene_svg(&snapshot)
 }
@@ -312,45 +312,46 @@ pub async fn shooting_document_json_to_svg(value: &Value) -> Result<(String, u32
 /// consumed both by the icon window's `render()` and by the `exportActiveShot`/`exportAllShots` shell
 /// commands (`🎮️commands/🖨️export`), two consumers.
 pub async fn shooting_icon_render_request_json(snapshot: &ShootingSnapshot, shot: &ShootingShot, asset: &ShootingAsset, fallback_camera: &ShootingCamera) -> String {
+    let vec3 = |v: [f64; 3]| Value::from(v.iter().map(|c| Value::from(*c)).collect::<Vec<Value>>());
     let camera = crate::artifacts::shooting::shooting_resolve_shot_camera(snapshot, shot, fallback_camera);
     let scene = &snapshot.scene;
     let mut camera_value = json!({
-        "position": camera.position,
-        "target": camera.target,
+        "position": vec3(camera.position),
+        "target": vec3(camera.target),
         "zoom": camera.zoom,
         "fov": camera.fov,
     });
     if let (Some(object), Some(up)) = (camera_value.as_object_mut(), camera.up) {
-        object.insert("up".into(), json!(up));
+        object.insert("up", vec3(up));
     }
     let mut value = json!({
-        "assetUrl": asset.url,
+        "assetUrl": asset.url.as_str(),
         "camera": camera_value,
         "lights": {
             "ambientIntensity": scene.ambient.intensity,
-            "ambientColor": scene.ambient.color,
+            "ambientColor": scene.ambient.color.as_str(),
             "sunAzimuth": scene.sun.azimuth,
             "sunElevation": scene.sun.elevation,
             "sunIntensity": scene.sun.intensity,
-            "sunColor": scene.sun.color,
+            "sunColor": scene.sun.color.as_str(),
         },
         "width": shot.width,
         "height": shot.height,
-        "format": shot.format,
+        "format": shot.format.as_str(),
         "shape": if shot.shape == "ellipse" { "ellipse" } else { "rectangle" },
         "shadowEnabled": scene.shadow.enabled,
         "material": {
-            "color": scene.material.color,
+            "color": scene.material.color.as_str(),
             "metalness": scene.material.metalness,
             "roughness": scene.material.roughness,
-            "emissive": scene.material.emissive,
+            "emissive": scene.material.emissive.as_str(),
             "emissiveIntensity": scene.material.emissive_intensity,
         },
     });
     if let Some(object) = value.as_object_mut() {
         let background = shot.background.clone().unwrap_or_else(|| scene.background.clone());
         if !is_transparent_shooting_background(&background) {
-            object.insert("background".into(), json!(background));
+            object.insert("background", json!(background.as_str()));
         }
     }
     value.to_string()
@@ -365,8 +366,7 @@ pub async fn shooting_icon_render_request_json(snapshot: &ShootingSnapshot, shot
 /// (`&DwgDrawing -> Result<Value, String>`) has no channel back into that runtime state, so this no
 /// longer reframes the camera to the drawing extent (dropped, not moved — see the ticket notes).
 pub async fn shooting_document_json_from_dwg(_drawing: &semio_s_plugin_stdio::artifacts::dwg::DwgDrawing) -> Result<Value, String> {
-    let value: serde_json::Value = dsl::ToValue::to_value(&default_snapshot()).into();
-    Ok(value)
+    Ok(dsl::os_pack::json::from_dsl_value(&dsl::ToValue::to_value(&default_snapshot())))
 }
 //#endregion 🔖️MediaImport
 

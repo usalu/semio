@@ -2,7 +2,7 @@
 //! transform). Only `Group` carries a rotation field -- `Path`/`Text`/`Image` are honestly a
 //! no-op, matching `move-node`'s own reach limits.
 
-use crate::artifacts::semio::standards::v1::subsets::any::schema::geometry::SemioQuaternion;
+use crate::artifacts::semio::standards::v1::subsets::base::schema::geometry::SemioQuaternion;
 use crate::artifacts::semio::standards::v1::subsets::drawing::schema::diff::{NodePath, SemioDrawingDiff, diff_rotate_node, node_at};
 use crate::artifacts::semio::standards::v1::subsets::drawing::schema::mutations::SemioDrawingMutation;
 use crate::artifacts::semio::standards::v1::subsets::drawing::schema::snapshot::{DrawNode, SemioDrawingSnapshot};

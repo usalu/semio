@@ -1,0 +1,9 @@
+dialect grammar
+grammar generation2d.snapshot
+extension generation2d
+start document
+
+document = header body
+header = "schema" SP "procedural.generation2d.snapshot" NL
+body = payload NL?
+payload = OCTET+

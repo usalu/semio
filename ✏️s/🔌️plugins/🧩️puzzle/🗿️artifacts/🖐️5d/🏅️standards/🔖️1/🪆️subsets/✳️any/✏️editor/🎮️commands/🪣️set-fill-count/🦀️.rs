@@ -1,7 +1,7 @@
 //! 🪣️ `set-fill-count` command.
 
 use crate::editor::puzzle5d::{merge_engine_fixture, Puzzle5dActionCtx, PUZZLE5D_FILL_COUNT_MAX};
-use serde_json::Value;
+use dsl::os_pack::json::Value;
 
 /// 🪣️ Applies the requested placement count (clamped to [`PUZZLE5D_FILL_COUNT_MAX`]); a count of zero
 /// only records the runtime value, leaving the document untouched.

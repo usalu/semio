@@ -1,0 +1,15 @@
+syntax = "proto3";
+package semio.app.mathematical.equation.config;
+
+message EquationCamera {
+  double x = 1;
+  double y = 2;
+  double zoom = 3;
+}
+
+message EquationConfig {
+  // @state config
+  EquationCamera camera = 1;
+  // @state config
+  string locale = 2;
+}

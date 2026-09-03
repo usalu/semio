@@ -2,7 +2,7 @@
 
 use crate::editor::puzzle5d::modes::edit::windows::board2d;
 use crate::editor::puzzle5d::{Puzzle5dActionCtx, PUZZLE5D_PLAY_WINDOWS};
-use serde_json::Value;
+use dsl::os_pack::json::Value;
 
 pub fn engagement_input(ctx: &mut Puzzle5dActionCtx<'_>, args: Option<&Value>) {
     let window = args.and_then(|value| value.get("window")).and_then(|value| value.as_str()).unwrap_or(board2d::WINDOW_KIND_ID);

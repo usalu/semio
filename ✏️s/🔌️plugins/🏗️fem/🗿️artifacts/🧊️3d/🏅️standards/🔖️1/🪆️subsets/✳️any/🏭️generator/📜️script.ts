@@ -27,7 +27,7 @@
 //
 // @see ../../../../../../../../🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️mesh/🏭️generator/📜️script.ts
 //      — the pilot this file mirrors in CLI shape, bundle layout and manifest fields.
-// @see ../../../../◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🏭️generator/📜️script.ts — the sibling 2D
+// @see ../../../../◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🏭️generator/📜️script.ts — the sibling 2D
 //      generator this file mirrors, plus the `baseZ` translation `FemSolid` adds over `FemRegion`.
 // @see ../🕸️meshing/… (crate::fem3d_engine::meshing::build_semio_mesh_snapshot) — the honest-geometry
 //      bridge whose OUTER CAPABILITY (not its triangulation) this corpus stands in for.

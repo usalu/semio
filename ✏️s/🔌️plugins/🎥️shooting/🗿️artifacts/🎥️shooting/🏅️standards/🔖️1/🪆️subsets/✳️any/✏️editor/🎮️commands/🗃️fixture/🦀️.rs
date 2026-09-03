@@ -19,8 +19,8 @@ pub mod import_snapshot_json {
     }
 
     pub async fn handle(payload: &ImportSnapshotJson, _doc: &ArtifactView<'_, ShootingSnapshot>, _cfg: &ConfigView<'_, ShootingConfig>, _ctx: &mut ShootingDispatchCtx) -> Result<Emit<ShootingMutation, ShootingConfigMutation>, Fault> {
-        let parsed: Result<ShootingSnapshot, ()> = serde_json::from_str::<serde_json::Value>(&payload.json).map_err(|_| ()).and_then(|json_value| {
-            let dsl_value: dsl::DslValue = json_value.into();
+        let parsed: Result<ShootingSnapshot, ()> = dsl::os_pack::json::parse(&payload.json).map_err(|_| ()).and_then(|json_value| {
+            let dsl_value = dsl::os_pack::json::to_dsl_value(&json_value);
             dsl::FromValue::from_value(dsl_value).map_err(|_: dsl::ValueError| ())
         });
         match parsed {
@@ -82,11 +82,9 @@ pub mod save_download {
     pub struct SaveDownload {}
 
     pub async fn handle(_payload: &SaveDownload, doc: &ArtifactView<'_, ShootingSnapshot>, _cfg: &ConfigView<'_, ShootingConfig>, _ctx: &mut ShootingDispatchCtx) -> Result<Emit<ShootingMutation, ShootingConfigMutation>, Fault> {
-        let value: serde_json::Value = dsl::ToValue::to_value(doc.snapshot).into();
-        match serde_json::to_string_pretty(&value) {
-            Ok(fixture_text) => Ok(Emit::effect(Effect::DownloadMediaExport { filename: "shooting.shooting.ops".into(), mime_type: "text/plain".into(), data: fixture_text, encoding: None })),
-            Err(_) => Ok(Emit::default()),
-        }
+        let value = dsl::os_pack::json::from_dsl_value(&dsl::ToValue::to_value(doc.snapshot));
+        let fixture_text = dsl::os_pack::json::to_string_pretty(&value);
+        Ok(Emit::effect(Effect::DownloadMediaExport { filename: "shooting.shooting.ops".into(), mime_type: "text/plain".into(), data: fixture_text, encoding: None }))
     }
 }
 //#endregion 🔖️SaveDownload

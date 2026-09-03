@@ -1,7 +1,7 @@
 //! ✏️ Pptx editor — the `edit` mode: a single full-pane Document window over the slide list, one
 //! page per slide.
 
-use crate::editor::pptx::standards::v_ecma_376::subsets::any::modes::edit::windows::main;
+use crate::editor::pptx::standards::v_ecma_376::subsets::base::modes::edit::windows::main;
 use semio_framework_plugin::{LocalizedLabel, ModeDefinition, WindowLayout, WindowLayoutRoot, WindowLayoutStackNode, WindowLayoutWindowNode};
 
 pub const PPTX_EDIT_MODE_ID: &str = "edit";

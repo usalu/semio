@@ -36,6 +36,30 @@
       },
       "productionReachable": false,
       "networkDuringExecution": false
+    },
+    {
+      "id": "openpyxl-xlsx-ecma-376-mutate-reader",
+      "kind": "third-party-library",
+      "ecosystem": "python",
+      "package": "openpyxl",
+      "version": "3.1.5",
+      "engine": {
+        "family": "openpyxl",
+        "implementation": "openpyxl OOXML SpreadsheetML reader/writer",
+        "version": "3.1.5"
+      },
+      "capabilities": [
+        "xlsx-ecma-376-mutate"
+      ],
+      "license": "MIT",
+      "testOnly": true,
+      "productionReachable": false,
+      "networkDuringExecution": false,
+      "homepage": "https://openpyxl.readthedocs.io",
+      "rationale": "📖️ A READER, registered separately from this file's existing `cross-semio-implementation` entry, which COMPUTES what a mutation should produce from this repository's own reading of the spec and therefore cannot discharge this requirement — both halves would descend from one reading of it. openpyxl 3.1.5 is a from-scratch reader/writer of the SpreadsheetML package (its own OPC walk, its own XML parsing — no dependency on this repository's `zip`/`calamine`/`quick-xml` reimplementation). `load_workbook(path)` exposes `wb.sheetnames`, `ws.dimensions`, per-cell `ws[coord].value`, and cell formatting/formula strings, directly witnessing this subset's document vocabulary. Verified against this subset's own committed `shared://📕️reuse-marketplaces.xlsx`: `wb.sheetnames` reports the real two-sheet workbook (`Marktplätze`, `Länderübersicht`) and `ws['A1'].value` reads the real header cell `ID`.",
+      "comparisonProfiles": [
+        "semantic-spreadsheet-v1"
+      ]
     }
   ],
   "mutationCatalogs": [
@@ -103,7 +127,8 @@
           "oracleRequirements": [
             {
               "capability": "xlsx-ecma-376-mutate",
-              "qualifyingKind": "third-party-library"
+              "qualifyingKind": "third-party-library",
+              "oracle": "openpyxl-xlsx-ecma-376-mutate-reader"
             }
           ]
         },
@@ -122,7 +147,8 @@
           "oracleRequirements": [
             {
               "capability": "xlsx-ecma-376-mutate",
-              "qualifyingKind": "third-party-library"
+              "qualifyingKind": "third-party-library",
+              "oracle": "openpyxl-xlsx-ecma-376-mutate-reader"
             }
           ]
         },
@@ -141,7 +167,8 @@
           "oracleRequirements": [
             {
               "capability": "xlsx-ecma-376-mutate",
-              "qualifyingKind": "third-party-library"
+              "qualifyingKind": "third-party-library",
+              "oracle": "openpyxl-xlsx-ecma-376-mutate-reader"
             }
           ]
         },
@@ -160,7 +187,8 @@
           "oracleRequirements": [
             {
               "capability": "xlsx-ecma-376-mutate",
-              "qualifyingKind": "third-party-library"
+              "qualifyingKind": "third-party-library",
+              "oracle": "openpyxl-xlsx-ecma-376-mutate-reader"
             }
           ]
         },
@@ -179,7 +207,8 @@
           "oracleRequirements": [
             {
               "capability": "xlsx-ecma-376-mutate",
-              "qualifyingKind": "third-party-library"
+              "qualifyingKind": "third-party-library",
+              "oracle": "openpyxl-xlsx-ecma-376-mutate-reader"
             }
           ]
         },
@@ -198,7 +227,8 @@
           "oracleRequirements": [
             {
               "capability": "xlsx-ecma-376-mutate",
-              "qualifyingKind": "third-party-library"
+              "qualifyingKind": "third-party-library",
+              "oracle": "openpyxl-xlsx-ecma-376-mutate-reader"
             }
           ]
         },
@@ -217,7 +247,8 @@
           "oracleRequirements": [
             {
               "capability": "xlsx-ecma-376-mutate",
-              "qualifyingKind": "third-party-library"
+              "qualifyingKind": "third-party-library",
+              "oracle": "openpyxl-xlsx-ecma-376-mutate-reader"
             }
           ]
         },
@@ -236,7 +267,8 @@
           "oracleRequirements": [
             {
               "capability": "xlsx-ecma-376-mutate",
-              "qualifyingKind": "third-party-library"
+              "qualifyingKind": "third-party-library",
+              "oracle": "openpyxl-xlsx-ecma-376-mutate-reader"
             }
           ]
         },
@@ -255,11 +287,398 @@
           "oracleRequirements": [
             {
               "capability": "xlsx-ecma-376-mutate",
-              "qualifyingKind": "third-party-library"
+              "qualifyingKind": "third-party-library",
+              "oracle": "openpyxl-xlsx-ecma-376-mutate-reader"
             }
           ]
         }
       ]
+    }
+  ],
+  "fixtureManifests": [
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "insert-sheet-applied",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.xlsx",
+        "standard": "ecma-376",
+        "subset": "base"
+      },
+      "mutation": "insert-sheet",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before-xlsx",
+          "path": "../🧫️fixtures/insert-sheet-applied/before.xlsx",
+          "mediaType": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+          "sha256": "sha256:e355ac95b3e240cbe730720710d23b84cae2a2605c4b23bf3be62b17da88fb3d",
+          "bytes": 4784
+        },
+        {
+          "role": "expected-after-xlsx",
+          "path": "../🧫️fixtures/insert-sheet-applied/after.xlsx",
+          "mediaType": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+          "sha256": "sha256:fc6415c517aaee75233e244fa19f15079f0cddd241752d5cccf8e0b44afea76e",
+          "bytes": 5211
+        }
+      ],
+      "provenance": {
+        "source": "generated",
+        "license": "MIT (openpyxl)",
+        "attribution": "Written by openpyxl 3.1.5's own Workbook.save()",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "exact-bytes-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "A second worksheet, Sheet2, added to the workbook.",
+      "generator": {
+        "oracle": "openpyxl-xlsx-ecma-376-mutate-reader",
+        "packageVersion": "3.1.5",
+        "engineFamily": "openpyxl",
+        "engineVersion": "3.1.5",
+        "command": "uv run python3 🔨️f2-gen-xlsx-base-fixtures.py (openpyxl Workbook object model + .save())",
+        "platform": "darwin-arm64"
+      }
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "remove-sheet-applied",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.xlsx",
+        "standard": "ecma-376",
+        "subset": "base"
+      },
+      "mutation": "remove-sheet",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before-xlsx",
+          "path": "../🧫️fixtures/remove-sheet-applied/before.xlsx",
+          "mediaType": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+          "sha256": "sha256:fc6415c517aaee75233e244fa19f15079f0cddd241752d5cccf8e0b44afea76e",
+          "bytes": 5211
+        },
+        {
+          "role": "expected-after-xlsx",
+          "path": "../🧫️fixtures/remove-sheet-applied/after.xlsx",
+          "mediaType": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+          "sha256": "sha256:e355ac95b3e240cbe730720710d23b84cae2a2605c4b23bf3be62b17da88fb3d",
+          "bytes": 4784
+        }
+      ],
+      "provenance": {
+        "source": "generated",
+        "license": "MIT (openpyxl)",
+        "attribution": "Written by openpyxl 3.1.5's own Workbook.save()",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "exact-bytes-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "Sheet2 removed from the workbook, inverse of insert-sheet.",
+      "generator": {
+        "oracle": "openpyxl-xlsx-ecma-376-mutate-reader",
+        "packageVersion": "3.1.5",
+        "engineFamily": "openpyxl",
+        "engineVersion": "3.1.5",
+        "command": "uv run python3 🔨️f2-gen-xlsx-base-fixtures.py (openpyxl Workbook object model + .save())",
+        "platform": "darwin-arm64"
+      }
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "rename-sheet-applied",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.xlsx",
+        "standard": "ecma-376",
+        "subset": "base"
+      },
+      "mutation": "rename-sheet",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before-xlsx",
+          "path": "../🧫️fixtures/rename-sheet-applied/before.xlsx",
+          "mediaType": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+          "sha256": "sha256:e355ac95b3e240cbe730720710d23b84cae2a2605c4b23bf3be62b17da88fb3d",
+          "bytes": 4784
+        },
+        {
+          "role": "expected-after-xlsx",
+          "path": "../🧫️fixtures/rename-sheet-applied/after.xlsx",
+          "mediaType": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+          "sha256": "sha256:82fec6b8f3441593b3747f71b5a71676c2d07d5362ec2289d3029b5c4fc93173",
+          "bytes": 4787
+        }
+      ],
+      "provenance": {
+        "source": "generated",
+        "license": "MIT (openpyxl)",
+        "attribution": "Written by openpyxl 3.1.5's own Workbook.save()",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "exact-bytes-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "The active worksheet's title changed, Sheet1 -> Renamed.",
+      "generator": {
+        "oracle": "openpyxl-xlsx-ecma-376-mutate-reader",
+        "packageVersion": "3.1.5",
+        "engineFamily": "openpyxl",
+        "engineVersion": "3.1.5",
+        "command": "uv run python3 🔨️f2-gen-xlsx-base-fixtures.py (openpyxl Workbook object model + .save())",
+        "platform": "darwin-arm64"
+      }
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "set-cell-applied",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.xlsx",
+        "standard": "ecma-376",
+        "subset": "base"
+      },
+      "mutation": "set-cell",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before-xlsx",
+          "path": "../🧫️fixtures/set-cell-applied/before.xlsx",
+          "mediaType": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+          "sha256": "sha256:a253aee30cf22c633e20dd5c8184f4dd3916635cc092f0f5fab9e9903e780dfe",
+          "bytes": 4835
+        },
+        {
+          "role": "expected-after-xlsx",
+          "path": "../🧫️fixtures/set-cell-applied/after.xlsx",
+          "mediaType": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+          "sha256": "sha256:bb256f44678c6e8c136cdfa4eb920716a51762afb604d79bfe9e7d4fe190746f",
+          "bytes": 4835
+        }
+      ],
+      "provenance": {
+        "source": "generated",
+        "license": "MIT (openpyxl)",
+        "attribution": "Written by openpyxl 3.1.5's own Workbook.save()",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "exact-bytes-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "Numeric cell B1's value replaced, 1 -> 2.",
+      "generator": {
+        "oracle": "openpyxl-xlsx-ecma-376-mutate-reader",
+        "packageVersion": "3.1.5",
+        "engineFamily": "openpyxl",
+        "engineVersion": "3.1.5",
+        "command": "uv run python3 🔨️f2-gen-xlsx-base-fixtures.py (openpyxl Workbook object model + .save())",
+        "platform": "darwin-arm64"
+      }
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "remove-cell-applied",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.xlsx",
+        "standard": "ecma-376",
+        "subset": "base"
+      },
+      "mutation": "remove-cell",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before-xlsx",
+          "path": "../🧫️fixtures/remove-cell-applied/before.xlsx",
+          "mediaType": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+          "sha256": "sha256:db4886a78ddf7c9876a78186dfa616e881ec03aaca3d0f256ef69bb796ac691f",
+          "bytes": 4834
+        },
+        {
+          "role": "expected-after-xlsx",
+          "path": "../🧫️fixtures/remove-cell-applied/after.xlsx",
+          "mediaType": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+          "sha256": "sha256:916cd753f9cd3760cbcd6f35809dbc843a5d86197e23c4ca0d529c28c7722b13",
+          "bytes": 4823
+        }
+      ],
+      "provenance": {
+        "source": "generated",
+        "license": "MIT (openpyxl)",
+        "attribution": "Written by openpyxl 3.1.5's own Workbook.save()",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "exact-bytes-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "Cell D1 cleared entirely (its <c> row entry disappears), not merely set to an empty string.",
+      "generator": {
+        "oracle": "openpyxl-xlsx-ecma-376-mutate-reader",
+        "packageVersion": "3.1.5",
+        "engineFamily": "openpyxl",
+        "engineVersion": "3.1.5",
+        "command": "uv run python3 🔨️f2-gen-xlsx-base-fixtures.py (openpyxl Workbook object model + .save())",
+        "platform": "darwin-arm64"
+      }
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "insert-shared-string-applied",
+      "class": "handcrafted",
+      "target": {
+        "artifact": "s.stdio.xlsx",
+        "standard": "ecma-376",
+        "subset": "base"
+      },
+      "mutation": "insert-shared-string",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before-xlsx",
+          "path": "../🧫️fixtures/insert-shared-string-applied/before.xlsx",
+          "mediaType": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+          "sha256": "sha256:73a4ee0facac066d7ee847c946e53162191cdea7367d770399cf4ee496f0f9ff",
+          "bytes": 5114
+        },
+        {
+          "role": "expected-after-xlsx",
+          "path": "../🧫️fixtures/insert-shared-string-applied/after.xlsx",
+          "mediaType": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+          "sha256": "sha256:97fceeb02054f6a37ff4ceb697401053887abdba10ec000baffc0d7b6d5d234a",
+          "bytes": 5130
+        }
+      ],
+      "provenance": {
+        "source": "authored",
+        "license": "n/a (handcrafted zip-part patch of an MIT openpyxl base package)",
+        "attribution": "A genuine openpyxl-written package hand-patched to use the OOXML shared-strings mechanism openpyxl's own writer never emits; read back and confirmed correct with openpyxl.load_workbook before commit",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "exact-bytes-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "A second unique string, Extra (index 1), added to the shared-strings table for the new cell C1."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "remove-shared-string-applied",
+      "class": "handcrafted",
+      "target": {
+        "artifact": "s.stdio.xlsx",
+        "standard": "ecma-376",
+        "subset": "base"
+      },
+      "mutation": "remove-shared-string",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before-xlsx",
+          "path": "../🧫️fixtures/remove-shared-string-applied/before.xlsx",
+          "mediaType": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+          "sha256": "sha256:97fceeb02054f6a37ff4ceb697401053887abdba10ec000baffc0d7b6d5d234a",
+          "bytes": 5130
+        },
+        {
+          "role": "expected-after-xlsx",
+          "path": "../🧫️fixtures/remove-shared-string-applied/after.xlsx",
+          "mediaType": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+          "sha256": "sha256:73a4ee0facac066d7ee847c946e53162191cdea7367d770399cf4ee496f0f9ff",
+          "bytes": 5114
+        }
+      ],
+      "provenance": {
+        "source": "authored",
+        "license": "n/a (handcrafted zip-part patch of an MIT openpyxl base package)",
+        "attribution": "A genuine openpyxl-written package hand-patched to use the OOXML shared-strings mechanism openpyxl's own writer never emits; read back and confirmed correct with openpyxl.load_workbook before commit",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "exact-bytes-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "The second shared-string entry (index 1, Extra) removed, inverse of insert-shared-string."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "set-shared-string-applied",
+      "class": "handcrafted",
+      "target": {
+        "artifact": "s.stdio.xlsx",
+        "standard": "ecma-376",
+        "subset": "base"
+      },
+      "mutation": "set-shared-string",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before-xlsx",
+          "path": "../🧫️fixtures/set-shared-string-applied/before.xlsx",
+          "mediaType": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+          "sha256": "sha256:73a4ee0facac066d7ee847c946e53162191cdea7367d770399cf4ee496f0f9ff",
+          "bytes": 5114
+        },
+        {
+          "role": "expected-after-xlsx",
+          "path": "../🧫️fixtures/set-shared-string-applied/after.xlsx",
+          "mediaType": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+          "sha256": "sha256:302f795163941ef217b5b5cc3a62f9482f7cd33ed433f35fd8f88907570ce830",
+          "bytes": 5114
+        }
+      ],
+      "provenance": {
+        "source": "authored",
+        "license": "n/a (handcrafted zip-part patch of an MIT openpyxl base package)",
+        "attribution": "A genuine openpyxl-written package hand-patched to use the OOXML shared-strings mechanism openpyxl's own writer never emits; read back and confirmed correct with openpyxl.load_workbook before commit",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "exact-bytes-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "The shared-strings table entry at index 0 replaced, Hello -> World, same cell A1."
     }
   ]
 }

@@ -1,0 +1,48 @@
+syntax = "proto3";
+package semio.s.procedural.generation2d.mutation;
+
+// 🧬️ Generation2d mutation schema — artifact-lane fields only.
+
+message Generation2dMutation {
+  // @state artifact
+  FlowFixture fixture = 1;
+  // @state artifact
+  GenerationPlayState generation = 2;
+}
+
+message CameraJson {
+  double x = 1;
+  double y = 2;
+  double zoom = 3;
+}
+message WidgetLayout {
+  double x = 1;
+  double y = 2;
+}
+message SynapseSpec {
+  string id = 1;
+  string from = 2;
+  string to = 3;
+  string from_port = 4;
+  string to_port = 5;
+}
+message Widget {
+  string json = 1;
+}
+message FlowFixture {
+  string schema = 1;
+  CameraJson camera = 2;
+  repeated Widget widgets = 3;
+  repeated SynapseSpec synapses = 4;
+  map<string, WidgetLayout> layout = 5;
+}
+message FormGeneration {
+  string id = 1;
+  string name = 2;
+  string values_json = 3;
+}
+message GenerationPlayState {
+  repeated FormGeneration generations = 1;
+  optional string selected_generation_id = 2;
+  optional string preview_text = 3;
+}

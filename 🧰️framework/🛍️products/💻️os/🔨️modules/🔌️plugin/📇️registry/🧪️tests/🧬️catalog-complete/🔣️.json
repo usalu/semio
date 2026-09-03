@@ -1,0 +1,29 @@
+{
+  "schemaVersion": 1,
+  "nodes": [
+    { "pluginId": "extension", "role": "extension", "dependsOn": ["child"] },
+    { "pluginId": "parent", "role": "plugin", "dependsOn": [] },
+    { "pluginId": "child", "role": "plugin", "dependsOn": ["parent"] }
+  ],
+  "expectedOrder": ["parent", "child", "extension"],
+  "parentFailure": {
+    "failedPluginId": "parent",
+    "statuses": { "parent": "failed", "child": "blocked", "extension": "blocked" },
+    "publication": "withheld"
+  },
+  "expectedProgress": [
+    { "schemaVersion": 1, "completed": 1, "total": 3, "pluginId": "parent", "status": "failed" },
+    { "schemaVersion": 1, "completed": 2, "total": 3, "pluginId": "child", "status": "blocked" },
+    { "schemaVersion": 1, "completed": 3, "total": 3, "pluginId": "extension", "status": "blocked" }
+  ],
+  "expectedResult": {
+    "schemaVersion": 1,
+    "order": ["parent", "child", "extension"],
+    "results": [
+      { "pluginId": "parent", "status": "failed", "diagnostic": "forced parent failure" },
+      { "pluginId": "child", "status": "blocked", "diagnostic": "dependency parent was not verified" },
+      { "pluginId": "extension", "status": "blocked", "diagnostic": "dependency child was not verified" }
+    ],
+    "publication": "withheld"
+  }
+}

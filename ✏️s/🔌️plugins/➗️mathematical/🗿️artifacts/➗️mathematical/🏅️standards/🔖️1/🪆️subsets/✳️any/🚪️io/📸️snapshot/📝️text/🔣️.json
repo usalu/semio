@@ -1,5 +1,0 @@
-{
-  "$id": "https://semio.tech/schema/s/mathematical/mathematical/snapshot/text.json",
-  "title": "MathematicalSnapshotText",
-  "type": "object"
-}

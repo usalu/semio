@@ -3,7 +3,7 @@
 @comparison-ordered-json-v1
 @mutations-lowpoly-1-any
 Feature: Apply every typed lowpoly mutation twice — once in Rust, once in Python — and require the same answer
-  This case is a CROSS-LANGUAGE DIFFERENTIAL. The reference is `🐍️component.py` in this directory: a
+  This case is a CROSS-LANGUAGE DIFFERENTIAL. The reference is `🐍️.py` in this directory: a
   second implementation of the `s.lowpoly.lowpoly` document and all seventeen typed mutations, written
   in Python from `🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🔣️.json`, from rules 2,
   3 and 7 of
@@ -36,7 +36,7 @@ Feature: Apply every typed lowpoly mutation twice — once in Rust, once in Pyth
   states.
 
   📌️ TWO CEILINGS ON WHAT THIS COMPARISON ESTABLISHES, stated rather than implied. First, the
-  SUBJECT half does not run this subset's codec: `🦀️component.rs` beside this file links no plugin
+  SUBJECT half does not run this subset's codec: `🦀️.rs` beside this file links no plugin
   crate and replays the committed vectors, so today the comparison establishes that an independent
   implementation of the specification computes the committed after-snapshots — a real check of the
   vectors, and the class of check that found `mutate-jack-1`'s wrong vector — but not yet our codec

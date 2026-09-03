@@ -7,13 +7,12 @@ use crate::artifacts::wires::schema::entity_id;
 use crate::artifacts::wires::standards::v1::subsets::any::schema::inferences::find_board_node;
 use crate::artifacts::wires::WiresSnapshot;
 use dsl::DslValue;
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️Mutation
 /// 🌱 `create-node` payload — the node's full initial state.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslRecord, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
-#[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 #[dsl(keyword = "create-node")]
 pub struct CreateNode {
     pub node: DslValue,

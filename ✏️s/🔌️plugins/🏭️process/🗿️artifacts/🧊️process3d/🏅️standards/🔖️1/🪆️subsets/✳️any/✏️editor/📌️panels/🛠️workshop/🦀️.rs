@@ -1,5 +1,7 @@
 //! 🛠️ Process 3d play app panel — the workshop configurator: installed machines (select, remove) plus
-//! one section per installed catalog (add if not yet installed).
+//! one section per installed catalog that still has something left to add — a catalog fully installed,
+//! or a machine already installed from it, renders no duplicate row here (it stays visible above, in
+//! the installed-machines section, where remove lives).
 
 use crate::artifacts::process3d::{MachineCatalog, Process3dSnapshot};
 use crate::editor::process3d::iconed_tree_item_with_action;
@@ -7,7 +9,7 @@ use crate::editor::process3d::installed_catalogs;
 use crate::editor::process3d::process3d_action;
 use crate::editor::process3d::terminology::Process3dLabels;
 use crate::editor::process3d::PROCESS3D_INTERACTION_DOMAIN;
-use semio_framework_plugin::{tree_item, tree_item_desc, ActionBinding, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, RowAction, RowActionPlacement, Trigger};
+use semio_framework_plugin::{tree_item, ActionBinding, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, RowAction, RowActionPlacement, Trigger};
 
 //#region 🔖️Constants
 pub const PROCESS_3D_PLAY_BODY_WORKSHOP: &str = "process.play.workshop";
@@ -57,24 +59,18 @@ pub fn render(fixture: &Process3dSnapshot, contributions_json: &str, labels: &Pr
     let installed_ids: std::collections::BTreeSet<&str> = fixture.workshop.machines.iter().map(|machine| machine.id.as_str()).collect();
     for catalog in installed_catalogs(contributions_json) {
         let catalog_id = catalog.catalog_id();
+        let installable: Vec<_> = catalog.machines().into_iter().filter(|machine| !installed_ids.contains(machine.id.as_str())).collect();
+        if installable.is_empty() {
+            continue;
+        }
         let mut items = semio_framework_plugin::UiFixedList::default();
-        for machine in catalog.machines() {
+        for machine in installable {
             let id = format!("process3d-workshop.catalog.{catalog_id}.{}", machine.id);
-            let already_installed = installed_ids.contains(machine.id.as_str());
-            let item = if already_installed {
-                let mut item = tree_item_desc(id, crate::editor::process3d::ui_label(&machine.label)?, Some(labels.installed.as_str().to_string()))?;
-                if let semio_framework_plugin::Component::TreeItem(props) = &mut item.component {
-                    props.icon = Some(semio_framework_plugin::UiText::try_from_str(&machine.icon_id).ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("ui.workshop.icon", "fixed workshop icon admission failed"))?);
-                    props.dimmed = Some(true);
-                }
-                item
-            } else {
-                let args = crate::editor::process3d::ui_value_map([
-                    ("catalogId", crate::editor::process3d::ui_value_text(catalog_id)?),
-                    ("machineId", crate::editor::process3d::ui_value_text(&machine.id)?),
-                ])?;
-                iconed_tree_item_with_action(id, &machine.label, &machine.icon_id, process3d_action("addWorkshopMachine", Some(args)))?
-            };
+            let args = crate::editor::process3d::ui_value_map([
+                ("catalogId", crate::editor::process3d::ui_value_text(catalog_id)?),
+                ("machineId", crate::editor::process3d::ui_value_text(&machine.id)?),
+            ])?;
+            let item = iconed_tree_item_with_action(id, &machine.label, &machine.icon_id, process3d_action("addWorkshopMachine", Some(args)))?;
             items.try_push(item).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.workshop.catalogue", "fixed workshop catalogue admission failed"))?;
         }
         builder = builder.section(format!("process3d-play-workshop.catalog.{catalog_id}"), Some(crate::editor::process3d::ui_label(catalog.label())?), false, items)?;

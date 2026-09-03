@@ -6,7 +6,7 @@
 //! archive's decompressed `entries` — the natural container-level facet a ZIP central directory
 //! already exists to answer).
 
-use crate::artifacts::zip::standards::v2_0::subsets::any::schema::snapshot::ZipSnapshot;
+use crate::artifacts::zip::standards::v2_0::subsets::base::schema::snapshot::ZipSnapshot;
 use schema::ArtifactSchema;
 use semio_framework_plugin::ArtifactInferrer;
 
@@ -55,7 +55,7 @@ impl protocol::InferenceSpec<ZipSnapshot> for ZipInference {
 /// content digest), already O(n) in entry count with no honest per-entity incremental
 /// decomposition worth a merkle dep-chain over one flat `Vec<ZipEntry>` — the default
 /// `infer_cached` passthrough is exact.
-impl ArtifactInferrer for crate::artifacts::zip::standards::v2_0::subsets::any::schema::ZipBuilder {
+impl ArtifactInferrer for crate::artifacts::zip::standards::v2_0::subsets::base::schema::ZipBuilder {
     type Snapshot = ZipSnapshot;
     type Inference = ZipInference;
 }
@@ -83,7 +83,7 @@ pub fn zip_artifact_inference_descriptor() -> schema::ArtifactInferenceDescripto
 //#region 🧪️Tests
 mod tests {
     use super::*;
-    use crate::artifacts::zip::standards::v2_0::subsets::any::schema::demo_zip_snapshot;
+    use crate::artifacts::zip::standards::v2_0::subsets::base::schema::demo_zip_snapshot;
     use protocol::Inference;
 
     #[semio_framework_async_macros::async_test]

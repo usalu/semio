@@ -35,7 +35,7 @@ pub fn definition() -> WindowKindDefinition {
 
 //#region 🔖️Render
 pub fn render(history: &HistoryView) -> UiNode {
-    build_graph_timeline_scene(VCS_PLAY_SURFACE_HISTORY, VCS_PLAY_APP_ID, GraphTimelineScene { columns_json: serde_json::to_string(&history.columns).unwrap_or_else(|_| "[]".into()) })
+    build_graph_timeline_scene(VCS_PLAY_SURFACE_HISTORY, VCS_PLAY_APP_ID, GraphTimelineScene { columns_json: dsl::json::to_json_string(&history.columns) })
 }
 //#endregion 🔖️Render
 

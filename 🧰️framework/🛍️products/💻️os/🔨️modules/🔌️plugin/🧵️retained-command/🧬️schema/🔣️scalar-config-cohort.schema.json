@@ -95,7 +95,7 @@
         "id": {
           "enum": [
             "fem2d",
-            "procedural2d",
+            "generation2d",
             "layout"
           ]
         },
@@ -134,7 +134,7 @@
         "owner": {
           "enum": [
             "fem2d",
-            "procedural2d",
+            "generation2d",
             "layout"
           ]
         },

@@ -1,7 +1,7 @@
 //! 🖌️ `engagement-control-select` command.
 
 use crate::editor::puzzle3d::Puzzle3dActionCtx;
-use serde_json::Value;
+use dsl::os_pack::json::Value;
 
 /// 🎚️ The brush placement picker's select — its option values are `puzzle3d.brush.candidate.<index>`.
 pub fn engagement_control_select(ctx: &mut Puzzle3dActionCtx<'_>, args: Option<&Value>) {

@@ -1,0 +1,25 @@
+{
+  "schema": "stdio.md",
+  "blocks": [
+    {
+      "kind": "heading",
+      "level": 1,
+      "inlines": [
+        {
+          "kind": "text",
+          "text": "Title"
+        }
+      ]
+    },
+    {
+      "kind": "heading",
+      "level": 2,
+      "inlines": [
+        {
+          "kind": "text",
+          "text": "Replaced"
+        }
+      ]
+    }
+  ]
+}

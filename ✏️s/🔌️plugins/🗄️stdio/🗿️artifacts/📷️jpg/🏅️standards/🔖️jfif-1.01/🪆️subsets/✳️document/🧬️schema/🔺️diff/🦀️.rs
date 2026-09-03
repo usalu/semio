@@ -1328,7 +1328,7 @@ pub(crate) fn parse_bool(s: &str) -> Result<bool, String> {
 //#region 🔖️BinaryPrimitives
 /// 🧪️ P2-FG2: real LEB128-varint-framed binary primitives backing the upgraded `DiffCodec`
 /// (below) and, via `pub(crate)`, `../🧬️mutations/🦀️.rs`'s upgraded `OpBinary` — mirrors
-/// `📰xml`'s own `write_bytes_lp`/`read_bytes_lp` shape (`📖️grammar-recipe.md` §2.5), reusing
+/// `📰️xml`'s own `write_bytes_lp`/`read_bytes_lp` shape (`📖️grammar-recipe.md` §2.5), reusing
 /// `store::pack_rt::write_varint_u64`/`store::ByteReader` rather than reinventing varint codecs.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn write_bytes_lp(out: &mut Vec<u8>, bytes: &[u8]) {

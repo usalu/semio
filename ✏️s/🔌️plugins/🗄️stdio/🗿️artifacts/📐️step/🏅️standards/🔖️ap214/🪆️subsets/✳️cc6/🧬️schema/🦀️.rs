@@ -5,7 +5,7 @@
 //! `🪆️subsets/✳️cc6/🧬️schema/` is present per `🔣️taxonomy.json`'s `subsetChildDirs`, without
 //! duplicating the schema definition.
 
-pub use crate::artifacts::step::standards::v_ap214::subsets::any::schema::*;
+pub use crate::artifacts::step::standards::v_ap214::subsets::base::schema::*;
 
 //#region 🧬️Mutations
 /// 🧬️ This subset's OWN mutation vocabulary — one kind per ISO 10303-214 CC6 (advanced B-Rep, top of the ladder) conformance
@@ -110,7 +110,7 @@ pub mod derived_construction {
             let mut doc = snapshot.to_part21_document();
             doc.instances.push(Part21Instance { id: 99, entities: vec![("ADVANCED_BREP_SHAPE_REPRESENTATION".into(), vec![])] });
             snapshot = StepSnapshot::from_part21_document(doc);
-            let (mutated, _diff) = StepCc6BuilderConstruction::from_snapshot(StepSnapshot::default()).mutate(StepMutation::SetSnapshot(crate::artifacts::step::standards::v_ap214::subsets::any::schema::mutations::set_snapshot::SetSnapshot { snapshot }));
+            let (mutated, _diff) = StepCc6BuilderConstruction::from_snapshot(StepSnapshot::default()).mutate(StepMutation::SetSnapshot(crate::artifacts::step::standards::v_ap214::subsets::base::schema::mutations::set_snapshot::SetSnapshot { snapshot }));
             mutated.build().expect("cc6 is the top of the ladder -- ADVANCED_BREP_SHAPE_REPRESENTATION is never a violation");
         }
     }
@@ -121,9 +121,9 @@ pub use derived_construction::*;
 //#region 🧐️DerivedAnalysis
 pub mod derived_analysis {
     use crate::artifacts::step::standards::v_ap214::engine::ladder::{file_schema_contains, has_product_definition_chain, ladder_violations};
-    use crate::artifacts::step::standards::v_ap214::subsets::any::schema::snapshot::StepSnapshot;
-    use crate::artifacts::step::standards::v_ap214::subsets::any::schema::StepAnalyzer as StepAnyAnalyzer;
-    pub use crate::artifacts::step::standards::v_ap214::subsets::any::schema::StepParts;
+    use crate::artifacts::step::standards::v_ap214::subsets::base::schema::snapshot::StepSnapshot;
+    use crate::artifacts::step::standards::v_ap214::subsets::base::schema::StepAnalyzer as StepAnyAnalyzer;
+    pub use crate::artifacts::step::standards::v_ap214::subsets::base::schema::StepParts;
     use dsl::{Diagnostic, FaultCode, FaultScope, Severity, TextSpan};
     use semio_framework_plugin::{Analysis, AnalyzeSource, ArtifactAnalysis, Dialect, IoConfidence, StandardId, SubsetId};
 

@@ -8,7 +8,12 @@ use crate::artifacts::block3d::{Block3dSnapshot, Block3dVortexKind};
 use crate::editor::block3d::config::{block3d_window_view, Block3dConfig};
 use crate::BlockRepresentation;
 use semio_framework_plugin::{world3d_camera_projection_json, world3d_mesh_id_from_url, world3d_selection_json, WorldProjectionConfig};
-use serde_json::json;
+use dsl::json;
+use dsl::os_pack::json::{parse, Value};
+
+fn vec3(v: [f64; 3]) -> Value {
+    Value::from(v.iter().map(|c| Value::from(*c)).collect::<Vec<Value>>())
+}
 
 //#region 🔖️Visibility
 pub async fn visible_representations<'a>(definition: &'a Block3dSnapshot, view: &Block3dWindowView) -> Vec<&'a BlockRepresentation> {
@@ -44,36 +49,36 @@ pub async fn representation_mesh_id(representation: &BlockRepresentation) -> Str
 }
 
 pub async fn world_meshes_json(_definition: &Block3dSnapshot, visible: &[&BlockRepresentation]) -> String {
-    let meshes: Vec<serde_json::Value> = visible
+    let meshes: Vec<Value> = visible
         .iter()
         .filter_map(|representation| {
             let url = representation.mesh_url.as_deref()?;
             Some(json!({ "id": representation_mesh_id(representation), "url": url }))
         })
         .collect();
-    serde_json::to_string(&meshes).unwrap_or_else(|_| "[]".into())
+    Value::from(meshes).to_string()
 }
 
 pub async fn world_instances_json(definition: &Block3dSnapshot, visible: &[&BlockRepresentation], view: &Block3dWindowView) -> String {
     let label = if definition.object_kind.label.is_empty() { definition.object_kind.name.clone() } else { definition.object_kind.label.clone() };
-    let instances: Vec<serde_json::Value> = visible
+    let instances: Vec<Value> = visible
         .iter()
         .enumerate()
         .map(|(index, representation)| {
             let offset = arrangement_offset(&view.arrangement, index, view.spacing);
             let mesh_id = representation_mesh_id(representation);
             json!({
-                "id": representation.id,
+                "id": representation.id.as_str(),
                 "meshId": mesh_id,
-                "position": offset,
+                "position": vec3(offset),
                 "rotation": [0.0, 0.0, 0.0, 1.0],
                 "scale": [1.0, 1.0, 1.0],
                 "label": format!("{} — {}", label, representation.name),
-                "objectKind": definition.object_kind.id,
+                "objectKind": definition.object_kind.id.as_str(),
             })
         })
         .collect();
-    serde_json::to_string(&instances).unwrap_or_else(|_| "[]".into())
+    Value::from(instances).to_string()
 }
 
 async fn vortex_kind_color(definition: &Block3dSnapshot, vortex_kind_id: &str) -> String {
@@ -92,10 +97,10 @@ pub async fn world_vortices_json(definition: &Block3dSnapshot, config: &Block3dC
             let position = [vortex.position[0] + offset[0], vortex.position[1] + offset[1], vortex.position[2] + offset[2]];
             records.push(json!({
                 "fullId": block3d_vortex_full_id(&representation.id, &vortex.id),
-                "objectId": representation.id,
-                "vortexKind": vortex.vortex_kind,
-                "position": position,
-                "direction": vortex.direction,
+                "objectId": representation.id.as_str(),
+                "vortexKind": vortex.vortex_kind.as_str(),
+                "position": vec3(position),
+                "direction": vec3(vortex.direction),
                 "radius": vortex.radius,
                 "color": vortex_kind_color(definition, &vortex.vortex_kind),
             }));
@@ -107,13 +112,13 @@ pub async fn world_vortices_json(definition: &Block3dSnapshot, config: &Block3dC
             "fullId": "__brush_preview__",
             "objectId": visible.first().map_or(crate::editor::block3d::BLOCK3D_WORLD_OBJECT_ID, |r| r.id.as_str()),
             "vortexKind": config.brush_vortex_kind_id.clone().unwrap_or_else(|| "brush".into()),
-            "position": preview.position,
-            "direction": direction,
+            "position": vec3(preview.position),
+            "direction": vec3(direction),
             "radius": config.brush_radius,
             "color": "#60a5fa88",
         }));
     }
-    serde_json::to_string(&records).unwrap_or_else(|_| "[]".into())
+    Value::from(records).to_string()
 }
 
 pub async fn world_camera_json(definition: &Block3dSnapshot, config: &Block3dConfig) -> String {
@@ -129,11 +134,11 @@ pub async fn world_camera_json(definition: &Block3dSnapshot, config: &Block3dCon
 /// render time; it still declares the domain/granularity/mode the client uses to interpret picks.
 /// Flagged as a known gap for a follow-up wave, mirroring the SDK's own `dispatch_emit_group` gap note.
 pub async fn world_selection_json(_config: &Block3dConfig) -> String {
-    let mut value: serde_json::Value = serde_json::from_str(&world3d_selection_json("replace", &[], None)).unwrap_or_else(|_| json!({}));
+    let mut value: Value = parse(&world3d_selection_json("replace", &[], None)).unwrap_or_else(|_| json!({}));
     if let Some(object) = value.as_object_mut() {
-        object.insert("granularity".into(), json!("mesh"));
-        object.insert("selectionMode".into(), json!("mesh"));
-        object.insert("vortexIds".into(), json!(Vec::<String>::new()));
+        object.insert("granularity", json!("mesh"));
+        object.insert("selectionMode", json!("mesh"));
+        object.insert("vortexIds", json!([]));
     }
     value.to_string()
 }

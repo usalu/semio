@@ -2,15 +2,15 @@
 //! `DagNodeKind` — every kind-specific field, e.g. a Slider's `value`/`min`/`max` or a Note's
 //! `text`, changes through this one mutation; see `deviations` in this ticket's report for why no
 //! finer per-field granularity was minted).
-use serde::{Deserialize, Serialize};
 use crate::artifacts::dag::diff::DagDiff;
 use crate::artifacts::dag::mutations::DagMutation;
 use crate::artifacts::dag::{DagNodeKind, DagSnapshot};
 
 //#region 🔖️Mutation
-#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase")]
-#[serde(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct ReplaceNodeKind {
     pub id: String,
     pub new_kind: DagNodeKind,

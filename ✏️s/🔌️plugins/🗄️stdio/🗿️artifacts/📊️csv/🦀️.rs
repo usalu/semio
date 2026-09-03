@@ -43,7 +43,7 @@ pub fn artifact_kind() -> ArtifactKindSpec {
 /// `.schema(...)`/`.inferences(...)`; `.languages(...)` from `pilot_languages()` below (same
 /// `OnceLock`-leak shape `🔋️energy`'s own `pilot_languages()` uses, since `dsl::LanguageSpec` isn't
 /// `const fn`-constructible); `.document_codec_bare::<CsvSnapshot, CsvMutation>(...)`. Unlike
-/// `📄txt`/`💾️binary`, this artifact's declaration never calls `register_schema_specs` —
+/// `📄️txt`/`💾️binary`, this artifact's declaration never calls `register_schema_specs` —
 /// `CsvSnapshot`/`CsvDiff` don't carry the `#[derive(dsl::DslRecord)]`/`#[derive(dsl::DslDiff)]`
 /// `register_schema_specs` needs, per txt's own doc ("unlike json/csv...") — so there is no
 /// uncovered call left behind here.

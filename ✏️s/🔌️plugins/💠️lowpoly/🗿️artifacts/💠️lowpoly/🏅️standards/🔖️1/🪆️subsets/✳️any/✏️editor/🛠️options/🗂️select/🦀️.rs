@@ -13,7 +13,6 @@ use crate::editor::lowpoly::lowpoly_window_action;
 use crate::editor::lowpoly::terminology::LowpolyLabels;
 use crate::editor::lowpoly::view::MESH_INTERACTION_DOMAIN;
 use semio_framework_plugin::{LabelText, WindowMeasure};
-use serde_json::json;
 
 /// 🎯️ One mesh-domain granularity toggle — dispatches `setInteractionGranularity`.
 fn granularity_toggle(id: &str, icon: &str, label: LabelText, granularity_id: &str) -> WindowMeasure {
@@ -23,7 +22,7 @@ fn granularity_toggle(id: &str, icon: &str, label: LabelText, granularity_id: &s
         label: Some(label.into()),
         pressed: false,
         text: None,
-        on_change: lowpoly_window_action("setInteractionGranularity", Some(json!({ "domainId": MESH_INTERACTION_DOMAIN, "granularityId": granularity_id }))),
+        on_change: lowpoly_window_action("setInteractionGranularity", Some((&dsl::DslValue::object([("domainId".to_string(), dsl::DslValue::String(MESH_INTERACTION_DOMAIN.to_string())), ("granularityId".to_string(), dsl::DslValue::String(granularity_id.to_string()))])).into())),
     }
 }
 
@@ -35,7 +34,7 @@ fn selection_mode_toggle(id: &str, icon: &str, label: LabelText, mode: &str) -> 
         label: Some(label.into()),
         pressed: false,
         text: None,
-        on_change: lowpoly_window_action("setSelectionMode", Some(json!({ "domainId": MESH_INTERACTION_DOMAIN, "mode": mode }))),
+        on_change: lowpoly_window_action("setSelectionMode", Some((&dsl::DslValue::object([("domainId".to_string(), dsl::DslValue::String(MESH_INTERACTION_DOMAIN.to_string())), ("mode".to_string(), dsl::DslValue::String(mode.to_string()))])).into())),
     }
 }
 

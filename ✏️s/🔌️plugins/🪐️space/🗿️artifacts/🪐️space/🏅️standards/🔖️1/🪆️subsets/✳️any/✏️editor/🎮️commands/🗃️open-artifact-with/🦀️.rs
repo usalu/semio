@@ -22,7 +22,7 @@ pub fn handle(payload: &OpenArtifactWith, doc: &ArtifactView<'_, SSpaceSnapshot>
     let artifact_ref = format!("{}@{}/{}", row.dialect.artifact_kind, row.dialect.standard, row.dialect.subset);
     Ok(Emit::effect(Effect::ReplayShellCommand {
         action_id: "os.open-artifact-with".into(),
-        args: Some(pack::json_to_dsl_value(&pack::json!({ "artifactRef": artifact_ref, "documentId": row.id.clone(), "spaceId": doc.snapshot.space_id.clone(), "role": payload.role.clone(), "pluginId": payload.plugin_id.clone(), "appId": payload.app_id.clone() }))),
+        args: Some(pack::json_to_dsl_value(&pack::json!({ "artifactRef": artifact_ref, "documentId": row.id.clone(), "spaceId": doc.snapshot.space_id.clone(), "schema": row.schema.clone(), "role": payload.role.clone(), "pluginId": payload.plugin_id.clone(), "appId": payload.app_id.clone() }))),
     }))
 }
 
@@ -50,6 +50,7 @@ mod tests {
                 assert_eq!(args.get("role").and_then(|v| v.as_str()), Some("viewer"));
                 assert_eq!(args.get("pluginId").and_then(|v| v.as_str()), Some("draw"));
                 assert_eq!(args.get("appId").and_then(|v| v.as_str()), Some("draw-play"));
+                assert_eq!(args.get("schema").and_then(|v| v.as_str()), Some("s.draw.draw"));
             }
             other => panic!("expected ReplayShellCommand, got {other:?}"),
         }

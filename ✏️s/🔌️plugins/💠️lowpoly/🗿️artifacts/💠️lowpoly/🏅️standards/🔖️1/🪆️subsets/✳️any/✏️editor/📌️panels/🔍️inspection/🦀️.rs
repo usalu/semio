@@ -8,7 +8,6 @@ use crate::editor::lowpoly::view::{active_object, utility_params_value, LowpolyV
 use semio_framework_plugin::plugin_app_close_prelude::{Buildable, HasBase, HasChildren, InputKind, Trigger};
 use semio_framework_plugin::{LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PluginAssemblyError, UiText, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL};
 use semio_framework_ui_contract as ui;
-use serde_json::Value;
 
 //#region 🔖️Constants
 pub const LOWPOLY_PLAY_BODY_INSPECTION: &str = "lowpoly.play.inspection";
@@ -28,7 +27,7 @@ pub fn definition() -> PanelTabDefinition {
 
 //#region 🔖️Render
 /// 🔢️ Builds one editable "label + number input" field row that dispatches `setUtilityParam`.
-fn inspector_utility_param_field(id: &str, label: semio_framework_plugin::LabelText, key: &str, value: &Value) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+fn inspector_utility_param_field(id: &str, label: semio_framework_plugin::LabelText, key: &str, value: &serde_json::Value) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     let current = value.get(key).map_or_else(|| "0".to_string(), |entry| entry.to_string());
     let (action, args) = lowpoly_action("setUtilityParam", Some(ui_value_map([("key", ui_value_text(key)?)])?))?;
     let mut number_input = ui::input(InputKind::Number)

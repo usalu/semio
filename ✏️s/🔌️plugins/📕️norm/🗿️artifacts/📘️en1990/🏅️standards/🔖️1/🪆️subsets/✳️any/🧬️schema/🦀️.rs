@@ -7,7 +7,7 @@ use schema::ArtifactSchema;
 /// 🧬️ Full En1990 artifact state across the artifact and presence lanes. `q_k` mirrors
 /// `En1990Snapshot`'s composed `s.stdio.semio.table` child slot (ticket
 /// 26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM round 2) — `to_snapshot`/`from_snapshot` copy the
-/// handle across verbatim, same as `➗️mathematical`'s `MathematicalArtifact`.
+/// handle across verbatim, same as `➗️mathematical`'s `EquationArtifact`.
 #[derive(Clone, Debug, PartialEq, ArtifactSchema, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]

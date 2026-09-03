@@ -1,0 +1,103 @@
+{
+  "formatVersion": 1,
+  "descriptorEncoding": {
+    "domainUtf8": "semio.document-descriptor.digest.v1\u0000",
+    "lengthPrefix": "u64-big-endian-byte-length-per-field",
+    "integerEncoding": "unsigned-big-endian-fixed-width-field-payload",
+    "hashEncoding": "lowercase-hex-decoded-to-32-byte-field-payload",
+    "fieldOrder": [
+      "spaceId",
+      "documentId",
+      "artifactKind",
+      "artifactSchema",
+      "owner.pluginId",
+      "owner.packageId",
+      "owner.version",
+      "owner.packageHash",
+      "packSchemaHash",
+      "bootstrapVersion",
+      "bootstrapFrontier.headSeq",
+      "bootstrapFrontier.commitSeq",
+      "bootstrapFrontier.epoch",
+      "bootstrapSnapshotHash"
+    ]
+  },
+  "descriptor": {
+    "spaceId": "raum:ä",
+    "documentId": "plan:東京",
+    "artifactKind": "s.gis:gismap",
+    "artifactSchema": "s.gis.gismap@1/*:精密",
+    "owner": {
+      "pluginId": "s.gis:地図",
+      "packageId": "s.gis.gismap:codec",
+      "version": "1.0.0:β",
+      "packageHash": "2222222222222222222222222222222222222222222222222222222222222222"
+    },
+    "packSchemaHash": "1111111111111111111111111111111111111111111111111111111111111111",
+    "bootstrapVersion": 1,
+    "bootstrapFrontier": {
+      "headSeq": 7,
+      "commitSeq": 6,
+      "epoch": 2
+    },
+    "bootstrapSnapshotHash": "3333333333333333333333333333333333333333333333333333333333333333"
+  },
+  "descriptorEncodingHex": "73656d696f2e646f63756d656e742d64657363726970746f722e6469676573742e76310000000000000000077261756d3ac3a4000000000000000b706c616e3ae69db1e4baac000000000000000c732e6769733a6769736d61700000000000000017732e6769732e6769736d617040312f2a3ae7b2bee5af86000000000000000c732e6769733ae59cb0e59bb30000000000000012732e6769732e6769736d61703a636f6465630000000000000008312e302e303aceb2000000000000002022222222222222222222222222222222222222222222222222222222222222220000000000000020111111111111111111111111111111111111111111111111111111111111111100000000000000040000000100000000000000080000000000000007000000000000000800000000000000060000000000000008000000000000000200000000000000203333333333333333333333333333333333333333333333333333333333333333",
+  "descriptorDigestV1": [
+    3, 80, 64, 54, 217, 174, 207, 101,
+    58, 56, 216, 7, 210, 168, 82, 241,
+    141, 19, 188, 246, 18, 203, 157, 126,
+    97, 44, 70, 84, 12, 67, 12, 172
+  ],
+  "scopeBoundaries": {
+    "colonLeft": { "spaceId": "a:b", "documentId": "c" },
+    "colonRight": { "spaceId": "a", "documentId": "b:c" },
+    "nonAscii": { "spaceId": "raum:ä", "documentId": "plan:東京" },
+    "sameDocumentFirstSpace": { "spaceId": "space-a", "documentId": "shared" },
+    "sameDocumentSecondSpace": { "spaceId": "space-b", "documentId": "shared" },
+    "emptySpace": { "spaceId": "", "documentId": "document" },
+    "emptyDocument": { "spaceId": "space", "documentId": "" }
+  },
+  "checkpoint": {
+    "scope": { "spaceId": "raum:ä", "documentId": "plan:東京" },
+    "checkpointId": [72, 10, 59, 15, 20, 78, 56, 160, 82, 126, 79, 99, 65, 175, 68, 80, 152, 40, 74, 24, 165, 48, 23, 186, 94, 154, 140, 27, 205, 214, 13, 51],
+    "descriptorDigestV1": [3, 80, 64, 54, 217, 174, 207, 101, 58, 56, 216, 7, 210, 168, 82, 241, 141, 19, 188, 246, 18, 203, 157, 126, 97, 44, 70, 84, 12, 67, 12, 172],
+    "baselineFrontier": {
+      "documentId": "plan:東京",
+      "headEditOrdinal": 2,
+      "headEditId": "edit:2",
+      "lastCommitSeq": 2,
+      "chainHash": [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2]
+    },
+    "pack": {
+      "sha256": [63, 219, 163, 95, 4, 220, 140, 70, 41, 134, 201, 146, 188, 248, 117, 84, 98, 87, 17, 48, 114, 169, 9, 193, 98, 247, 228, 112, 229, 129, 226, 120],
+      "byteLength": 2,
+      "storageKey": "sha256/3fdba35f04dc8c462986c992bcf875546257113072a909c162f7e470e581e278"
+    },
+    "spr": {
+      "sha256": [236, 81, 173, 187, 187, 123, 198, 199, 129, 250, 43, 248, 200, 221, 241, 192, 237, 189, 203, 122, 19, 118, 80, 155, 194, 203, 246, 119, 78, 229, 145, 216],
+      "byteLength": 15,
+      "storageKey": "sha256/ec51adbbbb7bc6c781fa2bf8c8ddf1c0edbdcb7a1376509bc2cbf6774ee591d8"
+    },
+    "aggregateSha256": [226, 159, 146, 135, 180, 43, 6, 66, 215, 25, 149, 226, 208, 12, 194, 115, 18, 185, 165, 104, 241, 208, 162, 248, 127, 187, 110, 54, 150, 50, 173, 53],
+    "publishedAtMs": 100
+  },
+  "retention": {
+    "scope": { "spaceId": "raum:ä", "documentId": "plan:東京" },
+    "retainedCheckpointId": [72, 10, 59, 15, 20, 78, 56, 160, 82, 126, 79, 99, 65, 175, 68, 80, 152, 40, 74, 24, 165, 48, 23, 186, 94, 154, 140, 27, 205, 214, 13, 51],
+    "retainedFloor": {
+      "documentId": "plan:東京",
+      "headEditOrdinal": 2,
+      "headEditId": "edit:2",
+      "lastCommitSeq": 2,
+      "chainHash": [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2]
+    },
+    "checkpointLineageHead": [72, 10, 59, 15, 20, 78, 56, 160, 82, 126, 79, 99, 65, 175, 68, 80, 152, 40, 74, 24, 165, 48, 23, 186, 94, 154, 140, 27, 205, 214, 13, 51]
+  },
+  "invalidBoundaries": {
+    "shortHash": [72, 10, 59, 15, 20, 78, 56, 160, 82, 126, 79, 99, 65, 175, 68, 80, 152, 40, 74, 24, 165, 48, 23, 186, 94, 154, 140, 27, 205, 214, 13],
+    "overflowHashByte": [72, 10, 59, 15, 20, 78, 56, 160, 82, 126, 79, 99, 65, 175, 68, 80, 152, 40, 74, 24, 165, 48, 23, 186, 94, 154, 140, 27, 205, 214, 13, 256],
+    "zeroHash": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    "unsafeInteger": 9007199254740992
+  }
+}

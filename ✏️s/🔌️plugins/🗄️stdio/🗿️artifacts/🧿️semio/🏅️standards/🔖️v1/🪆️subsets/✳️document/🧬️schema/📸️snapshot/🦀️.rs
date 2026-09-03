@@ -4,7 +4,7 @@
 //! `SlideShape::TextBox`, which embeds `DocBlock` directly (spec-mandated cross-reuse, see
 //! `w1b-type-ownership.md`) — `DocBlock`/`DocRun`/`DocStyle` are this subset's owned types.
 
-use crate::artifacts::semio::standards::v1::subsets::any::schema::triples::{split_top_level, strip_brackets};
+use crate::artifacts::semio::standards::v1::subsets::base::schema::triples::{split_top_level, strip_brackets};
 use crate::artifacts::semio::standards::v1::subsets::document::schema::diff::{dec_block, dec_image, dec_str, dec_style, enc_block, enc_image, enc_str, enc_style};
 use schema::ArtifactSchema;
 

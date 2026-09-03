@@ -589,6 +589,9 @@ impl SnapshotPageSink {
 
 trait SnapshotPageSource {
     fn len(&self) -> usize;
+    fn is_empty(&self) -> bool {
+        self.len() == 0
+    }
     fn page(&self, index: usize) -> Option<&Page>;
 }
 
@@ -1712,8 +1715,8 @@ mod tests {
         let storage = MemoryStorage::new(crate::db_storage::db_io_test_pool()).await.unwrap();
         let manager = SnapshotManager::new(&storage).await;
         let document: ArtifactId = "doc-g".into();
-        let pages = vec![page(b"verify-me").await];
-        db_actor::block_on(manager.publish(&document, SnapshotOrigin::FullBaseline, &pages, body(0).await)).unwrap();
+        let source_pages = vec![page(b"verify-me").await];
+        db_actor::block_on(manager.publish(&document, SnapshotOrigin::FullBaseline, &source_pages, body(0).await)).unwrap();
 
         db_actor::block_on(manager.verify(&document, 0, pack::os_pack::VerificationLevel::Full)).unwrap();
 

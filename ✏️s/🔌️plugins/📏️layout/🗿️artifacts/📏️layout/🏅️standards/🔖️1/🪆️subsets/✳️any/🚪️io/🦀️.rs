@@ -165,7 +165,7 @@ impl From<std::io::Error> for LayoutError {
 use crate::artifacts::layout::{Frame, GridSettings, Layer, LayoutSnapshot, Page, PageColumns, PageMargins, Spread, LAYOUT_DOCUMENT_SCHEMA};
 use semio_framework_plugin::{io_dispatch, resolve_ready, Dialect, ErasedComposeSource, IoDirection, IoKey, IoPayload, StandardId, SubsetId};
 use semio_s_plugin_stdio::artifacts::dwg::{DwgColor, DwgDrawing, DwgEntity, DwgGeometry};
-use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::any::schema::geometry::{SemioPoint3, SemioRgba, SemioTransform};
+use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::base::schema::geometry::{SemioPoint3, SemioRgba, SemioTransform};
 use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::drawing::schema::snapshot::{DrawCanvas, DrawLayer, DrawNode, DrawStyle, PathSegment, SemioDrawingSnapshot, STDIO_SEMIODRAWING_DOCUMENT_SCHEMA};
 use semio_s_plugin_stdio::artifacts::svg::schema::snapshot::{write_svg_xml, SvgSnapshot};
 use serde_json::Value;
@@ -178,7 +178,7 @@ const SVG_FORMAT_STANDARD: &str = "1.1";
 /// "rects-as-paths" primitive both `layout_snapshot_to_semio_drawing` (page/frame rects) and the app
 /// engine's `display_list_to_semio_drawing` (rendered display-list rects) build on.
 pub async fn rect_path_segments(x: f64, y: f64, width: f64, height: f64) -> Vec<PathSegment> {
-    use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::any::schema::geometry::SemioPoint2;
+    use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::base::schema::geometry::SemioPoint2;
     vec![
         PathSegment::MoveTo { to: SemioPoint2 { x, y } },
         PathSegment::LineTo { to: SemioPoint2 { x: x + width, y } },

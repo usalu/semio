@@ -5,7 +5,7 @@ use crate::editor::puzzle3d::puzzle3d_apply_translate;
 use crate::editor::puzzle3d::puzzle3d_rederive_moved_attractions;
 use crate::editor::puzzle3d::resolve_puzzle3d_attractions;
 use crate::editor::puzzle3d::Puzzle3dActionCtx;
-use serde_json::Value;
+use dsl::os_pack::json::Value;
 
 fn axis_arg(args: Option<&Value>, key: &str, fallback: f64) -> f64 {
     args.and_then(|value| value.get(key)).and_then(|value| value.as_f64()).unwrap_or(fallback)

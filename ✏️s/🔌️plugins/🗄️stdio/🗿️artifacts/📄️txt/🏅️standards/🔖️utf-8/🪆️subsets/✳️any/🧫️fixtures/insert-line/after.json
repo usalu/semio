@@ -1,0 +1,10 @@
+{
+  "schema": "stdio.txt",
+  "lines": [
+    "first line",
+    "inserted line",
+    "second line"
+  ],
+  "trailingNewline": true,
+  "lineEnding": "lf"
+}

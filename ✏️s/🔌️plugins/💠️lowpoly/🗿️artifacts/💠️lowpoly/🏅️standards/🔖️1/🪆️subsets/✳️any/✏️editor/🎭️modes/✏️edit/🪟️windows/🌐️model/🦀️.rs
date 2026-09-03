@@ -9,7 +9,6 @@ use crate::editor::lowpoly::terminology::LowpolyLabels;
 use crate::editor::lowpoly::view::{euler_degrees_to_quaternion, resolve_active_object_id, LowpolyView};
 use crate::editor::lowpoly::{lowpoly_window_engagement, lowpoly_window_measures};
 use semio_framework_plugin::{scene_surface, world3d_camera_json, world3d_scene, InteractionRef, PluginAssemblyError, SurfaceKind, UtilityRef, WindowEngagementSlot, WindowKindDefinition, WindowMeasure, WindowOptions};
-use serde_json::{json, Value};
 use std::collections::HashMap;
 
 //#region 🔖️Constants
@@ -100,61 +99,55 @@ pub fn window_measures(config: &LowpolyConfig, labels: &LowpolyLabels) -> Vec<Wi
 fn world_selection_json_for(view: LowpolyView<'_>, active_utility: &str) -> String {
     let config = view.config;
     let active = resolve_active_object_id(view.snapshot, config);
-    json!({
-        "transformMode": active_utility,
-        "interactionMode": if crate::editor::lowpoly::view::is_paint_utility(active_utility) { "paint" } else { "model" },
-        "activeObjectId": active,
-        "showEdges": config.show_edges,
-    })
-    .to_string()
+    let interaction_mode = if crate::editor::lowpoly::view::is_paint_utility(active_utility) { "paint" } else { "model" };
+    dsl::json::to_json_string(&dsl::DslValue::object([
+        ("transformMode".to_string(), dsl::DslValue::String(active_utility.to_string())),
+        ("interactionMode".to_string(), dsl::DslValue::String(interaction_mode.to_string())),
+        ("activeObjectId".to_string(), dsl::DslValue::String(active)),
+        ("showEdges".to_string(), dsl::DslValue::Bool(config.show_edges)),
+    ]))
 }
 
 fn world_meshes_json(doc: &LowpolyDocument, texture_cache: &HashMap<String, String>) -> String {
-    let items: Vec<Value> = serde_json::from_str(&doc.tessellate_all_json().unwrap_or_else(|_| "[]".into())).unwrap_or_default();
-    let meshes: Vec<Value> = items
+    let items: Vec<dsl::DslValue> = dsl::json::from_json_str(&doc.tessellate_all_json().unwrap_or_else(|_| "[]".into())).unwrap_or_default();
+    let meshes: Vec<dsl::DslValue> = items
         .iter()
         .filter_map(|item| {
             let id = item.get("id")?.as_str()?;
-            let tessellation = item.get("tessellation")?;
+            let tessellation: serde_json::Value = item.get("tessellation")?.into();
             let texture = texture_cache.get(id).cloned();
-            Some(json!({
-                "id": id,
-                "data": mesh_data_from_transfer(tessellation, texture),
-            }))
+            Some(dsl::DslValue::object([
+                ("id".to_string(), dsl::DslValue::String(id.to_string())),
+                ("data".to_string(), dsl::ToValue::to_value(&mesh_data_from_transfer(&tessellation, texture))),
+            ]))
         })
         .collect();
-    serde_json::to_string(&meshes).unwrap_or_else(|_| "[]".into())
+    dsl::json::to_json_string(&meshes)
 }
 
 /// 🕹️ `selected`/`hovered` per-instance flags are DELETED — see `world_selection_json_for`'s doc: the
 /// shell overlays the mesh domain's live selection/hover generically now.
 fn world_instances_json(view: LowpolyView<'_>) -> String {
-    let instances: Vec<Value> = view
+    let instances: Vec<dsl::DslValue> = view
         .snapshot
         .objects
         .iter()
         .map(|object| {
             let rotation = euler_degrees_to_quaternion(object.transform.rotation);
-            json!({
-                "id": object.id,
-                "meshId": object.id,
-                "position": [
-                    object.transform.position[0] as f64,
-                    object.transform.position[1] as f64,
-                    object.transform.position[2] as f64,
-                ],
-                "rotation": rotation,
-                "scale": [
-                    object.transform.scale[0] as f64,
-                    object.transform.scale[1] as f64,
-                    object.transform.scale[2] as f64,
-                ],
-                "label": object.name,
-                "smoothShading": object.smooth_shading,
-            })
+            let position: [f64; 3] = [object.transform.position[0] as f64, object.transform.position[1] as f64, object.transform.position[2] as f64];
+            let scale: [f64; 3] = [object.transform.scale[0] as f64, object.transform.scale[1] as f64, object.transform.scale[2] as f64];
+            dsl::DslValue::object([
+                ("id".to_string(), dsl::DslValue::String(object.id.clone())),
+                ("meshId".to_string(), dsl::DslValue::String(object.id.clone())),
+                ("position".to_string(), dsl::ToValue::to_value(&position)),
+                ("rotation".to_string(), dsl::ToValue::to_value(&rotation)),
+                ("scale".to_string(), dsl::ToValue::to_value(&scale)),
+                ("label".to_string(), dsl::DslValue::String(object.name.clone())),
+                ("smoothShading".to_string(), dsl::DslValue::Bool(object.smooth_shading)),
+            ])
         })
         .collect();
-    serde_json::to_string(&instances).unwrap_or_else(|_| "[]".into())
+    dsl::json::to_json_string(&instances)
 }
 
 pub fn render(view: LowpolyView<'_>, loaded: Option<&LowpolyDocument>, active_utility: &str, texture_cache: &HashMap<String, String>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {

@@ -2,14 +2,14 @@
 use crate::artifacts::dag::diff::DagDiff;
 use crate::artifacts::dag::mutations::DagMutation;
 use crate::artifacts::dag::{DagNodeSpec, DagSnapshot};
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️Mutation
 /// 🌱 `create-node` payload — full initial payload (position/size/kind/properties all fixed at
 /// creation).
-#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase")]
-#[serde(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct CreateNode {
     pub node: DagNodeSpec,
 }

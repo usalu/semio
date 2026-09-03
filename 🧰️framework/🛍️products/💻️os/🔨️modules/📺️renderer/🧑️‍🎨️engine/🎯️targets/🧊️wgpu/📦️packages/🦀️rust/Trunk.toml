@@ -5,7 +5,7 @@ public_url = "/"
 filehash = false
 
 [watch]
-watch = ["🦀️.rs", "🟦️typescript", "🌐️.html", "../../../../../../🧑️‍💻️dev/🔌️plugin-modules"]
+watch = ["../../🧊️renderer", "../../🧊️renderer-boot", "../../🧵️browser-boot", "../../🧵️browser-frame-transport", "../../🧵️browser-interactive-job-port", "../../🧵️frame-worker", "../../🧵️interactive-job-registry", "../../../../../../../../../🔨️modules/🖱️ui/🧱️elements/📊️Diagram", "../../../../../../../../../🔨️modules/🖱️ui/🧱️elements/🔌️Ports", "🟦️typescript", "🌐️.html", "../../../../../../🧑️‍💻️dev/🔌️plugin-modules"]
 
 [serve]
 addresses = ["127.0.0.1"]

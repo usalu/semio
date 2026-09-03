@@ -5,7 +5,7 @@
 //! This leaf exists so `🪆️subsets/✳️transitional/🧬️schema/` is present per `🔣️taxonomy.json`'s
 //! `subsetChildDirs`, without duplicating the schema definition.
 
-pub use crate::artifacts::xlsx::standards::v_ecma_376::subsets::any::schema::*;
+pub use crate::artifacts::xlsx::standards::v_ecma_376::subsets::base::schema::*;
 //#region 🧬️Mutations
 // 🧬️ This subset's OWN conformance-class vocabulary, mounted here rather than in the crate's shared
 // `🦀️.rs`: that file is one wiring file for every stdio artifact at once, and the rationale the
@@ -21,8 +21,8 @@ pub mod mutations;
 
 //#region 🏗️DerivedConstruction
 pub mod derived_construction {
-    use crate::artifacts::xlsx::standards::v_ecma_376::subsets::any::schema::mutations::set_snapshot;
-    use crate::artifacts::xlsx::standards::v_ecma_376::subsets::any::schema::snapshot::{XlsxSnapshot, XlsxWorkbook};
+    use crate::artifacts::xlsx::standards::v_ecma_376::subsets::base::schema::mutations::set_snapshot;
+    use crate::artifacts::xlsx::standards::v_ecma_376::subsets::base::schema::snapshot::{XlsxSnapshot, XlsxWorkbook};
     use crate::artifacts::xlsx::standards::v_ecma_376::subsets::transitional::schema::{check_transitional_conformance, TRANSITIONAL_R_NS, TRANSITIONAL_SML_NS};
     use crate::artifacts::xlsx::{XlsxDiff, XlsxMutation};
     use crate::artifacts::xml::schema::snapshot::{xml_document_from_text, xml_document_to_text, XmlAttr, XmlNode};
@@ -73,7 +73,7 @@ pub mod derived_construction {
         /// ecma-376 engine, then stamps it explicitly Transitional.
         // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
         pub fn new(workbook: XlsxWorkbook) -> Self {
-            Self { snapshot: stamp_transitional_namespace(crate::artifacts::xlsx::standards::v_ecma_376::subsets::any::io::export::serializers::build_minimal_xlsx(workbook)) }
+            Self { snapshot: stamp_transitional_namespace(crate::artifacts::xlsx::standards::v_ecma_376::subsets::base::io::export::serializers::build_minimal_xlsx(workbook)) }
         }
     }
 
@@ -99,7 +99,7 @@ pub mod derived_construction {
         }
 
         fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
-            let diff = crate::artifacts::xlsx::standards::v_ecma_376::subsets::any::schema::mutations::apply_xlsx_mutation(&mut self.snapshot, &mutation);
+            let diff = crate::artifacts::xlsx::standards::v_ecma_376::subsets::base::schema::mutations::apply_xlsx_mutation(&mut self.snapshot, &mutation);
             (self, diff)
         }
 
@@ -147,9 +147,9 @@ pub use derived_construction::*;
 
 //#region 🧐️DerivedAnalysis
 pub mod derived_analysis {
-    use crate::artifacts::xlsx::standards::v_ecma_376::subsets::any::schema::snapshot::XlsxSnapshot;
-    use crate::artifacts::xlsx::standards::v_ecma_376::subsets::any::schema::XlsxAnalyzer as XlsxAnyAnalyzer;
-    pub use crate::artifacts::xlsx::standards::v_ecma_376::subsets::any::schema::XlsxParts;
+    use crate::artifacts::xlsx::standards::v_ecma_376::subsets::base::schema::snapshot::XlsxSnapshot;
+    use crate::artifacts::xlsx::standards::v_ecma_376::subsets::base::schema::XlsxAnalyzer as XlsxAnyAnalyzer;
+    pub use crate::artifacts::xlsx::standards::v_ecma_376::subsets::base::schema::XlsxParts;
     use crate::artifacts::xml::schema::snapshot::{xml_document_from_text, XmlNode};
     use dsl::{Diagnostic, FaultCode, FaultScope, Severity, TextSpan};
     use semio_framework_plugin::{Analysis, AnalyzeSource, ArtifactAnalysis, Dialect, IoConfidence, StandardId, SubsetId};

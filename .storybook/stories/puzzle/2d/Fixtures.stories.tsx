@@ -11,8 +11,8 @@ import { useCallback, useEffect, useMemo, useState, type ReactElement } from "re
 import { Board2dHost } from "../../../../framework/product/os/module/renderer/js/react/index.tsx";
 import type { ActionDescriptor, UiComponentSceneNode } from "../../../../framework/product/os/module/renderer/js/react/index.tsx";
 
-import concreteForestFixtureDsl from "../../../../✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻2d/📚️examples/🌲️concrete-forest/🖼️assets/🗣️forest.dsl.semio?raw";
-import nakaginCapsuleTowerFixtureDsl from "../../../../✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻2d/📚️examples/🏗️nakagin-capsule-tower/🖼️assets/🗣️tower.dsl.semio?raw";
+import concreteForestFixtureDsl from "../../../../✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/📚️examples/🌲️concrete-forest/🖼️assets/🗣️forest.dsl.semio?raw";
+import nakaginCapsuleTowerFixtureDsl from "../../../../✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/📚️examples/🏗️nakagin-capsule-tower/🖼️assets/🗣️tower.dsl.semio?raw";
 import capsuleDreamFixtureDsl from "../../../../.🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️09/PUZZLE-DESIGN-PARITY/🌙️capsule-dream-out/🗣️dream.2d.dsl.semio?raw";
 
 //#region WasmFixtureLoader
@@ -294,7 +294,7 @@ export const ConcreteForest: Story = {
   },
 };
 
-/** 🌙️ Capsule Dream 2D projection (2880 nodes / 2864 edges) — ticket `PUZZLE-DESIGN-PARITY` `🌙️capsule-dream-out/🗣️dream.2d.dsl.semio` until the `◻2d/📚️examples/🌙️capsule-dream` unit lands. */
+/** 🌙️ Capsule Dream 2D projection (2880 nodes / 2864 edges) — ticket `PUZZLE-DESIGN-PARITY` `🌙️capsule-dream-out/🗣️dream.2d.dsl.semio` until the `◻️2d/📚️examples/🌙️capsule-dream` unit lands. */
 export const CapsuleDream: Story = {
   args: {
     fixtureDsl: capsuleDreamFixtureDsl,

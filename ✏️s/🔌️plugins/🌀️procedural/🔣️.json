@@ -3,13 +3,13 @@
     {
       "kind": "onArtifactKind",
       "value": {
-        "kind": "2d.procedural"
+        "kind": "2d.generation"
       }
     },
     {
       "kind": "onArtifactKind",
       "value": {
-        "kind": "3d.procedural"
+        "kind": "3d.generation"
       }
     }
   ],
@@ -17,7 +17,7 @@
     {
       "id": "documents.write",
       "optional": false,
-      "reason": "persist procedural2d/procedural3d editor edits (flow graph parameter/node changes) to the open document",
+      "reason": "persist generation2d/generation3d editor edits (flow graph parameter/node changes) to the open document",
       "scope": "plugin"
     }
   ],
@@ -39,7 +39,7 @@
     ],
     "panels": [
       {
-        "bodyKey": "procedural2d.play.document",
+        "bodyKey": "generation2d.play.document",
         "children": [],
         "group": "workbench",
         "kind": {
@@ -58,7 +58,7 @@
         }
       },
       {
-        "bodyKey": "procedural2d.play.catalogue",
+        "bodyKey": "generation2d.play.catalogue",
         "children": [],
         "group": "workbench",
         "kind": {
@@ -77,7 +77,7 @@
         }
       },
       {
-        "bodyKey": "procedural2d.play.inspection",
+        "bodyKey": "generation2d.play.inspection",
         "children": [],
         "group": "details",
         "kind": {
@@ -242,7 +242,7 @@
       {
         "artifactKinds": [
           {
-            "componentKind": "procedural2d",
+            "componentKind": "generation2d",
             "dimension": "2d",
             "exportFormats": [],
             "exportStdioKinds": [
@@ -252,7 +252,7 @@
               "stdio.png",
               "stdio.svg"
             ],
-            "id": "2d.procedural",
+            "id": "2d.generation",
             "importFormats": [],
             "importStdioKinds": [
               "stdio.dwg",
@@ -267,9 +267,9 @@
               "class": "twoD",
               "form": "flow"
             },
-            "name": "2D Procedural",
-            "schema": "procedural.2d",
-            "sourceFormat": "procedural.2d"
+            "name": "2D Generation",
+            "schema": "generation.2d",
+            "sourceFormat": "generation.2d"
           }
         ],
         "breadcrumb": [
@@ -284,7 +284,7 @@
         "config": {
           "fields": []
         },
-        "controllerId": "s.procedural.procedural2d@1/*#editor",
+        "controllerId": "s.procedural.generation2d@1/*#editor",
         "defaultLayout": {
           "root": {
             "children": [
@@ -293,7 +293,7 @@
                   {
                     "kind": "window",
                     "title": "Main",
-                    "windowKindId": "procedural2d-main"
+                    "windowKindId": "generation2d-main"
                   }
                 ],
                 "kind": "stack",
@@ -304,7 +304,7 @@
                   {
                     "kind": "window",
                     "title": "Preview",
-                    "windowKindId": "procedural2d-preview"
+                    "windowKindId": "generation2d-preview"
                   }
                 ],
                 "kind": "stack",
@@ -316,13 +316,13 @@
         },
         "defaultModeId": "edit",
         "dialect": {
-          "artifactKind": "s.procedural.procedural2d",
+          "artifactKind": "s.procedural.generation2d",
           "standard": "1",
           "subset": "*"
         },
         "dialogs": [],
-        "iconId": "procedural2d",
-        "id": "s.procedural.procedural2d@1/*#editor",
+        "iconId": "generation2d",
+        "id": "s.procedural.generation2d@1/*#editor",
         "interactions": [
           {
             "granularities": [
@@ -414,16 +414,16 @@
         ],
         "io": {
           "artifact": {
-            "componentKind": "procedural2d",
+            "componentKind": "generation2d",
             "dimension": "2d",
-            "id": "2d.procedural",
-            "name": "2D Procedural"
+            "id": "2d.generation",
+            "name": "2D Generation"
           },
           "documentMediaType": {
             "class": "twoD",
             "form": "flow"
           },
-          "documentSchema": "procedural.2d",
+          "documentSchema": "generation.2d",
           "exportFormats": [],
           "importFormats": [],
           "ports": [
@@ -456,49 +456,49 @@
           {
             "action": {
               "action": "undo",
-              "controllerId": "s.procedural.procedural2d@1/*#editor"
+              "controllerId": "s.procedural.generation2d@1/*#editor"
             },
             "keys": "mod+z"
           },
           {
             "action": {
               "action": "redo",
-              "controllerId": "s.procedural.procedural2d@1/*#editor"
+              "controllerId": "s.procedural.generation2d@1/*#editor"
             },
             "keys": "mod+shift+z"
           },
           {
             "action": {
               "action": "copy",
-              "controllerId": "s.procedural.procedural2d@1/*#editor"
+              "controllerId": "s.procedural.generation2d@1/*#editor"
             },
             "keys": "mod+c"
           },
           {
             "action": {
               "action": "cut",
-              "controllerId": "s.procedural.procedural2d@1/*#editor"
+              "controllerId": "s.procedural.generation2d@1/*#editor"
             },
             "keys": "mod+x"
           },
           {
             "action": {
               "action": "paste",
-              "controllerId": "s.procedural.procedural2d@1/*#editor"
+              "controllerId": "s.procedural.generation2d@1/*#editor"
             },
             "keys": "mod+v"
           },
           {
             "action": {
               "action": "clearSelection",
-              "controllerId": "s.procedural.procedural2d@1/*#editor"
+              "controllerId": "s.procedural.generation2d@1/*#editor"
             },
             "keys": "escape"
           },
           {
             "action": {
               "action": "selectAll",
-              "controllerId": "s.procedural.procedural2d@1/*#editor"
+              "controllerId": "s.procedural.generation2d@1/*#editor"
             },
             "keys": "mod+a"
           }
@@ -546,14 +546,14 @@
                 "en": "Generate"
               }
             },
-            "layoutId": "procedural2d-generate",
+            "layoutId": "generation2d-generate",
             "tools": []
           }
         ],
         "namedLayouts": [
           {
             "iconId": "sparkles",
-            "id": "procedural2d-generate",
+            "id": "generation2d-generate",
             "label": "Generate",
             "layout": {
               "root": {
@@ -563,7 +563,7 @@
                       {
                         "kind": "window",
                         "title": "Generations",
-                        "windowKindId": "procedural2d-generations"
+                        "windowKindId": "generation2d-generations"
                       }
                     ],
                     "kind": "stack",
@@ -574,7 +574,7 @@
                       {
                         "kind": "window",
                         "title": "Form",
-                        "windowKindId": "procedural2d-generate-form"
+                        "windowKindId": "generation2d-generate-form"
                       }
                     ],
                     "kind": "stack",
@@ -585,7 +585,7 @@
                       {
                         "kind": "window",
                         "title": "Preview",
-                        "windowKindId": "procedural2d-generate-preview"
+                        "windowKindId": "generation2d-generate-preview"
                       }
                     ],
                     "kind": "stack",
@@ -600,7 +600,7 @@
         ],
         "panelTabs": [
           {
-            "bodyKey": "procedural2d.play.document",
+            "bodyKey": "generation2d.play.document",
             "children": [],
             "group": "workbench",
             "kind": {
@@ -619,7 +619,7 @@
             }
           },
           {
-            "bodyKey": "procedural2d.play.catalogue",
+            "bodyKey": "generation2d.play.catalogue",
             "children": [],
             "group": "workbench",
             "kind": {
@@ -638,7 +638,7 @@
             }
           },
           {
-            "bodyKey": "procedural2d.play.inspection",
+            "bodyKey": "generation2d.play.inspection",
             "children": [],
             "group": "details",
             "kind": {
@@ -3074,10 +3074,10 @@
                 }
               }
             ],
-            "bodyKey": "procedural2d.play.main",
+            "bodyKey": "generation2d.play.main",
             "capabilities": [],
             "iconId": "flow-graph",
-            "id": "procedural2d-main",
+            "id": "generation2d-main",
             "interactions": [
               "graph"
             ],
@@ -5490,10 +5490,10 @@
                 }
               }
             ],
-            "bodyKey": "procedural2d.play.preview",
+            "bodyKey": "generation2d.play.preview",
             "capabilities": [],
             "iconId": "preview",
-            "id": "procedural2d-preview",
+            "id": "generation2d-preview",
             "interactions": [
               "graph"
             ],
@@ -7906,10 +7906,10 @@
                 }
               }
             ],
-            "bodyKey": "procedural2d.play.generations",
+            "bodyKey": "generation2d.play.generations",
             "capabilities": [],
             "iconId": "sparkles",
-            "id": "procedural2d-generations",
+            "id": "generation2d-generations",
             "interactions": [],
             "label": {
               "native": {
@@ -10320,10 +10320,10 @@
                 }
               }
             ],
-            "bodyKey": "procedural2d.play.generate-form",
+            "bodyKey": "generation2d.play.generate-form",
             "capabilities": [],
             "iconId": "clipboard-list",
-            "id": "procedural2d-generate-form",
+            "id": "generation2d-generate-form",
             "interactions": [],
             "label": {
               "native": {
@@ -12734,10 +12734,10 @@
                 }
               }
             ],
-            "bodyKey": "procedural2d.play.generate-preview",
+            "bodyKey": "generation2d.play.generate-preview",
             "capabilities": [],
             "iconId": "preview",
-            "id": "procedural2d-generate-preview",
+            "id": "generation2d-generate-preview",
             "interactions": [
               "graph"
             ],
@@ -12775,14 +12775,14 @@
         "config": {
           "fields": []
         },
-        "controllerId": "s.procedural.procedural2d@1/*#viewer",
+        "controllerId": "s.procedural.generation2d@1/*#viewer",
         "defaultLayout": {
           "root": {
             "children": [
               {
                 "kind": "window",
                 "title": "Preview",
-                "windowKindId": "procedural2d-view-preview"
+                "windowKindId": "generation2d-view-preview"
               }
             ],
             "kind": "stack"
@@ -12790,13 +12790,13 @@
         },
         "defaultModeId": "view",
         "dialect": {
-          "artifactKind": "s.procedural.procedural2d",
+          "artifactKind": "s.procedural.generation2d",
           "standard": "1",
           "subset": "*"
         },
         "dialogs": [],
-        "iconId": "procedural2d",
-        "id": "s.procedural.procedural2d@1/*#viewer",
+        "iconId": "generation2d",
+        "id": "s.procedural.generation2d@1/*#viewer",
         "interactions": [],
         "io": {
           "artifact": {
@@ -12809,7 +12809,7 @@
             "class": "data",
             "form": "value"
           },
-          "documentSchema": "procedural.2d",
+          "documentSchema": "generation.2d",
           "exportFormats": [],
           "importFormats": [],
           "ports": []
@@ -12818,35 +12818,35 @@
           {
             "action": {
               "action": "undo",
-              "controllerId": "s.procedural.procedural2d@1/*#viewer"
+              "controllerId": "s.procedural.generation2d@1/*#viewer"
             },
             "keys": "mod+z"
           },
           {
             "action": {
               "action": "redo",
-              "controllerId": "s.procedural.procedural2d@1/*#viewer"
+              "controllerId": "s.procedural.generation2d@1/*#viewer"
             },
             "keys": "mod+shift+z"
           },
           {
             "action": {
               "action": "copy",
-              "controllerId": "s.procedural.procedural2d@1/*#viewer"
+              "controllerId": "s.procedural.generation2d@1/*#viewer"
             },
             "keys": "mod+c"
           },
           {
             "action": {
               "action": "cut",
-              "controllerId": "s.procedural.procedural2d@1/*#viewer"
+              "controllerId": "s.procedural.generation2d@1/*#viewer"
             },
             "keys": "mod+x"
           },
           {
             "action": {
               "action": "paste",
-              "controllerId": "s.procedural.procedural2d@1/*#viewer"
+              "controllerId": "s.procedural.generation2d@1/*#viewer"
             },
             "keys": "mod+v"
           }
@@ -13719,10 +13719,10 @@
                 }
               }
             ],
-            "bodyKey": "procedural2d.view.preview",
+            "bodyKey": "generation2d.view.preview",
             "capabilities": [],
             "iconId": "preview",
-            "id": "procedural2d-view-preview",
+            "id": "generation2d-view-preview",
             "interactions": [],
             "label": {
               "native": {
@@ -13747,7 +13747,7 @@
       {
         "artifactKinds": [
           {
-            "componentKind": "procedural3d",
+            "componentKind": "generation3d",
             "dimension": "3d",
             "exportFormats": [],
             "exportStdioKinds": [
@@ -13758,7 +13758,7 @@
               "stdio.ply",
               "stdio.stl"
             ],
-            "id": "3d.procedural",
+            "id": "3d.generation",
             "importFormats": [],
             "importStdioKinds": [
               "stdio.dwg",
@@ -13775,9 +13775,9 @@
               "class": "threeD",
               "form": "flow"
             },
-            "name": "3D Procedural",
-            "schema": "procedural.3d",
-            "sourceFormat": "procedural.3d"
+            "name": "3D Generation",
+            "schema": "generation.3d",
+            "sourceFormat": "generation.3d"
           }
         ],
         "breadcrumb": [
@@ -13840,7 +13840,7 @@
         "config": {
           "fields": []
         },
-        "controllerId": "s.procedural.procedural3d@1/*#editor",
+        "controllerId": "s.procedural.generation3d@1/*#editor",
         "defaultLayout": {
           "root": {
             "children": [
@@ -13872,13 +13872,13 @@
         },
         "defaultModeId": "edit",
         "dialect": {
-          "artifactKind": "s.procedural.procedural3d",
+          "artifactKind": "s.procedural.generation3d",
           "standard": "1",
           "subset": "*"
         },
         "dialogs": [],
         "iconId": "workflow",
-        "id": "s.procedural.procedural3d@1/*#editor",
+        "id": "s.procedural.generation3d@1/*#editor",
         "interactions": [
           {
             "granularities": [
@@ -13970,16 +13970,16 @@
         ],
         "io": {
           "artifact": {
-            "componentKind": "procedural3d",
+            "componentKind": "generation3d",
             "dimension": "3d",
-            "id": "3d.procedural",
-            "name": "3D Procedural"
+            "id": "3d.generation",
+            "name": "3D Generation"
           },
           "documentMediaType": {
             "class": "threeD",
             "form": "flow"
           },
-          "documentSchema": "procedural.3d",
+          "documentSchema": "generation.3d",
           "exportFormats": [],
           "importFormats": [],
           "ports": [
@@ -14012,49 +14012,49 @@
           {
             "action": {
               "action": "undo",
-              "controllerId": "s.procedural.procedural3d@1/*#editor"
+              "controllerId": "s.procedural.generation3d@1/*#editor"
             },
             "keys": "mod+z"
           },
           {
             "action": {
               "action": "redo",
-              "controllerId": "s.procedural.procedural3d@1/*#editor"
+              "controllerId": "s.procedural.generation3d@1/*#editor"
             },
             "keys": "mod+shift+z"
           },
           {
             "action": {
               "action": "copy",
-              "controllerId": "s.procedural.procedural3d@1/*#editor"
+              "controllerId": "s.procedural.generation3d@1/*#editor"
             },
             "keys": "mod+c"
           },
           {
             "action": {
               "action": "cut",
-              "controllerId": "s.procedural.procedural3d@1/*#editor"
+              "controllerId": "s.procedural.generation3d@1/*#editor"
             },
             "keys": "mod+x"
           },
           {
             "action": {
               "action": "paste",
-              "controllerId": "s.procedural.procedural3d@1/*#editor"
+              "controllerId": "s.procedural.generation3d@1/*#editor"
             },
             "keys": "mod+v"
           },
           {
             "action": {
               "action": "clearSelection",
-              "controllerId": "s.procedural.procedural3d@1/*#editor"
+              "controllerId": "s.procedural.generation3d@1/*#editor"
             },
             "keys": "escape"
           },
           {
             "action": {
               "action": "selectAll",
-              "controllerId": "s.procedural.procedural3d@1/*#editor"
+              "controllerId": "s.procedural.generation3d@1/*#editor"
             },
             "keys": "mod+a"
           }
@@ -14102,14 +14102,14 @@
                 "en": "Generate"
               }
             },
-            "layoutId": "procedural3d-generate",
+            "layoutId": "generation3d-generate",
             "tools": []
           }
         ],
         "namedLayouts": [
           {
             "iconId": "sparkles",
-            "id": "procedural3d-generate",
+            "id": "generation3d-generate",
             "label": "Generate",
             "layout": {
               "root": {
@@ -14119,7 +14119,7 @@
                       {
                         "kind": "window",
                         "title": "Generations",
-                        "windowKindId": "procedural3d-generations"
+                        "windowKindId": "generation3d-generations"
                       }
                     ],
                     "kind": "stack",
@@ -14130,7 +14130,7 @@
                       {
                         "kind": "window",
                         "title": "Form",
-                        "windowKindId": "procedural3d-generate-form"
+                        "windowKindId": "generation3d-generate-form"
                       }
                     ],
                     "kind": "stack",
@@ -14141,7 +14141,7 @@
                       {
                         "kind": "window",
                         "title": "Preview",
-                        "windowKindId": "procedural3d-generate-preview"
+                        "windowKindId": "generation3d-generate-preview"
                       }
                     ],
                     "kind": "stack",
@@ -23033,7 +23033,7 @@
             "bodyKey": "procedural.play.generations",
             "capabilities": [],
             "iconId": "sparkles",
-            "id": "procedural3d-generations",
+            "id": "generation3d-generations",
             "interactions": [],
             "label": {
               "native": {
@@ -25952,7 +25952,7 @@
             "bodyKey": "procedural.play.generate-form",
             "capabilities": [],
             "iconId": "clipboard-list",
-            "id": "procedural3d-generate-form",
+            "id": "generation3d-generate-form",
             "interactions": [],
             "label": {
               "native": {
@@ -28871,7 +28871,7 @@
             "bodyKey": "procedural.play.generate-preview",
             "capabilities": [],
             "iconId": "preview",
-            "id": "procedural3d-generate-preview",
+            "id": "generation3d-generate-preview",
             "interactions": [
               "graph"
             ],
@@ -28909,7 +28909,7 @@
         "config": {
           "fields": []
         },
-        "controllerId": "s.procedural.procedural3d@1/*#viewer",
+        "controllerId": "s.procedural.generation3d@1/*#viewer",
         "defaultLayout": {
           "root": {
             "children": [
@@ -28924,13 +28924,13 @@
         },
         "defaultModeId": "view",
         "dialect": {
-          "artifactKind": "s.procedural.procedural3d",
+          "artifactKind": "s.procedural.generation3d",
           "standard": "1",
           "subset": "*"
         },
         "dialogs": [],
         "iconId": "workflow",
-        "id": "s.procedural.procedural3d@1/*#viewer",
+        "id": "s.procedural.generation3d@1/*#viewer",
         "interactions": [],
         "io": {
           "artifact": {
@@ -28943,7 +28943,7 @@
             "class": "data",
             "form": "value"
           },
-          "documentSchema": "procedural.3d",
+          "documentSchema": "generation.3d",
           "exportFormats": [],
           "importFormats": [],
           "ports": []
@@ -28952,35 +28952,35 @@
           {
             "action": {
               "action": "undo",
-              "controllerId": "s.procedural.procedural3d@1/*#viewer"
+              "controllerId": "s.procedural.generation3d@1/*#viewer"
             },
             "keys": "mod+z"
           },
           {
             "action": {
               "action": "redo",
-              "controllerId": "s.procedural.procedural3d@1/*#viewer"
+              "controllerId": "s.procedural.generation3d@1/*#viewer"
             },
             "keys": "mod+shift+z"
           },
           {
             "action": {
               "action": "copy",
-              "controllerId": "s.procedural.procedural3d@1/*#viewer"
+              "controllerId": "s.procedural.generation3d@1/*#viewer"
             },
             "keys": "mod+c"
           },
           {
             "action": {
               "action": "cut",
-              "controllerId": "s.procedural.procedural3d@1/*#viewer"
+              "controllerId": "s.procedural.generation3d@1/*#viewer"
             },
             "keys": "mod+x"
           },
           {
             "action": {
               "action": "paste",
-              "controllerId": "s.procedural.procedural3d@1/*#viewer"
+              "controllerId": "s.procedural.generation3d@1/*#viewer"
             },
             "keys": "mod+v"
           }

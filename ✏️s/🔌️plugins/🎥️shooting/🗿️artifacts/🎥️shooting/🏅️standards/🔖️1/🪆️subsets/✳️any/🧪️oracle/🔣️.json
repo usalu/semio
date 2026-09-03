@@ -2,12 +2,66 @@
   "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json",
   "schemaVersion": 2,
   "_comment": "🧩️ This subset's own contribution. The `kinds` are the kebab spelling of `ShootingMutation`'s thirty-one variants in declaration order — assets, then shots, then saved cameras, then the two active-selection verbs, then the scene lighting block; `../🧬️schema/🧬️mutations/🦀️.rs`'s `KINDS` const and its `kinds_match_the_enum_and_the_catalog` test keep this file, that const and the enum in agreement.",
-  "oracles": [],
+  "oracles": [
+    {
+      "id": "shooting-1-python-independent",
+      "ecosystem": "python",
+      "package": "",
+      "capabilities": [
+        "shooting-1-mutate"
+      ],
+      "comparisonProfiles": [
+        "ordered-json-v1"
+      ],
+      "license": "AGPL-3.0-only",
+      "testOnly": true,
+      "rationale": "🐍️ No third-party library reads or writes s.shooting.shooting's shooting.shooting.dsl carrier -- glTF 2.0, USD and Collada were surveyed and declined on the one structural point that matters: none of them models a SHOT (a named render-output configuration with width/height/format/shape), and eleven of the thirty-one kinds address one. The reference is therefore a SECOND IMPLEMENTATION rather than a third-party distribution. The implementation is ../../../🧪️tests/mutate-shooting-1/🐍️component.py, written from this subset's own committed ../🧬️schema/📸️snapshot/🔣️.json document shape, each kind's own committed (mutation, after) leaf fixture (all thirty-one leaves share ONE committed before-document, SHA-1 6441b72754e5c649b2b07a2f2b244313467f85a0, verified across all thirty-one copies), and from .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-DIRECT-LEAF-OVERHAUL/📓️taxonomy.md's verb table. It imports nothing from the Rust it judges and transliterates none of it -- rotate-assets/scale-assets compose via the standard Hamilton-product/component-multiply mathematics, not the Rust arithmetic; replace-shot-camera was read off the one committed vector (and confirmed by the payload schema) to patch the SAVED CAMERA the shot references, not the shot itself; create-* was read off all three committed create vectors at once (each ones own index field disagrees with where its after-document actually places the new member) to be append-only, matching production's own CreateAsset/CreateShot/CreateSavedCamera docstrings. All 31 kinds forward and inverse scenarios were executed standalone via the repository's own 🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🐍️python/🐍️.py host against a hand-built plan -- all 62 passed on the first run.",
+      "kind": "verified-native-second-implementation",
+      "engine": {
+        "family": "none",
+        "implementation": "in-repository second implementation",
+        "version": "0"
+      },
+      "productionReachable": false,
+      "networkDuringExecution": false,
+      "nativeSecondImplementation": {
+        "format": "s.shooting.shooting",
+        "noThirdPartySurvey": {
+          "ecosystemsSearched": [
+            "python/pypi"
+          ],
+          "candidatesConsidered": [
+            {
+              "package": "glTF 2.0 (khronos)",
+              "reason": "Interchange scene format with meshes/cameras/nodes, but has no notion of a SHOT (a named render-output configuration with width/height/format/shape); eleven of thirty-one kinds address one and would have nothing to write to."
+            },
+            {
+              "package": "USD (pixar openusd)",
+              "reason": "Composable scene-description format for VFX pipelines, models cameras and prims but no SHOT concept comparable to this vocabulary either; declined for the same structural reason as glTF."
+            },
+            {
+              "package": "Collada (khronos, .dae)",
+              "reason": "XML scene-interchange format, same gap: no SHOT entity, and no reader in this repository already links it as a test oracle for any format."
+            }
+          ]
+        },
+        "subjectImplementationLanguage": "rust",
+        "secondImplementationLanguage": "python",
+        "specificationSource": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-DIRECT-LEAF-OVERHAUL/📓️taxonomy.md; ../🧬️schema/📸️snapshot/🔣️.json; each mutation's own 🔣️.schema.json and ↩️inverse/🦀️.rs docstring (read for convention, not transliterated)",
+        "fixtureCoverage": {
+          "vectors": 31,
+          "capabilitiesCovered": [
+            "shooting-1-mutate"
+          ]
+        }
+      }
+    }
+  ],
   "noOracleDecisions": [
     {
       "id": "shooting-render-scene-mutation-semantics",
       "capabilities": [],
-      "rationale": "The survey this decision already carries is a good one and is kept: glTF 2.0, USD and Collada are named, they really do model an asset list, a transform, a camera and a punctual light, and they are declined on one structural point — none of them models a SHOT, a render request with width, height, output format, mask shape, background and a saved-camera reference, which ELEVEN of the thirty-one kinds address. THAT SURVEY STANDS, AND IT IS NOT WHAT THIS DECISION NOW RESTS ON. Surveying and declining a third-party LIBRARY is a different judgement from declining a SECOND IMPLEMENTATION, and until this re-examination that is the only judgement this decision had ever made. The sentence it used to lean on — that this subset's own shape IS its specification and so not a fact an external implementation could confirm or refute — is refuted inside this repository: `mutate-puzzle-2d-1` and `mutate-puzzle-3d-1`, whose documents carry ports inside nodes and cascade on delete, took Python second implementations over this same `.dsl.semio` carrier, from the same kind of committed material, and between them they surfaced findings no single-implementation case could produce. So THIS DECISION IS A DEBT, NOT A JUDGEMENT, and it is recorded as one here rather than left reading as a verdict.\n\nWHAT A SECOND IMPLEMENTATION HERE WOULD BE WRITTEN FROM: `../🧬️schema/📸️snapshot/🔣️.json` for the document's members, the rules of `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/📓️derivation-rules.md` that this vocabulary was derived by, and the thirty-one committed `(before, mutation, after, outcome)` specification vectors under `../🧬️schema/🧬️mutations/<kind>/🧪️tests/<fixture>/`. The nearest transferable recipe is `mutate-puzzle-3d-1`: a scene of typed placed records beside a second register the first one references.\n\nWHAT BLOCKS IT TODAY, precisely. This case's committed specification vectors are NOT declared as `asset://` fixtures. Its `Examples` table carries the payloads inline, and the Rust adapter reaches the committed `(before, mutation, after, outcome)` files through `include_str!` instead. Two consequences follow: the execution plan does not pin those files' digests, so a silently edited vector changes the result rather than the plan; and a Python reference cannot read them at all, because the Python host resolves a fixture only through the plan and raises on an undeclared URI. Declaring them — the shape `mutate-program-1`, `mutate-note-1` and `mutate-block-3d-1` already use — is the one edit that unblocks this case, and it strengthens the case whether or not a reference follows. AND, SEPARATELY, `identity-round-trip` WOULD STILL BE REFUSED. This subset's committed snapshot text grammar is the repository-wide PLACEHOLDER: its whole body is `payload = OCTET+` and its header production declares `\"schema\" SP \"stdio.json\"`, which the committed artifact contradicts on its own first line. A second reader cannot parse what no document describes — the finding `mutate-iso16757-1`, `mutate-vdi3805-1`, `mutate-program-1` and `mutate-writer-1` all report against their own subsets.\n\nWHAT IS ASSERTED IN THE MEANTIME is unchanged and is listed in `substitutes`: the committed specification vectors, replayed end to end through the platform, and the metamorphic laws the subject handler asserts in role. The ceiling on all of it is unchanged too and is worth restating: no second producer runs beside them, so a mistake shared by the handcrafted vector and the production code passes unseen.\n\n[C2 2026-09-02] Narrowed `capabilities` to remove 'shooting-1-mutate': a mutation manifest already requires an external-oracle discharge for this capability (tracked honestly as `missing-external-oracle`), so a no-oracle decision claiming the same capability made that gap invisible to `no-oracle-covers-mutation` without discharging it. The rationale above is kept verbatim as the record of what was actually investigated; only the claim is withdrawn. See .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION/📓️c2-native-artifact-oracles.md.",
+      "rationale": "The survey this decision already carries is a good one and is kept: glTF 2.0, USD and Collada are named, they really do model an asset list, a transform, a camera and a punctual light, and they are declined on one structural point — none of them models a SHOT, a render request with width, height, output format, mask shape, background and a saved-camera reference, which ELEVEN of the thirty-one kinds address. THAT SURVEY STANDS, AND IT IS NOT WHAT THIS DECISION NOW RESTS ON. Surveying and declining a third-party LIBRARY is a different judgement from declining a SECOND IMPLEMENTATION, and until this re-examination that is the only judgement this decision had ever made. The sentence it used to lean on — that this subset's own shape IS its specification and so not a fact an external implementation could confirm or refute — is refuted inside this repository: `mutate-puzzle-2d-1` and `mutate-puzzle-3d-1`, whose documents carry ports inside nodes and cascade on delete, took Python second implementations over this same `.dsl.semio` carrier, from the same kind of committed material, and between them they surfaced findings no single-implementation case could produce. So THIS DECISION IS A DEBT, NOT A JUDGEMENT, and it is recorded as one here rather than left reading as a verdict.\n\nWHAT A SECOND IMPLEMENTATION HERE WOULD BE WRITTEN FROM: `../🧬️schema/📸️snapshot/🔣️.json` for the document's members, the rules of `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/📓️derivation-rules.md` that this vocabulary was derived by, and the thirty-one committed `(before, mutation, after, outcome)` specification vectors under `../🧬️schema/🧬️mutations/<kind>/🧪️tests/<fixture>/`. The nearest transferable recipe is `mutate-puzzle-3d-1`: a scene of typed placed records beside a second register the first one references.\n\nWHAT BLOCKS IT TODAY, precisely. This case's committed specification vectors are NOT declared as `asset://` fixtures. Its `Examples` table carries the payloads inline, and the Rust adapter reaches the committed `(before, mutation, after, outcome)` files through `include_str!` instead. Two consequences follow: the execution plan does not pin those files' digests, so a silently edited vector changes the result rather than the plan; and a Python reference cannot read them at all, because the Python host resolves a fixture only through the plan and raises on an undeclared URI. Declaring them — the shape `mutate-program-1`, `mutate-note-1` and `mutate-block-3d-1` already use — is the one edit that unblocks this case, and it strengthens the case whether or not a reference follows. AND, SEPARATELY, `identity-round-trip` WOULD STILL BE REFUSED. This subset's committed snapshot text grammar is the repository-wide PLACEHOLDER: its whole body is `payload = OCTET+` and its header production declares `\"schema\" SP \"stdio.json\"`, which the committed artifact contradicts on its own first line. A second reader cannot parse what no document describes — the finding `mutate-iso16757-1`, `mutate-vdi3805-1`, `mutate-program-1` and `mutate-writer-1` all report against their own subsets.\n\nWHAT IS ASSERTED IN THE MEANTIME is unchanged and is listed in `substitutes`: the committed specification vectors, replayed end to end through the platform, and the metamorphic laws the subject handler asserts in role. The ceiling on all of it is unchanged too and is worth restating: no second producer runs beside them, so a mistake shared by the handcrafted vector and the production code passes unseen.\n\n[C2 2026-09-02] Narrowed `capabilities` to remove 'shooting-1-mutate': a mutation manifest already requires an external-oracle discharge for this capability (tracked honestly as `missing-external-oracle`), so a no-oracle decision claiming the same capability made that gap invisible to `no-oracle-covers-mutation` without discharging it. The rationale above is kept verbatim as the record of what was actually investigated; only the claim is withdrawn. See .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION/📓️c2-native-artifact-oracles.md.\n\n[E1 2026-09-02] The asset:// fixture-declaration blocker named above is now resolved (this feature's Examples now carry declared asset:// fixtures) and a Python second implementation is registered as oracle 'shooting-1-python-independent' (kind verified-native-second-implementation). Capabilities stay empty ([]) — this entry is kept, not deleted, as the honest record of what was investigated on the carrier side; the mutation-semantics gap it used to name is now discharged by the registered oracle instead. See $TICKET/📓️e1-remodel-shooting-layout.md.",
       "substitutes": [
         "specification-vectors",
         "metamorphic-laws"
@@ -423,7 +477,7 @@
           "oracleRequirements": [
             {
               "capability": "shooting-1-mutate",
-              "qualifyingKind": "third-party-library"
+              "qualifyingKind": "verified-native-second-implementation"
             }
           ]
         },
@@ -442,7 +496,7 @@
           "oracleRequirements": [
             {
               "capability": "shooting-1-mutate",
-              "qualifyingKind": "third-party-library"
+              "qualifyingKind": "verified-native-second-implementation"
             }
           ]
         },
@@ -461,7 +515,7 @@
           "oracleRequirements": [
             {
               "capability": "shooting-1-mutate",
-              "qualifyingKind": "third-party-library"
+              "qualifyingKind": "verified-native-second-implementation"
             }
           ]
         },
@@ -480,7 +534,7 @@
           "oracleRequirements": [
             {
               "capability": "shooting-1-mutate",
-              "qualifyingKind": "third-party-library"
+              "qualifyingKind": "verified-native-second-implementation"
             }
           ]
         },
@@ -499,7 +553,7 @@
           "oracleRequirements": [
             {
               "capability": "shooting-1-mutate",
-              "qualifyingKind": "third-party-library"
+              "qualifyingKind": "verified-native-second-implementation"
             }
           ]
         },
@@ -518,7 +572,7 @@
           "oracleRequirements": [
             {
               "capability": "shooting-1-mutate",
-              "qualifyingKind": "third-party-library"
+              "qualifyingKind": "verified-native-second-implementation"
             }
           ]
         },
@@ -537,7 +591,7 @@
           "oracleRequirements": [
             {
               "capability": "shooting-1-mutate",
-              "qualifyingKind": "third-party-library"
+              "qualifyingKind": "verified-native-second-implementation"
             }
           ]
         },
@@ -556,7 +610,7 @@
           "oracleRequirements": [
             {
               "capability": "shooting-1-mutate",
-              "qualifyingKind": "third-party-library"
+              "qualifyingKind": "verified-native-second-implementation"
             }
           ]
         },
@@ -576,7 +630,7 @@
           "oracleRequirements": [
             {
               "capability": "shooting-1-mutate",
-              "qualifyingKind": "third-party-library"
+              "qualifyingKind": "verified-native-second-implementation"
             }
           ]
         },
@@ -596,7 +650,7 @@
           "oracleRequirements": [
             {
               "capability": "shooting-1-mutate",
-              "qualifyingKind": "third-party-library"
+              "qualifyingKind": "verified-native-second-implementation"
             }
           ]
         },
@@ -616,7 +670,7 @@
           "oracleRequirements": [
             {
               "capability": "shooting-1-mutate",
-              "qualifyingKind": "third-party-library"
+              "qualifyingKind": "verified-native-second-implementation"
             }
           ]
         },
@@ -636,7 +690,7 @@
           "oracleRequirements": [
             {
               "capability": "shooting-1-mutate",
-              "qualifyingKind": "third-party-library"
+              "qualifyingKind": "verified-native-second-implementation"
             }
           ]
         },
@@ -655,7 +709,7 @@
           "oracleRequirements": [
             {
               "capability": "shooting-1-mutate",
-              "qualifyingKind": "third-party-library"
+              "qualifyingKind": "verified-native-second-implementation"
             }
           ]
         },
@@ -674,7 +728,7 @@
           "oracleRequirements": [
             {
               "capability": "shooting-1-mutate",
-              "qualifyingKind": "third-party-library"
+              "qualifyingKind": "verified-native-second-implementation"
             }
           ]
         },
@@ -693,7 +747,7 @@
           "oracleRequirements": [
             {
               "capability": "shooting-1-mutate",
-              "qualifyingKind": "third-party-library"
+              "qualifyingKind": "verified-native-second-implementation"
             }
           ]
         },
@@ -713,7 +767,7 @@
           "oracleRequirements": [
             {
               "capability": "shooting-1-mutate",
-              "qualifyingKind": "third-party-library"
+              "qualifyingKind": "verified-native-second-implementation"
             }
           ]
         },
@@ -733,7 +787,7 @@
           "oracleRequirements": [
             {
               "capability": "shooting-1-mutate",
-              "qualifyingKind": "third-party-library"
+              "qualifyingKind": "verified-native-second-implementation"
             }
           ]
         },
@@ -753,7 +807,7 @@
           "oracleRequirements": [
             {
               "capability": "shooting-1-mutate",
-              "qualifyingKind": "third-party-library"
+              "qualifyingKind": "verified-native-second-implementation"
             }
           ]
         },
@@ -773,7 +827,7 @@
           "oracleRequirements": [
             {
               "capability": "shooting-1-mutate",
-              "qualifyingKind": "third-party-library"
+              "qualifyingKind": "verified-native-second-implementation"
             }
           ]
         },
@@ -793,7 +847,7 @@
           "oracleRequirements": [
             {
               "capability": "shooting-1-mutate",
-              "qualifyingKind": "third-party-library"
+              "qualifyingKind": "verified-native-second-implementation"
             }
           ]
         },
@@ -813,7 +867,7 @@
           "oracleRequirements": [
             {
               "capability": "shooting-1-mutate",
-              "qualifyingKind": "third-party-library"
+              "qualifyingKind": "verified-native-second-implementation"
             }
           ]
         },
@@ -833,7 +887,7 @@
           "oracleRequirements": [
             {
               "capability": "shooting-1-mutate",
-              "qualifyingKind": "third-party-library"
+              "qualifyingKind": "verified-native-second-implementation"
             }
           ]
         },
@@ -853,7 +907,7 @@
           "oracleRequirements": [
             {
               "capability": "shooting-1-mutate",
-              "qualifyingKind": "third-party-library"
+              "qualifyingKind": "verified-native-second-implementation"
             }
           ]
         },
@@ -873,7 +927,7 @@
           "oracleRequirements": [
             {
               "capability": "shooting-1-mutate",
-              "qualifyingKind": "third-party-library"
+              "qualifyingKind": "verified-native-second-implementation"
             }
           ]
         },
@@ -893,7 +947,7 @@
           "oracleRequirements": [
             {
               "capability": "shooting-1-mutate",
-              "qualifyingKind": "third-party-library"
+              "qualifyingKind": "verified-native-second-implementation"
             }
           ]
         },
@@ -913,7 +967,7 @@
           "oracleRequirements": [
             {
               "capability": "shooting-1-mutate",
-              "qualifyingKind": "third-party-library"
+              "qualifyingKind": "verified-native-second-implementation"
             }
           ]
         },
@@ -933,7 +987,7 @@
           "oracleRequirements": [
             {
               "capability": "shooting-1-mutate",
-              "qualifyingKind": "third-party-library"
+              "qualifyingKind": "verified-native-second-implementation"
             }
           ]
         },
@@ -953,7 +1007,7 @@
           "oracleRequirements": [
             {
               "capability": "shooting-1-mutate",
-              "qualifyingKind": "third-party-library"
+              "qualifyingKind": "verified-native-second-implementation"
             }
           ]
         },
@@ -973,7 +1027,7 @@
           "oracleRequirements": [
             {
               "capability": "shooting-1-mutate",
-              "qualifyingKind": "third-party-library"
+              "qualifyingKind": "verified-native-second-implementation"
             }
           ]
         },
@@ -993,7 +1047,7 @@
           "oracleRequirements": [
             {
               "capability": "shooting-1-mutate",
-              "qualifyingKind": "third-party-library"
+              "qualifyingKind": "verified-native-second-implementation"
             }
           ]
         },
@@ -1013,7 +1067,7 @@
           "oracleRequirements": [
             {
               "capability": "shooting-1-mutate",
-              "qualifyingKind": "third-party-library"
+              "qualifyingKind": "verified-native-second-implementation"
             }
           ]
         }

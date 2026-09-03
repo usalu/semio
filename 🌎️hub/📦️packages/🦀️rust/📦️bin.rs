@@ -12,26 +12,45 @@
 //! catalog (`{space_id}:{document_id}`), not hub-internal state.
 
 use axum::body::Bytes;
-use axum::extract::ws::{Message, WebSocket, WebSocketUpgrade};
+use axum::extract::ws::{CloseFrame, Message, WebSocket, WebSocketUpgrade};
 use axum::extract::{Path, State};
 use axum::http::{HeaderMap, StatusCode};
 use axum::response::IntoResponse;
-use axum::routing::{get, post};
+use axum::routing::{delete, get, post};
 use axum::{Json, Router};
 use db::db_storage::PayloadStorage as _;
 use directory::os_directory::{
     self, ConnectionView, DirectoryActor, DirectoryActorKind, DirectoryCommand, DirectoryConnectionPhase, DirectoryEvent, DirectoryPresenceActor, DirectoryReadModel, DirectorySpaceRole, DirectorySpaceVisibility, DirectoryStreamMessage, DocumentView,
     InviteView, MemberView, SpaceView,
 };
+use directory::{DslValue, FromValue, ToValue};
 use futures::stream::SplitSink;
 use futures::{SinkExt, StreamExt};
 use protocol::{decode_client_frame, encode_server_frame, AckStage, ActorId, ApplyOutcome, ArtifactId as ProtocolArtifactId, ClientFrame, Lane, MutationEnvelope, RuntimeFrontierSummary, ServerFrame};
 use semio_framework_async::ShardedMap;
 use semio_hub::directory::error::DirectoryError;
-use semio_hub::directory::model::{InviteRecord, SpaceRole, SyncSessionRecord};
+use semio_hub::directory::model::{AuthSessionKind, DocumentScope, InviteRecord, SpaceRole, SyncSessionRecord};
+#[cfg(test)]
+use semio_hub::directory::model::AuthSessionIssue;
+use semio_hub::directory::{identity_subject_digest, HubCapability, IdentityAssertionVerifier, IdentityVerificationControl, InviteCapability, LocalBootstrapTransport, SessionCapability};
+use semio_hub::lag_rebootstrap::{RebootstrapContext, RebootstrapProgress, RebootstrapTransferControl, VerifiedRebootstrapSource, REBOOTSTRAP_DEADLINE_MS};
+use semio_hub::local_bootstrap::{serve_local_bootstrap, InheritedLocalBootstrapTransport, LOCAL_BOOTSTRAP_EXCHANGE_DEADLINE_MS};
+use semio_hub::artifact_authority::trusted_catalog::{NativeCodecBinding, TrustedCatalogLoader, VerifiedTrustedCatalog};
+use semio_hub::artifact_authority::chunk_cas::{ArtifactChunkCasStores, FsArtifactChunkCasStorage};
+#[cfg(test)]
+use semio_hub::artifact_authority::chunk_cas::{artifact_cas_manifest_locator_v1, prepare_artifact_cas_manifest_v1, prepare_artifact_cas_ownership_v1, ArtifactChunkBlobStore, MemoryArtifactChunkCasStorage};
+#[cfg(feature = "neo4j")]
+use semio_hub::artifact_authority::chunk_cas::Neo4jArtifactChunkCasStorage;
+#[cfg(feature = "postgres")]
+use semio_hub::artifact_authority::chunk_cas::PostgresArtifactChunkCasStorage;
+#[cfg(feature = "sqlite")]
+use semio_hub::artifact_authority::chunk_cas::SqliteArtifactChunkCasStorage;
+use semio_hub::artifact_authority::{AuthorityError, AuthorityLimits, AuthorityOperationControl, AuthorityProgress, OperationContext, ValidatingCanonicalArtifactAuthority};
+#[cfg(test)]
+use semio_hub::artifact_authority::{ArtifactBlobIntegrity, ArtifactPair, ImmutableArtifactBlobStore};
 #[cfg(feature = "sqlite")]
 use semio_hub::directory::sqlite::SqliteDirectory;
-use semio_hub::directory::{CommandResult, DirectoryService, HubDirectories, HubDirectory};
+use semio_hub::directory::{CommandResult, DirectoryService, HubDirectories, HubDirectory, DIRECTORY_EVENT_READ_MAX, DIRECTORY_PROJECTION_REBUILD_MAX_EVENTS};
 use serde::{Deserialize, Serialize};
 use std::net::SocketAddr;
 use std::sync::Arc;
@@ -44,21 +63,25 @@ use tokio::sync::broadcast;
 /// HTTP listener.
 #[derive(Debug)]
 enum HubError {
+    ArtifactAuthority(AuthorityError),
     Directory(DirectoryError),
     Db(db::DbError),
     Io(std::io::Error),
     UnknownStorageBackend(String),
     UnknownDirectoryBackend(String),
+    UnsafeAuthConfiguration(String),
 }
 
 impl std::fmt::Display for HubError {
     fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
+            Self::ArtifactAuthority(error) => std::fmt::Display::fmt(error, formatter),
             Self::Directory(error) => std::fmt::Display::fmt(error, formatter),
             Self::Db(error) => std::fmt::Display::fmt(error, formatter),
             Self::Io(error) => write!(formatter, "io error: {error}"),
             Self::UnknownStorageBackend(backend) => write!(formatter, "unknown OS_HUB_STORAGE_BACKEND: {backend}"),
             Self::UnknownDirectoryBackend(backend) => write!(formatter, "unknown OS_HUB_DIRECTORY_BACKEND: {backend}"),
+            Self::UnsafeAuthConfiguration(detail) => write!(formatter, "unsafe hub authentication configuration: {detail}"),
         }
     }
 }
@@ -66,11 +89,18 @@ impl std::fmt::Display for HubError {
 impl std::error::Error for HubError {
     fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
         match self {
+            Self::ArtifactAuthority(error) => Some(error),
             Self::Directory(error) => Some(error),
             Self::Db(error) => Some(error),
             Self::Io(error) => Some(error),
-            Self::UnknownStorageBackend(_) | Self::UnknownDirectoryBackend(_) => None,
+            Self::UnknownStorageBackend(_) | Self::UnknownDirectoryBackend(_) | Self::UnsafeAuthConfiguration(_) => None,
         }
+    }
+}
+
+impl From<AuthorityError> for HubError {
+    fn from(error: AuthorityError) -> Self {
+        Self::ArtifactAuthority(error)
     }
 }
 
@@ -93,20 +123,99 @@ impl From<std::io::Error> for HubError {
 }
 //#endregion ⚠️ Errors
 
+/// @emoji 📦️ Axum JSON boundary for first-party `ToValue`/`FromValue` directory contracts.
+struct DirectoryJson<T>(T);
+
+impl<'de, T: FromValue> Deserialize<'de> for DirectoryJson<T> {
+    fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
+        let value = serde_json::Value::deserialize(deserializer)?;
+        T::from_value(DslValue::from(value)).map(Self).map_err(serde::de::Error::custom)
+    }
+}
+
+impl<T: ToValue> IntoResponse for DirectoryJson<T> {
+    fn into_response(self) -> axum::response::Response {
+        ([(axum::http::header::CONTENT_TYPE, "application/json")], directory::os_pack::json::to_json_string(&self.0)).into_response()
+    }
+}
+
 fn now_ms() -> i64 {
     SystemTime::now().duration_since(UNIX_EPOCH).map_or(0, |d| d.as_millis() as i64)
 }
 
-//#region 🔖️State
-/// @emoji 🎫️ `(space_id, document_id)` -> the single string key both `db::Database`'s flat
-/// document catalog and this crate's own fanout/presence registries key on — space scoping is a
-/// convention this crate applies on top of `db`'s namespace, not something `db` itself knows about.
-fn scope_key(space_id: &str, document_id: &str) -> String {
-    format!("{space_id}:{document_id}")
+struct StartupCatalogControl;
+
+impl AuthorityOperationControl for StartupCatalogControl {
+    fn now_ms(&self) -> u64 {
+        SystemTime::now().duration_since(UNIX_EPOCH).map_or(0, |duration| u64::try_from(duration.as_millis()).unwrap_or(u64::MAX))
+    }
+
+    fn is_cancelled(&self) -> bool {
+        false
+    }
+
+    fn report(&self, progress: AuthorityProgress) {
+        if progress.completed_units == 0 || progress.completed_units == progress.total_units {
+            eprintln!("[INFO] trusted catalog {:?}: {}/{}", progress.stage, progress.completed_units, progress.total_units);
+        }
+    }
 }
 
-fn db_artifact_id(space_id: &str, document_id: &str) -> ProtocolArtifactId {
-    ProtocolArtifactId(scope_key(space_id, document_id))
+struct HubBootstrapControl {
+    cancelled: std::sync::atomic::AtomicBool,
+}
+
+impl HubBootstrapControl {
+    fn new() -> Self {
+        Self { cancelled: std::sync::atomic::AtomicBool::new(false) }
+    }
+
+    fn cancel(&self) {
+        self.cancelled.store(true, std::sync::atomic::Ordering::Release);
+    }
+}
+
+impl IdentityVerificationControl for HubBootstrapControl {
+    fn now_ms(&self) -> i64 {
+        now_ms()
+    }
+
+    fn is_cancelled(&self) -> bool {
+        self.cancelled.load(std::sync::atomic::Ordering::Acquire)
+    }
+
+    fn report(&self, _progress: semio_hub::directory::IdentityVerificationProgress) {}
+}
+
+type HubArtifactAuthority = ValidatingCanonicalArtifactAuthority<Arc<VerifiedTrustedCatalog>>;
+
+async fn configured_artifact_authority(bundle_path: Option<std::path::PathBuf>, profile: Option<String>, bindings: &[NativeCodecBinding]) -> Result<Option<Arc<HubArtifactAuthority>>, AuthorityError> {
+    let (bundle_path, profile) = match (bundle_path, profile) {
+        (None, None) => return Ok(None),
+        (Some(bundle_path), Some(profile)) => (bundle_path, profile),
+        _ => return Err(AuthorityError::Catalog("OS_HUB_TRUSTED_CATALOG_BUNDLE and OS_HUB_TRUSTED_CATALOG_PROFILE must be configured together".to_string())),
+    };
+    let control = StartupCatalogControl;
+    let started = control.now_ms();
+    let context = OperationContext::new(started.saturating_add(30_000), AuthorityLimits::maximum(), &control);
+    let catalog = Arc::new(TrustedCatalogLoader::load(&bundle_path, &profile, bindings, &context).await?);
+    Ok(Some(Arc::new(ValidatingCanonicalArtifactAuthority::new(catalog))))
+}
+
+fn linked_native_codec_bindings() -> Vec<NativeCodecBinding> {
+    Vec::new()
+}
+
+//#region 🔖️State
+/// @emoji 🎫️ Unambiguous v1 key for the flat DB/fanout catalogs: ASCII `v1:`, both UTF-8 byte
+/// lengths in decimal, separators, then the exact adjacent UTF-8 scope payloads. Both lengths make
+/// colon-containing and non-ASCII identifiers structural without a fallback decoder.
+fn document_scope_key_v1(scope: &DocumentScope) -> String {
+    format!("v1:{}:{}:{}{}", scope.space_id.len(), scope.document_id.len(), scope.space_id, scope.document_id)
+}
+
+fn db_artifact_id(scope: &DocumentScope) -> ProtocolArtifactId {
+    ProtocolArtifactId(document_scope_key_v1(scope))
 }
 
 fn db_core_document_id(id: &ProtocolArtifactId) -> db::ArtifactId {
@@ -140,16 +249,40 @@ struct SpaceColors {
     by_actor: std::collections::BTreeMap<String, ColorLease>,
 }
 
+#[cfg(test)]
+struct TestLiveGate {
+    document_subscribed: tokio::sync::Semaphore,
+    document_release: tokio::sync::Semaphore,
+    directory_subscribed: tokio::sync::Semaphore,
+    directory_release: tokio::sync::Semaphore,
+}
+
+#[cfg(test)]
+impl Default for TestLiveGate {
+    fn default() -> Self {
+        Self {
+            document_subscribed: tokio::sync::Semaphore::new(0),
+            document_release: tokio::sync::Semaphore::new(0),
+            directory_subscribed: tokio::sync::Semaphore::new(0),
+            directory_release: tokio::sync::Semaphore::new(0),
+        }
+    }
+}
+
 #[derive(Clone)]
 struct HubState {
     db: Arc<db::Database>,
+    artifact_cas: Arc<ArtifactChunkCasStores>,
     directory: Arc<HubDirectories>,
+    rebootstrap: Arc<VerifiedRebootstrapSource>,
+    _artifact_authority: Option<Arc<HubArtifactAuthority>>,
     /// @emoji 🏭️ Wave 1.B: the single serialized directory writer (contract §C1's decider laws +
     /// dense event `seq`) built once over `directory` at startup — see `semio_hub::directory::
     /// DirectoryService`'s own doc. `/directory/commands` and `/directory/invites/{token}/redeem`
     /// go through this; every other `/directory/*` route reads `directory` directly.
     directory_service: Arc<DirectoryService>,
-    admin_token: Option<String>,
+    admin_subjects: Arc<[AdminSubject]>,
+    readiness: Arc<HubReadinessV1>,
     /// @emoji 🛡️ Contract §C0 `OS_HUB_ADMIN_DIR`: the admin SPA's static asset root. Lane 2-E owns
     /// the actual `/admin` file-serving handler (and its 503-if-missing stub) — this lane only
     /// carries the resolved path through `HubState` so that handler has something to read.
@@ -157,7 +290,7 @@ struct HubState {
     // wired to a route yet (explicitly out of this lane's scope, see the doc above).
     #[allow(dead_code)]
     admin_dir: std::path::PathBuf,
-    /// @emoji 📡️ Command-lane + preview-lane fan-out, one `broadcast::Sender` per `scope_key` —
+    /// @emoji 📡️ Command-lane + preview-lane fan-out, one `broadcast::Sender` per v1 scope key —
     /// `db::Database`'s own `ArtifactHandle` exposes no live-subscription seam yet (see
     /// `db_engine`'s module doc: `subscribe`/`preview` are honest `Unimplemented` extension seams),
     /// so relaying newly-committed commands / preview blobs / presence updates to other connected
@@ -165,7 +298,10 @@ struct HubState {
     /// never itself decides ordering or durability, only re-broadcasts what `db` already committed
     /// or what a preview/presence frame carries verbatim.
     fanout: Arc<ShardedMap<String, broadcast::Sender<ServerFrame>>>,
-    /// @emoji 👥️ `(scope_key, actor)` -> that actor's presence session (contract §C7.3) — ephemeral,
+    fanout_capacity: usize,
+    #[cfg(test)]
+    live_gate: Option<Arc<TestLiveGate>>,
+    /// @emoji 👥️ `(document_scope_key_v1, actor)` -> that actor's presence session (contract §C7.3) — ephemeral,
     /// never durable (mirrors the preview lane's own law), rebuilt from nothing on hub restart. The
     /// roster is document-wide now (contract §C7.0): `ServerFrame::Presence` fans out on `fanout`, not
     /// a surface-scoped channel; a peer's `surface` travels INSIDE its `PresencePeer` bytes, stamped
@@ -180,14 +316,6 @@ struct HubState {
     /// fires it; the loop observes the wake-up and closes the connection on its own next tick —
     /// this map never itself closes a socket, only signals the session that owns it to.
     session_kicks: Arc<ShardedMap<String, Arc<tokio::sync::Notify>>>,
-    /// @emoji 🧬️ W5.7: `scope_key` -> the first non-zero `store::ArtifactCodec::pack_schema_hash`
-    /// a client's `Hello` declared for that document — pinned in-memory, never durable (durable
-    /// pinning belongs in the db catalog once it grows a column for it; this wave's scope is the
-    /// in-memory pin only). A later `Hello` with a different non-zero hash for the same document is
-    /// rejected with an `error_frame("schema-hash-mismatch", ...)` before `Welcome` — catches two
-    /// builds of the same app disagreeing on a document's field shape. A zero hash always skips
-    /// validation (schema-agnostic client, see `ArtifactCodec::pack_schema_hash`'s own doc).
-    schema_hashes: Arc<ShardedMap<String, [u8; 32]>>,
     /// @emoji 🧩️ Wave 1.B: installed runtime extensions mirrored from dev `/extensions` static dir —
     /// populated by hub deploy copy / sideload; `GET /extensions` lists `install.json` rows.
     extensions_root: std::path::PathBuf,
@@ -201,7 +329,7 @@ struct HubState {
 
 impl HubState {
     fn fanout_for(&self, key: &str) -> broadcast::Sender<ServerFrame> {
-        self.fanout.get_or_insert_with_cloned(key.to_string(), || broadcast::channel(256).0)
+        self.fanout.get_or_insert_with_cloned(key.to_string(), || broadcast::channel(self.fanout_capacity).0)
     }
 
     /// @emoji 👥️ The document-wide roster's raw peer bytes (contract §C7.3) — entries whose `peer` is
@@ -262,9 +390,9 @@ impl HubState {
         });
     }
 
-    /// @emoji 🗂️ Get-or-create: a document is lazily minted in `db`'s catalog on its first Hello,
-    /// tolerating the race of two sessions doing so concurrently (the loser's `AlreadyExists`
-    /// resolves to the same live handle the winner just registered).
+    /// @emoji 🗂️ Get-or-create: after the caller has authenticated and validated the durable
+    /// descriptor, a document is lazily minted in `db`'s catalog on its first open. Concurrent
+    /// opens resolve to the same live handle.
     async fn ensure_document(&self, id: &ProtocolArtifactId) -> Result<db::ArtifactHandle, db::DbError> {
         match self.db.document(id).await {
             Ok(handle) => Ok(handle),
@@ -318,6 +446,8 @@ enum AuthOutcome {
     Session {
         user_id: String,
         role: SpaceRole,
+        session_id: String,
+        authorization_generation: u64,
     },
     ShareToken,
     /// @emoji 👁️ Public-visibility fallback — an implicit anonymous `SpaceRole::Spectator`, never
@@ -330,22 +460,23 @@ enum AuthOutcome {
 }
 
 /// @emoji 🔐️ Tries the bearer as an `AuthSessionRecord` (session id -> user -> space role) first;
-/// falls back to the existing anonymous share-token scheme when session resolution fails; and
+/// falls back to an active space/document share grant when session resolution fails; and
 /// finally falls back to `AuthOutcome::Public` when the space itself is `visibility == "public"`.
-/// Tokenless documents in a non-public space stay open (dev default) until any share token is
-/// issued for them, same as before this wave.
+/// Tokenless documents in a non-public space are always denied.
 async fn resolve_auth(state: &HubState, space_id: &str, document_id: &str, token: Option<&str>) -> AuthOutcome {
-    if let Some(session_id) = token {
-        if let Ok(Some(session)) = state.directory.get_auth_session(session_id).await {
-            if session.expires_at > now_ms() {
-                if let Ok(Some(role)) = state.directory.get_role(space_id, &session.user_id).await {
-                    return AuthOutcome::Session { user_id: session.user_id, role };
-                }
+    let capability = token.and_then(|value| HubCapability::parse(value).ok());
+    if let Some(HubCapability::Session(capability)) = &capability {
+        if let Ok(Some(session)) = state.directory.authenticate_session(capability).await {
+            if let Ok(Some(role)) = state.directory.get_role(space_id, &session.user_id).await {
+                return AuthOutcome::Session { user_id: session.user_id, role, session_id: session.id, authorization_generation: session.authorization_generation };
             }
         }
     }
-    if let Ok(true) = state.directory.authorized_by_token(document_id, token).await {
-        return AuthOutcome::ShareToken;
+    let scope = DocumentScope::new(space_id, document_id);
+    if let Some(HubCapability::Share(capability)) = &capability {
+        if let Ok(true) = state.directory.authenticate_share(&scope, capability).await {
+            return AuthOutcome::ShareToken;
+        }
     }
     match state.directory.get_space(space_id).await {
         Ok(Some(space)) if space.visibility == "public" => AuthOutcome::Public,
@@ -369,16 +500,150 @@ async fn authorized_for_blob(state: &HubState, space_id: &str, hash: &str, token
 //#endregion 🔖️Auth
 
 //#region 🔖️AdminAuth
-/// @emoji 🛡️ Contract §C2: bearer `OS_HUB_ADMIN_TOKEN` when the hub was started with one configured;
-/// otherwise (dev default) a loopback peer address is implicitly admin — `main()` logs this fallback
-/// loudly once at startup so it is never a silent surprise. Shared by every `/admin/api/*` route and
-/// `create_share` alike (this supersedes `create_share`'s previous "no token configured ⇒ 403"
-/// behaviour, which predates the loopback-admin dev default).
-fn is_admin(state: &HubState, headers: &HeaderMap, peer: Option<SocketAddr>) -> bool {
-    match state.admin_token.as_deref() {
-        Some(expected) => bearer(headers).as_deref() == Some(expected),
-        None => peer.is_some_and(|addr| addr.ip().is_loopback()),
+#[derive(Clone)]
+struct AdminSubject {
+    provider: String,
+    subject_digest: [u8; 32],
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum HubMode {
+    Production,
+    Development,
+}
+
+impl HubMode {
+    fn from_environment(bind: std::net::IpAddr) -> Result<Self, HubError> {
+        match std::env::var("OS_HUB_MODE").ok().as_deref() {
+            Some("production") => Ok(Self::Production),
+            Some("development") => Ok(Self::Development),
+            Some(_) => Err(HubError::UnsafeAuthConfiguration("OS_HUB_MODE must be development or production".into())),
+            None if bind.is_loopback() => Ok(Self::Development),
+            None => Ok(Self::Production),
+        }
     }
+}
+
+#[derive(Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
+struct HubReadinessV1 {
+    schema: &'static str,
+    status: &'static str,
+    run_id: String,
+    mode: &'static str,
+    bind_scope: &'static str,
+    authentication: HubAuthenticationReadinessV1,
+    directory: HubComponentReadinessV1,
+    storage: HubComponentReadinessV1,
+    artifact_authority: HubComponentReadinessV1,
+    admin_assets: HubComponentReadinessV1,
+    features: HubFeatureReadinessV1,
+}
+
+#[derive(Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
+struct HubAuthenticationReadinessV1 {
+    kind: &'static str,
+    bootstrap_ready: bool,
+    public_session_issuance: bool,
+}
+
+#[derive(Clone, Serialize)]
+struct HubComponentReadinessV1 {
+    ready: bool,
+}
+
+#[derive(Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
+struct HubFeatureReadinessV1 {
+    open_plan: bool,
+    rebootstrap: bool,
+    mcp_workspace: bool,
+    inference: bool,
+}
+
+fn hub_readiness(mode: HubMode, run_id: String, bootstrap_ready: bool, artifact_authority_ready: bool, admin_assets_ready: bool) -> HubReadinessV1 {
+    let authentication_kind = match mode {
+        HubMode::Development => "local-bootstrap-pipe-v1",
+        HubMode::Production => "identity-assertion-verifier",
+    };
+    let required_ready = bootstrap_ready && artifact_authority_ready && admin_assets_ready;
+    HubReadinessV1 {
+        schema: "semio.hub.readiness/v1",
+        status: if required_ready { "ready" } else { "not-ready" },
+        run_id,
+        mode: match mode {
+            HubMode::Development => "development",
+            HubMode::Production => "production",
+        },
+        bind_scope: "loopback",
+        authentication: HubAuthenticationReadinessV1 { kind: authentication_kind, bootstrap_ready, public_session_issuance: false },
+        directory: HubComponentReadinessV1 { ready: true },
+        storage: HubComponentReadinessV1 { ready: true },
+        artifact_authority: HubComponentReadinessV1 { ready: artifact_authority_ready },
+        admin_assets: HubComponentReadinessV1 { ready: admin_assets_ready },
+        features: HubFeatureReadinessV1 { open_plan: false, rebootstrap: true, mcp_workspace: false, inference: false },
+    }
+}
+
+fn configured_admin_subjects() -> Result<Arc<[AdminSubject]>, HubError> {
+    const ADMIN_SUBJECTS_MAX: usize = 64;
+    let Some(encoded) = std::env::var("OS_HUB_ADMIN_SUBJECTS").ok().filter(|value| !value.is_empty()) else { return Ok(Arc::from([])) };
+    let mut subjects = Vec::new();
+    for entry in encoded.split(',') {
+        if subjects.len() == ADMIN_SUBJECTS_MAX {
+            return Err(HubError::UnsafeAuthConfiguration("OS_HUB_ADMIN_SUBJECTS exceeds 64 entries".into()));
+        }
+        let (provider, subject) = entry.split_once(':').ok_or_else(|| HubError::UnsafeAuthConfiguration("OS_HUB_ADMIN_SUBJECTS entries must be provider:subject".into()))?;
+        let subject_digest = identity_subject_digest(provider, subject).map_err(HubError::Directory)?;
+        if subjects.iter().any(|existing: &AdminSubject| existing.provider == provider && semio_hub::directory::constant_time_digest_eq(&existing.subject_digest, &subject_digest)) {
+            return Err(HubError::UnsafeAuthConfiguration("OS_HUB_ADMIN_SUBJECTS contains a duplicate identity".into()));
+        }
+        subjects.push(AdminSubject { provider: provider.to_string(), subject_digest });
+    }
+    Ok(subjects.into())
+}
+
+fn validate_auth_startup(
+    mode: HubMode,
+    bind: std::net::IpAddr,
+    verifier: Option<&Arc<dyn IdentityAssertionVerifier>>,
+    local_bootstrap: Option<&Arc<dyn LocalBootstrapTransport>>,
+    admin_subjects: &[AdminSubject],
+) -> Result<(), HubError> {
+    match mode {
+        HubMode::Production => {
+            if verifier.is_none() {
+                return Err(HubError::UnsafeAuthConfiguration("production requires an IdentityAssertionVerifier adapter".into()));
+            }
+            if admin_subjects.is_empty() {
+                return Err(HubError::UnsafeAuthConfiguration("production requires OS_HUB_ADMIN_SUBJECTS".into()));
+            }
+            if !bind.is_loopback() {
+                return Err(HubError::UnsafeAuthConfiguration("production cleartext HTTP/WebSocket may bind only to loopback".into()));
+            }
+        }
+        HubMode::Development => {
+            if !bind.is_loopback() {
+                return Err(HubError::UnsafeAuthConfiguration("development mode must bind to loopback".into()));
+            }
+            if local_bootstrap.is_none() {
+                return Err(HubError::UnsafeAuthConfiguration("development requires a protected LocalBootstrapTransport adapter".into()));
+            }
+        }
+    }
+    Ok(())
+}
+
+/// @emoji 🛡️ Administrator authority is a verified session identity policy, never a static token
+/// or proximity to a loopback interface.
+async fn is_admin(state: &HubState, headers: &HeaderMap, _peer: Option<SocketAddr>) -> bool {
+    let Some(encoded) = bearer(headers) else { return false };
+    let Ok(capability) = SessionCapability::parse(&encoded) else { return false };
+    let Ok(Some(session)) = state.directory.authenticate_session(&capability).await else { return false };
+    state.admin_subjects.iter().any(|subject| {
+        subject.provider == session.identity_provider && semio_hub::directory::constant_time_digest_eq(&subject.subject_digest, &session.identity_subject_digest)
+    })
 }
 //#endregion 🔖️AdminAuth
 
@@ -392,19 +657,19 @@ struct DocumentStatusResponse {
 }
 
 #[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
 struct ShareResponse {
+    id: String,
     token: String,
+    expires_at: i64,
 }
 
-#[derive(Deserialize)]
-struct CreateAuthSessionRequest {
-    email: String,
-}
+const DEFAULT_SHARE_TTL_SECS: i64 = 7 * 24 * 60 * 60;
 
-#[derive(Serialize)]
-struct CreateAuthSessionResponse {
-    token: String,
-    user_id: String,
+#[derive(Default, Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct CreateShareQuery {
+    ttl_secs: Option<i64>,
 }
 
 #[derive(Serialize)]
@@ -414,47 +679,79 @@ struct BlobRecord {
     size: i64,
 }
 
-/// @emoji 🧭️ A document's current frontier — the REST surface's only document-shaped route now
-/// that whole-envelope JSON snapshot/operation-log routes are gone (superseded by the WS wire-v2
-/// protocol; see this module's doc). Lazily mints the document in `db`'s catalog on first access,
-/// same as the WS handshake does.
+/// @emoji 🧭️ A durably announced document's current frontier.
 async fn get_document_status(Path((space_id, document_id)): Path<(String, String)>, headers: HeaderMap, State(state): State<HubState>) -> Result<Json<DocumentStatusResponse>, StatusCode> {
     if !authorized(&state, &space_id, &document_id, bearer(&headers).as_deref()).await {
         return Err(StatusCode::UNAUTHORIZED);
     }
-    let handle = state.ensure_document(&db_artifact_id(&space_id, &document_id)).await.map_err(|e| db_error_status(&e))?;
+    let scope = DocumentScope::new(space_id, document_id);
+    if state.directory.get_document_descriptor(&scope).await.map_err(directory_error_status)?.is_none() {
+        return Err(StatusCode::NOT_FOUND);
+    }
+    let handle = state.ensure_document(&db_artifact_id(&scope)).await.map_err(|e| db_error_status(&e))?;
     let frontier = handle.frontier().await.map_err(|e| db_error_status(&e))?;
-    Ok(Json(DocumentStatusResponse { document_id, head_seq: frontier.head_seq, commit_seq: frontier.commit_seq, epoch: frontier.epoch }))
+    Ok(Json(DocumentStatusResponse { document_id: scope.document_id, head_seq: frontier.head_seq, commit_seq: frontier.commit_seq, epoch: frontier.epoch }))
 }
 
-async fn create_share(Path((_space_id, document_id)): Path<(String, String)>, headers: HeaderMap, axum::extract::ConnectInfo(peer): axum::extract::ConnectInfo<SocketAddr>, State(state): State<HubState>) -> Result<Json<ShareResponse>, StatusCode> {
-    if !is_admin(&state, &headers, Some(peer)) {
+async fn create_share(
+    Path((space_id, document_id)): Path<(String, String)>,
+    axum::extract::Query(query): axum::extract::Query<CreateShareQuery>,
+    headers: HeaderMap,
+    axum::extract::ConnectInfo(peer): axum::extract::ConnectInfo<SocketAddr>,
+    State(state): State<HubState>,
+) -> Result<Json<ShareResponse>, StatusCode> {
+    if !is_admin(&state, &headers, Some(peer)).await {
         return Err(StatusCode::UNAUTHORIZED);
     }
-    let token = state.directory.create_share_token(&document_id).await.map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
-    Ok(Json(ShareResponse { token }))
+    let scope = DocumentScope::new(space_id, document_id);
+    if state.directory.get_document_descriptor(&scope).await.map_err(directory_error_status)?.is_none() {
+        return Err(StatusCode::NOT_FOUND);
+    }
+    let issued = state.directory.issue_share_token(&scope, query.ttl_secs.unwrap_or(DEFAULT_SHARE_TTL_SECS), &directory::os_identity::time_ordered_id()).await.map_err(directory_error_status)?;
+    Ok(Json(ShareResponse { id: issued.record.id, token: issued.capability.expose_once(), expires_at: issued.record.expires_at }))
 }
 
-/// @emoji 🧪️ Dev-mode session mint: trades a bare email for a bearer session token, upserting the
-/// user if it doesn't exist yet. No password/SSO check — real SSO/OAuth is explicitly future scope;
-/// this exists only so `AuthSessionRecord`-backed routes have a caller until that lands.
-async fn create_auth_session(State(state): State<HubState>, Json(body): Json<CreateAuthSessionRequest>) -> Result<Json<CreateAuthSessionResponse>, StatusCode> {
-    let user = match state.directory.get_user_by_email(&body.email).await {
-        Ok(Some(user)) => user,
-        Ok(None) => state.directory.create_user(&body.email, &body.email, None, None, None).await.map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?,
-        Err(_) => return Err(StatusCode::INTERNAL_SERVER_ERROR),
-    };
-    let session = state.directory.create_auth_session(&user.id, 60 * 60 * 24 * 30, None).await.map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
-    Ok(Json(CreateAuthSessionResponse { token: session.id, user_id: user.id }))
+async fn revoke_share(Path((space_id, document_id, share_id)): Path<(String, String, String)>, headers: HeaderMap, axum::extract::ConnectInfo(peer): axum::extract::ConnectInfo<SocketAddr>, State(state): State<HubState>) -> StatusCode {
+    if !is_admin(&state, &headers, Some(peer)).await {
+        return StatusCode::UNAUTHORIZED;
+    }
+    let scope = DocumentScope::new(space_id, document_id);
+    match state.directory.revoke_share_token(&scope, &share_id, "administrator-revoked", &directory::os_identity::time_ordered_id()).await {
+        Ok(()) => StatusCode::NO_CONTENT,
+        Err(error) => directory_error_status(error),
+    }
 }
 
 //#region Blobs
+const HUB_BLOB_MAX_BYTES: usize = db::db_storage::DB_IO_PAGE_BYTES * db::db_storage::DB_IO_OPERATION_PAGES;
+
+async fn db_io_pages_into_http_bytes(mut pages: db::db_storage::DbIoPages) -> Result<Bytes, db::DbError> {
+    if pages.len() > HUB_BLOB_MAX_BYTES {
+        while !pages.terminal_is_empty() {
+            pages.close_step()?;
+            semio_framework_async::yield_once().await;
+        }
+        return Err(db::DbError::LimitExceeded("hub blob response bytes"));
+    }
+    let mut body = Vec::with_capacity(pages.len());
+    for fragment in pages.fragments() {
+        body.extend_from_slice(fragment);
+    }
+    while !pages.terminal_is_empty() {
+        pages.close_step()?;
+        semio_framework_async::yield_once().await;
+    }
+    Ok(Bytes::from(body))
+}
+
 async fn put_blob(Path((space_id, hash)): Path<(String, String)>, headers: HeaderMap, State(state): State<HubState>, body: Bytes) -> Result<Json<BlobRecord>, StatusCode> {
     if !authorized_for_blob(&state, &space_id, &hash, bearer(&headers).as_deref()).await {
         return Err(StatusCode::UNAUTHORIZED);
     }
     let media_type = headers.get(axum::http::header::CONTENT_TYPE).and_then(|value| value.to_str().ok()).unwrap_or("application/octet-stream").to_string();
-    let computed = state.db.storage().await.payload().await.put(&body).await.map_err(|e| db_error_status(&e))?;
+    let size = body.len();
+    let pages = db::db_storage::db_io_copy_pages(body.as_ref()).map_err(|error| db_error_status(&error))?.await.map_err(|error| db_error_status(&error))?;
+    let computed = state.db.storage().await.payload().await.put(pages).await.map_err(|error| db_error_status(&error))?;
     let computed_hex = computed.to_string();
     // The path hash is client-supplied (content-addressed URL); a mismatch against the
     // storage-computed hash means the client sent the wrong bytes for that address — a bad
@@ -462,7 +759,7 @@ async fn put_blob(Path((space_id, hash)): Path<(String, String)>, headers: Heade
     if computed_hex != hash {
         return Err(StatusCode::BAD_REQUEST);
     }
-    Ok(Json(BlobRecord { hash: computed_hex, media_type, size: body.len() as i64 }))
+    Ok(Json(BlobRecord { hash: computed_hex, media_type, size: size as i64 }))
 }
 
 async fn get_blob(Path((space_id, hash)): Path<(String, String)>, headers: HeaderMap, State(state): State<HubState>) -> Result<impl IntoResponse, StatusCode> {
@@ -471,9 +768,11 @@ async fn get_blob(Path((space_id, hash)): Path<(String, String)>, headers: Heade
     }
     let content_hash = parse_content_hash(&hash).ok_or(StatusCode::BAD_REQUEST)?;
     match state.db.storage().await.payload().await.get(&content_hash).await {
-        Ok(bytes) => Ok(([(axum::http::header::CONTENT_TYPE, "application/octet-stream")], bytes)),
-        Err(db::DbError::NotFound(_)) => Err(StatusCode::NOT_FOUND),
-        Err(_) => Err(StatusCode::INTERNAL_SERVER_ERROR),
+        Ok(pages) => {
+            let bytes = db_io_pages_into_http_bytes(pages).await.map_err(|error| db_error_status(&error))?;
+            Ok(([(axum::http::header::CONTENT_TYPE, "application/octet-stream")], bytes))
+        }
+        Err(error) => Err(db_error_status(&error)),
     }
 }
 
@@ -514,6 +813,60 @@ async fn error_frame(code: &str, message: impl Into<String>) -> Message {
     encode(&ServerFrame::Error { code: code.to_string(), message: message.into() }).await
 }
 
+struct SocketRebootstrapControl;
+
+impl RebootstrapTransferControl for SocketRebootstrapControl {
+    fn now_ms(&self) -> u64 {
+        now_ms().max(0) as u64
+    }
+
+    fn is_cancelled(&self) -> bool {
+        false
+    }
+
+    fn report(&self, _progress: RebootstrapProgress) {}
+}
+
+fn wire_rebootstrap(control: &os_directory::RebootstrapRequired) -> protocol::RebootstrapRequired {
+    protocol::RebootstrapRequired {
+        space_id: control.scope.space_id.clone(),
+        document_id: control.scope.document_id.clone(),
+        checkpoint_id: control.checkpoint_id.0,
+        descriptor_hash: control.descriptor_digest_v1.0,
+        baseline_frontier: RuntimeFrontierSummary {
+            document_id: ProtocolArtifactId(control.baseline_frontier.document_id.clone()),
+            head_edit_ordinal: control.baseline_frontier.head_edit_ordinal,
+            head_edit_id: control.baseline_frontier.head_edit_id.clone(),
+            last_commit_seq: control.baseline_frontier.last_commit_seq,
+            chain_hash: control.baseline_frontier.chain_hash.0,
+        },
+    }
+}
+
+async fn verified_rebootstrap_control(state: &HubState, scope: &DocumentScope) -> Option<os_directory::RebootstrapRequired> {
+    let control = SocketRebootstrapControl;
+    let deadline = control.now_ms().saturating_add(REBOOTSTRAP_DEADLINE_MS);
+    state.rebootstrap.control(scope, &RebootstrapContext::new(deadline, &control)).await.ok()
+}
+
+async fn close_document_for_rebootstrap(sender: &mut SplitSink<WebSocket, Message>, state: &HubState, scope: &DocumentScope) {
+    if let Some(control) = verified_rebootstrap_control(state, scope).await {
+        let _ = sender.send(encode(&ServerFrame::RebootstrapRequired { control: wire_rebootstrap(&control) }).await).await;
+    }
+    let _ = sender.send(Message::Close(Some(CloseFrame { code: 1013, reason: "rebootstrap-required".into() }))).await;
+}
+
+async fn close_directory_for_rebootstrap(sender: &mut SplitSink<WebSocket, Message>, state: &HubState, scope: Option<&DocumentScope>, caller: &AuthedUser) {
+    if let Some(scope) = scope {
+        if caller_is_space_member(state, &scope.space_id, Some(caller)).await {
+            if let Some(control) = verified_rebootstrap_control(state, scope).await {
+                let _ = send_directory_message(sender, &DirectoryStreamMessage::RebootstrapRequired { control }).await;
+            }
+        }
+    }
+    let _ = sender.send(Message::Close(Some(CloseFrame { code: 1013, reason: "rebootstrap-required".into() }))).await;
+}
+
 /// @emoji 🧭️ Best-effort `RuntimeFrontierSummary` for an `Ack` when the triggering `submit` itself
 /// failed — re-reads the document's current (unaffected) frontier so the client still learns
 /// "where the server actually is", falling back to an all-zero genesis summary only if even that
@@ -546,18 +899,11 @@ fn merge_policy_from_env() -> protocol::MergePolicy {
     }
 }
 
-/// @emoji 🧾️ `ApplyOutcome::Rejected.messages`'s wire payload: a packed `Vec<protocol::
-/// MutationMessage>` blob (contract §C9/§C8). `📡️wire`'s own doc names `pack::encode_record_body`
-/// as the intended codec, but that needs a `RecordSpec` no `MutationMessage`-adjacent type in this
-/// tree defines yet (verified: none of `📡️spr/🎮️command`/`📡️spr/⚔️conflict` register one) — adding
-/// one is a `📡️spr` schema change outside this lease. `MutationMessage` already derives `serde::
-/// Serialize`/`Deserialize` (used verbatim for every other opaque wire/WAL payload in this same
-/// crate, e.g. `sample_envelope`'s diff/inverse bytes below), so this crate uses that instead: a
-/// real, round-trippable encoding of the actual messages, not a placeholder. Flagged in this
-/// ticket's report for the coordinator/lane 1-C to reconcile against `pack::encode_record_body` if
-/// a `MutationMessage` `RecordSpec` lands later.
+/// @emoji 🧾️ `ApplyOutcome::Rejected.messages`'s canonical JSON payload, encoded from the
+/// first-party `ToValue` shape shared by every replication wire consumer.
 fn encode_messages(messages: &[protocol::MutationMessage]) -> Vec<u8> {
-    serde_json::to_vec(messages).unwrap_or_default()
+    let value = DslValue::Array(messages.iter().map(ToValue::to_value).collect());
+    directory::os_pack::json::to_json_string(&value).into_bytes()
 }
 
 /// @emoji 🧾️ Every `protocol::MutationMessage` `error` carries, if any — non-empty only for
@@ -697,32 +1043,41 @@ async fn handle_ws(socket: WebSocket, space_id: String, document_id: String, sur
         Some(Ok(Message::Binary(bytes))) => decode_client_frame(&bytes).await.ok().map(|(_lane, frame)| frame),
         _ => None,
     };
-    let Some(ClientFrame::Hello { pack_schema_hash, actor, token, frontier, .. }) = hello else {
+    let Some(ClientFrame::Hello { schema, pack_schema_hash, actor, token, frontier, .. }) = hello else {
         let _ = sender.send(error_frame("protocol", "expected hello frame").await).await;
         return;
     };
 
-    let key = scope_key(&space_id, &document_id);
-    if pack_schema_hash != [0u8; 32] {
-        let pinned = state.schema_hashes.get_or_insert_with_cloned(key.clone(), || pack_schema_hash);
-        if pinned != pack_schema_hash {
-            let _ = sender.send(error_frame("schema-hash-mismatch", "pack schema hash does not match the hash already pinned for this document").await).await;
-            return;
-        }
-    }
-
     let auth = resolve_auth(&state, &space_id, &document_id, token.as_deref()).await;
-    let (user_id, role) = match &auth {
-        AuthOutcome::Session { user_id, role } => (Some(user_id.clone()), Some(*role)),
-        AuthOutcome::ShareToken => (None, None),
+    let (user_id, role, auth_session_id, authorization_generation) = match &auth {
+        AuthOutcome::Session { user_id, role, session_id, authorization_generation } => (Some(user_id.clone()), Some(*role), Some(session_id.as_str()), *authorization_generation),
+        AuthOutcome::ShareToken => (None, None, None, 0),
         // 👁️ Public-visibility fallback: an implicit anonymous spectator, never a persisted
         // membership row (see `AuthOutcome::Public`'s doc).
-        AuthOutcome::Public => (None, Some(SpaceRole::Spectator)),
+        AuthOutcome::Public => (None, Some(SpaceRole::Spectator), None, 0),
         AuthOutcome::Denied => {
             let _ = sender.send(error_frame("unauthorized", "unauthorized").await).await;
             return;
         }
     };
+    let scope = DocumentScope::new(&space_id, &document_id);
+    let descriptor = match state.directory.get_document_descriptor(&scope).await {
+        Ok(Some(descriptor)) => descriptor,
+        Ok(None) => {
+            let _ = sender.send(error_frame("document-not-announced", "document has no durable descriptor").await).await;
+            return;
+        }
+        Err(error) => {
+            let _ = sender.send(error_frame("directory", error.to_string()).await).await;
+            return;
+        }
+    };
+    let announced_hash = pack_schema_hash.iter().map(|byte| format!("{byte:02x}")).collect::<String>();
+    if schema != descriptor.artifact_schema || announced_hash != descriptor.pack_schema_hash {
+        let _ = sender.send(error_frame("schema-hash-mismatch", "hello codec identity does not match the durable document descriptor").await).await;
+        return;
+    }
+    let key = document_scope_key_v1(&scope);
     // 🎨️ Contract §C7.3: acquired after successful Hello/auth and before `Welcome`, released at
     // handler exit (every early-return path below releases it explicitly; the loop-exit cleanup
     // releases it on a clean disconnect).
@@ -739,21 +1094,17 @@ async fn handle_ws(socket: WebSocket, space_id: String, document_id: String, sur
     let policy = db::security::space_grants(&space_id, &space_kind).await.into_iter().fold(db::security::RoleBasedPolicy::new(), db::security::RoleBasedPolicy::with_grant);
     let gate = db::security::SecurityGate::new(policy, db::security::ReplayGuard::new(60_000, 256), db::security::BudgetRegistry::new(240, 60), Arc::new(db::NullEmit));
     let tenant = db::security::TenantId::from(space_id.clone());
-    // 🎯️ Role mapping: a resolved membership uses its own `SpaceRole`; `AuthOutcome::Public` (the
-    // NEW implicit-anonymous-spectator fallback for `visibility == "public"`, per the design
-    // ruling) is deliberately read-only. `AuthOutcome::ShareToken` predates the role system
-    // entirely — it already granted unconditional (read+write) per-document access before this
-    // wave — so it maps to `"author"` here to preserve that existing contract rather than silently
-    // regressing every share-token holder to read-only.
+    // 🎯️ Role mapping: anonymous public and share-grant callers are both least-privilege
+    // spectators. Only an authenticated directory membership can confer author authority.
     let role_str = match &auth {
         AuthOutcome::Session { role, .. } => role.as_str().to_string(),
-        AuthOutcome::ShareToken => "author".to_string(),
+        AuthOutcome::ShareToken => "spectator".to_string(),
         AuthOutcome::Public => "spectator".to_string(),
         AuthOutcome::Denied => unreachable!("Denied already returned above"),
     };
     let principal = db::security::Principal::new(actor.clone(), tenant.clone(), vec![role_str]);
 
-    let db_id = db_artifact_id(&space_id, &document_id);
+    let db_id = db_artifact_id(&scope);
     let handle = match state.ensure_document(&db_id).await {
         Ok(handle) => handle,
         Err(error) => {
@@ -833,8 +1184,17 @@ async fn handle_ws(socket: WebSocket, space_id: String, document_id: String, sur
 
     let fanout = state.fanout_for(&key);
     let mut broadcast_rx = fanout.subscribe();
+    #[cfg(test)]
+    if let Some(gate) = &state.live_gate {
+        gate.document_subscribed.add_permits(1);
+        let _ = gate.document_release.acquire().await;
+    }
 
-    let sync_session = state.directory.record_sync_session_open(&space_id, &document_id, &surface, user_id.as_deref(), role, &actor.0).await.ok();
+    let sync_session = state
+        .directory
+        .record_sync_session_open(auth_session_id, authorization_generation, &actor.0, &space_id, &document_id, &surface, user_id.as_deref(), role, &actor.0)
+        .await
+        .ok();
     if let Some(session) = &sync_session {
         let view = connection_view(&state, session).await;
         state.directory_service.publish(DirectoryStreamMessage::Connection { phase: DirectoryConnectionPhase::Opened, connection: view });
@@ -852,9 +1212,15 @@ async fn handle_ws(socket: WebSocket, space_id: String, document_id: String, sur
         }
         None => Arc::new(tokio::sync::Notify::new()),
     };
+    let mut authorization_tick = tokio::time::interval(std::time::Duration::from_secs(1));
 
     loop {
         tokio::select! {
+            _ = authorization_tick.tick() => {
+                if matches!(resolve_auth(&state, &space_id, &document_id, token.as_deref()).await, AuthOutcome::Denied) {
+                    break;
+                }
+            }
             incoming = receiver.next() => {
                 match incoming {
                     Some(Ok(Message::Binary(bytes))) => {
@@ -881,7 +1247,12 @@ async fn handle_ws(socket: WebSocket, space_id: String, document_id: String, sur
                             break;
                         }
                     }
-                    Err(broadcast::error::RecvError::Lagged(_)) => {}
+                    Err(broadcast::error::RecvError::Lagged(_)) => {
+                        if !matches!(resolve_auth(&state, &space_id, &document_id, token.as_deref()).await, AuthOutcome::Denied) {
+                            close_document_for_rebootstrap(&mut sender, &state, &scope).await;
+                        }
+                        break;
+                    }
                     Err(broadcast::error::RecvError::Closed) => break,
                 }
             }
@@ -908,16 +1279,19 @@ async fn handle_ws(socket: WebSocket, space_id: String, document_id: String, sur
 /// (distinct from `AuthOutcome`, which is the document-WS auth-lite scheme with its share-token/
 /// public-visibility fallbacks; the directory control plane has no such fallbacks — a command with
 /// no valid session is simply unauthenticated).
+#[derive(Clone)]
 struct AuthedUser {
     user_id: String,
+    session_id: String,
+    expires_at: i64,
+    authorization_generation: u64,
+    capability: SessionCapability,
 }
 
 async fn resolve_bearer_user(state: &HubState, token: Option<&str>) -> Option<AuthedUser> {
-    let session = state.directory.get_auth_session(token?).await.ok().flatten()?;
-    if session.expires_at <= now_ms() {
-        return None;
-    }
-    Some(AuthedUser { user_id: session.user_id })
+    let capability = SessionCapability::parse(token?).ok()?;
+    let session = state.directory.authenticate_session(&capability).await.ok().flatten()?;
+    Some(AuthedUser { user_id: session.user_id, session_id: session.id, expires_at: session.expires_at, authorization_generation: session.authorization_generation, capability })
 }
 
 fn directory_error_status(error: DirectoryError) -> StatusCode {
@@ -929,13 +1303,57 @@ fn directory_error_status(error: DirectoryError) -> StatusCode {
     }
 }
 
-/// @emoji 📇️ Rebuilds `DirectoryReadModel` by folding the WHOLE event log on every call — simple
-/// and always-correct (a maintained/cached projection updated incrementally off `DirectoryService::
-/// subscribe` would be the natural follow-up optimization once a real log grows large enough to
-/// matter; this wave's event logs are dev/test-scale, so correctness-first wins over that added
-/// moving part).
+trait DirectoryEventPageSource {
+    async fn directory_event_head(&self) -> Result<u64, DirectoryError>;
+    async fn directory_event_page(&self, since: u64, limit: usize) -> Result<Vec<DirectoryEvent>, DirectoryError>;
+}
+
+impl DirectoryEventPageSource for HubDirectories {
+    async fn directory_event_head(&self) -> Result<u64, DirectoryError> {
+        HubDirectory::head_seq(self).await
+    }
+
+    async fn directory_event_page(&self, since: u64, limit: usize) -> Result<Vec<DirectoryEvent>, DirectoryError> {
+        HubDirectory::events_since(self, since, limit).await
+    }
+}
+
+/// 📖️ Reads a bounded complete suffix in fixed pages, cursoring by observed sequence.
+async fn load_all_directory_events<S: DirectoryEventPageSource + ?Sized>(directory: &S, since: u64) -> Result<Vec<DirectoryEvent>, DirectoryError> {
+    let head = directory.directory_event_head().await?;
+    let expected = head.saturating_sub(since);
+    if expected > DIRECTORY_PROJECTION_REBUILD_MAX_EVENTS {
+        return Err(DirectoryError::Conflict(format!("directory event suffix exceeds fixed maximum {DIRECTORY_PROJECTION_REBUILD_MAX_EVENTS}")));
+    }
+    let mut cursor = since;
+    let capacity = usize::try_from(expected).map_err(|error| DirectoryError::Conflict(error.to_string()))?;
+    let mut events = Vec::with_capacity(capacity);
+    loop {
+        let page = directory.directory_event_page(cursor, DIRECTORY_EVENT_READ_MAX).await?;
+        let page_len = page.len();
+        if page_len == 0 {
+            break;
+        }
+        for event in &page {
+            if event.seq <= cursor {
+                return Err(DirectoryError::Backend("directory event page did not strictly advance its cursor".into()));
+            }
+            cursor = event.seq;
+        }
+        events.extend(page);
+        if u64::try_from(events.len()).map_err(|error| DirectoryError::Conflict(error.to_string()))? > DIRECTORY_PROJECTION_REBUILD_MAX_EVENTS {
+            return Err(DirectoryError::Conflict(format!("directory event suffix exceeds fixed maximum {DIRECTORY_PROJECTION_REBUILD_MAX_EVENTS}")));
+        }
+        if page_len < DIRECTORY_EVENT_READ_MAX {
+            break;
+        }
+    }
+    Ok(events)
+}
+
+/// @emoji 📇️ Rebuilds `DirectoryReadModel` from the bounded complete public event suffix.
 async fn load_read_model(state: &HubState) -> Result<DirectoryReadModel, StatusCode> {
-    let events = state.directory.events_since(0, usize::MAX).await.map_err(directory_error_status)?;
+    let events = load_all_directory_events(state.directory.as_ref(), 0).await.map_err(directory_error_status)?;
     Ok(os_directory::fold_all(DirectoryReadModel::default(), &events).await)
 }
 
@@ -958,7 +1376,7 @@ async fn connection_view(state: &HubState, session: &SyncSessionRecord) -> Conne
         Some(id) => state.directory.get_user(id).await.ok().flatten().map(|user| user.email),
         None => None,
     };
-    let scope = scope_key(&session.space_id, &session.document_id);
+    let scope = document_scope_key_v1(&DocumentScope::new(&session.space_id, &session.document_id));
     let presence_known = state.presence.with(&(scope, session.client_label.clone()), |entry| entry.is_some_and(|entry| entry.peer.is_some()));
     ConnectionView {
         sync_session_id: session.id.clone(),
@@ -974,16 +1392,19 @@ async fn connection_view(state: &HubState, session: &SyncSessionRecord) -> Conne
     }
 }
 
-/// @emoji 📄️ `db.catalog()` filtered by the `{space_id}:` prefix, each surviving handle's own
-/// `frontier()` (contract: space detail's `documents` + admin's `documents?space=`).
+/// @emoji 📄️ Durable directory descriptors enriched with each opened DB handle's current
+/// frontier; unopened documents retain the descriptor's authoritative bootstrap frontier.
 async fn documents_for_space(state: &HubState, space_id: &str) -> Vec<DocumentView> {
-    let prefix = format!("{space_id}:");
     let mut views = Vec::new();
-    for entry in state.db.catalog().await.artifacts {
-        let Some(document_id) = entry.document.0.strip_prefix(prefix.as_str()) else { continue };
-        let Ok(handle) = state.db.document(&entry.document).await else { continue };
-        let Ok(frontier) = handle.frontier().await else { continue };
-        views.push(DocumentView { id: document_id.to_string(), head_seq: frontier.head_seq, commit_seq: frontier.commit_seq, epoch: frontier.epoch });
+    let Ok(descriptors) = state.directory.list_document_descriptors(space_id).await else { return views };
+    for descriptor in descriptors {
+        let db_id = db_artifact_id(&DocumentScope::new(space_id, &descriptor.document_id));
+        let frontier = match state.db.document(&db_id).await {
+            Ok(handle) => handle.frontier().await.ok().map(|frontier| (frontier.head_seq, frontier.commit_seq, frontier.epoch)),
+            Err(_) => None,
+        }
+        .unwrap_or((descriptor.bootstrap_frontier.head_seq, descriptor.bootstrap_frontier.commit_seq, descriptor.bootstrap_frontier.epoch));
+        views.push(DocumentView { descriptor, head_seq: frontier.0, commit_seq: frontier.1, epoch: frontier.2 });
     }
     views
 }
@@ -1027,35 +1448,48 @@ async fn authorize_directory_command(state: &HubState, actor_user_id: &str, admi
             Ok(_) => Err(StatusCode::FORBIDDEN),
             Err(error) => Err(directory_error_status(error)),
         },
+        DirectoryCommand::AnnounceDocument { descriptor } => match state.directory.get_role(&descriptor.space_id, actor_user_id).await {
+            Ok(Some(SpaceRole::Author)) => Ok(()),
+            Ok(_) => Err(StatusCode::FORBIDDEN),
+            Err(error) => Err(directory_error_status(error)),
+        },
     }
 }
 
-#[derive(Serialize)]
 struct DirectoryCommandResponse {
     events: Vec<DirectoryEvent>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    result: Option<serde_json::Value>,
+    result: Option<DslValue>,
 }
 
-fn command_result_json(result: Option<CommandResult>) -> Option<serde_json::Value> {
-    result.and_then(|value| value.invite_token).map(|token| serde_json::json!({ "inviteToken": token }))
+impl ToValue for DirectoryCommandResponse {
+    fn to_value(&self) -> DslValue {
+        let mut entries = vec![("events".to_string(), self.events.to_value())];
+        if let Some(result) = &self.result {
+            entries.push(("result".to_string(), result.clone()));
+        }
+        DslValue::Object(entries)
+    }
+}
+
+fn command_result_value(result: Option<CommandResult>) -> Option<DslValue> {
+    result.and_then(|value| value.invite_token).map(|token| DslValue::object([("inviteToken".into(), DslValue::String(token))]))
 }
 
 async fn post_directory_commands(
     headers: HeaderMap,
     axum::extract::ConnectInfo(peer): axum::extract::ConnectInfo<SocketAddr>,
     State(state): State<HubState>,
-    Json(command): Json<DirectoryCommand>,
-) -> Result<(StatusCode, Json<DirectoryCommandResponse>), StatusCode> {
+    Json(DirectoryJson(command)): Json<DirectoryJson<DirectoryCommand>>,
+) -> Result<(StatusCode, DirectoryJson<DirectoryCommandResponse>), StatusCode> {
     let user = resolve_bearer_user(&state, bearer(&headers).as_deref()).await.ok_or(StatusCode::UNAUTHORIZED)?;
-    let admin = is_admin(&state, &headers, Some(peer));
+    let admin = is_admin(&state, &headers, Some(peer)).await;
     authorize_directory_command(&state, &user.user_id, admin, &command).await?;
     let actor = DirectoryActor { kind: DirectoryActorKind::User, id: format!("user:{}#hub-rest", user.user_id) };
     let (events, result) = state.directory_service.execute(actor, command).await.map_err(directory_error_status)?;
-    Ok((StatusCode::ACCEPTED, Json(DirectoryCommandResponse { events, result: command_result_json(result) })))
+    Ok((StatusCode::ACCEPTED, DirectoryJson(DirectoryCommandResponse { events, result: command_result_value(result) })))
 }
 
-async fn get_directory_spaces(headers: HeaderMap, State(state): State<HubState>) -> Result<Json<Vec<SpaceView>>, StatusCode> {
+async fn get_directory_spaces(headers: HeaderMap, State(state): State<HubState>) -> Result<DirectoryJson<Vec<SpaceView>>, StatusCode> {
     let caller = resolve_bearer_user(&state, bearer(&headers).as_deref()).await;
     let model = load_read_model(&state).await?;
     let mut views = Vec::new();
@@ -1066,20 +1500,32 @@ async fn get_directory_spaces(headers: HeaderMap, State(state): State<HubState>)
         }
     }
     views.sort_by(|left, right| left.id.cmp(&right.id));
-    Ok(Json(views))
+    Ok(DirectoryJson(views))
 }
 
-#[derive(Serialize)]
 struct SpaceDetailResponse {
-    #[serde(flatten)]
     view: SpaceView,
     members: Vec<MemberView>,
     documents: Vec<DocumentView>,
-    #[serde(skip_serializing_if = "Option::is_none")]
     invites: Option<Vec<InviteView>>,
 }
 
-async fn get_directory_space(Path(space_id): Path<String>, headers: HeaderMap, State(state): State<HubState>) -> Result<Json<SpaceDetailResponse>, StatusCode> {
+impl ToValue for SpaceDetailResponse {
+    fn to_value(&self) -> DslValue {
+        let mut entries = match self.view.to_value() {
+            DslValue::Object(entries) => entries,
+            other => vec![("space".into(), other)],
+        };
+        entries.push(("members".into(), self.members.to_value()));
+        entries.push(("documents".into(), self.documents.to_value()));
+        if let Some(invites) = &self.invites {
+            entries.push(("invites".into(), invites.to_value()));
+        }
+        DslValue::Object(entries)
+    }
+}
+
+async fn get_directory_space(Path(space_id): Path<String>, headers: HeaderMap, State(state): State<HubState>) -> Result<DirectoryJson<SpaceDetailResponse>, StatusCode> {
     let caller = resolve_bearer_user(&state, bearer(&headers).as_deref()).await;
     let model = load_read_model(&state).await?;
     let space = model.spaces.get(&space_id).ok_or(StatusCode::NOT_FOUND)?;
@@ -1091,15 +1537,15 @@ async fn get_directory_space(Path(space_id): Path<String>, headers: HeaderMap, S
     let documents = documents_for_space(&state, &space_id).await;
     let invites = if is_author { state.directory.list_invites(&space_id).await.ok().map(|records| records.into_iter().map(invite_view).collect()) } else { None };
     let view = space_view(&state, space, caller.as_ref()).await;
-    Ok(Json(SpaceDetailResponse { view, members: space.members.clone(), documents, invites }))
+    Ok(DirectoryJson(SpaceDetailResponse { view, members: space.members.clone(), documents, invites }))
 }
 
-async fn post_redeem_invite(Path(token): Path<String>, headers: HeaderMap, State(state): State<HubState>) -> Result<Json<Vec<DirectoryEvent>>, StatusCode> {
+async fn post_redeem_invite(Path(token): Path<String>, headers: HeaderMap, State(state): State<HubState>) -> Result<DirectoryJson<Vec<DirectoryEvent>>, StatusCode> {
     let user = resolve_bearer_user(&state, bearer(&headers).as_deref()).await.ok_or(StatusCode::UNAUTHORIZED)?;
-    let record = state.directory.get_user(&user.user_id).await.map_err(directory_error_status)?.ok_or(StatusCode::UNAUTHORIZED)?;
+    let capability = InviteCapability::parse(&token).map_err(directory_error_status)?;
     let actor = DirectoryActor { kind: DirectoryActorKind::User, id: format!("user:{}#hub-rest", user.user_id) };
-    let events = state.directory_service.redeem_invite(actor, &token, &record.email, &record.display_name).await.map_err(directory_error_status)?;
-    Ok(Json(events))
+    let events = state.directory_service.redeem_invite(actor, &capability, &user.user_id).await.map_err(directory_error_status)?;
+    Ok(DirectoryJson(events))
 }
 
 #[derive(Deserialize)]
@@ -1108,19 +1554,55 @@ struct EventsQuery {
     limit: Option<usize>,
 }
 
-/// @emoji 👁️ One event's visibility for `caller`: events with no `space_id` (`user.created`) are
-/// always visible (member display-name resolution needs them, and a platform user's email/display
-/// name carries no more exposure than an existing member listing already does); a space-scoped event
-/// is visible iff the space is public or `caller` holds ANY role in it.
+/// @emoji 🪪️ Revalidates the exact browser session behind a long-lived directory stream. Revocation and
+/// expiry therefore take effect on the next outbound frame instead of leaving a previously opened
+/// socket privileged indefinitely.
+async fn caller_active(state: &HubState, caller: &AuthedUser) -> bool {
+    if caller.expires_at <= now_ms() {
+        return false;
+    }
+    matches!(
+        state.directory.authenticate_session(&caller.capability).await,
+        Ok(Some(session)) if session.id == caller.session_id && session.user_id == caller.user_id && session.authorization_generation == caller.authorization_generation
+    )
+}
+
+async fn caller_is_space_member(state: &HubState, space_id: &str, caller: Option<&AuthedUser>) -> bool {
+    let Some(caller) = caller else { return false };
+    caller_active(state, caller).await && matches!(state.directory.get_role(space_id, &caller.user_id).await, Ok(Some(_)))
+}
+
+/// @emoji 👁️ One event's visibility for `caller`: a global identity event is visible only to the
+/// identity it names; other member identities come from the authorized space-detail projection.
+/// A space-scoped event is visible when the space is public or the active caller is a member.
 async fn event_visible(state: &HubState, event: &DirectoryEvent, caller: Option<&AuthedUser>) -> bool {
-    let Some(space_id) = &event.space_id else { return true };
+    let Some(space_id) = &event.space_id else {
+        return match (caller, event.user_id.as_deref()) {
+            (Some(caller), Some(user_id)) if caller.user_id == user_id => caller_active(state, caller).await,
+            _ => false,
+        };
+    };
     match state.directory.get_space(space_id).await {
         Ok(Some(space)) if space.visibility == "public" => true,
-        Ok(Some(_)) => match caller {
-            Some(user) => matches!(state.directory.get_role(space_id, &user.user_id).await, Ok(Some(_))),
-            None => false,
-        },
+        Ok(Some(_)) => caller_is_space_member(state, space_id, caller).await,
         _ => false,
+    }
+}
+
+/// @emoji 🛡️ The single privacy boundary for every directory WebSocket frame. Realtime connection
+/// and presence telemetry requires current membership even for public spaces; public visibility
+/// exposes directory metadata, not who is online or their account email.
+async fn directory_message_visible(state: &HubState, message: &DirectoryStreamMessage, caller: Option<&AuthedUser>) -> bool {
+    let Some(caller) = caller else { return false };
+    if !caller_active(state, caller).await {
+        return false;
+    }
+    match message {
+        DirectoryStreamMessage::Event { event } => event_visible(state, event, Some(caller)).await,
+        DirectoryStreamMessage::Connection { connection, .. } => caller_is_space_member(state, &connection.space_id, Some(caller)).await,
+        DirectoryStreamMessage::Presence { space_id, .. } => caller_is_space_member(state, space_id, Some(caller)).await,
+        DirectoryStreamMessage::Heartbeat { .. } => true,
+        DirectoryStreamMessage::RebootstrapRequired { control } => caller_is_space_member(state, &control.scope.space_id, Some(caller)).await,
     }
 }
 
@@ -1134,25 +1616,29 @@ async fn visibility_filter_events(state: &HubState, events: Vec<DirectoryEvent>,
     visible
 }
 
-async fn get_directory_events(axum::extract::Query(query): axum::extract::Query<EventsQuery>, headers: HeaderMap, State(state): State<HubState>) -> Result<Json<Vec<DirectoryEvent>>, StatusCode> {
+async fn get_directory_events(axum::extract::Query(query): axum::extract::Query<EventsQuery>, headers: HeaderMap, State(state): State<HubState>) -> Result<DirectoryJson<Vec<DirectoryEvent>>, StatusCode> {
     let caller = resolve_bearer_user(&state, bearer(&headers).as_deref()).await;
     let events = state.directory.events_since(query.since.unwrap_or(0), query.limit.unwrap_or(500)).await.map_err(directory_error_status)?;
-    Ok(Json(visibility_filter_events(&state, events, caller.as_ref()).await))
+    Ok(DirectoryJson(visibility_filter_events(&state, events, caller.as_ref()).await))
 }
 
 #[derive(Deserialize)]
+#[serde(rename_all = "camelCase")]
 struct DirectoryWsQuery {
     token: Option<String>,
     #[serde(default)]
     since: u64,
+    space_id: Option<String>,
+    document_id: Option<String>,
 }
 
 async fn directory_ws(ws: WebSocketUpgrade, axum::extract::Query(query): axum::extract::Query<DirectoryWsQuery>, State(state): State<HubState>) -> impl IntoResponse {
-    ws.on_upgrade(move |socket| handle_directory_ws(socket, query.token, query.since, state))
+    let scope = query.space_id.zip(query.document_id).map(|(space_id, document_id)| DocumentScope::new(space_id, document_id));
+    ws.on_upgrade(move |socket| handle_directory_ws(socket, query.token, query.since, scope, state))
 }
 
 async fn send_directory_message(sender: &mut SplitSink<WebSocket, Message>, message: &DirectoryStreamMessage) -> bool {
-    let text = serde_json::to_string(message).unwrap_or_default();
+    let text = directory::os_pack::json::to_json_string(message);
     sender.send(Message::Text(text.into())).await.is_ok()
 }
 
@@ -1161,14 +1647,22 @@ async fn send_directory_message(sender: &mut SplitSink<WebSocket, Message>, mess
 /// ever missed), THEN replays `events_since(since)`, THEN forwards live messages — dropping any
 /// already-replayed `Event` (`seq <= last_replayed`) so a reconnecting client's stream is both
 /// gap-free and duplicate-free.
-async fn handle_directory_ws(socket: WebSocket, token: Option<String>, since: u64, state: HubState) {
+async fn handle_directory_ws(socket: WebSocket, token: Option<String>, since: u64, scope: Option<DocumentScope>, state: HubState) {
     let (mut sender, mut receiver) = socket.split();
-    let caller = resolve_bearer_user(&state, token.as_deref()).await;
+    let Some(caller) = resolve_bearer_user(&state, token.as_deref()).await else { return };
     let mut live = state.directory_service.subscribe();
+    #[cfg(test)]
+    if let Some(gate) = &state.live_gate {
+        gate.directory_subscribed.add_permits(1);
+        let _ = gate.directory_release.acquire().await;
+    }
 
-    let replay = match state.directory.events_since(since, usize::MAX).await {
-        Ok(events) => visibility_filter_events(&state, events, caller.as_ref()).await,
-        Err(_) => Vec::new(),
+    let replay = match load_all_directory_events(state.directory.as_ref(), since).await {
+        Ok(events) => visibility_filter_events(&state, events, Some(&caller)).await,
+        Err(_) => {
+            let _ = sender.send(Message::Close(Some(CloseFrame { code: 1011, reason: "directory_replay_failed".into() }))).await;
+            return;
+        }
     };
     let mut last_replayed = since;
     for event in replay {
@@ -1195,20 +1689,28 @@ async fn handle_directory_ws(socket: WebSocket, token: Option<String>, since: u6
             event = live.recv() => {
                 match event {
                     Ok(DirectoryStreamMessage::Event { event }) => {
-                        if event.seq <= last_replayed || !event_visible(&state, &event, caller.as_ref()).await {
+                        let seq = event.seq;
+                        let message = DirectoryStreamMessage::Event { event };
+                        if seq <= last_replayed || !directory_message_visible(&state, &message, Some(&caller)).await {
                             continue;
                         }
-                        last_replayed = last_replayed.max(event.seq);
-                        if !send_directory_message(&mut sender, &DirectoryStreamMessage::Event { event }).await {
-                            break;
-                        }
-                    }
-                    Ok(message) => {
+                        last_replayed = last_replayed.max(seq);
                         if !send_directory_message(&mut sender, &message).await {
                             break;
                         }
                     }
-                    Err(broadcast::error::RecvError::Lagged(_)) => {}
+                    Ok(message) => {
+                        if !directory_message_visible(&state, &message, Some(&caller)).await {
+                            continue;
+                        }
+                        if !send_directory_message(&mut sender, &message).await {
+                            break;
+                        }
+                    }
+                    Err(broadcast::error::RecvError::Lagged(_)) => {
+                        close_directory_for_rebootstrap(&mut sender, &state, scope.as_ref(), &caller).await;
+                        break;
+                    }
                     Err(broadcast::error::RecvError::Closed) => break,
                 }
             }
@@ -1223,45 +1725,37 @@ struct SessionMeResponse {
     email: String,
     display_name: String,
     expires_at: i64,
+    session_kind: AuthSessionKind,
+    authorization_generation: u64,
 }
 
 async fn get_session_me(headers: HeaderMap, State(state): State<HubState>) -> Result<Json<SessionMeResponse>, StatusCode> {
-    let token = bearer(&headers).ok_or(StatusCode::UNAUTHORIZED)?;
-    let session = state.directory.get_auth_session(&token).await.map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?.ok_or(StatusCode::UNAUTHORIZED)?;
-    if session.expires_at <= now_ms() {
-        return Err(StatusCode::UNAUTHORIZED);
-    }
+    let capability = SessionCapability::parse(&bearer(&headers).ok_or(StatusCode::UNAUTHORIZED)?).map_err(directory_error_status)?;
+    let session = state.directory.authenticate_session(&capability).await.map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?.ok_or(StatusCode::UNAUTHORIZED)?;
     let user = state.directory.get_user(&session.user_id).await.map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?.ok_or(StatusCode::UNAUTHORIZED)?;
-    Ok(Json(SessionMeResponse { user_id: user.id, email: user.email, display_name: user.display_name, expires_at: session.expires_at }))
+    Ok(Json(SessionMeResponse {
+        user_id: user.id,
+        email: user.email,
+        display_name: user.display_name,
+        expires_at: session.expires_at,
+        session_kind: session.session_kind,
+        authorization_generation: session.authorization_generation,
+    }))
 }
 
 async fn delete_session_me(headers: HeaderMap, State(state): State<HubState>) -> StatusCode {
     let Some(token) = bearer(&headers) else { return StatusCode::UNAUTHORIZED };
-    match state.directory.revoke_auth_session(&token).await {
-        Ok(()) => StatusCode::NO_CONTENT,
+    let Ok(capability) = SessionCapability::parse(&token) else { return StatusCode::UNAUTHORIZED };
+    let Ok(Some(session)) = state.directory.authenticate_session(&capability).await else { return StatusCode::UNAUTHORIZED };
+    match state.directory.revoke_auth_session(&session.id, "self-revoked", Some(&session.user_id), &directory::os_identity::time_ordered_id()).await {
+        Ok(Some(_)) => StatusCode::NO_CONTENT,
+        Ok(None) => StatusCode::UNAUTHORIZED,
         Err(_) => StatusCode::INTERNAL_SERVER_ERROR,
     }
 }
 
-/// @emoji 🌐️ Ticket 26/08/16/HUB-SPACES-LIVE-PRESENCE-AND-COLLABORATIVE-STUDIOS w4-h — root cause of
-/// STEP 1's "space created but never replicated" symptom: contract §C0 puts the hub and every `s`
-/// shell on DIFFERENT origins (hub `8787`; shell dev/preview `6072`/`6073`/the collab-e2e `7400-7498`
-/// pool), so every fetch the shell issues — starting with `POST /auth/sessions` during the identity
-/// bootstrap (§C3), which every later directory command depends on — is cross-origin. With no CORS
-/// grant, the browser blocks the preflight before the request ever reaches this router; reproduced
-/// live via the collab-e2e harness's new console capture: `Access to fetch at
-/// 'http://127.0.0.1:<hub>/auth/sessions' from origin 'http://127.0.0.1:<shell>' has been blocked by
-/// CORS policy`, which surfaces downstream as `[os-shell] identity bootstrap: hub unreachable` and
-/// then `replayShellCommand: directory command dropped, no signed-in identity` for every
-/// `os.directory.*` command — the create-space POST is silently never sent, so the hub-side broadcast
-/// this ticket's directory-lane/fold plumbing was built to deliver never had an event to carry. No
-/// `tower-http` dependency (outside this lease's `Cargo.toml`): a bare `axum::middleware::from_fn`
-/// mirrors the caller's own `Origin` back (never a bare `*`, so this stays compatible with a future
-/// cookie/credentialed scheme) and answers every `OPTIONS` preflight with 204 before it reaches route
-/// dispatch. Applied to the WHOLE router (`router()`, `🔖️Main`) rather than only `/directory/*` —
-/// `/auth/sessions` (`🔖️Rest`) is the very first cross-origin call in the boot sequence and must be
-/// reachable before any directory command can even be attempted; a narrower per-route layer would
-/// leave the actual observed failure unfixed.
+/// @emoji 🌐️ Applies the hub's explicit cross-origin response policy. Authentication issuance
+/// is absent from the public router; protected routes still require their typed capability.
 async fn cors_middleware(request: axum::extract::Request, next: axum::middleware::Next) -> axum::response::Response {
     let origin = request.headers().get(axum::http::header::ORIGIN).cloned();
     if request.method() == axum::http::Method::OPTIONS {
@@ -1303,7 +1797,7 @@ fn dir_size(path: &std::path::Path) -> u64 {
 }
 
 async fn admin_overview(headers: HeaderMap, axum::extract::ConnectInfo(peer): axum::extract::ConnectInfo<SocketAddr>, State(state): State<HubState>) -> Result<Json<serde_json::Value>, StatusCode> {
-    if !is_admin(&state, &headers, Some(peer)) {
+    if !is_admin(&state, &headers, Some(peer)).await {
         return Err(StatusCode::UNAUTHORIZED);
     }
     let model = load_read_model(&state).await?;
@@ -1322,8 +1816,8 @@ async fn admin_overview(headers: HeaderMap, axum::extract::ConnectInfo(peer): ax
     })))
 }
 
-async fn admin_spaces(headers: HeaderMap, axum::extract::ConnectInfo(peer): axum::extract::ConnectInfo<SocketAddr>, State(state): State<HubState>) -> Result<Json<Vec<SpaceView>>, StatusCode> {
-    if !is_admin(&state, &headers, Some(peer)) {
+async fn admin_spaces(headers: HeaderMap, axum::extract::ConnectInfo(peer): axum::extract::ConnectInfo<SocketAddr>, State(state): State<HubState>) -> Result<DirectoryJson<Vec<SpaceView>>, StatusCode> {
+    if !is_admin(&state, &headers, Some(peer)).await {
         return Err(StatusCode::UNAUTHORIZED);
     }
     let model = load_read_model(&state).await?;
@@ -1332,11 +1826,11 @@ async fn admin_spaces(headers: HeaderMap, axum::extract::ConnectInfo(peer): axum
         views.push(space_view(&state, space, None).await);
     }
     views.sort_by(|left, right| left.id.cmp(&right.id));
-    Ok(Json(views))
+    Ok(DirectoryJson(views))
 }
 
-async fn admin_space(Path(space_id): Path<String>, headers: HeaderMap, axum::extract::ConnectInfo(peer): axum::extract::ConnectInfo<SocketAddr>, State(state): State<HubState>) -> Result<Json<SpaceDetailResponse>, StatusCode> {
-    if !is_admin(&state, &headers, Some(peer)) {
+async fn admin_space(Path(space_id): Path<String>, headers: HeaderMap, axum::extract::ConnectInfo(peer): axum::extract::ConnectInfo<SocketAddr>, State(state): State<HubState>) -> Result<DirectoryJson<SpaceDetailResponse>, StatusCode> {
+    if !is_admin(&state, &headers, Some(peer)).await {
         return Err(StatusCode::UNAUTHORIZED);
     }
     let model = load_read_model(&state).await?;
@@ -1344,19 +1838,19 @@ async fn admin_space(Path(space_id): Path<String>, headers: HeaderMap, axum::ext
     let documents = documents_for_space(&state, &space_id).await;
     let invites = state.directory.list_invites(&space_id).await.map_err(directory_error_status)?.into_iter().map(invite_view).collect();
     let view = space_view(&state, space, None).await;
-    Ok(Json(SpaceDetailResponse { view, members: space.members.clone(), documents, invites: Some(invites) }))
+    Ok(DirectoryJson(SpaceDetailResponse { view, members: space.members.clone(), documents, invites: Some(invites) }))
 }
 
-async fn admin_users(headers: HeaderMap, axum::extract::ConnectInfo(peer): axum::extract::ConnectInfo<SocketAddr>, State(state): State<HubState>) -> Result<Json<Vec<os_directory::UserView>>, StatusCode> {
-    if !is_admin(&state, &headers, Some(peer)) {
+async fn admin_users(headers: HeaderMap, axum::extract::ConnectInfo(peer): axum::extract::ConnectInfo<SocketAddr>, State(state): State<HubState>) -> Result<DirectoryJson<Vec<os_directory::UserView>>, StatusCode> {
+    if !is_admin(&state, &headers, Some(peer)).await {
         return Err(StatusCode::UNAUTHORIZED);
     }
     let users = state.directory.list_users(i64::MAX, 0).await.map_err(directory_error_status)?;
-    Ok(Json(users.into_iter().map(|user| os_directory::UserView { id: user.id, email: user.email, display_name: user.display_name, created_at_ms: user.created_at }).collect()))
+    Ok(DirectoryJson(users.into_iter().map(|user| os_directory::UserView { id: user.id, email: user.email, display_name: user.display_name, created_at_ms: user.created_at }).collect()))
 }
 
-async fn admin_connections(headers: HeaderMap, axum::extract::ConnectInfo(peer): axum::extract::ConnectInfo<SocketAddr>, State(state): State<HubState>) -> Result<Json<Vec<ConnectionView>>, StatusCode> {
-    if !is_admin(&state, &headers, Some(peer)) {
+async fn admin_connections(headers: HeaderMap, axum::extract::ConnectInfo(peer): axum::extract::ConnectInfo<SocketAddr>, State(state): State<HubState>) -> Result<DirectoryJson<Vec<ConnectionView>>, StatusCode> {
+    if !is_admin(&state, &headers, Some(peer)).await {
         return Err(StatusCode::UNAUTHORIZED);
     }
     let sessions = state.directory.list_active_sync_sessions(None).await.map_err(directory_error_status)?;
@@ -1364,7 +1858,7 @@ async fn admin_connections(headers: HeaderMap, axum::extract::ConnectInfo(peer):
     for session in &sessions {
         views.push(connection_view(&state, session).await);
     }
-    Ok(Json(views))
+    Ok(DirectoryJson(views))
 }
 
 #[derive(Deserialize)]
@@ -1377,20 +1871,18 @@ async fn admin_documents(
     headers: HeaderMap,
     axum::extract::ConnectInfo(peer): axum::extract::ConnectInfo<SocketAddr>,
     State(state): State<HubState>,
-) -> Result<Json<Vec<DocumentView>>, StatusCode> {
-    if !is_admin(&state, &headers, Some(peer)) {
+) -> Result<DirectoryJson<Vec<DocumentView>>, StatusCode> {
+    if !is_admin(&state, &headers, Some(peer)).await {
         return Err(StatusCode::UNAUTHORIZED);
     }
     match query.space {
-        Some(space_id) => Ok(Json(documents_for_space(&state, &space_id).await)),
+        Some(space_id) => Ok(DirectoryJson(documents_for_space(&state, &space_id).await)),
         None => {
             let mut views = Vec::new();
-            for entry in state.db.catalog().await.artifacts {
-                let Ok(handle) = state.db.document(&entry.document).await else { continue };
-                let Ok(frontier) = handle.frontier().await else { continue };
-                views.push(DocumentView { id: entry.document.0.clone(), head_seq: frontier.head_seq, commit_seq: frontier.commit_seq, epoch: frontier.epoch });
+            for space in state.directory.list_spaces(i64::MAX, 0).await.map_err(directory_error_status)? {
+                views.extend(documents_for_space(&state, &space.id).await);
             }
-            Ok(Json(views))
+            Ok(DirectoryJson(views))
         }
     }
 }
@@ -1400,12 +1892,12 @@ async fn admin_events(
     headers: HeaderMap,
     axum::extract::ConnectInfo(peer): axum::extract::ConnectInfo<SocketAddr>,
     State(state): State<HubState>,
-) -> Result<Json<Vec<DirectoryEvent>>, StatusCode> {
-    if !is_admin(&state, &headers, Some(peer)) {
+) -> Result<DirectoryJson<Vec<DirectoryEvent>>, StatusCode> {
+    if !is_admin(&state, &headers, Some(peer)).await {
         return Err(StatusCode::UNAUTHORIZED);
     }
     let events = state.directory.events_since(query.since.unwrap_or(0), query.limit.unwrap_or(500)).await.map_err(directory_error_status)?;
-    Ok(Json(events))
+    Ok(DirectoryJson(events))
 }
 
 /// @emoji 🛡️ Contract §C2: actor kind `admin`, bypasses `authorize_directory_command` entirely
@@ -1417,18 +1909,18 @@ async fn admin_commands(
     headers: HeaderMap,
     axum::extract::ConnectInfo(peer): axum::extract::ConnectInfo<SocketAddr>,
     State(state): State<HubState>,
-    Json(command): Json<DirectoryCommand>,
-) -> Result<(StatusCode, Json<DirectoryCommandResponse>), StatusCode> {
-    if !is_admin(&state, &headers, Some(peer)) {
+    Json(DirectoryJson(command)): Json<DirectoryJson<DirectoryCommand>>,
+) -> Result<(StatusCode, DirectoryJson<DirectoryCommandResponse>), StatusCode> {
+    if !is_admin(&state, &headers, Some(peer)).await {
         return Err(StatusCode::UNAUTHORIZED);
     }
     let actor = DirectoryActor { kind: DirectoryActorKind::Admin, id: "admin".to_string() };
     let (events, result) = state.directory_service.execute(actor, command).await.map_err(directory_error_status)?;
-    Ok((StatusCode::ACCEPTED, Json(DirectoryCommandResponse { events, result: command_result_json(result) })))
+    Ok((StatusCode::ACCEPTED, DirectoryJson(DirectoryCommandResponse { events, result: command_result_value(result) })))
 }
 
 async fn admin_rebuild(headers: HeaderMap, axum::extract::ConnectInfo(peer): axum::extract::ConnectInfo<SocketAddr>, State(state): State<HubState>) -> Result<Json<serde_json::Value>, StatusCode> {
-    if !is_admin(&state, &headers, Some(peer)) {
+    if !is_admin(&state, &headers, Some(peer)).await {
         return Err(StatusCode::UNAUTHORIZED);
     }
     let replayed = state.directory.rebuild_projections().await.map_err(directory_error_status)?;
@@ -1436,7 +1928,7 @@ async fn admin_rebuild(headers: HeaderMap, axum::extract::ConnectInfo(peer): axu
 }
 
 async fn admin_close_connection(Path(sync_session_id): Path<String>, headers: HeaderMap, axum::extract::ConnectInfo(peer): axum::extract::ConnectInfo<SocketAddr>, State(state): State<HubState>) -> StatusCode {
-    if !is_admin(&state, &headers, Some(peer)) {
+    if !is_admin(&state, &headers, Some(peer)).await {
         return StatusCode::UNAUTHORIZED;
     }
     match state.session_kicks.get_cloned(&sync_session_id) {
@@ -1448,18 +1940,17 @@ async fn admin_close_connection(Path(sync_session_id): Path<String>, headers: He
     }
 }
 
-/// @emoji 🦵️ Kicks every live connection for `user_id` (join of `list_active_sync_sessions` against
-/// `session_kicks`, same as `admin_close_connection`). `HubDirectory` has no "enumerate a user's
-/// browser `AuthSessionRecord`s" read, only revoke-by-id, so a login session this hub never saw
-/// connect over WS cannot be enumerated here — flagged in this ticket's report as a trait gap for
-/// the coordinator/1-A to consider; this route's contract name is still honored for every LIVE
-/// connection, which is the only realtime-relevant half of "revoke this user's sessions" anyway.
+/// @emoji 🦵️ Durably revokes every user capability first, then separately signals matching live
+/// connections. A failed kick cannot resurrect the already-revoked generation.
 async fn admin_revoke_user_sessions(Path(user_id): Path<String>, headers: HeaderMap, axum::extract::ConnectInfo(peer): axum::extract::ConnectInfo<SocketAddr>, State(state): State<HubState>) -> StatusCode {
-    if !is_admin(&state, &headers, Some(peer)) {
+    if !is_admin(&state, &headers, Some(peer)).await {
         return StatusCode::UNAUTHORIZED;
     }
+    let correlation_id = directory::os_identity::time_ordered_id();
+    let Ok(revoked) = state.directory.revoke_auth_sessions_for_user(&user_id, "administrator-revoked", None, &correlation_id).await else { return StatusCode::INTERNAL_SERVER_ERROR };
+    let revoked_ids: std::collections::BTreeSet<&str> = revoked.iter().map(|session| session.id.as_str()).collect();
     let Ok(sessions) = state.directory.list_active_sync_sessions(None).await else { return StatusCode::INTERNAL_SERVER_ERROR };
-    for session in sessions.iter().filter(|session| session.user_id.as_deref() == Some(user_id.as_str())) {
+    for session in sessions.iter().filter(|session| session.auth_session_id.as_deref().is_some_and(|id| revoked_ids.contains(id))) {
         if let Some(notify) = state.session_kicks.get_cloned(&session.id) {
             notify.notify_one();
         }
@@ -1588,12 +2079,17 @@ async fn get_admin_root(State(state): State<HubState>) -> impl IntoResponse {
 async fn get_admin_asset(Path(rest): Path<String>, State(state): State<HubState>) -> impl IntoResponse {
     admin_page(&state, &rest).await
 }
+
+async fn get_readyz(State(state): State<HubState>) -> impl IntoResponse {
+    let status = if state.readiness.status == "ready" { StatusCode::OK } else { StatusCode::SERVICE_UNAVAILABLE };
+    (status, Json((*state.readiness).clone()))
+}
 //#endregion 🔖️AdminPage
 
 //#region 🔖️Main
 fn router(state: HubState) -> Router {
     Router::new()
-        .route("/auth/sessions", post(create_auth_session))
+        .route("/readyz", get(get_readyz))
         .route("/auth/sessions/me", get(get_session_me).delete(delete_session_me))
         .route("/directory/commands", post(post_directory_commands))
         .route("/directory/spaces", get(get_directory_spaces))
@@ -1619,6 +2115,7 @@ fn router(state: HubState) -> Router {
         .route("/spaces/{space_id}/blobs/{hash}", get(get_blob).head(head_blob).put(put_blob))
         .route("/spaces/{space_id}/documents/{id}", get(get_document_status))
         .route("/spaces/{space_id}/documents/{id}/share", post(create_share))
+        .route("/spaces/{space_id}/documents/{id}/share/{share_id}", delete(revoke_share))
         .route("/spaces/{space_id}/documents/{id}/ws", get(document_ws))
         // 🐙️ w4-h: router-wide CORS grant — see `cors_middleware`'s doc comment (`🔖️Directory` region)
         // for why this must cover the whole router, not just `/directory/*`.
@@ -1682,6 +2179,33 @@ async fn connect_db(data_dir: &std::path::Path) -> Result<db::Database, HubError
     }
 }
 
+/// @emoji 🧩️ Opens the hub-owned artifact CAS in a namespace independent from generic DB payloads.
+async fn connect_artifact_cas(data_dir: &std::path::Path) -> Result<Arc<ArtifactChunkCasStores>, HubError> {
+    let backend = std::env::var("OS_HUB_STORAGE_BACKEND").unwrap_or_else(|_| "fs".into());
+    let storage = match backend.as_str() {
+        "fs" | "" => ArtifactChunkCasStores::Filesystem(FsArtifactChunkCasStorage::open(&data_dir.join("artifact-cas/v1")).await?),
+        #[cfg(feature = "sqlite")]
+        "sqlite" => {
+            let path = std::env::var("OS_HUB_DB_SQLITE").unwrap_or_else(|_| data_dir.join("db.sqlite3").to_string_lossy().into_owned());
+            ArtifactChunkCasStores::Sqlite(SqliteArtifactChunkCasStorage::open(std::path::Path::new(&path)).await?)
+        }
+        #[cfg(feature = "postgres")]
+        "postgres" => {
+            let database_url = std::env::var("OS_HUB_DATABASE_URL").map_err(|_| HubError::UnknownStorageBackend("postgres requires OS_HUB_DATABASE_URL".into()))?;
+            ArtifactChunkCasStores::Postgres(PostgresArtifactChunkCasStorage::connect(&database_url).await?)
+        }
+        #[cfg(feature = "neo4j")]
+        "neo4j" => {
+            let uri = std::env::var("OS_HUB_NEO4J_URI").map_err(|_| HubError::UnknownStorageBackend("neo4j requires OS_HUB_NEO4J_URI".into()))?;
+            let user = std::env::var("OS_HUB_NEO4J_USER").unwrap_or_else(|_| "neo4j".into());
+            let password = std::env::var("OS_HUB_NEO4J_PASSWORD").unwrap_or_default();
+            ArtifactChunkCasStores::Neo4j(Neo4jArtifactChunkCasStorage::connect(&uri, &user, &password).await?)
+        }
+        other => return Err(HubError::UnknownStorageBackend(other.to_string())),
+    };
+    Ok(Arc::new(storage))
+}
+
 /// @emoji 🧬️ Resolves and connects the identity/tenancy directory backend, selected by
 /// `OS_HUB_DIRECTORY_BACKEND` (`sqlite` default, zero-touch, `{data_dir}/directory.db`; `postgres`
 /// — requires `OS_HUB_DIRECTORY_DATABASE_URL` — or `neo4j` — requires
@@ -1728,42 +2252,96 @@ async fn connect_directory(data_dir: &std::path::Path) -> Result<Arc<HubDirector
 #[tokio::main]
 async fn main() -> Result<(), HubError> {
     let port: u16 = std::env::var("OS_HUB_PORT").ok().and_then(|value| value.parse().ok()).unwrap_or(8787);
+    let bind: std::net::IpAddr = std::env::var("OS_HUB_BIND").unwrap_or_else(|_| "0.0.0.0".into()).parse().map_err(|_| HubError::UnsafeAuthConfiguration("OS_HUB_BIND must be an IP address".into()))?;
+    let mode = HubMode::from_environment(bind)?;
+    let identity_verifier: Option<Arc<dyn IdentityAssertionVerifier>> = None;
+    let bootstrap_control = Arc::new(HubBootstrapControl::new());
+    let local_bootstrap: Option<Arc<dyn LocalBootstrapTransport>> = if mode == HubMode::Development {
+        let deadline_ms = now_ms().checked_add(LOCAL_BOOTSTRAP_EXCHANGE_DEADLINE_MS).ok_or_else(|| HubError::UnsafeAuthConfiguration("local bootstrap deadline overflow".into()))?;
+        let context = semio_hub::directory::IdentityVerificationContext { deadline_ms, control: bootstrap_control.as_ref() };
+        Some(InheritedLocalBootstrapTransport::open_inherited(&context).await?)
+    } else {
+        None
+    };
+    let admin_subjects = configured_admin_subjects()?;
+    validate_auth_startup(mode, bind, identity_verifier.as_ref(), local_bootstrap.as_ref(), &admin_subjects)?;
     let data_dir = std::env::var("OS_HUB_DATA").map_or_else(|_| std::path::PathBuf::from("./.🧬semio/🌐hub/"), std::path::PathBuf::from);
-    let db = connect_db(&data_dir).await?;
+    let native_codec_bindings = linked_native_codec_bindings();
+    let artifact_authority = configured_artifact_authority(
+        std::env::var("OS_HUB_TRUSTED_CATALOG_BUNDLE").ok().filter(|value| !value.is_empty()).map(std::path::PathBuf::from),
+        std::env::var("OS_HUB_TRUSTED_CATALOG_PROFILE").ok().filter(|value| !value.is_empty()),
+        &native_codec_bindings,
+    )
+    .await?;
+    let db = Arc::new(connect_db(&data_dir).await?);
+    let artifact_cas = connect_artifact_cas(&data_dir).await?;
     let directory = connect_directory(&data_dir).await?;
     // 🧹️ Contract §C0: clear crash residue before any real connection lands — a session that never
     // got its `disconnected_at` because a previous process was killed mid-connection.
     directory.close_all_sync_sessions().await?;
     let directory_service = Arc::new(DirectoryService::new(directory.clone(), 1024));
-    let admin_token = std::env::var("OS_HUB_ADMIN_TOKEN").ok().filter(|value| !value.is_empty());
-    if admin_token.is_none() {
-        // 🛡️ Contract §C0/§C2: no configured token ⇒ a loopback peer is implicitly admin (dev
-        // default) — logged loudly once so this is never a silent surprise in a deployment that
-        // forgot to set `OS_HUB_ADMIN_TOKEN`.
-        eprintln!("[WARN] OS_HUB_ADMIN_TOKEN is not set — /admin/api/* and document sharing fall back to loopback-peer-is-admin (dev default); set OS_HUB_ADMIN_TOKEN to require a bearer token instead");
-    }
+    let rebootstrap = Arc::new(VerifiedRebootstrapSource::new(directory.clone(), artifact_cas.clone()));
     let admin_dir = std::env::var("OS_HUB_ADMIN_DIR").map(std::path::PathBuf::from).unwrap_or_else(|_| std::path::PathBuf::from(concat!(env!("CARGO_MANIFEST_DIR"), "/../../🔨️modules/🛡️admin/📦️packages/🟦️typescript/📤️dist")));
     let extensions_root = std::env::var("OS_HUB_EXTENSIONS_DIR").map(std::path::PathBuf::from).unwrap_or_else(|_| data_dir.join("extension-modules"));
     std::fs::create_dir_all(&extensions_root)?;
+    let run_id = local_bootstrap.as_ref().map_or_else(|| "production".to_string(), |bootstrap| bootstrap.run_id().to_string());
+    let bootstrap_ready = match mode {
+        HubMode::Development => local_bootstrap.as_ref().is_some_and(|bootstrap| bootstrap.is_ready()),
+        HubMode::Production => identity_verifier.is_some(),
+    };
+    let readiness = Arc::new(hub_readiness(mode, run_id, bootstrap_ready, artifact_authority.is_some(), admin_dir.is_dir()));
     let state = HubState {
-        db: Arc::new(db),
-        directory,
+        db,
+        artifact_cas,
+        directory: directory.clone(),
+        rebootstrap,
+        _artifact_authority: artifact_authority,
         directory_service,
-        admin_token,
+        admin_subjects,
+        readiness,
         admin_dir,
         fanout: Arc::new(ShardedMap::new()),
+        fanout_capacity: 256,
+        #[cfg(test)]
+        live_gate: None,
         presence: Arc::new(ShardedMap::new()),
         session_colors: Arc::new(ShardedMap::new()),
         session_kicks: Arc::new(ShardedMap::new()),
-        schema_hashes: Arc::new(ShardedMap::new()),
         extensions_root,
         merge_policy: merge_policy_from_env(),
     };
-    let addr = SocketAddr::from(([0, 0, 0, 0], port));
-    eprintln!("[INFO] os-hub listening on http://{addr}");
+    let addr = SocketAddr::new(bind, port);
     let listener = tokio::net::TcpListener::bind(addr).await?;
-    axum::serve(listener, router(state).into_make_service_with_connect_info::<SocketAddr>()).await?;
-    Ok(())
+    let bootstrap_task = local_bootstrap.clone().map(|transport| {
+        let control: Arc<dyn IdentityVerificationControl> = bootstrap_control.clone();
+        tokio::spawn(serve_local_bootstrap(transport, directory, control))
+    });
+    eprintln!("[INFO] os-hub ready at http://{addr}");
+    let server = std::future::IntoFuture::into_future(axum::serve(listener, router(state).into_make_service_with_connect_info::<SocketAddr>()));
+    tokio::pin!(server);
+    if let Some(mut bootstrap_task) = bootstrap_task {
+        tokio::select! {
+            result = &mut server => {
+                bootstrap_control.cancel();
+                if let Some(transport) = local_bootstrap {
+                    let _ = transport.shutdown().await;
+                }
+                bootstrap_task.abort();
+                let _ = bootstrap_task.await;
+                result.map_err(HubError::Io)
+            }
+            result = &mut bootstrap_task => {
+                bootstrap_control.cancel();
+                match result {
+                    Ok(Ok(())) => Err(HubError::UnsafeAuthConfiguration("local bootstrap endpoint closed".into())),
+                    Ok(Err(error)) => Err(HubError::Directory(error)),
+                    Err(_) => Err(HubError::UnsafeAuthConfiguration("local bootstrap service stopped".into())),
+                }
+            }
+        }
+    } else {
+        server.await.map_err(HubError::Io)
+    }
 }
 //#endregion 🔖️Main
 
@@ -1777,11 +2355,146 @@ async fn main() -> Result<(), HubError> {
 mod tests {
     use super::*;
     use protocol::{ArtifactId as WireArtifactId, Bootstrap};
+    use semio_framework_hash::Sha256;
+    use semio_hub::artifact_authority::checkpoint_id_encoding_v1;
+
+    struct StartupVerifier;
+
+    impl IdentityAssertionVerifier for StartupVerifier {
+        fn verify<'a>(
+            &'a self,
+            _assertion: &'a semio_hub::directory::IdentityAssertion,
+            _context: &'a semio_hub::directory::IdentityVerificationContext<'a>,
+        ) -> semio_hub::directory::IdentityVerificationFuture<'a> {
+            Box::pin(async { Err(DirectoryError::Unauthorized) })
+        }
+    }
+
+    struct TestLocalBootstrap;
+
+    impl LocalBootstrapTransport for TestLocalBootstrap {
+        fn run_id(&self) -> &str {
+            "00112233445566778899aabbccddeeff"
+        }
+
+        fn is_ready(&self) -> bool {
+            true
+        }
+
+        fn request_cancelled(&self, _request_id: &str) -> bool {
+            false
+        }
+
+        fn accept<'a>(&'a self, _context: &'a semio_hub::directory::IdentityVerificationContext<'a>) -> semio_hub::directory::LocalBootstrapAcceptFuture<'a> {
+            Box::pin(async { Ok(None) })
+        }
+
+        fn issue<'a>(
+            &'a self,
+            _request: &'a semio_hub::directory::VerifiedLocalBootstrapRequest,
+            _session: &'a semio_hub::directory::model::IssuedAuthSession,
+            _context: &'a semio_hub::directory::IdentityVerificationContext<'a>,
+        ) -> semio_hub::directory::LocalBootstrapIssueFuture<'a> {
+            Box::pin(async { Ok(()) })
+        }
+
+        fn reject<'a>(
+            &'a self,
+            _request_id: &'a str,
+            _code: semio_hub::directory::LocalBootstrapRejectCode,
+            _context: &'a semio_hub::directory::IdentityVerificationContext<'a>,
+        ) -> semio_hub::directory::LocalBootstrapTerminalFuture<'a> {
+            Box::pin(async { Ok(()) })
+        }
+
+        fn cancel<'a>(&'a self, _request_id: &'a str) -> semio_hub::directory::LocalBootstrapTerminalFuture<'a> {
+            Box::pin(async { Ok(()) })
+        }
+
+        fn shutdown<'a>(&'a self) -> semio_hub::directory::LocalBootstrapTerminalFuture<'a> {
+            Box::pin(async { Ok(()) })
+        }
+    }
+
+    #[test]
+    fn startup_auth_policy_fails_closed_without_owned_adapters() {
+        let loopback = std::net::IpAddr::from([127, 0, 0, 1]);
+        let public = std::net::IpAddr::from([0, 0, 0, 0]);
+        let verifier: Arc<dyn IdentityAssertionVerifier> = Arc::new(StartupVerifier);
+        let local: Arc<dyn LocalBootstrapTransport> = Arc::new(TestLocalBootstrap);
+        let admin = AdminSubject { provider: "oidc.example".into(), subject_digest: identity_subject_digest("oidc.example", "admin-subject").expect("admin digest") };
+        assert!(validate_auth_startup(HubMode::Production, loopback, None, None, &[admin.clone()]).is_err());
+        assert!(validate_auth_startup(HubMode::Production, loopback, Some(&verifier), None, &[]).is_err());
+        assert!(validate_auth_startup(HubMode::Production, public, Some(&verifier), None, &[admin.clone()]).is_err());
+        assert!(validate_auth_startup(HubMode::Production, loopback, Some(&verifier), None, &[admin]).is_ok());
+        assert!(validate_auth_startup(HubMode::Development, loopback, None, None, &[]).is_err());
+        assert!(validate_auth_startup(HubMode::Development, public, None, Some(&local), &[]).is_err());
+        assert!(validate_auth_startup(HubMode::Development, loopback, None, Some(&local), &[]).is_ok());
+    }
+
+    #[test]
+    fn readiness_v1_is_redacted_and_never_claims_public_session_issuance() {
+        let ready = hub_readiness(HubMode::Development, "00112233445566778899aabbccddeeff".into(), true, true, true);
+        let encoded = serde_json::to_string(&ready).expect("readiness json");
+        assert_eq!(ready.status, "ready");
+        assert!(!ready.authentication.public_session_issuance);
+        assert!(ready.artifact_authority.ready);
+        assert!(!encoded.contains("session.v1"));
+        assert!(!encoded.contains("subject"));
+        assert!(!encoded.contains("channel"));
+        assert!(!encoded.contains("sessionKind"));
+        assert!(!encoded.contains("authorizationGeneration"));
+        let partial = hub_readiness(HubMode::Development, ready.run_id.clone(), true, false, true);
+        assert_eq!(partial.status, "not-ready");
+        assert!(partial.authentication.bootstrap_ready);
+        assert!(!partial.artifact_authority.ready);
+        assert_eq!(hub_readiness(HubMode::Development, ready.run_id.clone(), false, false, true).status, "not-ready");
+        assert_eq!(hub_readiness(HubMode::Development, ready.run_id, true, false, false).status, "not-ready");
+    }
     use tokio_tungstenite::connect_async;
     use tokio_tungstenite::tungstenite::Message as WsMessage;
 
     /// @emoji 🏛️ The seeded space id every test routes against (see `SqliteDirectory::seed`).
     const STUDIO: &str = "default";
+
+    #[tokio::test]
+    async fn trusted_catalog_startup_is_opt_in_and_partial_configuration_fails_closed() {
+        assert!(configured_artifact_authority(None, None, &[]).await.expect("unconfigured authority").is_none());
+        let error = match configured_artifact_authority(Some(std::path::PathBuf::from("bundle.json")), None, &[]).await {
+            Ok(_) => panic!("partial trusted-catalog configuration unexpectedly succeeded"),
+            Err(error) => error,
+        };
+        assert!(error.to_string().contains("must be configured together"));
+    }
+
+    struct SyntheticDirectoryEventSource {
+        head: u64,
+        requests: std::sync::Mutex<Vec<(u64, usize)>>,
+    }
+
+    impl DirectoryEventPageSource for SyntheticDirectoryEventSource {
+        async fn directory_event_head(&self) -> Result<u64, DirectoryError> {
+            Ok(self.head)
+        }
+
+        async fn directory_event_page(&self, since: u64, limit: usize) -> Result<Vec<DirectoryEvent>, DirectoryError> {
+            self.requests.lock().expect("request lock").push((since, limit));
+            let limit = u64::try_from(limit).map_err(|error| DirectoryError::Backend(error.to_string()))?;
+            let end = since.saturating_add(limit).min(self.head);
+            Ok(((since + 1)..=end)
+                .map(|seq| DirectoryEvent {
+                    seq,
+                    id: format!("event-{seq}"),
+                    hlc: os_directory::Hlc { physical_ms: i64::try_from(seq).expect("bounded synthetic sequence"), logical: 0 },
+                    actor: DirectoryActor { kind: DirectoryActorKind::System, id: "system:paged-read-law".into() },
+                    space_id: Some("default".into()),
+                    user_id: None,
+                    body: os_directory::DirectoryEventBody::SpaceRenamed { space_id: "default".into(), name: format!("paged-{seq}") },
+                    recorded_at_ms: 0,
+                })
+                .collect())
+        }
+    }
 
     /// @emoji 📁️ A fresh, never-reused temp directory per call — the owned `time_ordered_id` rather than
     /// `now_ms()` alone, since `cargo test` runs this whole module's `#[tokio::test]`s
@@ -1794,24 +2507,82 @@ mod tests {
         dir
     }
 
+    fn run_socket_test<F, Fut>(test: F)
+    where
+        F: FnOnce() -> Fut + Send + 'static,
+        Fut: std::future::Future<Output = ()> + 'static,
+    {
+        std::thread::Builder::new()
+            .name("hub-socket-test".into())
+            .stack_size(32 * 1024 * 1024)
+            .spawn(move || tokio::runtime::Builder::new_current_thread().enable_all().build().expect("test runtime").block_on(test()))
+            .expect("socket test thread")
+            .join()
+            .expect("socket test");
+    }
+
     async fn test_state() -> HubState {
+        test_state_with_capacity(1024, 256).await
+    }
+
+    async fn test_state_with_capacity(directory_capacity: usize, fanout_capacity: usize) -> HubState {
         let dir = tempdir("db");
         let database = db::Database::open_at(hub_worker_pool(), &dir, db::Profile::Test).await.expect("open db");
         let directory = SqliteDirectory::connect(":memory:").await.expect("connect directory");
         directory.seed().await.expect("seed");
         let directory: Arc<HubDirectories> = Arc::new(directory.into());
-        let directory_service = Arc::new(DirectoryService::new(directory.clone(), 1024));
+        let directory_service = Arc::new(DirectoryService::new(directory.clone(), directory_capacity));
+        let database = Arc::new(database);
+        let artifact_cas = Arc::new(ArtifactChunkCasStores::Filesystem(FsArtifactChunkCasStorage::open(&dir.join("artifact-cas/v1")).await.expect("open artifact CAS")));
+        let rebootstrap = Arc::new(VerifiedRebootstrapSource::new(directory.clone(), artifact_cas.clone()));
         HubState {
-            db: Arc::new(database),
+            db: database,
+            artifact_cas,
             directory,
+            rebootstrap,
+            _artifact_authority: None,
             directory_service,
-            admin_token: None,
+            admin_subjects: Arc::from([]),
+            readiness: Arc::new(hub_readiness(HubMode::Development, "00112233445566778899aabbccddeeff".into(), true, false, true)),
             admin_dir: dir.join("admin-dist"),
             fanout: Arc::new(ShardedMap::new()),
+            fanout_capacity,
+            live_gate: None,
             presence: Arc::new(ShardedMap::new()),
             session_colors: Arc::new(ShardedMap::new()),
             session_kicks: Arc::new(ShardedMap::new()),
-            schema_hashes: Arc::new(ShardedMap::new()),
+            extensions_root: dir.join("extension-modules"),
+            merge_policy: protocol::MergePolicy::default(),
+        }
+    }
+
+    async fn lag_test_state(directory_capacity: usize, fanout_capacity: usize) -> HubState {
+        let dir = tempdir("lag-db");
+        let pool = Arc::new(db::semio_framework_async::process_worker_pool(db::semio_framework_async::WorkerPoolConfig::new(db::semio_framework_async::ProcessKind::HeadlessBatch, 2)));
+        let backend = Arc::new(db::db_storage::DbBackend::Memory(db::db_storage::MemoryStorage::new(pool.clone()).await.expect("memory storage")));
+        let database = Arc::new(db::Database::open(pool, db::DbConfig::for_profile(db::Profile::Test), backend).await.expect("open memory db"));
+        let directory = SqliteDirectory::connect(":memory:").await.expect("connect directory");
+        directory.seed().await.expect("seed");
+        let directory: Arc<HubDirectories> = Arc::new(directory.into());
+        let directory_service = Arc::new(DirectoryService::new(directory.clone(), directory_capacity));
+        let artifact_cas = Arc::new(ArtifactChunkCasStores::Memory(MemoryArtifactChunkCasStorage::default()));
+        let rebootstrap = Arc::new(VerifiedRebootstrapSource::new(directory.clone(), artifact_cas.clone()));
+        HubState {
+            db: database,
+            artifact_cas,
+            directory,
+            rebootstrap,
+            _artifact_authority: None,
+            directory_service,
+            admin_subjects: Arc::from([]),
+            readiness: Arc::new(hub_readiness(HubMode::Development, "00112233445566778899aabbccddeeff".into(), true, false, true)),
+            admin_dir: dir.join("admin-dist"),
+            fanout: Arc::new(ShardedMap::new()),
+            fanout_capacity,
+            live_gate: None,
+            presence: Arc::new(ShardedMap::new()),
+            session_colors: Arc::new(ShardedMap::new()),
+            session_kicks: Arc::new(ShardedMap::new()),
             extensions_root: dir.join("extension-modules"),
             merge_policy: protocol::MergePolicy::default(),
         }
@@ -1841,6 +2612,78 @@ mod tests {
         state.directory_service.execute(actor, DirectoryCommand::UpsertMember { space_id: space_id.to_string(), email: email.to_string(), role }).await.expect("upsert member");
     }
 
+    fn document_descriptor_for_test(space_id: &str, document_id: &str) -> os_directory::DocumentDescriptor {
+        os_directory::DocumentDescriptor {
+            space_id: space_id.to_string(),
+            document_id: document_id.to_string(),
+            artifact_kind: "test.artifact".into(),
+            artifact_schema: "test.v1".into(),
+            owner: os_directory::DocumentOwner { plugin_id: "test.plugin".into(), package_id: "test.package".into(), version: "1.0.0".into(), package_hash: "22".repeat(32) },
+            pack_schema_hash: "11".repeat(32),
+            bootstrap_version: 1,
+            bootstrap_frontier: os_directory::DocumentFrontier { head_seq: 0, commit_seq: 0, epoch: 0 },
+            bootstrap_snapshot_hash: "33".repeat(32),
+        }
+    }
+
+    async fn announce_document_for_test(state: &HubState, space_id: &str, document_id: &str) {
+        let actor = DirectoryActor { kind: DirectoryActorKind::User, id: "user:seed#test".into() };
+        state.directory_service.execute(actor, DirectoryCommand::AnnounceDocument { descriptor: document_descriptor_for_test(space_id, document_id) }).await.expect("announce document");
+    }
+
+    async fn publish_checkpoint_for_test(state: &HubState, space_id: &str, document_id: &str) -> os_directory::ArtifactCheckpoint {
+        let pack = b"verified-pack";
+        let spr = b"verified-spr";
+        let pack_hash = os_directory::ArtifactHash(Sha256::digest(pack));
+        let spr_hash = os_directory::ArtifactHash(Sha256::digest(spr));
+        let mut aggregate = Sha256::new();
+        aggregate.update(pack);
+        aggregate.update(spr);
+        let scope = DocumentScope::new(space_id, document_id);
+        let descriptor = state.directory.get_document_descriptor(&scope).await.expect("descriptor read").expect("descriptor");
+        let pack_plan = prepare_artifact_cas_manifest_v1(space_id, pack).expect("pack manifest plan");
+        let spr_plan = prepare_artifact_cas_manifest_v1(space_id, spr).expect("SPR manifest plan");
+        let mut checkpoint = os_directory::ArtifactCheckpoint {
+            scope,
+            checkpoint_id: os_directory::ArtifactHash([0; 32]),
+            parent_checkpoint_id: None,
+            descriptor_digest_v1: os_directory::descriptor_digest_v1(&descriptor).expect("descriptor digest"),
+            baseline_frontier: os_directory::ArtifactFrontier {
+                document_id: document_id.to_string(),
+                head_edit_ordinal: 1,
+                head_edit_id: "verified-edit-1".into(),
+                last_commit_seq: 1,
+                chain_hash: os_directory::ArtifactHash([0x44; 32]),
+            },
+            pack: os_directory::ArtifactBlobRef { sha256: pack_hash, byte_length: pack.len() as u64, storage_key: artifact_cas_manifest_locator_v1(pack_plan.manifest_id) },
+            spr: os_directory::ArtifactBlobRef { sha256: spr_hash, byte_length: spr.len() as u64, storage_key: artifact_cas_manifest_locator_v1(spr_plan.manifest_id) },
+            aggregate_sha256: os_directory::ArtifactHash(aggregate.finalize()),
+            published_at_ms: 1,
+        };
+        checkpoint.checkpoint_id = os_directory::ArtifactHash(Sha256::digest(&checkpoint_id_encoding_v1(&checkpoint).expect("checkpoint identity")));
+        let ownership = prepare_artifact_cas_ownership_v1(&checkpoint, &ArtifactPair { pack: pack.to_vec(), spr: spr.to_vec() }).expect("ownership plan");
+        let reservation = state.directory_service.reserve_artifact_cas(DirectoryActor { kind: DirectoryActorKind::System, id: "system:lag-rebootstrap-test".into() }, ownership, 1_000, 100).await.expect("reserve checkpoint objects");
+        let cas = ArtifactChunkBlobStore::new(state.artifact_cas.clone());
+        let authority_control = StartupCatalogControl;
+        let authority_context = OperationContext::new(u64::MAX, AuthorityLimits::maximum(), &authority_control);
+        let staged_pack = cas
+            .stage(space_id, ArtifactBlobIntegrity { sha256: pack_hash, byte_length: pack.len() as u64 }, pack, &authority_context)
+            .await
+            .expect("stage reserved pack manifest");
+        let staged_spr = cas
+            .stage(space_id, ArtifactBlobIntegrity { sha256: spr_hash, byte_length: spr.len() as u64 }, spr, &authority_context)
+            .await
+            .expect("stage reserved SPR manifest");
+        assert_eq!(staged_pack.storage_key, checkpoint.pack.storage_key);
+        assert_eq!(staged_spr.storage_key, checkpoint.spr.storage_key);
+        state
+            .directory_service
+            .publish_reserved_artifact_checkpoint(DirectoryActor { kind: DirectoryActorKind::System, id: "system:lag-rebootstrap-test".into() }, checkpoint.clone(), reservation, 100)
+            .await
+            .expect("publish verified checkpoint");
+        checkpoint
+    }
+
     async fn sample_envelope(id: &str, document: &WireArtifactId) -> MutationEnvelope {
         MutationEnvelope {
             mutation_id: protocol::MutationId(id.to_string()),
@@ -1849,8 +2692,18 @@ mod tests {
             dependencies: Vec::new(),
             diff: protocol::ArtifactDiff { schema: protocol::SchemaId(db::document::DB_PATHMAP_SCHEMA.to_string()), payload: db::document::encode_pathmap_json(&serde_json::json!({ "value": id })).await.unwrap() },
             inverse: protocol::InverseMutation { schema: protocol::SchemaId(db::document::DB_PATHMAP_SCHEMA.to_string()), payload: db::document::encode_pathmap_json(&serde_json::json!({})).await.unwrap() },
-            timestamp: protocol::HybridLogicalTimestamp::new(0, 0).await,
+            timestamp: protocol::HybridLogicalTimestamp::new(0, 0),
         }
+    }
+
+    #[test]
+    fn mutation_message_payload_matches_language_neutral_fixture() {
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("🧪️fixtures/🧬️hub-boundaries/🔣️.json")).expect("valid hub boundary fixture");
+        let messages = vec![protocol::MutationMessage::warn("mutation.clamped", "height clamped").at(["node", "height"]).at_op(2), protocol::MutationMessage::info("mutation.cascade", "dependent value updated")];
+        let encoded = encode_messages(&messages);
+        let parsed: serde_json::Value = serde_json::from_slice(&encoded).expect("first-party message bytes are valid JSON");
+        assert_eq!(parsed, fixture["mutationMessages"]);
+        assert_eq!(<Vec<protocol::MutationMessage> as FromValue>::from_value(DslValue::from(parsed)).expect("first-party message decode"), messages);
     }
 
     async fn spawn_server(state: HubState) -> SocketAddr {
@@ -1863,10 +2716,8 @@ mod tests {
         addr
     }
 
-    /// @emoji 🧪️ A loopback `ConnectInfo` for handlers under test called directly (not through a
-    /// real socket accept) — every test-suite caller of `create_share` used to rely on the admin
-    /// bearer check alone; `is_admin` now also accepts loopback when no token is configured, so
-    /// tests that DO configure a token still exercise the bearer branch unaffected.
+    /// @emoji 🧪️ A loopback `ConnectInfo` for handlers called directly in tests. Network
+    /// proximity confers no authorization; every protected test also supplies a verified session.
     fn loopback_peer() -> axum::extract::ConnectInfo<SocketAddr> {
         axum::extract::ConnectInfo(SocketAddr::from(([127, 0, 0, 1], 0)))
     }
@@ -1891,8 +2742,74 @@ mod tests {
         WsMessage::Binary(protocol::encode_client_frame(frame, lane).await.into())
     }
 
-    fn hello(actor: &str) -> ClientFrame {
-        ClientFrame::Hello { wire_version: 1, protocol_version: 1, schema: "test.v1".to_string(), pack_schema_hash: [0u8; 32], actor: ActorId(actor.to_string()), token: None, resume_token: None, frontier: None }
+    async fn next_close_code<S>(ws: &mut S, allow_text: bool) -> u16
+    where
+        S: StreamExt<Item = Result<WsMessage, tokio_tungstenite::tungstenite::Error>> + Unpin,
+    {
+        let deadline = tokio::time::Instant::now() + std::time::Duration::from_secs(5);
+        loop {
+            match tokio::time::timeout_at(deadline, ws.next()).await {
+                Ok(Some(Ok(WsMessage::Close(Some(frame))))) => return frame.code.into(),
+                Ok(Some(Ok(WsMessage::Text(text)))) if !allow_text => panic!("unauthorized rebootstrap control leaked: {text}"),
+                Ok(Some(Ok(_))) => continue,
+                Ok(Some(other)) => panic!("expected close frame, got {other:?}"),
+                Ok(None) => panic!("stream ended before close frame"),
+                Err(_) => panic!("no close frame before 5s deadline"),
+            }
+        }
+    }
+
+    fn hello(actor: &str, token: Option<&str>) -> ClientFrame {
+        ClientFrame::Hello { wire_version: 1, protocol_version: 1, schema: "test.v1".to_string(), pack_schema_hash: [0x11u8; 32], actor: ActorId(actor.to_string()), token: token.map(str::to_string), resume_token: None, frontier: None }
+    }
+
+    struct TestIssuedSession {
+        token: String,
+        user_id: String,
+    }
+
+    async fn issue_test_session(state: &HubState, email: &str) -> TestIssuedSession {
+        let user = match state.directory.get_user_by_email(email).await.expect("test user lookup") {
+            Some(user) => user,
+            None => state.directory.create_user(email, email, None, Some(email), Some("test-verifier")).await.expect("test verified user"),
+        };
+        let issue = AuthSessionIssue {
+            user_id: user.id.clone(),
+            identity_provider: "test-verifier".into(),
+            identity_subject_digest: identity_subject_digest("test-verifier", email).expect("test subject digest"),
+            ttl_secs: 3_600,
+            device_instance_id: "test-device".into(),
+            session_kind: AuthSessionKind::DevelopmentLocal,
+            correlation_id: directory::os_identity::time_ordered_id(),
+            peer_class: "test".into(),
+        };
+        let issued = state.directory.issue_auth_session(&issue).await.expect("test session issue");
+        TestIssuedSession { token: issued.capability.expose_once(), user_id: user.id }
+    }
+
+    async fn authorize_test_admin(state: &mut HubState, email: &str) -> HeaderMap {
+        let session = issue_test_session(state, email).await;
+        state.admin_subjects = Arc::from([AdminSubject {
+            provider: "test-verifier".into(),
+            subject_digest: identity_subject_digest("test-verifier", email).expect("test admin subject digest"),
+        }]);
+        let mut headers = HeaderMap::new();
+        headers.insert(axum::http::header::AUTHORIZATION, format!("Bearer {}", session.token).parse().expect("test bearer header"));
+        headers
+    }
+
+    async fn seed_author_token(state: &HubState) -> String {
+        let issue = AuthSessionIssue {
+            user_id: "seed".into(),
+            identity_provider: "test-verifier".into(),
+            identity_subject_digest: identity_subject_digest("test-verifier", "seed").expect("seed subject digest"),
+            ttl_secs: 3_600,
+            device_instance_id: "seed-device".into(),
+            session_kind: AuthSessionKind::DevelopmentLocal,
+            correlation_id: directory::os_identity::time_ordered_id(),
+            peer_class: "test".into(),
+        };
+        state.directory.issue_auth_session(&issue).await.expect("seed author session").capability.expose_once()
     }
 
     // 🔬️ WS duplex fan-out over the real wire-v2 protocol: A's committed command reaches B on its
@@ -1901,20 +2818,23 @@ mod tests {
     // only asserts B observes it, matching `framework/sync`'s own origin check).
     #[tokio::test]
     async fn ws_duplex_fan_out() {
-        let addr = spawn_server(test_state().await).await;
+        let state = test_state().await;
+        let token = seed_author_token(&state).await;
+        announce_document_for_test(&state, STUDIO, "default").await;
+        let addr = spawn_server(state).await;
         let url = format!("ws://{addr}/spaces/{STUDIO}/documents/default/ws");
 
         let (mut a, _) = connect_async(&url).await.unwrap();
-        a.send(client_binary(&hello("A"), Lane::Command).await).await.unwrap();
+        a.send(client_binary(&hello("A", Some(&token)), Lane::Command).await).await.unwrap();
         assert!(matches!(next_server_frame(&mut a).await, ServerFrame::Welcome { .. }));
         assert!(matches!(next_server_frame(&mut a).await, ServerFrame::Session { .. }));
 
         let (mut b, _) = connect_async(&url).await.unwrap();
-        b.send(client_binary(&hello("B"), Lane::Command).await).await.unwrap();
+        b.send(client_binary(&hello("B", Some(&token)), Lane::Command).await).await.unwrap();
         assert!(matches!(next_server_frame(&mut b).await, ServerFrame::Welcome { .. }));
         assert!(matches!(next_server_frame(&mut b).await, ServerFrame::Session { .. }));
 
-        let document = WireArtifactId(format!("{STUDIO}:default"));
+        let document = db_artifact_id(&DocumentScope::new(STUDIO, "default"));
         a.send(client_binary(&ClientFrame::Commands { batch_id: 1, envelopes: vec![sample_envelope("op-1", &document).await] }, Lane::Command).await).await.unwrap();
 
         assert!(matches!(next_server_frame(&mut a).await, ServerFrame::Ack { batch_id: 1, .. }));
@@ -1933,16 +2853,52 @@ mod tests {
         }
     }
 
+    #[test]
+    fn document_socket_forced_lag_sends_verified_control_then_closes_1013() {
+        run_socket_test(|| async {
+        let mut state = lag_test_state(1024, 1).await;
+        let gate = Arc::new(TestLiveGate::default());
+        state.live_gate = Some(gate.clone());
+        let token = seed_author_token(&state).await;
+        announce_document_for_test(&state, STUDIO, "lagged-document").await;
+        let checkpoint = publish_checkpoint_for_test(&state, STUDIO, "lagged-document").await;
+        let addr = spawn_server(state.clone()).await;
+        let (mut ws, _) = connect_async(format!("ws://{addr}/spaces/{STUDIO}/documents/lagged-document/ws")).await.expect("connect document socket");
+        ws.send(client_binary(&hello("lagged-actor", Some(&token)), Lane::Command).await).await.expect("send hello");
+        assert!(matches!(next_server_frame(&mut ws).await, ServerFrame::Welcome { .. }));
+        assert!(matches!(next_server_frame(&mut ws).await, ServerFrame::Session { .. }));
+        tokio::time::timeout(std::time::Duration::from_secs(5), gate.document_subscribed.acquire()).await.expect("document subscription deadline").expect("document subscription");
+        let fanout = state.fanout_for(&document_scope_key_v1(&DocumentScope::new(STUDIO, "lagged-document")));
+        fanout.send(ServerFrame::Presence { peers: vec![b"first".to_vec()] }).expect("first fanout");
+        fanout.send(ServerFrame::Presence { peers: vec![b"second".to_vec()] }).expect("second fanout");
+        gate.document_release.add_permits(1);
+        match next_server_frame(&mut ws).await {
+            ServerFrame::RebootstrapRequired { control } => {
+                assert_eq!(control.space_id, STUDIO);
+                assert_eq!(control.document_id, "lagged-document");
+                assert_eq!(control.checkpoint_id, checkpoint.checkpoint_id.0);
+                assert_eq!(control.descriptor_hash, checkpoint.descriptor_digest_v1.0);
+                assert_eq!(control.baseline_frontier.document_id.0, "lagged-document");
+            }
+            other => panic!("expected verified rebootstrap control, got {other:?}"),
+        }
+        assert_eq!(next_close_code(&mut ws, false).await, 1013);
+        });
+    }
+
     // 🔬️ A reconnecting client whose `Hello.frontier` is stale gets the missing commands replayed
     // via `Welcome`'s `Bootstrap::Tail` follow-up — the `db::Database::hello` integration.
     #[tokio::test]
     async fn reconnect_replays_missing_commands_via_bootstrap_tail() {
-        let addr = spawn_server(test_state().await).await;
+        let state = test_state().await;
+        let token = seed_author_token(&state).await;
+        announce_document_for_test(&state, STUDIO, "default").await;
+        let addr = spawn_server(state).await;
         let url = format!("ws://{addr}/spaces/{STUDIO}/documents/default/ws");
-        let document = WireArtifactId(format!("{STUDIO}:default"));
+        let document = db_artifact_id(&DocumentScope::new(STUDIO, "default"));
 
         let (mut a, _) = connect_async(&url).await.unwrap();
-        a.send(client_binary(&hello("A"), Lane::Command).await).await.unwrap();
+        a.send(client_binary(&hello("A", Some(&token)), Lane::Command).await).await.unwrap();
         assert!(matches!(next_server_frame(&mut a).await, ServerFrame::Welcome { .. }));
         assert!(matches!(next_server_frame(&mut a).await, ServerFrame::Session { .. }));
         a.send(client_binary(&ClientFrame::Commands { batch_id: 1, envelopes: vec![sample_envelope("op-1", &document).await] }, Lane::Command).await).await.unwrap();
@@ -1952,7 +2908,7 @@ mod tests {
         // Welcome bootstrap follow-up, sent BEFORE the connection's own `Session` frame (contract
         // §C7.3: Session is sent after Welcome AND its follow-up bootstrap frames).
         let (mut c, _) = connect_async(&url).await.unwrap();
-        c.send(client_binary(&hello("C"), Lane::Command).await).await.unwrap();
+        c.send(client_binary(&hello("C", Some(&token)), Lane::Command).await).await.unwrap();
         assert!(matches!(next_server_frame(&mut c).await, ServerFrame::Welcome { bootstrap: Bootstrap::Tail, .. }));
         match next_server_frame(&mut c).await {
             ServerFrame::Commands { envelopes, .. } => assert_eq!(envelopes[0].mutation_id.0, "op-1"),
@@ -1962,56 +2918,69 @@ mod tests {
     }
 
     // 🔬️ Space-scoped documents: the same document id in two different studios lands in two
-    // independent `db` documents (the `{space_id}:{document_id}` scope key) — a peer on
+    // independent `db` documents through the structural v1 scope key — a peer on
     // space-b's `shared-doc` never observes space-a's commands.
     #[tokio::test]
     async fn space_scoped_documents_are_isolated() {
         let state = test_state().await;
+        let space_a = create_space_for_test(&state, "seed", "Space A", os_directory::DirectorySpaceKind::Studio, DirectorySpaceVisibility::Private).await;
+        let space_b = create_space_for_test(&state, "seed", "Space B", os_directory::DirectorySpaceKind::Studio, DirectorySpaceVisibility::Private).await;
+        let token = seed_author_token(&state).await;
+        announce_document_for_test(&state, &space_a, "shared-doc").await;
+        announce_document_for_test(&state, &space_b, "shared-doc").await;
         let addr = spawn_server(state).await;
 
-        let url_a = format!("ws://{addr}/spaces/space-a/documents/shared-doc/ws");
+        let url_a = format!("ws://{addr}/spaces/{space_a}/documents/shared-doc/ws");
         let (mut a, _) = connect_async(&url_a).await.unwrap();
-        a.send(client_binary(&hello("A"), Lane::Command).await).await.unwrap();
+        a.send(client_binary(&hello("A", Some(&token)), Lane::Command).await).await.unwrap();
         assert!(matches!(next_server_frame(&mut a).await, ServerFrame::Welcome { .. }));
         assert!(matches!(next_server_frame(&mut a).await, ServerFrame::Session { .. }));
-        let document = WireArtifactId("space-a:shared-doc".to_string());
+        let document = db_artifact_id(&DocumentScope::new(&space_a, "shared-doc"));
         a.send(client_binary(&ClientFrame::Commands { batch_id: 1, envelopes: vec![sample_envelope("only-in-a", &document).await] }, Lane::Command).await).await.unwrap();
         assert!(matches!(next_server_frame(&mut a).await, ServerFrame::Ack { .. }));
 
-        let url_b = format!("ws://{addr}/spaces/space-b/documents/shared-doc/ws");
+        let url_b = format!("ws://{addr}/spaces/{space_b}/documents/shared-doc/ws");
         let (mut b, _) = connect_async(&url_b).await.unwrap();
-        b.send(client_binary(&hello("B"), Lane::Command).await).await.unwrap();
+        b.send(client_binary(&hello("B", Some(&token)), Lane::Command).await).await.unwrap();
         assert!(matches!(next_server_frame(&mut b).await, ServerFrame::Welcome { bootstrap: Bootstrap::None, .. }), "space-b's document must not see space-a's committed op");
     }
 
-    // 🔬️ Auth-lite: issuing a share token closes an otherwise-open document to a tokenless Hello.
+    // 🔬️ A share grant is bound to one space/document, read-only, and revocable through its
+    // non-secret id. A private document never admits a tokenless caller.
     #[tokio::test]
-    async fn share_token_gates_ws_access() {
+    async fn share_token_is_scoped_read_only_and_revocable() {
         let state = test_state().await;
-        let admin_state = HubState { admin_token: Some("admin-secret".to_string()), ..state };
+        let other_space = create_space_for_test(&state, "seed", "Other Share Space", os_directory::DirectorySpaceKind::Studio, DirectorySpaceVisibility::Private).await;
+        announce_document_for_test(&state, STUDIO, "guarded").await;
+        let mut admin_state = state;
+        let headers = authorize_test_admin(&mut admin_state, "share-admin@example.com").await;
         let addr = spawn_server(admin_state.clone()).await;
-
-        let mut headers = HeaderMap::new();
-        headers.insert(axum::http::header::AUTHORIZATION, "Bearer admin-secret".parse().unwrap());
-        let share = create_share(Path((STUDIO.to_string(), "guarded".to_string())), headers, loopback_peer(), State(admin_state)).await.expect("share");
+        let share = create_share(Path((STUDIO.to_string(), "guarded".to_string())), axum::extract::Query(CreateShareQuery::default()), headers.clone(), loopback_peer(), State(admin_state.clone())).await.expect("share");
 
         let url = format!("ws://{addr}/spaces/{STUDIO}/documents/guarded/ws");
         let (mut denied, _) = connect_async(&url).await.unwrap();
-        denied.send(client_binary(&hello("intruder"), Lane::Command).await).await.unwrap();
+        denied.send(client_binary(&hello("intruder", None), Lane::Command).await).await.unwrap();
         assert!(matches!(next_server_frame(&mut denied).await, ServerFrame::Error { code, .. } if code == "unauthorized"));
 
+        let other_url = format!("ws://{addr}/spaces/{other_space}/documents/guarded/ws");
+        let (mut cross_space, _) = connect_async(&other_url).await.unwrap();
+        cross_space.send(client_binary(&hello("cross-space", Some(&share.0.token)), Lane::Command).await).await.unwrap();
+        assert!(matches!(next_server_frame(&mut cross_space).await, ServerFrame::Error { code, .. } if code == "unauthorized"));
+
         let (mut allowed, _) = connect_async(&url).await.unwrap();
-        allowed
-            .send(
-                client_binary(
-                    &ClientFrame::Hello { wire_version: 1, protocol_version: 1, schema: "test.v1".to_string(), pack_schema_hash: [0u8; 32], actor: ActorId("holder".to_string()), token: Some(share.0.token), resume_token: None, frontier: None },
-                    Lane::Command,
-                )
-                .await,
-            )
-            .await
-            .unwrap();
+        allowed.send(client_binary(&hello("holder", Some(&share.0.token)), Lane::Command).await).await.unwrap();
         assert!(matches!(next_server_frame(&mut allowed).await, ServerFrame::Welcome { .. }));
+        assert!(matches!(next_server_frame(&mut allowed).await, ServerFrame::Session { .. }));
+        let document = db_artifact_id(&DocumentScope::new(STUDIO, "guarded"));
+        allowed.send(client_binary(&ClientFrame::Commands { batch_id: 1, envelopes: vec![sample_envelope("share-write", &document).await] }, Lane::Command).await).await.unwrap();
+        assert!(matches!(next_server_frame(&mut allowed).await, ServerFrame::Ack { stages, .. } if matches!(&stages[0], AckStage::Applied { outcome } if matches!(outcome.as_ref(), ApplyOutcome::Rejected { .. }))));
+
+        assert_eq!(revoke_share(Path((STUDIO.to_string(), "guarded".to_string(), share.0.id.clone())), headers, loopback_peer(), State(admin_state)).await, StatusCode::NO_CONTENT);
+        let closed = tokio::time::timeout(std::time::Duration::from_secs(3), allowed.next()).await.expect("revoked share socket closes promptly");
+        assert!(matches!(closed, Some(Ok(WsMessage::Close(_))) | None | Some(Err(_))));
+        let (mut revoked, _) = connect_async(&url).await.unwrap();
+        revoked.send(client_binary(&hello("revoked", Some(&share.0.token)), Lane::Command).await).await.unwrap();
+        assert!(matches!(next_server_frame(&mut revoked).await, ServerFrame::Error { code, .. } if code == "unauthorized"));
     }
 
     // 🔬️ `SecurityGate` wiring: a `Spectator` session may `Hello` into a document (reads are
@@ -2024,20 +2993,21 @@ mod tests {
         let state = test_state().await;
         let space = create_space_for_test(&state, "seed", "Gated Space", os_directory::DirectorySpaceKind::Studio, DirectorySpaceVisibility::Private).await;
 
-        let spectator_session = create_auth_session(State(state.clone()), Json(CreateAuthSessionRequest { email: "spectator@example.com".into() })).await.expect("mint spectator session");
+        let spectator_session = issue_test_session(&state, "spectator@example.com").await;
         upsert_member_for_test(&state, &space, "spectator@example.com", DirectorySpaceRole::Spectator).await;
 
-        let author_session = create_auth_session(State(state.clone()), Json(CreateAuthSessionRequest { email: "author@example.com".into() })).await.expect("mint author session");
+        let author_session = issue_test_session(&state, "author@example.com").await;
         upsert_member_for_test(&state, &space, "author@example.com", DirectorySpaceRole::Author).await;
+        announce_document_for_test(&state, &space, "gated-doc").await;
 
         let addr = spawn_server(state).await;
         let url = format!("ws://{addr}/spaces/{space}/documents/gated-doc/ws");
-        let document = WireArtifactId(format!("{space}:gated-doc"));
+        let document = db_artifact_id(&DocumentScope::new(&space, "gated-doc"));
         let hello_with_token = |actor: &str, token: String| ClientFrame::Hello {
             wire_version: 1,
             protocol_version: 1,
             schema: "test.v1".to_string(),
-            pack_schema_hash: [0u8; 32],
+            pack_schema_hash: [0x11u8; 32],
             actor: ActorId(actor.to_string()),
             token: Some(token),
             resume_token: None,
@@ -2045,7 +3015,7 @@ mod tests {
         };
 
         let (mut spectator, _) = connect_async(&url).await.unwrap();
-        spectator.send(client_binary(&hello_with_token("spectator", spectator_session.0.token), Lane::Command).await).await.unwrap();
+        spectator.send(client_binary(&hello_with_token("spectator", spectator_session.token), Lane::Command).await).await.unwrap();
         assert!(matches!(next_server_frame(&mut spectator).await, ServerFrame::Welcome { .. }));
         assert!(matches!(next_server_frame(&mut spectator).await, ServerFrame::Session { .. }));
         spectator.send(client_binary(&ClientFrame::Commands { batch_id: 1, envelopes: vec![sample_envelope("op-spectator", &document).await] }, Lane::Command).await).await.unwrap();
@@ -2061,7 +3031,7 @@ mod tests {
         }
 
         let (mut author, _) = connect_async(&url).await.unwrap();
-        author.send(client_binary(&hello_with_token("author", author_session.0.token), Lane::Command).await).await.unwrap();
+        author.send(client_binary(&hello_with_token("author", author_session.token), Lane::Command).await).await.unwrap();
         assert!(matches!(next_server_frame(&mut author).await, ServerFrame::Welcome { .. }));
         assert!(matches!(next_server_frame(&mut author).await, ServerFrame::Session { .. }));
         author.send(client_binary(&ClientFrame::Commands { batch_id: 1, envelopes: vec![sample_envelope("op-author", &document).await] }, Lane::Command).await).await.unwrap();
@@ -2074,91 +3044,110 @@ mod tests {
     #[tokio::test]
     async fn blob_put_get_head_round_trip() {
         let state = test_state().await;
-        let bytes = Bytes::from_static(b"hello hub blob bytes");
-        let expected_hash = state.db.storage().await.payload().await.put(&bytes).await.unwrap().to_string();
-        // A re-put through the route with the correct address must be idempotent and agree.
+        let token = seed_author_token(&state).await;
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("🧪️fixtures/🧬️hub-boundaries/🔣️.json")).expect("valid hub boundary fixture");
+        let bytes = Bytes::copy_from_slice(fixture["blobUtf8"].as_str().expect("blob fixture string").as_bytes());
+        let mut expected_pages = db::db_storage::db_io_copy_pages(bytes.as_ref()).unwrap().await.unwrap();
+        let expected_hash = db::db_storage::db_io_hash_pages(&expected_pages).await.to_string();
+        while !expected_pages.terminal_is_empty() {
+            expected_pages.close_step().unwrap();
+            semio_framework_async::yield_once().await;
+        }
         let mut headers = HeaderMap::new();
         headers.insert(axum::http::header::CONTENT_TYPE, "text/plain".parse().unwrap());
-        let put = put_blob(Path((STUDIO.to_string(), expected_hash.clone())), headers, State(state.clone()), bytes.clone()).await.expect("put blob");
+        headers.insert(axum::http::header::AUTHORIZATION, format!("Bearer {token}").parse().unwrap());
+        let put = put_blob(Path((STUDIO.to_string(), expected_hash.clone())), headers.clone(), State(state.clone()), bytes.clone()).await.expect("put blob");
         assert_eq!(put.0.hash, expected_hash);
         assert_eq!(put.0.size, bytes.len() as i64);
 
-        let response = get_blob(Path((STUDIO.to_string(), expected_hash.clone())), HeaderMap::new(), State(state.clone())).await.expect("get blob").into_response();
-        let got = axum::body::to_bytes(response.into_body(), usize::MAX).await.expect("read body");
+        let response = get_blob(Path((STUDIO.to_string(), expected_hash.clone())), headers.clone(), State(state.clone())).await.expect("get blob").into_response();
+        let got = axum::body::to_bytes(response.into_body(), HUB_BLOB_MAX_BYTES).await.expect("read bounded body");
         assert_eq!(got.as_ref(), bytes.as_ref());
 
-        assert_eq!(head_blob(Path((STUDIO.to_string(), expected_hash.clone())), HeaderMap::new(), State(state.clone())).await, StatusCode::OK);
+        assert_eq!(head_blob(Path((STUDIO.to_string(), expected_hash.clone())), headers.clone(), State(state.clone())).await, StatusCode::OK);
 
         let missing = "0".repeat(64);
-        assert_eq!(head_blob(Path((STUDIO.to_string(), missing.clone())), HeaderMap::new(), State(state.clone())).await, StatusCode::NOT_FOUND);
-        assert_eq!(get_blob(Path((STUDIO.to_string(), missing)), HeaderMap::new(), State(state)).await.err(), Some(StatusCode::NOT_FOUND));
+        assert_eq!(head_blob(Path((STUDIO.to_string(), missing.clone())), headers.clone(), State(state.clone())).await, StatusCode::NOT_FOUND);
+        assert_eq!(get_blob(Path((STUDIO.to_string(), missing)), headers, State(state)).await.err(), Some(StatusCode::NOT_FOUND));
+    }
+
+    #[test]
+    fn db_errors_lower_to_exact_http_status_classes() {
+        assert_eq!(db_error_status(&db::DbError::InvalidArgument("invalid".into())), StatusCode::BAD_REQUEST);
+        assert_eq!(db_error_status(&db::DbError::NotFound("missing".into())), StatusCode::NOT_FOUND);
+        assert_eq!(db_error_status(&db::DbError::Conflict("conflict".into())), StatusCode::CONFLICT);
+        assert_eq!(db_error_status(&db::DbError::Unavailable("offline".into())), StatusCode::SERVICE_UNAVAILABLE);
+        assert_eq!(db_error_status(&db::DbError::Internal("internal".into())), StatusCode::INTERNAL_SERVER_ERROR);
     }
 
     // 🔬️ A client-provided hash that doesn't match the computed content hash is a bad request.
     #[tokio::test]
     async fn blob_put_rejects_hash_mismatch() {
         let state = test_state().await;
+        let token = seed_author_token(&state).await;
         let bytes = Bytes::from_static(b"mismatched content");
-        let result = put_blob(Path((STUDIO.to_string(), "0".repeat(64))), HeaderMap::new(), State(state), bytes).await;
+        let mut headers = HeaderMap::new();
+        headers.insert(axum::http::header::AUTHORIZATION, format!("Bearer {token}").parse().unwrap());
+        let result = put_blob(Path((STUDIO.to_string(), "0".repeat(64))), headers, State(state), bytes).await;
         assert_eq!(result.err(), Some(StatusCode::BAD_REQUEST));
     }
 
     // 🔬️ A `visibility == "public"` space grants an anonymous caller an implicit
     // `AuthOutcome::Public` — the hub-handler-level fallback, never a policy-engine concept (see
-    // `AuthOutcome::Public`'s doc) — once the tokenless-open-by-default share-token scheme no
-    // longer resolves the request itself (a share token has been issued for the document, closing
-    // it); a private space with the same shape stays denied.
+    // `AuthOutcome::Public`'s doc); a private space with the same shape stays denied.
     #[tokio::test]
     async fn public_visibility_grants_anonymous_spectator_fallback() {
         let state = test_state().await;
         let public_space = create_space_for_test(&state, "seed", "Public Space", os_directory::DirectorySpaceKind::Studio, DirectorySpaceVisibility::Public).await;
         let private_space = create_space_for_test(&state, "seed", "Private Space", os_directory::DirectorySpaceKind::Studio, DirectorySpaceVisibility::Private).await;
-        state.directory.create_share_token("guarded-doc").await.expect("close document with a share token");
-
         assert!(matches!(resolve_auth(&state, &public_space, "guarded-doc", None).await, AuthOutcome::Public));
         assert!(matches!(resolve_auth(&state, &private_space, "guarded-doc", None).await, AuthOutcome::Denied));
     }
 
-    // 🔬️ Auth sessions: POST /auth/sessions mints a session that resolves the caller's space role
-    // and grants access even to a document a share token has otherwise closed.
+    // 🔬️ A verifier-issued test session resolves the caller's space role and grants access even
+    // to a document a share capability has otherwise closed.
     #[tokio::test]
     async fn auth_session_grants_role_and_bypasses_share_gate() {
         let state = test_state().await;
         // `hub_space_membership.space_id` is FK-bound to `hub_space(id)` — a real studio, not a
-        // bare string, matching how `create_auth_session`'s minted user must also be a real row.
+        // bare string; the session subject must resolve to a real projected user row.
         let studio = create_space_for_test(&state, "seed", "Space X", os_directory::DirectorySpaceKind::Studio, DirectorySpaceVisibility::Private).await;
         let document = "closed-doc";
-        state.directory.create_share_token(document).await.expect("close with share token");
-        assert!(!state.directory.authorized_by_token(document, None).await.unwrap());
+        let scope = DocumentScope::new(&studio, document);
+        state.directory.issue_share_token(&scope, 60, "auth-session-test").await.expect("close with share token");
 
-        let minted = create_auth_session(State(state.clone()), Json(CreateAuthSessionRequest { email: "dev@example.com".into() })).await.expect("mint session");
+        let minted = issue_test_session(&state, "dev@example.com").await;
         upsert_member_for_test(&state, &studio, "dev@example.com", DirectorySpaceRole::Spectator).await;
 
         assert!(!authorized(&state, &studio, document, None).await, "tokenless request still denied");
-        assert!(authorized(&state, &studio, document, Some(&minted.0.token)).await, "session token authorized despite no share token");
+        assert!(authorized(&state, &studio, document, Some(&minted.token)).await, "session token authorized despite no share token");
 
-        match resolve_auth(&state, &studio, document, Some(&minted.0.token)).await {
-            AuthOutcome::Session { user_id, role } => {
-                assert_eq!(user_id, minted.0.user_id);
+        match resolve_auth(&state, &studio, document, Some(&minted.token)).await {
+            AuthOutcome::Session { user_id, role, .. } => {
+                assert_eq!(user_id, minted.user_id);
                 assert_eq!(role, SpaceRole::Spectator);
             }
             _ => panic!("expected a resolved session"),
         }
     }
 
-    // 🔬️ GET .../documents/{id} reports the document's current frontier, lazily minting it in
-    // `db`'s catalog on first access.
+    // 🔬️ GET .../documents/{id} reports a durably announced document's current frontier.
     #[tokio::test]
     async fn document_status_reports_frontier_and_lazily_mints() {
         let state = test_state().await;
-        let status = get_document_status(Path((STUDIO.to_string(), "fresh".to_string())), HeaderMap::new(), State(state.clone())).await.expect("status");
+        let token = seed_author_token(&state).await;
+        announce_document_for_test(&state, STUDIO, "fresh").await;
+        let mut headers = HeaderMap::new();
+        headers.insert(axum::http::header::AUTHORIZATION, format!("Bearer {token}").parse().unwrap());
+        let status = get_document_status(Path((STUDIO.to_string(), "fresh".to_string())), headers.clone(), State(state.clone())).await.expect("status");
         assert_eq!(status.0.head_seq, 0);
 
-        let handle = state.ensure_document(&db_artifact_id(STUDIO, "fresh")).await.expect("ensure");
-        let batch = db::document::CommandBatch::new(vec![sample_envelope("op-1", &db_artifact_id(STUDIO, "fresh")).await]).await.unwrap();
+        let scope = DocumentScope::new(STUDIO, "fresh");
+        let handle = state.ensure_document(&db_artifact_id(&scope)).await.expect("ensure");
+        let batch = db::document::CommandBatch::new(vec![sample_envelope("op-1", &db_artifact_id(&scope)).await]).await.unwrap();
         handle.submit(batch, db::document::SubmitOptions::default()).await.unwrap().unwrap();
 
-        let status = get_document_status(Path((STUDIO.to_string(), "fresh".to_string())), HeaderMap::new(), State(state)).await.expect("status after submit");
+        let status = get_document_status(Path((STUDIO.to_string(), "fresh".to_string())), headers, State(state)).await.expect("status after submit");
         assert_eq!(status.0.head_seq, 1);
     }
 
@@ -2169,12 +3158,22 @@ mod tests {
         let deadline = tokio::time::Instant::now() + std::time::Duration::from_secs(5);
         loop {
             match tokio::time::timeout_at(deadline, ws.next()).await {
-                Ok(Some(Ok(WsMessage::Text(text)))) => return serde_json::from_str(&text).expect("directory stream message decodes"),
+                Ok(Some(Ok(WsMessage::Text(text)))) => return directory::os_pack::json::from_json_str(&text).expect("directory stream message decodes"),
                 Ok(Some(Ok(_))) => continue,
                 Ok(Some(other)) => panic!("expected a text frame, got {other:?}"),
                 Ok(None) => panic!("stream ended before a directory message"),
                 Err(_) => panic!("no directory message before the 5s deadline"),
             }
+        }
+    }
+
+    async fn assert_no_directory_message<S>(ws: &mut S)
+    where
+        S: StreamExt<Item = Result<WsMessage, tokio_tungstenite::tungstenite::Error>> + Unpin,
+    {
+        match tokio::time::timeout(std::time::Duration::from_millis(250), ws.next()).await {
+            Err(_) => {}
+            Ok(other) => panic!("private directory frame leaked: {other:?}"),
         }
     }
 
@@ -2185,20 +3184,99 @@ mod tests {
         let state = test_state().await;
         let space_id = create_space_for_test(&state, "seed", "Atelier Alpha", os_directory::DirectorySpaceKind::Studio, DirectorySpaceVisibility::Private).await;
 
-        let events = state.directory.events_since(0, usize::MAX).await.expect("events");
+        let events = load_all_directory_events(state.directory.as_ref(), 0).await.expect("events");
         assert!(events.iter().any(|event| matches!(&event.body, os_directory::DirectoryEventBody::SpaceCreated { space_id: id, .. } if id == &space_id)));
         assert!(events.iter().any(|event| matches!(&event.body, os_directory::DirectoryEventBody::MemberUpserted { space_id: id, user_id, .. } if id == &space_id && user_id == "seed")));
 
-        let owner_session = create_auth_session(State(state.clone()), Json(CreateAuthSessionRequest { email: "owner-user@example.com".into() })).await.expect("mint owner session");
+        let owner_session = issue_test_session(&state, "owner-user@example.com").await;
         upsert_member_for_test(&state, &space_id, "owner-user@example.com", DirectorySpaceRole::Author).await;
 
         let mut headers = HeaderMap::new();
-        headers.insert(axum::http::header::AUTHORIZATION, format!("Bearer {}", owner_session.0.token).parse().unwrap());
+        headers.insert(axum::http::header::AUTHORIZATION, format!("Bearer {}", owner_session.token).parse().unwrap());
         let spaces = get_directory_spaces(headers, State(state)).await.expect("list spaces");
         let projected = spaces.0.iter().find(|space| space.id == space_id).expect("projected space");
         assert_eq!(projected.name, "Atelier Alpha");
         assert_eq!(projected.role, Some(DirectorySpaceRole::Author));
         assert_eq!(projected.member_count, 2, "the synthetic owner actor plus the newly granted author");
+    }
+
+    #[tokio::test]
+    async fn complete_directory_event_reads_cross_the_fixed_page_boundary_without_gaps() {
+        let count = DIRECTORY_EVENT_READ_MAX + 1;
+        let source = SyntheticDirectoryEventSource { head: u64::try_from(count).expect("bounded count"), requests: std::sync::Mutex::new(Vec::new()) };
+        let loaded = load_all_directory_events(&source, 0).await.expect("load all paged events");
+        assert_eq!(loaded.len(), count);
+        assert_eq!(loaded.first().map(|event| event.seq), Some(1));
+        assert_eq!(loaded.last().map(|event| event.seq), Some(u64::try_from(count).expect("bounded count")));
+        assert_eq!(source.requests.into_inner().expect("request lock"), vec![(0, DIRECTORY_EVENT_READ_MAX), (u64::try_from(DIRECTORY_EVENT_READ_MAX).expect("bounded page size"), DIRECTORY_EVENT_READ_MAX)]);
+    }
+
+    #[tokio::test]
+    async fn document_announcement_requires_author_and_descriptor_reads_revalidate_membership() {
+        let mut state = test_state().await;
+        let admin_headers = authorize_test_admin(&mut state, "descriptor-admin@example.com").await;
+        let author_token = seed_author_token(&state).await;
+        let spectator = issue_test_session(&state, "descriptor-reader@example.com").await;
+        upsert_member_for_test(&state, STUDIO, "descriptor-reader@example.com", DirectorySpaceRole::Spectator).await;
+        let descriptor = document_descriptor_for_test(STUDIO, "authorized-document");
+
+        let mut spectator_headers = HeaderMap::new();
+        spectator_headers.insert(axum::http::header::AUTHORIZATION, format!("Bearer {}", spectator.token).parse().unwrap());
+        let denied = post_directory_commands(spectator_headers.clone(), loopback_peer(), State(state.clone()), Json(DirectoryJson(DirectoryCommand::AnnounceDocument { descriptor: descriptor.clone() }))).await;
+        assert_eq!(denied.err(), Some(StatusCode::FORBIDDEN));
+
+        let mut author_headers = HeaderMap::new();
+        author_headers.insert(axum::http::header::AUTHORIZATION, format!("Bearer {author_token}").parse().unwrap());
+        assert_eq!(get_document_status(Path((STUDIO.into(), "unannounced".into())), author_headers.clone(), State(state.clone())).await.err(), Some(StatusCode::NOT_FOUND));
+        assert_eq!(create_share(Path((STUDIO.into(), "unannounced".into())), axum::extract::Query(CreateShareQuery::default()), admin_headers, loopback_peer(), State(state.clone())).await.err(), Some(StatusCode::NOT_FOUND));
+        let announced = post_directory_commands(author_headers.clone(), loopback_peer(), State(state.clone()), Json(DirectoryJson(DirectoryCommand::AnnounceDocument { descriptor: descriptor.clone() }))).await.expect("author announces document");
+        assert_eq!(announced.1 .0.events.len(), 1);
+        let replay =
+            post_directory_commands(author_headers.clone(), loopback_peer(), State(state.clone()), Json(DirectoryJson(DirectoryCommand::AnnounceDocument { descriptor: descriptor.clone() }))).await.expect("identical descriptor is idempotent");
+        assert!(replay.1 .0.events.is_empty());
+
+        let mut conflict = descriptor.clone();
+        conflict.pack_schema_hash = "44".repeat(32);
+        let rejected = post_directory_commands(author_headers.clone(), loopback_peer(), State(state.clone()), Json(DirectoryJson(DirectoryCommand::AnnounceDocument { descriptor: conflict }))).await;
+        assert_eq!(rejected.err(), Some(StatusCode::CONFLICT));
+
+        let detail = get_directory_space(Path(STUDIO.to_string()), spectator_headers.clone(), State(state.clone())).await.expect("member reads space detail");
+        assert_eq!(detail.0.documents.len(), 1);
+        assert_eq!(detail.0.documents[0].descriptor, descriptor);
+
+        let actor = DirectoryActor { kind: DirectoryActorKind::User, id: "user:seed#test".into() };
+        state.directory_service.execute(actor, DirectoryCommand::RemoveMember { space_id: STUDIO.into(), user_id: spectator.user_id }).await.expect("revoke membership");
+        assert_eq!(get_directory_space(Path(STUDIO.to_string()), spectator_headers, State(state)).await.err(), Some(StatusCode::NOT_FOUND));
+    }
+
+    #[tokio::test]
+    async fn document_open_rejects_missing_or_conflicting_descriptor_before_db_creation() {
+        let state = test_state().await;
+        let token = seed_author_token(&state).await;
+        announce_document_for_test(&state, STUDIO, "known-document").await;
+        let addr = spawn_server(state.clone()).await;
+
+        let missing_url = format!("ws://{addr}/spaces/{STUDIO}/documents/missing-document/ws");
+        let (mut missing, _) = connect_async(&missing_url).await.unwrap();
+        missing.send(client_binary(&hello("missing", Some(&token)), Lane::Command).await).await.unwrap();
+        assert!(matches!(next_server_frame(&mut missing).await, ServerFrame::Error { code, .. } if code == "document-not-announced"));
+        assert!(state.db.document(&db_artifact_id(&DocumentScope::new(STUDIO, "missing-document"))).await.is_err());
+
+        let known_url = format!("ws://{addr}/spaces/{STUDIO}/documents/known-document/ws");
+        let (mut conflict, _) = connect_async(&known_url).await.unwrap();
+        let mut conflicting_hello = hello("conflict", Some(&token));
+        if let ClientFrame::Hello { pack_schema_hash, .. } = &mut conflicting_hello {
+            *pack_schema_hash = [0x44; 32];
+        }
+        conflict.send(client_binary(&conflicting_hello, Lane::Command).await).await.unwrap();
+        assert!(matches!(next_server_frame(&mut conflict).await, ServerFrame::Error { code, .. } if code == "schema-hash-mismatch"));
+        assert!(state.db.document(&db_artifact_id(&DocumentScope::new(STUDIO, "known-document"))).await.is_err());
+
+        let (mut valid, _) = connect_async(&known_url).await.unwrap();
+        valid.send(client_binary(&hello("valid", Some(&token)), Lane::Command).await).await.unwrap();
+        let frame = next_server_frame(&mut valid).await;
+        assert!(matches!(frame, ServerFrame::Welcome { .. }), "expected valid descriptor welcome, got {frame:?}");
+        assert_eq!(state.directory.get_document_descriptor(&DocumentScope::new(STUDIO, "known-document")).await.unwrap(), Some(document_descriptor_for_test(STUDIO, "known-document")));
     }
 
     // 🔬️ `/directory/ws?since=0`: subscribe-then-replay is visibility-filtered exactly like `GET
@@ -2209,27 +3287,25 @@ mod tests {
         let state = test_state().await;
         let space_mine = create_space_for_test(&state, "seed", "B's Space", os_directory::DirectorySpaceKind::Studio, DirectorySpaceVisibility::Private).await;
         let space_other = create_space_for_test(&state, "seed", "Other Space", os_directory::DirectorySpaceKind::Studio, DirectorySpaceVisibility::Private).await;
-        let b_session = create_auth_session(State(state.clone()), Json(CreateAuthSessionRequest { email: "b@example.com".into() })).await.expect("mint B session");
+        let b_session = issue_test_session(&state, "b@example.com").await;
         upsert_member_for_test(&state, &space_other, "someone-else@example.com", DirectorySpaceRole::Spectator).await;
         upsert_member_for_test(&state, &space_mine, "b@example.com", DirectorySpaceRole::Author).await;
 
         let addr = spawn_server(state.clone()).await;
-        let url = format!("ws://{addr}/directory/ws?token={}&since=0", b_session.0.token);
+        let url = format!("ws://{addr}/directory/ws?token={}&since=0", b_session.token);
         let (mut ws, _) = connect_async(&url).await.unwrap();
 
-        // Replay: the seeded `default` studio's own `user.created` (space-less, always visible), the
-        // fresh `user.created` for "someone-else" (`upsert_member_for_test`'s unknown-email path,
-        // also space-less/always-visible), plus the 3 events of `space_mine` — `space_other`'s
-        // `space.created`/`member.upserted` never arrive. 5 visible events total.
+        // Replay contains only `space_mine`'s creation/owner membership and B's own membership.
+        // Global identity events and all `space_other` events are private.
         let mut seen_spaces = std::collections::HashSet::new();
         let mut saw_own_membership = false;
-        for _ in 0..5u32 {
+        for _ in 0..3u32 {
             match next_directory_message(&mut ws).await {
                 DirectoryStreamMessage::Event { event } => {
                     if let Some(space_id) = &event.space_id {
                         seen_spaces.insert(space_id.clone());
                     }
-                    if matches!(&event.body, os_directory::DirectoryEventBody::MemberUpserted { user_id, .. } if user_id == &b_session.0.user_id) {
+                    if matches!(&event.body, os_directory::DirectoryEventBody::MemberUpserted { user_id, .. } if user_id == &b_session.user_id) {
                         saw_own_membership = true;
                     }
                 }
@@ -2239,10 +3315,8 @@ mod tests {
         assert!(saw_own_membership, "B must see the replayed member.upserted naming them");
         assert_eq!(seen_spaces, std::collections::HashSet::from([space_mine.clone()]), "B must never see space_other's events");
 
-        // Live: the same filter holds for events committed AFTER B is already connected. Both
-        // `upsert_member_for_test` calls below mint a brand-new user first (space-less `user.created`,
-        // always visible) before their `member.upserted` — skip those and check the first
-        // space-scoped event is `space_mine`'s, never `space_other`'s.
+        // Live: the same filter holds after B connects. Other identities and `space_other` remain
+        // invisible; the next received event belongs to `space_mine`.
         upsert_member_for_test(&state, &space_other, "yet-another@example.com", DirectorySpaceRole::Spectator).await;
         upsert_member_for_test(&state, &space_mine, "second-member@example.com", DirectorySpaceRole::Spectator).await;
         loop {
@@ -2257,6 +3331,99 @@ mod tests {
         }
     }
 
+    #[test]
+    fn directory_socket_forced_lag_is_scope_authorized_and_closes_1013() {
+        run_socket_test(|| async {
+        let mut state = lag_test_state(1, 256).await;
+        let gate = Arc::new(TestLiveGate::default());
+        state.live_gate = Some(gate.clone());
+        let token = seed_author_token(&state).await;
+        announce_document_for_test(&state, STUDIO, "authorized-lag").await;
+        let authorized_checkpoint = publish_checkpoint_for_test(&state, STUDIO, "authorized-lag").await;
+        let unrelated = issue_test_session(&state, "unrelated-owner@example.com").await;
+        let denied_space = create_space_for_test(&state, &unrelated.user_id, "Denied Space", os_directory::DirectorySpaceKind::Studio, DirectorySpaceVisibility::Private).await;
+        announce_document_for_test(&state, &denied_space, "denied-lag").await;
+        publish_checkpoint_for_test(&state, &denied_space, "denied-lag").await;
+        let since = state.directory.head_seq().await.expect("directory head");
+        let addr = spawn_server(state.clone()).await;
+        let (mut authorized, _) = connect_async(format!("ws://{addr}/directory/ws?token={token}&since={since}&spaceId={STUDIO}&documentId=authorized-lag")).await.expect("authorized directory socket");
+        let (mut denied, _) = connect_async(format!("ws://{addr}/directory/ws?token={token}&since={since}&spaceId={denied_space}&documentId=denied-lag")).await.expect("denied directory socket");
+        tokio::time::timeout(std::time::Duration::from_secs(5), gate.directory_subscribed.acquire_many(2)).await.expect("directory subscription deadline").expect("directory subscriptions");
+        state.directory_service.publish(DirectoryStreamMessage::Heartbeat { head_seq: since });
+        state.directory_service.publish(DirectoryStreamMessage::Heartbeat { head_seq: since });
+        gate.directory_release.add_permits(2);
+
+        match next_directory_message(&mut authorized).await {
+            DirectoryStreamMessage::RebootstrapRequired { control } => {
+                assert_eq!(control.scope, DocumentScope::new(STUDIO, "authorized-lag"));
+                assert_eq!(control.checkpoint_id, authorized_checkpoint.checkpoint_id);
+                assert_eq!(control.descriptor_digest_v1, authorized_checkpoint.descriptor_digest_v1);
+                assert_eq!(control.baseline_frontier, authorized_checkpoint.baseline_frontier);
+                assert!(!directory::os_pack::json::to_json_string(&DirectoryStreamMessage::RebootstrapRequired { control }).contains("storageKey"));
+            }
+            other => panic!("expected authorized rebootstrap control, got {other:?}"),
+        }
+        assert_eq!(next_close_code(&mut authorized, false).await, 1013);
+        assert_eq!(next_close_code(&mut denied, false).await, 1013);
+        });
+    }
+
+    // 🔬️ The real directory socket never exposes another private space's connection,
+    // presence, membership, or account-creation frames. An unauthenticated socket receives no
+    // subscription at all, while an authorized member still receives their own space's activity.
+    #[tokio::test]
+    async fn directory_ws_isolates_private_realtime_activity_and_global_identity() {
+        let state = test_state().await;
+        let mine = create_space_for_test(&state, "seed", "Mine", os_directory::DirectorySpaceKind::Studio, DirectorySpaceVisibility::Private).await;
+        let private = create_space_for_test(&state, "seed", "Private", os_directory::DirectorySpaceKind::Studio, DirectorySpaceVisibility::Private).await;
+        let observer = issue_test_session(&state, "member-a@example.com").await;
+        upsert_member_for_test(&state, &mine, "member-a@example.com", DirectorySpaceRole::Spectator).await;
+        let other = issue_test_session(&state, "member-b@example.com").await;
+        upsert_member_for_test(&state, &private, "member-b@example.com", DirectorySpaceRole::Author).await;
+        announce_document_for_test(&state, &private, "shared").await;
+        announce_document_for_test(&state, &mine, "shared").await;
+        let since = state.directory.head_seq().await.unwrap();
+        let addr = spawn_server(state.clone()).await;
+
+        let (mut anonymous, _) = connect_async(format!("ws://{addr}/directory/ws?since={since}")).await.unwrap();
+        match tokio::time::timeout(std::time::Duration::from_secs(1), anonymous.next()).await {
+            Ok(Some(Ok(WsMessage::Text(text)))) => panic!("anonymous directory subscription leaked {text}"),
+            Ok(_) => {}
+            Err(_) => panic!("anonymous directory subscription was left open"),
+        }
+
+        let (mut stream, _) = connect_async(format!("ws://{addr}/directory/ws?token={}&since={since}", observer.token)).await.unwrap();
+        state.directory_service.publish(DirectoryStreamMessage::Heartbeat { head_seq: since });
+        assert!(matches!(next_directory_message(&mut stream).await, DirectoryStreamMessage::Heartbeat { head_seq } if head_seq == since));
+
+        let (mut private_doc, _) = connect_async(format!("ws://{addr}/spaces/{private}/documents/shared/ws")).await.unwrap();
+        private_doc.send(client_binary(&hello("private-actor", Some(&other.token)), Lane::Command).await).await.unwrap();
+        assert!(matches!(next_server_frame(&mut private_doc).await, ServerFrame::Welcome { .. }));
+        assert!(matches!(next_server_frame(&mut private_doc).await, ServerFrame::Session { .. }));
+        private_doc.send(client_binary(&ClientFrame::Presence { peer: b"private-presence".to_vec() }, Lane::Command).await).await.unwrap();
+        assert!(matches!(next_server_frame(&mut private_doc).await, ServerFrame::Presence { .. }));
+        upsert_member_for_test(&state, &private, "private-person@example.com", DirectorySpaceRole::Spectator).await;
+        assert_no_directory_message(&mut stream).await;
+
+        let (mut mine_doc, _) = connect_async(format!("ws://{addr}/spaces/{mine}/documents/shared/ws")).await.unwrap();
+        mine_doc.send(client_binary(&hello("mine-actor", Some(&observer.token)), Lane::Command).await).await.unwrap();
+        let mine_first = next_server_frame(&mut mine_doc).await;
+        if !matches!(mine_first, ServerFrame::Welcome { .. }) {
+            match &mine_first {
+                ServerFrame::Error { code, message } => panic!("expected mine document Welcome, got frame={mine_first:?}, code={code:?}, message={message:?}"),
+                _ => panic!("expected mine document Welcome, got frame={mine_first:?}"),
+            }
+        }
+        assert!(matches!(next_server_frame(&mut mine_doc).await, ServerFrame::Session { .. }));
+        match next_directory_message(&mut stream).await {
+            DirectoryStreamMessage::Connection { connection, .. } => {
+                assert_eq!(connection.space_id, mine);
+                assert_eq!(connection.email.as_deref(), Some("member-a@example.com"));
+            }
+            other => panic!("expected authorized connection frame, got {other:?}"),
+        }
+    }
+
     // 🔬️ Contract §C7.0/§C7.3: the roster is document-wide now — A (`surface=editor`) and C
     // (`surface=viewer`) on the SAME document see each other's presence bytes; `surface` no longer
     // scopes any broadcast channel (`surface_fanout` is deleted, `ServerFrame::Presence` fans out on
@@ -2264,17 +3431,20 @@ mod tests {
     // `PresencePeer` bytes, which this hub stores and forwards without ever decoding.
     #[tokio::test]
     async fn presence_roster_is_document_wide_and_frames_carry_surface_only_inside_peer() {
-        let addr = spawn_server(test_state().await).await;
+        let state = test_state().await;
+        let token = seed_author_token(&state).await;
+        announce_document_for_test(&state, STUDIO, "shared").await;
+        let addr = spawn_server(state).await;
         let url_editor = format!("ws://{addr}/spaces/{STUDIO}/documents/shared/ws?surface=editor");
         let url_viewer = format!("ws://{addr}/spaces/{STUDIO}/documents/shared/ws?surface=viewer");
 
         let (mut a, _) = connect_async(&url_editor).await.unwrap();
-        a.send(client_binary(&hello("A"), Lane::Command).await).await.unwrap();
+        a.send(client_binary(&hello("A", Some(&token)), Lane::Command).await).await.unwrap();
         assert!(matches!(next_server_frame(&mut a).await, ServerFrame::Welcome { .. }));
         assert!(matches!(next_server_frame(&mut a).await, ServerFrame::Session { .. }));
 
         let (mut c, _) = connect_async(&url_viewer).await.unwrap();
-        c.send(client_binary(&hello("C"), Lane::Command).await).await.unwrap();
+        c.send(client_binary(&hello("C", Some(&token)), Lane::Command).await).await.unwrap();
         assert!(matches!(next_server_frame(&mut c).await, ServerFrame::Welcome { .. }));
         assert!(matches!(next_server_frame(&mut c).await, ServerFrame::Session { .. }));
 
@@ -2304,7 +3474,11 @@ mod tests {
     // close, color 0 is freed and a brand-new actor C is assigned it (B, still connected, keeps 1).
     #[tokio::test]
     async fn session_frame_assigns_lowest_free_color_per_space_and_releases_on_last_disconnect() {
-        let addr = spawn_server(test_state().await).await;
+        let state = test_state().await;
+        let token = seed_author_token(&state).await;
+        announce_document_for_test(&state, STUDIO, "doc1").await;
+        announce_document_for_test(&state, STUDIO, "doc2").await;
+        let addr = spawn_server(state).await;
         let url = |document: &str| format!("ws://{addr}/spaces/{STUDIO}/documents/{document}/ws");
 
         async fn welcome_and_session<S>(ws: &mut S) -> (String, u8)
@@ -2319,17 +3493,17 @@ mod tests {
         }
 
         let (mut a1, _) = connect_async(&url("doc1")).await.unwrap();
-        a1.send(client_binary(&hello("A"), Lane::Command).await).await.unwrap();
+        a1.send(client_binary(&hello("A", Some(&token)), Lane::Command).await).await.unwrap();
         assert_eq!(welcome_and_session(&mut a1).await, ("A".to_string(), 0));
 
         let (mut b, _) = connect_async(&url("doc1")).await.unwrap();
-        b.send(client_binary(&hello("B"), Lane::Command).await).await.unwrap();
+        b.send(client_binary(&hello("B", Some(&token)), Lane::Command).await).await.unwrap();
         assert_eq!(welcome_and_session(&mut b).await, ("B".to_string(), 1));
 
         // A's second document socket, same space: the existing lease is reused (still 0), not a new
         // lowest-free index (which would otherwise be 2).
         let (mut a2, _) = connect_async(&url("doc2")).await.unwrap();
-        a2.send(client_binary(&hello("A"), Lane::Command).await).await.unwrap();
+        a2.send(client_binary(&hello("A", Some(&token)), Lane::Command).await).await.unwrap();
         assert_eq!(welcome_and_session(&mut a2).await, ("A".to_string(), 0));
 
         drop(a1);
@@ -2338,7 +3512,7 @@ mod tests {
         tokio::time::sleep(std::time::Duration::from_millis(200)).await;
 
         let (mut c, _) = connect_async(&url("doc1")).await.unwrap();
-        c.send(client_binary(&hello("C"), Lane::Command).await).await.unwrap();
+        c.send(client_binary(&hello("C", Some(&token)), Lane::Command).await).await.unwrap();
         assert_eq!(welcome_and_session(&mut c).await, ("C".to_string(), 0), "color 0 is freed once BOTH of A's document sockets disconnect, and is the lowest free index (B still holds 1)");
     }
 
@@ -2349,22 +3523,17 @@ mod tests {
     #[tokio::test]
     async fn directory_ws_publishes_presence_roster_with_surface_and_color() {
         let state = test_state().await;
+        let observer_session = issue_test_session(&state, "presence-observer@example.com").await;
+        upsert_member_for_test(&state, STUDIO, "presence-observer@example.com", DirectorySpaceRole::Spectator).await;
+        announce_document_for_test(&state, STUDIO, "watched-presence").await;
+        let since = state.directory.head_seq().await.unwrap();
         let addr = spawn_server(state.clone()).await;
-
-        let observer_session = create_auth_session(State(state.clone()), Json(CreateAuthSessionRequest { email: "presence-observer@example.com".into() })).await.expect("mint observer session");
-        let dir_url = format!("ws://{addr}/directory/ws?token={}&since=0", observer_session.0.token);
+        let dir_url = format!("ws://{addr}/directory/ws?token={}&since={since}", observer_session.token);
         let (mut observer, _) = connect_async(&dir_url).await.unwrap();
-        // `since=0` replays only the seeded `default` studio's own space-less `user.created` (see
-        // `connection_events_reach_admin_stream`'s doc) — draining it also proves the observer's live
-        // loop is already running before the document connection below publishes anything.
-        match next_directory_message(&mut observer).await {
-            DirectoryStreamMessage::Event { .. } => {}
-            other => panic!("expected the seeded replay, got {other:?}"),
-        }
 
         let doc_url = format!("ws://{addr}/spaces/{STUDIO}/documents/watched-presence/ws?surface=editor");
         let (mut doc, _) = connect_async(&doc_url).await.unwrap();
-        doc.send(client_binary(&hello("presence-actor"), Lane::Command).await).await.unwrap();
+        doc.send(client_binary(&hello("presence-actor", Some(&observer_session.token)), Lane::Command).await).await.unwrap();
         assert!(matches!(next_server_frame(&mut doc).await, ServerFrame::Welcome { .. }));
         let color = match next_server_frame(&mut doc).await {
             ServerFrame::Session { color, .. } => color,
@@ -2394,23 +3563,17 @@ mod tests {
     #[tokio::test]
     async fn connection_events_reach_admin_stream() {
         let state = test_state().await;
-        let observer_session = create_auth_session(State(state.clone()), Json(CreateAuthSessionRequest { email: "observer@example.com".into() })).await.expect("mint observer session");
-
+        let observer_session = issue_test_session(&state, "observer@example.com").await;
+        upsert_member_for_test(&state, STUDIO, "observer@example.com", DirectorySpaceRole::Spectator).await;
+        announce_document_for_test(&state, STUDIO, "watched").await;
+        let since = state.directory.head_seq().await.unwrap();
         let addr = spawn_server(state).await;
-        let dir_url = format!("ws://{addr}/directory/ws?token={}&since=0", observer_session.0.token);
+        let dir_url = format!("ws://{addr}/directory/ws?token={}&since={since}", observer_session.token);
         let (mut observer, _) = connect_async(&dir_url).await.unwrap();
-        // `since=0` also replays the seeded `default` studio's own `user.created` (visible to
-        // everyone, per `event_visible`'s doc) — draining it also proves the observer's live loop is
-        // already running by the time the document connection below publishes, with no other
-        // synchronization point needed.
-        match next_directory_message(&mut observer).await {
-            DirectoryStreamMessage::Event { .. } => {}
-            other => panic!("expected the seeded user.created replay, got {other:?}"),
-        }
 
         let doc_url = format!("ws://{addr}/spaces/{STUDIO}/documents/watched/ws");
         let (mut doc, _) = connect_async(&doc_url).await.unwrap();
-        doc.send(client_binary(&hello("watched-actor"), Lane::Command).await).await.unwrap();
+        doc.send(client_binary(&hello("watched-actor", Some(&observer_session.token)), Lane::Command).await).await.unwrap();
         assert!(matches!(next_server_frame(&mut doc).await, ServerFrame::Welcome { .. }));
 
         match next_directory_message(&mut observer).await {
@@ -2434,36 +3597,39 @@ mod tests {
     // listed connection's `syncSessionId` actually kicks the live document WS session.
     #[tokio::test]
     async fn admin_api_lists_spaces_users_connections_and_kicks() {
-        let state = test_state().await;
+        let mut state = test_state().await;
+        let admin_headers = authorize_test_admin(&mut state, "hub-admin@example.com").await;
         let space_id = create_space_for_test(&state, "seed", "Admin Visible Space", os_directory::DirectorySpaceKind::Studio, DirectorySpaceVisibility::Private).await;
-        let _ = create_auth_session(State(state.clone()), Json(CreateAuthSessionRequest { email: "someone@example.com".into() })).await.expect("mint session");
+        let _ = issue_test_session(&state, "someone@example.com").await;
+        let token = seed_author_token(&state).await;
+        announce_document_for_test(&state, STUDIO, "kickable").await;
 
         let addr = spawn_server(state.clone()).await;
         let doc_url = format!("ws://{addr}/spaces/{STUDIO}/documents/kickable/ws");
         let (mut doc, _) = connect_async(&doc_url).await.unwrap();
-        doc.send(client_binary(&hello("kick-me"), Lane::Command).await).await.unwrap();
+        doc.send(client_binary(&hello("kick-me", Some(&token)), Lane::Command).await).await.unwrap();
         assert!(matches!(next_server_frame(&mut doc).await, ServerFrame::Welcome { .. }));
         assert!(matches!(next_server_frame(&mut doc).await, ServerFrame::Session { .. }));
         // Let the server side finish recording the sync session before the admin reads it back.
         tokio::time::sleep(std::time::Duration::from_millis(100)).await;
 
-        let spaces = admin_spaces(HeaderMap::new(), loopback_peer(), State(state.clone())).await.expect("admin spaces");
+        let spaces = admin_spaces(admin_headers.clone(), loopback_peer(), State(state.clone())).await.expect("admin spaces");
         assert!(spaces.0.iter().any(|space| space.id == space_id));
 
-        let users = admin_users(HeaderMap::new(), loopback_peer(), State(state.clone())).await.expect("admin users");
+        let users = admin_users(admin_headers.clone(), loopback_peer(), State(state.clone())).await.expect("admin users");
         assert!(users.0.iter().any(|user| user.email == "someone@example.com"));
 
-        let connections = admin_connections(HeaderMap::new(), loopback_peer(), State(state.clone())).await.expect("admin connections");
+        let connections = admin_connections(admin_headers.clone(), loopback_peer(), State(state.clone())).await.expect("admin connections");
         let connection = connections.0.iter().find(|connection| connection.actor == "kick-me").expect("kickable connection listed");
         assert!(!connection.presence_known, "no ClientFrame::Presence published yet");
 
         doc.send(client_binary(&ClientFrame::Presence { peer: b"kick-me-presence".to_vec() }, Lane::Command).await).await.unwrap();
         assert!(matches!(next_server_frame(&mut doc).await, ServerFrame::Presence { .. }));
-        let connections = admin_connections(HeaderMap::new(), loopback_peer(), State(state.clone())).await.expect("admin connections after presence");
+        let connections = admin_connections(admin_headers.clone(), loopback_peer(), State(state.clone())).await.expect("admin connections after presence");
         let connection = connections.0.iter().find(|connection| connection.actor == "kick-me").expect("kickable connection still listed");
         assert!(connection.presence_known, "presenceKnown flips true once the actor's PresenceSession carries a peer");
 
-        assert_eq!(admin_close_connection(Path(connection.sync_session_id.clone()), HeaderMap::new(), loopback_peer(), State(state.clone())).await, StatusCode::NO_CONTENT);
+        assert_eq!(admin_close_connection(Path(connection.sync_session_id.clone()), admin_headers, loopback_peer(), State(state.clone())).await, StatusCode::NO_CONTENT);
         let closed = tokio::time::timeout(std::time::Duration::from_secs(5), doc.next()).await.expect("connection closes before the 5s deadline");
         // The kicked session's task just `break`s its select loop and drops the socket — no clean WS
         // close handshake is sent, so the client observes either a `Close` frame, a stream end, or
@@ -2472,20 +3638,16 @@ mod tests {
         assert!(matches!(closed, Some(Ok(WsMessage::Close(_))) | None | Some(Err(_))), "the kicked connection must close, got {closed:?}");
     }
 
-    // 🔬️ `is_admin`: loopback is the dev-default admin when `OS_HUB_ADMIN_TOKEN` is unset (and a
-    // non-loopback peer never is); once a token IS configured, loopback alone no longer suffices —
-    // only the matching bearer token does, from any peer address.
+    // 🔬️ Administrator authority is attached only to a verified subject. Loopback proximity
+    // and arbitrary bearer strings never confer it.
     #[tokio::test]
-    async fn admin_loopback_default_and_bearer_when_configured() {
-        let state = test_state().await;
-        assert!(is_admin(&state, &HeaderMap::new(), Some(SocketAddr::from(([127, 0, 0, 1], 0)))), "loopback is admin when no token is configured");
-        assert!(!is_admin(&state, &HeaderMap::new(), Some(SocketAddr::from(([10, 0, 0, 5], 0)))), "a non-loopback peer is never admin when no token is configured");
-
-        let configured = HubState { admin_token: Some("s3cret".to_string()), ..state };
-        assert!(!is_admin(&configured, &HeaderMap::new(), Some(SocketAddr::from(([127, 0, 0, 1], 0)))), "loopback no longer suffices once a token is configured");
-        let mut headers = HeaderMap::new();
-        headers.insert(axum::http::header::AUTHORIZATION, "Bearer s3cret".parse().unwrap());
-        assert!(is_admin(&configured, &headers, Some(SocketAddr::from(([10, 0, 0, 5], 0)))), "the correct bearer token is admin regardless of peer address");
+    async fn admin_requires_verified_subject_policy() {
+        let mut state = test_state().await;
+        assert!(!is_admin(&state, &HeaderMap::new(), Some(SocketAddr::from(([127, 0, 0, 1], 0)))).await);
+        let headers = authorize_test_admin(&mut state, "admin-policy@example.com").await;
+        assert!(is_admin(&state, &headers, Some(SocketAddr::from(([10, 0, 0, 5], 0)))).await);
+        state.admin_subjects = Arc::from([]);
+        assert!(!is_admin(&state, &headers, Some(SocketAddr::from(([127, 0, 0, 1], 0)))).await);
     }
 
     // 🔬️ `space.deleted` closes the space's document WS to a later Hello — `get_space` returns
@@ -2498,15 +3660,10 @@ mod tests {
         let space_id = create_space_for_test(&state, "seed", "Doomed Space", os_directory::DirectorySpaceKind::Studio, DirectorySpaceVisibility::Public).await;
         let actor = DirectoryActor { kind: DirectoryActorKind::User, id: "user:seed#test".to_string() };
         state.directory_service.execute(actor, DirectoryCommand::DeleteSpace { space_id: space_id.clone() }).await.expect("delete space");
-        // Close the pre-existing tokenless-open-by-default fallback (see `share_token_gates_ws_access`)
-        // so the Hello below is forced through the space-visibility path this test targets, rather
-        // than being trivially admitted before that path is ever consulted.
-        state.directory.create_share_token("gone").await.expect("close document with a share token");
-
         let addr = spawn_server(state).await;
         let url = format!("ws://{addr}/spaces/{space_id}/documents/gone/ws");
         let (mut ws, _) = connect_async(&url).await.unwrap();
-        ws.send(client_binary(&hello("late-comer"), Lane::Command).await).await.unwrap();
+        ws.send(client_binary(&hello("late-comer", None), Lane::Command).await).await.unwrap();
         assert!(matches!(next_server_frame(&mut ws).await, ServerFrame::Error { code, .. } if code == "unauthorized"));
     }
 
@@ -2515,12 +3672,12 @@ mod tests {
     #[tokio::test]
     async fn auth_sessions_me_roundtrip() {
         let state = test_state().await;
-        let session = create_auth_session(State(state.clone()), Json(CreateAuthSessionRequest { email: "me@example.com".into() })).await.expect("mint session");
+        let session = issue_test_session(&state, "me@example.com").await;
         let mut headers = HeaderMap::new();
-        headers.insert(axum::http::header::AUTHORIZATION, format!("Bearer {}", session.0.token).parse().unwrap());
+        headers.insert(axum::http::header::AUTHORIZATION, format!("Bearer {}", session.token).parse().unwrap());
 
         let me = get_session_me(headers.clone(), State(state.clone())).await.expect("session me");
-        assert_eq!(me.0.user_id, session.0.user_id);
+        assert_eq!(me.0.user_id, session.user_id);
         assert_eq!(me.0.email, "me@example.com");
 
         assert_eq!(delete_session_me(headers.clone(), State(state.clone())).await, StatusCode::NO_CONTENT);
@@ -2528,3 +3685,16 @@ mod tests {
     }
 }
 //#endregion 🔖️Tests
+#[test]
+fn document_scope_key_v1_is_length_prefixed_and_never_colon_ambiguous() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("🧪️fixtures/🧬️hub-boundaries/🔣️.json")).expect("valid hub boundary fixture");
+    let vectors = fixture["documentScopeKeyV1"].as_array().expect("scope key vectors");
+    let mut encoded = std::collections::HashSet::new();
+    for vector in vectors {
+        let scope = DocumentScope::new(vector["scope"]["spaceId"].as_str().unwrap(), vector["scope"]["documentId"].as_str().unwrap());
+        let actual = document_scope_key_v1(&scope);
+        assert_eq!(actual, vector["encoded"].as_str().unwrap());
+        assert!(encoded.insert(actual), "scope vector aliased");
+    }
+    assert_ne!(db_artifact_id(&DocumentScope::new("space-a", "shared")), db_artifact_id(&DocumentScope::new("space-b", "shared")));
+}

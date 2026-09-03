@@ -107,7 +107,7 @@ mod tests {
     async fn render_produces_a_node_for_the_default_document() {
         let document = crate::artifacts::forms::schema::building_component_spec();
         let node = render(&document);
-        let json = serde_json::to_string(&node).unwrap();
+        let json = dsl::os_pack::json::to_json_string(&node);
         assert!(json.contains("\"stack\""));
     }
 
@@ -115,7 +115,7 @@ mod tests {
     async fn render_falls_back_to_a_placeholder_for_an_empty_document() {
         let document = crate::artifacts::forms::schema::empty_forms_snapshot();
         let node = render(&document);
-        let json = serde_json::to_string(&node).unwrap();
+        let json = dsl::os_pack::json::to_json_string(&node);
         assert!(json.contains("No steps"));
     }
 }

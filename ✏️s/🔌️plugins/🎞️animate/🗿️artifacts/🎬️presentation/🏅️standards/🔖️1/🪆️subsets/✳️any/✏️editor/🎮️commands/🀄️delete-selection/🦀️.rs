@@ -36,8 +36,7 @@ mod tests {
     use crate::editor::animate::testkit::{dispatch, presentation_app_with_registry};
     use crate::editor::animate::{commands::add_tile, PresentationCommand, PRESENTATION_INTERACTION_DOMAIN, PRESENTATION_INTERACTION_GRANULARITY};
     use semio_framework_plugin::testkit::meta;
-    use semio_framework_plugin::{InteractionTarget, PluginApp, INTERACTION_SELECT_ACTION_ID};
-    use serde_json::json;
+    use semio_framework_plugin::{PluginApp, INTERACTION_SELECT_ACTION_ID};
 
     /// 🕹️ End-to-end proof the `tiles` domain's live selection actually drives `deleteSelection` —
     /// adds a tile, selects it via the framework's real `interactionSelect` action (the only way a
@@ -48,8 +47,17 @@ mod tests {
         let mut app = presentation_app_with_registry().await;
         dispatch(&mut app, PresentationCommand::AddTile(add_tile::AddTile { crop: None })).await;
         let tile_id = crate::artifacts::presentation::presentation_working_scene(&app.snapshot().await.expect("projection")).1[0].id.clone();
-        let targets = serde_json::to_string(&vec![InteractionTarget { granularity: PRESENTATION_INTERACTION_GRANULARITY.into(), id: tile_id.clone() }]).expect("targets");
-        app.handle_action(INTERACTION_SELECT_ACTION_ID, Some(&json!({ "domainId": PRESENTATION_INTERACTION_DOMAIN, "targets": targets, "merge": "replace", "method": "pick" })), &meta("local")).await.expect("interactionSelect");
+        let targets = dsl::os_pack::json::to_string(&dsl::os_pack::json::Value::Array(vec![dsl::os_pack::json::object([
+            ("granularity".to_string(), dsl::os_pack::json::Value::from(PRESENTATION_INTERACTION_GRANULARITY)),
+            ("id".to_string(), dsl::os_pack::json::Value::from(tile_id.clone())),
+        ])]));
+        let args = dsl::DslValue::object([
+            ("domainId".to_string(), dsl::DslValue::String(PRESENTATION_INTERACTION_DOMAIN.into())),
+            ("targets".to_string(), dsl::DslValue::String(targets)),
+            ("merge".to_string(), dsl::DslValue::String("replace".into())),
+            ("method".to_string(), dsl::DslValue::String("pick".into())),
+        ]);
+        app.handle_action(INTERACTION_SELECT_ACTION_ID, Some(&args), &meta("local")).await.expect("interactionSelect");
         dispatch(&mut app, PresentationCommand::DeleteSelection(DeleteSelection {})).await;
         assert!(crate::artifacts::presentation::presentation_working_scene(&app.snapshot().await.expect("projection")).1.is_empty(), "selected tile must be deleted");
     }

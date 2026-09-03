@@ -21,7 +21,7 @@
 //! fails with `Option<T>: DslField` is not satisfied. `DiffCodec` is hand-rolled below, following
 //! the svg/gif/docx template exactly.
 
-use crate::artifacts::semio::standards::v1::subsets::any::schema::triples::{
+use crate::artifacts::semio::standards::v1::subsets::base::schema::triples::{
     dec_indexed_triple, dec_named_triple, enc_indexed_triple, enc_named_triple, split_top_level, strip_brackets, IndexAdded, IndexModified, IndexedTripleDiff, NamedModified, NamedTripleDiff,
 };
 use crate::artifacts::semio::standards::v1::subsets::document::schema::snapshot::{DocBlock, DocImage, DocListItem, DocRun, DocStyle, DocTableCell, DocTableRow, RunStyle, SemioDocumentSnapshot};
@@ -1077,15 +1077,15 @@ impl MutationDiff<SemioDocumentSnapshot> for SemioDocumentDiff {
     fn apply(&self, base: &SemioDocumentSnapshot) -> protocol::MutationApplyResult<SemioDocumentSnapshot> {
         let mut out = base.clone();
         if let Some(sd) = &self.styles {
-            crate::artifacts::semio::standards::v1::subsets::any::schema::triples::validate_named_triple(&out.styles, sd, |item| item.id.clone(), |item| item.id.clone(), ["styles"])?;
+            crate::artifacts::semio::standards::v1::subsets::base::schema::triples::validate_named_triple(&out.styles, sd, |item| item.id.clone(), |item| item.id.clone(), ["styles"])?;
             apply_named(&mut out.styles, sd, |s| s.id.clone(), apply_style);
         }
         if let Some(id) = &self.images {
-            crate::artifacts::semio::standards::v1::subsets::any::schema::triples::validate_named_triple(&out.images, id, |item| item.id.clone(), |item| item.id.clone(), ["images"])?;
+            crate::artifacts::semio::standards::v1::subsets::base::schema::triples::validate_named_triple(&out.images, id, |item| item.id.clone(), |item| item.id.clone(), ["images"])?;
             apply_named(&mut out.images, id, |i| i.id.clone(), apply_image);
         }
         if let Some(bd) = &self.blocks {
-            crate::artifacts::semio::standards::v1::subsets::any::schema::triples::validate_indexed_triple(bd, out.blocks.len(), ["blocks"])?;
+            crate::artifacts::semio::standards::v1::subsets::base::schema::triples::validate_indexed_triple(bd, out.blocks.len(), ["blocks"])?;
             apply_indexed(&mut out.blocks, bd, apply_block);
         }
         Ok(out)

@@ -1,0 +1,222 @@
+{
+  "contractVersion": 1,
+  "limits": {
+    "maxDocuments": 4096,
+    "maxTokenBytes": 4096,
+    "maxDiagnosticBytes": 4096,
+    "operationTimeoutMs": 10000
+  },
+  "cases": {
+    "noToken": {
+      "tokenPresent": false,
+      "responses": [],
+      "expected": {
+        "state": "unbound",
+        "errorCode": "INPUT_INVALID",
+        "cacheAction": "none",
+        "resourceUris": [],
+        "noTokenLeak": true
+      }
+    },
+    "expiredToken": {
+      "tokenPresent": true,
+      "responses": [
+        { "status": 401, "body": { "error": "expired" } }
+      ],
+      "expected": {
+        "state": "revoked",
+        "errorCode": "PERMISSION_DENIED",
+        "cacheAction": "invalidate",
+        "resourceUris": [],
+        "noTokenLeak": true
+      }
+    },
+    "publicWithoutMembership": {
+      "tokenPresent": true,
+      "responses": [
+        {
+          "status": 200,
+          "body": { "userId": "user-a", "email": "a@example.invalid", "displayName": "A", "expiresAt": 900000 }
+        },
+        {
+          "status": 200,
+          "body": {
+            "id": "space-a",
+            "name": "Public but not authorized",
+            "kind": "studio",
+            "visibility": "public",
+            "ownerUserId": "user-owner",
+            "role": null,
+            "memberCount": 1,
+            "documentCount": 0,
+            "activeConnections": 0,
+            "createdAtMs": 1,
+            "updatedAtMs": 2,
+            "members": [{ "userId": "user-owner", "email": "owner@example.invalid", "displayName": "Owner", "role": "author" }],
+            "documents": [],
+            "invites": []
+          }
+        }
+      ],
+      "expected": {
+        "state": "revoked",
+        "errorCode": "PERMISSION_DENIED",
+        "cacheAction": "invalidate",
+        "resourceUris": [],
+        "noTokenLeak": true
+      }
+    },
+    "memberReady": {
+      "tokenPresent": true,
+      "responses": [
+        {
+          "status": 200,
+          "body": { "userId": "user-a", "email": "a@example.invalid", "displayName": "A", "expiresAt": 900000 }
+        },
+        {
+          "status": 200,
+          "body": {
+            "id": "space-a",
+            "name": "Authorized",
+            "kind": "studio",
+            "visibility": "private",
+            "ownerUserId": "user-a",
+            "role": "author",
+            "memberCount": 1,
+            "documentCount": 1,
+            "activeConnections": 0,
+            "createdAtMs": 1,
+            "updatedAtMs": 2,
+            "members": [{ "userId": "user-a", "email": "a@example.invalid", "displayName": "A", "role": "author" }],
+            "documents": [
+              {
+                "descriptor": {
+                  "spaceId": "space-a",
+                  "documentId": "shared-doc",
+                  "artifactKind": "note.document",
+                  "artifactSchema": "note.document@1",
+                  "owner": {
+                    "pluginId": "note-plugin",
+                    "packageId": "note-package",
+                    "version": "1.0.0",
+                    "packageHash": "1111111111111111111111111111111111111111111111111111111111111111"
+                  },
+                  "packSchemaHash": "2222222222222222222222222222222222222222222222222222222222222222",
+                  "bootstrapVersion": 1,
+                  "bootstrapFrontier": { "headSeq": 3, "commitSeq": 2, "epoch": 1 },
+                  "bootstrapSnapshotHash": "3333333333333333333333333333333333333333333333333333333333333333"
+                },
+                "headSeq": 8,
+                "commitSeq": 7,
+                "epoch": 1
+              }
+            ],
+            "invites": []
+          }
+        }
+      ],
+      "expected": {
+        "state": "ready",
+        "errorCode": null,
+        "cacheAction": "publish",
+        "resourceUris": [
+          "semio://workspace",
+          "semio://workspace/artifacts",
+          "semio://workspace/scopes/space-a/shared-doc/descriptor"
+        ],
+        "noTokenLeak": true
+      }
+    },
+    "sameDocumentOtherSpace": {
+      "tokenPresent": true,
+      "responses": [
+        {
+          "status": 200,
+          "body": { "userId": "user-a", "email": "a@example.invalid", "displayName": "A", "expiresAt": 900000 }
+        },
+        {
+          "status": 200,
+          "body": {
+            "id": "space-a",
+            "name": "Wrong row mixed in",
+            "kind": "studio",
+            "visibility": "private",
+            "ownerUserId": "user-a",
+            "role": "author",
+            "memberCount": 1,
+            "documentCount": 1,
+            "activeConnections": 0,
+            "createdAtMs": 1,
+            "updatedAtMs": 2,
+            "members": [{ "userId": "user-a", "email": "a@example.invalid", "displayName": "A", "role": "author" }],
+            "documents": [
+              {
+                "descriptor": {
+                  "spaceId": "space-b",
+                  "documentId": "shared-doc",
+                  "artifactKind": "note.document",
+                  "artifactSchema": "note.document@1",
+                  "owner": {
+                    "pluginId": "note-plugin",
+                    "packageId": "note-package",
+                    "version": "1.0.0",
+                    "packageHash": "1111111111111111111111111111111111111111111111111111111111111111"
+                  },
+                  "packSchemaHash": "2222222222222222222222222222222222222222222222222222222222222222",
+                  "bootstrapVersion": 1,
+                  "bootstrapFrontier": { "headSeq": 3, "commitSeq": 2, "epoch": 1 },
+                  "bootstrapSnapshotHash": "3333333333333333333333333333333333333333333333333333333333333333"
+                },
+                "headSeq": 8,
+                "commitSeq": 7,
+                "epoch": 1
+              }
+            ],
+            "invites": []
+          }
+        }
+      ],
+      "expected": {
+        "state": "refreshing",
+        "errorCode": "PRECONDITION_FAILED",
+        "cacheAction": "invalidate",
+        "resourceUris": [],
+        "noTokenLeak": true
+      }
+    },
+    "memberRevoked": {
+      "tokenPresent": true,
+      "responses": [],
+      "streamMessage": {
+        "kind": "event",
+        "event": {
+          "seq": 9,
+          "id": "event-9",
+          "hlc": { "physicalMs": 9, "logical": 0 },
+          "actor": { "kind": "admin", "id": "admin-a" },
+          "spaceId": "space-a",
+          "body": { "kind": "member.removed", "spaceId": "space-a", "userId": "user-a" },
+          "recordedAtMs": 9
+        }
+      },
+      "expected": {
+        "state": "revoked",
+        "errorCode": "PLUGIN_UNAVAILABLE",
+        "cacheAction": "invalidate",
+        "resourceUris": [],
+        "noTokenLeak": true
+      }
+    },
+    "streamReconnect": {
+      "tokenPresent": true,
+      "responses": [],
+      "expected": {
+        "state": "refreshing",
+        "errorCode": "PLUGIN_UNAVAILABLE",
+        "cacheAction": "invalidate",
+        "resourceUris": [],
+        "noTokenLeak": true
+      }
+    }
+  }
+}

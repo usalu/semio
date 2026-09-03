@@ -9,8 +9,8 @@ use semio_framework_plugin::{ExecutionMode, Plugin, PluginApp};
 /// 🗃️ Closed runtime app fleet for the imperative plugin's editor and viewer.
 semio_framework_dispatch_macros::dyn_enum_close! {
     pub enum ImperativeApps: PluginApp {
-        Editor(semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::EditorApp<crate::editor::imperative::ImperativePlayApp>>),
-        Viewer(semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::ViewerApp<crate::viewer::imperative::ImperativeViewer>>),
+        Editor(semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::EditorApp<crate::editor::procedure::ImperativePlayApp>>),
+        Viewer(semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::ViewerApp<crate::viewer::procedure::ImperativeViewer>>),
     }
 }
 //#endregion 🗃️Apps
@@ -21,10 +21,10 @@ semio_framework_dispatch_macros::dyn_enum_close! {
 /// one thing it used to survive for, registered automatically by `.editor(…)` below.
 /// `.editor(…)`/`.viewer(…)` (ticket 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET) replace the
 /// old single `.document_app(…)` call — one surface per role, both bound to the same
-/// `crate::artifacts::imperative::IMPERATIVE_DIALECT`. `.activation(…)`/`.execution(…)`/
+/// `crate::artifacts::procedure::PROCEDURE_DIALECT`. `.activation(…)`/`.execution(…)`/
 /// `.requests(…)` (ticket 26/08/17/MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME M4, `📓️design-abi.md`
 /// §5/§6) are this crate's proof-of-migration: the host activates one instance whenever a
-/// `"computation.imperative"` artifact (`crate::artifacts::imperative::artifact_kind().id`) is
+/// `"computation.procedure"` artifact (`crate::artifacts::procedure::artifact_kind().id`) is
 /// opened, this plugin's own actor runs `Isolated` (its 5 `🧩️extensions/` run `Linked` instead —
 /// see each extension's own `bundle()`), and it asks the broker for document write access to
 /// persist edits.
@@ -32,12 +32,12 @@ pub fn plugin() -> Result<Plugin<ImperativeApps>, semio_framework_plugin::Plugin
     Plugin::<ImperativeApps>::builder("imperative")
         .label("Imperative")
         .version("0.1.0")
-        .artifact(crate::artifacts::imperative::declaration().map_err(semio_framework_plugin::PluginAssemblyError::definition)?)
-        .editor::<crate::editor::imperative::ImperativePlayApp>(crate::editor::imperative::create_imperative_app())
-        .editor_mutation_roster::<crate::editor::imperative::ImperativePlayApp>()
-        .viewer::<crate::viewer::imperative::ImperativeViewer>(crate::viewer::imperative::create_imperative_viewer())
-        .viewer_mutation_roster::<crate::viewer::imperative::ImperativeViewer>()
-        .activation(ActivationEvent::OnArtifactKind { kind: crate::artifacts::imperative::artifact_kind().id })
+        .artifact(crate::artifacts::procedure::declaration().map_err(semio_framework_plugin::PluginAssemblyError::definition)?)
+        .editor::<crate::editor::procedure::ImperativePlayApp>(crate::editor::procedure::create_imperative_app())
+        .editor_mutation_roster::<crate::editor::procedure::ImperativePlayApp>()
+        .viewer::<crate::viewer::procedure::ImperativeViewer>(crate::viewer::procedure::create_imperative_viewer())
+        .viewer_mutation_roster::<crate::viewer::procedure::ImperativeViewer>()
+        .activation(ActivationEvent::OnArtifactKind { kind: crate::artifacts::procedure::artifact_kind().id })
         .execution(ExecutionMode::Isolated)
         .requests(CapabilityRequest { id: CapabilityId("documents.write".into()), scope: "plugin".into(), reason: "persist imperative graph edits to the open document".into(), optional: false })
         .try_build()
@@ -52,12 +52,12 @@ mod surface_tests {
 
     #[semio_framework_async_macros::async_test]
     async fn imperative_viewer_never_mutates() {
-        assert_viewer_never_mutates::<crate::viewer::imperative::ImperativeViewer>();
+        assert_viewer_never_mutates::<crate::viewer::procedure::ImperativeViewer>();
     }
 
     #[semio_framework_async_macros::async_test]
     async fn imperative_editor_and_viewer_share_dialect() {
-        assert_editor_and_viewer_share_dialect::<crate::editor::imperative::ImperativePlayApp, crate::viewer::imperative::ImperativeViewer>();
+        assert_editor_and_viewer_share_dialect::<crate::editor::procedure::ImperativePlayApp, crate::viewer::procedure::ImperativeViewer>();
     }
 }
 //#endregion 🧪️Tests

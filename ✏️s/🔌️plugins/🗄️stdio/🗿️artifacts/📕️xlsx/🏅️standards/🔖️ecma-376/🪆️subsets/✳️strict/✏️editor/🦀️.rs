@@ -9,8 +9,8 @@
 //! `XlsxStrictEditorCommand::SetCell`, into `XlsxMutation::SetCell` — the cleanest possible fit
 //! `TableWindowKit`'s `set-cell` action has in this artifact's whole mutation surface.
 
-use crate::artifacts::xlsx::standards::v_ecma_376::subsets::any::schema::mutations::set_cell;
-use crate::artifacts::xlsx::standards::v_ecma_376::subsets::any::schema::snapshot::XlsxCellValue;
+use crate::artifacts::xlsx::standards::v_ecma_376::subsets::base::schema::mutations::set_cell;
+use crate::artifacts::xlsx::standards::v_ecma_376::subsets::base::schema::snapshot::XlsxCellValue;
 use crate::artifacts::xlsx::{XlsxMutation, XlsxSnapshot, STDIO_XLSX_DOCUMENT_SCHEMA};
 use crate::editor::xlsx::standards::v_ecma_376::subsets::strict::modes::edit;
 use crate::editor::xlsx::standards::v_ecma_376::subsets::strict::modes::edit::windows::main;
@@ -210,7 +210,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn flat_cells_orders_by_sheet_then_cell_storage_order() {
-        use crate::artifacts::xlsx::standards::v_ecma_376::subsets::any::schema::snapshot::{XlsxCell, XlsxSheet, XlsxWorkbook};
+        use crate::artifacts::xlsx::standards::v_ecma_376::subsets::base::schema::snapshot::{XlsxCell, XlsxSheet, XlsxWorkbook};
         let document = XlsxSnapshot {
             workbook: XlsxWorkbook {
                 sheets: vec![

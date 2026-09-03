@@ -4815,8 +4815,8 @@ mod tests {
         drop(rejected_retirement);
 
         let layer = RasterLayerNode::Adjustment { id: "serde-output".into(), name: "Serde Output".into(), visible: true, opacity: 1.0, blend_mode: "normal".into(), transform: RasterTransform::default(), adjustment_kind: "nested".into(), params };
-        let output = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| serde_json::to_vec(&layer)));
-        assert!(matches!(output, Ok(Err(_))), "public populated serde output faults before any whole-map result and contains panic");
+        let output = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| dsl::ToValue::to_value(&layer)));
+        assert!(output.is_err(), "public populated dsl output faults before any whole-map result and contains panic");
         let params = match &layer {
             RasterLayerNode::Adjustment { params, .. } => params,
             _ => unreachable!("serde fixture remains an adjustment"),

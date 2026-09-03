@@ -195,7 +195,7 @@ pub mod derived_composition {
             /// ✅️ `fixture_honesty_law`: the shipped `.dsl.semio`/`.pack.semio` fixtures are
             /// GENUINE `print_dsl`/`encode_pack` output of `snapshot::demo_table_snapshot()`.
             /// ⚠️ Fixture path deviation from `✳️text`'s own precedent: `text` reads its fixtures
-            /// from `✳️any/📚️examples/📃️note/…` (owned by the parent orchestrator, off-limits to
+            /// from `✳️base/📚️examples/📃️note/…` (owned by the parent orchestrator, off-limits to
             /// this authoring pass); `table` reads from its OWN `✳️table/📚️examples/📃️sheet/…`
             /// instead, per this ticket's explicit brief. The two placeholder asset files still
             /// need real regeneration (see this facet's own `📚️examples/📃️sheet/🦀️.rs`

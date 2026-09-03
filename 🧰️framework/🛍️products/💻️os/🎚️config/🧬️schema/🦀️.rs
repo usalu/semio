@@ -8,13 +8,11 @@
 //! every direct mutation leaf in its Rust glue.
 
 use semio_framework::{AppRef, AppRole, ArtifactDialect};
-use serde::{Deserialize, Serialize};
 use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️Schema
 /// 🎚️ One user-pinned default: `dialect × role -> app`.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
 #[value(rename_all = "camelCase")]
 pub struct DefaultApp {
     pub dialect: ArtifactDialect,
@@ -23,8 +21,7 @@ pub struct DefaultApp {
 }
 
 /// 🎚️ `os.config.opening` — every pinned viewer/editor default, OS-wide.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
-#[serde(rename_all = "camelCase", default)]
+#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue)]
 #[value(rename_all = "camelCase", default)]
 pub struct OpeningPreferences {
     pub defaults: Vec<DefaultApp>,
@@ -62,17 +59,17 @@ pub fn inverse_opening_config_mutation(snapshot: &OpeningPreferences, mutation: 
 
 /// 📥️ Decodes the internally tagged opening-config JSON projection.
 pub fn decode_opening_config_mutation_json(text: &str) -> Result<super::mutations::OpeningConfigMutation, String> {
-    serde_json::from_str(text).map_err(|error| error.to_string())
+    dsl::os_pack::json::from_json_str(text).map_err(|error| error.to_string())
 }
 
 /// 📤️ Encodes opening preferences to their canonical camel-case JSON projection.
 pub fn encode_opening_preferences_json(snapshot: &OpeningPreferences) -> String {
-    serde_json::to_string(snapshot).expect("OpeningPreferences serialization is infallible")
+    dsl::os_pack::json::to_json_string(snapshot)
 }
 
 /// 📥️ Decodes the canonical opening-preferences JSON projection.
 pub fn decode_opening_preferences_json(text: &str) -> Result<OpeningPreferences, String> {
-    serde_json::from_str(text).map_err(|error| error.to_string())
+    dsl::os_pack::json::from_json_str(text).map_err(|error| error.to_string())
 }
 
 /// ▶️ Applies a mutation and returns its diagnostic `(code, severity)` pairs.

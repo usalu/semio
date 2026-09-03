@@ -29,12 +29,16 @@ fn default_camera_json() -> String {
     serde_json::json!({ "position": [8.0, 8.0, 8.0], "target": [0.0, 0.0, 0.0], "zoom": 1.0, "fov": 45.0 }).to_string()
 }
 
-/// ✂️ Same wire shape as `Puzzle5dScale`'s own `Serialize` impl (bare number = uniform, `[x,y,z]` =
-/// per-axis) — duplicated as a plain default rather than reaching for the enum's `Serialize` through
-/// a re-import, since the artifact-level type already round-trips through `serde_json::to_value`
+/// ✂️ Same wire shape as `Puzzle5dScale`'s own `ToValue` impl (bare number = uniform, `[x,y,z]` =
+/// per-axis) — duplicated as a plain default rather than reaching for the enum's `ToValue` through
+/// a re-import, since the artifact-level type already round-trips through `dsl::ToValue::to_value`
 /// directly.
+///
+/// 🩹️ Ticket 26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS: routes through
+/// `dsl::ToValue`/`dsl::DslValue` instead of `serde_json::to_value` — `Puzzle5dScale` only derives
+/// `Serialize` under `#[cfg(test)]` now.
 fn scale_json(scale: Option<Puzzle5dScale>) -> serde_json::Value {
-    serde_json::to_value(scale.unwrap_or(Puzzle5dScale::Uniform(1.0))).unwrap_or(serde_json::json!(1.0))
+    serde_json::Value::from(dsl::ToValue::to_value(&scale.unwrap_or(Puzzle5dScale::Uniform(1.0))))
 }
 
 const FALLBACK_MESH_ID: &str = "box";
@@ -46,7 +50,11 @@ fn mesh_id_for(part: &Puzzle5dPart) -> String {
 fn meshes_json(document: &Puzzle5dSnapshot) -> String {
     let urls: Vec<String> = document.parts.iter().filter_map(|part| part.part_3d.mesh_url.clone()).collect();
     if urls.is_empty() {
-        return serde_json::to_string(&[serde_json::json!({ "id": FALLBACK_MESH_ID, "data": semio_framework_plugin::mesh_from_kind(FALLBACK_MESH_ID) })]).unwrap_or_else(|_| "[]".into());
+        let fallback = dsl::DslValue::Array(vec![dsl::DslValue::object([
+            ("id".to_string(), dsl::DslValue::String(FALLBACK_MESH_ID.to_string())),
+            ("data".to_string(), dsl::ToValue::to_value(&semio_framework_plugin::mesh_from_kind(FALLBACK_MESH_ID))),
+        ])]);
+        return dsl::json::to_json_string(&fallback);
     }
     world3d_meshes_json_from_urls(&urls)
 }

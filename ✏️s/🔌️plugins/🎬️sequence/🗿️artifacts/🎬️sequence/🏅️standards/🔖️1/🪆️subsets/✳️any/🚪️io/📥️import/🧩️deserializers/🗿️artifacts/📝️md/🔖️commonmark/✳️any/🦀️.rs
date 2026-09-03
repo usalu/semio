@@ -23,7 +23,7 @@ impl Deserializer<SequenceSnapshot> for MdIntoSequence {
             [MdBlock::CodeBlock { info: Some(info), literal }] if info == "json" => literal,
             _ => return Err(IoError { message: "MdIntoSequence: expected one json code block".into(), diagnostics: Vec::new() }),
         };
-        let fixture: SequenceFixture = serde_json::from_str(literal).map_err(|error| IoError { message: format!("MdIntoSequence: {error}"), diagnostics: Vec::new() })?;
+        let fixture: SequenceFixture = dsl::os_pack::json::from_json_str(literal).map_err(|error| IoError { message: format!("MdIntoSequence: {error}"), diagnostics: Vec::new() })?;
         Ok(IoOutcome::clean(SequenceSnapshot::from_fixture(fixture)))
     }
 }

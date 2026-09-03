@@ -6,7 +6,7 @@
 //! real per-kind geometry — deliberately generic across all subsets this kit serves (see the
 //! packet's own report for the tradeoff).
 
-use crate::artifacts::step::standards::v_ap214::subsets::any::schema::snapshot::StepSnapshot;
+use crate::artifacts::step::standards::v_ap214::subsets::base::schema::snapshot::StepSnapshot;
 use semio_framework_plugin::{mesh_from_kind, world3d_camera_json, world3d_selection_json, BuiltNode, MeshView, MeshWindowKit, WindowKindDefinition, WindowKit};
 
 //#region 🔖️Constants

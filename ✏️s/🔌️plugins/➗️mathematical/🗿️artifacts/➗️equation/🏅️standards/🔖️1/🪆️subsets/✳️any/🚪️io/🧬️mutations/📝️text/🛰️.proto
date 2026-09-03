@@ -1,0 +1,77 @@
+syntax = "proto3";
+package semio.s_mathematical_equation.mutations;
+
+message ChangeGraphDirected {
+  bool new_directed = 1;
+}
+message UpdateGraphAlgorithm {
+  string new_algorithm = 1;
+  string new_algorithm_seed = 2;
+}
+message ReplaceGraph {
+  bytes graph = 1;
+}
+message CreateNode {
+  string id = 1;
+  string label = 2;
+  double x = 3;
+  double y = 4;
+}
+message DeleteNode {
+  string id = 1;
+}
+message DeleteNodes {
+  repeated string ids = 1;
+}
+message ChangeNodeLabel {
+  string id = 1;
+  string new_label = 2;
+}
+message MoveNode {
+  string id = 1;
+  double x = 2;
+  double y = 3;
+}
+message ConnectNodes {
+  string id = 1;
+  string source = 2;
+  string target = 3;
+}
+message DisconnectNodes {
+  string id = 1;
+}
+message ReplacePoints {
+  repeated bytes points = 1;
+}
+message InsertPoint {
+  uint32 index = 1;
+  double x = 2;
+  double y = 3;
+}
+message RemovePoint {
+  uint32 index = 1;
+}
+message MovePoint {
+  uint32 index = 1;
+  double x = 2;
+  double y = 3;
+}
+
+message EquationMutation {
+  oneof kind {
+    ChangeGraphDirected change_graph_directed = 1;
+    UpdateGraphAlgorithm update_graph_algorithm = 2;
+    ReplaceGraph replace_graph = 3;
+    CreateNode create_node = 4;
+    DeleteNode delete_node = 5;
+    DeleteNodes delete_nodes = 6;
+    ChangeNodeLabel change_node_label = 7;
+    MoveNode move_node = 8;
+    ConnectNodes connect_nodes = 9;
+    DisconnectNodes disconnect_nodes = 10;
+    ReplacePoints replace_points = 11;
+    InsertPoint insert_point = 12;
+    RemovePoint remove_point = 13;
+    MovePoint move_point = 14;
+  }
+}

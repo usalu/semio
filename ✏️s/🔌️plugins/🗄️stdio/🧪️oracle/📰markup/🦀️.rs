@@ -9,7 +9,7 @@
 //! parse, write, address and projection below is genuinely common to both.
 //!
 //! Nothing here knows what a profile is. `MarkupDoc` is this module's OWN tree, structurally
-//! parallel to (and never imported from) the production `XmlNode`/`XmlDocument` the `📰xml` subset
+//! parallel to (and never imported from) the production `XmlNode`/`XmlDocument` the `📰️xml` subset
 //! persists, so a subset's own codec is never the thing measuring itself.
 //!
 //! @see ../../🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/✳️tiny/🦀️oracle.rs

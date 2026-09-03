@@ -1,0 +1,13 @@
+{
+  "title": "Complete Semio End to End",
+  "emoji": "🚀",
+  "status": "open",
+  "description": "Complete the repository end to end: deliver a working OS-style frontend with every plugin and artifact; a working server-hub backend with database, presence, and administration; AI integration over the map; collaborative spaces for users; complete administrator workflows; and comprehensive language-agnostic plus third-party-oracle tests. Replace the current ad hoc unfinished state with a coherent, accessible, customizable, local-first, multi-user, event-sourced system. Coordinate with a maximum-width fleet: GPT-5.6 Sol xhigh implementers and GPT-5.6 Terra xhigh read-only explorers/auditors, while this main task coordinates with GPT-5.6 Sol ultra. Work safely alongside concurrent edits and finish every discovered in-scope gap.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2607"
+  },
+  "goal": "🎯r2603",
+  "sessions": [
+    "⚪37756db96a3c4dedb4be181d755849ad"
+  ]
+}

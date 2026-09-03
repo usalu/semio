@@ -1,0 +1,37 @@
+syntax = "proto3";
+package semio.s.imperative.procedure.artifact;
+
+// 🧬️ Imperative artifact schema — every field with its state class.
+
+message ProcedureArtifact {
+  // @state artifact
+  string schema = 1;
+  // @state artifact
+  ProcedurePath path = 2;
+  // @state artifact
+  map<string, string> seed = 3;
+  // @state presence
+  repeated string selected_step_ids = 4;
+  // @state config
+  string locale = 5;
+  // @state config
+  string contributions_json = 6;
+  // @state transient
+  string run_output_json = 7;
+}
+
+message ProcedurePath {
+  repeated ProcedureStep steps = 1;
+}
+
+message ProcedureStep {
+  string id = 1;
+  string kind = 2;
+  string params_json = 3;
+  repeated ProcedureStepBodyEntry bodies = 4;
+}
+
+message ProcedureStepBodyEntry {
+  string slot = 1;
+  ProcedurePath path = 2;
+}

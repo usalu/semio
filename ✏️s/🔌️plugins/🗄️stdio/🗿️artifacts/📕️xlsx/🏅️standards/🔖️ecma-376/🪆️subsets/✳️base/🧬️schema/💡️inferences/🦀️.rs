@@ -41,7 +41,7 @@ impl protocol::InferenceSpec<XlsxSnapshot> for XlsxInference {
 //#endregion 🔖️Inference
 
 //#region 🔖️ArtifactInferrer
-impl ArtifactInferrer for crate::artifacts::xlsx::standards::v_ecma_376::subsets::any::schema::XlsxBuilder {
+impl ArtifactInferrer for crate::artifacts::xlsx::standards::v_ecma_376::subsets::base::schema::XlsxBuilder {
     type Snapshot = XlsxSnapshot;
     type Inference = XlsxInference;
 }

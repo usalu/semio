@@ -1,0 +1,17 @@
+/** ✏️ Generation3d editor — subset-level typed twin. Re-exports every window's typed view-model
+ * binding so a host-side TS consumer has one import surface for the whole editor manifest, mirroring
+ * `🦀️.rs`'s `create_generation3d_app()` stitching every window/mode module together. */
+
+export const GENERATION3D_EDITOR_DIALECT = { artifactKind: "s.procedural.generation3d", standard: "1", subset: "*" } as const;
+
+export const GENERATION3D_PLAY_MODE_EDIT = "edit" as const;
+export const GENERATION3D_PLAY_MODE_GENERATE = "generate" as const;
+
+// 🪟️ Namespaced (not `export *`): every window independently exports a same-named
+// `<Window>ViewModel` interface, and a blanket `export *` from more than one of them would be an
+// ambiguous re-export.
+export * as flowWindow from "./🎭️modes/✏️edit/🪟️windows/🕸️flow/🟦️";
+export * as previewWindow from "./🎭️modes/✏️edit/🪟️windows/👁️preview/🟦️";
+export * as generationsWindow from "./🎭️modes/🧬️generate/🪟️windows/🗂️generations/🟦️";
+export * as generateFormWindow from "./🎭️modes/🧬️generate/🪟️windows/📝️form/🟦️";
+export * as generatePreviewWindow from "./🎭️modes/🧬️generate/🪟️windows/👁️preview/🟦️";

@@ -9,7 +9,7 @@
 //! `FILE_SCHEMA(('AUTOMOTIVE_DESIGN'))`). Reuses `step::engine::part21`'s tokenizer/writer
 //! functions directly — PARSING-CODE reuse; what's NOT reused is `Part21Document`'s type IDENTITY
 //! as this standard's snapshot type.
-use crate::artifacts::ifc::standards::v2x3::subsets::any::schema::snapshot::{Ifc2x3EdmPreamble, Ifc2x3Snapshot, STDIO_IFC2X3_DOCUMENT_SCHEMA};
+use crate::artifacts::ifc::standards::v2x3::subsets::base::schema::snapshot::{Ifc2x3EdmPreamble, Ifc2x3Snapshot, STDIO_IFC2X3_DOCUMENT_SCHEMA};
 use crate::artifacts::step::engine::part21::{parse_part21, write_part21_with, Part21Preamble, Part21WriteOptions};
 use std::fmt::Write as _;
 
@@ -33,7 +33,7 @@ pub fn decode_ifc2x3(bytes: &[u8]) -> Result<Ifc2x3Snapshot, String> {
 /// 📤️ Regenerates valid IFC2X3 SPF bytes from a snapshot. Losslessness is `write_part21`'s job
 /// (shared with `step`/`4`); this function's only own contribution is the byte encoding.
 pub fn encode_ifc2x3(snapshot: &Ifc2x3Snapshot) -> Result<Vec<u8>, String> {
-    crate::artifacts::ifc::standards::v2x3::subsets::any::schema::snapshot::validate_ifc2x3_snapshot(snapshot)?;
+    crate::artifacts::ifc::standards::v2x3::subsets::base::schema::snapshot::validate_ifc2x3_snapshot(snapshot)?;
     let options = Part21WriteOptions { line_ending: "\r\n", blank_after_header: snapshot.edm_preamble.is_some(), blank_before_data: true, blank_before_terminator: true, space_after_instance_equals: true };
     Ok(write_part21_with(&snapshot.document, options, snapshot.edm_preamble.as_ref()).into_bytes())
 }
@@ -100,8 +100,8 @@ impl Part21Preamble for Ifc2x3EdmPreamble {
 
 //#region 🎹️DerivedComposition
 pub mod derived_composition {
-    use crate::artifacts::ifc::standards::v2x3::subsets::any::schema::snapshot::Ifc2x3Snapshot;
-    use crate::artifacts::ifc::standards::v2x3::subsets::any::schema::Ifc2x3Analyzer;
+    use crate::artifacts::ifc::standards::v2x3::subsets::base::schema::snapshot::Ifc2x3Snapshot;
+    use crate::artifacts::ifc::standards::v2x3::subsets::base::schema::Ifc2x3Analyzer;
     use semio_framework_plugin::{AnalyzeSource, ArtifactComposition, ComposeError, ComposeSource, Composition, Dialect, StandardId, SubsetId};
 
     const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.ifc", standard: StandardId("2x3"), subset: SubsetId("*") };
@@ -201,9 +201,9 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn exact_native_engine_raw_serializers_analyzer_and_composer_roundtrip() {
         use crate::artifacts::binary::{BinarySnapshot, STDIO_BINARY_DOCUMENT_SCHEMA};
-        use crate::artifacts::ifc::standards::v2x3::subsets::any::io::export::serializers::artifacts::{binary::v_raw::any as binary_export, txt::v_utf_8::any as text_export};
-        use crate::artifacts::ifc::standards::v2x3::subsets::any::io::import::deserializers::artifacts::{binary::v_raw::any as binary_import, txt::v_utf_8::any as text_import};
-        use crate::artifacts::ifc::standards::v2x3::subsets::any::schema::Ifc2x3Analyzer;
+        use crate::artifacts::ifc::standards::v2x3::subsets::base::io::export::serializers::artifacts::{binary::v_raw::any as binary_export, txt::v_utf_8::any as text_export};
+        use crate::artifacts::ifc::standards::v2x3::subsets::base::io::import::deserializers::artifacts::{binary::v_raw::any as binary_import, txt::v_utf_8::any as text_import};
+        use crate::artifacts::ifc::standards::v2x3::subsets::base::schema::Ifc2x3Analyzer;
         use crate::artifacts::txt::TxtSnapshot;
 
         let original = exact_fixture_bytes().await;
@@ -271,7 +271,7 @@ mod tests {
     /// `4`'s own `conformance_laws` module and every P1-P3 pilot's own.
     mod conformance_laws {
         use super::*;
-        use crate::artifacts::ifc::standards::v2x3::subsets::any::schema::{diff, mutations, snapshot};
+        use crate::artifacts::ifc::standards::v2x3::subsets::base::schema::{diff, mutations, snapshot};
         use protocol::{DiffCodec, OpBinary, OpText};
 
         /// ✅️ "committed files parse": all 6 handcrafted `.grammar.semio`/`.protocol.semio` files
@@ -382,7 +382,7 @@ mod tests {
 //#region 🚪️DerivedIoRegistry
 /// 🚪️ Dissolved out of `⚙️engine` (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES).
 pub mod io_registry {
-    use crate::artifacts::ifc::standards::v2x3::subsets::any::schema::Ifc2x3Composer as Ifc2x3RawAnyComposer;
+    use crate::artifacts::ifc::standards::v2x3::subsets::base::schema::Ifc2x3Composer as Ifc2x3RawAnyComposer;
     use crate::artifacts::ifc::standards::v2x3::subsets::cobie::schema::Ifc2x3CobieComposer;
     use crate::artifacts::ifc::standards::v2x3::subsets::cv20::schema::Ifc2x3Cv20Composer;
     use crate::artifacts::ifc::standards::v2x3::subsets::sav::schema::Ifc2x3SavComposer;

@@ -1,0 +1,50 @@
+# 🔺️ Equation diff schema.
+
+type EquationDiff {
+  artifact: EquationArtifact @state(class: ARTIFACT)
+  graph: EquationGraph @state(class: ARTIFACT)
+  geometry: EquationGeometry @state(class: ARTIFACT)
+  cameraX: Float @state(class: CONFIG)
+  cameraY: Float @state(class: CONFIG)
+  cameraZoom: Float @state(class: CONFIG)
+  locale: String @state(class: CONFIG)
+}
+
+type EquationArtifact {
+  graph: EquationGraph!
+  geometry: EquationGeometry!
+  cameraX: Float!
+  cameraY: Float!
+  cameraZoom: Float!
+  locale: String!
+}
+
+type EquationGraph {
+  directed: Boolean!
+  nodes: [EquationNode!]!
+  edges: [EquationEdge!]!
+  algorithm: String!
+  algorithmSeed: String
+}
+
+type EquationNode {
+  id: String!
+  label: String!
+  x: Float!
+  y: Float!
+}
+
+type EquationEdge {
+  id: String!
+  source: String!
+  target: String!
+}
+
+type EquationPoint {
+  x: Float!
+  y: Float!
+}
+
+type EquationGeometry {
+  points: [EquationPoint!]!
+}

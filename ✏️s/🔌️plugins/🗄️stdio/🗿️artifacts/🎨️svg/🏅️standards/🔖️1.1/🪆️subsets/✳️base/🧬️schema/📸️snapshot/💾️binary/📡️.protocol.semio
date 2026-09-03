@@ -10,7 +10,7 @@ start body
 # passed straight to `store::semio_format::wrap_binary` -- no `pack_rt::encode_document` structured
 # record, because the persisted `doc: XmlDocument` field is a genuinely recursive, data-carrying
 # enum tree with no `RecordSpec` to walk against, same reason `#[derive(dsl::DslArtifact)]` is
-# unusable here, identical root cause to `📰xml`'s own sibling protocol file). Replaces the
+# unusable here, identical root cause to `📰️xml`'s own sibling protocol file). Replaces the
 # pre-Phase-2 placeholder that (falsely) described the payload as a JSON serialization of the doc --
 # the real codec was fixed this wave to stop routing through `serde_json` at all (see
 # `../../🦀️.rs`'s `ArtifactPack` impl doc comment), so this file's own description now

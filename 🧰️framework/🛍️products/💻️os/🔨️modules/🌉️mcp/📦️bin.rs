@@ -1,6 +1,6 @@
-//! 🕸️ CLI: `semio-os-mcp stdio [--folder <dir> | --hub <url> --space <id> [--token <t>]]
+//! 🕸️ CLI: `semio-os-mcp stdio [--folder <dir> | --hub <url> --space <id> --token <t>]
 //! [--principal <id>] [--scopes a,b]` and `semio-os-mcp http [--port <p>] [--bind <addr>] --token <t>
-//! [--folder <dir> | --hub <url> --space <id> [--token <t>]] [--principal <id>] [--scopes a,b]
+//! [--folder <dir> | --hub <url> --space <id> --token <t>] [--principal <id>] [--scopes a,b]
 //! [--audit-dir <dir>] [--allow-origin <origin>]… [--bridge-token-file <path>]` (P1b + P1c +
 //! P7-headless-workspace) — this binary owns argv parsing only; all real logic lives in
 //! `semio_framework_os_mcp::{run_stdio, run_http}` (P1a's brief §2.5, "keep main thin, all logic in
@@ -25,7 +25,7 @@ fn parse_scopes(raw: &str) -> Vec<String> {
     raw.split(',').map(str::trim).filter(|scope| !scope.is_empty()).map(str::to_string).collect()
 }
 
-/// 🏠️ Shared `--hub <url> --space <id> [--token <t>]` builder — `hub_token` accumulates the token
+/// 🏠️ Shared `--hub <url> --space <id> --token <t>` builder — `hub_token` accumulates the token
 /// seen AFTER `--hub`/`--space` (the hub's own auth token), distinct from `http`'s own bearer
 /// `--token` flag which `parse_http_args` handles separately.
 #[derive(Default)]
@@ -37,10 +37,11 @@ struct HubArgs {
 
 impl HubArgs {
     fn into_options(self) -> Result<Option<HubOptions>, String> {
-        match (self.base_url, self.space_id) {
-            (None, None) => Ok(None),
-            (Some(base_url), Some(space_id)) => Ok(Some(HubOptions { base_url, space_id, token: self.token })),
-            _ => Err("--hub requires --space <id> (and vice versa)".to_string()),
+        match (self.base_url, self.space_id, self.token) {
+            (None, None, None) => Ok(None),
+            (Some(base_url), Some(space_id), Some(token)) if !token.is_empty() => Ok(Some(HubOptions { base_url, space_id, token })),
+            (Some(_), Some(_), None) => Err("--hub requires --token <t>".to_string()),
+            _ => Err("--hub requires --space <id> and --token <t>".to_string()),
         }
     }
 }
@@ -111,7 +112,7 @@ fn parse_args() -> Result<Mode, String> {
     let mut argv = std::env::args().skip(1);
     let Some(mode) = argv.next() else {
         return Err(
-            "usage: semio-os-mcp <stdio|http> [--folder <dir> | --hub <url> --space <id> [--token <t>]] [--principal <id>] [--scopes a,b] [http-only: --port <p> --bind <addr> --token <t> --audit-dir <dir> --allow-origin <origin>]".to_string()
+            "usage: semio-os-mcp <stdio|http> [--folder <dir> | --hub <url> --space <id> --token <t>] [--principal <id>] [--scopes a,b] [http-only: --port <p> --bind <addr> --token <t> --audit-dir <dir> --allow-origin <origin>]".to_string()
         );
     };
     match mode.as_str() {
@@ -137,5 +138,27 @@ fn main() {
     if let Err(error) = result {
         eprintln!("[semio-os-mcp] {:?}: {}", error.code, error.message);
         std::process::exit(1);
+    }
+}
+
+#[cfg(test)]
+mod quick {
+    use super::*;
+
+    #[test]
+    fn authenticated_hub_workspace_cli_requires_a_distinct_hub_token() {
+        let error = parse_stdio_args(&mut ["--hub", "https://hub.invalid", "--space", "space-a"].into_iter().map(str::to_string)).unwrap_err();
+        assert_eq!(error, "--hub requires --token <t>");
+
+        let options = parse_http_args(
+            &mut ["--token", "mcp-bearer", "--hub", "https://hub.invalid", "--space", "space-a", "--token", "hub-bearer"]
+                .into_iter()
+                .map(str::to_string),
+        )
+        .unwrap();
+        let hub = options.hub.expect("authenticated hub binding");
+        assert_eq!(options.token, "mcp-bearer");
+        assert_eq!(hub.token, "hub-bearer");
+        assert!(!format!("{hub:?}").contains("hub-bearer"));
     }
 }

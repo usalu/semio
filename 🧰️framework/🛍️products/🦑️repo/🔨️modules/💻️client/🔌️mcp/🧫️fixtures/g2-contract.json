@@ -1,12 +1,12 @@
 {
   "schema": "semio.mcp.contract/1",
-  "protocolVersion": "2025-06-18",
+  "protocolVersion": "2025-11-25",
   "vectors": [
     {
       "name": "initialize",
       "ready": false,
-      "request": "{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"initialize\",\"params\":{\"protocolVersion\":\"2025-06-18\",\"capabilities\":{},\"clientInfo\":{\"name\":\"fixture\",\"version\":\"1.0.0\"}}}",
-      "response": "{\"jsonrpc\":\"2.0\",\"id\":1,\"result\":{\"protocolVersion\":\"2025-06-18\",\"capabilities\":{\"prompts\":{},\"resources\":{},\"tools\":{}},\"serverInfo\":{\"name\":\"repo\",\"version\":\"1.0.0\"},\"instructions\":\"owned\"}}"
+      "request": "{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"initialize\",\"params\":{\"protocolVersion\":\"2025-11-25\",\"capabilities\":{},\"clientInfo\":{\"name\":\"fixture\",\"version\":\"1.0.0\"}}}",
+      "response": "{\"jsonrpc\":\"2.0\",\"id\":1,\"result\":{\"protocolVersion\":\"2025-11-25\",\"capabilities\":{\"prompts\":{},\"resources\":{},\"tools\":{}},\"serverInfo\":{\"name\":\"repo\",\"version\":\"1.0.0\"},\"instructions\":\"owned\"}}"
     },
     {
       "name": "tool",

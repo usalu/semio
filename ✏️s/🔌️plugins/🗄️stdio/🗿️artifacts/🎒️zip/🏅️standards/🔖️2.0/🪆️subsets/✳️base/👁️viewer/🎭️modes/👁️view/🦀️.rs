@@ -1,13 +1,13 @@
 //! 👁️ Zip viewer (2.0/✳️base) — the `view` mode: a single read-only window over the archive tree, the
 //! read-only counterpart of the editor's `edit` mode.
 
-use crate::viewer::zip::any::modes::view::windows::main;
+use crate::viewer::zip::base::modes::view::windows::main;
 use semio_framework_plugin::{create_stack_layout, LocalizedLabel, ModeDefinition, WindowLayout};
 
 pub const ZIP_ANY_VIEW_MODE_ID: &str = "view";
 
 //#region 🔖️Definition
-/// 🧱️ Stitched into the viewer manifest by `crate::viewer::zip::any::create_zip_any_viewer`.
+/// 🧱️ Stitched into the viewer manifest by `crate::viewer::zip::base::create_zip_any_viewer`.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn definition() -> ModeDefinition {
     ModeDefinition { id: ZIP_ANY_VIEW_MODE_ID.into(), label: LocalizedLabel::native("View", "Ansicht"), icon_id: "eye".into(), tools: Vec::new(), layout_id: None, commands: Vec::new() }

@@ -89,7 +89,7 @@ export const HAND_CURATED_SCOPES: readonly StoryScope[] = [
   {
     id: "puzzle/2d",
     titlePrefix: "🧩️puzzle🩻️2d",
-    sourceRoots: [repoRelative("✏️s/🔌️plugins/🧩️puzzle/🎛️apps/◻2d")],
+    sourceRoots: [repoRelative("✏️s/🔌️plugins/🧩️puzzle/🎛️apps/◻️2d")],
   },
   {
     id: "puzzle/3d",
@@ -353,7 +353,7 @@ if (import.meta.vitest) {
   describe("buildScopeWatchIgnores", () => {
     it("ignores inactive scopes' source roots", () => {
       const ignores = buildScopeWatchIgnores(resolveActiveScopes("ui"));
-      expect(ignores).toContain("**/✏️s/🔌️plugins/🧩️puzzle/🎛️apps/◻2d/**");
+      expect(ignores).toContain("**/✏️s/🔌️plugins/🧩️puzzle/🎛️apps/◻️2d/**");
       expect(ignores.some((g) => g.includes("🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react"))).toBe(false);
     });
 

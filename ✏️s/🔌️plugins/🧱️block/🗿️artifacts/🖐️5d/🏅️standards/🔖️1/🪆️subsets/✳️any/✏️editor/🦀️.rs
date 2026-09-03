@@ -25,7 +25,7 @@ use semio_framework_plugin::retained_command::{ArtifactCommandWork, ArtifactReta
 use semio_framework_plugin::{
     ActionDescriptor, AppOperationContext, ArtifactEditor, ArtifactKindSpec, ArtifactOwnedToolJobFactory, ArtifactOwnedToolJobRequest, ArtifactToolFactoryRegistry, ArtifactToolPublicationContract, ArtifactToolPublicationLane, ArtifactView, ConfigView, DraftView, Editor, EditorApp, Emit, Fault, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, NoDraft, NoDraftMutation, UiNode,
 };
-use serde_json::Value;
+use dsl::os_pack::json::Value;
 use std::collections::BTreeMap;
 use store::EngineHandles;
 
@@ -819,7 +819,7 @@ mod tests {
         match media.payload {
             MediaPayload::Structured { schema, json } => {
                 assert_eq!(schema, "kit.catalog");
-                let value: Value = serde_json::from_str(&json).expect("valid json");
+                let value: serde_json::Value = serde_json::from_str(&json).expect("valid json");
                 assert_eq!(value["parts"][0]["id"], "Hexagonal Cut Concrete Forest Left");
             }
             other => panic!("expected Structured payload, got {other:?}"),

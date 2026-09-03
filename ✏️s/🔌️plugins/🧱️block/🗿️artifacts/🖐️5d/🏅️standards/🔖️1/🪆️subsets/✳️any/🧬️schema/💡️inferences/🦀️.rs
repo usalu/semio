@@ -15,7 +15,8 @@ use crate::artifacts::block5d::Block5dSnapshot;
 use schema::ArtifactSchema;
 use semio_framework_plugin::ArtifactInferrer;
 
-use serde_json::{json, Value};
+use dsl::json;
+use dsl::os_pack::json::{array, Value};
 
 use super::bounds::{compute_block5d_bounds, Block5dBounds};
 
@@ -63,33 +64,34 @@ impl ArtifactInferrer for crate::artifacts::block5d::standards::v1::subsets::any
 /// (`Puzzle5dKindCatalogs`: `parts`/`grips`/`fasteners`/`ropes`), the seam puzzle imports through its
 /// `Kit×Type` media port. Block owns no fastener/rope-kind rows, so those arrays stay empty here.
 pub async fn puzzle5d_catalog_fragment(definition: &Block5dSnapshot) -> Value {
+    let vec3 = |v: [f64; 3]| array(v.iter().map(|c| Value::from(*c)));
     let grips: Vec<Value> = definition
         .grips
         .iter()
         .map(|grip| {
             json!({
-                "gripKind": grip.grip_kind,
-                "2d": { "angle": grip.angle, "gripKind": grip.grip_kind, "radius": grip.radius_2d },
-                "3d": { "position": grip.position, "direction": grip.direction, "radius": grip.radius_3d },
+                "gripKind": grip.grip_kind.as_str(),
+                "2d": { "angle": grip.angle, "gripKind": grip.grip_kind.as_str(), "radius": grip.radius_2d },
+                "3d": { "position": vec3(grip.position), "direction": vec3(grip.direction), "radius": grip.radius_3d },
             })
         })
         .collect();
     let mesh_url = definition.representations.first().and_then(|representation| representation.mesh_url.clone());
     let part = json!({
-        "id": definition.part_kind.id,
-        "name": definition.part_kind.name,
-        "label": definition.part_kind.label,
+        "id": definition.part_kind.id.as_str(),
+        "name": definition.part_kind.name.as_str(),
+        "label": definition.part_kind.label.as_str(),
         "meshUrl": mesh_url,
         "grips": grips,
     });
-    let grip_kinds: Vec<Value> = definition.grip_kinds.iter().map(|kind| json!({ "id": kind.id, "name": kind.name, "label": kind.label, "color": kind.color, "defaultRopeKind": kind.default_rope_kind })).collect();
+    let grip_kinds: Vec<Value> = definition.grip_kinds.iter().map(|kind| json!({ "id": kind.id.as_str(), "name": kind.name.as_str(), "label": kind.label.as_str(), "color": kind.color.as_str(), "defaultRopeKind": kind.default_rope_kind.as_str() })).collect();
     json!({
         "schema": "manifest",
         "parts": [part],
         "grips": grip_kinds,
         "fasteners": Vec::<Value>::new(),
         "ropes": Vec::<Value>::new(),
-        "kindCompatibility": definition.compatibility.iter().map(|rule| json!({ "source": rule.source, "target": rule.target, "bidirectional": rule.bidirectional })).collect::<Vec<_>>(),
+        "kindCompatibility": definition.compatibility.iter().map(|rule| json!({ "source": rule.source.as_str(), "target": rule.target.as_str(), "bidirectional": rule.bidirectional })).collect::<Vec<Value>>(),
     })
 }
 //#endregion 🔖️PuzzleCatalogFragment

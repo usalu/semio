@@ -18,7 +18,7 @@
 //! `document`/`raster`/`archive`/...): the `zip`+`quick-xml` composition it needs is specific to
 //! this one subset's container shape, so it lives here rather than in a shared module.
 //!
-//! Two entry points mirror the `📰xml`/`🎨️svg` precedent: [`oracle_apply_mutation`] performs the
+//! Two entry points mirror the `📰️xml`/`🎨️svg` precedent: [`oracle_apply_mutation`] performs the
 //! FORWARD mutation (the `mutate-<kind>` scenarios), [`oracle_apply_mutation_inverse`] performs the
 //! forward mutation and then its computed inverse in sequence (the `inverse-<kind>` scenarios) —
 //! the same "apply, then apply the inverse, land back on the start" law `BcfMutation::inverse`
@@ -190,7 +190,7 @@ mod oracles {
     //#region 🔖️XmlParse
     /// 🔓️ Resolves one `Event::GeneralRef` (`&name;` or `&#NNN;`) to its literal text — this
     /// `quick-xml` version splits every entity reference out of `Text` into its own event, exactly
-    /// the same `📰xml`/`🎨️svg` precedent already established.
+    /// the same `📰️xml`/`🎨️svg` precedent already established.
     fn resolve_general_ref(reference: &BytesRef) -> Result<String, String> {
         if let Some(ch) = reference.resolve_char_ref().map_err(|error| error.to_string())? {
             return Ok(ch.to_string());

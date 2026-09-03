@@ -8,12 +8,11 @@
 //! the deleted `ViewModel` used to carry.
 
 use protocol::Mutation;
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️Config
 /// 🧮️ `ReasoningWiresPlayApp::Config` — the pure-trait `ArtifactApp::Config` for the wires app.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslArtifact)]
-#[serde(rename_all = "camelCase", default)]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslArtifact)]
+#[value(rename_all = "camelCase", default)]
 #[dsl(extension = "reasoning.wirescfg")]
 #[dsl(id = "wires.config")]
 #[dsl(layout = "lines")]
@@ -90,7 +89,7 @@ store::impl_whole_record_config!(WiresConfig);
 /// `Mutation::Diff` is the WHOLE `WiresConfig` (not a granular patch type): `diff()` returns "the
 /// full config after this op", and `store::impl_whole_record_config!` supplies the
 /// `MutationDiff<WiresConfig>` that returns that snapshot verbatim, ignoring `base`.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslOps)]
 pub enum WiresConfigMutation {
     #[dsl(key = "drag")]
     SetDrag { node_id: Option<String>, last_x: f64, last_y: f64 },

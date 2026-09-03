@@ -29,13 +29,13 @@
 //! @see ../../🔣️oracle.json — the `ifc-2x3-cv20` catalog `KINDS` is checked against.
 
 use crate::artifacts::ifc::standards::v2x3::mvd;
-use crate::artifacts::ifc::standards::v2x3::subsets::any::schema::diff::Ifc2x3Diff;
-use crate::artifacts::ifc::standards::v2x3::subsets::any::schema::snapshot::Ifc2x3Snapshot;
+use crate::artifacts::ifc::standards::v2x3::subsets::base::schema::diff::Ifc2x3Diff;
+use crate::artifacts::ifc::standards::v2x3::subsets::base::schema::snapshot::Ifc2x3Snapshot;
 use crate::artifacts::step::engine::part21::Part21Value;
 use protocol::os_spr::command::DiffAlgebra;
 use protocol::Mutation;
 
-pub use crate::artifacts::ifc::standards::v2x3::subsets::any::schema::mutations::{apply_ifc2x3_mutation, Ifc2x3Mutation};
+pub use crate::artifacts::ifc::standards::v2x3::subsets::base::schema::mutations::{apply_ifc2x3_mutation, Ifc2x3Mutation};
 
 //#region 🔖️Vocabulary
 /// 🚫️ Entity types Coordination View 2.0 excludes — the same list `check_cv20_conformance`
@@ -163,7 +163,7 @@ fn edit(base: &Ifc2x3Snapshot, mutation: &Ifc2x3Cv20Mutation) -> Result<Ifc2x3Sn
 // 🚫️async: E1 pure codec/computation helper — lifted verbatim from the former `impl Mutation`.
 pub(crate) fn agg_diff(this: &Ifc2x3Cv20Mutation, base: &Ifc2x3Snapshot) -> protocol::MutationOutcome<Ifc2x3Diff> {
         match this {
-            Ifc2x3Cv20Mutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot }) => match crate::artifacts::ifc::standards::v2x3::subsets::any::schema::snapshot::validate_ifc2x3_snapshot(snapshot) {
+            Ifc2x3Cv20Mutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot }) => match crate::artifacts::ifc::standards::v2x3::subsets::base::schema::snapshot::validate_ifc2x3_snapshot(snapshot) {
                 Ok(()) => protocol::MutationOutcome::new(Ifc2x3Diff::between(base, snapshot)),
                 Err(message) => rejected(message),
             },

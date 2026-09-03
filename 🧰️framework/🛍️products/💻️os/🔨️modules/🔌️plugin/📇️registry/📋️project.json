@@ -24,6 +24,14 @@
         "command": "bun ./📜️script.ts check-generated"
       }
     },
+    "catalog-complete": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry",
+        "command": "bun ./📜️script.ts catalog-complete",
+        "forwardAllArgs": true
+      }
+    },
     "check": {
       "executor": "nx:run-commands",
       "options": {

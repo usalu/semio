@@ -30,7 +30,7 @@ Feature: Apply every typed SVG 1.1 mutation to a real-world document
   does not carry. `set-attribute` targets the real `<image>`'s `xlink:href`.
 
   FINDING (not narrowed, not worked around): the production `xml` codec's `xml_escape_attr`
-  (`../../../📰xml/🏅️standards/🔖️1.0/🪆️subsets/✳️base/🧬️schema/📸️snapshot/🦀️component.rs`, a shared
+  (`../../../📰️xml/🏅️standards/🔖️1.0/🪆️subsets/✳️base/🧬️schema/📸️snapshot/🦀️component.rs`, a shared
   module this subset does not own) escapes only `&`, `<` and `"` when re-emitting an attribute
   value — it does not re-escape a literal tab/newline/CR (produced when it decodes a `&#10;`-style
   numeric character reference such as the real `xlink:href` above carries) back into a character

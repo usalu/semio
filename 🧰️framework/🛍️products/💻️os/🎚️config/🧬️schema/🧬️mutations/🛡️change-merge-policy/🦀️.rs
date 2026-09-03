@@ -2,13 +2,11 @@
 
 use super::MergePolicyConfigMutation;
 use protocol::{Mutation, MutationDiff, MutationKind, MutationOutcome, SemanticDescriptor};
-use serde::{Deserialize, Serialize};
 use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️Schema
 /// 🛡️ `os.config.merge-policy` — the authority-local policy choice.
-#[derive(Clone, Copy, Debug, Default, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
-#[serde(rename_all = "camelCase", default)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, ToValue, FromValue)]
 #[value(rename_all = "camelCase", default)]
 pub struct MergePolicySetting {
     pub policy: protocol::MergePolicy,
@@ -30,9 +28,8 @@ impl MutationDiff<MergePolicySetting> for MergePolicySetting {
 
 //#region 🔖️Mutation
 /// 🛡️ Replaces the active OS-wide merge policy.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
-#[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 pub struct ChangeMergePolicy {
     pub policy: protocol::MergePolicy,
@@ -79,17 +76,17 @@ pub fn inverse_merge_policy_config_mutation(snapshot: &MergePolicySetting, mutat
 
 /// 📥️ Decodes the internally tagged merge-policy mutation JSON projection.
 pub fn decode_merge_policy_config_mutation_json(text: &str) -> Result<MergePolicyConfigMutation, String> {
-    serde_json::from_str(text).map_err(|error| error.to_string())
+    dsl::os_pack::json::from_json_str(text).map_err(|error| error.to_string())
 }
 
 /// 📤️ Encodes the merge-policy setting to its canonical camel-case JSON projection.
 pub fn encode_merge_policy_setting_json(snapshot: &MergePolicySetting) -> String {
-    serde_json::to_string(snapshot).expect("MergePolicySetting serialization is infallible")
+    dsl::os_pack::json::to_json_string(snapshot)
 }
 
 /// 📥️ Decodes the canonical merge-policy setting JSON projection.
 pub fn decode_merge_policy_setting_json(text: &str) -> Result<MergePolicySetting, String> {
-    serde_json::from_str(text).map_err(|error| error.to_string())
+    dsl::os_pack::json::from_json_str(text).map_err(|error| error.to_string())
 }
 
 /// ▶️ Applies a mutation and returns its diagnostic `(code, severity)` pairs.

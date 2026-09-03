@@ -1,7 +1,8 @@
 //! 🧩️ `add-part-kind` command.
 
 use crate::editor::puzzle5d::Puzzle5dActionCtx;
-use serde_json::{json, Value};
+use dsl::json;
+use dsl::os_pack::json::Value;
 
 /// 🛍️ Catalogue placement — routed through the paired board/engine brush placement so both aspects land at once.
 pub fn add_part_kind(ctx: &mut Puzzle5dActionCtx<'_>, args: Option<&Value>) {

@@ -20,7 +20,7 @@ pub struct OpenArtifact {
 pub fn handle(payload: &OpenArtifact, doc: &ArtifactView<'_, SSpaceSnapshot>, _cfg: &ConfigView<'_, SpaceIndexConfig>) -> Result<Emit<SSpaceMutation, SpaceIndexConfigMutation>, Fault> {
     let row = doc.snapshot.artifacts.iter().find(|row| row.id == payload.id).ok_or_else(|| Fault::new(FaultOrigin::App, FaultCode::new("s.space.mutation.target-missing"), format!("artifact `{}` not found", payload.id)))?;
     let artifact_ref = format!("{}@{}/{}", row.dialect.artifact_kind, row.dialect.standard, row.dialect.subset);
-    Ok(Emit::effect(Effect::ReplayShellCommand { action_id: "os.open-artifact".into(), args: Some(pack::json_to_dsl_value(&pack::json!({ "artifactRef": artifact_ref, "documentId": row.id.clone(), "spaceId": doc.snapshot.space_id.clone() }))) }))
+    Ok(Emit::effect(Effect::ReplayShellCommand { action_id: "os.open-artifact".into(), args: Some(pack::json_to_dsl_value(&pack::json!({ "artifactRef": artifact_ref, "documentId": row.id.clone(), "spaceId": doc.snapshot.space_id.clone(), "schema": row.schema.clone() }))) }))
 }
 
 //#region 🧪️Tests
@@ -44,6 +44,7 @@ mod tests {
                 assert_eq!(action_id, "os.open-artifact");
                 let args = pack::json_from_dsl_value(&args.clone().unwrap());
                 assert_eq!(args.get("documentId").and_then(|v| v.as_str()), Some(id.as_str()));
+                assert_eq!(args.get("schema").and_then(|v| v.as_str()), Some("s.draw.draw"));
                 assert!(args.get("role").is_none(), "role is omitted so the shell resolves OpeningPreferences");
             }
             other => panic!("expected ReplayShellCommand, got {other:?}"),

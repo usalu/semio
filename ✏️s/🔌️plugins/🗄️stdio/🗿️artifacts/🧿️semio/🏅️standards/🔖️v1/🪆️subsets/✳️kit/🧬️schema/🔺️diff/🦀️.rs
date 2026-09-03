@@ -121,7 +121,7 @@ impl MutationDiff<SemioKitSnapshot> for SemioKitDiff {
     }
 }
 
-/// 🧮️ `kit`'s own `DiffAlgebra` — required by the `✳️any` envelope's own dispatch.
+/// 🧮️ `kit`'s own `DiffAlgebra` — required by the `✳️base` envelope's own dispatch.
 impl protocol::command::DiffAlgebra<SemioKitSnapshot> for SemioKitDiff {
     fn between(base: &SemioKitSnapshot, other: &SemioKitSnapshot) -> Self {
         SemioKitDiff {

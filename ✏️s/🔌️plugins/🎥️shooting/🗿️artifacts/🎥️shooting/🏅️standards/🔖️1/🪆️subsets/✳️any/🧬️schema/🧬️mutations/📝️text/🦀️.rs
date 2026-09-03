@@ -5,9 +5,10 @@
 //!
 //! Every `ShootingMutation` variant wraps a plain local payload struct now (no foreign generic —
 //! the pre-migration generic-option-bag-flattening `ShootingMutationDsl` mirror this file used
-//! to carry, needed only to route around the orphan rule, is gone with it). `serde_json`'s compact
-//! (single-line, declaration-order) encoding satisfies `OpText`/`OpBinary`'s laws directly:
-//! `print_op` never contains `\n`, `parse_op(op.print_op()) == op`, and encoding is deterministic.
+//! to carry, needed only to route around the orphan rule, is gone with it). `dsl::os_pack::json`'s
+//! compact (single-line, declaration-order) encoding satisfies `OpText`/`OpBinary`'s laws directly:
+//! `print_op` never contains `\n`, `parse_op(op.print_op()) == op`, and encoding is deterministic —
+//! no `serde_json` anywhere in this leaf.
 
 pub use crate::artifacts::shooting::schema::mutations::ShootingMutation;
 
@@ -20,13 +21,10 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.gram
 //#region 🔖️OpText
 impl protocol::OpText for ShootingMutation {
     async fn parse_op(line: &str) -> Result<Self, store::TextError> {
-        let json_value: serde_json::Value = serde_json::from_str(line).map_err(|e| store::__rt::field_error(format!("invalid shooting mutation line: {e}")))?;
-        let dsl_value: dsl::DslValue = json_value.into();
-        dsl::FromValue::from_value(dsl_value).map_err(|e: dsl::ValueError| store::__rt::field_error(format!("invalid shooting mutation line: {e}")))
+        dsl::os_pack::json::from_json_str(line).map_err(|e| store::__rt::field_error(format!("invalid shooting mutation line: {e}")))
     }
     async fn print_op(&self) -> String {
-        let value: serde_json::Value = dsl::ToValue::to_value(self).into();
-        value.to_string()
+        dsl::os_pack::json::to_json_string(self)
     }
 }
 //#endregion 🔖️OpText
@@ -34,12 +32,11 @@ impl protocol::OpText for ShootingMutation {
 //#region 🔖️OpBinary
 impl protocol::OpBinary for ShootingMutation {
     async fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        let value: serde_json::Value = dsl::ToValue::to_value(self).into();
-        Ok(serde_json::to_vec(&value).expect("ShootingMutation always serializes"))
+        Ok(dsl::os_pack::json::to_json_string(self).into_bytes())
     }
     async fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        let json_value: serde_json::Value = serde_json::from_slice(bytes).map_err(|e| protocol::ProtocolError::Malformed { what: "shooting-mutation", offset: 0, detail: e.to_string() })?;
-        let dsl_value: dsl::DslValue = json_value.into();
+        let json_value = dsl::os_pack::json::parse_bytes(bytes).map_err(|e| protocol::ProtocolError::Malformed { what: "shooting-mutation", offset: 0, detail: e.to_string() })?;
+        let dsl_value = dsl::os_pack::json::to_dsl_value(&json_value);
         dsl::FromValue::from_value(dsl_value).map_err(|e: dsl::ValueError| protocol::ProtocolError::Malformed { what: "shooting-mutation", offset: 0, detail: e.to_string() })
     }
 }

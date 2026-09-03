@@ -15,15 +15,38 @@
       ],
       "license": "AGPL-3.0-only",
       "testOnly": true,
-      "rationale": "🐍️ No third-party library in any ecosystem reads or writes `s.energy.model`'s `.dsl.semio` carrier — EnergyPlus and OpenStudio were surveyed and DECLINED (kept verbatim below in this history), and the `energyplus` weather reader already registered under `✏️s/🔌️plugins/🗄️stdio`'s `🌦️epw` subset reads a different format for a different purpose and is deliberately not reused. The reference is therefore a SECOND IMPLEMENTATION rather than a third-party distribution, which is why `package` is empty. The implementation is `../../../🧪️tests/mutate-energy-model-1/🐍️component.py`, written from this subset's own committed `../🧬️schema/📸️snapshot/🔣️.json` and `../🧬️schema/🧬️mutations/♻️replace-model/🔣️.schema.json`, and from `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-DIRECT-LEAF-OVERHAUL/📓️taxonomy.md`'s `replace` verb entry. It imports nothing from the Rust it judges and transliterates none of it. It asserts exactly the ONE committed specification vector's documented degrade-on-empty-payload path and deliberately REFUSES a non-empty `newModelJson`, because no schema in this repository states the `model` member's field layout or the structure/zones regeneration rule for a non-default model — the same boundary the Rust adapter's own `mutation_is_observable(..., UNOBSERVABLE=[\"replace-model\"])` call records, so this reference does not manufacture coverage the subject side does not have either. Executed standalone via the repository's own `🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🐍️python/🐍️.py` host against a hand-built plan pointing at the two scenario ids — both passed.\n\nUNDER PROTOCOL V2 this registration is classified `cross-semio-implementation` — a required SUPPLEMENTAL oracle that does not discharge `energy-model-1-mutate`'s external-oracle requirement; a qualifying third-party reference (`third-party-library` / `third-party-cli` / `standards-reference-tool`) is still owed and none exists for a semio-native carrier no third party reads.\n\n[history, kept verbatim from the no-oracle decision this replaces] The survey this decision already carried is kept: EnergyPlus and OpenStudio were named and DECLINED, and the `energyplus` weather reader already registered under `✏️s/🔌️plugins/🗄️stdio`'s `🌦️epw` subset is deliberately NOT reused here.",
-      "kind": "cross-semio-implementation",
+      "rationale": "🐍️ No third-party library in any ecosystem reads or writes `s.energy.model`'s `.dsl.semio` carrier — EnergyPlus and OpenStudio were surveyed and DECLINED (kept verbatim below in this history), and the `energyplus` weather reader already registered under `✏️s/🔌️plugins/🗄️stdio`'s `🌦️epw` subset reads a different format for a different purpose and is deliberately not reused. The reference is therefore a SECOND IMPLEMENTATION rather than a third-party distribution, which is why `package` is empty. The implementation is `../../../🧪️tests/mutate-energy-model-1/🐍️component.py`, written from this subset's own committed `../🧬️schema/📸️snapshot/🔣️.json` and `../🧬️schema/🧬️mutations/♻️replace-model/🔣️.schema.json`, and from `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-DIRECT-LEAF-OVERHAUL/📓️taxonomy.md`'s `replace` verb entry. It imports nothing from the Rust it judges and transliterates none of it. It asserts exactly the ONE committed specification vector's documented degrade-on-empty-payload path and deliberately REFUSES a non-empty `newModelJson`, because no schema in this repository states the `model` member's field layout or the structure/zones regeneration rule for a non-default model — the same boundary the Rust adapter's own `mutation_is_observable(..., UNOBSERVABLE=[\"replace-model\"])` call records, so this reference does not manufacture coverage the subject side does not have either. Executed standalone via the repository's own `🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🐍️python/🐍️.py` host against a hand-built plan pointing at the two scenario ids — both passed.\n\nUNDER PROTOCOL V2 this registration is classified `cross-semio-implementation` — a required SUPPLEMENTAL oracle that does not discharge `energy-model-1-mutate`'s external-oracle requirement; a qualifying third-party reference (`third-party-library` / `third-party-cli` / `standards-reference-tool`) is still owed and none exists for a semio-native carrier no third party reads.\n\n[history, kept verbatim from the no-oracle decision this replaces] The survey this decision already carried is kept: EnergyPlus and OpenStudio were named and DECLINED, and the `energyplus` weather reader already registered under `✏️s/🔌️plugins/🗄️stdio`'s `🌦️epw` subset is deliberately NOT reused here.\n\n[2026-09-02, D1 — SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION] Promoted from cross-semio-implementation to verified-native-second-implementation: this artifact is semio-native (isSemioNativeArtifact), this reference's own third-party survey above (kept verbatim) already names what was checked and declined, its python implementation differs from the Rust subject, and it covers 100% of this manifest's 1 capability/capabilities with 1 committed fixture vector(s). See .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION/📓️d1-native-oracle-discharge.md.",
+      "kind": "verified-native-second-implementation",
       "engine": {
         "family": "none",
         "implementation": "in-repository second implementation",
         "version": "0"
       },
       "productionReachable": false,
-      "networkDuringExecution": false
+      "networkDuringExecution": false,
+      "nativeSecondImplementation": {
+        "format": "s.energy.model",
+        "noThirdPartySurvey": {
+          "ecosystemsSearched": [
+            "python/pypi"
+          ],
+          "candidatesConsidered": [
+            {
+              "package": "EnergyPlus and OpenStudio",
+              "reason": "EnergyPlus and OpenStudio named and declined in this entry's own rationale as not modelling this repository's own document format"
+            }
+          ]
+        },
+        "subjectImplementationLanguage": "rust",
+        "secondImplementationLanguage": "python",
+        "specificationSource": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-DIRECT-LEAF-OVERHAUL/📓️taxonomy.md; .dsl.semio; ../🧬️schema/📸️snapshot/🔣️.json; ../🧬️schema/🧬️mutations/♻️replace-model/🔣️.schema.json; .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-DIRECT-LEAF-OVERHAUL/📓️taxonomy.md",
+        "fixtureCoverage": {
+          "vectors": 1,
+          "capabilitiesCovered": [
+            "energy-model-1-mutate"
+          ]
+        }
+      }
     }
   ],
   "noOracleDecisions": [],
@@ -75,7 +98,7 @@
           "oracleRequirements": [
             {
               "capability": "energy-model-1-mutate",
-              "qualifyingKind": "third-party-library"
+              "qualifyingKind": "verified-native-second-implementation"
             }
           ]
         }

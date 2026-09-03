@@ -10,7 +10,8 @@ use crate::artifacts::shooting::{ShootingAsset, ShootingSnapshot};
 use crate::editor::shooting::config::{ShootingConfig, ShootingConfigMutation};
 use crate::editor::shooting::ShootingDispatchCtx;
 use semio_framework_plugin::{ArtifactView, ConfigView, Effect, Emit, Fault};
-use serde_json::{json, Value};
+use dsl::json;
+use dsl::os_pack::json::Value;
 use semio_framework_value_derive::{FromValue, ToValue};
 
 /// 🩹️ Builds the single-field `ShootingMutation` for a `patchAsset`/`patchAssets` field write,

@@ -15,13 +15,12 @@ use semio_framework_plugin::{
 };
 // 🌱️ `Value`/`Map` alias `pack::json`'s first-party JSON tree (the `serde_json::Value`
 // replacement, `🧰️framework/🔨️modules/🎒️pack/🔤️json/🦀️.rs`), keeping this file's shape
-// unchanged everywhere else. `serde_json` itself stays a real dependency ONLY for
-// `playbook::visible_blocks`'s hard-typed `serde_json::Map<String, serde_json::Value>` signature
-// (`🧰️framework/🛍️products/💻️os/🔨️modules/📖️playbook/🦀️.rs` — a peer's own framework module,
-// not this extension's to convert); `FlowFixture` itself now derives `ToValue`/`FromValue`
-// alongside `Serialize`/`Deserialize`, so its own parse goes through `pack::json::from_json_str`
-// below instead. Every other JSON value in this file is arbitrary-shaped and goes through
-// `pack::json` instead.
+// unchanged everywhere else. `playbook::visible_blocks` (`🧰️framework/🛍️products/💻️os/🔨️modules/📖️playbook/🦀️.rs`)
+// takes `&PlaybookValues` (`HashMap<String, DslValue>`) — already first-party, converted through
+// `json_to_dsl_value` at its one call site below, no `serde_json` crossing left. `FlowFixture`
+// itself now derives `ToValue`/`FromValue` alongside `Serialize`/`Deserialize`, so its own parse
+// goes through `pack::json::from_json_str` below instead. Every other JSON value in this file is
+// arbitrary-shaped and goes through `pack::json` instead.
 use pack::{json_from_dsl_value, json_to_dsl_value, json_to_string, parse_json, to_json_string, JsonObject as Map, JsonValue as Value};
 use store::EngineHandles;
 
@@ -54,7 +53,7 @@ semio_framework_dispatch_macros::dyn_enum_close! {
 //#endregion 🗃️Apps
 // 🩹️ Was `include_str!` of procedural's example fixture; procedural migrated that fixture to a
 // handcrafted DSL (`store::ArtifactDsl`) that this module (which parses the content as a raw
-// `FlowFixture`, not a `Procedural3dDocument`) doesn't read — inlined the same flow-fixture JSON
+// `FlowFixture`, not a `Generation3dDocument`) doesn't read — inlined the same flow-fixture JSON
 // this module actually needs, decoupled from procedural's document format.
 const HEX_COLUMN_FIXTURE_JSON: &str = r#"{
   "schema": "flow.fixture",
@@ -654,12 +653,11 @@ fn render_params_body(payload: &ModuleRenderPayload, labels: &ModuleLabels) -> U
         return ui_text(labels.no_flow_inputs);
     };
     // 🌉️ `playbook::visible_blocks` (`🧰️framework/🛍️products/💻️os/🔨️modules/📖️playbook/🦀️.rs`)
-    // is hard-typed to `serde_json::Map<String, serde_json::Value>` — a framework signature this
-    // extension does not own, unconverted (out of this batch's scope, same shape as the
-    // `contributes_topic`/`ArtifactEditor` blockers `📓️serde-fanout-cad-math-energy.md` documents).
-    // A throwaway JSON-text round trip through the first-party bridge is the only crossing point.
-    let values_serde: serde_json::Map<String, serde_json::Value> = serde_json::from_str(&json_to_string(&Value::Object(values.clone()))).unwrap_or_default();
-    let visible = visible_blocks(step, &values_serde);
+    // takes `&PlaybookValues` (`HashMap<String, DslValue>`) — first-party already, no `serde_json`
+    // boundary here (the prior doc comment claiming a `serde_json::Map<String, serde_json::Value>`
+    // signature was stale). Converted field-by-field through `pack`'s own `json_to_dsl_value`.
+    let values_dsl: std::collections::HashMap<String, protocol::DslValue> = values.iter().map(|(key, value)| (key.to_string(), json_to_dsl_value(value))).collect();
+    let visible = visible_blocks(step, &values_dsl);
     let mut children: Vec<UiNode> = visible
         .iter()
         .map(|question| {

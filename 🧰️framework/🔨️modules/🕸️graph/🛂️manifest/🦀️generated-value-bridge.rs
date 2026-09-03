@@ -42,7 +42,7 @@ impl dsl_core::FromValue for crate::manifest::generated::flow_dag::FlowDagNodeKi
             "export" => crate::manifest::generated::flow_dag::FlowDagNodeKind::Export,
             "cluster" => crate::manifest::generated::flow_dag::FlowDagNodeKind::Cluster,
             "appInstance" => crate::manifest::generated::flow_dag::FlowDagNodeKind::AppInstance,
-            other => return Err(dsl_core::ValueError::new(format!("unknown FlowDagNodeKind `{{other}}`"))),
+            other => return Err(dsl_core::ValueError::new(format!("unknown FlowDagNodeKind `{other}`"))),
         })
     }
 }
@@ -63,7 +63,7 @@ impl dsl_core::FromValue for crate::manifest::generated::rewrite_lhs::RewriteLhs
         Ok(match s.as_str() {
             "rewrite.match" => crate::manifest::generated::rewrite_lhs::RewriteLhsNodeKind::RewriteMatch,
             "rewrite.where" => crate::manifest::generated::rewrite_lhs::RewriteLhsNodeKind::RewriteWhere,
-            other => return Err(dsl_core::ValueError::new(format!("unknown RewriteLhsNodeKind `{{other}}`"))),
+            other => return Err(dsl_core::ValueError::new(format!("unknown RewriteLhsNodeKind `{other}`"))),
         })
     }
 }
@@ -84,7 +84,7 @@ impl dsl_core::FromValue for crate::manifest::generated::rewrite_lhs::RewriteLhs
         Ok(match s.as_str() {
             "edge.flow" => crate::manifest::generated::rewrite_lhs::RewriteLhsEdgeKind::EdgeFlow,
             "edge.pattern" => crate::manifest::generated::rewrite_lhs::RewriteLhsEdgeKind::EdgePattern,
-            other => return Err(dsl_core::ValueError::new(format!("unknown RewriteLhsEdgeKind `{{other}}`"))),
+            other => return Err(dsl_core::ValueError::new(format!("unknown RewriteLhsEdgeKind `{other}`"))),
         })
     }
 }
@@ -103,7 +103,7 @@ impl dsl_core::FromValue for crate::manifest::generated::rewrite_lhs::RewriteLhs
         };
         Ok(match s.as_str() {
             "port" => crate::manifest::generated::rewrite_lhs::RewriteLhsPortKind::Port,
-            other => return Err(dsl_core::ValueError::new(format!("unknown RewriteLhsPortKind `{{other}}`"))),
+            other => return Err(dsl_core::ValueError::new(format!("unknown RewriteLhsPortKind `{other}`"))),
         })
     }
 }
@@ -122,7 +122,7 @@ impl dsl_core::FromValue for crate::manifest::generated::rewrite_lhs::RewriteLhs
         };
         Ok(match s.as_str() {
             "wire.flow" => crate::manifest::generated::rewrite_lhs::RewriteLhsWireKind::WireFlow,
-            other => return Err(dsl_core::ValueError::new(format!("unknown RewriteLhsWireKind `{{other}}`"))),
+            other => return Err(dsl_core::ValueError::new(format!("unknown RewriteLhsWireKind `{other}`"))),
         })
     }
 }
@@ -141,7 +141,7 @@ impl dsl_core::FromValue for crate::manifest::generated::puzzle2d_default::Puzzl
         };
         Ok(match s.as_str() {
             "edge.link" => crate::manifest::generated::puzzle2d_default::Puzzle2dDefaultEdgeKind::EdgeLink,
-            other => return Err(dsl_core::ValueError::new(format!("unknown Puzzle2dDefaultEdgeKind `{{other}}`"))),
+            other => return Err(dsl_core::ValueError::new(format!("unknown Puzzle2dDefaultEdgeKind `{other}`"))),
         })
     }
 }
@@ -160,7 +160,7 @@ impl dsl_core::FromValue for crate::manifest::generated::puzzle2d_default::Puzzl
         };
         Ok(match s.as_str() {
             "port" => crate::manifest::generated::puzzle2d_default::Puzzle2dDefaultPortKind::Port,
-            other => return Err(dsl_core::ValueError::new(format!("unknown Puzzle2dDefaultPortKind `{{other}}`"))),
+            other => return Err(dsl_core::ValueError::new(format!("unknown Puzzle2dDefaultPortKind `{other}`"))),
         })
     }
 }
@@ -179,7 +179,7 @@ impl dsl_core::FromValue for crate::manifest::generated::puzzle2d_default::Puzzl
         };
         Ok(match s.as_str() {
             "wire.link" => crate::manifest::generated::puzzle2d_default::Puzzle2dDefaultWireKind::WireLink,
-            other => return Err(dsl_core::ValueError::new(format!("unknown Puzzle2dDefaultWireKind `{{other}}`"))),
+            other => return Err(dsl_core::ValueError::new(format!("unknown Puzzle2dDefaultWireKind `{other}`"))),
         })
     }
 }
@@ -280,7 +280,7 @@ impl dsl_core::FromValue for crate::manifest::generated::nakagin::NakaginNodeKin
             "Trapezoid Capsule Slash" => crate::manifest::generated::nakagin::NakaginNodeKind::TrapezoidCapsuleSlash,
             "Trapezoid Capsule Z" => crate::manifest::generated::nakagin::NakaginNodeKind::TrapezoidCapsuleZ,
             "Piece" => crate::manifest::generated::nakagin::NakaginNodeKind::Piece,
-            other => return Err(dsl_core::ValueError::new(format!("unknown NakaginNodeKind `{{other}}`"))),
+            other => return Err(dsl_core::ValueError::new(format!("unknown NakaginNodeKind `{other}`"))),
         })
     }
 }
@@ -301,7 +301,7 @@ impl dsl_core::FromValue for crate::manifest::generated::nakagin::NakaginEdgeKin
         Ok(match s.as_str() {
             "Connection" => crate::manifest::generated::nakagin::NakaginEdgeKind::Connection,
             "edge.link" => crate::manifest::generated::nakagin::NakaginEdgeKind::EdgeLink,
-            other => return Err(dsl_core::ValueError::new(format!("unknown NakaginEdgeKind `{{other}}`"))),
+            other => return Err(dsl_core::ValueError::new(format!("unknown NakaginEdgeKind `{other}`"))),
         })
     }
 }
@@ -356,7 +356,7 @@ impl dsl_core::FromValue for crate::manifest::generated::nakagin::NakaginPortKin
             "tambour circular top" => crate::manifest::generated::nakagin::NakaginPortKind::TambourCircularTop,
             "tambour rectangular bottom" => crate::manifest::generated::nakagin::NakaginPortKind::TambourRectangularBottom,
             "tambour rectangular top" => crate::manifest::generated::nakagin::NakaginPortKind::TambourRectangularTop,
-            other => return Err(dsl_core::ValueError::new(format!("unknown NakaginPortKind `{{other}}`"))),
+            other => return Err(dsl_core::ValueError::new(format!("unknown NakaginPortKind `{other}`"))),
         })
     }
 }
@@ -375,7 +375,7 @@ impl dsl_core::FromValue for crate::manifest::generated::nakagin::NakaginWireKin
         };
         Ok(match s.as_str() {
             "wire.link" => crate::manifest::generated::nakagin::NakaginWireKind::WireLink,
-            other => return Err(dsl_core::ValueError::new(format!("unknown NakaginWireKind `{{other}}`"))),
+            other => return Err(dsl_core::ValueError::new(format!("unknown NakaginWireKind `{other}`"))),
         })
     }
 }
@@ -396,7 +396,7 @@ impl dsl_core::FromValue for crate::manifest::generated::puzzle5d_default::Puzzl
         Ok(match s.as_str() {
             "edge.link" => crate::manifest::generated::puzzle5d_default::Puzzle5dDefaultEdgeKind::EdgeLink,
             "attraction.link" => crate::manifest::generated::puzzle5d_default::Puzzle5dDefaultEdgeKind::AttractionLink,
-            other => return Err(dsl_core::ValueError::new(format!("unknown Puzzle5dDefaultEdgeKind `{{other}}`"))),
+            other => return Err(dsl_core::ValueError::new(format!("unknown Puzzle5dDefaultEdgeKind `{other}`"))),
         })
     }
 }
@@ -417,7 +417,7 @@ impl dsl_core::FromValue for crate::manifest::generated::puzzle5d_default::Puzzl
         Ok(match s.as_str() {
             "port" => crate::manifest::generated::puzzle5d_default::Puzzle5dDefaultPortKind::Port,
             "vortex" => crate::manifest::generated::puzzle5d_default::Puzzle5dDefaultPortKind::Vortex,
-            other => return Err(dsl_core::ValueError::new(format!("unknown Puzzle5dDefaultPortKind `{{other}}`"))),
+            other => return Err(dsl_core::ValueError::new(format!("unknown Puzzle5dDefaultPortKind `{other}`"))),
         })
     }
 }
@@ -438,7 +438,7 @@ impl dsl_core::FromValue for crate::manifest::generated::puzzle5d_default::Puzzl
         Ok(match s.as_str() {
             "wire.link" => crate::manifest::generated::puzzle5d_default::Puzzle5dDefaultWireKind::WireLink,
             "cable.link" => crate::manifest::generated::puzzle5d_default::Puzzle5dDefaultWireKind::CableLink,
-            other => return Err(dsl_core::ValueError::new(format!("unknown Puzzle5dDefaultWireKind `{{other}}`"))),
+            other => return Err(dsl_core::ValueError::new(format!("unknown Puzzle5dDefaultWireKind `{other}`"))),
         })
     }
 }
@@ -463,7 +463,7 @@ impl dsl_core::FromValue for crate::manifest::generated::writer_languages::Write
             "wire" => crate::manifest::generated::writer_languages::WriterLanguagesLanguageKind::Wire,
             "plaintext" => crate::manifest::generated::writer_languages::WriterLanguagesLanguageKind::Plaintext,
             "markdown" => crate::manifest::generated::writer_languages::WriterLanguagesLanguageKind::Markdown,
-            other => return Err(dsl_core::ValueError::new(format!("unknown WriterLanguagesLanguageKind `{{other}}`"))),
+            other => return Err(dsl_core::ValueError::new(format!("unknown WriterLanguagesLanguageKind `{other}`"))),
         })
     }
 }
@@ -488,38 +488,38 @@ impl dsl_core::FromValue for crate::manifest::generated::wires::WiresEdgeKind {
             "wires.is" => crate::manifest::generated::wires::WiresEdgeKind::WiresIs,
             "wires.references" => crate::manifest::generated::wires::WiresEdgeKind::WiresReferences,
             "wires.has" => crate::manifest::generated::wires::WiresEdgeKind::WiresHas,
-            other => return Err(dsl_core::ValueError::new(format!("unknown WiresEdgeKind `{{other}}`"))),
+            other => return Err(dsl_core::ValueError::new(format!("unknown WiresEdgeKind `{other}`"))),
         })
     }
 }
 
-impl dsl_core::ToValue for crate::manifest::generated::draw_layers::DrawLayersLayerKind {
+impl dsl_core::ToValue for crate::manifest::generated::drawing_layers::DrawingLayersLayerKind {
     fn to_value(&self) -> dsl_core::DslValue {
         dsl_core::DslValue::String(match self {
-            crate::manifest::generated::draw_layers::DrawLayersLayerKind::Shape => "shape",
-            crate::manifest::generated::draw_layers::DrawLayersLayerKind::Path => "path",
-            crate::manifest::generated::draw_layers::DrawLayersLayerKind::Text => "text",
-            crate::manifest::generated::draw_layers::DrawLayersLayerKind::Image => "image",
-            crate::manifest::generated::draw_layers::DrawLayersLayerKind::Group => "group",
-            crate::manifest::generated::draw_layers::DrawLayersLayerKind::Boolean => "boolean",
-            crate::manifest::generated::draw_layers::DrawLayersLayerKind::Trace => "trace",
+            crate::manifest::generated::drawing_layers::DrawingLayersLayerKind::Shape => "shape",
+            crate::manifest::generated::drawing_layers::DrawingLayersLayerKind::Path => "path",
+            crate::manifest::generated::drawing_layers::DrawingLayersLayerKind::Text => "text",
+            crate::manifest::generated::drawing_layers::DrawingLayersLayerKind::Image => "image",
+            crate::manifest::generated::drawing_layers::DrawingLayersLayerKind::Group => "group",
+            crate::manifest::generated::drawing_layers::DrawingLayersLayerKind::Boolean => "boolean",
+            crate::manifest::generated::drawing_layers::DrawingLayersLayerKind::Trace => "trace",
         }.to_string())
     }
 }
-impl dsl_core::FromValue for crate::manifest::generated::draw_layers::DrawLayersLayerKind {
+impl dsl_core::FromValue for crate::manifest::generated::drawing_layers::DrawingLayersLayerKind {
     fn from_value(value: dsl_core::DslValue) -> Result<Self, dsl_core::ValueError> {
         let dsl_core::DslValue::String(s) = value else {
-            return Err(dsl_core::ValueError::new(format!("expected a string for DrawLayersLayerKind, found {value:?}")));
+            return Err(dsl_core::ValueError::new(format!("expected a string for DrawingLayersLayerKind, found {value:?}")));
         };
         Ok(match s.as_str() {
-            "shape" => crate::manifest::generated::draw_layers::DrawLayersLayerKind::Shape,
-            "path" => crate::manifest::generated::draw_layers::DrawLayersLayerKind::Path,
-            "text" => crate::manifest::generated::draw_layers::DrawLayersLayerKind::Text,
-            "image" => crate::manifest::generated::draw_layers::DrawLayersLayerKind::Image,
-            "group" => crate::manifest::generated::draw_layers::DrawLayersLayerKind::Group,
-            "boolean" => crate::manifest::generated::draw_layers::DrawLayersLayerKind::Boolean,
-            "trace" => crate::manifest::generated::draw_layers::DrawLayersLayerKind::Trace,
-            other => return Err(dsl_core::ValueError::new(format!("unknown DrawLayersLayerKind `{{other}}`"))),
+            "shape" => crate::manifest::generated::drawing_layers::DrawingLayersLayerKind::Shape,
+            "path" => crate::manifest::generated::drawing_layers::DrawingLayersLayerKind::Path,
+            "text" => crate::manifest::generated::drawing_layers::DrawingLayersLayerKind::Text,
+            "image" => crate::manifest::generated::drawing_layers::DrawingLayersLayerKind::Image,
+            "group" => crate::manifest::generated::drawing_layers::DrawingLayersLayerKind::Group,
+            "boolean" => crate::manifest::generated::drawing_layers::DrawingLayersLayerKind::Boolean,
+            "trace" => crate::manifest::generated::drawing_layers::DrawingLayersLayerKind::Trace,
+            other => return Err(dsl_core::ValueError::new(format!("unknown DrawingLayersLayerKind `{other}`"))),
         })
     }
 }
@@ -538,7 +538,7 @@ impl dsl_core::FromValue for crate::manifest::generated::puzzle3d_default::Puzzl
         };
         Ok(match s.as_str() {
             "puzzle3d.attraction.link" => crate::manifest::generated::puzzle3d_default::Puzzle3dDefaultEdgeKind::Puzzle3dAttractionLink,
-            other => return Err(dsl_core::ValueError::new(format!("unknown Puzzle3dDefaultEdgeKind `{{other}}`"))),
+            other => return Err(dsl_core::ValueError::new(format!("unknown Puzzle3dDefaultEdgeKind `{other}`"))),
         })
     }
 }
@@ -557,7 +557,7 @@ impl dsl_core::FromValue for crate::manifest::generated::puzzle3d_default::Puzzl
         };
         Ok(match s.as_str() {
             "vortex" => crate::manifest::generated::puzzle3d_default::Puzzle3dDefaultPortKind::Vortex,
-            other => return Err(dsl_core::ValueError::new(format!("unknown Puzzle3dDefaultPortKind `{{other}}`"))),
+            other => return Err(dsl_core::ValueError::new(format!("unknown Puzzle3dDefaultPortKind `{other}`"))),
         })
     }
 }
@@ -576,7 +576,7 @@ impl dsl_core::FromValue for crate::manifest::generated::puzzle3d_default::Puzzl
         };
         Ok(match s.as_str() {
             "cable.link" => crate::manifest::generated::puzzle3d_default::Puzzle3dDefaultWireKind::CableLink,
-            other => return Err(dsl_core::ValueError::new(format!("unknown Puzzle3dDefaultWireKind `{{other}}`"))),
+            other => return Err(dsl_core::ValueError::new(format!("unknown Puzzle3dDefaultWireKind `{other}`"))),
         })
     }
 }

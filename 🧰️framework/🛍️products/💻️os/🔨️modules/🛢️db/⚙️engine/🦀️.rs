@@ -1793,7 +1793,7 @@ impl DatabaseCatalogReadState {
                 }
             }
             Ok(std::task::Poll::Ready(result)) => {
-                let too_large = result.root.as_ref().ok().and_then(Option::as_ref).is_some_and(|(bytes, _)| bytes.capacity() > DATABASE_CATALOG_READ_BYTES as usize);
+                let too_large = result.root.as_ref().ok().and_then(Option::as_ref).is_some_and(|(bytes, _)| bytes.len() > DATABASE_CATALOG_READ_BYTES as usize);
                 *self.poll_work.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some(work);
                 *self.staged_result.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some(result);
                 self.set_phase(DatabaseCatalogReadPhase::RetainWork);
@@ -2081,7 +2081,8 @@ impl Drop for DatabaseCatalogReadFuture {
         }
         self.state.abandoned.store(true, std::sync::atomic::Ordering::Release);
         self.state.cancelled.store(true, std::sync::atomic::Ordering::Release);
-        if let Some(result) = self.state.completion.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take() {
+        let completion = { self.state.completion.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take() };
+        if let Some(result) = completion {
             *self.state.terminal_completion.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some(result);
         }
         if !self.state.scheduled.load(std::sync::atomic::Ordering::Acquire) && !self.state.polling.load(std::sync::atomic::Ordering::Acquire) {
@@ -2123,18 +2124,22 @@ impl DatabaseCatalogReadTerminalHandle {
         self.state.cancelled.store(false, Ordering::Release);
         self.state.abandoned.store(false, Ordering::Release);
         let terminal_error = self.state.terminal_error.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take();
-        if let Some((job, attempt)) = self.state.retry_job.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take() {
+        let retry_job = { self.state.retry_job.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take() };
+        if let Some((job, attempt)) = retry_job {
             self.state.scheduled.store(true, Ordering::Release);
             self.state.submit_exact(job, attempt);
-        } else if let Some(work) = self.state.terminal_work.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take() {
-            *self.state.poll_work.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some(work);
-            self.state.set_phase(DatabaseCatalogReadPhase::Poll);
-            self.state.schedule();
         } else {
-            self.state.cancelled.store(true, Ordering::Release);
-            self.state.abandoned.store(true, Ordering::Release);
-            *self.state.terminal_error.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = terminal_error;
-            return Err(self);
+            let terminal_work = { self.state.terminal_work.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take() };
+            if let Some(work) = terminal_work {
+                *self.state.poll_work.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some(work);
+                self.state.set_phase(DatabaseCatalogReadPhase::Poll);
+                self.state.schedule();
+            } else {
+                self.state.cancelled.store(true, Ordering::Release);
+                self.state.abandoned.store(true, Ordering::Release);
+                *self.state.terminal_error.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = terminal_error;
+                return Err(self);
+            }
         }
         self.state.terminal_checked_out.store(false, Ordering::Release);
         Ok(DatabaseCatalogReadFuture { state: self.state.clone(), resolved: false })
@@ -2773,6 +2778,8 @@ struct DatabaseCatalogBootstrapState {
     active_drivers: std::sync::atomic::AtomicUsize,
     #[cfg(test)]
     max_active_drivers: std::sync::atomic::AtomicUsize,
+    #[cfg(test)]
+    poll_worker_thread: std::sync::atomic::AtomicBool,
 }
 
 struct DatabaseCatalogBootstrapWake {
@@ -3041,6 +3048,8 @@ impl DatabaseCatalogBootstrapState {
             return;
         }
         self.set_progress(DatabaseCatalogBootstrapProgress::Polling);
+        #[cfg(test)]
+        self.poll_worker_thread.store(std::thread::current().name().is_some_and(|name| name.starts_with("semio-pool-worker-")), Ordering::Release);
         let wake = std::task::Waker::from(Arc::new(DatabaseCatalogBootstrapWake { state: Arc::downgrade(self), generation }));
         let mut context = std::task::Context::from_waker(&wake);
         let polled = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| work.poll(&mut context)));
@@ -3361,6 +3370,8 @@ impl DatabaseCatalogBootstrapFuture {
             active_drivers: std::sync::atomic::AtomicUsize::new(0),
             #[cfg(test)]
             max_active_drivers: std::sync::atomic::AtomicUsize::new(0),
+            #[cfg(test)]
+            poll_worker_thread: std::sync::atomic::AtomicBool::new(false),
         });
         database_catalog_bootstrap_registry().lock().unwrap_or_else(std::sync::PoisonError::into_inner)[slot] = Some(state.clone());
         if schedule {
@@ -3396,7 +3407,8 @@ impl Future for DatabaseCatalogBootstrapFuture {
     type Output = Result<DatabaseCatalogBootstrapResult, DbError>;
 
     fn poll(mut self: std::pin::Pin<&mut Self>, context: &mut std::task::Context<'_>) -> std::task::Poll<Self::Output> {
-        if let Some(result) = self.state.completion.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take() {
+        let completion = { self.state.completion.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take() };
+        if let Some(result) = completion {
             self.resolved = true;
             return std::task::Poll::Ready(result);
         }
@@ -3405,7 +3417,8 @@ impl Future for DatabaseCatalogBootstrapFuture {
             hook();
         }
         *self.state.waker.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some(context.waker().clone());
-        if let Some(result) = self.state.completion.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take() {
+        let completion = { self.state.completion.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take() };
+        if let Some(result) = completion {
             self.state.waker.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take();
             self.resolved = true;
             return std::task::Poll::Ready(result);
@@ -3421,7 +3434,8 @@ impl Drop for DatabaseCatalogBootstrapFuture {
         }
         self.state.abandoned.store(true, std::sync::atomic::Ordering::Release);
         self.state.cancelled.store(true, std::sync::atomic::Ordering::Release);
-        if let Some(result) = self.state.completion.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take() {
+        let completion = { self.state.completion.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take() };
+        if let Some(result) = completion {
             *self.state.terminal_completion.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some(result);
         }
         self.state.wake_requested.store(true, std::sync::atomic::Ordering::Release);
@@ -3479,35 +3493,37 @@ impl DatabaseCatalogBootstrapTerminalHandle {
 
     pub fn resume(self) -> Result<DatabaseCatalogBootstrapFuture, Self> {
         use std::sync::atomic::Ordering;
-        if self.state.finished.load(Ordering::Acquire) || self.state.driver_authority.load(Ordering::Acquire) != DatabaseCatalogBootstrapDriverAuthority::Idle as u8 || self.state.closing.load(Ordering::Acquire) {
+        let state = self.state.clone();
+        if state.finished.load(Ordering::Acquire) || state.driver_authority.load(Ordering::Acquire) != DatabaseCatalogBootstrapDriverAuthority::Idle as u8 || state.closing.load(Ordering::Acquire) {
             return Err(self);
         }
-        if let Some(mut result) = self.state.terminal_completion.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take() {
+        let terminal_completion = { state.terminal_completion.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take() };
+        if let Some(mut result) = terminal_completion {
             if let Ok(owner) = result.as_mut() {
-                owner.state = Some(self.state.clone());
+                owner.state = Some(state.clone());
             }
-            *self.state.completion.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some(result);
-        } else if let Some((job, attempt)) = self.state.retry_job.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take() {
-            if self.state.driver_authority.compare_exchange(DatabaseCatalogBootstrapDriverAuthority::Idle as u8, DatabaseCatalogBootstrapDriverAuthority::Queued as u8, Ordering::AcqRel, Ordering::Acquire).is_err() {
-                *self.state.retry_job.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some((job, attempt));
+            *state.completion.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some(result);
+        } else if let Some((job, attempt)) = { state.retry_job.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take() } {
+            if state.driver_authority.compare_exchange(DatabaseCatalogBootstrapDriverAuthority::Idle as u8, DatabaseCatalogBootstrapDriverAuthority::Queued as u8, Ordering::AcqRel, Ordering::Acquire).is_err() {
+                *state.retry_job.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some((job, attempt));
                 return Err(self);
             }
-            self.state.scheduled.store(true, Ordering::Release);
-            self.state.submit_exact(job, attempt);
-        } else if let Some(work) = self.state.terminal_work.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take() {
-            *self.state.poll_work.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some(work);
-            self.state.set_phase(DatabaseCatalogBootstrapPhase::Poll);
-            self.state.schedule();
-        } else if self.state.pages.lock().unwrap_or_else(std::sync::PoisonError::into_inner).is_some() {
-            self.state.set_phase(DatabaseCatalogBootstrapPhase::Handoff);
-            self.state.schedule();
+            state.scheduled.store(true, Ordering::Release);
+            state.submit_exact(job, attempt);
+        } else if let Some(work) = { state.terminal_work.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take() } {
+            *state.poll_work.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some(work);
+            state.set_phase(DatabaseCatalogBootstrapPhase::Poll);
+            state.schedule();
+        } else if state.pages.lock().unwrap_or_else(std::sync::PoisonError::into_inner).is_some() {
+            state.set_phase(DatabaseCatalogBootstrapPhase::Handoff);
+            state.schedule();
         } else {
             return Err(self);
         }
-        self.state.cancelled.store(false, Ordering::Release);
-        self.state.abandoned.store(false, Ordering::Release);
-        self.state.terminal_checked_out.store(false, Ordering::Release);
-        Ok(DatabaseCatalogBootstrapFuture { state: self.state.clone(), resolved: false })
+        state.cancelled.store(false, Ordering::Release);
+        state.abandoned.store(false, Ordering::Release);
+        state.terminal_checked_out.store(false, Ordering::Release);
+        Ok(DatabaseCatalogBootstrapFuture { state, resolved: false })
     }
 }
 
@@ -3849,20 +3865,20 @@ fn retire_engine_query_stream(owner: QueryStream) -> Result<(), QueryStream> {
         return Ok(());
     }
     let mut retired = ENGINE_QUERY_RETIREMENT.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
-    if let Some(index) = engine_query_vacant_retirement_slot(0, &retired) {
+    if let Some(index) = engine_query_vacant_retirement_slot(0, &retired[..]) {
         retired[index] = Some(owner);
         Ok(())
     } else {
         drop(retired);
         ENGINE_QUERY_RETIREMENT_PRESSURE_FAULT.store(true, std::sync::atomic::Ordering::Release);
         let mut overflow = ENGINE_QUERY_RETIREMENT_OVERFLOW.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
-        if let Some(index) = engine_query_vacant_retirement_slot(1, &overflow) {
+        if let Some(index) = engine_query_vacant_retirement_slot(1, &overflow[..]) {
             overflow[index] = Some(owner);
             return Ok(());
         }
         drop(overflow);
         let mut quarantine = ENGINE_QUERY_RETIREMENT_QUARANTINE.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
-        let Some(index) = engine_query_vacant_retirement_slot(2, &quarantine) else { return Err(owner) };
+        let Some(index) = engine_query_vacant_retirement_slot(2, &quarantine[..]) else { return Err(owner) };
         quarantine[index] = Some(owner);
         Ok(())
     }
@@ -3878,7 +3894,7 @@ pub fn engine_query_maintenance_step() -> Result<bool, DbError> {
             let mut quarantine = ENGINE_QUERY_RETIREMENT_QUARANTINE.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
             let Some(index) = quarantine.iter().position(Option::is_some) else { return Ok(false) };
             let mut retired = ENGINE_QUERY_RETIREMENT.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
-            let Some(target) = engine_query_vacant_retirement_slot(0, &retired) else {
+            let Some(target) = engine_query_vacant_retirement_slot(0, &retired[..]) else {
                 drop(retired);
                 let owner = quarantine[index].as_mut().ok_or_else(|| DbError::Internal("engine query quarantine changed stream owner".to_string()))?;
                 if !owner.close_step()? {
@@ -3890,7 +3906,7 @@ pub fn engine_query_maintenance_step() -> Result<bool, DbError> {
             return Ok(true);
         };
         let mut retired = ENGINE_QUERY_RETIREMENT.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
-        let Some(target) = engine_query_vacant_retirement_slot(0, &retired) else {
+        let Some(target) = engine_query_vacant_retirement_slot(0, &retired[..]) else {
             drop(retired);
             let owner = overflow[index].as_mut().ok_or_else(|| DbError::Internal("engine query overflow retirement changed stream owner".to_string()))?;
             if !owner.close_step()? {
@@ -4071,7 +4087,7 @@ pub mod vcs_integration {
     /// PRIOR hash from the pre-state, a real, correct inverse — not a placeholder). This mirrors
     /// `db_artifact`'s own schema-erased-JSON convention one layer up: neither crate has (or needs)
     /// compile-time knowledge of any real document schema.
-    #[derive(Clone, Debug, Default, PartialEq, serde::Serialize, serde::Deserialize)]
+    #[derive(Clone, Debug, Default, PartialEq, store::ToValue, store::FromValue)]
     pub struct HashProjection {
         pub latest_hash: [u8; 32],
     }
@@ -4111,7 +4127,7 @@ pub mod vcs_integration {
         }
     }
 
-    #[derive(Clone, Debug, Default, serde::Serialize, serde::Deserialize)]
+    #[derive(Clone, Debug, Default, store::ToValue, store::FromValue)]
     pub struct HashDiff {
         pub hash: Option<[u8; 32]>,
     }
@@ -4131,15 +4147,37 @@ pub mod vcs_integration {
         }
     }
 
-    #[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
+    #[derive(Clone, Debug, PartialEq, store::ToValue, store::FromValue)]
     pub struct HashMutation {
         pub hash: [u8; 32],
         pub author: Option<protocol::ActorId>,
         pub timestamp: Option<protocol::HybridLogicalTimestamp>,
     }
 
+    const HASH_MUTATION_DESCRIPTOR: protocol::MutationLeafDescriptor = protocol::MutationLeafDescriptor {
+        schema_version: 1,
+        owner: "framework/os/db/version-graph/hash-mutation",
+        semantic_kind: "set-hash",
+        display_name: "Set Hash",
+        emoji: "#️⃣",
+        aggregate_variant: "HashMutation",
+        payload_schema: "db.hash/v1",
+        text_opcode: None,
+        binary_tag: None,
+        invertibility: protocol::MutationInvertibility::ExplicitMutation,
+        diff_participation: protocol::MutationDiffParticipation::Detect,
+        outcome_classes: &[protocol::MutationOutcomeClass::Applied],
+        composition: protocol::MutationComposition::Atomic,
+        required_language_surfaces: &[protocol::MutationLanguageSurface::Rust],
+    };
+
     impl protocol::Mutation<HashProjection> for HashMutation {
         type Diff = HashDiff;
+        const DESCRIPTORS: &'static [protocol::MutationLeafDescriptor] = &[HASH_MUTATION_DESCRIPTOR];
+
+        fn descriptor(&self) -> &'static protocol::MutationLeafDescriptor {
+            &HASH_MUTATION_DESCRIPTOR
+        }
 
         fn diff(&self, _base: &HashProjection) -> protocol::MutationOutcome<HashDiff> {
             protocol::MutationOutcome::new(HashDiff { hash: Some(self.hash) })
@@ -4579,14 +4617,18 @@ pub mod vcs_integration {
     }
 
     impl VersionGraph for VcsVersionGraph {
-        async fn record_change(&self, document: &ArtifactId, change: ChangeRecord) -> Result<String, DbError> {
-            let admission = record_credit(document, &change).and_then(|(items, bytes)| VcsOperationAdmission::try_claim(items, bytes))?;
-            let mut lease = self.store(document, &admission).await?;
-            let ChangeRecord { content_hash, author, message, timestamp_ms, .. } = change;
-            let operation = HashMutation { hash: content_hash.0, author: Some(protocol::ActorId(author.0)), timestamp: Some(protocol::HybridLogicalTimestamp::new(0, timestamp_ms)) };
-            let mutations = Vec::from([operation]);
-            lease.store_mut().dispatch(store::ArtifactCommand::Apply { mutations, description: Some(message) }).await.map_err(map_vcs_error)?;
-            Ok(lease.store_mut().envelope().await.vcs.edits.last().map(|edit| edit.id.clone()).unwrap_or_default())
+        fn record_change<'a>(&'a self, document: &'a ArtifactId, change: ChangeRecord) -> VersionGraphFuture<'a, String> {
+            Box::pin(async move {
+                crate::db_actor::block_on(async move {
+                    let admission = record_credit(document, &change).and_then(|(items, bytes)| VcsOperationAdmission::try_claim(items, bytes))?;
+                    let mut lease = self.store(document, &admission).await?;
+                    let ChangeRecord { content_hash, author, message, timestamp_ms, .. } = change;
+                    let operation = HashMutation { hash: content_hash.0, author: Some(protocol::ActorId(author.0)), timestamp: Some(protocol::HybridLogicalTimestamp::new(0, timestamp_ms)) };
+                    let mutations = Vec::from([operation]);
+                    lease.store_mut().dispatch(store::ArtifactCommand::Apply { mutations, description: Some(message) }).await.map_err(map_vcs_error)?;
+                    Ok(lease.store_mut().envelope().vcs.edits.last().map(|edit| edit.id.clone()).unwrap_or_default())
+                })
+            })
         }
 
         /// @emoji 🎯️ Design choice: `request.parent_checkpoint`/`change_ids` are NOT threaded
@@ -4597,33 +4639,45 @@ pub mod vcs_integration {
         /// unused: `vcs`'s own `CommitCheckpoint` handler stamps its own `now_iso()` timestamp into
         /// the checkpoint (part of what its content-addressed id hashes over) — this crate cannot
         /// override that without reaching into `vcs`'s private state.
-        async fn checkpoint(&self, document: &ArtifactId, request: CheckpointRequest) -> Result<String, DbError> {
-            let admission = checkpoint_credit(document, &request).and_then(|(items, bytes)| VcsOperationAdmission::try_claim(items, bytes))?;
-            let mut lease = self.store(document, &admission).await?;
-            let CheckpointRequest { message, authors: source_authors, .. } = request;
-            let mut authors = Vec::with_capacity(source_authors.capacity());
-            for author in source_authors {
-                let name = author.0;
-                authors.push(vcs::Author { id: name.clone(), name, avatar: None });
-            }
-            lease.store_mut().dispatch(store::ArtifactCommand::CommitCheckpoint { message: Some(message), authors }).await.map_err(map_vcs_error)?;
-            lease.store_mut().current_checkpoint_id().await.map(str::to_string).ok_or_else(|| DbError::Internal("vcs: commit_checkpoint produced no checkpoint id".to_string()))
+        fn checkpoint<'a>(&'a self, document: &'a ArtifactId, request: CheckpointRequest) -> VersionGraphFuture<'a, String> {
+            Box::pin(async move {
+                crate::db_actor::block_on(async move {
+                    let admission = checkpoint_credit(document, &request).and_then(|(items, bytes)| VcsOperationAdmission::try_claim(items, bytes))?;
+                    let mut lease = self.store(document, &admission).await?;
+                    let CheckpointRequest { message, authors: source_authors, .. } = request;
+                    let mut authors = Vec::with_capacity(source_authors.capacity());
+                    for author in source_authors {
+                        let name = author.0;
+                        authors.push(vcs::Author { id: name.clone(), name, avatar: None });
+                    }
+                    lease.store_mut().dispatch(store::ArtifactCommand::CommitCheckpoint { message: Some(message), authors }).await.map_err(map_vcs_error)?;
+                    lease.store_mut().current_checkpoint_id().map(str::to_string).ok_or_else(|| DbError::Internal("vcs: commit_checkpoint produced no checkpoint id".to_string()))
+                })
+            })
         }
 
-        async fn merge_base(&self, document: &ArtifactId, a: &str, b: &str) -> Result<Option<String>, DbError> {
-            let admission = relation_credit(document, &[a, b]).and_then(|(items, bytes)| VcsOperationAdmission::try_claim(items, bytes))?;
-            let mut lease = self.store(document, &admission).await?;
-            Ok(store::merge_base(lease.store_mut().envelope().await, a, b).await)
+        fn merge_base<'a>(&'a self, document: &'a ArtifactId, a: &'a str, b: &'a str) -> VersionGraphFuture<'a, Option<String>> {
+            Box::pin(async move {
+                crate::db_actor::block_on(async move {
+                    let admission = relation_credit(document, &[a, b]).and_then(|(items, bytes)| VcsOperationAdmission::try_claim(items, bytes))?;
+                    let mut lease = self.store(document, &admission).await?;
+                    Ok(store::merge_base(lease.store_mut().envelope(), a, b).await)
+                })
+            })
         }
 
-        async fn head(&self, document: &ArtifactId, alternative: &str) -> Result<Option<String>, DbError> {
-            let admission = relation_credit(document, &[alternative]).and_then(|(items, bytes)| VcsOperationAdmission::try_claim(items, bytes))?;
-            let mut lease = self.store(document, &admission).await?;
-            let envelope = lease.store_mut().envelope().await;
-            if let Some(found) = envelope.vcs.alternatives.iter().find(|candidate| candidate.id == alternative || candidate.name == alternative) {
-                return Ok(found.checkpoint_ids.last().cloned());
-            }
-            Ok(lease.store_mut().current_checkpoint_id().await.map(str::to_string))
+        fn head<'a>(&'a self, document: &'a ArtifactId, alternative: &'a str) -> VersionGraphFuture<'a, Option<String>> {
+            Box::pin(async move {
+                crate::db_actor::block_on(async move {
+                    let admission = relation_credit(document, &[alternative]).and_then(|(items, bytes)| VcsOperationAdmission::try_claim(items, bytes))?;
+                    let mut lease = self.store(document, &admission).await?;
+                    let envelope = lease.store_mut().envelope();
+                    if let Some(found) = envelope.vcs.alternatives.iter().find(|candidate| candidate.id == alternative || candidate.name == alternative) {
+                        return Ok(found.checkpoint_ids.last().cloned());
+                    }
+                    Ok(lease.store_mut().current_checkpoint_id().map(str::to_string))
+                })
+            })
         }
     }
 
@@ -4956,7 +5010,7 @@ async fn encode_catalog_pages(entries: &[CatalogEntry]) -> Result<db_storage::Db
     for (index, entry) in entries.iter().enumerate() {
         let mut decimal = [0u8; 20];
         encoded_len = encoded_len
-            .checked_add(index.signum())
+            .checked_add(usize::from(index != 0))
             .and_then(|length| length.checked_add(b"{\"document\":".len()))
             .and_then(|length| length.checked_add(json_string_len(&entry.document.0)))
             .and_then(|length| length.checked_add(b",\"created_at_ms\":".len()))
@@ -6528,7 +6582,7 @@ impl DatabaseCreateCatalogState {
         self.set_phase(DatabaseCreateCatalogPhase::Publish);
     }
 
-    fn retire_intermediate_one(&self) {
+    fn retire_intermediate_one(self: &Arc<Self>) {
         if self.terminal_job.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take().is_some() {
             #[cfg(test)]
             self.terminal_job_retirements.fetch_add(1, std::sync::atomic::Ordering::AcqRel);
@@ -6724,7 +6778,7 @@ impl DatabaseCreateCatalogState {
             + usize::from(self.pending_owned.load(std::sync::atomic::Ordering::Acquire))
     }
 
-    fn retire_terminal_one(&self) {
+    fn retire_terminal_one(self: &Arc<Self>) {
         if !self.roots_are_empty() {
             self.set_phase(DatabaseCreateCatalogPhase::Retire);
             self.retire_intermediate_one();
@@ -6932,7 +6986,8 @@ impl Future for DatabaseCreateCatalogFuture {
     type Output = Result<DatabaseCreateCatalogResult, DbError>;
 
     fn poll(mut self: std::pin::Pin<&mut Self>, context: &mut std::task::Context<'_>) -> std::task::Poll<Self::Output> {
-        if let Some(result) = self.state.completion.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take() {
+        let completion = { self.state.completion.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take() };
+        if let Some(result) = completion {
             self.resolved = true;
             return std::task::Poll::Ready(result);
         }
@@ -6941,7 +6996,8 @@ impl Future for DatabaseCreateCatalogFuture {
             hook();
         }
         *self.state.waker.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some(context.waker().clone());
-        if let Some(result) = self.state.completion.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take() {
+        let completion = { self.state.completion.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take() };
+        if let Some(result) = completion {
             self.state.waker.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take();
             self.resolved = true;
             return std::task::Poll::Ready(result);
@@ -8574,8 +8630,14 @@ impl ArtifactHistoryState {
         let mut terminal = self.terminal_result.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
         if let Some(result) = terminal.as_mut() {
             match result {
-                Ok(view) if view.close_step() => return true,
-                Ok(_) | Err(_) => {
+                Ok(view) => {
+                    if view.close_step() {
+                        return true;
+                    }
+                    terminal.take();
+                    return true;
+                }
+                Err(_) => {
                     terminal.take();
                     return true;
                 }
@@ -9195,7 +9257,7 @@ mod tests {
         value
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Clone, Copy, PartialEq, Eq)]
     enum ControlledCapabilityPoll {
         Pending,
         Ready,
@@ -9308,6 +9370,7 @@ mod tests {
         mode: ControlledCatalogReadPoll,
         storage: Option<Arc<db_storage::DbBackend>>,
         key: Option<DatabaseCatalogRootKey>,
+        root: Option<db_storage::DbIoPages>,
         polls: Arc<std::sync::atomic::AtomicUsize>,
         waker: Arc<std::sync::Mutex<Option<std::task::Waker>>>,
     }
@@ -9324,7 +9387,11 @@ mod tests {
             match self.mode {
                 ControlledCatalogReadPoll::Pending => std::task::Poll::Pending,
                 ControlledCatalogReadPoll::Ready => {
-                    std::task::Poll::Ready(DatabaseCatalogReadResult { storage: self.storage.take().expect("controlled catalog storage"), key: self.key.take().expect("controlled catalog key"), root: Ok(Some((vec![1, 2, 3], EpochFence::INITIAL))) })
+                    std::task::Poll::Ready(DatabaseCatalogReadResult {
+                        storage: self.storage.take().expect("controlled catalog storage"),
+                        key: self.key.take().expect("controlled catalog key"),
+                        root: Ok(Some((self.root.take().expect("controlled catalog root"), EpochFence::INITIAL))),
+                    })
                 }
                 ControlledCatalogReadPoll::Panic => panic!("controlled catalog-read panic"),
             }
@@ -9337,7 +9404,8 @@ mod tests {
         let probe = DatabaseCatalogReadFuture::try_prepare(test_worker_pool(), storage.clone(), DatabaseCatalogRootKey::root(), false).expect("controlled catalog-read preparation");
         let polls = Arc::new(std::sync::atomic::AtomicUsize::new(0));
         let waker = Arc::new(std::sync::Mutex::new(None));
-        let future = ControlledCatalogReadFuture { mode, storage: Some(storage), key: Some(DatabaseCatalogRootKey::root()), polls: polls.clone(), waker: waker.clone() };
+        let root = db_storage::db_io_copy_pages(&[1, 2, 3]).unwrap().await.unwrap();
+        let future = ControlledCatalogReadFuture { mode, storage: Some(storage), key: Some(DatabaseCatalogRootKey::root()), root: Some(root), polls: polls.clone(), waker: waker.clone() };
         *probe.state.work.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some(DatabaseCatalogReadWork::controlled(Box::pin(future), pointer));
         let work = probe.state.work.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take().expect("controlled catalog-read work");
         *probe.state.poll_work.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some(work);
@@ -9798,7 +9866,8 @@ mod tests {
                 }
             }),
         )
-        .unwrap();
+        .ok()
+        .expect("catalog-bootstrap blocker admission");
         started_rx.recv().unwrap();
         loop {
             if let Err(error) = pool.try_submit(Lane::Io, Box::new(|| {})) {
@@ -10011,6 +10080,7 @@ mod tests {
                 }
             }),
         )
+        .ok()
         .expect("fixture blocker admission");
         started_rx.recv().expect("fixture worker entered blocker");
         loop {
@@ -10507,7 +10577,8 @@ mod tests {
                 }
             }),
         )
-        .unwrap();
+        .ok()
+        .expect("create-catalog blocker admission");
         started_rx.recv().unwrap();
         loop {
             if let Err(error) = pool.try_submit(Lane::Io, Box::new(|| {})) {
@@ -10547,7 +10618,8 @@ mod tests {
                 }
             }),
         )
-        .unwrap();
+        .ok()
+        .expect("create-catalog replenishing blocker admission");
         started_rx.recv().unwrap();
         loop {
             let job = replenishing_create_catalog_io_job(pool.clone(), active.clone());
@@ -10579,7 +10651,8 @@ mod tests {
                 }
             }),
         )
-        .unwrap();
+        .ok()
+        .expect("create-catalog maintenance blocker admission");
         maintenance_rx.recv().unwrap();
         let (service_tx, service_rx) = std::sync::mpsc::sync_channel(1);
         let held_service = service_gate.clone();
@@ -10594,7 +10667,8 @@ mod tests {
                 }
             }),
         )
-        .unwrap();
+        .ok()
+        .expect("create-catalog service blocker admission");
         service_rx.recv().unwrap();
         loop {
             let job = replenishing_create_catalog_io_job(pool.clone(), active.clone());
@@ -10857,7 +10931,8 @@ mod tests {
                 }
             }),
         )
-        .unwrap();
+        .ok()
+        .expect("create-catalog saturation blocker admission");
         started_rx.recv().unwrap();
         loop {
             if let Err(error) = pool.try_submit(Lane::Io, Box::new(|| {})) {
@@ -11146,7 +11221,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn database_create_catalog_maximum_catalog_claim_revalidate_and_snapshot_clone_never_hold_worker() {
-        let entries = (0..DATABASE_CREATE_CATALOG_MAX_ENTRIES - 1).map(|index| CatalogEntry { document: protocol::ArtifactId(format!("contention-{index:04}")), created_at_ms: index as u64 }).collect();
+        let entries: Vec<CatalogEntry> = (0..DATABASE_CREATE_CATALOG_MAX_ENTRIES - 1).map(|index| CatalogEntry { document: protocol::ArtifactId(format!("contention-{index:04}")), created_at_ms: index as u64 }).collect();
         let (claim_storage, claim_catalog, _) = create_catalog_fixture(entries.clone()).await;
         let (revalidate_storage, revalidate_catalog, _) = create_catalog_fixture(entries.clone()).await;
         let (retire_storage, retire_catalog, _) = create_catalog_fixture(entries).await;
@@ -11475,7 +11550,9 @@ mod tests {
         db_actor::block_on(handle.submit(batch, db_artifact::SubmitOptions::default())).unwrap().unwrap();
 
         let mut session = database.hello(document, None, "session-1".to_string(), protocol::ActorId("semio_hub".to_string()), 4096).await.unwrap();
-        assert!(matches!(session.take_welcome().unwrap(), protocol::ServerFrame::Welcome { .. }));
+        let welcome = session.take_welcome().unwrap();
+        assert!(matches!(welcome.frame().unwrap(), protocol::ServerFrame::Welcome { .. }));
+        welcome.acknowledge().unwrap();
     }
 
     // 🔬️ `storage()` is a real escape hatch to the same backend `Database::open_at` wired — a

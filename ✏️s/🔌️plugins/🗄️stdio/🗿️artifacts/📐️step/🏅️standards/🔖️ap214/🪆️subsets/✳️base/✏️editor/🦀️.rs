@@ -2,8 +2,8 @@
 //! 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET contract §2.1). `StepAnyEditor`
 //! implements `ArtifactEditor`, wiring the shared `MeshWindowKit` to a single Main window.
 
-use crate::artifacts::step::standards::v_ap214::subsets::any::schema::mutations::StepMutation;
-use crate::artifacts::step::standards::v_ap214::subsets::any::schema::snapshot::StepSnapshot;
+use crate::artifacts::step::standards::v_ap214::subsets::base::schema::mutations::StepMutation;
+use crate::artifacts::step::standards::v_ap214::subsets::base::schema::snapshot::StepSnapshot;
 use crate::editor::step_any::modes::edit;
 use crate::editor::step_any::modes::edit::windows::main;
 use semio_framework_plugin::app::InteractionView;

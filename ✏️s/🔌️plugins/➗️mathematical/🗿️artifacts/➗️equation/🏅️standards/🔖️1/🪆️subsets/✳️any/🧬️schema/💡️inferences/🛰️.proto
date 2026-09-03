@@ -1,0 +1,16 @@
+syntax = "proto3";
+package semio.s.mathematical.equation.inference;
+
+// 💡️ Equation inference schema — topology (graph topological order).
+
+message EquationInference {
+  // @derived
+  EquationTopology topology = 1;
+}
+
+message EquationTopology {
+  repeated string topo_order = 1;
+  map<string, uint32> depth = 2;
+  bool cycle_free = 3;
+  uint32 node_count = 4;
+}

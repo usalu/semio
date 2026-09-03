@@ -18,7 +18,6 @@ pub mod compiler {
     use crate::artifacts::presentation::PresentationSnapshot;
     use crate::editor::animate::engine::config::config::{AnimateConfig, QualityPreset};
     use crate::editor::animate::engine::video::{render_scene, scene_for_hash, OutputFormat};
-    use serde_json::json;
     use std::fs;
     use std::path::{Path, PathBuf};
 
@@ -73,38 +72,44 @@ pub mod compiler {
     /// unchanged `fs::write`s).
     pub fn compile_presentation_site(deck: &PresentationSnapshot, output_dir: &Path) -> Result<()> {
         fs::create_dir_all(output_dir).map_err(|error| PresentationCompileError::new(error.to_string()))?;
-        let deck_value: serde_json::Value = dsl::ToValue::to_value(deck).into();
-        let deck_json = serde_json::to_string_pretty(&deck_value).map_err(|error| PresentationCompileError::new(format!("deck json: {error}")))?;
+        let deck_value = dsl::os_pack::json::from_dsl_value(&dsl::ToValue::to_value(deck));
+        let deck_json = dsl::os_pack::json::to_string_pretty(&deck_value);
         fs::write(output_dir.join("deck.json"), &deck_json).map_err(|error| PresentationCompileError::new(error.to_string()))?;
         let index_snapshot = index_html_snapshot(&deck_json);
         let index_text = semio_s_plugin_stdio::artifacts::html::standards::v5::subsets::any::schema::snapshot::write_html_document(&index_snapshot);
         fs::write(output_dir.join("🌐️.html"), index_text).map_err(|error| PresentationCompileError::new(error.to_string()))?;
         fs::write(output_dir.join("styles.css"), styles_css()).map_err(|error| PresentationCompileError::new(error.to_string()))?;
-        fs::write(output_dir.join("manifest.json"), serde_json::to_string_pretty(&site_manifest(deck)).map_err(|error| PresentationCompileError::new(error.to_string()))?).map_err(|error| PresentationCompileError::new(error.to_string()))?;
+        fs::write(output_dir.join("manifest.json"), dsl::os_pack::json::to_string_pretty(&site_manifest(deck))).map_err(|error| PresentationCompileError::new(error.to_string()))?;
         fs::write(output_dir.join("player.js"), player_boot_js()).map_err(|error| PresentationCompileError::new(error.to_string()))?;
         Ok(())
     }
 
-    fn site_manifest(deck: &PresentationSnapshot) -> serde_json::Value {
+    fn site_manifest(deck: &PresentationSnapshot) -> dsl::os_pack::json::Value {
         let (_, tiles) = crate::artifacts::presentation::presentation_working_scene(deck);
-        json!({
-            "schema": "animate.presentation.site",
-            "deckSchema": deck.schema,
-            "title": tiles.first().map_or("Animate Presentation", |tile| tile.name.as_str()),
-            "tileCount": tiles.len(),
-            "player": {
-                "kind": "wgpu",
-                "wasm": "/animate/plugin/wasm/animate_plugin_bg.wasm",
-                "js": "/animate/plugin/wasm/semio_s_plugin_animate.js",
-                "boot": "/animate/plugin/wasm/🟨️boot.js"
-            },
-            "assets": {
-                "deck": "deck.json",
-                "styles": "styles.css",
-                "player": "player.js",
-                "scenes": "scenes"
-            }
-        })
+        dsl::os_pack::json::object([
+            ("schema".to_string(), dsl::os_pack::json::Value::from("animate.presentation.site")),
+            ("deckSchema".to_string(), dsl::os_pack::json::Value::from(deck.schema.clone())),
+            ("title".to_string(), dsl::os_pack::json::Value::from(tiles.first().map_or("Animate Presentation", |tile| tile.name.as_str()))),
+            ("tileCount".to_string(), dsl::os_pack::json::Value::from(tiles.len())),
+            (
+                "player".to_string(),
+                dsl::os_pack::json::object([
+                    ("kind".to_string(), dsl::os_pack::json::Value::from("wgpu")),
+                    ("wasm".to_string(), dsl::os_pack::json::Value::from("/animate/plugin/wasm/animate_plugin_bg.wasm")),
+                    ("js".to_string(), dsl::os_pack::json::Value::from("/animate/plugin/wasm/semio_s_plugin_animate.js")),
+                    ("boot".to_string(), dsl::os_pack::json::Value::from("/animate/plugin/wasm/🟨️boot.js")),
+                ]),
+            ),
+            (
+                "assets".to_string(),
+                dsl::os_pack::json::object([
+                    ("deck".to_string(), dsl::os_pack::json::Value::from("deck.json")),
+                    ("styles".to_string(), dsl::os_pack::json::Value::from("styles.css")),
+                    ("player".to_string(), dsl::os_pack::json::Value::from("player.js")),
+                    ("scenes".to_string(), dsl::os_pack::json::Value::from("scenes")),
+                ]),
+            ),
+        ])
     }
 
     /// 🌐️ Builds `🌐️.html`'s real `HtmlSnapshot` — deck JSON lands verbatim inside the
@@ -258,11 +263,11 @@ pub mod compiler {
             assert!(index.contains("semio_s_plugin_animate.js"));
             let player = fs::read_to_string(output.join("player.js")).expect("player.js");
             assert!(player.contains("sceneClips"));
-            let manifest: serde_json::Value = serde_json::from_str(&fs::read_to_string(output.join("manifest.json")).expect("manifest")).expect("json");
+            let manifest = dsl::os_pack::json::parse(&fs::read_to_string(output.join("manifest.json")).expect("manifest")).expect("json");
             assert_eq!(manifest.get("schema").and_then(|v| v.as_str()), Some("animate.presentation.site"));
             assert_eq!(manifest.pointer("/player/wasm").and_then(|v| v.as_str()), Some("/animate/plugin/wasm/animate_plugin_bg.wasm"));
-            let deck_value: serde_json::Value = serde_json::from_str(&fs::read_to_string(output.join("deck.json")).expect("deck.json")).expect("json");
-            let deck_file: PresentationSnapshot = dsl::FromValue::from_value(deck_value.into()).expect("deck");
+            let deck_value = dsl::os_pack::json::parse(&fs::read_to_string(output.join("deck.json")).expect("deck.json")).expect("json");
+            let deck_file: PresentationSnapshot = dsl::FromValue::from_value(dsl::os_pack::json::to_dsl_value(&deck_value)).expect("deck");
             assert_eq!(crate::artifacts::presentation::presentation_working_scene(&deck_file).1.len(), 4);
             let _ = fs::remove_dir_all(&output);
         }

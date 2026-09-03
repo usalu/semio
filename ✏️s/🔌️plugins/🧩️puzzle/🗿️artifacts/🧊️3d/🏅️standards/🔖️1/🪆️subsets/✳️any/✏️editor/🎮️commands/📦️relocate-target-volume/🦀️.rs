@@ -1,7 +1,7 @@
 //! 📦️ `relocate-target-volume` command.
 
 use crate::editor::puzzle3d::{value_as_vec3, Puzzle3dActionCtx};
-use serde_json::{json, Value};
+use dsl::os_pack::json::Value;
 
 /// 🚚️ Absolute pose push from the gumball for one unlocked target volume.
 pub fn relocate_target_volume(ctx: &mut Puzzle3dActionCtx<'_>, args: Option<&Value>) {
@@ -17,6 +17,6 @@ pub fn relocate_target_volume(ctx: &mut Puzzle3dActionCtx<'_>, args: Option<&Val
         volume.orientation = Some([values[0].as_f64().unwrap_or(0.0), values[1].as_f64().unwrap_or(0.0), values[2].as_f64().unwrap_or(0.0), values[3].as_f64().unwrap_or(1.0)]);
     }
     if let Some(scale) = after.get("scale").and_then(|value| value.as_array()).filter(|values| values.len() >= 3) {
-        volume.scale = Some(json!([scale[0].as_f64().unwrap_or(1.0), scale[1].as_f64().unwrap_or(1.0), scale[2].as_f64().unwrap_or(1.0),]));
+        volume.scale = Some(dsl::ToValue::to_value(&[scale[0].as_f64().unwrap_or(1.0), scale[1].as_f64().unwrap_or(1.0), scale[2].as_f64().unwrap_or(1.0)]));
     }
 }

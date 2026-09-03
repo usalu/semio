@@ -1,14 +1,15 @@
 //! 🧬️ Wires artifact schema — every field of the artifact with its state class.
 
 use dsl::DslValue;
+use dsl::os_pack::json::Value;
 use schema::ArtifactSchema;
-use serde::{Deserialize, Serialize};
-use serde_json::Value;
 
 //#region 🔖️Artifact
 /// 🧬️ Full wires artifact state across the artifact, presence and config lanes.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ArtifactSchema)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, ArtifactSchema)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[artifact_schema(id = "s.reasoning.wires")]
 pub struct WiresArtifact {
     #[state(artifact)]
@@ -217,11 +218,11 @@ pub async fn dsl_id(value: Option<&DslValue>) -> Option<u64> {
 }
 
 pub async fn dsl_to_json(value: &DslValue) -> Value {
-    dsl::from_dsl_value(value.clone()).unwrap_or(Value::Null)
+    dsl::os_pack::json::from_dsl_value(value)
 }
 
 pub async fn fixture_json_string(fixture: &DslValue) -> String {
-    serde_json::to_string(&dsl_to_json(fixture)).unwrap_or_else(|_| "{}".into())
+    dsl::os_pack::json::to_json_string(fixture)
 }
 
 pub async fn fixture_camera(fixture: &DslValue) -> (f64, f64, f64) {
@@ -261,8 +262,8 @@ pub async fn force_layout_board(board: &mut DslValue) {
     let Ok(layout_json) = infinite_board_port_directed::apply_force_graph_layout_to_fixture_v1_json(&fixture_json_string(board), r#"{"mode":"force-graph"}"#) else {
         return;
     };
-    if let Ok(parsed) = serde_json::from_str::<Value>(&layout_json) {
-        *board = dsl::to_dsl_value(&parsed).unwrap_or(DslValue::Null);
+    if let Ok(parsed) = dsl::os_pack::json::from_json_str::<DslValue>(&layout_json) {
+        *board = parsed;
     }
 }
 //#endregion 🔖️DocumentHelpers
@@ -279,47 +280,41 @@ pub async fn metabolism_wires_example_snapshot() -> protocol::MutationApplyResul
 
 /// 🧪️ Hand-built metabolism demo when the bundled `.dsl.semio` asset is still a stub envelope.
 async fn handcrafted_metabolism_snapshot() -> protocol::MutationApplyResult<crate::artifacts::wires::WiresSnapshot> {
-    use serde_json::json;
     let mut snapshot = crate::artifacts::wires::empty_wires_snapshot();
     for i in 1..=7 {
         let node_id = format!("node-{i}");
         let label = if i == 1 { "Metabolism".to_string() } else { format!("Topic {i}") };
-        let node = dsl::to_dsl_value(&json!({
-            "id": node_id,
-            "nodeKind": "identity",
-            "shape": "circle",
-            "x": (i as f64) * 40.0,
-            "y": (i as f64) * 30.0,
-            "radius": 24.0,
-            "text": label,
-            "handles": []
-        }))
-        .expect("node serializes");
+        let node = DslValue::object([
+            ("id".into(), DslValue::String(node_id.clone())),
+            ("nodeKind".into(), DslValue::String("identity".into())),
+            ("shape".into(), DslValue::String("circle".into())),
+            ("x".into(), DslValue::float((i as f64) * 40.0)),
+            ("y".into(), DslValue::float((i as f64) * 30.0)),
+            ("radius".into(), DslValue::float(24.0)),
+            ("text".into(), DslValue::String(label.clone())),
+            ("handles".into(), DslValue::Array(vec![])),
+        ]);
         snapshot = store::apply_mutation(&snapshot, &crate::artifacts::wires::mutations::create_node(node))?.0;
-        array_mut(&mut snapshot.wires_fixture, "identities").push(
-            dsl::to_dsl_value(&json!({
-                "identityId": i,
-                "identityKind": "topic",
-                "label": label,
-                "nodeId": node_id,
-            }))
-            .expect("identity serializes"),
-        );
+        array_mut(&mut snapshot.wires_fixture, "identities").push(DslValue::object([
+            ("identityId".into(), DslValue::uint(i as u64)),
+            ("identityKind".into(), DslValue::String("topic".into())),
+            ("label".into(), DslValue::String(label)),
+            ("nodeId".into(), DslValue::String(node_id)),
+        ]));
     }
     for i in 1..=9 {
         let edge_id = format!("edge-{i}");
         let source = format!("node-{}", ((i - 1) % 7) + 1);
         let target = format!("node-{}", (i % 7) + 1);
         let kind = if i == 8 { "is" } else { "owns" };
-        let edge = dsl::to_dsl_value(&json!({ "id": edge_id, "source": source, "target": target })).expect("edge serializes");
-        let relationship = dsl::to_dsl_value(&json!({
-            "relationshipId": i,
-            "kind": kind,
-            "sourceIdentityId": ((i - 1) % 7) + 1,
-            "targetIdentityId": (i % 7) + 1,
-            "edgeId": edge_id,
-        }))
-        .expect("relationship serializes");
+        let edge = DslValue::object([("id".into(), DslValue::String(edge_id.clone())), ("source".into(), DslValue::String(source)), ("target".into(), DslValue::String(target))]);
+        let relationship = DslValue::object([
+            ("relationshipId".into(), DslValue::uint(i as u64)),
+            ("kind".into(), DslValue::String(kind.into())),
+            ("sourceIdentityId".into(), DslValue::uint((((i - 1) % 7) + 1) as u64)),
+            ("targetIdentityId".into(), DslValue::uint(((i % 7) + 1) as u64)),
+            ("edgeId".into(), DslValue::String(edge_id)),
+        ]);
         snapshot = store::apply_mutation(&snapshot, &crate::artifacts::wires::mutations::connect_nodes(edge, relationship))?.0;
     }
     let board = crate::artifacts::wires::wires_working_board(&snapshot);

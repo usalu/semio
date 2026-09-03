@@ -1,0 +1,23 @@
+semio procedural.generation3d.dsl v1
+schema="flow.fixture"
+camera {
+  x=130 y=-70 zoom=2
+}
+layout={
+  box=x=80 y=-70 shell=x=260 y=-70 size=x=40 y=-110 thickness=x=40 y=-150
+}
+synapses [id:TEXT wire:WIRE] {
+  e1 size@number->box@width
+  e2 size@number->box@depth
+  e3 size@number->box@height
+  e4 box@solid->shell@geometry
+  e5 thickness@number->shell@thickness
+}
+generations [id:TEXT name:TEXT values:VAL] {
+}
+widgets {
+  input-slider id="size" label="Size" value=2 min=0.5 max=5 step=0.1
+  input-slider id="thickness" label="Shell Thickness" value=0.2 min=0.05 max=0.8 step=0.01
+  neuron id="box" neuron-kind=brep.prim3d.box preview=false input-ports=[ "width" "depth" "height" ] output-ports=[ ] params=[ ]
+  neuron id="shell" neuron-kind=brep.solid.shell preview=true input-ports=[ "geometry" "thickness" "openFaces" ] output-ports=[ ] params=[ ]
+}

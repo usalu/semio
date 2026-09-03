@@ -491,7 +491,7 @@ impl GraphHost {
     }
 
     pub fn camera_json(&self) -> String {
-        serde_json::to_string(&self.dag.fixture.camera).unwrap_or_else(|_| r#"{"x":0,"y":0,"zoom":1}"#.into())
+        dsl::os_pack::json::to_json_string(&self.dag.fixture.camera)
     }
 
     pub fn selected_node_ids_json(&self) -> String {

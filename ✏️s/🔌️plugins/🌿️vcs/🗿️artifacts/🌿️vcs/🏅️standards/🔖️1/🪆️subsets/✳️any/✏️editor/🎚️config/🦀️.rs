@@ -10,11 +10,12 @@
 //! `shooting_engine::ShootingConfig`'s identical `locale` field/doc).
 
 use protocol::Mutation;
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️Config
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslArtifact)]
-#[serde(rename_all = "camelCase", default)]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslArtifact)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase", default)]
+#[cfg_attr(test, serde(rename_all = "camelCase", default))]
 #[dsl(extension = "vcscfg")]
 #[dsl(id = "vcs.config")]
 #[dsl(layout = "lines")]
@@ -81,7 +82,8 @@ store::impl_whole_record_config!(VcsDemoConfig);
 /// `VcsPlayApp` field writes/deleted `ViewModel.locale`), plus a generic `Snapshot` every variant's
 /// `backwards()` returns (see `shooting_op::ShootingConfigMutation`'s identical doc for why this
 /// whole-config-snapshot-undo shape is correct and sufficient here).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslOps)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 pub enum VcsDemoConfigMutation {
     #[dsl(key = "snapshot")]
     Snapshot {

@@ -26,9 +26,9 @@ pub struct ExportVideoFromDeck {
 }
 
 pub async fn handle_async(payload: &ExportVideoFromDeck) -> Result<Emit<PresentationMutation, PresentationConfigMutation>, Fault> {
-    let scene: PresentationScene = serde_json::from_str::<serde_json::Value>(&payload.scene_json)
+    let scene: PresentationScene = dsl::os_pack::json::parse(&payload.scene_json)
         .ok()
-        .and_then(|value| dsl::FromValue::from_value(value.into()).ok())
+        .and_then(|value| dsl::FromValue::from_value(dsl::os_pack::json::to_dsl_value(&value)).ok())
         .unwrap_or_else(|| PresentationScene::empty("Deck export"));
     match export_video_from_deck(&scene, &payload.output_dir).await {
         Ok(bundles) => Ok(Emit {
@@ -36,8 +36,8 @@ pub async fn handle_async(payload: &ExportVideoFromDeck) -> Result<Emit<Presenta
                 filename: "animate-video-export.ops".into(),
                 mime_type: "text/plain".into(),
                 data: {
-                    let value: serde_json::Value = dsl::ToValue::to_value(&bundles).into();
-                    serde_json::to_string_pretty(&value).unwrap_or_else(|_| "[]".into())
+                    let value = dsl::os_pack::json::from_dsl_value(&dsl::ToValue::to_value(&bundles));
+                    dsl::os_pack::json::to_string_pretty(&value)
                 },
                 encoding: None,
             }],

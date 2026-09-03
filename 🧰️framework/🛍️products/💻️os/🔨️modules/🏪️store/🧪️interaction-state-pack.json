@@ -1,0 +1,21 @@
+{
+  "selection": {
+    "graph": {
+      "granularity": "node",
+      "ids": ["n1", "n2"],
+      "anchorId": "n1"
+    }
+  },
+  "hover": {
+    "graph": {
+      "channel": "pointer",
+      "ids": ["n3"]
+    }
+  },
+  "activeMode": {
+    "graph": "multiple"
+  },
+  "activeGranularity": {
+    "graph": "node"
+  }
+}

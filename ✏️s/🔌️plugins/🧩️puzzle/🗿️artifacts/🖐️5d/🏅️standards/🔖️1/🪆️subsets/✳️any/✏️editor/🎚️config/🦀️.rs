@@ -9,7 +9,6 @@
 //! `active_utility_by_window_id` maps.
 
 use semio_framework_plugin::WorldSunConfig;
-use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, HashMap};
 
 //#region 🔖️Defaults
@@ -43,32 +42,24 @@ fn default_locale() -> String {
 //#endregion 🔖️Defaults
 
 //#region 🔖️Cameras
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, Default, value_derive::ToValue, value_derive::FromValue)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, Default, value_derive::ToValue, value_derive::FromValue)]
 #[value(rename_all = "camelCase")]
 pub struct Puzzle5dCamera2d {
-    #[serde(default)]
     #[value(default)]
     pub x: f64,
-    #[serde(default)]
     #[value(default)]
     pub y: f64,
-    #[serde(default = "one_f64")]
     #[value(default = "one_f64")]
     pub zoom: f64,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, Default, value_derive::ToValue, value_derive::FromValue)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, Default, value_derive::ToValue, value_derive::FromValue)]
 #[value(rename_all = "camelCase")]
 pub struct Puzzle5dCamera3d {
-    #[serde(default)]
     #[value(default)]
     pub position: [f64; 3],
-    #[serde(default)]
     #[value(default)]
     pub target: [f64; 3],
-    #[serde(default = "one_f64")]
     #[value(default = "one_f64")]
     pub zoom: f64,
 }
@@ -155,11 +146,11 @@ impl store::ArtifactDsl for Puzzle5dConfig {
     const EXTENSION: &'static str = "puzzle5dcfg";
 
     fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
-        serde_json::from_str(text).map_err(|error| store::TextError::new(error.to_string(), store::TextSpan::at(1, 1)))
+        dsl::json::from_json_str(text).map_err(|error| store::TextError::new(error.to_string(), store::TextSpan::at(1, 1)))
     }
 
     fn print_dsl(&self) -> String {
-        serde_json::to_string_pretty(self).unwrap_or_default()
+        dsl::json::to_string_pretty(&dsl::json::from_dsl_value(&dsl::ToValue::to_value(self)))
     }
 }
 
@@ -309,19 +300,20 @@ impl protocol::Mutation<Puzzle5dConfig> for Puzzle5dConfigMutation {
 
 impl protocol::OpBinary for Puzzle5dConfigMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        serde_json::to_vec(self).map_err(|error| protocol::ProtocolError::Pack(store::PackError::Schema(error.to_string())))
+        Ok(dsl::json::to_json_string(self).into_bytes())
     }
     fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        serde_json::from_slice(bytes).map_err(|error| protocol::ProtocolError::Pack(store::PackError::Schema(error.to_string())))
+        let text = std::str::from_utf8(bytes).map_err(|error| protocol::ProtocolError::Pack(store::PackError::Schema(error.to_string())))?;
+        dsl::json::from_json_str(text).map_err(|error| protocol::ProtocolError::Pack(store::PackError::Schema(error.to_string())))
     }
 }
 
 impl protocol::OpText for Puzzle5dConfigMutation {
     fn print_op(&self) -> String {
-        serde_json::to_string(self).unwrap_or_default()
+        dsl::json::to_json_string(self)
     }
     fn parse_op(line: &str) -> Result<Self, store::TextError> {
-        serde_json::from_str(line).map_err(|error| store::TextError::new(error.to_string(), store::TextSpan::at(1, 1)))
+        dsl::json::from_json_str(line).map_err(|error| store::TextError::new(error.to_string(), store::TextSpan::at(1, 1)))
     }
 }
 //#endregion 🔖️ConfigMutation

@@ -1,0 +1,5 @@
+"""🌱 Direct create-step payload."""
+input CreateStepInput {
+  pathRef: ProcedurePathRefInput!
+  step: ProcedureStepInput!
+}

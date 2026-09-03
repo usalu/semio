@@ -4,8 +4,8 @@ use semio_s_plugin_stdio::artifacts::xlsx::{XlsxSnapshot, STDIO_XLSX_DOCUMENT_SC
 
 pub fn serialize(snapshot: &PlaygroundSnapshot) -> Result<XlsxSnapshot, store::TextError> {
     let _ = STDIO_XLSX_DOCUMENT_SCHEMA;
-    let value = serde_json::to_value(snapshot).map_err(|e| store::TextError::new(e.to_string(), dsl::TextSpan::at(1, 1)))?;
-    serde_json::from_value(value).map_err(|e| store::TextError::new(format!("playground->xlsx: {e}"), dsl::TextSpan::at(1, 1)))
+    let value = dsl::ToValue::to_value(snapshot);
+    dsl::FromValue::from_value(value).map_err(|e| store::TextError::new(format!("playground->xlsx: {e}"), dsl::TextSpan::at(1, 1)))
 }
 
 pub fn serialize_bytes(snapshot: &PlaygroundSnapshot) -> Result<Vec<u8>, store::TextError> {

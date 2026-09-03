@@ -1,12 +1,12 @@
 //! ✏️ Zip editor (2.0/✳️base) — the `edit` mode: a single window over the archive tree.
 
-use crate::editor::zip::any::modes::edit::windows::main;
+use crate::editor::zip::base::modes::edit::windows::main;
 use semio_framework_plugin::{create_stack_layout, LocalizedLabel, ModeDefinition, WindowLayout};
 
 pub const ZIP_ANY_EDIT_MODE_ID: &str = "edit";
 
 //#region 🔖️Definition
-/// 🧱️ Stitched into the editor manifest by `crate::editor::zip::any::create_zip_any_editor`.
+/// 🧱️ Stitched into the editor manifest by `crate::editor::zip::base::create_zip_any_editor`.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn definition() -> ModeDefinition {
     ModeDefinition { id: ZIP_ANY_EDIT_MODE_ID.into(), label: LocalizedLabel::native("Edit", "Bearbeiten"), icon_id: "pencil".into(), tools: Vec::new(), layout_id: None, commands: Vec::new() }

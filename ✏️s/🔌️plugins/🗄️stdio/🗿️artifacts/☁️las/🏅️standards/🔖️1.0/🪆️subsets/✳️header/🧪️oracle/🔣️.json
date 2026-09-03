@@ -60,7 +60,6 @@
         }
       ],
       "kinds": [
-        "no-mutation",
         "set-snapshot",
         "set-version",
         "set-system-identifier",
@@ -81,37 +80,6 @@
       "standardDirectoryName": "🔖️1.0",
       "subsetDirectoryName": "✳️header",
       "mutations": [
-        {
-          "id": "no-mutation",
-          "capability": "las-1-0-any-mutate",
-          "payloadSchema": "../🧬️schema/🧬️mutations/🦀️.rs#NoMutation",
-          "outcomes": [
-            "no-op"
-          ],
-          "productionDispatch": {
-            "operation": "no-mutation",
-            "bridgeVersion": 1,
-            "variant": "LasMutation::NoMutation"
-          },
-          "oracleRequirements": [
-            {
-              "capability": "las-1-0-any-mutate",
-              "qualifyingKind": "third-party-library",
-              "oracle": "las-1-0-any-mutate"
-            }
-          ],
-          "carriers": [
-            "las"
-          ],
-          "invariants": {
-            "local": [
-              "byte-identical-round-trip"
-            ],
-            "enclosing": [
-              "las-reencode-round-trip-agrees-with-reference-reader"
-            ]
-          }
-        },
         {
           "id": "set-snapshot",
           "capability": "las-1-0-any-mutate",
@@ -411,6 +379,307 @@
       "reproducible": true,
       "family": "mechanical",
       "notes": "A single base input document exercising all 15 declared las@1.0 mutation kinds (2 VLRs, 6 points spanning classification/intensity/return-number/scan-angle, bounds and points-by-return deliberately divergent from the real point distribution so those two kinds are checked mutations, not no-ops). LAS itself declares no physical length/angle unit convention; 751 units, 62 prefixes is schema-required,  and  are placeholders, not claims. Verified to read back correctly through both las::Reader (6/6 points) and this subset's own oracle projection."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "set-version-applied",
+      "class": "handcrafted",
+      "target": {
+        "artifact": "s.stdio.las",
+        "standard": "1.0",
+        "subset": "header"
+      },
+      "mutation": "set-version",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before",
+          "path": "../🧫️fixtures/set-version/before.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:ade43cdac81af5655ba6b349b24bd9623e89cdc721ace4068b1cb2e9b3f9621f",
+          "bytes": 1409
+        },
+        {
+          "role": "expected-after",
+          "path": "../🧫️fixtures/set-version/after.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:be00fcd6116cd8ccaf65d1b021bb007b7a4ef6496d18526d9ef834975619784f",
+          "bytes": 1409
+        }
+      ],
+      "provenance": {
+        "source": "authored",
+        "license": "public-domain (handcrafted by this repository)",
+        "attribution": "Handcrafted before/after vector authored directly against this subset's own documented schema — Law 2's handcrafted-vector category.",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "ordered-json-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "Handcrafted LasSnapshot before/after pair (schema per this subset's own set-snapshot leaf). SetVersion{major:1,minor:1} bumps the minor version only (major is already 1); parameters taken verbatim from this subset's own mutate-las-1-0 differential feature Examples row."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "set-system-identifier-applied",
+      "class": "handcrafted",
+      "target": {
+        "artifact": "s.stdio.las",
+        "standard": "1.0",
+        "subset": "header"
+      },
+      "mutation": "set-system-identifier",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before",
+          "path": "../🧫️fixtures/set-system-identifier/before.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:ade43cdac81af5655ba6b349b24bd9623e89cdc721ace4068b1cb2e9b3f9621f",
+          "bytes": 1409
+        },
+        {
+          "role": "expected-after",
+          "path": "../🧫️fixtures/set-system-identifier/after.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:c15222e84423262551b5c7929d33c04daa13d1b61d949119e92a37643f1f53a0",
+          "bytes": 1418
+        }
+      ],
+      "provenance": {
+        "source": "authored",
+        "license": "public-domain (handcrafted by this repository)",
+        "attribution": "Handcrafted before/after vector authored directly against this subset's own documented schema — Law 2's handcrafted-vector category.",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "ordered-json-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "Handcrafted LasSnapshot before/after pair (schema per this subset's own set-snapshot leaf). SetSystemIdentifier renames the 32-byte header field; parameters match the differential feature's own Examples row."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "set-software-info-applied",
+      "class": "handcrafted",
+      "target": {
+        "artifact": "s.stdio.las",
+        "standard": "1.0",
+        "subset": "header"
+      },
+      "mutation": "set-software-info",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before",
+          "path": "../🧫️fixtures/set-software-info/before.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:ade43cdac81af5655ba6b349b24bd9623e89cdc721ace4068b1cb2e9b3f9621f",
+          "bytes": 1409
+        },
+        {
+          "role": "expected-after",
+          "path": "../🧫️fixtures/set-software-info/after.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:21c34f63b333cef37f364156ef263d0214257b2ea8666c9b6772890537f23630",
+          "bytes": 1414
+        }
+      ],
+      "provenance": {
+        "source": "authored",
+        "license": "public-domain (handcrafted by this repository)",
+        "attribution": "Handcrafted before/after vector authored directly against this subset's own documented schema — Law 2's handcrafted-vector category.",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "ordered-json-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "Handcrafted LasSnapshot before/after pair (schema per this subset's own set-snapshot leaf). SetSoftwareInfo renames the 32-byte generating-software field; parameters match the differential feature's own Examples row."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "set-creation-date-applied",
+      "class": "handcrafted",
+      "target": {
+        "artifact": "s.stdio.las",
+        "standard": "1.0",
+        "subset": "header"
+      },
+      "mutation": "set-creation-date",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before",
+          "path": "../🧫️fixtures/set-creation-date/before.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:ade43cdac81af5655ba6b349b24bd9623e89cdc721ace4068b1cb2e9b3f9621f",
+          "bytes": 1409
+        },
+        {
+          "role": "expected-after",
+          "path": "../🧫️fixtures/set-creation-date/after.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:5f52e7e7a2c0d88d0c5f5c391ef8ee768c68686b5209b6e1994e3c5e20c016be",
+          "bytes": 1408
+        }
+      ],
+      "provenance": {
+        "source": "authored",
+        "license": "public-domain (handcrafted by this repository)",
+        "attribution": "Handcrafted before/after vector authored directly against this subset's own documented schema — Law 2's handcrafted-vector category.",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "ordered-json-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "Handcrafted LasSnapshot before/after pair (schema per this subset's own set-snapshot leaf). SetCreationDate{dayOfYear:42,year:2027} matches the differential feature's own Examples row."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "set-scale-and-offset-applied",
+      "class": "handcrafted",
+      "target": {
+        "artifact": "s.stdio.las",
+        "standard": "1.0",
+        "subset": "header"
+      },
+      "mutation": "set-scale-and-offset",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before",
+          "path": "../🧫️fixtures/set-scale-and-offset/before.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:ade43cdac81af5655ba6b349b24bd9623e89cdc721ace4068b1cb2e9b3f9621f",
+          "bytes": 1409
+        },
+        {
+          "role": "expected-after",
+          "path": "../🧫️fixtures/set-scale-and-offset/after.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:c7cc9d035d6558cab160876ed24d18117a81561cbae4ed15e5be8b8631e62a06",
+          "bytes": 1426
+        }
+      ],
+      "provenance": {
+        "source": "authored",
+        "license": "public-domain (handcrafted by this repository)",
+        "attribution": "Handcrafted before/after vector authored directly against this subset's own documented schema — Law 2's handcrafted-vector category.",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "ordered-json-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "Handcrafted LasSnapshot before/after pair (schema per this subset's own set-snapshot leaf). SetScaleAndOffset{scale:[5e-4,5e-4,5e-4],offset:[583000,5804000,0]} matches the differential feature's own Examples row (a real UTM-like offset)."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "set-bounds-applied",
+      "class": "handcrafted",
+      "target": {
+        "artifact": "s.stdio.las",
+        "standard": "1.0",
+        "subset": "header"
+      },
+      "mutation": "set-bounds",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before",
+          "path": "../🧫️fixtures/set-bounds/before.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:ade43cdac81af5655ba6b349b24bd9623e89cdc721ace4068b1cb2e9b3f9621f",
+          "bytes": 1409
+        },
+        {
+          "role": "expected-after",
+          "path": "../🧫️fixtures/set-bounds/after.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:b0821ca1b462407c35446233b13606ccb867f68eccadae302ec8d68eb7b7ae6b",
+          "bytes": 1434
+        }
+      ],
+      "provenance": {
+        "source": "authored",
+        "license": "public-domain (handcrafted by this repository)",
+        "attribution": "Handcrafted before/after vector authored directly against this subset's own documented schema — Law 2's handcrafted-vector category.",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "ordered-json-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "Handcrafted LasSnapshot before/after pair (schema per this subset's own set-snapshot leaf). SetBounds matches the differential feature's own Examples row."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "set-points-by-return-applied",
+      "class": "handcrafted",
+      "target": {
+        "artifact": "s.stdio.las",
+        "standard": "1.0",
+        "subset": "header"
+      },
+      "mutation": "set-points-by-return",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before",
+          "path": "../🧫️fixtures/set-points-by-return/before.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:ade43cdac81af5655ba6b349b24bd9623e89cdc721ace4068b1cb2e9b3f9621f",
+          "bytes": 1409
+        },
+        {
+          "role": "expected-after",
+          "path": "../🧫️fixtures/set-points-by-return/after.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:ecd599a9f9c187678cf302a722167555728d431c62ab22e76e6c3e66e4235639",
+          "bytes": 1417
+        }
+      ],
+      "provenance": {
+        "source": "authored",
+        "license": "public-domain (handcrafted by this repository)",
+        "attribution": "Handcrafted before/after vector authored directly against this subset's own documented schema — Law 2's handcrafted-vector category.",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "ordered-json-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "Handcrafted LasSnapshot before/after pair (schema per this subset's own set-snapshot leaf). SetPointsByReturn matches the differential feature's own Examples row (a real per-return histogram)."
     }
   ]
 }

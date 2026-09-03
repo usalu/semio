@@ -12,15 +12,16 @@
 use crate::artifacts::vcs::VcsSnapshot;
 use schema::ArtifactSchema;
 use semio_framework_plugin::ArtifactInferrer;
-use serde::{Deserialize, Serialize};
 
 use super::summary::compute_vcs_summary;
 
 //#region 🔖️Inference
 /// 💡️ Everything inferable from a VCS snapshot. One field per named inference under
 /// `💡️inferences/` (currently: `summary`, backed by the `📊summary/` slug dir).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ArtifactSchema)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, ArtifactSchema)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[artifact_schema(id = "s.vcs.vcs.inference")]
 pub struct VcsInference {
     #[derived]

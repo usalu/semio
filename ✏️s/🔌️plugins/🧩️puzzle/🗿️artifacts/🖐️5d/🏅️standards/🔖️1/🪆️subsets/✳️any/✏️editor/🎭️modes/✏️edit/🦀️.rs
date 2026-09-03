@@ -8,7 +8,7 @@ use crate::editor::puzzle5d::modes::edit::windows::{board2d, world3d};
 use crate::editor::puzzle5d::terminology::Puzzle5dLabels;
 use crate::editor::puzzle5d::{puzzle5d_action, Puzzle5dScene};
 use semio_framework_plugin::{create_default_layout, LocalizedLabel, ModeDefinition, WindowEngagement, WindowEngagementInput, WindowEngagementStatus, WindowLayout};
-use serde_json::json;
+use dsl::json;
 
 pub const PUZZLE5D_PLAY_MODE_EDIT: &str = "edit";
 

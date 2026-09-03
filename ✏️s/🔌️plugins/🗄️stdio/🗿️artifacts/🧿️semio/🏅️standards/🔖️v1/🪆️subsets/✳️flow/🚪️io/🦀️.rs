@@ -137,7 +137,7 @@ pub mod derived_composition {
     #[cfg(test)]
     mod tests {
         use super::*;
-        use crate::artifacts::semio::standards::v1::subsets::any::schema::geometry::SemioPoint2;
+        use crate::artifacts::semio::standards::v1::subsets::base::schema::geometry::SemioPoint2;
         use crate::artifacts::semio::standards::v1::subsets::flow::schema::snapshot::{FlowEdge, FlowNode, PortRef};
         use semio_framework_plugin::{ArtifactDeserializer, ArtifactSerializer};
 
@@ -289,8 +289,8 @@ pub mod derived_composition {
             /// pack twin — so the fixtures can never silently drift back to a fake.
             #[semio_framework_async_macros::async_test]
             async fn fixture_honesty_law() {
-                const FIXTURE_DSL: &str = include_str!("../../✳️any/📚️examples/🌊️pipeline/🖼️assets/🗣️.dsl.semio");
-                const FIXTURE_PACK: &[u8] = include_bytes!("../../✳️any/📚️examples/🌊️pipeline/🖼️assets/🎒️.pack.semio");
+                const FIXTURE_DSL: &str = include_str!("../../✳️base/📚️examples/🌊️pipeline/🖼️assets/🗣️.dsl.semio");
+                const FIXTURE_PACK: &[u8] = include_bytes!("../../✳️base/📚️examples/🌊️pipeline/🖼️assets/🎒️.pack.semio");
 
                 let demo = snapshot::demo_flow_snapshot();
 

@@ -1,16 +1,18 @@
 //#region 🩹️IssuedPatchReceipt
 use super::{decimal_generation, read_unsigned, ActorInstanceLifetime};
 use semio_framework_value_derive::{FromValue, ToValue};
+#[cfg(test)]
 use serde::{Deserialize, Serialize};
 
 pub const ACTOR_UI_PATCH_RECEIPT_MAXIMUM_BYTES: usize = 35;
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]
-#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, ToValue, FromValue)]
+#[derive(serde::Serialize, serde::Deserialize)]
+#[cfg_attr(test, serde(rename_all = "camelCase", deny_unknown_fields))]
 #[value(crate = "::protocol::value", rename_all = "camelCase", deny_unknown_fields)]
 pub struct ActorUiPatchReceipt {
     pub lifetime: ActorInstanceLifetime,
-    #[serde(with = "decimal_generation")]
+    #[cfg_attr(test, serde(with = "decimal_generation"))]
     #[value(with = "decimal_generation")]
     pub patch_sequence: u64,
 }

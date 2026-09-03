@@ -4,13 +4,12 @@
 //! fan-out). Physical dir name (`🩹update-block`, wired by `🦀️.rs`) predates the semantic
 //! rename; the Rust module is still `update_block`, the type/variant/kind are `replace-block`.
 
-use serde::{Deserialize, Serialize};
 use crate::artifacts::forms::{FormMutation, FormQuestion, FormsDiff, FormsSnapshot};
 use protocol::{MutationKind, SemanticDescriptor};
 
 //#region 🔁️ReplaceBlock
 /// 🔁️ Replaces the block matching `block.id` inside `step_id`'s `blocks` wholesale.
-#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue)]
 pub struct ReplaceBlock {
     pub step_id: String,
     pub block: FormQuestion,

@@ -16,9 +16,9 @@ and the app mounts on :6081 with its four windows.
 1. **Aggregate mutation primary renamed to the taxonomy-canonical name.**
    `🧬️schema/🧬️mutations/🦀️component.rs` → `🦀️.rs`. `#[derive(dsl::Mutations)]` validates that the file
    carrying it is named after the taxonomy's `mutationComponentFileKindId` (`🦀️` + `.rs`); it wasn't,
-   so the derive emitted a `compile_error!` and **no** `impl Mutation<CurateSnapshot>` at all — which
+   so the derive emitted a `compile_error!` and **no** `impl Mutation<CurationSnapshot>` at all — which
    cascaded into ~108 `E0277`s across the editor, viewer, io and operations surfaces. `📦️glue.rs`,
-   the facet `include_str!` and the `mutate-curate-1` docstrings follow.
+   the facet `include_str!` and the `mutate-curation-1` docstrings follow.
 2. **Leaf descriptors consolidated onto `🔣️.json`**, keeping the truthful content (binary tags 0/1/2,
    seven language surfaces) that the aggregate's own structural test asserts and the leaf directories
    actually carry; the duplicate `🔣️component.json` files are deleted.

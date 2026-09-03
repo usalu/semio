@@ -1,7 +1,7 @@
 //! 🖌️ `register-brush-mesh` command.
 
 use crate::editor::puzzle5d::Puzzle5dActionCtx;
-use serde_json::Value;
+use dsl::os_pack::json::Value;
 
 /// 🧊️ Real GLB geometry the browser round-tripped for one mesh url — installed into the collision
 /// engine and remembered so `drive_precompute` never re-registers a box over it. Aborts (emitting

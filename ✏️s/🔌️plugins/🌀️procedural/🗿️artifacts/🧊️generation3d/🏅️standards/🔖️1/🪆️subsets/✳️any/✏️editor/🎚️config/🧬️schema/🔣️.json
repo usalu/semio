@@ -1,0 +1,117 @@
+{
+  "$id": "https://semio.tech/schema/app/procedural/3d/config.json",
+  "title": "Generation3dConfig",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "lodMode",
+    "showMode",
+    "camera",
+    "previewCamera",
+    "sunJson",
+    "activeUtilityId",
+    "locale"
+  ],
+  "properties": {
+    "lodMode": {
+      "type": "string",
+      "x-semio-state": "config"
+    },
+    "showMode": {
+      "type": "string",
+      "x-semio-state": "config"
+    },
+    "camera": {
+      "$ref": "#/$defs/CameraJson",
+      "x-semio-state": "config"
+    },
+    "previewCamera": {
+      "$ref": "#/$defs/Generation3dPreviewCamera",
+      "x-semio-state": "config"
+    },
+    "sunJson": {
+      "type": "string",
+      "x-semio-state": "config"
+    },
+    "selectedGenerationId": {
+      "type": "string",
+      "x-semio-state": "config"
+    },
+    "generationPreviewText": {
+      "type": "string",
+      "x-semio-state": "config"
+    },
+    "activeUtilityId": {
+      "type": "string",
+      "x-semio-state": "config"
+    },
+    "locale": {
+      "type": "string",
+      "x-semio-state": "config"
+    },
+    "previewEvalText": {
+      "type": "string",
+      "x-semio-state": "config"
+    }
+  },
+  "$defs": {
+    "CameraJson": {
+      "title": "CameraJson",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "x",
+        "y",
+        "zoom"
+      ],
+      "properties": {
+        "x": {
+          "type": "number",
+          "format": "double"
+        },
+        "y": {
+          "type": "number",
+          "format": "double"
+        },
+        "zoom": {
+          "type": "number",
+          "format": "double"
+        }
+      }
+    },
+    "Generation3dPreviewCamera": {
+      "title": "Generation3dPreviewCamera",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "position",
+        "target",
+        "fov"
+      ],
+      "properties": {
+        "position": {
+          "type": "array",
+          "items": {
+            "type": "number",
+            "format": "double"
+          },
+          "minItems": 3,
+          "maxItems": 3
+        },
+        "target": {
+          "type": "array",
+          "items": {
+            "type": "number",
+            "format": "double"
+          },
+          "minItems": 3,
+          "maxItems": 3
+        },
+        "fov": {
+          "type": "number",
+          "format": "double"
+        }
+      }
+    }
+  }
+}

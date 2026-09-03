@@ -26,8 +26,6 @@ default = ["brep"]
 brep = ["dep:semio-framework-os-kernel"]
 
 [dependencies]
-serde.workspace = true
-serde_json.workspace = true
 semio-framework-number = { workspace = true }
 semio-framework-geometry = { workspace = true }
 semio-framework-os-kernel = { workspace = true, optional = true }
@@ -37,9 +35,18 @@ semio-framework-os-kernel = { workspace = true, optional = true }
 # (unconditional) rather than the derive's `brep`-dependent default path.
 semio-framework-value-derive = { path = "../../../../🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust" }
 semio-framework-replication = { workspace = true }
+# 🔤️ `🥽️mesh`'s `HalfedgeMesh::to_json`/`from_json` route through `pack::json::to_json_string`/
+# `from_json_str` (over `ToValue`/`FromValue`) instead of `serde_json::to_string`/`from_str`
+# (RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS, 26/09/01).
+pack = { path = "../../../🎒️pack/📦️packages/🦀️rust", package = "semio-framework-pack" }
 
 [dev-dependencies]
 semio-framework-async-macros = { path = "../../../⏳️async/✨️macros/📦️packages/🦀️rust" }
 # 🧪️ Differential oracle for `🧿️collision` ONLY — proves our BVH triangle-mesh queries agree with
 # `parry3d`'s. Test-only: never a `[dependencies]` entry, never reachable from a production target.
 parry3d = "0.17"
+# 🔬️ `🥽️mesh`'s `value_round_trip_matches_serde_shape` differential oracle ONLY — proves the
+# first-party `ToValue`/`FromValue` codec agrees byte-for-byte with `serde_json`'s own encoding of
+# the same types. Test-only, `#[cfg(test)]`-gated: never a `[dependencies]` entry.
+serde = { workspace = true }
+serde_json = { workspace = true }

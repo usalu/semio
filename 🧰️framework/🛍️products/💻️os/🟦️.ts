@@ -12,8 +12,8 @@
  */
 // #endregion Header
 
-import type { Conflict, ConflictResolution, DispatchReport, Fault, FetchTimeoutResponse, MergePolicy, MergeReport, MutationMessage, PluginWasmHandle, TurnOutcome, UtilityLeaf } from "@semio-tech/framework";
-import { conflictResolutionAsU8, createTurnOutcomeBroadcast, fetchWithTimeout, mergePolicyAsU8, retryWithJitteredBackoff } from "@semio-tech/framework";
+import type { AppRef, AppRole, AppRouter, ArtifactDialect, Conflict, ConflictResolution, DispatchReport, Fault, FetchTimeoutResponse, MergePolicy, MergeReport, MutationMessage, OpeningPreferences, PluginWasmHandle, TurnOutcome, UtilityLeaf } from "@semio-tech/framework";
+import { conflictResolutionAsU8, createTurnOutcomeBroadcast, dialectCoordinate, fetchWithTimeout, mergePolicyAsU8, parseDialectCoordinate, parseSurfaceAppId, resolveOpeningApp, retryWithJitteredBackoff } from "@semio-tech/framework";
 /** 📇️ Directory event/command/DTO types (contract-freeze §C1/§C6) — imported once here for
  * {@link BackboneWorkerRequest}/{@link BackboneWorkerResponse}'s `directory-*` variants and this
  * file's `🔖️HubBinding` region; never redeclared (lane 0-A owns the type source). */
@@ -27,6 +27,99 @@ import { decodeClientFrame, decodeLocalInteractionQueryCommand, decodeLocalInter
 import { decodeCausalEnvelopeBatch, encodeCausalEnvelopeBatch, readBool, readBytes, readF64, readHash32, readStr, readU8, readVarintU64, readVecBytes, readVecEnvelope, readVecStr, writeBool, writeBytes, writeF64, writeHash32, writeStr, writeVarintU64, writeVecBytes, writeVecEnvelope, writeVecStr } from "@semio-tech/framework-replication";
 
 const replicationPackCodec = { encode: encodePackValue, decode: decodePackValue };
+
+//#region 🔖️ArtifactOpeningRelay
+/** 📂️ Canonical shell relay after parsing role aliases, validating an exact "Open with…"
+ * choice against the live router, and resolving a plain open through the event-sourced opening
+ * preferences projection. A document is attachable only as the complete `(documentId, schema)`
+ * pair; `spaceId` remains optional because local-only documents deliberately have none. */
+export type ResolvedArtifactOpeningRelay = {
+  readonly artifactRef: string;
+  readonly dialect: ArtifactDialect;
+  readonly role: AppRole;
+  readonly app: AppRef;
+  readonly documentId?: string;
+  readonly spaceId?: string;
+  readonly schema?: string;
+};
+
+function openingRelayError(code: string): never {
+  throw new Error(code);
+}
+
+function openingRelayRole(value: unknown): AppRole | undefined {
+  if (value === undefined) return undefined;
+  if (value === 0 || value === "viewer") return "viewer";
+  if (value === 1 || value === "editor") return "editor";
+  return openingRelayError("opening.invalid-role");
+}
+
+function openingRelayString(record: Readonly<Record<string, unknown>>, field: string, errorCode = `opening.invalid-${field}`): string | undefined {
+  const value = record[field];
+  if (value === undefined) return undefined;
+  if (typeof value !== "string" || value.trim() === "") return openingRelayError(errorCode);
+  return value;
+}
+
+/** 🧭 Resolves `os.open-artifact`/`os.open-artifact-with` without mutating the router or
+ * preferences. Missing role means editor, matching both shells' declared boot default. */
+export function resolveArtifactOpeningRelay(
+  actionId: string,
+  args: unknown,
+  router: AppRouter,
+  preferences: OpeningPreferences,
+): ResolvedArtifactOpeningRelay {
+  if (actionId !== "os.open-artifact" && actionId !== "os.open-artifact-with") return openingRelayError("opening.invalid-action");
+  if (!args || typeof args !== "object" || Array.isArray(args)) return openingRelayError("opening.invalid-args");
+  const record = args as Readonly<Record<string, unknown>>;
+  const rawArtifactRef = openingRelayString(record, "artifactRef", "opening.invalid-artifact-ref");
+  if (!rawArtifactRef) return openingRelayError("opening.invalid-artifact-ref");
+
+  let dialect: ArtifactDialect;
+  let surfaceRole: AppRole | undefined;
+  try {
+    if (rawArtifactRef.includes("#")) {
+      const surface = parseSurfaceAppId(rawArtifactRef);
+      dialect = surface.dialect;
+      surfaceRole = surface.role;
+    } else {
+      dialect = parseDialectCoordinate(rawArtifactRef);
+    }
+  } catch {
+    return openingRelayError("opening.invalid-artifact-ref");
+  }
+
+  const wireRole = openingRelayRole(record.role);
+  if (surfaceRole && wireRole && surfaceRole !== wireRole) return openingRelayError("opening.role-mismatch");
+  const role = wireRole ?? surfaceRole ?? "editor";
+  const pluginId = openingRelayString(record, "pluginId");
+  const appId = openingRelayString(record, "appId");
+  if (Boolean(pluginId) !== Boolean(appId)) return openingRelayError("opening.partial-app-ref");
+  if (actionId === "os.open-artifact-with" && (!pluginId || !appId)) return openingRelayError("opening.explicit-app-required");
+
+  let app: AppRef;
+  if (pluginId && appId) {
+    const explicit = { pluginId, appId };
+    if (!router.entriesFor(dialect, role).some((entry) => entry.pluginId === explicit.pluginId && entry.appId === explicit.appId)) return openingRelayError("opening.app-mismatch");
+    app = explicit;
+  } else {
+    app = resolveOpeningApp(router, dialect, role, preferences);
+  }
+
+  const documentId = openingRelayString(record, "documentId");
+  const schema = openingRelayString(record, "schema");
+  if (Boolean(documentId) !== Boolean(schema)) return openingRelayError("opening.partial-document-ref");
+  const spaceId = openingRelayString(record, "spaceId");
+  return {
+    artifactRef: dialectCoordinate(dialect),
+    dialect,
+    role,
+    app,
+    ...(documentId && schema ? { documentId, schema } : {}),
+    ...(spaceId ? { spaceId } : {}),
+  };
+}
+//#endregion 🔖️ArtifactOpeningRelay
 
 //#region 🔖️Backbone
 export const FRAMEWORK_SYNC_CONTROLLER_ID = "framework.sync";
@@ -588,11 +681,37 @@ export type BackboneWorkerRequest =
   | { readonly kind: "directory-command"; readonly requestId: string; readonly command: DirectoryCommand }
   | { readonly kind: "directory-close" };
 
+/** 🛰️ Worker-local P2-C recovery lifecycle. These are not persisted artifact events: they describe
+ * one bounded public bootstrap transfer and therefore remain explicit top-level worker responses. */
+export type ArtifactBootstrapWorkerEvent =
+  | {
+      readonly kind: "artifact-bootstrap-progress";
+      readonly documentId: string;
+      readonly receivedBytes: number;
+      readonly totalBytes: number;
+      readonly receivedChunks: number;
+      readonly totalChunks: number;
+    }
+  | {
+      readonly kind: "artifact-bootstrap-failed";
+      readonly documentId: string;
+      readonly code: "cancelled" | "deadline-exceeded" | "invalid-bootstrap" | "transport-failure";
+      readonly message: string;
+      readonly retryable: boolean;
+    }
+  | {
+      readonly kind: "artifact-rebootstrap-required";
+      readonly documentId: string;
+      readonly message: string;
+      readonly retryable: true;
+    };
+
 /** 📥️ `🟦️backbone-worker.ts` → main thread messages. `directory-status.pendingCommands` is the
  * bounded, in-memory offline queue's length (contract-freeze §C6 "commands queue... and flush on
  * reconnect"). */
 export type BackboneWorkerResponse =
   | { readonly kind: "event"; readonly documentId: string; readonly event: ArtifactEvent }
+  | ArtifactBootstrapWorkerEvent
   | { readonly kind: "ready" }
   | { readonly kind: "directory-message"; readonly message: DirectoryStreamMessage }
   | { readonly kind: "directory-command-result"; readonly requestId: string; readonly ok: boolean; readonly events?: readonly DirectoryEvent[]; readonly error?: string }
@@ -3663,10 +3782,16 @@ export function mediaAcceptFilterKinds(formatArtifactKinds: readonly string[]): 
 // `🔨️modules/📇️directory/🟦️.ts`; this region only imports/re-exports and, per this
 // package's `🧪️tests/🟦️.ts` (`include`/`includeSource` list only THIS file and
 // `🟦️backbone-worker.ts`), hosts the in-source parity test against the Rust twin's golden fixture.
-import { emptyDirectoryReadModel, fold, foldAll, isDirectoryCommandKind, isDirectoryEventBodyKind, isDirectoryStreamMessageKind } from "./🔨️modules/📇️directory/🟦️.ts";
+import { descriptorDigestEncodingV1, descriptorDigestV1, emptyDirectoryReadModel, fold, foldAll, isDirectoryCommandKind, isDirectoryEventBodyKind, isDirectoryStreamMessageKind } from "./🔨️modules/📇️directory/🟦️.ts";
 import type { DirectoryReadModel } from "./🔨️modules/📇️directory/🟦️.ts";
 
 export type {
+  ArtifactBlobRef,
+  ArtifactCheckpoint,
+  ArtifactFrontier,
+  ArtifactHash,
+  ArtifactRetention,
+  CheckpointId,
   ConnectionView,
   DirectoryActor,
   DirectoryActorKind,
@@ -3680,6 +3805,10 @@ export type {
   DirectorySpaceRole,
   DirectorySpaceVisibility,
   DirectoryStreamMessage,
+  DocumentDescriptor,
+  DocumentFrontier,
+  DocumentOwner,
+  DocumentScope,
   DocumentView,
   Hlc,
   InviteView,
@@ -3687,7 +3816,7 @@ export type {
   SpaceView,
   UserView,
 } from "./🔨️modules/📇️directory/🟦️.ts";
-export { emptyDirectoryReadModel, fold, foldAll, isDirectoryCommandKind, isDirectoryEventBodyKind, isDirectoryStreamMessageKind };
+export { decodeServerFrame, descriptorDigestEncodingV1, descriptorDigestV1, emptyDirectoryReadModel, encodeServerFrame, fold, foldAll, isDirectoryCommandKind, isDirectoryEventBodyKind, isDirectoryStreamMessageKind };
 
 if (import.meta.vitest) {
   const { describe, expect, it } = import.meta.vitest;
@@ -3731,6 +3860,47 @@ if (import.meta.vitest) {
       const once = foldAll(emptyDirectoryReadModel(), events);
       const twice = foldAll(once, events);
       expect(twice).toEqual(once);
+    });
+
+    it("preserves the language-neutral document descriptor fixture canonically", async () => {
+      const { readFileSync } = await import("node:fs");
+      const { fileURLToPath } = await import("node:url");
+      const { dirname, join } = await import("node:path");
+      const here = dirname(fileURLToPath(import.meta.url));
+      const fixture = JSON.parse(readFileSync(join(here, "🧫️fixtures", "📇️directory", "📄️document-descriptor.json"), "utf8")) as { valid: import("./🔨️modules/📇️directory/🧬️schema/🟦️.ts").DocumentDescriptor; canonical: string };
+      expect(JSON.stringify(fixture.valid)).toBe(fixture.canonical);
+    });
+
+    it("derives the domain-separated descriptor digest independently of JSON", async () => {
+      const { createHash } = await import("node:crypto");
+      const { readFileSync } = await import("node:fs");
+      const { fileURLToPath } = await import("node:url");
+      const { dirname, join } = await import("node:path");
+      const here = dirname(fileURLToPath(import.meta.url));
+      const fixture = JSON.parse(readFileSync(join(here, "🧫️fixtures", "📇️directory", "📄️artifact-authority.json"), "utf8")) as { descriptor: DocumentDescriptor; descriptorEncodingHex: string; descriptorDigestV1: number[] };
+      const encoded = descriptorDigestEncodingV1(fixture.descriptor);
+      expect(Buffer.from(encoded).toString("hex")).toBe(fixture.descriptorEncodingHex);
+      expect(Array.from(await descriptorDigestV1(fixture.descriptor))).toEqual(fixture.descriptorDigestV1);
+      expect(Array.from(createHash("sha256").update(encoded).digest())).toEqual(fixture.descriptorDigestV1);
+      expect(Buffer.from(encoded).includes(Buffer.from(JSON.stringify(fixture.descriptor)))).toBe(false);
+      expect(() => descriptorDigestEncodingV1({ ...fixture.descriptor, spaceId: "" })).toThrow();
+      expect(() => descriptorDigestEncodingV1({ ...fixture.descriptor, packSchemaHash: "AA".repeat(32) })).toThrow();
+      expect(() => descriptorDigestEncodingV1({ ...fixture.descriptor, bootstrapFrontier: { ...fixture.descriptor.bootstrapFrontier, headSeq: Number.MAX_SAFE_INTEGER + 1 } })).toThrow();
+    });
+
+    it("projects document.announced without allowing replay to redefine it", async () => {
+      const { readFileSync } = await import("node:fs");
+      const { fileURLToPath } = await import("node:url");
+      const { dirname, join } = await import("node:path");
+      const here = dirname(fileURLToPath(import.meta.url));
+      const fixture = JSON.parse(readFileSync(join(here, "🧫️fixtures", "📇️directory", "📄️document-descriptor.json"), "utf8")) as { valid: import("./🔨️modules/📇️directory/🧬️schema/🟦️.ts").DocumentDescriptor; conflictingSchemaHash: import("./🔨️modules/📇️directory/🧬️schema/🟦️.ts").DocumentDescriptor };
+      const created: DirectoryEvent = { seq: 1, id: "space", hlc: { physicalMs: 1, logical: 0 }, actor: { kind: "system", id: "system:test" }, spaceId: fixture.valid.spaceId, body: { kind: "space.created", spaceId: fixture.valid.spaceId, name: "Fixture", spaceKind: "studio", visibility: "private", ownerUserId: "user-owner" }, recordedAtMs: 1 };
+      const announced: DirectoryEvent = { seq: 2, id: "document", hlc: { physicalMs: 2, logical: 0 }, actor: { kind: "user", id: "user:user-owner#test" }, spaceId: fixture.valid.spaceId, body: { kind: "document.announced", descriptor: fixture.valid }, recordedAtMs: 2 };
+      const conflictReplay: DirectoryEvent = { ...announced, seq: 3, id: "conflict", body: { kind: "document.announced", descriptor: fixture.conflictingSchemaHash } };
+      const model = foldAll(emptyDirectoryReadModel(), [created, announced, conflictReplay]);
+
+      expect(model.spaces.get(fixture.valid.spaceId)?.documents).toEqual([fixture.valid]);
+      expect(model.spaces.get(fixture.valid.spaceId)?.view.documentCount).toBe(1);
     });
   });
 }

@@ -1,11 +1,11 @@
 //! ✒️ Direct `change-schema` payload and behavior owner.
 
 use crate::artifacts::playground::standards::v1::subsets::any::schema::{diff::PlaygroundDiff, mutations::PlaygroundMutation, snapshot::PlaygroundSnapshot};
-use serde::{Deserialize, Serialize};
+use dsl::os_pack::json::{array, from_dsl_value, from_json_str, object, to_string, Value};
 
 //#region 🔖️Mutation
 /// ✒️ Changes the playground document's schema identity.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
 pub struct ChangeSchema {
     pub new_schema: String,
@@ -37,8 +37,8 @@ pub const KINDS: &[&str] = &["change-schema"];
 
 //#region 🌉️ExternalCodecBridge
 fn bridge_decode_pair(snapshot_json: &str, mutation_json: &str) -> Result<(PlaygroundSnapshot, PlaygroundMutation), String> {
-    let snapshot = serde_json::from_str(snapshot_json).map_err(|error| format!("the committed playground snapshot JSON does not decode: {error}"))?;
-    let mutation = serde_json::from_str(mutation_json).map_err(|error| format!("the committed playground mutation JSON does not decode: {error}"))?;
+    let snapshot = from_json_str(snapshot_json).map_err(|error| format!("the committed playground snapshot JSON does not decode: {error}"))?;
+    let mutation = from_json_str(mutation_json).map_err(|error| format!("the committed playground mutation JSON does not decode: {error}"))?;
     Ok((snapshot, mutation))
 }
 
@@ -50,7 +50,8 @@ fn bridge_step(snapshot: &PlaygroundSnapshot, mutation: &PlaygroundMutation) -> 
 }
 
 fn bridge_render(snapshot: &PlaygroundSnapshot, messages: Vec<String>) -> Result<String, String> {
-    serde_json::to_string(&serde_json::json!({ "snapshot": snapshot, "messages": messages })).map_err(|error| error.to_string())
+    let value = object([("snapshot".to_string(), from_dsl_value(&dsl::ToValue::to_value(snapshot))), ("messages".to_string(), array(messages.into_iter().map(Value::String)))]);
+    Ok(to_string(&value))
 }
 
 /// 🌉️ Applies one committed language-neutral mutation payload to a playground snapshot.
@@ -79,7 +80,8 @@ pub fn round_trip_playground_dsl(text: &str) -> Result<String, String> {
     let parsed = <PlaygroundSnapshot as ArtifactDsl>::parse_dsl(text).map_err(|error| format!("the committed playground example does not parse: {error:?}"))?;
     let printed = <PlaygroundSnapshot as ArtifactDsl>::print_dsl(&parsed);
     let reparsed = <PlaygroundSnapshot as ArtifactDsl>::parse_dsl(&printed).map_err(|error| format!("the reprinted playground document does not parse: {error:?}"))?;
-    serde_json::to_string(&serde_json::json!({ "printed": printed, "snapshot": parsed, "reparsed": reparsed })).map_err(|error| error.to_string())
+    let value = object([("printed".to_string(), Value::String(printed)), ("snapshot".to_string(), from_dsl_value(&dsl::ToValue::to_value(&parsed))), ("reparsed".to_string(), from_dsl_value(&dsl::ToValue::to_value(&reparsed)))]);
+    Ok(to_string(&value))
 }
 //#endregion 🌉️ExternalCodecBridge
 

@@ -15,17 +15,16 @@
  *    actually changes behaviour rather than merely being described;
  * 6. the catalog is compiled from the real installed plugin registry, not a note/cad fixture.
  *
- * Like its siblings this suite SKIPS (loudly) rather than passing when the binary is absent. */
-import { existsSync, mkdtempSync, rmSync } from "node:fs";
+ * The package test gate builds and requires the binary before Vitest starts. */
+import { mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { resolveMcpBinaryPath, spawnRawMcp, type RawMcpProcess } from "../../🟦️.ts";
+import { requireMcpBinary, spawnRawMcp, type RawMcpProcess } from "../../🟦️.ts";
 import { getWorkspaceRoot } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 
 const repoRoot = getWorkspaceRoot();
-const bin = resolveMcpBinaryPath(repoRoot);
-const BIN_PRESENT = existsSync(bin);
+const bin = requireMcpBinary(repoRoot);
 
 /** 🎯️ The full tool census `🦀️.rs`'s `GATEWAY_TOOL_NAMES` declares. Duplicated here on
  * purpose: this suite is an INDEPENDENT observer of the running binary, so it must not import the
@@ -69,11 +68,7 @@ type TemplateListResult = { resourceTemplates: Array<{ uriTemplate: string; name
 type PromptListResult = { prompts: Array<{ name: string; title?: string; description?: string }> };
 type CallToolResult = { isError?: boolean; structuredContent?: Record<string, unknown>; content?: Array<{ type: string; text?: string }> };
 
-if (!BIN_PRESENT) {
-  console.warn(`[@semio-tech/framework-os-mcp] end-to-end suite SKIPPED — binary not found at ${bin}. Build it first: cargo build -p semio-framework-os-mcp --bin semio-os-mcp`);
-}
-
-describe.skipIf(!BIN_PRESENT)("semio-os-mcp — end to end", () => {
+describe("semio-os-mcp — end to end", () => {
   let procs: RawMcpProcess[] = [];
   let folders: string[] = [];
 

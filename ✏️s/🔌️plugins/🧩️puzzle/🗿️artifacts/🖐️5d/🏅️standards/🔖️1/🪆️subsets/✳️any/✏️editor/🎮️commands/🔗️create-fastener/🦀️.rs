@@ -1,7 +1,7 @@
 //! 🔗️ `create-fastener` command.
 
 use crate::editor::puzzle5d::{find_part_by_grip_full_id, Puzzle5dActionCtx, Puzzle5dDocument, Puzzle5dFastener, Puzzle5dFreshIds};
-use serde_json::Value;
+use dsl::os_pack::json::Value;
 
 fn arg_str<'a>(args: Option<&'a Value>, key: &str) -> Option<&'a str> {
     args.and_then(|value| value.get(key)).and_then(Value::as_str).filter(|text| !text.is_empty())
@@ -18,16 +18,16 @@ fn resolve_grip_kind(document: &Puzzle5dDocument, full_id: &str) -> Option<Strin
 /// 🧲️ Permissive when the document declares no `kindCompatibility` rules — otherwise requires an
 /// explicit (or bidirectional) entry, matching puzzle3d's attraction gate.
 fn puzzle5d_kinds_compatible(document: &Puzzle5dDocument, source_kind: &str, target_kind: &str) -> bool {
-    let Some(entries) = document.kind_compatibility.as_ref().and_then(Value::as_array) else {
+    let Some(entries) = document.kind_compatibility.as_ref().and_then(serde_json::Value::as_array) else {
         return true;
     };
     if entries.is_empty() {
         return true;
     }
     entries.iter().any(|entry| {
-        let source = entry.get("source").and_then(Value::as_str).unwrap_or("");
-        let target = entry.get("target").and_then(Value::as_str).unwrap_or("");
-        let bidirectional = entry.get("bidirectional").and_then(Value::as_bool).unwrap_or(false);
+        let source = entry.get("source").and_then(serde_json::Value::as_str).unwrap_or("");
+        let target = entry.get("target").and_then(serde_json::Value::as_str).unwrap_or("");
+        let bidirectional = entry.get("bidirectional").and_then(serde_json::Value::as_bool).unwrap_or(false);
         (source == source_kind && target == target_kind) || (bidirectional && source == target_kind && target == source_kind)
     })
 }

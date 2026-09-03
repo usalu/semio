@@ -34,8 +34,7 @@
 
 /// @emoji ✉️ A causally-ordered operation crossing the wire: identity, actor, dependency set, the
 /// forward diff, its precomputed inverse, and the HLC tick it was authored at.
-#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq)]
 pub struct MutationEnvelope {
     pub mutation_id: crate::ids::MutationId,
     pub document_id: crate::ids::ArtifactId,
@@ -96,7 +95,7 @@ impl crate::value::FromValue for MutationEnvelope {
 }
 
 /// @emoji 🧮️ A schema-tagged, opaque binary forward-op payload.
-#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct ArtifactDiff {
     pub schema: crate::ids::SchemaId,
     pub payload: Vec<u8>,
@@ -129,7 +128,7 @@ impl crate::value::FromValue for ArtifactDiff {
 }
 
 /// @emoji ↩️ A schema-tagged, opaque binary inverse-op payload.
-#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct InverseMutation {
     pub schema: crate::ids::SchemaId,
     pub payload: Vec<u8>,

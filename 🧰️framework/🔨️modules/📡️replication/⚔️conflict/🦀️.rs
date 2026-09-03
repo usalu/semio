@@ -11,8 +11,7 @@
 /// @emoji 🆔️ Content-addressed conflict identity: two authorities independently detecting the
 /// identical conflict (same kind, same artifact, same mutation-id set, same HLC) converge on the
 /// identical id.
-#[derive(Clone, Debug, PartialEq, Eq, Hash, serde::Serialize, serde::Deserialize)]
-#[serde(transparent)]
+#[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub struct ConflictId(pub String);
 
 /// 🌱️ Hand-written, not derived — same DAG reason `MutationMessage`'s hand-written twin in
@@ -65,8 +64,7 @@ impl ConflictId {
 /// without ever relaying it. `Degraded`: the batch WAS applied (its worst level was below the
 /// policy's reject floor but still `>= Warning`), so `edit_ids` names the already-durable edits worth
 /// a human's attention — resolving only acknowledges/dismisses the flag, it never rewrites history.
-#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
-#[serde(tag = "kind", rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq)]
 pub enum ConflictKind {
     Quarantined { envelopes: Vec<crate::MutationEnvelope> },
     Degraded { edit_ids: Vec<String> },
@@ -120,8 +118,7 @@ impl ConflictKind {
 
 //#region 🔖️ConflictStatus
 /// @emoji 🚦️ A conflict's own lifecycle, independent of the `MutationMessage`s it carries.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum ConflictStatus {
     Open,
     Accepted,
@@ -150,8 +147,7 @@ impl crate::value::FromValue for ConflictStatus {
 }
 
 /// @emoji ✅️❌️ What a human/authority decided to do with an `Open` conflict.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum ConflictResolution {
     Accept,
     Discard,
@@ -180,8 +176,7 @@ impl crate::value::FromValue for ConflictResolution {
 //#region 🔖️Conflict
 /// @emoji ⚔️ One first-class conflict: identity, what it is, its lifecycle status, the messages that
 /// explain it, who was involved, and when it was detected.
-#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq)]
 pub struct Conflict {
     pub id: ConflictId,
     pub kind: ConflictKind,
@@ -241,8 +236,7 @@ impl crate::value::FromValue for Conflict {
 //#region 🔖️Reports
 /// @emoji 📨️ One edit's worth of `MutationMessage`s — the per-edit unit `MergeReport::replayed`
 /// carries and `📡️spr/📜️history`'s durable ledger keys by `edit_id`.
-#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq)]
 pub struct EditMessages {
     pub edit_id: String,
     pub messages: Vec<crate::MutationMessage>,
@@ -277,8 +271,7 @@ impl crate::value::FromValue for EditMessages {
 
 /// @emoji 📤️ The report a single LOCAL dispatch (one `ArtifactStore::dispatch`-shaped call)
 /// produces: the policy it was judged against, the worst level reached, and every message.
-#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq)]
 pub struct DispatchReport {
     pub policy: crate::MergePolicy,
     pub worst: Option<crate::diagnostic::Severity>,
@@ -325,8 +318,7 @@ impl crate::value::FromValue for DispatchReport {
 /// `accepted`), every replayed edit's messages, the worst level across the whole replayed suffix,
 /// and the id of a `Conflict` this merge raised, if any (`Quarantined` on reject, `Degraded` on an
 /// accepted-but-messy merge).
-#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq)]
 pub struct MergeReport {
     pub policy: crate::MergePolicy,
     pub accepted: bool,

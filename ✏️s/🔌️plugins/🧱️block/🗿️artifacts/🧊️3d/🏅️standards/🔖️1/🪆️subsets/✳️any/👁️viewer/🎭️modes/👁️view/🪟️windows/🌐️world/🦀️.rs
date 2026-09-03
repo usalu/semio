@@ -14,7 +14,8 @@ use semio_framework_plugin::{build_world_3d_scene, world3d_camera_projection_jso
 // submodule they're declared in — not (yet) in `semio_framework_plugin`'s curated crate-root
 // re-export list, mirroring the sibling editor module's own gap note about `Dialect`.
 use semio_framework_plugin::app::{MeshWindowKit, WindowKit};
-use serde_json::json;
+use dsl::json;
+use dsl::os_pack::json::{to_string, Value};
 
 //#region 🔖️Constants
 pub const WINDOW_KIND_ID: &str = MeshWindowKit::KIND_ID;
@@ -59,33 +60,33 @@ async fn representation_mesh_id(representation: &BlockRepresentation) -> String 
 }
 
 async fn meshes_json(representations: &[BlockRepresentation]) -> String {
-    let meshes: Vec<serde_json::Value> = representations
+    let meshes: Vec<Value> = representations
         .iter()
         .filter_map(|representation| {
             let url = representation.mesh_url.as_deref()?;
             Some(json!({ "id": representation_mesh_id(representation), "url": url }))
         })
         .collect();
-    serde_json::to_string(&meshes).unwrap_or_else(|_| "[]".into())
+    to_string(&Value::from(meshes))
 }
 
 async fn instances_json(document: &Block3dSnapshot, representations: &[BlockRepresentation]) -> String {
     let label = if document.object_kind.label.is_empty() { document.object_kind.name.clone() } else { document.object_kind.label.clone() };
-    let instances: Vec<serde_json::Value> = representations
+    let instances: Vec<Value> = representations
         .iter()
         .map(|representation| {
             json!({
-                "id": representation.id,
+                "id": representation.id.as_str(),
                 "meshId": representation_mesh_id(representation),
                 "position": [0.0, 0.0, 0.0],
                 "rotation": [0.0, 0.0, 0.0, 1.0],
                 "scale": [1.0, 1.0, 1.0],
                 "label": format!("{} — {}", label, representation.name),
-                "objectKind": document.object_kind.id,
+                "objectKind": document.object_kind.id.as_str(),
             })
         })
         .collect();
-    serde_json::to_string(&instances).unwrap_or_else(|_| "[]".into())
+    to_string(&Value::from(instances))
 }
 
 async fn vortex_kind_color(document: &Block3dSnapshot, vortex_kind_id: &str) -> String {
@@ -93,22 +94,23 @@ async fn vortex_kind_color(document: &Block3dSnapshot, vortex_kind_id: &str) -> 
 }
 
 async fn vortices_json(document: &Block3dSnapshot) -> String {
-    let records: Vec<serde_json::Value> = document
+    let vec3 = |v: [f64; 3]| Value::from(v.iter().map(|c| Value::from(*c)).collect::<Vec<Value>>());
+    let records: Vec<Value> = document
         .vortices
         .iter()
         .map(|vortex| {
             json!({
                 "fullId": format!("{}:{}", BLOCK3D_VIEW_CONTROLLER_ID, vortex.id),
-                "objectId": document.object_kind.id,
-                "vortexKind": vortex.vortex_kind,
-                "position": vortex.position,
-                "direction": vortex.direction,
+                "objectId": document.object_kind.id.as_str(),
+                "vortexKind": vortex.vortex_kind.as_str(),
+                "position": vec3(vortex.position),
+                "direction": vec3(vortex.direction),
                 "radius": vortex.radius,
                 "color": vortex_kind_color(document, &vortex.vortex_kind),
             })
         })
         .collect();
-    serde_json::to_string(&records).unwrap_or_else(|_| "[]".into())
+    to_string(&Value::from(records))
 }
 //#endregion 🔖️Render
 

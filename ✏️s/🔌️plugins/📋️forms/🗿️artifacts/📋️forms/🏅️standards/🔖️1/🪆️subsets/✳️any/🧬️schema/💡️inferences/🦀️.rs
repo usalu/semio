@@ -114,7 +114,7 @@ mod tests {
                 }
             ]
         }"#;
-        let spec = serde_json::from_str::<flow::playbook::PlaybookSpec>(json).expect("valid playbook spec json");
+        let spec = dsl::os_pack::json::from_json_str::<flow::playbook::PlaybookSpec>(json).expect("valid playbook spec json");
         crate::artifacts::forms::forms_snapshot_with_state(spec.schema, spec.id, spec.version, spec.title, spec.steps)
     }
     //#endregion 🧸️Fixtures

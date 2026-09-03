@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "owner": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️load/🧬️schema/🧬️mutations/⚖change-load-case-self-weight",
+  "semanticKind": "change-load-case-self-weight",
+  "displayName": "Change Load Case Self Weight",
+  "emoji": "⚖",
+  "aggregateVariant": "ChangeLoadCaseSelfWeight",
+  "payloadSchema": "🔣️.schema.json",
+  "textOpcode": "change-load-case-self-weight",
+  "binaryTag": null,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "detect",
+  "outcomeClasses": [
+    "error",
+    "info",
+    "applied"
+  ],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": [
+    "rust",
+    "json-schema",
+    "text",
+    "binary"
+  ]
+}

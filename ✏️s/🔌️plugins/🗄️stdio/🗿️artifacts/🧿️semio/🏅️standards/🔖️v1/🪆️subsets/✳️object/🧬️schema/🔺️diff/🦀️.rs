@@ -6,7 +6,7 @@
 //! `Some(Some(handle))` = "set it to this handle" — each triad's own `🔺️diff` leaf builds this
 //! directly from `(payload, base)`, never apply-then-capture.
 
-use crate::artifacts::semio::standards::v1::subsets::any::schema::geometry::SemioTransform;
+use crate::artifacts::semio::standards::v1::subsets::base::schema::geometry::SemioTransform;
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::SemioBrepSnapshot;
 use crate::artifacts::semio::standards::v1::subsets::mesh::schema::snapshot::SemioMeshSnapshot;
 use crate::artifacts::semio::standards::v1::subsets::object::schema::snapshot::SemioObjectSnapshot;
@@ -74,7 +74,7 @@ impl MutationDiff<SemioObjectSnapshot> for SemioObjectDiff {
     }
 }
 
-/// 🧮️ `object`'s own `DiffAlgebra` — required by the `✳️any` envelope's own dispatch.
+/// 🧮️ `object`'s own `DiffAlgebra` — required by the `✳️base` envelope's own dispatch.
 impl protocol::command::DiffAlgebra<SemioObjectSnapshot> for SemioObjectDiff {
     fn between(base: &SemioObjectSnapshot, other: &SemioObjectSnapshot) -> Self {
         SemioObjectDiff {
@@ -207,7 +207,7 @@ impl protocol::DiffCodec for SemioObjectDiff {
 #[cfg(test)]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn demo_diff_cases() -> Vec<SemioObjectDiff> {
-    use crate::artifacts::semio::standards::v1::subsets::any::schema::geometry::SemioPoint3;
+    use crate::artifacts::semio::standards::v1::subsets::base::schema::geometry::SemioPoint3;
     vec![
         SemioObjectDiff::default(),
         SemioObjectDiff { transform: Some(SemioTransform { translation: SemioPoint3 { x: 5.0, y: 0.0, z: 0.0 }, ..SemioTransform::identity() }), ..Default::default() },

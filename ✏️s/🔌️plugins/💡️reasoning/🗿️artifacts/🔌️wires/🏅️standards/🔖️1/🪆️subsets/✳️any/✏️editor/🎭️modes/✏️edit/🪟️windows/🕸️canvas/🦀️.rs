@@ -3,8 +3,8 @@
 use crate::artifacts::wires::schema::{dsl_to_json, fixture_camera, fixture_edges, fixture_nodes, wires_relationships};
 use crate::editor::wires::WIRES_PLAY_APP_ID;
 use dsl::DslValue;
+use dsl::os_pack::json::Value;
 use semio_framework_plugin::{build_canvas_2d_scene, Canvas2dScene, LocalizedLabel, SurfaceKind, UiNode, WindowKindDefinition, WindowOptions};
-use serde_json::{json, Value};
 
 //#region 🔖️Constants
 pub const WIRES_PLAY_WINDOW_CANVAS: &str = "reasoning-wires-composite";
@@ -51,13 +51,13 @@ async fn relationship_edge_layers(wires: &DslValue, board: &DslValue) -> Vec<Val
         if let Some(edge) = edge {
             layers.push(dsl_to_json(edge));
         } else {
-            layers.push(json!({
-                "id": edge_id,
-                "kind": "edge",
-                "edgeKind": relationship.get("kind").map_or_else(|| json!("relationship"), dsl_to_json),
-                "source": relationship.get("sourceIdentityId").map(|value| value.as_f64().map(|n| n.to_string()).unwrap_or_default()).unwrap_or_default(),
-                "target": relationship.get("targetIdentityId").map(|value| value.as_f64().map(|n| n.to_string()).unwrap_or_default()).unwrap_or_default(),
-            }));
+            layers.push(dsl::os_pack::json::object([
+                ("id".into(), edge_id.into()),
+                ("kind".into(), "edge".into()),
+                ("edgeKind".into(), relationship.get("kind").map_or_else(|| Value::from("relationship"), dsl_to_json)),
+                ("source".into(), relationship.get("sourceIdentityId").map(|value| value.as_f64().map(|n| n.to_string()).unwrap_or_default()).unwrap_or_default().into()),
+                ("target".into(), relationship.get("targetIdentityId").map(|value| value.as_f64().map(|n| n.to_string()).unwrap_or_default()).unwrap_or_default().into()),
+            ]));
         }
     }
     layers
@@ -68,7 +68,7 @@ pub async fn render(board: &DslValue, wires: &DslValue) -> UiNode {
     let mut layers: Vec<Value> = fixture_nodes(board).iter().map(dsl_to_json).collect();
     layers.extend(fixture_edges(board).iter().map(dsl_to_json));
     layers.extend(relationship_edge_layers(wires, board));
-    build_canvas_2d_scene(WIRES_PLAY_SURFACE_ID, WIRES_PLAY_APP_ID, Canvas2dScene { camera_x, camera_y, zoom, layers_json: serde_json::to_string(&layers).unwrap_or_else(|_| "[]".into()), snapshot: None })
+    build_canvas_2d_scene(WIRES_PLAY_SURFACE_ID, WIRES_PLAY_APP_ID, Canvas2dScene { camera_x, camera_y, zoom, layers_json: dsl::os_pack::json::to_string(&Value::Array(layers)), snapshot: None })
 }
 //#endregion 🔖️Render
 

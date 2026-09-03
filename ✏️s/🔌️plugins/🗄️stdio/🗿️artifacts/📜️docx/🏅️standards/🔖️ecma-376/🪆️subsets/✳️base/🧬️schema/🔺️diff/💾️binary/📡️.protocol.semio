@@ -10,7 +10,7 @@ start record
 # this shortcut before this pilot ladder. `format u8` + `flags u8` (bit0 = `opc` present, bit1 =
 # `document` present -- `DocxDiff` has exactly these TWO independently-optional top-level fields)
 # as two REAL fixed fields, individually protocol-walked -- same shape
-# `📰xml/…/🔺️diff/💾️binary/📡️.protocol.semio`'s own `flags` header uses (restated here,
+# `📰️xml/…/🔺️diff/💾️binary/📡️.protocol.semio`'s own `flags` header uses (restated here,
 # per-artifact bit assignment).
 #
 # Past that header, `opc`/`document` (whichever `flags` marks present, in that FIXED order) are

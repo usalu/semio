@@ -1,7 +1,6 @@
 //! 🧬️ schema leaf
 use crate::artifacts::layout::{LayoutCamera, LayoutDropPreviewState};
 use schema::ArtifactSchema;
-use serde::{Deserialize, Serialize};
 use semio_framework_value_derive::{FromValue, ToValue};
 
 #[derive(Clone, Debug, Default, PartialEq, ArtifactSchema, ToValue, FromValue)]

@@ -9,10 +9,10 @@ use semio_framework_plugin::{ExecutionMode, FlowExtensionDeclaration, FlowExtens
 #[allow(unused_doc_comments, unused_qualifications)]
 semio_framework_dispatch_macros::dyn_enum_close! {
     pub enum ProceduralApps: PluginApp {
-        Procedural2dEditor(semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::EditorApp<crate::editor::procedural2d::Procedural2dPlayApp>>),
-        Procedural2dViewer(semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::ViewerApp<crate::viewer::procedural2d::Procedural2dViewer>>),
-        Procedural3dEditor(semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::EditorApp<crate::editor::procedural3d::Procedural3dPlayApp>>),
-        Procedural3dViewer(semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::ViewerApp<crate::viewer::procedural3d::Procedural3dViewer>>),
+        Generation2dEditor(semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::EditorApp<crate::editor::generation2d::Generation2dPlayApp>>),
+        Generation2dViewer(semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::ViewerApp<crate::viewer::generation2d::Generation2dViewer>>),
+        Generation3dEditor(semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::EditorApp<crate::editor::generation3d::Generation3dPlayApp>>),
+        Generation3dViewer(semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::ViewerApp<crate::viewer::generation3d::Generation3dViewer>>),
     }
 }
 //#endregion 🗃️Apps
@@ -252,13 +252,13 @@ pub fn plugin() -> Result<Plugin<ProceduralApps>, semio_framework_plugin::Plugin
         .label("Procedural")
         .version("0.1.0")
         .routed_inference(crate::artifacts::assembly::standards::v1::subsets::any::schema::inferences::assembly_inference_metadata())
-        .artifact(crate::artifacts::procedural2d::declaration().map_err(semio_framework_plugin::PluginAssemblyError::definition)?)
-        .artifact(crate::artifacts::procedural3d::declaration().map_err(semio_framework_plugin::PluginAssemblyError::definition)?)
+        .artifact(crate::artifacts::generation2d::declaration().map_err(semio_framework_plugin::PluginAssemblyError::definition)?)
+        .artifact(crate::artifacts::generation3d::declaration().map_err(semio_framework_plugin::PluginAssemblyError::definition)?)
         .host_media_handler(HostMediaHandlerDeclaration::mesh_dwg_bridge(
             "s.procedural.host-media.mesh-dwg",
-            crate::artifacts::procedural3d::artifact_kind(),
-            crate::artifacts::procedural3d::PROCEDURAL_3D_SCHEMA,
-            crate::editor::procedural3d::procedural3d_document_from_mesh,
+            crate::artifacts::generation3d::artifact_kind(),
+            crate::artifacts::generation3d::GENERATION_3D_SCHEMA,
+            crate::editor::generation3d::generation3d_document_from_mesh,
         )?)
         .flow_extension(FlowExtensionDeclaration::new(
             "s.procedural.flow-extension.brep",
@@ -305,14 +305,14 @@ pub fn plugin() -> Result<Plugin<ProceduralApps>, semio_framework_plugin::Plugin
             FlowExtensionManifest::new("bim", "Bim", "0.1.0")?,
             FlowExtensionExecutableIdentity::native("semio.s.plugin.flow.extension.bim", "semio.s.plugin.flow.extension.bim", "register")?,
         )?)
-        .editor::<crate::editor::procedural2d::Procedural2dPlayApp>(crate::editor::procedural2d::create_procedural2d_app())
-        .editor_mutation_roster::<crate::editor::procedural2d::Procedural2dPlayApp>()
-        .viewer::<crate::viewer::procedural2d::Procedural2dViewer>(crate::viewer::procedural2d::create_procedural2d_viewer())
-        .viewer_mutation_roster::<crate::viewer::procedural2d::Procedural2dViewer>()
-        .editor::<crate::editor::procedural3d::Procedural3dPlayApp>(crate::editor::procedural3d::create_procedural3d_app())
-        .editor_mutation_roster::<crate::editor::procedural3d::Procedural3dPlayApp>()
-        .viewer::<crate::viewer::procedural3d::Procedural3dViewer>(crate::viewer::procedural3d::create_procedural3d_viewer())
-        .viewer_mutation_roster::<crate::viewer::procedural3d::Procedural3dViewer>()
+        .editor::<crate::editor::generation2d::Generation2dPlayApp>(crate::editor::generation2d::create_generation2d_app())
+        .editor_mutation_roster::<crate::editor::generation2d::Generation2dPlayApp>()
+        .viewer::<crate::viewer::generation2d::Generation2dViewer>(crate::viewer::generation2d::create_generation2d_viewer())
+        .viewer_mutation_roster::<crate::viewer::generation2d::Generation2dViewer>()
+        .editor::<crate::editor::generation3d::Generation3dPlayApp>(crate::editor::generation3d::create_generation3d_app())
+        .editor_mutation_roster::<crate::editor::generation3d::Generation3dPlayApp>()
+        .viewer::<crate::viewer::generation3d::Generation3dViewer>(crate::viewer::generation3d::create_generation3d_viewer())
+        .viewer_mutation_roster::<crate::viewer::generation3d::Generation3dViewer>()
         // 🚧️ assembly's editor/viewer are authored (`🗿️artifacts/🧩️assembly/…/{✏️editor,👁️viewer}/`) but
         // not yet mounted in `🦀️.rs` or registered here: `ArtifactEditor`/`ArtifactViewer`'s own
         // trait bounds (`Snapshot: ArtifactDsl + ArtifactPack`, `Mutation`/`Command`: `OpText`/`OpBinary`)
@@ -321,13 +321,13 @@ pub fn plugin() -> Result<Plugin<ProceduralApps>, semio_framework_plugin::Plugin
         //
         // 🧬️ Assembly's editor remains unmounted, but its schema-owned `semio.infer` WFC factory
         // is registered above on the production action bus and needs no artifact surface.
-        .activation(ActivationEvent::OnArtifactKind { kind: crate::artifacts::procedural2d::artifact_kind().id })
-        .activation(ActivationEvent::OnArtifactKind { kind: crate::artifacts::procedural3d::artifact_kind().id })
+        .activation(ActivationEvent::OnArtifactKind { kind: crate::artifacts::generation2d::artifact_kind().id })
+        .activation(ActivationEvent::OnArtifactKind { kind: crate::artifacts::generation3d::artifact_kind().id })
         .execution(ExecutionMode::Isolated)
         .requests(CapabilityRequest {
             id: CapabilityId("documents.write".into()),
             scope: "plugin".into(),
-            reason: "persist procedural2d/procedural3d editor edits (flow graph parameter/node changes) to the open document".into(),
+            reason: "persist generation2d/generation3d editor edits (flow graph parameter/node changes) to the open document".into(),
             optional: false,
         })
         .try_build()
@@ -336,10 +336,10 @@ pub fn plugin() -> Result<Plugin<ProceduralApps>, semio_framework_plugin::Plugin
 //#region 🧪️SurfaceTests
 #[cfg(test)]
 mod surface_tests {
-    use crate::editor::procedural2d::Procedural2dPlayApp;
-    use crate::editor::procedural3d::Procedural3dPlayApp;
-    use crate::viewer::procedural2d::Procedural2dViewer;
-    use crate::viewer::procedural3d::Procedural3dViewer;
+    use crate::editor::generation2d::Generation2dPlayApp;
+    use crate::editor::generation3d::Generation3dPlayApp;
+    use crate::viewer::generation2d::Generation2dViewer;
+    use crate::viewer::generation3d::Generation3dViewer;
 
     #[test]
     fn plugin_manifest_builds_synchronously() {
@@ -348,22 +348,22 @@ mod surface_tests {
 
     /// 👁️ A viewer instance never mutates the document store, even when dispatched.
     #[test]
-    fn procedural2d_viewer_never_mutates() {
-        semio_framework_plugin::testkit::assert_viewer_never_mutates::<Procedural2dViewer>();
+    fn generation2d_viewer_never_mutates() {
+        semio_framework_plugin::testkit::assert_viewer_never_mutates::<Generation2dViewer>();
     }
     #[test]
-    fn procedural3d_viewer_never_mutates() {
-        semio_framework_plugin::testkit::assert_viewer_never_mutates::<Procedural3dViewer>();
+    fn generation3d_viewer_never_mutates() {
+        semio_framework_plugin::testkit::assert_viewer_never_mutates::<Generation3dViewer>();
     }
 
     /// 🤝️ Editor and viewer surfaces agree on the artifact dialect they address.
     #[test]
-    fn procedural2d_editor_and_viewer_share_dialect() {
-        semio_framework_plugin::testkit::assert_editor_and_viewer_share_dialect::<Procedural2dPlayApp, Procedural2dViewer>();
+    fn generation2d_editor_and_viewer_share_dialect() {
+        semio_framework_plugin::testkit::assert_editor_and_viewer_share_dialect::<Generation2dPlayApp, Generation2dViewer>();
     }
     #[test]
-    fn procedural3d_editor_and_viewer_share_dialect() {
-        semio_framework_plugin::testkit::assert_editor_and_viewer_share_dialect::<Procedural3dPlayApp, Procedural3dViewer>();
+    fn generation3d_editor_and_viewer_share_dialect() {
+        semio_framework_plugin::testkit::assert_editor_and_viewer_share_dialect::<Generation3dPlayApp, Generation3dViewer>();
     }
 }
 //#endregion 🧪️SurfaceTests

@@ -4,7 +4,7 @@
 //! `📚️examples` children — `crate::editor::block5d`/`crate::viewer::block5d` stay mounted at the
 //! plugin's top-level `editor`/`viewer` modules, not here.
 //!
-//! ⚠️ DEVIATION — see `◻2d`'s sibling subset-root file for the full rationale (identical here):
+//! ⚠️ DEVIATION — see `◻️2d`'s sibling subset-root file for the full rationale (identical here):
 //! `entries: &[]`, real `native` codec, `io_declaration()` local rather than `io::io()`. Real gap:
 //! zip/txt/png/json/stl/obj import+export (12 typed impls) stay unregistered on the `io_mechanism`
 //! channel, recommended as dedicated follow-up.
@@ -27,7 +27,7 @@ fn inference_descriptors() -> &'static [::semio_framework_schema::ArtifactInfere
     DESCRIPTORS.get_or_init(|| vec![schema::inferences::block5d_artifact_inference_descriptor()]).as_slice()
 }
 
-/// 🚪️ See `◻2d`'s sibling file's module doc for why this is not `io::io()`. `pilot_languages()`
+/// 🚪️ See `◻️2d`'s sibling file's module doc for why this is not `io::io()`. `pilot_languages()`
 /// indices are fixed by that function's own literal `vec![document, op, diff, pack, spr]` order —
 /// the same role→slot mapping `🗒️note`'s `io()` uses for its own five-language array.
 fn io_declaration() -> IoDeclaration {

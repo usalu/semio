@@ -1,5 +1,4 @@
 use super::{WorkflowDiff, WorkflowSnapshot};
-use serde::{Deserialize, Serialize};
 use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️Leaves
@@ -61,8 +60,7 @@ pub use unbind_output::UnbindOutput;
 //#endregion 🔖️Leaves
 
 //#region 🔖️Aggregate
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, dsl::Mutations, dsl::DslOps)]
-#[serde(tag = "operation", rename_all = "camelCase", deny_unknown_fields)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::Mutations, dsl::DslOps)]
 #[value(tag = "operation", rename_all = "camelCase", deny_unknown_fields)]
 #[mutations(snapshot = WorkflowSnapshot, diff = WorkflowDiff, schema = "os.workflow")]
 pub enum WorkflowMutation {

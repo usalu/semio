@@ -161,7 +161,7 @@ mod tests {
             kind: crate::artifacts::semio::standards::v1::subsets::model::schema::snapshot::SpatialKind::Site,
             name: "Unrepresentable Site".into(),
             parent_id: None,
-            placement: crate::artifacts::semio::standards::v1::subsets::any::schema::geometry::SemioTransform::identity(),
+            placement: crate::artifacts::semio::standards::v1::subsets::base::schema::geometry::SemioTransform::identity(),
         });
         let bcf_x = bcf_from_model(&s1);
         assert_eq!(bcf_x.topics.len(), 1, "only the BcfTopic-classed element becomes a topic");

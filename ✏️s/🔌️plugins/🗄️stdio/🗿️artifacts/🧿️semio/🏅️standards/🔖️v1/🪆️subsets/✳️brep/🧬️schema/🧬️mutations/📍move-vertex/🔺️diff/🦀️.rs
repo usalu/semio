@@ -1,6 +1,6 @@
 //! 🔺️ Diff for `MoveVertex`.
 
-use crate::artifacts::semio::standards::v1::subsets::any::schema::triples::{NamedModified, NamedTripleDiff};
+use crate::artifacts::semio::standards::v1::subsets::base::schema::triples::{NamedModified, NamedTripleDiff};
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::{BrepVertexDiff, SemioBrepDiff};
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::SemioBrepSnapshot;
 

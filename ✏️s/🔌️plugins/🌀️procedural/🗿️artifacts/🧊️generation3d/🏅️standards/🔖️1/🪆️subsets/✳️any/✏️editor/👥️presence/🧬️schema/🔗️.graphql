@@ -1,0 +1,16 @@
+type Generation3dPresence {
+  camera: CameraJson! @state(class: PRESENCE)
+  previewCamera: Generation3dPreviewCamera! @state(class: PRESENCE)
+  activeUtilityId: String! @state(class: PRESENCE)
+  showMode: String! @state(class: PRESENCE)
+}
+type CameraJson {
+  x: Float!
+  y: Float!
+  zoom: Float!
+}
+type Generation3dPreviewCamera {
+  position: [Float!]!
+  target: [Float!]!
+  fov: Float!
+}

@@ -48,7 +48,7 @@ pub fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Re
         .schema(crate::artifacts::zip::schema::zip_artifact_schema_descriptor())
         .formats(formats)
         .inferences([crate::artifacts::zip::schema::inferences::zip_artifact_inference_descriptor()])
-        .composers(crate::artifacts::zip::standards::v2_0::subsets::any::io::io_registry::entries())
+        .composers(crate::artifacts::zip::standards::v2_0::subsets::base::io::io_registry::entries())
         .subset_validators(zip_subset_validators())
         .languages(pilot_languages())
         .document_codec_bare::<ZipSnapshot, ZipMutation>(STDIO_ZIP_DOCUMENT_SCHEMA)
@@ -151,7 +151,7 @@ pub fn artifact_kind() -> ArtifactKindSpec {
 //#endregion 🔖️ArtifactKind
 //#region 🚪️DerivedIoRegistry
 pub mod io_registry {
-    use crate::artifacts::zip::standards::v2_0::subsets::any::io::io_registry as v2_0;
+    use crate::artifacts::zip::standards::v2_0::subsets::base::io::io_registry as v2_0;
     use semio_framework_plugin::{register_composer_entries, ComposeError, ComposedArtifact, ComposerEntry, Dialect, ErasedComposeSource};
     use std::sync::OnceLock;
 

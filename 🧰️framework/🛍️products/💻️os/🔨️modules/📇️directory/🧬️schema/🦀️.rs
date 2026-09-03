@@ -28,6 +28,9 @@
 
 use semio_framework_value_derive::{FromValue, ToValue};
 
+/// 🔐️ Domain prefix for the one canonical descriptor digest encoding.
+pub const DESCRIPTOR_DIGEST_V1_DOMAIN: &[u8] = b"semio.document-descriptor.digest.v1\0";
+
 //#region 🔖️Vocabulary
 /// 🏛️ Mirrors `🪐️space::SpaceKind` string-identically (see this file's header).
 #[derive(Clone, Copy, Debug, PartialEq, Eq, ToValue, FromValue)]
@@ -53,6 +56,62 @@ pub enum DirectorySpaceRole {
     Author,
     Spectator,
 }
+
+/// 🎯️ Structural tenant-qualified document identity shared by directory and artifact authority.
+#[derive(Clone, Debug, PartialEq, Eq, Hash, ToValue, FromValue)]
+#[value(rename_all = "camelCase")]
+pub struct DocumentScope {
+    pub space_id: String,
+    pub document_id: String,
+}
+
+impl DocumentScope {
+    /// 🆕️ Creates one structural document scope without flattening either identifier.
+    pub fn new(space_id: impl Into<String>, document_id: impl Into<String>) -> Self {
+        Self { space_id: space_id.into(), document_id: document_id.into() }
+    }
+}
+
+/// #️⃣ One exactly 32-byte artifact authority hash.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
+pub struct ArtifactHash(pub [u8; 32]);
+
+impl ArtifactHash {
+    /// 🧱️ Wraps an already-sized hash.
+    pub const fn new(bytes: [u8; 32]) -> Self {
+        Self(bytes)
+    }
+
+    /// 🔑️ Borrows the fixed-width bytes.
+    pub const fn as_bytes(&self) -> &[u8; 32] {
+        &self.0
+    }
+}
+
+impl crate::ToValue for ArtifactHash {
+    fn to_value(&self) -> crate::DslValue {
+        crate::DslValue::Array(self.0.iter().map(crate::ToValue::to_value).collect())
+    }
+}
+
+impl crate::FromValue for ArtifactHash {
+    fn from_value(value: crate::DslValue) -> Result<Self, crate::ValueError> {
+        let crate::DslValue::Array(items) = value else {
+            return Err(crate::ValueError::new(format!("expected an array for ArtifactHash, found {value:?}")));
+        };
+        if items.len() != 32 {
+            return Err(crate::ValueError::new(format!("expected exactly 32 bytes for ArtifactHash, found {}", items.len())));
+        }
+        let mut bytes = [0u8; 32];
+        for (index, item) in items.into_iter().enumerate() {
+            bytes[index] = item.as_u64().and_then(|value| u8::try_from(value).ok()).ok_or_else(|| crate::ValueError::new(format!("expected an integer byte at ArtifactHash.{index}")))?;
+        }
+        Ok(Self(bytes))
+    }
+}
+
+/// 🧾️ Canonical checkpoint identity.
+pub type CheckpointId = ArtifactHash;
 //#endregion 🔖️Vocabulary
 
 //#region 🔖️Actor
@@ -109,6 +168,12 @@ pub enum DirectoryEventBody {
     MemberRemoved { space_id: String, user_id: String },
     #[value(rename = "invite.redeemed")]
     InviteRedeemed { space_id: String, user_id: String, invite_id: String, role: DirectorySpaceRole },
+    #[value(rename = "document.announced")]
+    DocumentAnnounced { descriptor: DocumentDescriptor },
+    #[value(rename = "artifact.checkpoint-published")]
+    ArtifactCheckpointPublished { checkpoint: PublishedArtifactCheckpoint },
+    #[value(rename = "artifact.retention-advanced")]
+    ArtifactRetentionAdvanced { retention: ArtifactRetention },
 }
 
 /// 📜️ One persisted, backend-assigned directory event. `seq` is dense and 1-based; `space_id`/
@@ -144,6 +209,7 @@ pub enum DirectoryCommand {
     RemoveMember { space_id: String, user_id: String },
     CreateInvite { space_id: String, role: DirectorySpaceRole, ttl_secs: u64 },
     RevokeInvite { space_id: String, invite_id: String },
+    AnnounceDocument { descriptor: DocumentDescriptor },
 }
 //#endregion 🔖️Command
 
@@ -205,11 +271,219 @@ pub struct ConnectionView {
     pub presence_known: bool,
 }
 
-/// 🧾️ One document inside a space's artifact index (headSeq/commitSeq/epoch — sync bookkeeping).
+/// 📦️ Immutable identity of the plugin package that owns a document codec.
+#[derive(Clone, Debug, PartialEq, Eq, ToValue, FromValue)]
+#[value(rename_all = "camelCase")]
+pub struct DocumentOwner {
+    pub plugin_id: String,
+    pub package_id: String,
+    pub version: String,
+    pub package_hash: String,
+}
+
+/// 🏁️ One authoritative replication frontier bound to a canonical bootstrap snapshot.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, ToValue, FromValue)]
+#[value(rename_all = "camelCase")]
+pub struct DocumentFrontier {
+    pub head_seq: u64,
+    pub commit_seq: u64,
+    pub epoch: u64,
+}
+
+/// 🧬️ Durable, space-qualified codec and initial-bootstrap identity for one document.
+#[derive(Clone, Debug, PartialEq, Eq, ToValue, FromValue)]
+#[value(rename_all = "camelCase")]
+pub struct DocumentDescriptor {
+    pub space_id: String,
+    pub document_id: String,
+    pub artifact_kind: String,
+    pub artifact_schema: String,
+    pub owner: DocumentOwner,
+    pub pack_schema_hash: String,
+    pub bootstrap_version: u32,
+    pub bootstrap_frontier: DocumentFrontier,
+    pub bootstrap_snapshot_hash: String,
+}
+
+/// 🚨️ Descriptor values that cannot participate in canonical authority hashing.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum DescriptorDigestError {
+    EmptyField(&'static str),
+    InvalidHash(&'static str),
+    InvalidFrontier,
+    InvalidBootstrapVersion,
+    LengthOverflow(&'static str),
+}
+
+impl std::fmt::Display for DescriptorDigestError {
+    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::EmptyField(field) => write!(formatter, "descriptor field `{field}` is empty"),
+            Self::InvalidHash(field) => write!(formatter, "descriptor field `{field}` is not a nonzero lowercase SHA-256"),
+            Self::InvalidFrontier => formatter.write_str("descriptor bootstrap commit exceeds head"),
+            Self::InvalidBootstrapVersion => formatter.write_str("descriptor bootstrap version must be positive"),
+            Self::LengthOverflow(field) => write!(formatter, "descriptor field `{field}` exceeds the u64 byte-length encoding"),
+        }
+    }
+}
+
+impl std::error::Error for DescriptorDigestError {}
+
+fn decode_descriptor_hash(field: &'static str, value: &str) -> Result<[u8; 32], DescriptorDigestError> {
+    if value.len() != 64 || value.as_bytes().iter().any(|byte| !matches!(byte, b'0'..=b'9' | b'a'..=b'f')) {
+        return Err(DescriptorDigestError::InvalidHash(field));
+    }
+    let mut output = [0u8; 32];
+    for (index, pair) in value.as_bytes().chunks_exact(2).enumerate() {
+        let digit = |byte| match byte {
+            b'0'..=b'9' => byte - b'0',
+            b'a'..=b'f' => byte - b'a' + 10,
+            _ => unreachable!(),
+        };
+        output[index] = digit(pair[0]) << 4 | digit(pair[1]);
+    }
+    if output == [0; 32] {
+        return Err(DescriptorDigestError::InvalidHash(field));
+    }
+    Ok(output)
+}
+
+fn append_descriptor_field(output: &mut Vec<u8>, field: &'static str, bytes: &[u8]) -> Result<(), DescriptorDigestError> {
+    let length = u64::try_from(bytes.len()).map_err(|_| DescriptorDigestError::LengthOverflow(field))?;
+    output.extend_from_slice(&length.to_be_bytes());
+    output.extend_from_slice(bytes);
+    Ok(())
+}
+
+fn append_descriptor_text(output: &mut Vec<u8>, field: &'static str, value: &str) -> Result<(), DescriptorDigestError> {
+    if value.is_empty() {
+        return Err(DescriptorDigestError::EmptyField(field));
+    }
+    append_descriptor_field(output, field, value.as_bytes())
+}
+
+/// 🧬️ Encodes every immutable descriptor leaf after `DESCRIPTOR_DIGEST_V1_DOMAIN`, in declaration
+/// order, as `u64_be(payload byte length) || payload`. Text is UTF-8, unsigned integers are fixed-
+/// width big-endian payloads, and the three SHA-256 strings are decoded to their 32 bytes. Owner
+/// leaves remain nested-order `plugin_id, package_id, version, package_hash`; frontier leaves remain
+/// `head_seq, commit_seq, epoch`. JSON serialization never participates.
+pub fn descriptor_digest_encoding_v1(descriptor: &DocumentDescriptor) -> Result<Vec<u8>, DescriptorDigestError> {
+    if descriptor.bootstrap_version == 0 {
+        return Err(DescriptorDigestError::InvalidBootstrapVersion);
+    }
+    if descriptor.bootstrap_frontier.commit_seq > descriptor.bootstrap_frontier.head_seq {
+        return Err(DescriptorDigestError::InvalidFrontier);
+    }
+    let mut output = Vec::with_capacity(DESCRIPTOR_DIGEST_V1_DOMAIN.len() + 384);
+    output.extend_from_slice(DESCRIPTOR_DIGEST_V1_DOMAIN);
+    append_descriptor_text(&mut output, "space_id", &descriptor.space_id)?;
+    append_descriptor_text(&mut output, "document_id", &descriptor.document_id)?;
+    append_descriptor_text(&mut output, "artifact_kind", &descriptor.artifact_kind)?;
+    append_descriptor_text(&mut output, "artifact_schema", &descriptor.artifact_schema)?;
+    append_descriptor_text(&mut output, "owner.plugin_id", &descriptor.owner.plugin_id)?;
+    append_descriptor_text(&mut output, "owner.package_id", &descriptor.owner.package_id)?;
+    append_descriptor_text(&mut output, "owner.version", &descriptor.owner.version)?;
+    append_descriptor_field(&mut output, "owner.package_hash", &decode_descriptor_hash("owner.package_hash", &descriptor.owner.package_hash)?)?;
+    append_descriptor_field(&mut output, "pack_schema_hash", &decode_descriptor_hash("pack_schema_hash", &descriptor.pack_schema_hash)?)?;
+    append_descriptor_field(&mut output, "bootstrap_version", &descriptor.bootstrap_version.to_be_bytes())?;
+    append_descriptor_field(&mut output, "bootstrap_frontier.head_seq", &descriptor.bootstrap_frontier.head_seq.to_be_bytes())?;
+    append_descriptor_field(&mut output, "bootstrap_frontier.commit_seq", &descriptor.bootstrap_frontier.commit_seq.to_be_bytes())?;
+    append_descriptor_field(&mut output, "bootstrap_frontier.epoch", &descriptor.bootstrap_frontier.epoch.to_be_bytes())?;
+    append_descriptor_field(&mut output, "bootstrap_snapshot_hash", &decode_descriptor_hash("bootstrap_snapshot_hash", &descriptor.bootstrap_snapshot_hash)?)?;
+    Ok(output)
+}
+
+/// 🔐️ SHA-256 of [`descriptor_digest_encoding_v1`] through the repository-owned hash primitive.
+pub fn descriptor_digest_v1(descriptor: &DocumentDescriptor) -> Result<ArtifactHash, DescriptorDigestError> {
+    Ok(ArtifactHash(semio_framework_hash::Sha256::digest(&descriptor_digest_encoding_v1(descriptor)?)))
+}
+
+/// 🔡️ Renders canonical lowercase hexadecimal bytes for fixtures and private storage keys.
+pub fn hex_lower(bytes: &[u8]) -> String {
+    const DIGITS: &[u8; 16] = b"0123456789abcdef";
+    let mut output = String::with_capacity(bytes.len() * 2);
+    for byte in bytes {
+        output.push(DIGITS[(byte >> 4) as usize] as char);
+        output.push(DIGITS[(byte & 0x0f) as usize] as char);
+    }
+    output
+}
+
+/// 🏔️ Exact public checkpoint frontier, structurally identical to the replication wire frontier.
+#[derive(Clone, Debug, PartialEq, Eq, ToValue, FromValue)]
+#[value(rename_all = "camelCase")]
+pub struct ArtifactFrontier {
+    pub document_id: String,
+    pub head_edit_ordinal: u64,
+    pub head_edit_id: String,
+    pub last_commit_seq: u64,
+    pub chain_hash: ArtifactHash,
+}
+
+/// 🫧️ Integrity and private storage identity for one staged immutable artifact blob.
+#[derive(Clone, Debug, PartialEq, Eq, ToValue, FromValue)]
+#[value(rename_all = "camelCase")]
+pub struct ArtifactBlobRef {
+    pub sha256: ArtifactHash,
+    pub byte_length: u64,
+    pub storage_key: String,
+}
+
+/// 🪞️ Public integrity metadata for one staged blob; private storage keys never enter events.
+#[derive(Clone, Debug, PartialEq, Eq, ToValue, FromValue)]
+#[value(rename_all = "camelCase")]
+pub struct PublishedArtifactBlob {
+    pub sha256: ArtifactHash,
+    pub byte_length: u64,
+}
+
+/// 📡️ Storage-key-free checkpoint metadata published through the append-only directory log.
+#[derive(Clone, Debug, PartialEq, Eq, ToValue, FromValue)]
+#[value(rename_all = "camelCase")]
+pub struct PublishedArtifactCheckpoint {
+    pub scope: DocumentScope,
+    pub checkpoint_id: CheckpointId,
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub parent_checkpoint_id: Option<CheckpointId>,
+    pub descriptor_digest_v1: ArtifactHash,
+    pub baseline_frontier: ArtifactFrontier,
+    pub pack: PublishedArtifactBlob,
+    pub spr: PublishedArtifactBlob,
+    pub aggregate_sha256: ArtifactHash,
+    pub published_at_ms: u64,
+}
+
+/// 📍️ One server-derived checkpoint including backend-private immutable blob locators.
+#[derive(Clone, Debug, PartialEq, Eq, ToValue, FromValue)]
+#[value(rename_all = "camelCase")]
+pub struct ArtifactCheckpoint {
+    pub scope: DocumentScope,
+    pub checkpoint_id: CheckpointId,
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub parent_checkpoint_id: Option<CheckpointId>,
+    pub descriptor_digest_v1: ArtifactHash,
+    pub baseline_frontier: ArtifactFrontier,
+    pub pack: ArtifactBlobRef,
+    pub spr: ArtifactBlobRef,
+    pub aggregate_sha256: ArtifactHash,
+    pub published_at_ms: u64,
+}
+
+/// 🧹️ Public retention selection vocabulary; advancement is P2-B and pruning remains P2-D.
+#[derive(Clone, Debug, PartialEq, Eq, ToValue, FromValue)]
+#[value(rename_all = "camelCase")]
+pub struct ArtifactRetention {
+    pub scope: DocumentScope,
+    pub retained_checkpoint_id: CheckpointId,
+    pub retained_floor: ArtifactFrontier,
+    pub checkpoint_lineage_head: CheckpointId,
+}
+
+/// 🧾️ One document inside a space's durable artifact index plus live sync bookkeeping.
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
 #[value(rename_all = "camelCase")]
 pub struct DocumentView {
-    pub id: String,
+    pub descriptor: DocumentDescriptor,
     pub head_seq: u64,
     pub commit_seq: u64,
     pub epoch: u64,
@@ -251,6 +525,16 @@ pub struct DirectoryPresenceActor {
     pub color: u8,
 }
 
+/// 🛟️ Public checkpoint identity that makes a lagged client discard its discontinuous live state.
+#[derive(Clone, Debug, PartialEq, Eq, ToValue, FromValue)]
+#[value(rename_all = "camelCase")]
+pub struct RebootstrapRequired {
+    pub scope: DocumentScope,
+    pub checkpoint_id: CheckpointId,
+    pub descriptor_digest_v1: ArtifactHash,
+    pub baseline_frontier: ArtifactFrontier,
+}
+
 /// 📡️ One `/directory/ws` text frame (contract C1/C2) — subscribe, then gap-free replay.
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
 #[value(tag = "kind", rename_all = "lowercase", rename_all_fields = "camelCase")]
@@ -270,6 +554,10 @@ pub enum DirectoryStreamMessage {
     },
     Heartbeat {
         head_seq: u64,
+    },
+    #[value(rename = "rebootstrap-required")]
+    RebootstrapRequired {
+        control: RebootstrapRequired,
     },
 }
 //#endregion 🔖️Stream
@@ -319,6 +607,34 @@ mod tests {
         assert!(!json.contains("3600.0"), "got {json} — ttl_secs must not collapse to a float");
         let round: DirectoryCommand = crate::os_pack::json::from_json_str(&json).expect("deserialize");
         assert_eq!(round, command);
+    }
+
+    #[derive(FromValue)]
+    #[value(rename_all = "camelCase")]
+    struct DescriptorFixture {
+        valid: DocumentDescriptor,
+        canonical: String,
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn document_descriptor_matches_the_language_neutral_fixture() {
+        let fixture: DescriptorFixture = crate::os_pack::json::from_json_str(include_str!("../../../🧫️fixtures/📇️directory/📄️document-descriptor.json")).expect("descriptor fixture decodes");
+        assert_eq!(crate::os_pack::json::to_json_string(&fixture.valid), fixture.canonical);
+    }
+
+    #[derive(FromValue)]
+    #[value(rename_all = "camelCase")]
+    struct ArtifactAuthorityFixture {
+        descriptor: DocumentDescriptor,
+        descriptor_encoding_hex: String,
+        descriptor_digest_v1: ArtifactHash,
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn document_descriptor_digest_v1_matches_the_language_neutral_binary_vector() {
+        let fixture: ArtifactAuthorityFixture = crate::os_pack::json::from_json_str(include_str!("../../../🧫️fixtures/📇️directory/📄️artifact-authority.json")).expect("artifact authority fixture decodes");
+        assert_eq!(hex_lower(&descriptor_digest_encoding_v1(&fixture.descriptor).expect("descriptor encodes")), fixture.descriptor_encoding_hex);
+        assert_eq!(descriptor_digest_v1(&fixture.descriptor).expect("descriptor hashes"), fixture.descriptor_digest_v1);
     }
 }
 //#endregion 🧪️Tests

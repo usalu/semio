@@ -10,7 +10,7 @@
 //! sibling `<g id="layer-<id>">`, so MULTIPLE layers DO survive, just not as anything SVG itself
 //! calls a layer); colors are emitted as `rgba(r,g,b,a)` (matches the import leaf's own parser).
 
-use crate::artifacts::semio::standards::v1::subsets::any::schema::geometry::{SemioRgba, SemioTransform};
+use crate::artifacts::semio::standards::v1::subsets::base::schema::geometry::{SemioRgba, SemioTransform};
 use crate::artifacts::semio::standards::v1::subsets::drawing::schema::snapshot::{DrawNode, DrawStyle, PathSegment, SemioDrawingSnapshot};
 use crate::artifacts::svg::{
     schema::snapshot::{svg_element_to_xml_node, CommonAttrs, Matrix2D, PathCommand, PresentationAttrs, SvgElement, TransformOp, ViewBox},
@@ -164,7 +164,7 @@ impl ArtifactSerializer for SemioDrawingToSvg {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::semio::standards::v1::subsets::any::schema::geometry::SemioPoint2;
+    use crate::artifacts::semio::standards::v1::subsets::base::schema::geometry::SemioPoint2;
     use crate::artifacts::semio::standards::v1::subsets::drawing::schema::snapshot::{DrawCanvas, DrawLayer};
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9

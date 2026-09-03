@@ -35,29 +35,30 @@ async fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
     (0..s.len()).step_by(2).map(|i| u8::from_str_radix(&s[i..i + 2], 16).map_err(|e| e.to_string())).collect()
 }
 
-/// ⚠️ Serializes/deserializes `DslValue` DIRECTLY (`serde_json::to_string`/`from_str::<DslValue>`),
-/// never via the `dsl_to_json`/`serde_json::Value` intermediate `crate::artifacts::wires::schema`'s
-/// `fixture_json_string`/`dsl_to_json` use elsewhere: `serde_json::Value::Object` normalizes key
-/// order (alphabetical, no `preserve_order` feature), which silently reordered `wires_fixture`'s
+/// ⚠️ Serializes/deserializes `DslValue` DIRECTLY through its own `ToValue`/`FromValue` impl
+/// (`dsl::os_pack::json::to_json_string`/`from_json_str::<DslValue>`), never via the
+/// `dsl_to_json`/`serde_json::Value` intermediate `crate::artifacts::wires::schema`'s
+/// `fixture_json_string`/`dsl_to_json` use elsewhere: `serde_json::Value::Object` used to normalize
+/// key order (alphabetical, no `preserve_order` feature), which silently reordered `wires_fixture`'s
 /// object keys on every round trip and broke `DslValue::Object`'s (order-sensitive, `Vec`-backed)
-/// `PartialEq` — a real bug this pass's round-trip tests caught (not just latent risk). `DslValue`'s
-/// own hand-written `Serialize`/`Deserialize` impl (`dsl_value_serde.rs`) preserves entry order
-/// end-to-end, so encoding/decoding it directly (bypassing `serde_json::Value` entirely) is lossless.
+/// `PartialEq` — a real bug this pass's round-trip tests caught (not just latent risk).
+/// `dsl::os_pack::json`'s own `Object` is likewise `Vec`-backed and order-preserving end-to-end, so
+/// encoding/decoding through it directly (never `serde_json::Value`) is lossless.
 async fn enc_dsl(value: &DslValue) -> String {
-    hex_encode(serde_json::to_string(value).unwrap_or_default().as_bytes())
+    hex_encode(dsl::os_pack::json::to_json_string(value).as_bytes())
 }
 async fn dec_dsl(s: &str) -> Result<DslValue, String> {
     let bytes = hex_decode(s)?;
     let text = String::from_utf8(bytes).map_err(|e| e.to_string())?;
-    serde_json::from_str::<DslValue>(&text).map_err(|e| e.to_string())
+    dsl::os_pack::json::from_json_str::<DslValue>(&text).map_err(|e| e.to_string())
 }
 async fn enc_dsl_list(values: &[DslValue]) -> String {
-    hex_encode(serde_json::to_string(values).unwrap_or_default().as_bytes())
+    hex_encode(dsl::os_pack::json::to_json_string(&values.to_vec()).as_bytes())
 }
 async fn dec_dsl_list(s: &str) -> Result<Vec<DslValue>, String> {
     let bytes = hex_decode(s)?;
     let text = String::from_utf8(bytes).map_err(|e| e.to_string())?;
-    serde_json::from_str::<Vec<DslValue>>(&text).map_err(|e| e.to_string())
+    dsl::os_pack::json::from_json_str::<Vec<DslValue>>(&text).map_err(|e| e.to_string())
 }
 
 async fn to_text_error(message: String) -> store::TextError {

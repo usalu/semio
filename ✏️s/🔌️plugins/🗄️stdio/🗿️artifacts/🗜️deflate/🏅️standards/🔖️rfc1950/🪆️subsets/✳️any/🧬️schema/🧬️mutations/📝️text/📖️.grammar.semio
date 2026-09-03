@@ -7,7 +7,7 @@ start op
 # `dsl::print(..., dsl::JoinMode::Inline)` -- no per-artifact custom printer), replacing the F6-era
 # placeholder that described a serde-JSON `DeflateMutation` wire struct the Rust codec never emits.
 # Same mechanism, same conventions, as stdio.txt's own already-real mutations grammar
-# (../../../../../../📄txt/🏅️standards/🔖️utf-8/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📝️text/
+# (../../../../../../📄️txt/🏅️standards/🔖️utf-8/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📝️text/
 # 📖️.grammar.semio). Keyword = kebab-case of the Rust variant name (`to_kebab`,
 # `🗣️dsl/✨️derive/🦀️.rs`'s own documented convention: `SetPresetDictionary` ->
 # `set-preset-dictionary`). Field keys are likewise kebab-case of the Rust field ident, printed

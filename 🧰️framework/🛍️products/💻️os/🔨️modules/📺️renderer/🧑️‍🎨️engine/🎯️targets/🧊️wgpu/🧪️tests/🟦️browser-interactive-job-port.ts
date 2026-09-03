@@ -7,8 +7,8 @@ import {
   type InteractiveJobPage,
   type InteractiveJobUiMessage,
   type InteractiveJobWorkerMessage,
-} from "./🟦️typescript/🧵️browser-interactive-job-port.ts";
-import { InteractiveWorkerScheduler, type InteractiveWorkerDescriptor, type InteractiveWorkerJob, type InteractiveWorkerStep } from "./🟦️typescript/🧵️interactive-job-registry.ts";
+} from "../🧵️browser-interactive-job-port/🟦️.ts";
+import { InteractiveWorkerScheduler, type InteractiveWorkerDescriptor, type InteractiveWorkerJob, type InteractiveWorkerStep } from "../🧵️interactive-job-registry/🟦️.ts";
 
 const page = (complete = true): InteractiveJobPage => ({ itemCount: 1, byteLength: 8, payload: { value: 1 }, complete });
 const descriptor = (operation: number, kind = "alpha", generation = 1): InteractiveJobDescriptor => ({ kind, operation, generation, inputItems: 1, inputBytes: 32, outputItems: 1, outputBytes: 32, inputPageItems: 1, outputPageItems: 1, pageBytes: 16, payload: { kind, generation } });

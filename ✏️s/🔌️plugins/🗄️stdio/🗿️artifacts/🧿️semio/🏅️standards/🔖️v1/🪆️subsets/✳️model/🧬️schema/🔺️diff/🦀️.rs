@@ -3,14 +3,14 @@
 //! sparse field-by-field `SemioModelDiff::between(base, next)`.
 //!
 //! `spatial`/`elements`/`relations` (all id-keyed) are diffed via the SHARED
-//! `crate::artifacts::semio::standards::v1::subsets::any::schema::triples::NamedTripleDiff<K,D,T>` engine
+//! `crate::artifacts::semio::standards::v1::subsets::base::schema::triples::NamedTripleDiff<K,D,T>` engine
 //! (w1b-type-ownership.md: "Use `🧰️triples`... instead of reinventing it") — this file does NOT
 //! redefine that container or its wire codec, only the generic apply/between/inverse/absorb glue
 //! functions a specific artifact's collections need (mirrors bcf's own local generic engine,
 //! `f6-final-summary.md` §4.4, minus the container type itself, which now has one shared home).
 
-use crate::artifacts::semio::standards::v1::subsets::any::schema::geometry::{SemioPoint3, SemioQuaternion, SemioTransform};
-use crate::artifacts::semio::standards::v1::subsets::any::schema::triples::{dec_named_triple, enc_named_triple, split_top_level, strip_brackets, NamedModified, NamedTripleDiff};
+use crate::artifacts::semio::standards::v1::subsets::base::schema::geometry::{SemioPoint3, SemioQuaternion, SemioTransform};
+use crate::artifacts::semio::standards::v1::subsets::base::schema::triples::{dec_named_triple, enc_named_triple, split_top_level, strip_brackets, NamedModified, NamedTripleDiff};
 use crate::artifacts::semio::standards::v1::subsets::model::schema::snapshot::{ElementClass, GeometryRef, ModelRelation, Property, PropertySet, PsetValue, RelationKind, SemioModelElement, SemioModelSnapshot, SpatialKind, SpatialNode};
 use protocol::command::DiffAlgebra;
 use protocol::{DiffCodec, MutationDiff};
@@ -236,15 +236,15 @@ impl MutationDiff<SemioModelSnapshot> for SemioModelDiff {
     fn apply(&self, base: &SemioModelSnapshot) -> protocol::MutationApplyResult<SemioModelSnapshot> {
         let mut next = base.clone();
         if let Some(d) = &self.spatial {
-            crate::artifacts::semio::standards::v1::subsets::any::schema::triples::validate_named_triple(&next.spatial, d, |item| item.id.clone(), |item| item.id.clone(), ["spatial"])?;
+            crate::artifacts::semio::standards::v1::subsets::base::schema::triples::validate_named_triple(&next.spatial, d, |item| item.id.clone(), |item| item.id.clone(), ["spatial"])?;
             apply_named(&mut next.spatial, d, |n: &SpatialNode| n.id.clone(), apply_spatial);
         }
         if let Some(d) = &self.elements {
-            crate::artifacts::semio::standards::v1::subsets::any::schema::triples::validate_named_triple(&next.elements, d, |item| item.id.clone(), |item| item.id.clone(), ["elements"])?;
+            crate::artifacts::semio::standards::v1::subsets::base::schema::triples::validate_named_triple(&next.elements, d, |item| item.id.clone(), |item| item.id.clone(), ["elements"])?;
             apply_named(&mut next.elements, d, |e: &SemioModelElement| e.id.clone(), apply_element);
         }
         if let Some(d) = &self.relations {
-            crate::artifacts::semio::standards::v1::subsets::any::schema::triples::validate_named_triple(&next.relations, d, |item| item.id.clone(), |item| item.id.clone(), ["relations"])?;
+            crate::artifacts::semio::standards::v1::subsets::base::schema::triples::validate_named_triple(&next.relations, d, |item| item.id.clone(), |item| item.id.clone(), ["relations"])?;
             apply_named(&mut next.relations, d, |r: &ModelRelation| r.id.clone(), apply_relation);
         }
         Ok(next)
@@ -464,7 +464,7 @@ pub fn diff_set_snapshot(base: &SemioModelSnapshot, next: &SemioModelSnapshot) -
 
 //#region 🔖️HandcraftedDiffCodec
 /// 🎙️ Hand-rolled `protocol::DiffCodec` — same bracket-depth-aware token grammar bcf/gif/svg use
-/// (see `crate::artifacts::semio::standards::v1::subsets::any::schema::triples` for the shared
+/// (see `crate::artifacts::semio::standards::v1::subsets::base::schema::triples` for the shared
 /// `split_top_level`/`strip_brackets` primitives this reuses rather than redefining). This
 /// artifact's own copy of the small hex/option/list primitive set (each artifact writes its own,
 /// per bcf's own module doc rationale -- cross-artifact imports would be architecturally wrong).

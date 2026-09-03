@@ -8,7 +8,7 @@ pub use graph::drawing::routing::{
 };
 pub use graph::manifest::{PropertyBag, PropertyValue};
 pub use graph::{
-    self as graph, orient_endpoints, property_bag_from_json, property_bag_to_json, CoreEdge, Directed, Directedness, EdgeId, ElementSemantics, GraphEdge, Handle, HandleId, HandleRole, Node, NodeId, NodeShape, Normal, PortModel, Ported, Undirected,
+    self as graph, orient_endpoints, property_bag_from_value, property_bag_to_value, CoreEdge, Directed, Directedness, EdgeId, ElementSemantics, GraphEdge, Handle, HandleId, HandleRole, Node, NodeId, NodeShape, Normal, PortModel, Ported, Undirected,
 };
 
 pub use scene_json::{board_json_locked_option, board_json_visible_option, board_json_visible_or_true, CameraJson, NodeDescJson};

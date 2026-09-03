@@ -1,31 +1,25 @@
 @capability-flow-1-mutate
-@no-oracle-flow-widget-graph-mutation-semantics
+@oracle-flow-1-python-independent
 @comparison-ordered-json-v1
 @mutations-flow-1-any
-Feature: Apply every typed FLOW mutation to the real committed widget graph
+Feature: Apply every typed FLOW mutation to the real committed widget graph and against an independent Python implementation
   `s.flow.flow` is a semio-NATIVE artifact — the `flow.flow` envelope is defined by this repository
-  alone and no package in any ecosystem reads it — so this case carries a recorded no-oracle decision
-  (`flow-widget-graph-mutation-semantics`, in
-  `../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️oracle/🔣️.json`). That decision's third-party
-  survey is argued rather than assumed: this document's body is plain JSON and `json-rust` is already
-  linked into the stdio oracle crate, and it is declined because a generic DOM reader knows nothing of
-  a widget discriminant, a synapse port pair or the cascade `delete-widget` performs.
+  alone and no package in any ecosystem reads it. This subset's own third-party survey is argued
+  rather than assumed: this document's body is plain JSON and `json-rust` is already linked into the
+  stdio oracle crate, and it is declined because a generic DOM reader knows nothing of a widget
+  discriminant, a synapse port pair or the cascade `delete-widget` performs. The second producer a
+  differential comparison needs is therefore a second IMPLEMENTATION, and `🐍️component.py` beside
+  this file is it: all ten kinds of this vocabulary, written in Python from this subset's own
+  committed `🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🔣️.json` and from
+  `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-DIRECT-LEAF-OVERHAUL/📓️taxonomy.md`'s
+  `create`/`delete`/`reorder`/`replace`/`connect`/`disconnect`/`update`/`move`/`duplicate` verb
+  entries and `📓️derivation-rules.md`'s per-ordered-collection recipe. It imports nothing from the
+  Rust it judges and transliterates none of it. The no-oracle decision this replaces
+  (`flow-widget-graph-mutation-semantics`) is narrowed to an empty `capabilities` list rather than
+  deleted, because its own investigation remains the honest record of what was checked.
 
-  ⚠️ THIS NO-ORACLE DECISION IS A DEBT, NOT A VERDICT, and is recorded as one. Declining a third-party
-  LIBRARY is a different judgement from declining a SECOND IMPLEMENTATION, and only the first was ever
-  made here. `mutate-procedural-2d-1` and `mutate-procedural-3d-1` took Python second
-  implementations over this same `.dsl.semio` carrier in this wave, so the same is writable for this
-  subset from `🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🔣️.json`, the rules of
-  `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/📓️derivation-rules.md` and the
-  committed vectors this feature already replays. What blocks it TODAY is stated in the decision and
-  is one edit: this case's vectors are not declared as `asset://` fixtures — the `Examples` table
-  carries the payloads inline and the adapter reads the committed files through `include_str!` — so
-  the plan pins none of their digests and a Python reference cannot read them at all. Separately, `identity-round-trip` would still be refused: this subset's committed
-  snapshot text grammar is the repository-wide placeholder `payload = OCTET+`, whose header production
-  declares `"schema" SP "stdio.json"` against an artifact whose own first line says otherwise.
-  Until that is done, every assertion below still lives in the SUBJECT role, and the ceiling is the
-  one this decision has always had: no second producer runs beside it, so a mistake shared by the
-  handcrafted vector and the production code passes unseen.
+  Both implementations now read the SAME committed base graph — `local://🔣️.json` below, already
+  declared as this case's local fixture — and apply the SAME ten committed `params` payloads to it.
 
   📄️ The base document is real and committed. `asset://📚️examples/🎬️demo/🖼️assets/🗣️.dsl.semio` is
   parsed by production's own `parse_dsl` and supplies the schema and the CAMERA every scenario starts
@@ -66,15 +60,15 @@ Feature: Apply every typed FLOW mutation to the real committed widget graph
 
   @id-mutate
   @level-exhaustive
-  @mode-conformance
+  @mode-differential
   Scenario Outline: Apply <id> to the real committed widget graph and observe it move
     Given the real committed flow artifact asset://📚️examples/🎬️demo/🖼️assets/🗣️.dsl.semio
     And its composed content child seeded from local://🔣️.json
-    When the <id> mutation is applied through apply_flow_mutation
+    When the <id> mutation is applied through apply_flow_mutation, and separately by the Python reference
       """
       {"kind": "<id>", "params": <params>}
       """
-    Then the resulting projection differs from the base projection
+    Then the resulting projection differs from the base projection in both implementations
     Examples:
       | id                       | params                                                                                                                                             |
       | create-widget            | {"mutation":"createWidget","index":0,"widget":{"kind":"inputNote","id":"note-delta","text":"Delta"}}                                               |
@@ -90,16 +84,16 @@ Feature: Apply every typed FLOW mutation to the real committed widget graph
 
   @id-inverse
   @level-exhaustive
-  @mode-property
+  @mode-differential
   Scenario Outline: Undoing <id> restores the real committed widget graph exactly
     Given the real committed flow artifact asset://📚️examples/🎬️demo/🖼️assets/🗣️.dsl.semio
     And its composed content child seeded from local://🔣️.json
-    When the <id> mutation is applied through apply_flow_mutation
+    When the <id> mutation is applied through apply_flow_mutation, and separately by the Python reference
       """
       {"kind": "<id>", "params": <params>}
       """
-    And every step of its own computed inverse is applied through apply_flow_mutation
-    Then the projection equals the base projection again
+    And every step of its own computed inverse is applied through apply_flow_mutation, and separately by the Python reference
+    Then the projection equals the base projection again in both implementations
     Examples:
       | id                       | params                                                                                                                                             |
       | create-widget            | {"mutation":"createWidget","index":0,"widget":{"kind":"inputNote","id":"note-delta","text":"Delta"}}                                               |

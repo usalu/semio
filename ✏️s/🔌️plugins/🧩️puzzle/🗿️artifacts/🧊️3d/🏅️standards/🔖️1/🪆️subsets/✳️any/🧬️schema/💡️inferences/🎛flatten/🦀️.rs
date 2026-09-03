@@ -4,10 +4,9 @@
 //! child-plane solve, BFS). Diagram centers use attraction `x`/`y` (compose `u`/`v`).
 
 use crate::artifacts::puzzle3d::{Puzzle3dAttraction, Puzzle3dObject, Puzzle3dObjectAnchor, Puzzle3dSnapshot, Puzzle3dVortex};
-use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, HashSet, VecDeque};
 
-/// 🎛 Absolute plane + diagram center for one object after flatten. `Serialize`/`Deserialize`
+/// 🎛 Absolute plane + diagram center for one object after flatten. `ToValue`/`FromValue`
 /// (added for 💡️inference, ticket 26/08/12/INTRODUCE-INFERENCE-SCHEMA-FAMILY-WITH-DEPENDENCY-AWARE-CACHING):
 /// this is the `Value` type of the `Puzzle3dFlatPlane` `InferredField`, cached by
 /// `InferenceCache` as its own canonical bytes.

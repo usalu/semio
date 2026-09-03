@@ -20,6 +20,11 @@ use semio_framework_value_derive::FromValue;
 /// `#[cfg(all(target_arch = "wasm32", not(target_env = "p2")))] #[wasm_bindgen]` methods on `EditorSession` stay
 /// `Result<_, JsValue>` — that shape is dictated by the `wasm_bindgen` ABI, not this crate's own
 /// error handling, so it is not migrated here.
+// 🧬️ ToValue/FromValue coverage deliberately SKIPPED (RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS,
+// 26/09/01): both variants wrap a genuinely foreign, non-data error type — `serde_json::Error`
+// (opaque parser diagnostic state, not `ToValue`/`FromValue` anywhere) and `store::PackError`
+// (another owner's module) — and `EditorError` itself never crosses a wire (an internal
+// `Result<_, EditorError>`; the actual WASM boundary returns `JsValue` per the docstring above).
 #[derive(Debug)]
 pub enum EditorError {
     Json(serde_json::Error),
@@ -58,14 +63,37 @@ impl From<store::PackError> for EditorError {
 // #endregion ⚠️ Errors
 
 // #region 🔖️Theme
-#[derive(Clone, Copy, Debug)]
+/// 🌉️ `Color` bridge — `Color` (`♾️infinite`, a different owner's module) has no `ToValue`/
+/// `FromValue`; hand-written via its own public `components()`/`new()` rather than editing that
+/// module. `EditorCanvasTheme` below names this via `#[value(with = "color_bridge")]`.
+mod color_bridge {
+    use semio_framework_os_kernel as dsl_core;
+
+    pub fn to_value(c: &super::Color) -> dsl_core::DslValue {
+        dsl_core::ToValue::to_value(&c.components())
+    }
+    pub fn from_value(value: dsl_core::DslValue) -> Result<super::Color, dsl_core::ValueError> {
+        <[f32; 4] as dsl_core::FromValue>::from_value(value).map(super::Color::new)
+    }
+}
+
+// 🧬️ `value_derive::{ToValue, FromValue}` additive (RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS,
+// 26/09/01) — never had `serde`, so no `#[value(...)]` rename is needed beyond the `Color` bridge.
+#[derive(Clone, Copy, Debug, semio_framework_value_derive::ToValue, FromValue)]
 struct EditorCanvasTheme {
+    #[value(with = "color_bridge")]
     raster_clear: Color,
+    #[value(with = "color_bridge")]
     grid_minor_stroke: Color,
+    #[value(with = "color_bridge")]
     label_fill: Color,
+    #[value(with = "color_bridge")]
     label_fill_hovered: Color,
+    #[value(with = "color_bridge")]
     label_halo: Color,
+    #[value(with = "color_bridge")]
     hover_fill: Color,
+    #[value(with = "color_bridge")]
     selection_fill: Color,
 }
 
@@ -131,16 +159,21 @@ fn editor_content_affine(camera: &Camera) -> Affine {
 
 // #region 🔖️EditorState
 
-#[derive(Clone, Debug, Deserialize)]
+#[derive(Clone, Debug, Deserialize, FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 struct EditorSettingsJson {
     #[serde(default = "default_font_px")]
+    #[value(default = "default_font_px")]
     font_px: f64,
     #[serde(default = "default_line_height")]
+    #[value(default = "default_line_height")]
     line_height: f64,
     #[serde(default = "default_show_line_numbers")]
+    #[value(default = "default_show_line_numbers")]
     show_line_numbers: bool,
     #[serde(default = "default_tab_size")]
+    #[value(default = "default_tab_size")]
     tab_size: usize,
 }
 
@@ -160,16 +193,18 @@ fn default_tab_size() -> usize {
     DEFAULT_TAB_SIZE
 }
 
-#[derive(Clone, Debug, Deserialize)]
+#[derive(Clone, Debug, Deserialize, FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 struct SemanticTokenJson {
     start: usize,
     end: usize,
     class: String,
 }
 
-#[derive(Clone, Debug, Deserialize)]
+#[derive(Clone, Debug, Deserialize, FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 struct SelectableSpanJson {
     start: usize,
     end: usize,
@@ -178,22 +213,25 @@ struct SelectableSpanJson {
     tail_start: Option<usize>,
 }
 
-#[derive(Clone, Debug, Deserialize)]
+#[derive(Clone, Debug, Deserialize, FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 struct ByteRangeJson {
     start: usize,
     end: usize,
 }
 
-#[derive(Clone, Debug, Deserialize)]
+#[derive(Clone, Debug, Deserialize, FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 struct PlaceholderJson {
     offset: usize,
     label: String,
 }
 
-#[derive(Clone, Debug, Deserialize)]
+#[derive(Clone, Debug, Deserialize, FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 struct DiagnosticJson {
     start: usize,
     end: usize,
@@ -202,20 +240,21 @@ struct DiagnosticJson {
     message: String,
 }
 
-#[derive(Clone, Debug, Deserialize)]
+#[derive(Clone, Debug, Deserialize, FromValue)]
 struct TextEditJson {
     range: TextRangeJson,
     #[serde(rename = "newText")]
+    #[value(rename = "newText")]
     new_text: String,
 }
 
-#[derive(Clone, Debug, Deserialize)]
+#[derive(Clone, Debug, Deserialize, FromValue)]
 struct TextRangeJson {
     start: TextPosJson,
     end: TextPosJson,
 }
 
-#[derive(Clone, Debug, Deserialize)]
+#[derive(Clone, Debug, Deserialize, FromValue)]
 struct TextPosJson {
     line: u32,
     character: u32,

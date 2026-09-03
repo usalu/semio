@@ -474,13 +474,13 @@ impl ShardExecutor {
     /// send_frame`] before this is ever reached) is the sole signal [`Self::run`] trusts for "is
     /// there real work left."
     fn schedule(self: &Arc<Self>) {
-        if self.closed.load(Ordering::Acquire) {
-            return;
-        }
-        if self.scheduled.compare_exchange(false, true, Ordering::AcqRel, Ordering::Acquire).is_err() {
-            return;
-        }
-        let admitted_epoch = self.epoch.load(Ordering::Acquire);
+       if self.closed.load(Ordering::Acquire) {
+           return;
+       }
+       if self.scheduled.compare_exchange(false, true, Ordering::AcqRel, Ordering::Acquire).is_err() {
+           return;
+       }
+       let admitted_epoch = self.epoch.load(Ordering::Acquire);
         let retained = self.handoff.lock().unwrap_or_else(PoisonError::into_inner).take();
         let (lane, job) = retained.unwrap_or_else(|| {
             let rank = self.pending_lane_rank.swap(NO_LANE, Ordering::AcqRel);
@@ -549,15 +549,15 @@ impl ShardExecutor {
         self.closed.store(true, Ordering::Release);
         let previous = self.terminal_handoff.lock().unwrap_or_else(PoisonError::into_inner).replace((kind, lane, job));
         debug_assert!(previous.is_none(), "ShardExecutor: exactly one terminal handoff owner");
-    }
+   }
 
-    fn request_drive_wake(self: &Arc<Self>, generation: u64) {
-        if !claim_drive_wake(self.drive_generation.load(Ordering::Acquire), generation, &self.drive_wake_queued) {
-            return;
-        }
-        if self.drive_waiting.swap(false, Ordering::AcqRel) {
-            self.schedule();
-        }
+   fn request_drive_wake(self: &Arc<Self>, generation: u64) {
+       if !claim_drive_wake(self.drive_generation.load(Ordering::Acquire), generation, &self.drive_wake_queued) {
+           return;
+       }
+       if self.drive_waiting.swap(false, Ordering::AcqRel) {
+           self.schedule();
+       }
     }
 
     fn retain_failure(&self, failure: crate::PluginHostError) {
@@ -579,11 +579,11 @@ impl ShardExecutor {
 
     /// 🏃 The `WorkerPool` job body. A stale admitted epoch yields before locking shard state.
     /// A current admission polls exactly one bounded drive opportunity and takes at most one already
-    /// buffered outcome with [`ThreadTransport::try_recv_now`]. A successor is attempted only when
-    /// retained shard or ingress work remains; finite admission rejection stores the exact closure
-    /// returned by [`WorkerPool::try_submit`] for the next retry.
-    fn run(self: Arc<Self>, admitted_epoch: u64) {
-        if admitted_epoch != self.epoch.load(Ordering::Acquire) {
+   /// buffered outcome with [`ThreadTransport::try_recv_now`]. A successor is attempted only when
+   /// retained shard or ingress work remains; finite admission rejection stores the exact closure
+   /// returned by [`WorkerPool::try_submit`] for the next retry.
+   fn run(self: Arc<Self>, admitted_epoch: u64) {
+       if admitted_epoch != self.epoch.load(Ordering::Acquire) {
             self.scheduled.store(false, Ordering::Release);
             self.schedule();
             return;
@@ -619,27 +619,27 @@ impl ShardExecutor {
                 None => None,
             };
             (polled, !state.registrations.is_empty())
-        };
-        let Some(drive) = polled else {
-            self.scheduled.store(false, Ordering::Release);
+       };
+       let Some(drive) = polled else {
+           self.scheduled.store(false, Ordering::Release);
             self.drive_waiting.store(true, Ordering::Release);
             if self.drive_wake_queued.swap(false, Ordering::AcqRel) && self.drive_waiting.swap(false, Ordering::AcqRel) {
                 self.schedule();
-            }
-            return;
-        };
-        self.drive_generation.fetch_add(1, Ordering::AcqRel);
+           }
+           return;
+       };
+       self.drive_generation.fetch_add(1, Ordering::AcqRel);
         let (consumed_epoch, shard_more, terminal_overflow) = match &drive {
             ShardDrive::Idle { consumed_epoch } => (*consumed_epoch, false, false),
             ShardDrive::MoreWork { consumed_epoch } => (*consumed_epoch, true, false),
             ShardDrive::Blocked => (None, false, false),
             ShardDrive::Fault { consumed_epoch, work_remains, terminal_overflow, .. } => (*consumed_epoch, *work_remains, *terminal_overflow),
         };
-        if let Some(epoch) = consumed_epoch {
-            self.acknowledge_consumed_epoch(epoch);
-        }
-        if let Some(bytes) = self.kernel_side.try_recv_now() {
-            let mut pos = 0usize;
+       if let Some(epoch) = consumed_epoch {
+           self.acknowledge_consumed_epoch(epoch);
+       }
+       if let Some(bytes) = self.kernel_side.try_recv_now() {
+           let mut pos = 0usize;
             match poll_drive_once(ShardOutcome::pack_decode(&bytes, &mut pos)) {
                 Some(Ok(outcome)) => self.outcomes.push(outcome),
                 Some(Err(error)) => self.retain_failure(crate::PluginHostError::Plugin(format!("ShardExecutor: malformed outcome: {error:?}"))),
@@ -665,6 +665,31 @@ mod tests {
     use semio_framework_actor::{ActorId, Envelope, JobOperation, JobReplayRequest, JobTurn, Payload, ShardKind, ShardTable};
     use semio_framework_async::{ProcessKind, WorkerPoolConfig};
     use std::time::Duration;
+
+    /// 🧵️ Verifies the language-neutral stack-authority fixture against every shard owner
+    /// registry and the native executor values moved across asynchronous boundaries.
+    #[semio_framework_async_macros::async_test]
+    async fn shard_stack_authority_matches_the_neutral_fixture() {
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔣️stack-authority.json")).expect("stack authority fixture");
+        let maximum = fixture["maximumInlineBytes"].as_u64().expect("maximum inline bytes") as usize;
+        let registry = |id: &str| fixture["registries"].as_array().expect("registry rows").iter().find(|row| row["id"] == id).expect("stack authority row");
+        let seeds = registry("shard-replay-seeds");
+        let refusals = registry("shard-replay-refusals");
+        let deferred = registry("shard-deferred-owner-ring");
+        assert_eq!(fixture["schemaVersion"], 1);
+        assert_eq!(seeds["capacity"].as_u64(), Some(super::super::JOB_REPLAY_SEED_SLOT_CAPACITY as u64));
+        assert_eq!(refusals["capacity"].as_u64(), Some(super::super::JOB_REPLAY_REFUSAL_SLOT_CAPACITY as u64));
+        assert_eq!(deferred["capacity"].as_u64(), Some(SHARD_DEFERRED_ITEMS as u64));
+        assert!([seeds, refusals, deferred].iter().all(|row| row["storage"] == "heap"));
+        let (_, shard_side) = ThreadTransport::new_pair().await;
+        let shard = ShardLoop::new(Arc::new(GuestRuntimes::Mock(Arc::new(MockGuestRuntime::new().await))), ShardTransports::SharedThread(SharedThreadTransport(Arc::new(shard_side)))).await;
+        assert_eq!(shard.replay_seeds.len(), super::super::JOB_REPLAY_SEED_SLOT_CAPACITY);
+        assert_eq!(shard.replay_seed_refusals.len(), super::super::JOB_REPLAY_REFUSAL_SLOT_CAPACITY);
+        assert_eq!(FixedOwnerRing::<u8, SHARD_DEFERRED_ITEMS>::new(SHARD_DEFERRED_BYTES).slots.len(), SHARD_DEFERRED_ITEMS);
+        assert!(std::mem::size_of::<ShardLoop>() <= maximum);
+        assert!(std::mem::size_of::<ShardExecutorState>() <= maximum);
+        assert!(std::mem::size_of::<ShardExecutor>() <= maximum);
+   }
 
     async fn encode_frame(frame: super::super::ShardFrame) -> Vec<u8> {
         let mut bytes = Vec::new();
@@ -707,7 +732,7 @@ mod tests {
             deadline_ms: None,
             coalesce: None,
             cancel_of: None,
-            payload: Payload::Event { bytes: serde_json::to_vec(&semio_framework::kernel::Event::InstanceClose).unwrap() },
+            payload: Payload::Event { bytes: serde_json::to_vec(&super::super::fixture_instance_close_event()).unwrap() },
         };
         let budget = semio_framework_actor::lane_defaults::budget_for(semio_framework_actor::Lane::Interactive);
         let bytes = encode_frame(super::super::ShardFrame::Grant { actor, budget, envelopes: vec![envelope] }).await;
@@ -854,7 +879,7 @@ mod tests {
                 deadline_ms: None,
                 coalesce: None,
                 cancel_of: None,
-                payload: Payload::Event { bytes: serde_json::to_vec(&semio_framework::kernel::Event::InstanceClose).unwrap() },
+                payload: Payload::Event { bytes: serde_json::to_vec(&super::super::fixture_instance_close_event()).unwrap() },
             };
             let bytes = encode_frame(super::super::ShardFrame::Grant { actor, budget: grant_budget, envelopes: vec![envelope] }).await;
             executors[shard_id.0 as usize].send_frame(bytes, semio_framework_actor::Lane::Interactive).await;
@@ -969,7 +994,7 @@ mod tests {
                     deadline_ms: None,
                     coalesce: None,
                     cancel_of: None,
-                    payload: Payload::Event { bytes: serde_json::to_vec(&semio_framework::kernel::Event::InstanceClose).unwrap() },
+                    payload: Payload::Event { bytes: serde_json::to_vec(&super::super::fixture_instance_close_event()).unwrap() },
                 };
                 let bytes = semio_framework_async::block_on(encode_frame(super::super::ShardFrame::Grant { actor, budget, envelopes: vec![envelope] }));
                 semio_framework_async::block_on(executor.send_frame(bytes, semio_framework_actor::Lane::Interactive));

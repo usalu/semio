@@ -5,7 +5,7 @@ use crate::artifacts::forms::{op::FormMutation, FormsSnapshot};
 use crate::editor::forms::config::{FormsConfig, FormsConfigMutation};
 use crate::editor::forms::parse_value_json;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
-use serde_json::Value;
+use dsl::os_pack::json::Value;
 use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️Shell

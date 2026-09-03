@@ -15,8 +15,6 @@
 //! `crate::editor::forms::FORMS_INTERACTION_FIELDS`.
 
 use protocol::Mutation;
-use serde::de::Deserializer;
-use serde::ser::{SerializeMap, Serializer};
 #[cfg(test)]
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
@@ -346,26 +344,36 @@ impl fmt::Debug for FormsTryValues {
     }
 }
 
-impl Serialize for FormsTryValues {
-    fn serialize<S: Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+impl dsl::ToValue for FormsTryValues {
+    fn to_value(&self) -> dsl::DslValue {
         let entries = self.iter_content();
-        let mut map = serializer.serialize_map(Some(entries.len()))?;
-        for (key, content) in entries {
-            let chunks: Vec<&str> = content.chunks.iter().map(AsRef::as_ref).collect();
-            map.serialize_entry(&key, &chunks)?;
-        }
-        map.end()
+        dsl::DslValue::Object(
+            entries
+                .into_iter()
+                .map(|(key, content)| {
+                    let chunks: Vec<dsl::DslValue> = content.chunks.iter().map(|chunk| dsl::DslValue::String(chunk.to_string())).collect();
+                    (key, dsl::DslValue::Array(chunks))
+                })
+                .collect(),
+        )
     }
 }
 
-impl<'de> Deserialize<'de> for FormsTryValues {
-    fn deserialize<D: Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
-        let values = BTreeMap::<String, Vec<String>>::deserialize(deserializer)?;
-        Ok(values.into_iter().fold(Self::default(), |current, (key, chunks)| {
-            let chunks: Vec<Arc<str>> = chunks.into_iter().map(Arc::from).collect();
+impl dsl::FromValue for FormsTryValues {
+    fn from_value(value: dsl::DslValue) -> Result<Self, dsl::ValueError> {
+        let dsl::DslValue::Object(entries) = value else { return Err(dsl::ValueError::new("expected an object for Forms try values")) };
+        let mut values = Self::default();
+        for (key, entry) in entries {
+            let dsl::DslValue::Array(items) = entry else { return Err(dsl::ValueError::new("expected an array for a Forms try value entry")) };
+            let mut chunks = Vec::with_capacity(items.len());
+            for item in items {
+                let dsl::DslValue::String(chunk) = item else { return Err(dsl::ValueError::new("expected a string chunk")) };
+                chunks.push(Arc::<str>::from(chunk));
+            }
             let content_id = try_value_content_id(&chunks);
-            current.with_chunks(&key, content_id, chunks.into())
-        }))
+            values = values.with_chunks(&key, content_id, chunks.into());
+        }
+        Ok(values)
     }
 }
 

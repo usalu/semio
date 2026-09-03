@@ -1548,6 +1548,42 @@ export function mutationCoverageBreaches(discovered: DiscoveredCase, feature: Pa
 }
 
 /**
+ * 🪆️ Law 1's placement half, made mechanical. `discoverTestCases` takes a case's PARENT as its
+ * owner, so a case sitting one level above a subset directory is discovered and measured against
+ * that wrong owner — its `sharedFixtureDir` resolves to the ARTIFACT's fixtures, not the subset's,
+ * silently defeating the very placement this ticket spent 642 `unsplit-artifact-subset` closures on.
+ *
+ * The one signal this trusts is the catalog's own `subsetDirectoryName` — `mutationCatalogProblems`
+ * already REQUIRES and VALIDATES it (`catalog profile does not match its contribution owner`)
+ * whenever the catalog's own contribution carries standards/subsets coordinates, so a bare
+ * `@mutations-<id>` tag resolves to exactly one real, already-audited subset id; nothing here
+ * re-derives it from an adapter import or a fixture URI, both of which name a real subset for a pure
+ * container/round-trip case too (confirmed live: `gif/create-and-round-trip-gif`,
+ * `jpg/create-and-read-jpeg` and `zip/create-and-edit-archive` each import exactly one subset's `io`
+ * while genuinely spanning or exceeding it) and would misfire on precisely the three cases C4 confirmed
+ * must stay put. A catalog with no `subsetDirectoryName` — unprofiled, not a standards/subsets
+ * vocabulary — yields no verdict rather than a guess, and a feature with no `@mutations-` tag at all
+ * is never a candidate, mirroring the same early return `mutationCoverageBreaches` itself takes.
+ */
+export function caseAboveSubsetBreaches(discovered: DiscoveredCase, feature: ParsedFeature, registry: OracleRegistry): BreachRecord[] {
+  if (feature.mutationCatalog === null) return [];
+  const catalog = registry.mutationCatalogs.find((entry) => entry.id === feature.mutationCatalog);
+  if (catalog?.subsetDirectoryName === undefined || catalog.subsetDirectoryName.length === 0) return [];
+  if (subsetCoordinatesOfOwner(discovered.owner) !== null) return [];
+  const subset = catalog.subsetDirectoryName.slice("✳️".length);
+  return [
+    breach(
+      "testing/taxonomy",
+      "case-above-subset",
+      discovered.caseDir,
+      `Case claims @mutations-${feature.mutationCatalog}, owned by exactly one subset (${subset}), but sits at ${discovered.owner}, above every subset`,
+      "A mutation is owned by the smallest semantic subset. A case sitting above that subset is discovered with the ARTIFACT as its owner, so its sharedFixtureDir resolves against the artifact's fixtures rather than the subset's, and every reader of the tree sees an artifact-wide case for evidence that actually proves one narrow scope.",
+      `Move 🧪️tests/${discovered.case} under the ${catalog.subsetDirectoryName} subset's own 🧪️tests, beside catalog ${catalog.id}.`,
+    ),
+  ];
+}
+
+/**
  * 🧾️ The contract phase: everything checkable without executing a single test. A case that fails
  * here can never be reported as passing, because the plan the hosts would receive is not well formed.
  */
@@ -1609,6 +1645,7 @@ export function validateCaseContract(repoRoot: string, discovered: DiscoveredCas
   }
 
   breaches.push(...mutationCoverageBreaches(discovered, feature, registry));
+  breaches.push(...caseAboveSubsetBreaches(discovered, feature, registry));
 
   const uris = fixtureUrisIn(feature);
   for (const uri of resolveFixtures(repoRoot, discovered, uris).missing) {
@@ -1861,6 +1898,7 @@ export function validateAllContracts(repoRoot: string, cases: readonly Discovere
   breaches.push(...registryRecordBreaches(registry));
   breaches.push(...noOracleMisuseBreaches(registry));
   breaches.push(...fixtureProvenanceBreaches(repoRoot, registry));
+  breaches.push(...mutationFixtureBreaches(registry));
   breaches.push(...isolationBreaches(registry));
 
   const baseline = loadMigrationBaseline(repoRoot);
@@ -3802,7 +3840,7 @@ export function rustTypeIndex(repoRoot: string): { transparent: ReadonlyMap<stri
         if (existing !== undefined && existing !== body) ambiguous.add(name);
         else composites.set(name, body);
         // 📍️A name is not unique in this repository, and it is not supposed to be: `FemMaterial` is one
-        // struct in `fem/◻2d` and a different one in `fem/🧊3d`, exactly as the taxonomy intends. Keying
+        // struct in `fem/◻️2d` and a different one in `fem/🧊3d`, exactly as the taxonomy intends. Keying
         // the index by bare name made those AMBIGUOUS and dropped them, which refused every leaf that
         // mentioned them. Rust resolves by module path; so does this, by remembering where each
         // definition lives and letting the caller's own owner path pick the nearest one.
@@ -5096,12 +5134,24 @@ function ignoresItsInput(text: string): boolean {
  *
  * A crate that decodes the artifact discharges "the result is a well-formed file of this format". It does
  * not discharge "the mutation computed the right answer". Only the second is what a mutation oracle is for.
+ *
+ * 🎯 ENTRY-GRANULAR, NOT FILE-GRANULAR. This owner's shared `🦀️oracle.rs` is exactly one Rust
+ * compilation unit; a `verified-native-second-implementation`/`third-party-library`/… entry can only be
+ * THE CODE this file's predicting dispatch belongs to when that entry's own `ecosystem` is `"rust"` —
+ * anything else (`python`'s `ifcopenshell`, `javascript`'s `yauzl`, …) executes in an entirely different
+ * runtime the file never touches, so the file's content is not evidence about it, however incriminating
+ * that same file is about a Rust sibling entry sitting in the very same registry contribution. Filtering
+ * to `implicable` BEFORE reading the file — rather than reading it once and then deciding which of
+ * `qualifying`'s ids to name in the message — is what keeps a genuine third-party reader from being swept
+ * in with a mislabelled Rust reimplementation merely for sharing a directory: the file is not even opened
+ * unless some entry could actually be the code it describes.
  */
 export function reimplementationOracleBreaches(repoRoot: string, registry: OracleRegistry): BreachRecord[] {
   const breaches: BreachRecord[] = [];
   for (const contribution of registry.contributions) {
     const qualifying = contribution.oracles.filter((oracle) => isQualifyingOracleKind(oracle.kind));
-    if (qualifying.length === 0) continue;
+    const implicable = qualifying.filter((oracle) => oracle.ecosystem === "rust");
+    if (implicable.length === 0) continue;
     const own = join(repoRoot, contribution.owner, "🧪️oracle", "🦀️.rs");
     if (!existsSync(own)) continue;
     let text: string;
@@ -5130,7 +5180,7 @@ export function reimplementationOracleBreaches(repoRoot: string, registry: Oracl
         "testing/oracle",
         "reimplementation-registered-as-third-party",
         `${contribution.owner}/🦀️oracle.rs`,
-        `${qualifying.map((oracle) => oracle.id).join(", ")} is registered as a qualifying third-party oracle, but this owner predicts mutation output in its own Rust`,
+        `${implicable.map((oracle) => oracle.id).join(", ")} is registered as a qualifying third-party oracle, but this owner predicts mutation output in its own Rust`,
         `The crate parses or encodes; the expected RESULT of each mutation is computed here. Both halves of the comparison then read the same specification, so a misreading of it produces two agreeing wrong answers — the one failure mode a differential test exists to prevent.`,
         `Reclassify the entry as cross-semio-implementation (a required supplement, never a substitute) and register a domain-aware third-party reader for the mutation semantics, or narrow the crate's capability to file well-formedness only.`,
         "high",
@@ -5320,6 +5370,78 @@ export function fixtureProvenanceBreaches(repoRoot: string, registry: OracleRegi
         if (fixture.toleranceOverride.factor > cap) {
           breaches.push(breach("testing/fixture", "tolerance-override-exceeds-cap", `${scope}#${fixture.id}`, `Fixture ${fixture.id} overrides its tolerance by ${fixture.toleranceOverride.factor}×, above the profile cap of ${cap}×`, "An uncapped override turns a failing comparison into a passing one and nothing in the report would say so.", "Lower the override, or change the fixture's tolerance profile deliberately."));
         }
+      }
+    }
+  }
+  return breaches;
+}
+
+/**
+ * 🧫️ Law 2, made mechanical for the v2 manifest. `fixtureProvenanceBreaches` above already audits
+ * every REGISTERED fixture's own honesty — present on disk, correct digest, licensed, generated by a
+ * qualifying oracle when generated at all — and `mutationVectorRegistryBreaches` already audits the
+ * v1 physical `🦠️mutation`/`📸️snapshot`/`🔺️diff`/`🎯️outcome` bundle's own shape. What NEITHER can see
+ * is a v2-declared mutation with NO evidence registered against it in EITHER form: the coordinate
+ * `buildCoverageMatrix` reports as `status: "missing"` in a RUN's coverage report, but which this
+ * static contract phase — computable with no execution at all — never previously failed on.
+ * `mutation-kind-uncovered`/`mutation-inverse-uncovered` police the v1 Gherkin catalog's Examples
+ * table, not whether either fixture form actually exists; none of the five rules named in this
+ * function's own brief reads a v2 `mutationManifests` entry's fixture coverage at all.
+ *
+ * The minimum honest evidence this accepts is deliberately EITHER of the two forms already live in
+ * this repository, not a mandate to adopt one: a v2 `FixtureManifest` (schema `fixture/v2`) whose
+ * `target` names this mutation's own artifact/standard/subset and whose `mutation` field names this
+ * mutation's own id — exactly what the exemplar (`📷️png@1.2/✳️any`'s `change-background`) carries —
+ * OR a v1 physical vector registered in a `mutationCatalogs[].vectors` entry sharing this mutation's
+ * OWN `capability` (the same correlation `mutationInventoryBreaches` already uses to match a v1
+ * catalog's claimed kinds against a v2 manifest) whose `mutationId` names this mutation's own id, as
+ * `🏛️architect/🏛️program` carries for all 266 of its mutations. A survey of the live registry BEFORE
+ * settling on this design found 1,650 "violations" against the v2-only form — investigating the
+ * largest, `s.architect.program`, showed a real, checked-in, handcrafted before/after JSON bundle for
+ * every one of its 266 mutations, registered only in the older v1 form: counting those as untested
+ * would have been dishonest. Whichever form supplies the evidence, its OWN existing rule
+ * (`fixtureProvenanceBreaches` / `mutationVectorRegistryBreaches`) is what proves the claim is not a
+ * lie — this rule only proves a claim of SOME form exists at all. One fixture per mutation id, not one
+ * per declared outcome class: an unfixtured OUTCOME of an otherwise-fixtured mutation is a
+ * coverage-report gap (`measureCoverage`'s own `status: "missing"` rows), not a law-2 placement gap,
+ * and duplicating that measurement here would contradict the run-dependent coverage dimension instead
+ * of scoping cleanly around it.
+ */
+export function mutationFixtureBreaches(registry: OracleRegistry): BreachRecord[] {
+  const breaches: BreachRecord[] = [];
+  const fixturedMutations = new Set<string>();
+  for (const contribution of registry.contributions) {
+    for (const fixture of contribution.fixtureManifests) {
+      if (fixture?.target?.artifact === undefined || fixture.mutation === undefined) continue;
+      fixturedMutations.add(`${fixture.target.artifact}@${fixture.target.standard}/${fixture.target.subset}::${fixture.mutation}`);
+    }
+  }
+  const vectoredMutationsByCapability = new Map<string, Set<string>>();
+  for (const contribution of registry.contributions) {
+    for (const catalog of contribution.mutationCatalogs) {
+      if (catalog.capability === "") continue;
+      const ids = vectoredMutationsByCapability.get(catalog.capability) ?? new Set<string>();
+      for (const vector of catalog.vectors) ids.add(vector.mutationId);
+      vectoredMutationsByCapability.set(catalog.capability, ids);
+    }
+  }
+  for (const contribution of registry.contributions) {
+    for (const manifest of contribution.mutationManifests) {
+      if (mutationManifestProblems(manifest, contribution.owner).length > 0) continue;
+      for (const mutation of manifest.mutations) {
+        const subset = owningSubsetOf(manifest, mutation);
+        if (fixturedMutations.has(`${manifest.artifact}@${manifest.standard}/${subset}::${mutation.id}`)) continue;
+        if (vectoredMutationsByCapability.get(mutation.capability)?.has(mutation.id) === true) continue;
+        breaches.push(
+          breach(
+            "testing/fixture",
+            "mutation-without-fixture",
+            contribution.manifestPath,
+            `Mutation ${mutation.id} of ${subsetCoordinate(manifestTarget(manifest, mutation))} is declared with no fixture-backed vector`,
+            "A mutation manifest declares what dispatch CLAIMS it can do; a fixture is the one thing that tests the claim against a real-world example, a handcrafted vector, or a qualifying-oracle-generated before/after pair, rather than the implementation grading its own homework.",
+            `Add a fixtureManifests entry (schema semio.repository-test.fixture/v2) with target ${JSON.stringify({ artifact: manifest.artifact, standard: manifest.standard, subset })} and mutation ${JSON.stringify(mutation.id)}, or register a physical vector for it in a mutationCatalogs[] entry sharing capability ${JSON.stringify(mutation.capability)} — either way, backed by real-world/handcrafted/oracle-generated evidence.`,
+          ),
+        );
       }
     }
   }

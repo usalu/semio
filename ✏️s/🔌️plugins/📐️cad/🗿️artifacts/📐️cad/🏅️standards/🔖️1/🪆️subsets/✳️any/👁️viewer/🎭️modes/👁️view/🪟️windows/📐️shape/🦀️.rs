@@ -52,11 +52,11 @@ pub fn definition() -> WindowKindDefinition {
 /// straight off the document. Objects render the same fallback-box placeholder the editor's own
 /// `world_meshes_json` falls back to while composed-child object resolution is unimplemented (ticket
 /// `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM` wave 3 gap, pre-existing, not introduced here).
-/// 🌉️ `MeshData` (`semio_framework_plugin`) still derives `serde::Serialize`/`Deserialize`, not
-/// `ToValue`/`FromValue` — a genuine framework boundary out of this plugin's write scope. Bridged
-/// once, here, at the point the fallback mesh payload is assembled.
+/// 🌉️ `MeshData` (`semio_framework_plugin`) carries its own first-party `From<MeshData> for
+/// pack::json::Value` — reached here through the `dsl`/`protocol` alias's `os_pack` re-export of the
+/// same `pack` crate, never through `serde_json`.
 fn mesh_data_to_dsl(data: &semio_framework_plugin::MeshData) -> protocol::DslValue {
-    serde_json::to_value(data).map(|value| protocol::DslValue::from(&value)).unwrap_or(protocol::DslValue::Null)
+    protocol::os_pack::json::to_dsl_value(&protocol::os_pack::json::Value::from(data.clone()))
 }
 
 pub fn render(_document: &CadSnapshot) -> UiAssemblyResult<BuiltNode> {

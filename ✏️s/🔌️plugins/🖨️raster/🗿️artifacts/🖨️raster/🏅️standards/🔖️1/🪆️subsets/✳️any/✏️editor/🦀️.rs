@@ -18,7 +18,7 @@ use semio_framework_plugin::{
     InteractionDefinition, InteractionRef, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, MergeMode, NoDraft, NoDraftMutation, OsMediaCapability, SelectionMethod, SelectionMode, SelectionSpec, UiNode,
     UtilityCategory, UtilityDefinition, WindowMeasure,
 };
-use serde_json::Value;
+use dsl::os_pack::json::Value;
 use std::collections::HashMap;
 use store::ArtifactPack;
 use store::EngineHandles;
@@ -56,12 +56,15 @@ pub fn mask_row_id(target_id: &str) -> String {
 /// premigration `rasterDocumentToSyncJson`. Takes `&RasterConfig` nowhere directly (assets live on the
 /// document), but stays app-level next to {@link raster_scene}, its only caller.
 fn document_sync_json(document: &RasterSnapshot) -> String {
-    let mut value = serde_json::to_value(document).unwrap_or(Value::Null);
-    if let Value::Object(ref mut map) = value {
-        map.remove("assets");
-        map.remove("brushSize");
-        map.remove("brushOpacity");
-    }
+    let value = dsl::os_pack::json::from_dsl_value(&dsl::ToValue::to_value(document));
+    let value = match value {
+        Value::Object(object) => {
+            let filtered: dsl::os_pack::json::Object =
+                object.iter().filter(|(key, _)| *key != "assets" && *key != "brushSize" && *key != "brushOpacity").map(|(key, value)| (key.to_string(), value.clone())).collect();
+            Value::Object(filtered)
+        }
+        other => other,
+    };
     value.to_string()
 }
 
@@ -75,7 +78,8 @@ fn document_sync_json(document: &RasterSnapshot) -> String {
 fn assets_json_from_document(document: &RasterSnapshot) -> String {
     let resolved: std::collections::BTreeMap<String, crate::artifacts::raster::RasterImageAsset> =
         document.assets.keys().filter_map(|asset_id| crate::artifacts::raster::raster_asset(&document.assets, asset_id).map(|asset| (asset_id.clone(), asset))).collect();
-    serde_json::to_string(&resolved).unwrap_or_else(|_| "{}".into())
+    let object: dsl::os_pack::json::Object = resolved.into_iter().map(|(id, asset)| (id, dsl::os_pack::json::from_dsl_value(&dsl::ToValue::to_value(&asset)))).collect();
+    dsl::os_pack::json::to_string(&Value::Object(object))
 }
 
 /// 🎞️ Builds the shared `Paint2dScene` payload for both the composite and navigator windows. Takes
@@ -92,14 +96,14 @@ pub fn raster_scene(document: &RasterSnapshot, runtime: &RasterConfig, active_ut
     semio_framework_plugin::Paint2dScene {
         document_sync_json: document_sync_json(document),
         assets_json: assets_json_from_document(document),
-        camera_json: serde_json::to_string(&runtime.camera).unwrap_or_else(|_| r#"{"x":0,"y":0,"zoom":1}"#.into()),
+        camera_json: dsl::os_pack::json::to_json_string(&runtime.camera),
         selection_json: "[]".into(),
         hovered_id: None,
         active_utility: active_utility.into(),
         brush_size: runtime.brush_size,
         brush_opacity: runtime.brush_opacity,
         view_mode: view_mode.into(),
-        composite_viewport_json: runtime.composite_viewport.as_ref().map(|viewport| serde_json::to_string(viewport).unwrap_or_else(|_| "{}".into())),
+        composite_viewport_json: runtime.composite_viewport.as_ref().map(|viewport| dsl::os_pack::json::to_json_string(viewport)),
     }
 }
 
@@ -539,7 +543,7 @@ pub(crate) mod testkit {
     }
 
     pub fn render(app: &mut RasterApp, body_key: &str) -> String {
-        serde_json::to_string(&app.render(body_key, None, &ViewModel::default()).expect("render")).unwrap()
+        dsl::os_pack::json::to_json_string(&app.render(body_key, None, &ViewModel::default()).expect("render"))
     }
 
     pub fn main_window_measures(app: &mut RasterApp) -> Vec<WindowMeasure> {
@@ -677,7 +681,7 @@ mod tests {
         let sync_json = document_sync_json(&document);
         assert!(!sync_json.contains("\"assets\""), "sync json must omit assets");
         assert!(sync_json.contains("\"params\""), "adjustment params must survive document→sync roundtrip for the paint host");
-        let sync_value: Value = serde_json::from_str(&sync_json).expect("sync json");
+        let sync_value: Value = dsl::os_pack::json::parse(&sync_json).expect("sync json");
         let layers = sync_value.get("layers").and_then(Value::as_array).expect("layers");
         assert!(layers.iter().any(|layer| layer.get("kind").and_then(Value::as_str) == Some("adjustment") && layer.get("params").is_some()));
         assert!(document.assets.contains_key("semio-emblem"));

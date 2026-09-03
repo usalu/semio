@@ -2,12 +2,18 @@
 
 use crate::artifacts::playbook::{PlaybookDocumentChild, PlaybookFlowChild, PLAYBOOK_DOCUMENT_SCHEMA};
 use schema::ArtifactSchema;
+// 🔬️ `Serialize`/`Deserialize` survive ONLY as a `#[cfg(test)]` differential oracle — `PlaybookDiff`
+// carries this type behind its own `#[cfg_attr(test, derive(Serialize, Deserialize))]` (see
+// `../🔺️diff/🦀️.rs`), whose committed `🧪️tests/<fixture>/🦀️.rs` fixture vectors decode/re-encode
+// through it — never a production dependency of this crate.
+#[cfg(test)]
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Artifact
 /// 🧬️ Full playbook artifact state across the artifact, presence and config lanes.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ArtifactSchema)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, ArtifactSchema)]
+#[cfg_attr(test, derive(Serialize, Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[artifact_schema(id = "s.playbook.playbook")]
 pub struct PlaybookArtifact {
     #[state(artifact)]

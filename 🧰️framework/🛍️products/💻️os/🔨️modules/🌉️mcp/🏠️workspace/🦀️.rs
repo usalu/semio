@@ -30,6 +30,13 @@ use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 use std::sync::{Arc, Mutex};
 
+#[path = "🔗️remote/🦀️.rs"]
+pub mod remote;
+
+use remote::{descriptor_resource_uri, parse_descriptor_resource_uri, AuthorizedDescriptorSnapshot, HubRemoteBinding};
+#[cfg(not(target_arch = "wasm32"))]
+use remote::NativeHubBindingDriver;
+
 /// 🕰️ Local `now_ms` — `🦀️.rs`'s own `now_ms` is private to that module; this crate's own
 /// convention (`SystemTime::now` since `UNIX_EPOCH`, clamped) restated here rather than reaching for
 /// a file this packet does not own.
@@ -420,17 +427,26 @@ fn close_probe_store_to_terminal(mut probe_store: ProbeStore) {
 /// `📋️master.md` §2.1 names (`--folder <dir>` / `--hub <url> --space <id> --token <t>`), kept as our
 /// own small enum (rather than exposing `store::sync::PersistenceBinding` directly at this crate's
 /// public surface) only so `bin.rs`'s argv parsing has a single obvious constructor to build.
-#[derive(Clone, Debug)]
+#[derive(Clone)]
 pub enum WorkspaceOrigin {
     Folder { path: PathBuf },
-    Hub { base_url: String, space_id: String, token: Option<String> },
+    Hub { base_url: String, space_id: String, token: String },
+}
+
+impl std::fmt::Debug for WorkspaceOrigin {
+    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::Folder { path } => formatter.debug_struct("Folder").field("path", path).finish(),
+            Self::Hub { base_url, space_id, .. } => formatter.debug_struct("Hub").field("base_url", base_url).field("space_id", space_id).field("token", &"[REDACTED]").finish(),
+        }
+    }
 }
 
 impl WorkspaceOrigin {
     fn persistence_binding(&self) -> store::sync::PersistenceBinding {
         match self {
             WorkspaceOrigin::Folder { path } => store::sync::PersistenceBinding::Folder { path: path.clone() },
-            WorkspaceOrigin::Hub { base_url, space_id, token } => store::sync::PersistenceBinding::Hub { base_url: base_url.clone(), space_id: space_id.clone(), token: token.clone(), surface: None },
+            WorkspaceOrigin::Hub { base_url, space_id, token } => store::sync::PersistenceBinding::Hub { base_url: base_url.clone(), space_id: space_id.clone(), token: Some(token.clone()), surface: None },
         }
     }
 
@@ -859,15 +875,15 @@ fn persistent_command_completion_port_ready() -> bool {
 /// blob into this port's own `Fault{code,message}` — the wire's real fault type
 /// (`🔌️plugin::Fault`, wrapping `FaultOrigin`/`FaultCode`) is private to that crate (not reachable
 /// from here), so this decodes the SAME `store::pack_rt`/`DslValue` wire envelope every real fault
-/// travels over generically, as a `serde_json::Value`, and reads `code`/`message` defensively —
+/// travels over generically, as a `DslValue`, and reads `code`/`message` defensively —
 /// never panics, never invents a code the guest did not send.
 #[cfg(not(target_arch = "wasm32"))]
 fn decode_guest_fault(bytes: &[u8]) -> Fault {
-    let decoded = store::pack_rt::decode_wire_value(bytes).ok().and_then(|value| store::from_dsl_value::<serde_json::Value>(value).ok());
+    let decoded = store::pack_rt::decode_wire_value(bytes).ok();
     match decoded {
         Some(value) => {
-            let code = value.get("code").and_then(serde_json::Value::as_str).unwrap_or("mutation.rejected").to_string();
-            let message = value.get("message").and_then(serde_json::Value::as_str).map(str::to_string).unwrap_or_else(|| value.to_string());
+            let code = value.get("code").and_then(store::DslValue::as_str).unwrap_or("mutation.rejected").to_string();
+            let message = value.get("message").and_then(store::DslValue::as_str).map(str::to_string).unwrap_or_else(|| store::os_pack::json::to_json_string(&value));
             Fault { code, message }
         }
         None => Fault { code: "mutation.rejected".to_string(), message: format!("guest rejected the command ({} bytes of fault detail, undecodable as JSON)", bytes.len()) },
@@ -1145,6 +1161,9 @@ pub struct HeadlessWorkspace {
     /// `RoutingArtifactChannel` (`open_routing_channel`). `prepare_action`/`invoke_action` delegate to
     /// it rather than duplicating that protocol — see those methods' own doc for why.
     action_adapter: Mutex<Option<Arc<ActionAdapter>>>,
+    hub_binding: Option<Arc<HubRemoteBinding>>,
+    #[cfg(not(target_arch = "wasm32"))]
+    hub_driver: Option<NativeHubBindingDriver>,
 }
 
 /// 🚪️ Real teardown for a `--folder`/`--hub`-bound `semio-os-mcp` process (and every test that opens
@@ -1157,6 +1176,8 @@ pub struct HeadlessWorkspace {
 /// already follows for its actor runners.
 impl Drop for HeadlessWorkspace {
     fn drop(&mut self) {
+        #[cfg(not(target_arch = "wasm32"))]
+        drop(self.hub_driver.take());
         let probes = std::mem::take(&mut *self.open_probes.lock().unwrap_or_else(std::sync::PoisonError::into_inner));
         for (artifact_id, probe_store) in probes {
             self.artifact_host.close(&artifact_id);
@@ -1169,7 +1190,20 @@ impl HeadlessWorkspace {
     fn new(origin: WorkspaceOrigin, principal: String, scopes: Vec<String>, catalog: Arc<Catalog>) -> Self {
         ensure_probe_codec_registered();
         let session_id = crate::mint_session_id(&principal, 0);
-        Self { artifact_host: store::sync::ArtifactHost::new(workspace_worker_pool()), origin, principal, session_id, scopes, repo_root: find_repo_root().ok(), catalog, open_probes: Mutex::new(HashMap::new()), action_adapter: Mutex::new(None) }
+        Self {
+            artifact_host: store::sync::ArtifactHost::new(workspace_worker_pool()),
+            origin,
+            principal,
+            session_id,
+            scopes,
+            repo_root: find_repo_root().ok(),
+            catalog,
+            open_probes: Mutex::new(HashMap::new()),
+            action_adapter: Mutex::new(None),
+            hub_binding: None,
+            #[cfg(not(target_arch = "wasm32"))]
+            hub_driver: None,
+        }
     }
 
     pub fn open_folder(path: PathBuf, principal: String, scopes: Vec<String>, catalog: Arc<Catalog>) -> Result<Self, GatewayError> {
@@ -1179,8 +1213,21 @@ impl HeadlessWorkspace {
         Ok(Self::new(WorkspaceOrigin::Folder { path }, principal, scopes, catalog))
     }
 
-    pub fn open_hub(base_url: String, space_id: String, token: Option<String>, principal: String, scopes: Vec<String>, catalog: Arc<Catalog>) -> Result<Self, GatewayError> {
-        Ok(Self::new(WorkspaceOrigin::Hub { base_url, space_id, token }, principal, scopes, catalog))
+    pub fn open_hub(base_url: String, space_id: String, token: String, principal: String, scopes: Vec<String>, catalog: Arc<Catalog>) -> Result<Self, GatewayError> {
+        remote::validate_hub_origin(&base_url, &space_id, &token)?;
+        #[cfg(not(target_arch = "wasm32"))]
+        {
+            let (binding, driver) = NativeHubBindingDriver::connect(&base_url, &space_id, &token)?;
+            let mut workspace = Self::new(WorkspaceOrigin::Hub { base_url, space_id, token }, principal, scopes, catalog);
+            workspace.hub_binding = Some(binding);
+            workspace.hub_driver = Some(driver);
+            Ok(workspace)
+        }
+        #[cfg(target_arch = "wasm32")]
+        {
+            let _ = (base_url, space_id, token, principal, scopes, catalog);
+            Err(GatewayError::new(GatewayErrorCode::PluginUnavailable, "native hub directory transport is unavailable on wasm32").retryable())
+        }
     }
 
     pub fn origin(&self) -> &WorkspaceOrigin {
@@ -1205,13 +1252,21 @@ impl HeadlessWorkspace {
     /// gap because it is the SAME map `ensure_probe_artifact` writes to, read under the same lock,
     /// with no cross-thread hop in between.
     pub fn workspace_artifact_ids(&self) -> Result<Vec<String>, GatewayError> {
-        let mut ids: std::collections::BTreeSet<String> = self.open_probes.lock().unwrap_or_else(std::sync::PoisonError::into_inner).keys().cloned().collect();
-        if let WorkspaceOrigin::Folder { path } = &self.origin {
-            let storage = store::sync::FolderEventLogStorage::new(path.clone());
-            let persisted = semio_framework::io::resolve_ready(storage.document_ids()).map_err(|error| GatewayError::new(GatewayErrorCode::Internal, format!("listing {}: {error}", path.display())))?;
-            ids.extend(persisted);
+        match &self.origin {
+            WorkspaceOrigin::Folder { path } => {
+                let mut ids: std::collections::BTreeSet<String> = self.open_probes.lock().unwrap_or_else(std::sync::PoisonError::into_inner).keys().cloned().collect();
+                let storage = store::sync::FolderEventLogStorage::new(path.clone());
+                let persisted = semio_framework::io::resolve_ready(storage.document_ids()).map_err(|error| GatewayError::new(GatewayErrorCode::Internal, format!("listing {}: {error}", path.display())))?;
+                ids.extend(persisted);
+                Ok(ids.into_iter().collect())
+            }
+            WorkspaceOrigin::Hub { .. } => {
+                let snapshot = self.hub_snapshot()?;
+                let mut ids: Vec<_> = snapshot.documents.keys().map(|scope| scope.document_id.clone()).collect();
+                ids.sort();
+                Ok(ids)
+            }
         }
-        Ok(ids.into_iter().collect())
     }
 
     /// 📖️ One document's real pack+spr bytes: the LIVE in-memory `ProbeStore` snapshot
@@ -1221,6 +1276,15 @@ impl HeadlessWorkspace {
     /// with neither an open store nor a persisted row. Same race fix as `workspace_artifact_ids` —
     /// see that method's own doc.
     pub fn read_artifact_bytes(&self, artifact_id: &str) -> Result<Option<(Vec<u8>, Vec<u8>)>, GatewayError> {
+        if matches!(self.origin, WorkspaceOrigin::Hub { .. }) {
+            let snapshot = self.hub_snapshot()?;
+            let known = snapshot.documents.keys().any(|scope| scope.document_id == artifact_id);
+            return if known {
+                Err(GatewayError::new(GatewayErrorCode::PluginUnavailable, format!("artifact {artifact_id} has authenticated descriptor metadata, but canonical artifact bytes remain unavailable until P4-B")).retryable())
+            } else {
+                Ok(None)
+            };
+        }
         if let Some(probe_store) = self.open_probes.lock().unwrap_or_else(std::sync::PoisonError::into_inner).get(artifact_id) {
             let files = semio_framework::io::resolve_ready(probe_store.snapshot_pack()).map_err(|error| GatewayError::new(GatewayErrorCode::Internal, format!("snapshotting `{artifact_id}`: {error}")))?;
             return Ok(Some((files.pack, files.spr)));
@@ -1230,8 +1294,13 @@ impl HeadlessWorkspace {
                 let storage = store::sync::FolderEventLogStorage::new(path.clone());
                 semio_framework::io::resolve_ready(storage.read(artifact_id)).map_err(|error| GatewayError::new(GatewayErrorCode::Internal, format!("reading `{artifact_id}`: {error}")))
             }
-            WorkspaceOrigin::Hub { .. } => Ok(None),
+            WorkspaceOrigin::Hub { .. } => unreachable!("hub reads return before local probe or folder access"),
         }
+    }
+
+    fn hub_snapshot(&self) -> Result<Arc<AuthorizedDescriptorSnapshot>, GatewayError> {
+        let binding = self.hub_binding.as_ref().ok_or_else(|| GatewayError::new(GatewayErrorCode::PluginUnavailable, "hub descriptor binding is unbound").retryable())?;
+        binding.ready_snapshot(i64::try_from(now_ms()).unwrap_or(i64::MAX))
     }
 
     /// 🧪️ Opens (creating on first use) a real `ProbeStore` bound through `ArtifactHost` — real VCS
@@ -1409,7 +1478,7 @@ impl HeadlessWorkspace {
 
 impl GatewayBackend for HeadlessWorkspace {
     fn resolve_context(&self, principal: &str) -> Result<ContextSummary, GatewayError> {
-        let active_artifact_id = self.workspace_artifact_ids().ok().and_then(|ids| ids.into_iter().next());
+        let active_artifact_id = self.workspace_artifact_ids()?.into_iter().next();
         Ok(crate::resolve_context(&self.catalog, self.session_id.clone(), principal, self.scopes.clone(), active_artifact_id, "en"))
     }
 
@@ -1488,13 +1557,55 @@ impl GatewayBackend for HeadlessWorkspace {
 
     fn read_resource(&self, uri: &str) -> Result<Vec<ResourceContent>, GatewayError> {
         if uri == "semio://workspace" {
-            let ids = self.workspace_artifact_ids()?;
-            let body = serde_json::json!({ "origin": self.origin.describe(), "principal": self.principal, "artifacts": ids });
+            let body = match &self.origin {
+                WorkspaceOrigin::Folder { .. } => serde_json::json!({ "origin": self.origin.describe(), "localPolicyPrincipal": self.principal, "artifacts": self.workspace_artifact_ids()? }),
+                WorkspaceOrigin::Hub { .. } => {
+                    let snapshot = self.hub_snapshot()?;
+                    serde_json::json!({
+                        "origin": self.origin.describe(),
+                        "bindingState": "ready",
+                        "authenticatedUserId": snapshot.authenticated_user_id,
+                        "space": directory_json_value(&snapshot.space)?,
+                        "artifacts": snapshot.documents.len()
+                    })
+                }
+            };
             return Ok(vec![ResourceContent { uri: uri.to_string(), mime_type: Some("application/json".to_string()), text: Some(body.to_string()), blob: None }]);
         }
         if uri == "semio://workspace/artifacts" {
-            let ids = self.workspace_artifact_ids()?;
-            return Ok(vec![ResourceContent { uri: uri.to_string(), mime_type: Some("application/json".to_string()), text: Some(serde_json::json!({ "artifacts": ids }).to_string()), blob: None }]);
+            let body = match &self.origin {
+                WorkspaceOrigin::Folder { .. } => serde_json::json!({ "artifacts": self.workspace_artifact_ids()? }),
+                WorkspaceOrigin::Hub { .. } => {
+                    let snapshot = self.hub_snapshot()?;
+                    let mut documents: Vec<_> = snapshot.documents.values().cloned().collect();
+                    documents.sort_by(|left, right| left.scope.document_id.cmp(&right.scope.document_id));
+                    let artifacts: Vec<_> = documents
+                        .iter()
+                        .map(|document| {
+                            serde_json::json!({
+                                "scope": { "spaceId": document.scope.space_id, "documentId": document.scope.document_id },
+                                "descriptorDigestV1": document.descriptor_digest_v1,
+                                "descriptorResource": descriptor_resource_uri(&document.scope)
+                            })
+                        })
+                        .collect();
+                    serde_json::json!({ "spaceId": snapshot.space.id, "artifacts": artifacts })
+                }
+            };
+            return Ok(vec![ResourceContent { uri: uri.to_string(), mime_type: Some("application/json".to_string()), text: Some(body.to_string()), blob: None }]);
+        }
+        if let Some(scope) = parse_descriptor_resource_uri(uri) {
+            let snapshot = self.hub_snapshot()?;
+            if scope.space_id != snapshot.space.id {
+                return Err(GatewayError::new(GatewayErrorCode::NotFound, "descriptor scope is outside the authenticated workspace"));
+            }
+            let document = snapshot.documents.get(&scope).ok_or_else(|| GatewayError::new(GatewayErrorCode::NotFound, format!("no such descriptor scope: {uri}")))?;
+            let body = serde_json::json!({
+                "scope": { "spaceId": document.scope.space_id, "documentId": document.scope.document_id },
+                "descriptorDigestV1": document.descriptor_digest_v1,
+                "view": directory_json_value(&document.view)?
+            });
+            return Ok(vec![ResourceContent { uri: uri.to_string(), mime_type: Some("application/json".to_string()), text: Some(body.to_string()), blob: None }]);
         }
         if let Some(rest) = uri.strip_prefix("semio://artifact/") {
             let (artifact_id, suffix) = match rest.split_once('/') {
@@ -1514,16 +1625,42 @@ impl GatewayBackend for HeadlessWorkspace {
             description: Some("Active space and its artifacts".to_string()),
             mime_type: Some("application/json".to_string()),
             size: None,
+        }, Resource {
+            uri: "semio://workspace/artifacts".to_string(),
+            name: "Workspace artifacts".to_string(),
+            title: Some("Authenticated artifact descriptor index".to_string()),
+            description: Some("Artifacts currently visible in the bound workspace".to_string()),
+            mime_type: Some("application/json".to_string()),
+            size: None,
         }];
-        for artifact_id in self.workspace_artifact_ids().unwrap_or_default() {
-            resources.push(Resource {
-                uri: format!("semio://artifact/{artifact_id}"),
-                name: artifact_id.clone(),
-                title: None,
-                description: Some("Real artifact bytes from the open workspace".to_string()),
-                mime_type: Some("application/octet-stream".to_string()),
-                size: None,
-            });
+        match &self.origin {
+            WorkspaceOrigin::Folder { .. } => {
+                for artifact_id in self.workspace_artifact_ids()? {
+                    resources.push(Resource {
+                        uri: format!("semio://artifact/{artifact_id}"),
+                        name: artifact_id.clone(),
+                        title: None,
+                        description: Some("Real artifact bytes from the open workspace".to_string()),
+                        mime_type: Some("application/octet-stream".to_string()),
+                        size: None,
+                    });
+                }
+            }
+            WorkspaceOrigin::Hub { .. } => {
+                let snapshot = self.hub_snapshot()?;
+                let mut documents: Vec<_> = snapshot.documents.values().collect();
+                documents.sort_by(|left, right| left.scope.document_id.cmp(&right.scope.document_id));
+                for document in documents {
+                    resources.push(Resource {
+                        uri: descriptor_resource_uri(&document.scope),
+                        name: format!("{} descriptor", document.scope.document_id),
+                        title: Some(document.view.descriptor.artifact_kind.clone()),
+                        description: Some("Authenticated descriptor metadata; artifact bytes remain unavailable until P4-B".to_string()),
+                        mime_type: Some("application/json".to_string()),
+                        size: None,
+                    });
+                }
+            }
         }
         Ok(resources)
     }
@@ -1577,6 +1714,20 @@ dyn_enum_close! {
 
 impl HeadlessWorkspace {
     fn read_artifact_resource(&self, artifact_id: &str, suffix: Option<&str>, uri: &str) -> Result<Vec<ResourceContent>, GatewayError> {
+        if matches!(self.origin, WorkspaceOrigin::Hub { .. }) {
+            let snapshot = self.hub_snapshot()?;
+            if !snapshot.documents.keys().any(|scope| scope.document_id == artifact_id) {
+                return Err(GatewayError::new(GatewayErrorCode::NotFound, format!("no such artifact: {artifact_id}")));
+            }
+            let unavailable = match suffix {
+                None => "canonical artifact bodies remain unavailable until P4-B",
+                Some("schema") => "artifact schema remains unavailable until P4-B verifies and decodes a canonical pair",
+                Some("validation") => "artifact validation remains unavailable until P4-B verifies and decodes a canonical pair",
+                Some("history") => "artifact history remains unavailable until a revision-bound remote history surface exists",
+                Some(_) => return Err(GatewayError::new(GatewayErrorCode::NotFound, format!("no such artifact sub-resource for {artifact_id}"))),
+            };
+            return Err(GatewayError::new(GatewayErrorCode::PluginUnavailable, unavailable).retryable());
+        }
         match suffix {
             None => match self.read_artifact_bytes(artifact_id)? {
                 Some((pack, spr)) => {
@@ -1616,6 +1767,11 @@ impl HeadlessWorkspace {
     }
 }
 
+fn directory_json_value<T: semio_framework_os_kernel::ToValue>(value: &T) -> Result<serde_json::Value, GatewayError> {
+    let text = semio_framework_os_kernel::os_pack::json::to_json_string(value);
+    serde_json::from_str(&text).map_err(|_| GatewayError::new(GatewayErrorCode::Internal, "directory value could not be projected to MCP JSON"))
+}
+
 fn base64_encode(bytes: &[u8]) -> String {
     const ALPHABET: &[u8; 64] = b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
     let mut out = String::with_capacity(bytes.len().div_ceil(3) * 4);
@@ -1641,6 +1797,58 @@ mod quick {
         Arc::new(crate::compile(&crate::CatalogSource::default(), semio_framework::Locale::En, semio_framework::Terminology::Native).expect("empty catalog source compiles"))
     }
 
+    fn authenticated_hub_workspace_fixture() -> HeadlessWorkspace {
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("🔗️remote/🧫️fixtures/🔣️authenticated-hub-descriptor-index.json")).unwrap();
+        let ready = &fixture["cases"]["memberReady"];
+        let detail = semio_framework_os_kernel::os_pack::json::from_json_str::<semio_framework_os_kernel::os_directory::client::SpaceDetail>(&ready["responses"][1]["body"].to_string()).unwrap();
+        let view = detail.documents[0].clone();
+        let scope = semio_framework_os_kernel::os_directory::DocumentScope::new("space-a", "shared-doc");
+        let digest = semio_framework_os_kernel::os_directory::descriptor_digest_v1(&view.descriptor).unwrap();
+        let document = remote::AuthorizedDocumentView { scope: scope.clone(), descriptor_digest_v1: semio_framework_os_kernel::os_directory::hex_lower(digest.as_bytes()), view };
+        let snapshot = AuthorizedDescriptorSnapshot {
+            authenticated_user_id: "user-a".to_string(),
+            session_expires_at_ms: i64::MAX,
+            space: detail.space,
+            membership: detail.members[0].clone(),
+            observed_event_seq: 8,
+            documents: HashMap::from([(scope, document)]),
+        };
+        let binding = Arc::new(HubRemoteBinding::new("space-a").unwrap());
+        binding.install_snapshot_for_test(snapshot);
+        let mut workspace = HeadlessWorkspace::new(
+            WorkspaceOrigin::Hub { base_url: "https://hub.invalid".to_string(), space_id: "space-a".to_string(), token: "secret-never-rendered".to_string() },
+            "forged-local-principal".to_string(),
+            vec!["admin".to_string()],
+            empty_catalog(),
+        );
+        workspace.hub_binding = Some(binding);
+        workspace
+    }
+
+    #[test]
+    fn authenticated_hub_workspace_resources_are_snapshot_only_scoped_and_fail_closed_when_stale() {
+        let workspace = authenticated_hub_workspace_fixture();
+        let resources = workspace.list_resources().unwrap();
+        let uris: Vec<_> = resources.iter().map(|resource| resource.uri.as_str()).collect();
+        assert_eq!(uris, vec!["semio://workspace", "semio://workspace/artifacts", "semio://workspace/scopes/space-a/shared-doc/descriptor"]);
+        let workspace_body = workspace.read_resource("semio://workspace").unwrap()[0].text.clone().unwrap();
+        assert!(workspace_body.contains("user-a"));
+        assert!(!workspace_body.contains("forged-local-principal"));
+        assert!(!workspace_body.contains("secret-never-rendered"));
+        let descriptor_body = workspace.read_resource("semio://workspace/scopes/space-a/shared-doc/descriptor").unwrap()[0].text.clone().unwrap();
+        assert!(descriptor_body.contains("\"spaceId\":\"space-a\""));
+        assert!(descriptor_body.contains("\"documentId\":\"shared-doc\""));
+        for uri in ["semio://artifact/shared-doc", "semio://artifact/shared-doc/schema", "semio://artifact/shared-doc/validation"] {
+            let error = workspace.read_resource(uri).unwrap_err();
+            assert_eq!(error.code, GatewayErrorCode::PluginUnavailable);
+            assert!(error.retryable);
+        }
+        workspace.hub_binding.as_ref().unwrap().invalidate_stream();
+        let error = workspace.list_resources().unwrap_err();
+        assert_eq!(error.code, GatewayErrorCode::PluginUnavailable);
+        assert!(error.retryable);
+    }
+
     #[cfg(not(target_arch = "wasm32"))]
     #[test]
     fn pending_response_close_releases_one_exact_fixed_page() {
@@ -1661,6 +1869,16 @@ mod quick {
         duplicate.admit(semio_framework::kernel::RequestOutcome::Err(vec![2]));
         duplicate.admit(semio_framework::kernel::RequestOutcome::Ok(vec![3]));
         assert!(duplicate.take(10).unwrap_err().message.contains("more than one response"));
+    }
+
+    #[cfg(not(target_arch = "wasm32"))]
+    #[test]
+    fn guest_fault_wire_decodes_through_the_first_party_value_codec() {
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️first-party-codecs.json")).expect("language-neutral codec fixture parses");
+        let wire = store::DslValue::from(&fixture["guestFault"]["wire"]);
+        let fault = decode_guest_fault(&store::pack_rt::encode_wire_value(&wire));
+        assert_eq!(fault.code, fixture["guestFault"]["expected"]["code"].as_str().expect("fixture fault code"));
+        assert_eq!(fault.message, fixture["guestFault"]["expected"]["message"].as_str().expect("fixture fault message"));
     }
 
     #[test]

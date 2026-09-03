@@ -22,7 +22,7 @@ pub const ENTRY_NODE_PREFIX: &str = "entry:";
 //#endregion 🔖️Constants
 
 //#region 🔖️Definition
-/// 🧱️ Stitched into the editor manifest by `crate::editor::zip::any::create_zip_any_editor`.
+/// 🧱️ Stitched into the editor manifest by `crate::editor::zip::base::create_zip_any_editor`.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn definition() -> WindowKindDefinition {
     WindowKindDefinition { label: LocalizedLabel::native("Archive", "Archiv"), icon_id: "archive".into(), ..TreeWindowKit::editable_window_kind() }

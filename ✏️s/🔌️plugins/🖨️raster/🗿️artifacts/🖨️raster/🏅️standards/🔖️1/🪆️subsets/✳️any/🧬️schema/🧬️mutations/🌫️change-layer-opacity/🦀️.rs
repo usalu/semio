@@ -1,17 +1,15 @@
 //! 🌫️ `change-layer-opacity` — sets an id-addressed layer's `opacity` scalar.
 
 pub mod mutation {
-use serde::{Deserialize, Serialize};
 use crate::artifacts::raster::diff::{diff_patch_layer, RasterDiff};
 use crate::artifacts::raster::mutations::RasterMutation;
 use crate::artifacts::raster::schema::{find_layer, layer_opacity};
 use crate::artifacts::raster::{RasterLayerNode, RasterLayerPatch, RasterSnapshot};
 
 //#region 🔖️ChangeLayerOpacity
-#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::MutationLeaf, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
 #[value(rename_all = "camelCase")]
-#[serde(rename_all = "camelCase")]
 pub struct ChangeLayerOpacity {
     pub layer_id: String,
     pub new_opacity: f32,

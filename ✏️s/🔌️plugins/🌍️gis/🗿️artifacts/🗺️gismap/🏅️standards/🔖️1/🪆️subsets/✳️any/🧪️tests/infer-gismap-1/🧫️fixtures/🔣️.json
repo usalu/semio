@@ -1,0 +1,28 @@
+{
+  "subjectSchema": "../../../🧬️schema/💡️inferences/🔣️.json",
+  "inferenceSchema": "s.gis.gismap.inference",
+  "schemaVersion": 1,
+  "cases": [
+    {
+      "id": "empty-map",
+      "snapshot": { "positions": [], "routes": [], "regions": [] },
+      "oracleCoordinates": [],
+      "expected": { "positionCount": 0, "routeCount": 0, "regionCount": 0, "bounds": null }
+    },
+    {
+      "id": "mixed-feature-geometries",
+      "snapshot": {
+        "positions": [{ "id": "p-west", "data": { "lon": -0.1427, "lat": 51.5142 } }],
+        "routes": [{ "id": "r-east", "data": { "points": [[1.0, 2.0], [3.0, 4.0]] } }],
+        "regions": [{ "id": "g-south", "data": { "ring": [[0.0, -5.0], [1.0, 1.0], [1.0, 0.0]] } }]
+      },
+      "oracleCoordinates": [[-0.1427, 51.5142], [1.0, 2.0], [3.0, 4.0], [0.0, -5.0], [1.0, 1.0], [1.0, 0.0]],
+      "expected": {
+        "positionCount": 1,
+        "routeCount": 1,
+        "regionCount": 1,
+        "bounds": { "lonMin": -0.1427, "lonMax": 3.0, "latMin": -5.0, "latMax": 51.5142 }
+      }
+    }
+  ]
+}

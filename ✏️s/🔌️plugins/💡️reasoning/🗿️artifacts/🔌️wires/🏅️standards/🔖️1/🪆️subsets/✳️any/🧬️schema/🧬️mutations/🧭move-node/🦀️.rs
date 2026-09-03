@@ -8,13 +8,12 @@ use crate::artifacts::wires::schema::node_position;
 use crate::artifacts::wires::standards::v1::subsets::any::schema::inferences::find_board_node;
 use crate::artifacts::wires::WiresSnapshot;
 use dsl::DslValue;
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️Mutation
 /// 🧭️ `move-node` payload — the node's new absolute board position.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslRecord, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
-#[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 #[dsl(keyword = "move-node")]
 pub struct MoveNode {
     pub node_id: String,

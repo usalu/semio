@@ -36,6 +36,30 @@
       },
       "productionReachable": false,
       "networkDuringExecution": false
+    },
+    {
+      "id": "html5lib-html-5-mutate-reader",
+      "kind": "third-party-library",
+      "ecosystem": "python",
+      "package": "html5lib",
+      "version": "1.1",
+      "engine": {
+        "family": "html5lib",
+        "implementation": "html5lib WHATWG HTML5 parser",
+        "version": "1.1"
+      },
+      "capabilities": [
+        "html-5-mutate"
+      ],
+      "license": "MIT",
+      "testOnly": true,
+      "productionReachable": false,
+      "networkDuringExecution": false,
+      "homepage": "https://github.com/html5lib/html5lib-python",
+      "rationale": "📖️ A READER, registered separately from this file's existing `cross-semio-implementation` entry, which COMPUTES what a mutation should produce from this repository's own reading of the spec and therefore cannot discharge this requirement — both halves would descend from one reading of it. html5lib 1.1 is a from-scratch, pure-Python implementation of the WHATWG HTML5 parsing algorithm — spec-conformant tree construction, tokenizer states and all — entirely independent of this repository's Rust `html5ever` reimplementation (a different codebase in a different language implementing the same published algorithm). `html5lib.parse(path, treebuilder=\"lxml\")` builds the real DOM tree — element names, namespaces, attributes, text content, document order — directly witnessing this subset's HTML5 document vocabulary. Verified against this subset's own committed `shared://🧪️zukunft-bau-entwerfen-mit-bestand/🌐️.html`: the parser reported the real `{http://www.w3.org/1999/xhtml}html` root, the namespace HTML5 parsing always assigns.",
+      "comparisonProfiles": [
+        "semantic-html-v1"
+      ]
     }
   ],
   "noOracleDecisions": [],
@@ -102,7 +126,8 @@
           "oracleRequirements": [
             {
               "capability": "html-5-mutate",
-              "qualifyingKind": "third-party-library"
+              "qualifyingKind": "third-party-library",
+              "oracle": "html5lib-html-5-mutate-reader"
             }
           ]
         },
@@ -121,7 +146,8 @@
           "oracleRequirements": [
             {
               "capability": "html-5-mutate",
-              "qualifyingKind": "third-party-library"
+              "qualifyingKind": "third-party-library",
+              "oracle": "html5lib-html-5-mutate-reader"
             }
           ]
         },
@@ -140,7 +166,8 @@
           "oracleRequirements": [
             {
               "capability": "html-5-mutate",
-              "qualifyingKind": "third-party-library"
+              "qualifyingKind": "third-party-library",
+              "oracle": "html5lib-html-5-mutate-reader"
             }
           ]
         },
@@ -159,7 +186,8 @@
           "oracleRequirements": [
             {
               "capability": "html-5-mutate",
-              "qualifyingKind": "third-party-library"
+              "qualifyingKind": "third-party-library",
+              "oracle": "html5lib-html-5-mutate-reader"
             }
           ]
         },
@@ -178,7 +206,8 @@
           "oracleRequirements": [
             {
               "capability": "html-5-mutate",
-              "qualifyingKind": "third-party-library"
+              "qualifyingKind": "third-party-library",
+              "oracle": "html5lib-html-5-mutate-reader"
             }
           ]
         },
@@ -197,7 +226,8 @@
           "oracleRequirements": [
             {
               "capability": "html-5-mutate",
-              "qualifyingKind": "third-party-library"
+              "qualifyingKind": "third-party-library",
+              "oracle": "html5lib-html-5-mutate-reader"
             }
           ]
         },
@@ -216,7 +246,8 @@
           "oracleRequirements": [
             {
               "capability": "html-5-mutate",
-              "qualifyingKind": "third-party-library"
+              "qualifyingKind": "third-party-library",
+              "oracle": "html5lib-html-5-mutate-reader"
             }
           ]
         },
@@ -235,7 +266,8 @@
           "oracleRequirements": [
             {
               "capability": "html-5-mutate",
-              "qualifyingKind": "third-party-library"
+              "qualifyingKind": "third-party-library",
+              "oracle": "html5lib-html-5-mutate-reader"
             }
           ]
         },
@@ -254,11 +286,422 @@
           "oracleRequirements": [
             {
               "capability": "html-5-mutate",
-              "qualifyingKind": "third-party-library"
+              "qualifyingKind": "third-party-library",
+              "oracle": "html5lib-html-5-mutate-reader"
             }
           ]
         }
       ]
+    }
+  ],
+  "fixtureManifests": [
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "set-doctype-applied",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.html",
+        "standard": "5",
+        "subset": "any"
+      },
+      "mutation": "set-doctype",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before-html",
+          "path": "../🧫️fixtures/set-doctype-applied/before.html",
+          "mediaType": "text/html",
+          "sha256": "sha256:7e4af711b8fada18edac7994d6b83a8d80d6b29e2faebcaf4e8bc7acd79a2683",
+          "bytes": 72
+        },
+        {
+          "role": "expected-after-html",
+          "path": "../🧫️fixtures/set-doctype-applied/after.html",
+          "mediaType": "text/html",
+          "sha256": "sha256:c3b57c1360aa0bcb2a7a921f6d4083bfa7e81360829b4d5a30ab1ff3c61a1235",
+          "bytes": 101
+        }
+      ],
+      "generator": {
+        "oracle": "html5lib-html-5-mutate-reader",
+        "packageVersion": "1.1",
+        "engineFamily": "html5lib",
+        "engineVersion": "1.1",
+        "command": "uv run python3 🔨️f2-gen-html-fixtures.py (html5lib.parse(treebuilder='dom') -> html5lib.serializer.HTMLSerializer)",
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "MIT (html5lib)",
+        "attribution": "Serialized by html5lib 1.1's own HTMLSerializer over its dom treewalker",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "utf8-text-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "Document type declaration's SYSTEM identifier set (none -> about:legacy-compat)."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "insert-node-applied",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.html",
+        "standard": "5",
+        "subset": "any"
+      },
+      "mutation": "insert-node",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before-html",
+          "path": "../🧫️fixtures/insert-node-applied/before.html",
+          "mediaType": "text/html",
+          "sha256": "sha256:50e9a990d220f9094b52e07f31509225281fe374921dd0361681863a885698f4",
+          "bytes": 89
+        },
+        {
+          "role": "expected-after-html",
+          "path": "../🧫️fixtures/insert-node-applied/after.html",
+          "mediaType": "text/html",
+          "sha256": "sha256:a60a88e8aca9c5f2f792effe3f3ed30089fd1817023da51527b4e11b5a28df6b",
+          "bytes": 105
+        }
+      ],
+      "generator": {
+        "oracle": "html5lib-html-5-mutate-reader",
+        "packageVersion": "1.1",
+        "engineFamily": "html5lib",
+        "engineVersion": "1.1",
+        "command": "uv run python3 🔨️f2-gen-html-fixtures.py (html5lib.parse(treebuilder='dom') -> html5lib.serializer.HTMLSerializer)",
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "MIT (html5lib)",
+        "attribution": "Serialized by html5lib 1.1's own HTMLSerializer over its dom treewalker",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "utf8-text-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "A new <span> element node inserted as the last child of <body>."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "remove-node-applied",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.html",
+        "standard": "5",
+        "subset": "any"
+      },
+      "mutation": "remove-node",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before-html",
+          "path": "../🧫️fixtures/remove-node-applied/before.html",
+          "mediaType": "text/html",
+          "sha256": "sha256:a60a88e8aca9c5f2f792effe3f3ed30089fd1817023da51527b4e11b5a28df6b",
+          "bytes": 105
+        },
+        {
+          "role": "expected-after-html",
+          "path": "../🧫️fixtures/remove-node-applied/after.html",
+          "mediaType": "text/html",
+          "sha256": "sha256:50e9a990d220f9094b52e07f31509225281fe374921dd0361681863a885698f4",
+          "bytes": 89
+        }
+      ],
+      "generator": {
+        "oracle": "html5lib-html-5-mutate-reader",
+        "packageVersion": "1.1",
+        "engineFamily": "html5lib",
+        "engineVersion": "1.1",
+        "command": "uv run python3 🔨️f2-gen-html-fixtures.py (html5lib.parse(treebuilder='dom') -> html5lib.serializer.HTMLSerializer)",
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "MIT (html5lib)",
+        "attribution": "Serialized by html5lib 1.1's own HTMLSerializer over its dom treewalker",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "utf8-text-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "The <span> element node removed from <body>."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "set-element-name-applied",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.html",
+        "standard": "5",
+        "subset": "any"
+      },
+      "mutation": "set-element-name",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before-html",
+          "path": "../🧫️fixtures/set-element-name-applied/before.html",
+          "mediaType": "text/html",
+          "sha256": "sha256:7d634ef81426240fd6f973690a0625d0b8672c5c6e05b1936fa65af70db9adf3",
+          "bytes": 93
+        },
+        {
+          "role": "expected-after-html",
+          "path": "../🧫️fixtures/set-element-name-applied/after.html",
+          "mediaType": "text/html",
+          "sha256": "sha256:17bc5d8227ea3fc55996cc665b9ba4663c5e34cc3c582172a88d9bcd994ecab3",
+          "bytes": 101
+        }
+      ],
+      "generator": {
+        "oracle": "html5lib-html-5-mutate-reader",
+        "packageVersion": "1.1",
+        "engineFamily": "html5lib",
+        "engineVersion": "1.1",
+        "command": "uv run python3 🔨️f2-gen-html-fixtures.py (html5lib.parse(treebuilder='dom') -> html5lib.serializer.HTMLSerializer)",
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "MIT (html5lib)",
+        "attribution": "Serialized by html5lib 1.1's own HTMLSerializer over its dom treewalker",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "utf8-text-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "Element tag name retagged div -> section, attributes and content held fixed."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "set-attribute-applied",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.html",
+        "standard": "5",
+        "subset": "any"
+      },
+      "mutation": "set-attribute",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before-html",
+          "path": "../🧫️fixtures/set-attribute-applied/before.html",
+          "mediaType": "text/html",
+          "sha256": "sha256:50e9a990d220f9094b52e07f31509225281fe374921dd0361681863a885698f4",
+          "bytes": 89
+        },
+        {
+          "role": "expected-after-html",
+          "path": "../🧫️fixtures/set-attribute-applied/after.html",
+          "mediaType": "text/html",
+          "sha256": "sha256:d7603a072e097e1fed67429d98c0d8c50d3952bd500084ba6e498e0224acf7c8",
+          "bytes": 89
+        }
+      ],
+      "generator": {
+        "oracle": "html5lib-html-5-mutate-reader",
+        "packageVersion": "1.1",
+        "engineFamily": "html5lib",
+        "engineVersion": "1.1",
+        "command": "uv run python3 🔨️f2-gen-html-fixtures.py (html5lib.parse(treebuilder='dom') -> html5lib.serializer.HTMLSerializer)",
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "MIT (html5lib)",
+        "attribution": "Serialized by html5lib 1.1's own HTMLSerializer over its dom treewalker",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "utf8-text-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "The id attribute value replaced, a -> b."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "set-text-applied",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.html",
+        "standard": "5",
+        "subset": "any"
+      },
+      "mutation": "set-text",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before-html",
+          "path": "../🧫️fixtures/set-text-applied/before.html",
+          "mediaType": "text/html",
+          "sha256": "sha256:50e9a990d220f9094b52e07f31509225281fe374921dd0361681863a885698f4",
+          "bytes": 89
+        },
+        {
+          "role": "expected-after-html",
+          "path": "../🧫️fixtures/set-text-applied/after.html",
+          "mediaType": "text/html",
+          "sha256": "sha256:82f692e3234f942906b1fbb27f602e3e78a43dcb206fff13e43c9bd54d6fa088",
+          "bytes": 89
+        }
+      ],
+      "generator": {
+        "oracle": "html5lib-html-5-mutate-reader",
+        "packageVersion": "1.1",
+        "engineFamily": "html5lib",
+        "engineVersion": "1.1",
+        "command": "uv run python3 🔨️f2-gen-html-fixtures.py (html5lib.parse(treebuilder='dom') -> html5lib.serializer.HTMLSerializer)",
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "MIT (html5lib)",
+        "attribution": "Serialized by html5lib 1.1's own HTMLSerializer over its dom treewalker",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "utf8-text-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "Character-data content of <p> replaced, Hello -> World."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "set-comment-applied",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.html",
+        "standard": "5",
+        "subset": "any"
+      },
+      "mutation": "set-comment",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before-html",
+          "path": "../🧫️fixtures/set-comment-applied/before.html",
+          "mediaType": "text/html",
+          "sha256": "sha256:f3df1bc1aafba6ccaee5b53b5e3ae68953a0de8b372615712398928ea5d578ed",
+          "bytes": 89
+        },
+        {
+          "role": "expected-after-html",
+          "path": "../🧫️fixtures/set-comment-applied/after.html",
+          "mediaType": "text/html",
+          "sha256": "sha256:28de9b44635760d0c528995fd8b8b2a83046349606c977d3537e111da7b134e3",
+          "bytes": 89
+        }
+      ],
+      "generator": {
+        "oracle": "html5lib-html-5-mutate-reader",
+        "packageVersion": "1.1",
+        "engineFamily": "html5lib",
+        "engineVersion": "1.1",
+        "command": "uv run python3 🔨️f2-gen-html-fixtures.py (html5lib.parse(treebuilder='dom') -> html5lib.serializer.HTMLSerializer)",
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "MIT (html5lib)",
+        "attribution": "Serialized by html5lib 1.1's own HTMLSerializer over its dom treewalker",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "utf8-text-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "Comment node's data replaced, old -> new."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "set-raw-text-applied",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.html",
+        "standard": "5",
+        "subset": "any"
+      },
+      "mutation": "set-raw-text",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before-html",
+          "path": "../🧫️fixtures/set-raw-text-applied/before.html",
+          "mediaType": "text/html",
+          "sha256": "sha256:36c0b6b676bc6d4af9d966012071585e516f5ed72f54c6fc4986d47dcc8e7c6e",
+          "bytes": 104
+        },
+        {
+          "role": "expected-after-html",
+          "path": "../🧫️fixtures/set-raw-text-applied/after.html",
+          "mediaType": "text/html",
+          "sha256": "sha256:02f5febca799d41d9d255dc1776ba1d52ec42eb27f0d35b798fb64ae228d74ed",
+          "bytes": 104
+        }
+      ],
+      "generator": {
+        "oracle": "html5lib-html-5-mutate-reader",
+        "packageVersion": "1.1",
+        "engineFamily": "html5lib",
+        "engineVersion": "1.1",
+        "command": "uv run python3 🔨️f2-gen-html-fixtures.py (html5lib.parse(treebuilder='dom') -> html5lib.serializer.HTMLSerializer)",
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "MIT (html5lib)",
+        "attribution": "Serialized by html5lib 1.1's own HTMLSerializer over its dom treewalker",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "utf8-text-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "Raw-text element (<script>) content replaced, a=1 -> a=2."
     }
   ]
 }

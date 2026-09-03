@@ -4,7 +4,10 @@
 use crate::editor::cad::config::CadDislocateOptions;
 use crate::editor::cad::{cad_window_action, CAD_DISLOCATE_UTILITY_ID};
 use semio_framework_plugin::WindowMeasure;
-use serde_json::json;
+
+fn dislocate_option_args(option: &str) -> protocol::DslValue {
+    protocol::DslValue::object([("option".to_string(), protocol::DslValue::String(option.to_string()))])
+}
 
 /// 🎛️ Move and Rotate handle groups shown only while this window owns the Dislocate utility.
 pub fn measure(options: CadDislocateOptions, is_de: bool) -> WindowMeasure {
@@ -28,7 +31,7 @@ pub fn measure(options: CadDislocateOptions, is_de: bool) -> WindowMeasure {
                 label: Some(if is_de { "Verschieben" } else { "Move" }.into()),
                 pressed: options.move_enabled,
                 text: None,
-                on_change: cad_window_action("setDislocateOption", Some(json!({ "option": "move" }))),
+                on_change: cad_window_action("setDislocateOption", Some(dislocate_option_args("move"))),
             },
             WindowMeasure::Toggle {
                 id: "cad-dislocate-rotate".into(),
@@ -36,7 +39,7 @@ pub fn measure(options: CadDislocateOptions, is_de: bool) -> WindowMeasure {
                 label: Some(if is_de { "Drehen" } else { "Rotate" }.into()),
                 pressed: options.rotate_enabled,
                 text: None,
-                on_change: cad_window_action("setDislocateOption", Some(json!({ "option": "rotate" }))),
+                on_change: cad_window_action("setDislocateOption", Some(dislocate_option_args("rotate"))),
             },
         ],
     }

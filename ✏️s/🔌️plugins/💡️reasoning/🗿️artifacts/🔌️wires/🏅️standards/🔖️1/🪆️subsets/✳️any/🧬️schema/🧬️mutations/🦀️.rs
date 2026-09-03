@@ -15,7 +15,6 @@ use crate::artifacts::wires::diff::WiresDiff;
 use crate::artifacts::wires::schema::{array_mut, entity_id};
 use crate::artifacts::wires::WiresSnapshot;
 use dsl::DslValue;
-use serde::{Deserialize, Serialize};
 
 //#region 📖️SemioGrammar
 /// 📖️ Normative handcrafted text grammar for this facet (`dialect grammar`).
@@ -44,8 +43,8 @@ pub async fn set_node_field(board: &mut DslValue, node_id: &str, key: &str, valu
 /// multiple times"): a bare `use super::create_node;` collides with `🔖️Builders`' own
 /// `pub use create_node::create_node` (the builder FN of the same name) in the value
 /// namespace. Fully-qualifying every reference removes the need for the colliding import outright.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslEnum, dsl::Mutations)]
-#[serde(tag = "mutation", rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslEnum, dsl::Mutations)]
+#[value(tag = "mutation", rename_all = "camelCase")]
 #[mutations(snapshot = WiresSnapshot, diff = WiresDiff, schema = "s.reasoning.wires")]
 pub enum WiresMutation {
     CreateNode(CreateNode),
@@ -90,11 +89,11 @@ pub const KINDS: &[&str] = &["create-node", "delete-node", "move-node", "resize-
 /// fields) JSON projection — exactly the shape the committed
 /// `<slug>/🧪️tests/<fixture>/🦠️mutation/🔣️.json` specification vectors and
 /// `mutate-wires-1`'s own `Examples` payloads carry — into a real [`WiresMutation`]. The test
-/// adapter cannot reach `serde_json` (the generated host links only `semio-repo-test-host` and this
-/// crate) and cannot name this crate's private `protocol`/`store` extern-crate aliases either, so
-/// the bridge belongs here rather than there.
+/// adapter cannot name this crate's private `dsl`/`protocol`/`store` extern-crate aliases (the
+/// generated host links only `semio-repo-test-host` and this crate), so the bridge belongs here
+/// rather than there.
 pub fn decode_wires_mutation_json(text: &str) -> Result<WiresMutation, String> {
-    serde_json::from_str(text).map_err(|error| error.to_string())
+    dsl::os_pack::json::from_json_str(text).map_err(|error| error.to_string())
 }
 
 /// ▶️ Applies `mutation` in place and returns every diagnostic it raised as `(code, severity)`

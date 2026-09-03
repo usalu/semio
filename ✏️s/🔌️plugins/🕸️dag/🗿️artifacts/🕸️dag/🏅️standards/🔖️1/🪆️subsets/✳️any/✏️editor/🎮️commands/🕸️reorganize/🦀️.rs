@@ -18,10 +18,10 @@ pub async fn handle(_payload: &Reorganize, doc: &ArtifactView<'_, DagSnapshot>, 
     let document = doc.snapshot;
     let config = cfg.snapshot;
     let camera = dag_config_camera(config);
-    if let Ok(mut host) = DagHost::load_fixture_json(&serde_json::to_string(&dag_fixture_from_document(&infinite_board_port_directed_dag::DagSnapshot::from(document), camera)).unwrap_or_default()) {
+    if let Ok(mut host) = DagHost::load_fixture_json(&dsl::json::to_json_string(&dag_fixture_from_document(&infinite_board_port_directed_dag::DagSnapshot::from(document), camera))) {
         let _ = host.reorganize(&DagLayoutOptions::default());
         if let Ok(json) = host.fixture_json() {
-            if let Ok(fixture) = serde_json::from_str::<DagFixture>(&json) {
+            if let Ok(fixture) = dsl::json::from_json_str::<DagFixture>(&json) {
                 // 🎯️ Reorganize only ever moves EXISTING nodes (same ids/edges) — the generic
                 // differ correctly narrows that down to a `move-node` per node whose position
                 // actually changed, never a whole-collection replace.

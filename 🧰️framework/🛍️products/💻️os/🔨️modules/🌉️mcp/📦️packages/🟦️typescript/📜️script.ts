@@ -1,14 +1,15 @@
 #!/usr/bin/env bun
 /** 🌉️ `@semio-tech/framework-os-mcp` TS task router: `bun ./📜️script.ts test [quick|long|exhaustive] [args…]`.
- * Never builds the Rust crate itself — build it first (`cargo build -p semio-framework-os-mcp --bin
- * semio-os-mcp`, or the `🛠️dev🌉️os-mcp🧵️stdio` launch entry); this router only runs vitest against the
- * already-compiled binary. Every suite resolves the binary path itself (`resolveMcpBinaryPath` in
- * `../../🟦️.ts`) and skips with a clear message if it is absent — never silently green. */
-import { BundleScript, ScriptRouter, resolveTestLevel, runBundleScriptMain, runVitest } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+ * The default path builds the Rust Nx target first; an explicit binary override remains a strict
+ * prebuilt-artifact seam. Both paths require an executable before Vitest starts. */
+import { BundleScript, ScriptRouter, resolveTestLevel, runBundleScriptMain, runCmd, runVitest } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { requireMcpBinary } from "../../🟦️.ts";
 
 class TestScript extends BundleScript {
   run(segments: string[]): void {
     const { rest } = resolveTestLevel(segments);
+    if (!process.env.SEMIO_OS_MCP_BIN) runCmd("bun", ["nx", "run", "@semio-tech/framework-os-mcp-rs:build", "--skip-nx-cache"], { cwd: this.repoRoot });
+    console.log(`[test] ${requireMcpBinary(this.repoRoot)}`);
     runVitest(this.root, rest, "🧪️tests/🟦️.ts");
   }
 }

@@ -12,13 +12,13 @@ workspace = true
 package = "semio:demonstrator"
 
 # 🎪️ REDUCE-DEMONSTRATOR-IDLE-MEMORY-FOOTPRINT: bundles the six mit-bestand demonstrator panes'
-# already-existing apps (procedural3d, cad, puzzle3d, sourcing-curation, process3d, gis2d) into ONE
+# already-existing apps (generation3d, cad, puzzle3d, sourcing-curation, process3d, gis2d) into ONE
 # wasm component instead of six — the framework/kernel SDK (`semio-framework-plugin`,
 # `semio-framework-os`) is statically linked exactly once, and the six panes share one plugin
 # worker/module via the existing `acquirePluginModule` lease pool (framework core `🟦️.ts`),
 # instead of six separate workers each duplicating that linkage. Each source plugin
 # (procedural/cad/puzzle/sourcing/process/gis) keeps its own standalone playground rows unchanged
-# for its own non-demonstrator variants (e.g. `procedural3d`, `puzzle3d`) — only the six
+# for its own non-demonstrator variants (e.g. `generation3d`, `puzzle3d`) — only the six
 # demonstrator-specific rows (`generator`/`koordinator`/`aggregator`/`aussuchen`/`bearbeiten`/`verfolgen`)
 # live here.
 [package.metadata.semio]
@@ -32,7 +32,7 @@ ports = { react = 6107, wgpu = 6207 }
 
 [[package.metadata.semio.playground]]
 variant = "generator"
-app = "s.procedural.procedural3d@1/*#editor"
+app = "s.procedural.generation3d@1/*#editor"
 brand = "entwerfen-mit-bestand-generator"
 aliases = ["entwerfen-mit-bestand-generator"]
 ports = { react = 6027, wgpu = 6127 }
@@ -126,8 +126,6 @@ semio-framework-job = { workspace = true }
 # neither the host crate nor the BRep kernel it passed to it. `POLICY_PLUGIN_DEP_OS_SYMBOLS` carries
 # no carve-out for `🎪️demonstrator` any more: reintroducing the dependency is a plain breach.
 semio-framework-schema = { path = "../../../../../🧰️framework/🔨️modules/🧬️schema/📦️packages/🦀️rust", package = "semio-framework-schema" }
-serde.workspace = true
-serde_json.workspace = true
 
 # 🔌️ `default-features = false` switches OFF each pane plugin's `plugin-entry` feature: this
 # crate bundles all six into ONE component and owns the single `semio_plugin_install_bundle`
@@ -141,6 +139,8 @@ process = { path = "../../../🏭️process/📦️packages/🦀️rust", packag
 gis = { path = "../../../🌍️gis/📦️packages/🦀️rust", package = "semio-s-plugin-gis", default-features = false }
 
 [dev-dependencies]
+serde.workspace = true
+serde_json.workspace = true
 semio-framework-async-macros = { path = "../../../../../🧰️framework/🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust" }
 semio-framework-ui-scene = { path = "../../../../../🧰️framework/🔨️modules/🖱️ui/🎬️scene/📦️packages/🦀️rust" }
 semio-framework-ui-runtime = { path = "../../../../../🧰️framework/🔨️modules/🖱️ui/🧠️runtime/📦️packages/🦀️rust" }

@@ -1,0 +1,5 @@
+{
+  "$id": "https://semio.tech/schema/s/imperative/imperative/mutation/text.json",
+  "title": "ProcedureMutationsText",
+  "type": "object"
+}

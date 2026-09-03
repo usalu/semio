@@ -5,18 +5,28 @@
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { defineConfig } from "vitest/config";
+import { stripExecutableShebang } from "./🧹️executable-source/🟦️.ts";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 
 export default defineConfig({
   root,
+  plugins: [
+    {
+      name: "semio-strip-executable-shebang",
+      enforce: "pre",
+      transform(source, id) {
+        if (!/(?:^|[\\/])📜️script\.ts(?:[?#].*)?$/u.test(id) || !source.startsWith("#!")) return null;
+        return { code: stripExecutableShebang(source), map: null };
+      },
+    },
+  ],
   test: {
     name: "@semio-tech/framework-os-dev",
     environment: "jsdom",
-    // 🩹️ `include` MUST stay empty: this is an in-source (`import.meta.vitest`) suite collected via
-    // `includeSource`. Listing the same file in BOTH keys made vitest collect it twice and report
-    // double the real test count. Add new in-source files to `includeSource`/`coverage.include` only.
-    include: [],
+    // 🩹️ In-source files belong only in `includeSource`; listing them in BOTH keys made Vitest
+    // collect them twice. Dedicated regression files remain ordinary `include` entries.
+    include: ["🧪️config.test.ts"],
     includeSource: ["📜️script.ts", "../../../🔌️plugin/📤️return/🟦️.ts", "../../../🔌️plugin/📥️poll/🏘️composition/🟦️.ts"],
     coverage: { include: ["📜️script.ts", "../../../🔌️plugin/📤️return/🟦️.ts", "../../../🔌️plugin/📥️poll/🏘️composition/🟦️.ts"] },
   },

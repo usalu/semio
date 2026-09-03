@@ -1,0 +1,27 @@
+{
+  "$id": "https://semio.tech/schema/s/procedural/generation2d/inference.json",
+  "title": "Generation2dInference",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["topology"],
+  "properties": {
+    "topology": {
+      "$ref": "#/$defs/Generation2dTopology",
+      "x-semio-derived": true
+    }
+  },
+  "$defs": {
+    "Generation2dTopology": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["nodeCount", "edgeCount", "topoOrder", "depth", "cycleFree"],
+      "properties": {
+        "nodeCount": { "type": "integer", "minimum": 0 },
+        "edgeCount": { "type": "integer", "minimum": 0 },
+        "topoOrder": { "type": "array", "items": { "type": "string" } },
+        "depth": { "type": "integer", "minimum": 0 },
+        "cycleFree": { "type": "boolean" }
+      }
+    }
+  }
+}

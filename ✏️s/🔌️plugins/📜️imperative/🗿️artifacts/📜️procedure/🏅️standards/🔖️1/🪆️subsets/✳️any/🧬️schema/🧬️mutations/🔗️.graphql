@@ -1,0 +1,16 @@
+# 📜️ Imperative direct mutation aggregate.
+scalar JSON
+
+input ProcedurePathRefInput { owner: String, slot: String }
+input ProcedureStepInput { id: String!, kind: String!, params: JSON!, bodies: JSON! }
+input CreateStepInput { pathRef: ProcedurePathRefInput!, step: ProcedureStepInput! }
+input DeleteStepInput { pathRef: ProcedurePathRefInput!, id: String! }
+input ReorderStepsInput { pathRef: ProcedurePathRefInput!, id: String!, toIndex: Int! }
+input EditStepParamsInput { pathRef: ProcedurePathRefInput!, id: String!, newParams: JSON! }
+
+input ProcedureMutationInput {
+  createStep: CreateStepInput
+  deleteStep: DeleteStepInput
+  reorderSteps: ReorderStepsInput
+  editStepParams: EditStepParamsInput
+}

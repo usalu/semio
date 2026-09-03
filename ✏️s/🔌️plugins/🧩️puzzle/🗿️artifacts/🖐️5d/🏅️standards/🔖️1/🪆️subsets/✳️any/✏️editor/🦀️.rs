@@ -40,7 +40,7 @@ use semio_framework_plugin::{
 use semio_framework_job::{Checkpoint, CommitCandidate, InteractiveJob, JobFault, JobPayloadAdmissionFault, JobPayloadCloseStep, JobPayloadStream, Operation, RetainedJobPayload, RetainedJobPayloadWriter, StepContext, StepOutcome};
 use semio_framework_plugin::app::InteractionView;
 use serde::{Deserialize, Serialize};
-use serde_json::{json, Value};
+use dsl::os_pack::json::{from_json_str, object, parse, to_json_string, to_string, Object, Value};
 use std::cell::RefCell;
 use std::collections::{HashMap, HashSet};
 use std::sync::LazyLock;
@@ -90,7 +90,7 @@ static EMPTY_EXAMPLE_DOCUMENT: LazyLock<Puzzle5dDocument> = LazyLock::new(empty_
 
 fn parse_example_dsl(dsl_text: &str, label: &str) -> String {
     let projection = <Puzzle5dSnapshot as store::ArtifactDsl>::parse_dsl(dsl_text).unwrap_or_else(|error| panic!("{label} example fixture parses as dsl: {error}"));
-    serde_json::to_string(&projection).unwrap_or_else(|error| panic!("serialize {label} example fixture: {error}"))
+    dsl::json::to_json_string(&projection)
 }
 
 const PUZZLE5D_RESERVED_RAW_BYTES: usize = 65_536;
@@ -172,7 +172,7 @@ puzzle5d_reserved_factory!(Puzzle5dPasteJobFactory, "paste", "puzzle.5d.reserved
 puzzle5d_reserved_factory!(Puzzle5dImportJobFactory, "import-media", "puzzle.5d.reserved.import-media.v1");
 
 pub fn puzzle5d_action(action: &str, args: Option<Value>) -> ActionDescriptor {
-    ActionDescriptor { controller_id: PUZZLE5D_PLAY_CONTROLLER_ID.into(), action: action.into(), args: semio_framework_plugin::optional_json_to_dsl(args) }
+    ActionDescriptor { controller_id: PUZZLE5D_PLAY_CONTROLLER_ID.into(), action: action.into(), args: args.map(|value| dsl::os_pack::json::to_dsl_value(&value)) }
 }
 
 /// 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: builds a framework `interactionSelect`
@@ -180,7 +180,7 @@ pub fn puzzle5d_action(action: &str, args: Option<Value>) -> ActionDescriptor {
 /// `setSelection` action builders every document tree row used to construct by hand.
 pub fn puzzle5d_interaction_select(granularity: &str, id: &str) -> ActionDescriptor {
     let targets = serde_json::to_string(&vec![InteractionTarget { granularity: granularity.into(), id: id.into() }]).unwrap_or_default();
-    puzzle5d_action(INTERACTION_SELECT_ACTION_ID, Some(json!({ "domainId": PUZZLE5D_INTERACTION_DOMAIN, "targets": targets, "merge": "replace", "method": "pick" })))
+    puzzle5d_action(INTERACTION_SELECT_ACTION_ID, Some(dsl::json!({ "domainId": PUZZLE5D_INTERACTION_DOMAIN, "targets": targets, "merge": "replace", "method": "pick" })))
 }
 
 #[derive(Clone, Debug, Default)]
@@ -229,205 +229,162 @@ fn next_scoped_id(prefix: &str, cursor: &mut u64, occupied: &mut HashSet<String>
 //#endregion 🔖️Constants
 
 //#region 🔖️Document
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, Default, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, Default)]
 #[serde(rename_all = "camelCase")]
-#[value(rename_all = "camelCase")]
 pub struct Puzzle5dGrip2d {
     #[serde(default)]
-    #[value(default)]
     pub angle: f64,
     #[serde(default, rename = "gripKind")]
-    #[value(default, rename = "gripKind")]
     pub grip_kind: String,
     #[serde(default)]
-    #[value(default)]
     pub radius: f64,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, Default, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, Default)]
 #[serde(rename_all = "camelCase")]
-#[value(rename_all = "camelCase")]
 pub struct Puzzle5dGrip3d {
     #[serde(default)]
-    #[value(default)]
     pub position: [f64; 3],
     #[serde(default)]
-    #[value(default)]
     pub direction: Option<[f64; 3]>,
     #[serde(default)]
-    #[value(default)]
     pub radius: f64,
     #[serde(default)]
-    #[value(default)]
     pub label: Option<String>,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-#[value(rename_all = "camelCase")]
 pub struct Puzzle5dGrip {
     pub id: String,
     #[serde(default, rename = "gripKind")]
-    #[value(default, rename = "gripKind")]
     pub grip_kind: String,
     #[serde(default, rename = "2d")]
-    #[value(default, rename = "2d")]
     pub grip_2d: Puzzle5dGrip2d,
     #[serde(default, rename = "3d")]
-    #[value(default, rename = "3d")]
     pub grip_3d: Puzzle5dGrip3d,
 }
 
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase")]
-#[value(rename_all = "lowercase")]
 pub enum Puzzle5dPartAnchor {
     #[default]
     Fixed,
     Derived,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-#[value(rename_all = "camelCase")]
 pub struct Puzzle5dFastener {
     pub id: String,
     pub source: String,
     pub target: String,
     #[serde(default, rename = "fastenerKind", skip_serializing_if = "Option::is_none")]
-    #[value(default, rename = "fastenerKind", skip_serializing_if = "Option::is_none")]
     pub fastener_kind: Option<String>,
     #[serde(default)]
-    #[value(default)]
     pub gap: f64,
     #[serde(default)]
-    #[value(default)]
     pub shift: f64,
     #[serde(default)]
-    #[value(default)]
     pub rise: f64,
     #[serde(default)]
-    #[value(default)]
     pub rotation: f64,
     #[serde(default)]
-    #[value(default)]
     pub turn: f64,
     #[serde(default)]
-    #[value(default)]
     pub tilt: f64,
     #[serde(default)]
-    #[value(default)]
     pub x: f64,
     #[serde(default)]
-    #[value(default)]
     pub y: f64,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, Default, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, Default)]
 #[serde(rename_all = "camelCase")]
-#[value(rename_all = "camelCase")]
 pub struct Puzzle5dPart2d {
     #[serde(default)]
-    #[value(default)]
     pub x: f64,
     #[serde(default)]
-    #[value(default)]
     pub y: f64,
     #[serde(default)]
-    #[value(default)]
     pub shape: String,
     #[serde(default)]
-    #[value(default)]
     pub radius: f64,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[value(default, skip_serializing_if = "Option::is_none")]
     pub width: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[value(default, skip_serializing_if = "Option::is_none")]
     pub height: Option<f64>,
     #[serde(default)]
-    #[value(default)]
     pub text: String,
     #[serde(default, rename = "iconKind", skip_serializing_if = "Option::is_none")]
-    #[value(default, rename = "iconKind", skip_serializing_if = "Option::is_none")]
     pub icon_kind: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[value(default, skip_serializing_if = "Option::is_none")]
     pub hidden: Option<bool>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[value(default, skip_serializing_if = "Option::is_none")]
     pub locked: Option<bool>,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, Default, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, Default)]
 #[serde(rename_all = "camelCase")]
-#[value(rename_all = "camelCase")]
 pub struct Puzzle5dPart3d {
     #[serde(default)]
-    #[value(default)]
     pub origin: [f64; 3],
     #[serde(default, rename = "meshUrl")]
-    #[value(default, rename = "meshUrl")]
     pub mesh_url: Option<String>,
     #[serde(default)]
-    #[value(default)]
     pub orientation: Option<[f64; 4]>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[value(default, skip_serializing_if = "Option::is_none")]
-    pub scale: Option<Value>,
+    pub scale: Option<serde_json::Value>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[value(default, skip_serializing_if = "Option::is_none")]
     pub label: Option<String>,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-#[value(rename_all = "camelCase")]
 pub struct Puzzle5dPart {
     pub id: String,
     #[serde(rename = "partKind")]
-    #[value(rename = "partKind")]
     pub part_kind: String,
     #[serde(default)]
-    #[value(default)]
     pub anchor: Puzzle5dPartAnchor,
     #[serde(default, rename = "2d")]
-    #[value(default, rename = "2d")]
     pub part_2d: Puzzle5dPart2d,
     #[serde(default, rename = "3d")]
-    #[value(default, rename = "3d")]
     pub part_3d: Puzzle5dPart3d,
     #[serde(default)]
-    #[value(default)]
     pub grips: Vec<Puzzle5dGrip>,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-#[value(rename_all = "camelCase")]
 pub struct Puzzle5dDocument {
     pub schema: String,
     #[serde(default)]
-    #[value(default)]
     pub domain: String,
     #[serde(default)]
-    #[value(default)]
     pub parts: Vec<Puzzle5dPart>,
     #[serde(default)]
-    #[value(default)]
     pub fasteners: Vec<Puzzle5dFastener>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[value(default, skip_serializing_if = "Option::is_none")]
-    pub meta: Option<Value>,
+    pub meta: Option<serde_json::Value>,
     #[serde(default, rename = "kindCatalogs")]
-    #[value(default, rename = "kindCatalogs")]
-    pub kind_catalogs: Option<Value>,
+    pub kind_catalogs: Option<serde_json::Value>,
     #[serde(default, rename = "kindCompatibility")]
-    #[value(default, rename = "kindCompatibility")]
-    pub kind_compatibility: Option<Value>,
+    pub kind_compatibility: Option<serde_json::Value>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[value(default, skip_serializing_if = "Option::is_none")]
     pub label: Option<String>,
+}
+
+/// 🌉️ Hand-written, not derived: `value_derive::FromValue` cannot expand over this struct's
+/// `Option<serde_json::Value>` fields (`meta`/`kindCatalogs`/`kindCompatibility` stay the raw
+/// document JSON, matching `Puzzle5dPlaySnapshot`'s own still-`serde_json::Value` boundary), so this
+/// routes through the framework's pre-existing `DslValue -> serde_json::Value` bridge and the
+/// struct's own unconditional `Deserialize` instead. Needed because
+/// `🎮️commands/🛍️set-fixture-json` round-trips this type through `dsl::os_pack::json::from_json_str`.
+impl dsl::FromValue for Puzzle5dDocument {
+    fn from_value(value: dsl::DslValue) -> Result<Self, dsl::ValueError> {
+        serde_json::from_value(serde_json::Value::from(&value)).map_err(|error| dsl::ValueError::new(error.to_string()))
+    }
 }
 
 pub fn empty_document() -> Puzzle5dDocument {
@@ -454,6 +411,53 @@ pub fn default_document() -> Puzzle5dDocument {
     concrete_forest_example_document()
 }
 
+/// 🌉️ `Puzzle5dPlaySnapshot`'s inner `.0` (owned by `🧬️mutations/🦀️.rs`, out of this ticket's
+/// scope, and 5d has no `.typed()`/`.value()` accessor there the way 3d's sibling does — an
+/// asymmetry worth closing in that file, not this one) still projects the bare document as
+/// `serde_json::Value`; bridges it into this file's own first-party `Value` via `DslValue` without
+/// ever naming the foreign crate: `T`'s only real caller is `&snapshot.0: &serde_json::Value`,
+/// resolved structurally through the `DslValue: From<T>` bound rather than a spelled-out type —
+/// mirrors `🧊️3d/…/✏️editor/🦀️.rs`'s `puzzle3d_projection_value`.
+/// 🔎️ Reads a fixed-length `[f64; 3]` coordinate triple straight off a dsl `Value::Array` —
+/// the direct replacement for the old `serde_json::from_value::<[f64; 3]>(value.clone())` round
+/// trip, which this file's own `Value` no longer supports (no `Deserialize`).
+fn puzzle5d_value_as_f64_3(value: &Value) -> Option<[f64; 3]> {
+    let values = value.as_array()?;
+    Some([values.first()?.as_f64()?, values.get(1)?.as_f64()?, values.get(2)?.as_f64()?])
+}
+
+/// 🔎️ The `[f64; 4]` sibling of [`puzzle5d_value_as_f64_3`] (quaternion orientation reads).
+fn puzzle5d_value_as_f64_4(value: &Value) -> Option<[f64; 4]> {
+    let values = value.as_array()?;
+    Some([values.first()?.as_f64()?, values.get(1)?.as_f64()?, values.get(2)?.as_f64()?, values.get(3)?.as_f64()?])
+}
+
+fn puzzle5d_projection_value<T>(value: T) -> Value
+where
+    dsl::DslValue: From<T>,
+{
+    dsl::os_pack::json::from_dsl_value(&dsl::DslValue::from(value))
+}
+
+/// 🌉️ `puzzle5d_document_delta_operations` (owned by `🧬️mutations/🦀️.rs`, out of this ticket's
+/// scope) is typed against `serde_json::Value`; bridges this file's own first-party `Value` through
+/// `DslValue` at that one boundary, inferring the foreign return type from the callee's own
+/// signature via `Into` rather than naming it here.
+fn puzzle5d_operations_from_values(before: &Value, after: &Value) -> Vec<Puzzle5dMutation> {
+    let before_dsl = dsl::os_pack::json::to_dsl_value(before);
+    let after_dsl = dsl::os_pack::json::to_dsl_value(after);
+    puzzle5d_document_delta_operations(&(&before_dsl).into(), &(&after_dsl).into())
+}
+
+/// 🌉️ `Puzzle5dDocument` stays hand-written `Serialize`/`Deserialize` (see its own doc comment
+/// above), so a document becomes this file's first-party `Value` through `serde_json::to_value`
+/// then the framework's `DslValue` bridge, matching `Puzzle5dDocument::from_value`'s own reverse
+/// route.
+fn value_from_document(document: &Puzzle5dDocument) -> Value {
+    let serde_value = serde_json::to_value(document).unwrap_or(serde_json::Value::Null);
+    dsl::os_pack::json::from_dsl_value(&dsl::DslValue::from(&serde_value))
+}
+
 struct Puzzle5dExampleOperations {
     before: Value,
     after: Puzzle5dDocument,
@@ -462,11 +466,11 @@ struct Puzzle5dExampleOperations {
 
 static PUZZLE5D_EXAMPLE_OPERATIONS: LazyLock<Vec<Puzzle5dExampleOperations>> = LazyLock::new(|| {
     let documents = vec![empty_document(), concrete_forest_example_document(), nakagin_example_document(), capsule_dream_example_document()];
-    let values: Vec<Value> = documents.iter().filter_map(|document| serde_json::to_value(document).ok()).collect();
+    let values: Vec<Value> = documents.iter().map(value_from_document).collect();
     let mut entries = Vec::new();
     for before in &values {
         for (after, after_value) in documents.iter().zip(&values) {
-            entries.push(Puzzle5dExampleOperations { operations: puzzle5d_document_delta_operations(before, after_value), before: before.clone(), after: after.clone() });
+            entries.push(Puzzle5dExampleOperations { operations: puzzle5d_operations_from_values(before, after_value), before: before.clone(), after: after.clone() });
         }
     }
     entries
@@ -477,17 +481,17 @@ pub fn puzzle5d_operations_from_document_change(before: &Value, after_document: 
     if let Some(entry) = PUZZLE5D_EXAMPLE_OPERATIONS.iter().find(|entry| &entry.before == before && &entry.after == after_document) {
         return entry.operations.clone();
     }
-    let after = serde_json::to_value(after_document).unwrap_or_else(|_| before.clone());
-    puzzle5d_document_delta_operations(before, &after)
+    let after = value_from_document(after_document);
+    puzzle5d_operations_from_values(before, &after)
 }
 
-fn puzzle5d_patch_fastener_operations(before: &Value, after_document: &Puzzle5dDocument, args: Option<&Value>) -> Vec<Puzzle5dMutation> {
-    let field = args.and_then(|value| value.get("field")).and_then(Value::as_str).unwrap_or("");
+fn puzzle5d_patch_fastener_operations(before: &Value, after_document: &Puzzle5dDocument, args: Option<&dsl::os_pack::json::Value>) -> Vec<Puzzle5dMutation> {
+    let field = args.and_then(|value| value.get("field")).and_then(dsl::os_pack::json::Value::as_str).unwrap_or("");
     let mut ids = HashSet::new();
-    for id in args.and_then(|value| value.get("fastenerIds")).and_then(Value::as_array).into_iter().flatten().filter_map(Value::as_str) {
+    for id in args.and_then(|value| value.get("fastenerIds")).and_then(dsl::os_pack::json::Value::as_array).into_iter().flatten().filter_map(dsl::os_pack::json::Value::as_str) {
         ids.insert(id);
     }
-    if let Some(id) = args.and_then(|value| value.get("fastenerId")).and_then(Value::as_str) {
+    if let Some(id) = args.and_then(|value| value.get("fastenerId")).and_then(dsl::os_pack::json::Value::as_str) {
         ids.insert(id);
     }
     let before_fasteners = before.get("fasteners").and_then(Value::as_array);
@@ -552,11 +556,11 @@ pub fn puzzle5d_grip_full_id(part_id: &str, grip_id: &str) -> String {
 
 /// 📐️ Resolves one numeric-field edit: an absolute `value` (typed entry) wins when present,
 /// otherwise a `delta` (stepper nudge) is added to `current`. `None` when neither parses.
-pub fn puzzle5d_resolve_number_edit(current: f64, value: Option<&Value>, delta: Option<&Value>) -> Option<f64> {
-    if let Some(absolute) = value.and_then(Value::as_f64) {
+pub fn puzzle5d_resolve_number_edit(current: f64, value: Option<&dsl::os_pack::json::Value>, delta: Option<&dsl::os_pack::json::Value>) -> Option<f64> {
+    if let Some(absolute) = value.and_then(dsl::os_pack::json::Value::as_f64) {
         return Some(absolute);
     }
-    delta.and_then(Value::as_f64).map(|delta| current + delta)
+    delta.and_then(dsl::os_pack::json::Value::as_f64).map(|delta| current + delta)
 }
 
 /// 📐️ Parses a nested stepper-group field id as `"<base>.<axis>"` (`x`/`y`/`z`), returning the axis
@@ -571,14 +575,14 @@ pub fn puzzle5d_axis_index(field: &str, base: &str) -> Option<usize> {
     }
 }
 
-pub fn resolve_part_mesh_url(part: &Puzzle5dPart, kind_catalogs: Option<&Value>) -> Option<String> {
+pub fn resolve_part_mesh_url(part: &Puzzle5dPart, kind_catalogs: Option<&serde_json::Value>) -> Option<String> {
     if let Some(url) = part.part_3d.mesh_url.as_ref().filter(|url| !url.is_empty()) {
         return Some(url.clone());
     }
     resolve_part_kind_mesh_url(&part.part_kind, kind_catalogs)
 }
 
-pub fn resolve_part_kind_mesh_url(part_kind: &str, kind_catalogs: Option<&Value>) -> Option<String> {
+pub fn resolve_part_kind_mesh_url(part_kind: &str, kind_catalogs: Option<&serde_json::Value>) -> Option<String> {
     let parts = kind_catalogs?.get("parts")?.as_array()?;
     parts.iter().find(|entry| entry.get("id").and_then(|v| v.as_str()) == Some(part_kind)).and_then(|entry| entry.get("meshUrl").and_then(|v| v.as_str()).map(str::to_string))
 }
@@ -600,7 +604,7 @@ pub fn collect_mesh_urls(document: &Puzzle5dDocument) -> Vec<String> {
     urls.into_iter().collect()
 }
 
-fn part_kind_grip_templates(document: &Puzzle5dDocument, part_kind: &str) -> Vec<Value> {
+fn part_kind_grip_templates(document: &Puzzle5dDocument, part_kind: &str) -> Vec<serde_json::Value> {
     document
         .kind_catalogs
         .as_ref()
@@ -685,8 +689,8 @@ pub fn find_part_by_grip_full_id<'a>(document: &'a Puzzle5dDocument, full_id: &s
     None
 }
 
-pub fn mesh_selection_ids(args: Option<&Value>, fallback: &[String]) -> Vec<String> {
-    args.and_then(|value| value.get("ids")).and_then(|value| serde_json::from_value::<Vec<String>>(value.clone()).ok()).filter(|ids| !ids.is_empty()).unwrap_or_else(|| fallback.to_vec())
+pub fn mesh_selection_ids(args: Option<&dsl::os_pack::json::Value>, fallback: &[String]) -> Vec<String> {
+    args.and_then(|value| value.get("ids")).and_then(|value| <Vec<String> as dsl::FromValue>::from_value(dsl::os_pack::json::to_dsl_value(value)).ok()).filter(|ids| !ids.is_empty()).unwrap_or_else(|| fallback.to_vec())
 }
 
 pub fn remove_parts(document: &mut Puzzle5dDocument, part_ids: &[String]) {
@@ -719,8 +723,8 @@ pub fn set_part_2d_position(document: &mut Puzzle5dDocument, part_id: &str, x: O
 
 pub fn part_scale_json(part: &Puzzle5dPart) -> [f64; 3] {
     match &part.part_3d.scale {
-        Some(Value::Array(values)) if values.len() >= 3 => [values[0].as_f64().unwrap_or(1.0), values[1].as_f64().unwrap_or(1.0), values[2].as_f64().unwrap_or(1.0)],
-        Some(Value::Number(value)) => {
+        Some(serde_json::Value::Array(values)) if values.len() >= 3 => [values[0].as_f64().unwrap_or(1.0), values[1].as_f64().unwrap_or(1.0), values[2].as_f64().unwrap_or(1.0)],
+        Some(serde_json::Value::Number(value)) => {
             let factor = value.as_f64().unwrap_or(1.0);
             [factor, factor, factor]
         }
@@ -767,7 +771,7 @@ pub struct Puzzle5dScene {
 /// 🧾️ Materializes the transient scene from the persisted projection (bare document json) and the
 /// app's current view state; an unparseable projection degrades to an empty document.
 pub fn scene_from_projection(projection: &Value, runtime: Puzzle5dRuntime, active_utility: &str) -> Puzzle5dScene {
-    let document = serde_json::from_value::<Puzzle5dDocument>(projection.clone()).unwrap_or_else(|_| empty_document());
+    let document = <Puzzle5dDocument as dsl::FromValue>::from_value(dsl::os_pack::json::to_dsl_value(projection)).unwrap_or_else(|_| empty_document());
     Puzzle5dScene { document, runtime, active_utility: active_utility.to_string() }
 }
 
@@ -833,58 +837,58 @@ pub fn gumball_target_world(envelope: &Puzzle5dScene, selected_part_ids: &[Strin
 
 //#region 🔖️Engine
 /// 🧠️ Maps the unified 5d kind bundle to the puzzle 3d engine naming (`objects` with `vortices` templates, `vortices`, `cables`).
-fn engine_kind_catalogs_value(document: &Puzzle5dDocument) -> Option<Value> {
+fn engine_kind_catalogs_value(document: &Puzzle5dDocument) -> Option<serde_json::Value> {
     let catalogs = document.kind_catalogs.as_ref()?;
-    let objects: Vec<Value> = catalogs
+    let objects: Vec<serde_json::Value> = catalogs
         .get("parts")
         .and_then(|parts| parts.as_array())
         .into_iter()
         .flatten()
         .map(|entry| {
             let mut object = entry.clone();
-            let vortices: Vec<Value> = entry
+            let vortices: Vec<serde_json::Value> = entry
                 .get("grips")
                 .and_then(|grips| grips.as_array())
                 .into_iter()
                 .flatten()
                 .map(|template| {
-                    let volume = template.get("3d").cloned().unwrap_or(json!({}));
-                    json!({
-                        "vortexKind": template.get("gripKind").cloned().unwrap_or(json!("grip")),
-                        "position": volume.get("position").cloned().unwrap_or(json!([0.0, 0.0, 0.0])),
-                        "direction": volume.get("direction").cloned().unwrap_or(json!([0.0, 0.0, -1.0])),
-                        "radius": volume.get("radius").cloned().unwrap_or(json!(0.36)),
+                    let volume = template.get("3d").cloned().unwrap_or(serde_json::json!({}));
+                    serde_json::json!({
+                        "vortexKind": template.get("gripKind").cloned().unwrap_or(serde_json::json!("grip")),
+                        "position": volume.get("position").cloned().unwrap_or(serde_json::json!([0.0, 0.0, 0.0])),
+                        "direction": volume.get("direction").cloned().unwrap_or(serde_json::json!([0.0, 0.0, -1.0])),
+                        "radius": volume.get("radius").cloned().unwrap_or(serde_json::json!(0.36)),
                     })
                 })
                 .collect();
             if let Some(object) = object.as_object_mut() {
                 object.remove("grips");
-                object.insert("vortices".into(), json!(vortices));
+                object.insert("vortices".into(), serde_json::json!(vortices));
             }
             object
         })
         .collect();
-    Some(json!({
+    Some(serde_json::json!({
         "objects": objects,
-        "vortices": catalogs.get("grips").cloned().unwrap_or(json!([])),
-        "cables": catalogs.get("ropes").cloned().unwrap_or(json!([])),
+        "vortices": catalogs.get("grips").cloned().unwrap_or(serde_json::json!([])),
+        "cables": catalogs.get("ropes").cloned().unwrap_or(serde_json::json!([])),
     }))
 }
 
 fn scene_config_json(envelope: &Puzzle5dScene) -> String {
-    let objects: Vec<Value> = envelope
+    let objects: Vec<serde_json::Value> = envelope
         .document
         .parts
         .iter()
         .map(|part| {
-            json!({
+            serde_json::json!({
                 "id": part.id,
                 "objectKind": part.part_kind,
                 "meshUrl": resolve_part_mesh_url(part, envelope.document.kind_catalogs.as_ref()),
                 "origin": part.part_3d.origin,
                 "orientation": part.part_3d.orientation,
                 "scale": part.part_3d.scale,
-                "vortices": part.grips.iter().map(|grip| json!({
+                "vortices": part.grips.iter().map(|grip| serde_json::json!({
                     "id": grip.id,
                     "vortexKind": if grip.grip_kind.is_empty() { grip.grip_2d.grip_kind.clone() } else { grip.grip_kind.clone() },
                     "position": grip.grip_3d.position,
@@ -893,15 +897,15 @@ fn scene_config_json(envelope: &Puzzle5dScene) -> String {
             })
         })
         .collect();
-    let attractions: Vec<Value> = envelope.document.fasteners.iter().map(|fastener| json!({ "id": fastener.id, "attracting": fastener.source, "attracted": fastener.target })).collect();
-    json!({
+    let attractions: Vec<serde_json::Value> = envelope.document.fasteners.iter().map(|fastener| serde_json::json!({ "id": fastener.id, "attracting": fastener.source, "attracted": fastener.target })).collect();
+    serde_json::json!({
         "fixture": {
             "objects": objects,
             "attractions": attractions,
             "targetVolumes": [],
         },
         "kindCatalogs": engine_kind_catalogs_value(&envelope.document),
-        "kindCompatibility": envelope.document.kind_compatibility.clone().unwrap_or(json!([])),
+        "kindCompatibility": envelope.document.kind_compatibility.clone().unwrap_or(serde_json::json!([])),
         "overlapBudget": envelope.runtime.overlap_budget,
         "seed": 1,
         "hostRules": {},
@@ -915,7 +919,7 @@ fn scene_config_json(envelope: &Puzzle5dScene) -> String {
 
 /// 🔄️ Adopts an engine fixture while preserving flat aspects: existing parts keep `2d`, new parts get a synthesized flat aspect.
 pub fn merge_engine_fixture(envelope: &Puzzle5dScene, fixture_json: &str) -> Option<Puzzle5dScene> {
-    let parsed: Value = serde_json::from_str(fixture_json).ok()?;
+    let parsed: serde_json::Value = serde_json::from_str(fixture_json).ok()?;
     let objects = parsed.get("objects")?.as_array()?;
     let mut next = envelope.clone();
     let existing: HashMap<String, Puzzle5dPart> = envelope.document.parts.iter().map(|part| (part.id.clone(), part.clone())).collect();
@@ -1060,7 +1064,7 @@ pub fn puzzle5d_brush_target_grip(_envelope: &Puzzle5dScene) -> Option<String> {
 }
 
 pub fn parse_brush_candidates_free(raw: &str) -> Vec<Value> {
-    let parsed: Value = serde_json::from_str(raw).unwrap_or(Value::Null);
+    let parsed = parse(raw).unwrap_or(Value::Null);
     parsed.get("free").and_then(|value| value.as_array()).cloned().unwrap_or_default()
 }
 //#endregion 🔖️Brush
@@ -1439,8 +1443,8 @@ impl Puzzle5dSelectionScan {
         Self { snapshot: Some(snapshot), part_ids, explicit_fastener_ids, stage: Puzzle5dSelectionStage::Endpoints, cursor: 0, parts: Vec::new(), fasteners: Vec::new() }
     }
 
-    fn rows(&self, key: &str) -> &[Value] {
-        self.snapshot.as_ref().and_then(|snapshot| snapshot.0.get(key)).and_then(Value::as_array).map(Vec::as_slice).unwrap_or(&[])
+    fn rows(&self, key: &str) -> Vec<Value> {
+        self.snapshot.as_ref().map(|snapshot| puzzle5d_projection_value(&snapshot.0)).and_then(|projection| projection.get(key).and_then(Value::as_array).cloned()).unwrap_or_default()
     }
 
     fn step(&mut self) -> Result<bool, String> {
@@ -1469,7 +1473,7 @@ impl Puzzle5dSelectionScan {
                     let selected = row.get("id").and_then(Value::as_str).is_some_and(|id| self.explicit_fastener_ids.contains(id))
                         || source.zip(target).is_some_and(|(source, target)| !self.part_ids.is_empty() && self.part_ids.contains(source) && self.part_ids.contains(target));
                     if selected {
-                        self.fasteners.push(serde_json::from_value(row).map_err(|error| error.to_string())?);
+                        self.fasteners.push(serde_json::from_value(serde_json::Value::from(&dsl::os_pack::json::to_dsl_value(&row))).map_err(|error| error.to_string())?);
                     }
                 } else {
                     self.stage = Puzzle5dSelectionStage::Parts;
@@ -1480,7 +1484,7 @@ impl Puzzle5dSelectionScan {
                 if let Some(row) = self.rows("parts").get(self.cursor).cloned() {
                     self.cursor += 1;
                     if row.get("id").and_then(Value::as_str).is_some_and(|id| self.part_ids.contains(id)) {
-                        self.parts.push(serde_json::from_value(row).map_err(|error| error.to_string())?);
+                        self.parts.push(serde_json::from_value(serde_json::Value::from(&dsl::os_pack::json::to_dsl_value(&row))).map_err(|error| error.to_string())?);
                     }
                 } else {
                     self.stage = Puzzle5dSelectionStage::Complete;
@@ -1515,22 +1519,22 @@ fn puzzle5d_retire_vec_backing<T>(owners: &mut Vec<T>, maximum_bytes: usize) -> 
     Ok(Some(PluginCloseStep::Pending { released_items: 1, released_bytes: bytes }))
 }
 
-fn puzzle5d_retire_json_step(value: &mut Value, key: &mut [u8; PUZZLE5D_JSON_RETIREMENT_KEY_BYTES], maximum_bytes: usize) -> Result<Option<PluginCloseStep>, Fault> {
+fn puzzle5d_retire_json_step(value: &mut serde_json::Value, key: &mut [u8; PUZZLE5D_JSON_RETIREMENT_KEY_BYTES], maximum_bytes: usize) -> Result<Option<PluginCloseStep>, Fault> {
     match value {
-        Value::Null => Ok(None),
-        Value::Bool(_) | Value::Number(_) => {
-            *value = Value::Null;
+        serde_json::Value::Null => Ok(None),
+        serde_json::Value::Bool(_) | serde_json::Value::Number(_) => {
+            *value = serde_json::Value::Null;
             Ok(Some(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 }))
         }
-        Value::String(text) => {
+        serde_json::Value::String(text) => {
             let bytes = text.capacity();
             if bytes > maximum_bytes {
                 return Err(Fault::from("puzzle5d recursive string exceeds its bounded disposal byte slice"));
             }
-            *value = Value::Null;
+            *value = serde_json::Value::Null;
             Ok(Some(PluginCloseStep::Pending { released_items: 1, released_bytes: bytes }))
         }
-        Value::Array(values) => {
+        serde_json::Value::Array(values) => {
             if let Some(last) = values.last_mut() {
                 if last.is_null() {
                     values.pop();
@@ -1538,17 +1542,17 @@ fn puzzle5d_retire_json_step(value: &mut Value, key: &mut [u8; PUZZLE5D_JSON_RET
                 }
                 return puzzle5d_retire_json_step(last, key, maximum_bytes);
             }
-            let bytes = values.capacity().saturating_mul(std::mem::size_of::<Value>());
+            let bytes = values.capacity().saturating_mul(std::mem::size_of::<serde_json::Value>());
             if bytes > maximum_bytes {
                 return Err(Fault::from("puzzle5d recursive array backing exceeds its bounded disposal byte slice"));
             }
-            *value = Value::Null;
+            *value = serde_json::Value::Null;
             Ok(Some(PluginCloseStep::Pending { released_items: 1, released_bytes: bytes }))
         }
-        Value::Object(values) => {
+        serde_json::Value::Object(values) => {
             let next = values.iter().next().map(|(name, child)| (name.len(), child.is_null()));
             let Some((name_len, child_empty)) = next else {
-                *value = Value::Null;
+                *value = serde_json::Value::Null;
                 return Ok(Some(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 }));
             };
             if name_len > key.len() || name_len > maximum_bytes {
@@ -1613,9 +1617,9 @@ mod puzzle5d_retained_retirement_laws {
         let mut key = [0; PUZZLE5D_JSON_RETIREMENT_KEY_BYTES];
         assert!(puzzle5d_retire_json_step(&mut value, &mut key, 0).is_err());
         assert_eq!(value, before);
-        let nested = value.as_object_mut().and_then(|object| object.get_mut(&oversized_key)).and_then(Value::as_object_mut).and_then(|object| object.get_mut("nested")).and_then(Value::as_array_mut).and_then(|array| array.last_mut());
+        let nested = value.as_object_mut().and_then(|object| object.get_mut(&oversized_key)).and_then(serde_json::Value::as_object_mut).and_then(|object| object.get_mut("nested")).and_then(serde_json::Value::as_array_mut).and_then(|array| array.last_mut());
         if let Some(nested) = nested {
-            *nested = Value::Null;
+            *nested = serde_json::Value::Null;
         }
         assert!(puzzle5d_retire_json_step(&mut value, &mut key, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES).is_err());
         assert!(value.get(&oversized_key).is_some());
@@ -1911,7 +1915,7 @@ impl Puzzle5dClipboardWork {
             if let Some(step) = puzzle5d_retire_vec_backing(&mut part.grips, maximum_bytes)? {
                 return Ok(step);
             }
-            if matches!(part.part_3d.scale, Some(Value::Array(_)) | Some(Value::Object(_))) {
+            if matches!(part.part_3d.scale, Some(serde_json::Value::Array(_)) | Some(serde_json::Value::Object(_))) {
                 return Err(Fault::from("puzzle5d clipboard part retains an unproved recursive scale value"));
             }
             let part = self.scan.parts.pop().expect("last part exists");
@@ -2198,8 +2202,8 @@ struct Puzzle5dPasteJob {
     progress: u64,
     stage: Puzzle5dPasteStage,
     snapshot: Option<std::sync::Arc<Puzzle5dPlaySnapshot>>,
-    args: Option<Value>,
-    fragment_value: Option<Value>,
+    args: Option<serde_json::Value>,
+    fragment_value: Option<serde_json::Value>,
     fragment_parts: Vec<Puzzle5dPart>,
     cursor: usize,
     source_sum: (f64, f64),
@@ -2218,7 +2222,7 @@ struct Puzzle5dPasteJob {
 }
 
 impl Puzzle5dPasteJob {
-    fn new(request: ArtifactReservedToolJobRequest<EditorApp<Puzzle5dPlayApp>>, args: Option<Value>) -> Self {
+    fn new(request: ArtifactReservedToolJobRequest<EditorApp<Puzzle5dPlayApp>>, args: Option<serde_json::Value>) -> Self {
         Self {
             raw: request.raw_wire,
             raw_cursor: 0,
@@ -2287,8 +2291,8 @@ impl InteractiveJob for Puzzle5dPasteJob {
                     Ok(value) => Some(value),
                     Err(error) => return puzzle5d_job_fault(cx, error.to_string()),
                 };
-                self.placement = serde_json::from_value(json!({
-                    "anchor": args.get("anchor").cloned().unwrap_or_else(|| json!("original")),
+                self.placement = serde_json::from_value(serde_json::json!({
+                    "anchor": args.get("anchor").cloned().unwrap_or_else(|| serde_json::json!("original")),
                     "position": args.get("position").cloned()
                 }))
                 .unwrap_or_default();
@@ -2296,7 +2300,7 @@ impl InteractiveJob for Puzzle5dPasteJob {
                 self.cursor = 0;
             }
             Puzzle5dPasteStage::FragmentParts => {
-                let rows = self.fragment_value.as_ref().and_then(|value| value.get("parts")).and_then(Value::as_array).map(Vec::as_slice).unwrap_or(&[]);
+                let rows = self.fragment_value.as_ref().and_then(|value| value.get("parts")).and_then(serde_json::Value::as_array).map(Vec::as_slice).unwrap_or(&[]);
                 if let Some(row) = rows.get(self.cursor).cloned() {
                     self.cursor += 1;
                     let part: Puzzle5dPart = match serde_json::from_value(row) {
@@ -2312,14 +2316,14 @@ impl InteractiveJob for Puzzle5dPasteJob {
                 }
             }
             Puzzle5dPasteStage::TargetParts => {
-                let rows = self.snapshot.as_ref().and_then(|snapshot| snapshot.0.get("parts")).and_then(Value::as_array).map(Vec::as_slice).unwrap_or(&[]);
+                let rows = self.snapshot.as_ref().and_then(|snapshot| snapshot.0.get("parts")).and_then(serde_json::Value::as_array).map(Vec::as_slice).unwrap_or(&[]);
                 if let Some(row) = rows.get(self.cursor) {
                     self.cursor += 1;
-                    if let Some(id) = row.get("id").and_then(Value::as_str) {
+                    if let Some(id) = row.get("id").and_then(serde_json::Value::as_str) {
                         self.fresh_ids.observe_part(id);
                     }
-                    self.target_sum.0 += row.get("2d").and_then(|value| value.get("x")).and_then(Value::as_f64).unwrap_or_default();
-                    self.target_sum.1 += row.get("2d").and_then(|value| value.get("y")).and_then(Value::as_f64).unwrap_or_default();
+                    self.target_sum.0 += row.get("2d").and_then(|value| value.get("x")).and_then(serde_json::Value::as_f64).unwrap_or_default();
+                    self.target_sum.1 += row.get("2d").and_then(|value| value.get("y")).and_then(serde_json::Value::as_f64).unwrap_or_default();
                     self.target_count += 1;
                 } else {
                     let offset = self.placement.position.map_or((0.0, 0.0), |position| (position[0], position[1]));
@@ -2333,10 +2337,10 @@ impl InteractiveJob for Puzzle5dPasteJob {
                 }
             }
             Puzzle5dPasteStage::TargetFasteners => {
-                let rows = self.snapshot.as_ref().and_then(|snapshot| snapshot.0.get("fasteners")).and_then(Value::as_array).map(Vec::as_slice).unwrap_or(&[]);
+                let rows = self.snapshot.as_ref().and_then(|snapshot| snapshot.0.get("fasteners")).and_then(serde_json::Value::as_array).map(Vec::as_slice).unwrap_or(&[]);
                 if let Some(row) = rows.get(self.cursor) {
                     self.cursor += 1;
-                    if let Some(id) = row.get("id").and_then(Value::as_str) {
+                    if let Some(id) = row.get("id").and_then(serde_json::Value::as_str) {
                         self.fresh_ids.observe_fastener(id);
                     }
                 } else {
@@ -2355,7 +2359,7 @@ impl InteractiveJob for Puzzle5dPasteJob {
                     next.part_2d.y += self.delta.1;
                     next.part_3d.origin[0] += self.delta.0;
                     next.part_3d.origin[1] += self.delta.1;
-                    let typed = match serde_json::to_value(next).and_then(serde_json::from_value::<crate::artifacts::puzzle5d::Puzzle5dPart>) {
+                    let typed = match <crate::artifacts::puzzle5d::Puzzle5dPart as dsl::FromValue>::from_value(dsl::DslValue::from(&serde_json::to_value(&next).unwrap_or(serde_json::Value::Null))) {
                         Ok(typed) => typed,
                         Err(error) => return puzzle5d_job_fault(cx, error.to_string()),
                     };
@@ -2366,7 +2370,7 @@ impl InteractiveJob for Puzzle5dPasteJob {
                 }
             }
             Puzzle5dPasteStage::MaterializeFasteners => {
-                let rows = self.fragment_value.as_ref().and_then(|value| value.get("fasteners")).and_then(Value::as_array).map(Vec::as_slice).unwrap_or(&[]);
+                let rows = self.fragment_value.as_ref().and_then(|value| value.get("fasteners")).and_then(serde_json::Value::as_array).map(Vec::as_slice).unwrap_or(&[]);
                 if let Some(row) = rows.get(self.cursor).cloned() {
                     self.cursor += 1;
                     let fastener: Puzzle5dFastener = match serde_json::from_value(row) {
@@ -2458,12 +2462,19 @@ impl ArtifactReservedJob for Puzzle5dPasteJob {
             return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
         }
         if let Some(part) = self.fragment_parts.last_mut() {
-            if let Some(scale) = part.part_3d.scale.as_mut() {
-                if let Some(step) = puzzle5d_retire_json_step(scale, &mut self.retirement_key, maximum_bytes)? {
-                    return Ok(step);
+            if let Some(scale) = part.part_3d.scale.take() {
+                // 🌉️ `scale` is always bounded (a bare number or a short per-axis array), so this
+                // disposes it with the same flat capacity-credit idiom as the sibling grip/part
+                // disposal arms below rather than the shared recursive `puzzle5d_retire_json_step`.
+                let bytes = match &scale {
+                    serde_json::Value::Array(values) => values.capacity().saturating_mul(std::mem::size_of::<serde_json::Value>()),
+                    _ => std::mem::size_of::<serde_json::Value>(),
+                };
+                if bytes > maximum_bytes {
+                    part.part_3d.scale = Some(scale);
+                    return Err(Fault::from("puzzle5d paste part scale exceeds its bounded disposal byte slice"));
                 }
-                part.part_3d.scale = None;
-                return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
+                return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: bytes });
             }
             if let Some(grip) = part.grips.pop() {
                 let bytes = grip.id.capacity().saturating_add(grip.grip_kind.capacity()).saturating_add(grip.grip_2d.grip_kind.capacity()).saturating_add(grip.grip_3d.label.as_ref().map_or(0, String::capacity));
@@ -2634,14 +2645,14 @@ fn puzzle5d_import_vec3(value: Option<&Value>) -> Result<[f64; 3], &'static str>
 }
 
 fn puzzle5d_import_keys_are(value: &Value, allowed: &[&str]) -> bool {
-    value.as_object().is_some_and(|object| object.keys().all(|key| allowed.contains(&key.as_str())))
+    value.as_object().is_some_and(|object| object.iter().all(|(key, _)| allowed.contains(&key)))
 }
 
 fn puzzle5d_decode_import_fragment(media_json: &str) -> Result<Value, String> {
     if media_json.len() > PUZZLE5D_IMPORT_MEDIA_BYTES {
         return Err("puzzle5d kit:in payload exceeds its predecode cap".into());
     }
-    serde_json::from_str(media_json).map_err(|error| error.to_string())
+    dsl::os_pack::json::parse(media_json).map_err(|error| error.to_string())
 }
 
 fn puzzle5d_retire_string_step(owner: &mut String, maximum_bytes: usize) -> Result<Option<PluginCloseStep>, Fault> {
@@ -2930,8 +2941,12 @@ impl Puzzle5dImportJob {
         self.fragment.as_ref().and_then(|value| value.get(key)).and_then(Value::as_array).map(Vec::as_slice).unwrap_or(&[])
     }
 
-    fn snapshot_rows(&self, parent: &str, key: &str) -> &[Value] {
-        self.snapshot.as_ref().and_then(|snapshot| snapshot.0.get(parent)).and_then(|value| value.get(key)).and_then(Value::as_array).map(Vec::as_slice).unwrap_or(&[])
+    fn snapshot_rows(&self, parent: &str, key: &str) -> Vec<Value> {
+        self.snapshot.as_ref().map(|snapshot| puzzle5d_projection_value(&snapshot.0)).and_then(|projection| projection.get(parent).and_then(|value| value.get(key)).and_then(Value::as_array).cloned()).unwrap_or_default()
+    }
+
+    fn snapshot_kind_compatibility_rows(&self) -> Vec<Value> {
+        self.snapshot.as_ref().map(|snapshot| puzzle5d_projection_value(&snapshot.0)).and_then(|projection| projection.get("kindCompatibility").and_then(Value::as_array).cloned()).unwrap_or_default()
     }
 
     fn push_mutation(&mut self, mutation: Puzzle5dMutation) -> Result<(), &'static str> {
@@ -2978,12 +2993,12 @@ impl InteractiveJob for Puzzle5dImportJob {
                 let snapshot_items = ["parts", "grips", "fasteners", "ropes"]
                     .into_iter()
                     .try_fold(0usize, |total, key| total.checked_add(self.snapshot_rows("kindCatalogs", key).len()))
-                    .and_then(|total| total.checked_add(self.snapshot.as_ref().and_then(|snapshot| snapshot.0.get("kindCompatibility")).and_then(Value::as_array).map_or(0, Vec::len)));
+                    .and_then(|total| total.checked_add(self.snapshot_kind_compatibility_rows().len()));
                 self.decoded_items = match fragment_items.and_then(|fragment_items| snapshot_items.and_then(|snapshot_items| fragment_items.checked_add(snapshot_items))) {
                     Some(items) if items <= PUZZLE5D_IMPORT_DECODED_ITEMS => items,
                     _ => return puzzle5d_job_fault(cx, "puzzle5d kit:in decoded item limit exceeded"),
                 };
-                if !fragment.is_object() {
+                if fragment.as_object().is_none() {
                     return puzzle5d_job_fault(cx, "puzzle5d kit:in root must be an object");
                 }
                 if !puzzle5d_import_keys_are(&fragment, &["schema", "objectKinds", "vortexKinds", "cableKinds", "attractionKinds", "kindCompatibility"]) {
@@ -2992,7 +3007,7 @@ impl InteractiveJob for Puzzle5dImportJob {
                 if fragment.get("schema").is_some_and(|value| value.as_str() != Some("manifest")) {
                     return puzzle5d_job_fault(cx, "puzzle5d kit:in schema must be manifest when present");
                 }
-                if ["objectKinds", "vortexKinds", "cableKinds", "attractionKinds", "kindCompatibility"].into_iter().any(|key| fragment.get(key).is_some_and(|value| !value.is_array())) {
+                if ["objectKinds", "vortexKinds", "cableKinds", "attractionKinds", "kindCompatibility"].into_iter().any(|key| fragment.get(key).is_some_and(|value| value.as_array().is_none())) {
                     return puzzle5d_job_fault(cx, "puzzle5d kit:in collection must be an array");
                 }
                 if ["objectKinds", "vortexKinds", "cableKinds", "attractionKinds", "kindCompatibility"].into_iter().any(|key| fragment.get(key).and_then(Value::as_array).is_some_and(|rows| rows.len() > PUZZLE5D_IMPORT_SEMANTIC_ITEMS)) {
@@ -3012,7 +3027,7 @@ impl InteractiveJob for Puzzle5dImportJob {
                     if !puzzle5d_import_keys_are(row, &["id", "name", "label", "meshUrl", "vortices"]) {
                         return puzzle5d_job_fault(cx, "puzzle5d kit:in object kind contains an unknown field");
                     }
-                    if row.get("vortices").is_some_and(|value| !value.is_array()) {
+                    if row.get("vortices").is_some_and(|value| value.as_array().is_none()) {
                         return puzzle5d_job_fault(cx, "puzzle5d kit:in object-kind vortices must be an array");
                     }
                     let vortices = row.get("vortices").and_then(Value::as_array).map_or(0, Vec::len);
@@ -3058,7 +3073,7 @@ impl InteractiveJob for Puzzle5dImportJob {
                 self.stage = Puzzle5dImportStage::ReserveCompatibility;
             }
             Puzzle5dImportStage::ReserveCompatibility => {
-                let capacity = self.snapshot.as_ref().and_then(|snapshot| snapshot.0.get("kindCompatibility")).and_then(Value::as_array).map_or(0, Vec::len).saturating_add(self.rows("kindCompatibility").len());
+                let capacity = self.snapshot_kind_compatibility_rows().len().saturating_add(self.rows("kindCompatibility").len());
                 if capacity > PUZZLE5D_IMPORT_SEMANTIC_ITEMS || self.compatibility.try_reserve_exact(capacity).is_err() {
                     return puzzle5d_job_fault(cx, "puzzle5d kit:in compatibility reserve rejected");
                 }
@@ -3079,7 +3094,7 @@ impl InteractiveJob for Puzzle5dImportJob {
                 self.stage = Puzzle5dImportStage::ReserveCompatibilityIndex;
             }
             Puzzle5dImportStage::ReserveCompatibilityIndex => {
-                let capacity = self.snapshot.as_ref().and_then(|snapshot| snapshot.0.get("kindCompatibility")).and_then(Value::as_array).map_or(0, Vec::len).saturating_add(self.rows("kindCompatibility").len());
+                let capacity = self.snapshot_kind_compatibility_rows().len().saturating_add(self.rows("kindCompatibility").len());
                 if capacity > PUZZLE5D_IMPORT_SEMANTIC_ITEMS || self.compatibility_index.try_reserve_exact(capacity).is_err() {
                     return puzzle5d_job_fault(cx, "puzzle5d kit:in compatibility index reserve rejected");
                 }
@@ -3109,7 +3124,7 @@ impl InteractiveJob for Puzzle5dImportJob {
             }
             Puzzle5dImportStage::LoadCatalogParts => {
                 if let Some(row) = self.snapshot_rows("kindCatalogs", "parts").get(self.cursor) {
-                    let parsed = match crate::artifacts::puzzle5d::Puzzle5dCatalogPartKind::deserialize(row) {
+                    let parsed = match <crate::artifacts::puzzle5d::Puzzle5dCatalogPartKind as dsl::FromValue>::from_value(dsl::os_pack::json::to_dsl_value(row)) {
                         Ok(parsed) => parsed,
                         Err(error) => return puzzle5d_job_fault(cx, error.to_string()),
                     };
@@ -3122,7 +3137,7 @@ impl InteractiveJob for Puzzle5dImportJob {
             }
             Puzzle5dImportStage::LoadCatalogGrips => {
                 if let Some(row) = self.snapshot_rows("kindCatalogs", "grips").get(self.cursor) {
-                    let parsed = match crate::artifacts::puzzle5d::Puzzle5dCatalogGripKind::deserialize(row) {
+                    let parsed = match <crate::artifacts::puzzle5d::Puzzle5dCatalogGripKind as dsl::FromValue>::from_value(dsl::os_pack::json::to_dsl_value(row)) {
                         Ok(parsed) => parsed,
                         Err(error) => return puzzle5d_job_fault(cx, error.to_string()),
                     };
@@ -3135,7 +3150,7 @@ impl InteractiveJob for Puzzle5dImportJob {
             }
             Puzzle5dImportStage::LoadCatalogFasteners => {
                 if let Some(row) = self.snapshot_rows("kindCatalogs", "fasteners").get(self.cursor) {
-                    let parsed = match crate::artifacts::puzzle5d::Puzzle5dCatalogFastenerKind::deserialize(row) {
+                    let parsed = match <crate::artifacts::puzzle5d::Puzzle5dCatalogFastenerKind as dsl::FromValue>::from_value(dsl::os_pack::json::to_dsl_value(row)) {
                         Ok(parsed) => parsed,
                         Err(error) => return puzzle5d_job_fault(cx, error.to_string()),
                     };
@@ -3148,7 +3163,7 @@ impl InteractiveJob for Puzzle5dImportJob {
             }
             Puzzle5dImportStage::LoadCatalogRopes => {
                 if let Some(row) = self.snapshot_rows("kindCatalogs", "ropes").get(self.cursor) {
-                    let parsed = match crate::artifacts::puzzle5d::Puzzle5dCatalogRopeKind::deserialize(row) {
+                    let parsed = match <crate::artifacts::puzzle5d::Puzzle5dCatalogRopeKind as dsl::FromValue>::from_value(dsl::os_pack::json::to_dsl_value(row)) {
                         Ok(parsed) => parsed,
                         Err(error) => return puzzle5d_job_fault(cx, error.to_string()),
                     };
@@ -3160,9 +3175,9 @@ impl InteractiveJob for Puzzle5dImportJob {
                 }
             }
             Puzzle5dImportStage::LoadCompatibility => {
-                let rows = self.snapshot.as_ref().and_then(|snapshot| snapshot.0.get("kindCompatibility")).and_then(Value::as_array).map(Vec::as_slice).unwrap_or(&[]);
+                let rows = self.snapshot_kind_compatibility_rows();
                 if let Some(row) = rows.get(self.cursor) {
-                    let parsed = match crate::artifacts::puzzle5d::Puzzle5dKindCompatibility::deserialize(row) {
+                    let parsed = match <crate::artifacts::puzzle5d::Puzzle5dKindCompatibility as dsl::FromValue>::from_value(dsl::os_pack::json::to_dsl_value(row)) {
                         Ok(parsed) => parsed,
                         Err(error) => return puzzle5d_job_fault(cx, error.to_string()),
                     };
@@ -3332,7 +3347,7 @@ impl InteractiveJob for Puzzle5dImportJob {
                     if !puzzle5d_import_keys_are(row, &["source", "target", "bidirectional", "important", "specificity"]) {
                         return puzzle5d_job_fault(cx, "puzzle5d kit:in compatibility contains an unknown field");
                     }
-                    let parsed = match crate::artifacts::puzzle5d::Puzzle5dKindCompatibility::deserialize(row) {
+                    let parsed = match <crate::artifacts::puzzle5d::Puzzle5dKindCompatibility as dsl::FromValue>::from_value(dsl::os_pack::json::to_dsl_value(row)) {
                         Ok(parsed) => parsed,
                         Err(error) => return puzzle5d_job_fault(cx, error.to_string()),
                     };
@@ -3427,12 +3442,26 @@ impl ArtifactReservedJob for Puzzle5dImportJob {
             PluginCloseStep::Complete => {}
             step => return Ok(step),
         }
-        if let Some(fragment) = self.fragment.as_mut() {
-            if let Some(step) = puzzle5d_retire_json_step(fragment, &mut self.retirement_key, maximum_bytes)? {
-                return Ok(step);
+        if let Some(fragment) = self.fragment.take() {
+            // 🌉️ `fragment` is this file's own first-party `Value` (built by `parse`, not
+            // `serde_json::from_str` — see `puzzle5d_decode_import_fragment`), so the shared
+            // `puzzle5d_retire_json_step` (pinned to `serde_json::Value` by its own
+            // `serde_json::json!`-built test, an untouched `json!` site) cannot walk it. dsl's
+            // `Object` (unlike `serde_json::Map`) exposes no `remove`/`iter_mut`, so it cannot
+            // support the same incremental key-at-a-time descent either — a real gap, not
+            // papered over here: this disposes the whole (already admission-capped, at
+            // `PUZZLE5D_IMPORT_MEDIA_BYTES`/`PUZZLE5D_IMPORT_SEMANTIC_ITEMS`) fragment in one
+            // step instead of the sibling fields' byte-exact recursive walk.
+            let bytes = match &fragment {
+                Value::Object(object) => object.iter().count().saturating_mul(64).max(std::mem::size_of::<Value>()),
+                Value::Array(values) => values.len().saturating_mul(std::mem::size_of::<Value>()),
+                _ => std::mem::size_of::<Value>(),
+            };
+            if bytes > maximum_bytes {
+                self.fragment = Some(fragment);
+                return Err(Fault::from("puzzle5d kit:in fragment exceeds its bounded disposal byte slice"));
             }
-            self.fragment = None;
-            return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
+            return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: bytes });
         }
         if let Some(owner) = self.current_part.as_mut() {
             if let Some(step) = puzzle5d_retire_part_kind_step(owner, maximum_bytes)? {
@@ -3627,7 +3656,7 @@ fn puzzle5d_context_menu_items(envelope: &Puzzle5dScene, part_ids: &[String], la
         label: Some(label),
         icon: Some(icon.into()),
         action: Some(action.into()),
-        args: semio_framework_plugin::optional_json_to_dsl(args),
+        args: args.map(|value| dsl::os_pack::json::to_dsl_value(&value)),
         destructive: destructive.then_some(true),
         ..Default::default()
     };
@@ -3641,9 +3670,9 @@ fn puzzle5d_context_menu_items(envelope: &Puzzle5dScene, part_ids: &[String], la
             .action("zoomToSelection")
             .await
             .group("settings", |m| async {
-                m.item(bespoke("hide-show", if all_hidden { labels.show.into() } else { labels.hide.into() }, if all_hidden { "eye" } else { "eye-off" }, "setSelectionFlag", Some(json!({ "flag": "hidden", "value": !all_hidden })), false))
+                m.item(bespoke("hide-show", if all_hidden { labels.show.into() } else { labels.hide.into() }, if all_hidden { "eye" } else { "eye-off" }, "setSelectionFlag", Some(dsl::json!({ "flag": "hidden", "value": !all_hidden })), false))
                     .await
-                    .item(bespoke("lock-unlock", if all_locked { labels.unlock.into() } else { labels.lock.into() }, if all_locked { "lock-open" } else { "lock" }, "setSelectionFlag", Some(json!({ "flag": "locked", "value": !all_locked })), false))
+                    .item(bespoke("lock-unlock", if all_locked { labels.unlock.into() } else { labels.lock.into() }, if all_locked { "lock-open" } else { "lock" }, "setSelectionFlag", Some(dsl::json!({ "flag": "locked", "value": !all_locked })), false))
                     .await
             })
             .await
@@ -3670,9 +3699,9 @@ fn puzzle5d_context_menu_items(envelope: &Puzzle5dScene, part_ids: &[String], la
 /// list, its order and its action-id literals byte-for-byte stable.
 macro_rules! puzzle5d_command_variants {
     ($($Variant:ident = $id:tt),* $(,)?) => {
-        #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+        #[derive(Clone, Debug, PartialEq)]
         pub enum Puzzle5dCommand {
-            $($Variant { window_id: Option<String>, args: Option<Value> }),*
+            $($Variant { window_id: Option<String>, args: Option<dsl::os_pack::json::Value> }),*
         }
 
         impl Puzzle5dCommand {
@@ -3691,13 +3720,13 @@ macro_rules! puzzle5d_command_variants {
                 }
             }
 
-            fn args(&self) -> Option<&Value> {
+            fn args(&self) -> Option<&dsl::os_pack::json::Value> {
                 match self {
                     $(Puzzle5dCommand::$Variant { args, .. } => args.as_ref()),*
                 }
             }
 
-            fn try_from_action(action: &str, args: Option<Value>, window_id: Option<String>) -> Option<Self> {
+            fn try_from_action(action: &str, args: Option<dsl::os_pack::json::Value>, window_id: Option<String>) -> Option<Self> {
                 match action {
                     $($id => Some(Puzzle5dCommand::$Variant { window_id, args })),*,
                     _ => None,
@@ -3705,9 +3734,36 @@ macro_rules! puzzle5d_command_variants {
             }
 
             #[cfg(test)]
-            fn from_action(action: &str, args: Option<Value>, window_id: Option<String>) -> Self {
+            fn from_action(action: &str, args: Option<dsl::os_pack::json::Value>, window_id: Option<String>) -> Self {
                 Self::try_from_action(action, args, window_id)
                     .unwrap_or_else(|| panic!("unknown puzzle5d action id in test: {action}"))
+            }
+
+            /// 🪶️ Hand-written JSON bridge (see this macro's own doc comment on why `OpBinary` here
+            /// is a plain JSON-bytes bridge, not a derive): reproduces serde's default externally
+            /// tagged struct-variant shape (`{"VariantName": {"window_id": ..., "args": ...}}`) so
+            /// `encode_op`/`decode_op` stay byte-for-byte compatible with the pre-migration wire.
+            fn to_json(&self) -> dsl::os_pack::json::Value {
+                match self {
+                    $(Puzzle5dCommand::$Variant { window_id, args } => dsl::os_pack::json::object([(
+                        stringify!($Variant).to_string(),
+                        dsl::os_pack::json::object([("window_id".to_string(), dsl::os_pack::json::Value::from(window_id.clone())), ("args".to_string(), args.clone().unwrap_or(dsl::os_pack::json::Value::Null))]),
+                    )])),*
+                }
+            }
+
+            fn from_json(value: &dsl::os_pack::json::Value) -> Option<Self> {
+                let entries = value.as_object()?;
+                if entries.len() != 1 {
+                    return None;
+                }
+                let (tag, payload) = entries.iter().next()?;
+                let window_id = payload.get("window_id").and_then(dsl::os_pack::json::Value::as_str).map(str::to_string);
+                let args = payload.get("args").cloned().filter(|value| !value.is_null());
+                match tag {
+                    $(stringify!($Variant) => Some(Puzzle5dCommand::$Variant { window_id, args }),)*
+                    _ => None,
+                }
             }
         }
     };
@@ -3769,10 +3825,12 @@ puzzle5d_command_variants! {
 
 impl protocol::OpBinary for Puzzle5dCommand {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        serde_json::to_vec(self).map_err(|error| protocol::ProtocolError::Pack(store::PackError::Schema(error.to_string())))
+        Ok(dsl::os_pack::json::to_string(&self.to_json()).into_bytes())
     }
     fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        serde_json::from_slice(bytes).map_err(|error| protocol::ProtocolError::Pack(store::PackError::Schema(error.to_string())))
+        let text = std::str::from_utf8(bytes).map_err(|error| protocol::ProtocolError::Pack(store::PackError::Schema(error.to_string())))?;
+        let value = dsl::os_pack::json::parse(text).map_err(|error| protocol::ProtocolError::Pack(store::PackError::Schema(error.to_string())))?;
+        Self::from_json(&value).ok_or_else(|| protocol::ProtocolError::Pack(store::PackError::Schema("unrecognized Puzzle5dCommand tag".to_string())))
     }
 }
 //#endregion 🔖️Puzzle5dCommand
@@ -3886,8 +3944,8 @@ impl Puzzle5dPlayApp {
     }
 
     pub fn apply_engine_brush_placement(&self, envelope: &Puzzle5dScene, payload: &Value) -> Option<Puzzle5dScene> {
-        let brush_payload = serde_json::from_value::<BrushPlacePayload>(payload.clone()).ok()?;
-        let fixture_json = self.precompute.borrow_mut().apply_brush_placement_rust(&serde_json::to_string(&brush_payload).ok()?).ok()?;
+        let brush_payload = <BrushPlacePayload as dsl::FromValue>::from_value(dsl::os_pack::json::to_dsl_value(payload)).ok()?;
+        let fixture_json = self.precompute.borrow_mut().apply_brush_placement_rust(&dsl::json::to_json_string(&brush_payload)).ok()?;
         merge_engine_fixture(envelope, &fixture_json)
     }
 
@@ -3900,7 +3958,7 @@ impl Puzzle5dPlayApp {
             let candidates = parse_brush_candidates_free(&self.precompute.borrow().brush_candidates(source_grip));
             let candidate_index =
                 candidates.iter().position(|candidate| candidate.get("objectKindId").or_else(|| candidate.get("objectKind")).and_then(|value| value.as_str()) == Some(node_kind.as_str())).unwrap_or(envelope.runtime.brush_candidate_index);
-            let engine_payload = json!({ "objectKindId": node_kind, "targetVortexFullId": source_grip, "candidateIndex": candidate_index });
+            let engine_payload = dsl::json!({ "objectKindId": node_kind.as_str(), "targetVortexFullId": source_grip.as_str(), "candidateIndex": candidate_index });
             if let Some(mut next) = self.apply_engine_brush_placement(envelope, &engine_payload) {
                 let previous_ids: HashSet<String> = envelope.document.parts.iter().map(|part| part.id.clone()).collect();
                 let new_id = next.document.parts.iter().map(|part| part.id.clone()).find(|id| !previous_ids.contains(id));
@@ -3951,7 +4009,7 @@ impl Puzzle5dPlayApp {
     }
 
     pub fn apply_board_events_from_json(&self, events_json: &str, envelope: &mut Puzzle5dScene) {
-        let Ok(events) = serde_json::from_str::<Vec<Value>>(events_json) else {
+        let Some(events) = parse(events_json).ok().and_then(|value| value.as_array().cloned()) else {
             return;
         };
         for event in events {
@@ -3961,7 +4019,7 @@ impl Puzzle5dPlayApp {
             let payload = event.get("payload").cloned().unwrap_or(Value::Null);
             match name {
                 "camera" => {
-                    if let Ok(camera) = serde_json::from_value::<Puzzle5dCamera2d>(payload) {
+                    if let Ok(camera) = <Puzzle5dCamera2d as dsl::FromValue>::from_value(dsl::os_pack::json::to_dsl_value(&payload)) {
                         envelope.runtime.camera2d = camera;
                     }
                 }
@@ -4028,8 +4086,9 @@ impl Puzzle5dPlayApp {
     /// `action`/`args`/`window_id` reconstructed 1:1 from the typed `Puzzle5dCommand`. Everything past
     /// this adapter boundary reads/writes the passed-in `Puzzle5dConfig` snapshot and returns a real
     /// `Emit` (document + config operations) instead of mutating `self`.
-    fn handle_action_impl(&self, action: &str, args: Option<&Value>, window_id: Option<&str>, snapshot: &Puzzle5dPlaySnapshot, config: &Puzzle5dConfig, selection: &protocol::DomainSelection) -> Emit<Puzzle5dMutation, Puzzle5dConfigMutation> {
-        let before = snapshot.0.clone();
+    fn handle_action_impl(&self, action: &str, args: Option<&dsl::os_pack::json::Value>, window_id: Option<&str>, snapshot: &Puzzle5dPlaySnapshot, config: &Puzzle5dConfig, selection: &protocol::DomainSelection) -> Emit<Puzzle5dMutation, Puzzle5dConfigMutation> {
+        let projection = puzzle5d_projection_value(&snapshot.0);
+        let before = projection.clone();
         let active_utility_initial = puzzle5d_scene_active_utility(config, window_id);
         let wid = window_id.map_or_else(|| world3d::WINDOW_KIND_ID.to_string(), str::to_string);
         let mut scene = scene_from_projection(&before, config.clone(), &active_utility_initial);
@@ -4068,7 +4127,7 @@ impl Puzzle5dPlayApp {
 
 /// 🎬️ Dispatch only: every arm's behaviour lives in its `🎮️commands/<group>/🦀️.rs` free
 /// function. No behaviour lives in this match.
-fn dispatch_puzzle5d_action(ctx: &mut Puzzle5dActionCtx<'_>, action: &str, args: Option<&Value>) {
+fn dispatch_puzzle5d_action(ctx: &mut Puzzle5dActionCtx<'_>, action: &str, args: Option<&dsl::os_pack::json::Value>) {
     match action {
         "setFixtureJson" => set_fixture_json::set_fixture_json(ctx, args),
         "setActiveExample" => set_active_example::set_active_example(ctx, args),
@@ -4133,9 +4192,10 @@ pub(crate) const PUZZLE5D_RETAINED_TOOL_IDS: &[&str] = &[
 const PUZZLE5D_RETAINED_PAYLOAD_SCHEMA: &str = "puzzle.5d.tool-command.v1";
 
 fn puzzle5d_retained_extent(_command: &Puzzle5dCommand, snapshot: &Puzzle5dPlaySnapshot, interaction: &protocol::InteractionState) -> Option<usize> {
+    let projection = puzzle5d_projection_value(&snapshot.0);
     let selection = interaction.selection.get(PUZZLE5D_INTERACTION_DOMAIN).map_or(0, |selection| selection.ids.len());
-    let parts = snapshot.0.get("parts").and_then(Value::as_array).map_or(0, Vec::len);
-    let fasteners = snapshot.0.get("fasteners").and_then(Value::as_array).map_or(0, Vec::len);
+    let parts = projection.get("parts").and_then(Value::as_array).map_or(0, Vec::len);
+    let fasteners = projection.get("fasteners").and_then(Value::as_array).map_or(0, Vec::len);
     let items = selection.checked_add(parts)?.checked_add(fasteners)?;
     (items <= crate::retained_command::PUZZLE_COMMAND_WORK_ITEMS).then_some(items)
 }
@@ -4197,14 +4257,14 @@ impl Puzzle5dTransformWork {
     }
 
     fn source_id<'a>(command: &'a Puzzle5dCommand, interaction: &'a protocol::InteractionState, index: usize) -> Option<&'a str> {
-        if let Some(ids) = command.args().and_then(|args| args.get("ids")).and_then(Value::as_array).filter(|ids| !ids.is_empty()) {
+        if let Some(ids) = command.args().and_then(|args| args.get("ids")).and_then(dsl::os_pack::json::Value::as_array).filter(|ids| !ids.is_empty()) {
             return ids.get(index).and_then(Value::as_str);
         }
         interaction.selection.get(PUZZLE5D_INTERACTION_DOMAIN).filter(|selection| selection.granularity == PUZZLE5D_GRANULARITY_PART).and_then(|selection| selection.ids.get(index)).map(String::as_str)
     }
 
     fn axis(command: &Puzzle5dCommand, key: &str, fallback: f64) -> f64 {
-        command.args().and_then(|args| args.get(key)).and_then(Value::as_f64).unwrap_or(fallback)
+        command.args().and_then(|args| args.get(key)).and_then(dsl::os_pack::json::Value::as_f64).unwrap_or(fallback)
     }
 
     fn progress(stage: &'static str, en: &'static str, de: &'static str) -> crate::retained_command::PuzzleCommandWorkStep<EditorApp<Puzzle5dPlayApp>> {
@@ -4218,7 +4278,8 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle5dPlayApp>> for 
     }
 
     fn extent(&self, command: &Puzzle5dCommand, snapshot: &Puzzle5dPlaySnapshot, interaction: &protocol::InteractionState) -> Option<usize> {
-        let items = Self::source_len(command, interaction).checked_add(snapshot.0.get("parts").and_then(Value::as_array).map_or(0, Vec::len))?;
+        let projection = puzzle5d_projection_value(&snapshot.0);
+        let items = Self::source_len(command, interaction).checked_add(projection.get("parts").and_then(Value::as_array).map_or(0, Vec::len))?;
         (items <= crate::retained_command::PUZZLE_COMMAND_WORK_ITEMS).then_some(items)
     }
 
@@ -4230,6 +4291,7 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle5dPlayApp>> for 
         interaction: &protocol::InteractionState,
         _hover: &semio_framework_plugin::app::InteractionHoverState,
     ) -> Result<crate::retained_command::PuzzleCommandWorkStep<EditorApp<Puzzle5dPlayApp>>, Fault> {
+        let projection = puzzle5d_projection_value(&snapshot.0);
         match self.stage {
             Puzzle5dTransformStage::Selection => {
                 if let Some(id) = Self::source_id(command, interaction, self.selection_cursor) {
@@ -4244,7 +4306,7 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle5dPlayApp>> for 
                 Ok(Self::progress("puzzle5d-transform-part", "Transforming selected part", "Ausgewähltes Teil wird transformiert"))
             }
             Puzzle5dTransformStage::Parts => {
-                let Some(row) = snapshot.0.get("parts").and_then(Value::as_array).and_then(|parts| parts.get(self.part_cursor)) else {
+                let Some(row) = projection.get("parts").and_then(Value::as_array).and_then(|parts| parts.get(self.part_cursor)) else {
                     self.stage = Puzzle5dTransformStage::Complete;
                     let coalesce_key = match self.tool_id {
                         "translateSelection" => "gumball-translate",
@@ -4265,18 +4327,18 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle5dPlayApp>> for 
                 let part_3d = row.get("3d").and_then(Value::as_object);
                 let mutation = match self.tool_id {
                     "translateSelection" => {
-                        let origin = part_3d.and_then(|part| part.get("origin")).and_then(|value| serde_json::from_value::<[f64; 3]>(value.clone()).ok()).unwrap_or_default();
+                        let origin = part_3d.and_then(|part| part.get("origin")).and_then(puzzle5d_value_as_f64_3).unwrap_or_default();
                         crate::artifacts::puzzle5d::mutations::move_part_3d(id.to_string(), [origin[0] + Self::axis(command, "dx", 0.0), origin[1] + Self::axis(command, "dy", 0.0), origin[2] + Self::axis(command, "dz", 0.0)])
                     }
                     "rotateSelection" => {
-                        let orientation = part_3d.and_then(|part| part.get("orientation")).and_then(|value| serde_json::from_value::<[f64; 4]>(value.clone()).ok()).unwrap_or([0.0, 0.0, 0.0, 1.0]);
+                        let orientation = part_3d.and_then(|part| part.get("orientation")).and_then(puzzle5d_value_as_f64_4).unwrap_or([0.0, 0.0, 0.0, 1.0]);
                         let delta = quat_from_axis_angle(Self::axis(command, "ax", 0.0), Self::axis(command, "ay", 0.0), Self::axis(command, "az", 0.0), Self::axis(command, "angle", 0.0));
                         crate::artifacts::puzzle5d::mutations::rotate_part_3d(id.to_string(), Some(quat_mul(delta, orientation)))
                     }
                     "scaleSelection" => {
                         let scale = part_3d.and_then(|part| part.get("scale"));
                         let current = match scale {
-                            Some(Value::Number(value)) => [value.as_f64().unwrap_or(1.0); 3],
+                            Some(Value::Number(value)) => [value.as_f64(); 3],
                             Some(Value::Array(values)) => [values.first().and_then(Value::as_f64).unwrap_or(1.0), values.get(1).and_then(Value::as_f64).unwrap_or(1.0), values.get(2).and_then(Value::as_f64).unwrap_or(1.0)],
                             _ => [1.0; 3],
                         };
@@ -4379,7 +4441,7 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle5dPlayApp>> for 
                 let Some(camera) = args.and_then(|args| args.get("camera")) else {
                     return Ok(crate::retained_command::PuzzleCommandWorkStep::Complete(Emit::default()));
                 };
-                let is_2d = self.tool_id == "setCamera2d" || (self.tool_id == "setCamera" && (args.and_then(|args| args.get("surfaceId")).and_then(Value::as_str) == Some(board2d::SURFACE_ID) || camera.get("position").is_none()));
+                let is_2d = self.tool_id == "setCamera2d" || (self.tool_id == "setCamera" && (args.and_then(|args| args.get("surfaceId")).and_then(dsl::os_pack::json::Value::as_str) == Some(board2d::SURFACE_ID) || camera.get("position").is_none()));
                 if is_2d {
                     Puzzle5dConfigMutation::SetCamera2d { camera: Self::camera2d(camera) }
                 } else {
@@ -4387,47 +4449,51 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle5dPlayApp>> for 
                 }
             }
             "setGridFactor" => {
-                let Some(value) = args.and_then(|args| args.get("value")).and_then(Value::as_f64) else {
+                let Some(value) = args.and_then(|args| args.get("value")).and_then(dsl::os_pack::json::Value::as_f64) else {
                     return Ok(crate::retained_command::PuzzleCommandWorkStep::Complete(Emit::default()));
                 };
                 Puzzle5dConfigMutation::SetGridFactor { value }
             }
-            "setGridSnapEnabled" => Puzzle5dConfigMutation::SetGridSnapEnabled { enabled: args.and_then(|args| args.get("enabled")).and_then(Value::as_bool).unwrap_or(false) },
+            "setGridSnapEnabled" => Puzzle5dConfigMutation::SetGridSnapEnabled { enabled: args.and_then(|args| args.get("enabled")).and_then(dsl::os_pack::json::Value::as_bool).unwrap_or(false) },
             "setLodMode" => {
-                let Some(mode) = args.and_then(|args| args.get("value").or_else(|| args.get("mode"))).and_then(Value::as_str) else {
+                let Some(mode) = args.and_then(|args| args.get("value").or_else(|| args.get("mode"))).and_then(dsl::os_pack::json::Value::as_str) else {
                     return Ok(crate::retained_command::PuzzleCommandWorkStep::Complete(Emit::default()));
                 };
                 Puzzle5dConfigMutation::SetLodMode { mode: mode.to_string() }
             }
             "setSuggestionOffset" => {
-                let Some(distance) = args.and_then(|args| args.get("distance").or_else(|| args.get("value"))).and_then(Value::as_f64) else {
+                let Some(distance) = args.and_then(|args| args.get("distance").or_else(|| args.get("value"))).and_then(dsl::os_pack::json::Value::as_f64) else {
                     return Ok(crate::retained_command::PuzzleCommandWorkStep::Complete(Emit::default()));
                 };
                 Puzzle5dConfigMutation::SetSuggestionOffset { distance: distance.clamp(PUZZLE5D_SUGGESTION_OFFSET_MIN, PUZZLE5D_SUGGESTION_OFFSET_MAX) }
             }
             "setBrushPlacementOverlapBudget" => {
-                let Some(value) = args.and_then(|args| args.get("value")).and_then(Value::as_f64) else {
+                let Some(value) = args.and_then(|args| args.get("value")).and_then(dsl::os_pack::json::Value::as_f64) else {
                     return Ok(crate::retained_command::PuzzleCommandWorkStep::Complete(Emit::default()));
                 };
                 Puzzle5dConfigMutation::SetOverlapBudget { value: value.clamp(0.0, 1.0) }
             }
             "engagementControlSelect" => {
-                let candidate_id = args.and_then(|args| args.get("id").or_else(|| args.get("value"))).and_then(Value::as_str).unwrap_or("");
+                let candidate_id = args.and_then(|args| args.get("id").or_else(|| args.get("value"))).and_then(dsl::os_pack::json::Value::as_str).unwrap_or("");
                 let Some(index) = candidate_id.strip_prefix("puzzle5d.brush.candidate.").and_then(|value| value.parse::<usize>().ok()) else {
                     return Ok(crate::retained_command::PuzzleCommandWorkStep::Complete(Emit::default()));
                 };
                 Puzzle5dConfigMutation::SetBrushCandidateIndex { index }
             }
             "engagementInput" => {
-                let window_id = args.and_then(|args| args.get("window")).and_then(Value::as_str).unwrap_or(board2d::WINDOW_KIND_ID);
+                let window_id = args.and_then(|args| args.get("window")).and_then(dsl::os_pack::json::Value::as_str).unwrap_or(board2d::WINDOW_KIND_ID);
                 if !PUZZLE5D_PLAY_WINDOWS.contains(&window_id) {
                     return Ok(crate::retained_command::PuzzleCommandWorkStep::Complete(Emit::default()));
                 }
-                let value = args.and_then(|args| args.get("value")).and_then(Value::as_str).unwrap_or("");
+                let value = args.and_then(|args| args.get("value")).and_then(dsl::os_pack::json::Value::as_str).unwrap_or("");
                 Puzzle5dConfigMutation::SetEngagementInput { window_id: window_id.to_string(), value: value.to_string() }
             }
             "toggleSun" | "setSunAzimuth" | "setSunElevation" | "setSunIntensity" => {
                 let mut sun = config.sun.clone();
+                // 🌉️ `apply_world3d_sun_action` (framework-owned, out of this ticket's scope —
+                // `🔌️plugin/🦀️.rs` still `use serde_json::Value`) is typed against
+                // `serde_json::Value`; bridges this file's dsl `args` through `DslValue` at this
+                // one call, matching `puzzle5d_operations_from_values`'s boundary pattern.
                 semio_framework_plugin::apply_world3d_sun_action(&mut sun, self.tool_id, args);
                 if sun == config.sun {
                     return Ok(crate::retained_command::PuzzleCommandWorkStep::Complete(Emit::default()));
@@ -4522,8 +4588,9 @@ impl Puzzle5dKindWeightWork {
         }
     }
 
-    fn catalog<'a>(&self, snapshot: &'a Puzzle5dPlaySnapshot) -> &'a [Value] {
-        snapshot.0.get("kindCatalogs").and_then(|value| value.get(self.section())).and_then(Value::as_array).map(Vec::as_slice).unwrap_or_default()
+    fn catalog(&self, snapshot: &Puzzle5dPlaySnapshot) -> Vec<Value> {
+        let projection = puzzle5d_projection_value(&snapshot.0);
+        projection.get("kindCatalogs").and_then(|value| value.get(self.section())).and_then(Value::as_array).cloned().unwrap_or_default()
     }
 
     fn push_id(&mut self, id: &str, inferred: bool) -> Result<(), Fault> {
@@ -4573,6 +4640,7 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle5dPlayApp>> for 
         _interaction: &protocol::InteractionState,
         _hover: &semio_framework_plugin::app::InteractionHoverState,
     ) -> Result<crate::retained_command::PuzzleCommandWorkStep<EditorApp<Puzzle5dPlayApp>>, Fault> {
+        let projection = puzzle5d_projection_value(&snapshot.0);
         match self.stage {
             Puzzle5dKindWeightStage::Catalog => {
                 let entries = self.catalog(snapshot);
@@ -4596,7 +4664,7 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle5dPlayApp>> for 
                 Ok(Self::progress("puzzle5d-kind-weight-infer", "Preparing kind validation", "Artprüfung wird vorbereitet"))
             }
             Puzzle5dKindWeightStage::InferParts => {
-                let Some(part) = snapshot.0.get("parts").and_then(Value::as_array).and_then(|parts| parts.get(self.part_cursor)) else {
+                let Some(part) = projection.get("parts").and_then(Value::as_array).and_then(|parts| parts.get(self.part_cursor)) else {
                     self.stage = Puzzle5dKindWeightStage::Validate;
                     return Ok(Self::progress("puzzle5d-kind-weight-validate", "Validating current weights", "Aktuelle Gewichte werden geprüft"));
                 };
@@ -4607,7 +4675,7 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle5dPlayApp>> for 
                 Ok(Self::progress("puzzle5d-kind-weight-part", "Reading inferred part kind", "Abgeleitete Teileart wird gelesen"))
             }
             Puzzle5dKindWeightStage::InferGrips => {
-                let Some(part) = snapshot.0.get("parts").and_then(Value::as_array).and_then(|parts| parts.get(self.part_cursor)) else {
+                let Some(part) = projection.get("parts").and_then(Value::as_array).and_then(|parts| parts.get(self.part_cursor)) else {
                     self.stage = Puzzle5dKindWeightStage::Validate;
                     return Ok(Self::progress("puzzle5d-kind-weight-validate", "Validating current weights", "Aktuelle Gewichte werden geprüft"));
                 };
@@ -4624,8 +4692,8 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle5dPlayApp>> for 
             }
             Puzzle5dKindWeightStage::Validate => {
                 if self.changed_id.is_none() {
-                    self.changed_id = Some(command.args().and_then(|args| args.get("kindId")).and_then(Value::as_str).unwrap_or("").to_string());
-                    self.requested = command.args().and_then(|args| args.get("value")).and_then(Value::as_f64).unwrap_or(1.0).clamp(0.0, 1.0);
+                    self.changed_id = Some(command.args().and_then(|args| args.get("kindId")).and_then(dsl::os_pack::json::Value::as_str).unwrap_or("").to_string());
+                    self.requested = command.args().and_then(|args| args.get("value")).and_then(dsl::os_pack::json::Value::as_f64).unwrap_or(1.0).clamp(0.0, 1.0);
                 }
                 let Some(id) = self.ids.get(self.cursor) else {
                     self.cursor = 0;
@@ -4772,7 +4840,7 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle5dPlayApp>> for 
         _hover: &semio_framework_plugin::app::InteractionHoverState,
     ) -> Result<crate::retained_command::PuzzleCommandWorkStep<EditorApp<Puzzle5dPlayApp>>, Fault> {
         let args = command.args();
-        let window_id = args.and_then(|args| args.get("window")).and_then(Value::as_str).unwrap_or(board2d::WINDOW_KIND_ID);
+        let window_id = args.and_then(|args| args.get("window")).and_then(dsl::os_pack::json::Value::as_str).unwrap_or(board2d::WINDOW_KIND_ID);
         let utility_id = if window_id == world3d::WINDOW_KIND_ID { "move" } else { "select" };
         match self.stage {
             Puzzle5dEngagementAbortStage::Input => {
@@ -4892,8 +4960,8 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle5dPlayApp>> for 
         match self.stage {
             Puzzle5dEngagementSubmitStage::Parse => {
                 let args = command.args();
-                let window_id = args.and_then(|args| args.get("window")).and_then(Value::as_str).unwrap_or(board2d::WINDOW_KIND_ID).to_string();
-                let token = args.and_then(|args| args.get("value")).and_then(Value::as_str).unwrap_or("").trim().to_lowercase();
+                let window_id = args.and_then(|args| args.get("window")).and_then(dsl::os_pack::json::Value::as_str).unwrap_or(board2d::WINDOW_KIND_ID).to_string();
+                let token = args.and_then(|args| args.get("value")).and_then(dsl::os_pack::json::Value::as_str).unwrap_or("").trim().to_lowercase();
                 self.utility = match token.as_str() {
                     "select" if window_id == world3d::WINDOW_KIND_ID => Some("move".to_string()),
                     "select" | "brush" | "fill" => Some(token),
@@ -5012,8 +5080,9 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle5dPlayApp>> for 
     }
 
     fn extent(&self, _command: &Puzzle5dCommand, snapshot: &Puzzle5dPlaySnapshot, interaction: &protocol::InteractionState) -> Option<usize> {
+        let projection = puzzle5d_projection_value(&snapshot.0);
         let selected = Self::source(interaction).len();
-        let parts = snapshot.0.get("parts").and_then(Value::as_array).map_or(0, Vec::len);
+        let parts = projection.get("parts").and_then(Value::as_array).map_or(0, Vec::len);
         let items = selected.checked_add(parts)?.checked_add(1)?;
         (selected <= crate::retained_command::PUZZLE_COMMAND_DECODED_ITEMS && items <= crate::retained_command::PUZZLE_COMMAND_WORK_ITEMS).then_some(items)
     }
@@ -5026,6 +5095,7 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle5dPlayApp>> for 
         interaction: &protocol::InteractionState,
         _hover: &semio_framework_plugin::app::InteractionHoverState,
     ) -> Result<crate::retained_command::PuzzleCommandWorkStep<EditorApp<Puzzle5dPlayApp>>, Fault> {
+        let projection = puzzle5d_projection_value(&snapshot.0);
         match self.stage {
             Puzzle5dFocusSelectionStage::Selection => {
                 if let Some(id) = Self::source(interaction).get(self.selection_cursor) {
@@ -5040,7 +5110,7 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle5dPlayApp>> for 
                 Ok(Self::progress("puzzle5d-focus-selection-part", "Finding selected part", "Ausgewähltes Teil wird gesucht"))
             }
             Puzzle5dFocusSelectionStage::Parts => {
-                let Some(row) = snapshot.0.get("parts").and_then(Value::as_array).and_then(|parts| parts.get(self.part_cursor)) else {
+                let Some(row) = projection.get("parts").and_then(Value::as_array).and_then(|parts| parts.get(self.part_cursor)) else {
                     self.stage = Puzzle5dFocusSelectionStage::Publish;
                     return Ok(Self::progress("puzzle5d-focus-selection-publish", "Preparing camera focus", "Kamerafokus wird vorbereitet"));
                 };
@@ -5129,21 +5199,21 @@ impl Default for Puzzle5dPatchPartWork {
 impl Puzzle5dPatchPartWork {
     fn source_len(command: &Puzzle5dCommand) -> usize {
         let args = command.args();
-        args.and_then(|args| args.get("partIds")).and_then(Value::as_array).map_or(0, Vec::len) + usize::from(args.and_then(|args| args.get("partId")).and_then(Value::as_str).is_some())
+        args.and_then(|args| args.get("partIds")).and_then(dsl::os_pack::json::Value::as_array).map_or(0, Vec::len) + usize::from(args.and_then(|args| args.get("partId")).and_then(dsl::os_pack::json::Value::as_str).is_some())
     }
 
     fn source_id(command: &Puzzle5dCommand, index: usize) -> Option<&str> {
         let args = command.args()?;
-        let ids = args.get("partIds").and_then(Value::as_array);
+        let ids = args.get("partIds").and_then(dsl::os_pack::json::Value::as_array);
         if let Some(id) = ids.and_then(|ids| ids.get(index)).and_then(Value::as_str) {
             return (!id.is_empty()).then_some(id);
         }
-        (index == ids.map_or(0, Vec::len)).then(|| args.get("partId").and_then(Value::as_str)).flatten().filter(|id| !id.is_empty())
+        (index == ids.map_or(0, Vec::len)).then(|| args.get("partId").and_then(dsl::os_pack::json::Value::as_str)).flatten().filter(|id| !id.is_empty())
     }
 
     fn mutation(command: &Puzzle5dCommand, part: &Puzzle5dPart) -> Option<Puzzle5dMutation> {
         let args = command.args()?;
-        let field = args.get("field").and_then(Value::as_str).unwrap_or("");
+        let field = args.get("field").and_then(dsl::os_pack::json::Value::as_str).unwrap_or("");
         let value = args.get("value");
         let delta = args.get("delta");
         let text = value.and_then(Value::as_str);
@@ -5182,7 +5252,8 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle5dPlayApp>> for 
     }
 
     fn extent(&self, command: &Puzzle5dCommand, snapshot: &Puzzle5dPlaySnapshot, _interaction: &protocol::InteractionState) -> Option<usize> {
-        let items = Self::source_len(command).checked_add(snapshot.0.get("parts").and_then(Value::as_array).map_or(0, Vec::len))?;
+        let projection = puzzle5d_projection_value(&snapshot.0);
+        let items = Self::source_len(command).checked_add(projection.get("parts").and_then(Value::as_array).map_or(0, Vec::len))?;
         (items <= crate::retained_command::PUZZLE_COMMAND_WORK_ITEMS).then_some(items)
     }
 
@@ -5194,6 +5265,7 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle5dPlayApp>> for 
         _interaction: &protocol::InteractionState,
         _hover: &semio_framework_plugin::app::InteractionHoverState,
     ) -> Result<crate::retained_command::PuzzleCommandWorkStep<EditorApp<Puzzle5dPlayApp>>, Fault> {
+        let projection = puzzle5d_projection_value(&snapshot.0);
         match self.stage {
             Puzzle5dPatchPartStage::Selection => {
                 if let Some(id) = Self::source_id(command, self.selection_cursor) {
@@ -5208,12 +5280,12 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle5dPlayApp>> for 
                 Ok(Self::progress("puzzle5d-patch-part", "Patching part", "Teil wird geändert"))
             }
             Puzzle5dPatchPartStage::Parts => {
-                let Some(row) = snapshot.0.get("parts").and_then(Value::as_array).and_then(|parts| parts.get(self.part_cursor)).cloned() else {
+                let Some(row) = projection.get("parts").and_then(Value::as_array).and_then(|parts| parts.get(self.part_cursor)).cloned() else {
                     self.stage = Puzzle5dPatchPartStage::Complete;
                     return Ok(crate::retained_command::PuzzleCommandWorkStep::Complete(Emit { artifact_mutations: std::mem::take(&mut self.mutations), ui_scope: UiDirtyScope::Full, ..Default::default() }));
                 };
                 self.part_cursor += 1;
-                let part: Puzzle5dPart = serde_json::from_value(row).map_err(|_| Fault::from("puzzle5d-patch-part-malformed"))?;
+                let part: Puzzle5dPart = serde_json::from_value(serde_json::Value::from(&dsl::os_pack::json::to_dsl_value(&row))).map_err(|_| Fault::from("puzzle5d-patch-part-malformed"))?;
                 if self.selected.contains(&part.id) {
                     if let Some(mutation) = Self::mutation(command, &part) {
                         self.mutations.push(mutation);
@@ -5275,21 +5347,21 @@ impl Default for Puzzle5dPatchFastenerWork {
 impl Puzzle5dPatchFastenerWork {
     fn source_len(command: &Puzzle5dCommand) -> usize {
         let args = command.args();
-        args.and_then(|args| args.get("fastenerIds")).and_then(Value::as_array).map_or(0, Vec::len) + usize::from(args.and_then(|args| args.get("fastenerId")).and_then(Value::as_str).is_some())
+        args.and_then(|args| args.get("fastenerIds")).and_then(dsl::os_pack::json::Value::as_array).map_or(0, Vec::len) + usize::from(args.and_then(|args| args.get("fastenerId")).and_then(dsl::os_pack::json::Value::as_str).is_some())
     }
 
     fn source_id(command: &Puzzle5dCommand, index: usize) -> Option<&str> {
         let args = command.args()?;
-        let ids = args.get("fastenerIds").and_then(Value::as_array);
+        let ids = args.get("fastenerIds").and_then(dsl::os_pack::json::Value::as_array);
         if let Some(id) = ids.and_then(|ids| ids.get(index)).and_then(Value::as_str) {
             return (!id.is_empty()).then_some(id);
         }
-        (index == ids.map_or(0, Vec::len)).then(|| args.get("fastenerId").and_then(Value::as_str)).flatten().filter(|id| !id.is_empty())
+        (index == ids.map_or(0, Vec::len)).then(|| args.get("fastenerId").and_then(dsl::os_pack::json::Value::as_str)).flatten().filter(|id| !id.is_empty())
     }
 
     fn mutation(command: &Puzzle5dCommand, fastener: &Puzzle5dFastener) -> Option<Puzzle5dMutation> {
         let args = command.args()?;
-        let field = args.get("field").and_then(Value::as_str).unwrap_or("");
+        let field = args.get("field").and_then(dsl::os_pack::json::Value::as_str).unwrap_or("");
         let value = args.get("value");
         let delta = args.get("delta");
         if field == "fastenerKind" {
@@ -5318,7 +5390,8 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle5dPlayApp>> for 
     }
 
     fn extent(&self, command: &Puzzle5dCommand, snapshot: &Puzzle5dPlaySnapshot, _interaction: &protocol::InteractionState) -> Option<usize> {
-        let items = Self::source_len(command).checked_add(snapshot.0.get("fasteners").and_then(Value::as_array).map_or(0, Vec::len))?;
+        let projection = puzzle5d_projection_value(&snapshot.0);
+        let items = Self::source_len(command).checked_add(projection.get("fasteners").and_then(Value::as_array).map_or(0, Vec::len))?;
         (items <= crate::retained_command::PUZZLE_COMMAND_WORK_ITEMS).then_some(items)
     }
 
@@ -5330,6 +5403,7 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle5dPlayApp>> for 
         _interaction: &protocol::InteractionState,
         _hover: &semio_framework_plugin::app::InteractionHoverState,
     ) -> Result<crate::retained_command::PuzzleCommandWorkStep<EditorApp<Puzzle5dPlayApp>>, Fault> {
+        let projection = puzzle5d_projection_value(&snapshot.0);
         match self.stage {
             Puzzle5dPatchPartStage::Selection => {
                 if let Some(id) = Self::source_id(command, self.selection_cursor) {
@@ -5344,12 +5418,12 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle5dPlayApp>> for 
                 Ok(Puzzle5dPatchPartWork::progress("puzzle5d-patch-fastener", "Patching fastener", "Verbindung wird geändert"))
             }
             Puzzle5dPatchPartStage::Parts => {
-                let Some(row) = snapshot.0.get("fasteners").and_then(Value::as_array).and_then(|fasteners| fasteners.get(self.fastener_cursor)).cloned() else {
+                let Some(row) = projection.get("fasteners").and_then(Value::as_array).and_then(|fasteners| fasteners.get(self.fastener_cursor)).cloned() else {
                     self.stage = Puzzle5dPatchPartStage::Complete;
                     return Ok(crate::retained_command::PuzzleCommandWorkStep::Complete(Emit { artifact_mutations: std::mem::take(&mut self.mutations), ui_scope: UiDirtyScope::Full, ..Default::default() }));
                 };
                 self.fastener_cursor += 1;
-                let fastener: Puzzle5dFastener = serde_json::from_value(row).map_err(|_| Fault::from("puzzle5d-patch-fastener-malformed"))?;
+                let fastener: Puzzle5dFastener = serde_json::from_value(serde_json::Value::from(&dsl::os_pack::json::to_dsl_value(&row))).map_err(|_| Fault::from("puzzle5d-patch-fastener-malformed"))?;
                 if self.selected.contains(&fastener.id) {
                     if let Some(mutation) = Self::mutation(command, &fastener) {
                         self.mutations.push(mutation);
@@ -5412,14 +5486,14 @@ impl Default for Puzzle5dEditFastenerWork {
 
 impl Puzzle5dEditFastenerWork {
     fn id(command: &Puzzle5dCommand) -> &str {
-        command.args().and_then(|args| args.get("id").or_else(|| args.get("fastenerId"))).and_then(Value::as_str).filter(|id| !id.is_empty()).unwrap_or("")
+        command.args().and_then(|args| args.get("id").or_else(|| args.get("fastenerId"))).and_then(dsl::os_pack::json::Value::as_str).filter(|id| !id.is_empty()).unwrap_or("")
     }
 
     fn updated_kind(command: &Puzzle5dCommand, current: &Puzzle5dFastener) -> Option<Option<String>> {
         let args = command.args()?;
-        let mut update = args.get("fastenerKind").or_else(|| args.get("edgeKind")).and_then(Value::as_str).filter(|text| !text.is_empty()).map(|text| Some(text.to_string()));
-        if matches!(args.get("field").and_then(Value::as_str), Some("fastenerKind" | "edgeKind")) {
-            update = Some(args.get("value").and_then(Value::as_str).filter(|text| !text.is_empty()).map(str::to_string));
+        let mut update = args.get("fastenerKind").or_else(|| args.get("edgeKind")).and_then(dsl::os_pack::json::Value::as_str).filter(|text| !text.is_empty()).map(|text| Some(text.to_string()));
+        if matches!(args.get("field").and_then(dsl::os_pack::json::Value::as_str), Some("fastenerKind" | "edgeKind")) {
+            update = Some(args.get("value").and_then(dsl::os_pack::json::Value::as_str).filter(|text| !text.is_empty()).map(str::to_string));
         }
         update.filter(|updated| updated != &current.fastener_kind)
     }
@@ -5437,7 +5511,7 @@ impl Puzzle5dEditFastenerWork {
                 }
             }
         }
-        if let Some(index) = keys.iter().position(|key| args.get("field").and_then(Value::as_str) == Some(*key)) {
+        if let Some(index) = keys.iter().position(|key| args.get("field").and_then(dsl::os_pack::json::Value::as_str) == Some(*key)) {
             if let Some(updated) = puzzle5d_resolve_number_edit(geometry[index], args.get("value"), args.get("delta")) {
                 changed |= updated != geometry[index];
                 geometry[index] = updated;
@@ -5453,7 +5527,8 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle5dPlayApp>> for 
     }
 
     fn extent(&self, _command: &Puzzle5dCommand, snapshot: &Puzzle5dPlaySnapshot, _interaction: &protocol::InteractionState) -> Option<usize> {
-        snapshot.0.get("fasteners").and_then(Value::as_array).map_or(0, Vec::len).checked_add(2).filter(|items| *items <= crate::retained_command::PUZZLE_COMMAND_WORK_ITEMS)
+        let projection = puzzle5d_projection_value(&snapshot.0);
+        projection.get("fasteners").and_then(Value::as_array).map_or(0, Vec::len).checked_add(2).filter(|items| *items <= crate::retained_command::PUZZLE_COMMAND_WORK_ITEMS)
     }
 
     fn step(
@@ -5464,6 +5539,7 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle5dPlayApp>> for 
         _interaction: &protocol::InteractionState,
         _hover: &semio_framework_plugin::app::InteractionHoverState,
     ) -> Result<crate::retained_command::PuzzleCommandWorkStep<EditorApp<Puzzle5dPlayApp>>, Fault> {
+        let projection = puzzle5d_projection_value(&snapshot.0);
         match self.stage {
             Puzzle5dEditFastenerStage::Scan => {
                 let target = Self::id(command);
@@ -5471,13 +5547,13 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle5dPlayApp>> for 
                     self.stage = Puzzle5dEditFastenerStage::Complete;
                     return Ok(crate::retained_command::PuzzleCommandWorkStep::Complete(Emit::default()));
                 }
-                let Some(row) = snapshot.0.get("fasteners").and_then(Value::as_array).and_then(|fasteners| fasteners.get(self.cursor)).cloned() else {
+                let Some(row) = projection.get("fasteners").and_then(Value::as_array).and_then(|fasteners| fasteners.get(self.cursor)).cloned() else {
                     self.stage = Puzzle5dEditFastenerStage::Complete;
                     return Ok(crate::retained_command::PuzzleCommandWorkStep::Complete(Emit::default()));
                 };
                 self.cursor += 1;
                 if row.get("id").and_then(Value::as_str) == Some(target) {
-                    self.fastener = Some(serde_json::from_value(row).map_err(|_| Fault::from("puzzle5d-edit-fastener-malformed"))?);
+                    self.fastener = Some(serde_json::from_value(serde_json::Value::from(&dsl::os_pack::json::to_dsl_value(&row))).map_err(|_| Fault::from("puzzle5d-edit-fastener-malformed"))?);
                     self.stage = Puzzle5dEditFastenerStage::Kind;
                 }
                 Ok(Puzzle5dPatchPartWork::progress("puzzle5d-edit-fastener-scan", "Finding fastener", "Verbindung wird gesucht"))
@@ -5571,11 +5647,12 @@ impl Default for Puzzle5dRetargetFastenerWork {
 
 impl Puzzle5dRetargetFastenerWork {
     fn argument<'a>(command: &'a Puzzle5dCommand, primary: &str, alias: &str) -> Option<&'a str> {
-        command.args().and_then(|args| args.get(primary).or_else(|| args.get(alias))).and_then(Value::as_str).filter(|value| !value.is_empty())
+        command.args().and_then(|args| args.get(primary).or_else(|| args.get(alias))).and_then(dsl::os_pack::json::Value::as_str).filter(|value| !value.is_empty())
     }
 
     fn scan_grip(&mut self, snapshot: &Puzzle5dPlaySnapshot, target: &str) -> Puzzle5dGripScan {
-        let Some(part) = snapshot.0.get("parts").and_then(Value::as_array).and_then(|parts| parts.get(self.part_cursor)) else {
+        let projection = puzzle5d_projection_value(&snapshot.0);
+        let Some(part) = projection.get("parts").and_then(Value::as_array).and_then(|parts| parts.get(self.part_cursor)) else {
             return Puzzle5dGripScan::Exhausted;
         };
         let Some(grip) = part.get("grips").and_then(Value::as_array).and_then(|grips| grips.get(self.grip_cursor)) else {
@@ -5605,9 +5682,10 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle5dPlayApp>> for 
     }
 
     fn extent(&self, _command: &Puzzle5dCommand, snapshot: &Puzzle5dPlaySnapshot, _interaction: &protocol::InteractionState) -> Option<usize> {
-        let parts = snapshot.0.get("parts").and_then(Value::as_array).map_or(0, Vec::len);
-        let fasteners = snapshot.0.get("fasteners").and_then(Value::as_array).map_or(0, Vec::len);
-        let compatibility = snapshot.0.get("kindCompatibility").and_then(Value::as_array).map_or(0, Vec::len);
+        let projection = puzzle5d_projection_value(&snapshot.0);
+        let parts = projection.get("parts").and_then(Value::as_array).map_or(0, Vec::len);
+        let fasteners = projection.get("fasteners").and_then(Value::as_array).map_or(0, Vec::len);
+        let compatibility = projection.get("kindCompatibility").and_then(Value::as_array).map_or(0, Vec::len);
         let items = parts.checked_mul(2)?.checked_add(fasteners.checked_mul(2)?)?.checked_add(compatibility)?.checked_add(2)?;
         (items <= crate::retained_command::PUZZLE_COMMAND_WORK_ITEMS).then_some(items)
     }
@@ -5620,6 +5698,7 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle5dPlayApp>> for 
         _interaction: &protocol::InteractionState,
         _hover: &semio_framework_plugin::app::InteractionHoverState,
     ) -> Result<crate::retained_command::PuzzleCommandWorkStep<EditorApp<Puzzle5dPlayApp>>, Fault> {
+        let projection = puzzle5d_projection_value(&snapshot.0);
         if self.processed_units >= crate::retained_command::PUZZLE_COMMAND_WORK_ITEMS {
             return Err(Fault::from("puzzle5d-retarget-fastener-work-capacity"));
         }
@@ -5627,12 +5706,12 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle5dPlayApp>> for 
         match self.stage {
             Puzzle5dRetargetFastenerStage::Fastener => {
                 let Some(id) = Self::argument(command, "id", "fastenerId") else { return Ok(self.complete_empty()) };
-                let Some(row) = snapshot.0.get("fasteners").and_then(Value::as_array).and_then(|fasteners| fasteners.get(self.fastener_cursor)).cloned() else {
+                let Some(row) = projection.get("fasteners").and_then(Value::as_array).and_then(|fasteners| fasteners.get(self.fastener_cursor)).cloned() else {
                     return Ok(self.complete_empty());
                 };
                 self.fastener_cursor += 1;
                 if row.get("id").and_then(Value::as_str) == Some(id) {
-                    let fastener: Puzzle5dFastener = serde_json::from_value(row).map_err(|_| Fault::from("puzzle5d-retarget-fastener-malformed"))?;
+                    let fastener: Puzzle5dFastener = serde_json::from_value(serde_json::Value::from(&dsl::os_pack::json::to_dsl_value(&row))).map_err(|_| Fault::from("puzzle5d-retarget-fastener-malformed"))?;
                     self.source = Some(Self::argument(command, "source", "attracting").map_or_else(|| fastener.source.clone(), str::to_string));
                     self.target = Some(Self::argument(command, "target", "attracted").map_or_else(|| fastener.target.clone(), str::to_string));
                     if self.source.as_deref().is_none_or(str::is_empty) || self.target.as_deref().is_none_or(str::is_empty) || self.source == self.target {
@@ -5673,7 +5752,7 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle5dPlayApp>> for 
                 }
             }
             Puzzle5dRetargetFastenerStage::Duplicate => {
-                if let Some(row) = snapshot.0.get("fasteners").and_then(Value::as_array).and_then(|fasteners| fasteners.get(self.fastener_cursor)) {
+                if let Some(row) = projection.get("fasteners").and_then(Value::as_array).and_then(|fasteners| fasteners.get(self.fastener_cursor)) {
                     self.fastener_cursor += 1;
                     let id = row.get("id").and_then(Value::as_str).unwrap_or("");
                     let source = row.get("source").and_then(Value::as_str).unwrap_or("");
@@ -5690,7 +5769,7 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle5dPlayApp>> for 
                 Ok(Puzzle5dPatchPartWork::progress("puzzle5d-retarget-compatibility", "Checking kind compatibility", "Artkompatibilität wird geprüft"))
             }
             Puzzle5dRetargetFastenerStage::Compatibility => {
-                let rows = snapshot.0.get("kindCompatibility").and_then(Value::as_array).map(Vec::as_slice).unwrap_or_default();
+                let rows = projection.get("kindCompatibility").and_then(Value::as_array).map(Vec::as_slice).unwrap_or_default();
                 if rows.is_empty() || self.source_kind.is_none() || self.target_kind.is_none() {
                     self.stage = Puzzle5dRetargetFastenerStage::Disconnect;
                     return Ok(Puzzle5dPatchPartWork::progress("puzzle5d-retarget-disconnect", "Disconnecting old fastener", "Alte Verbindung wird getrennt"));
@@ -5807,7 +5886,7 @@ impl Default for Puzzle5dProximityConnectWork {
 
 impl Puzzle5dProximityConnectWork {
     fn argument<'a>(command: &'a Puzzle5dCommand, key: &str) -> Option<&'a str> {
-        command.args().and_then(|args| args.get(key)).and_then(Value::as_str).filter(|value| !value.is_empty())
+        command.args().and_then(|args| args.get(key)).and_then(dsl::os_pack::json::Value::as_str).filter(|value| !value.is_empty())
     }
 
     fn grip_kind(grip: &Value) -> Option<String> {
@@ -5815,9 +5894,9 @@ impl Puzzle5dProximityConnectWork {
     }
 
     fn world_position(part: &Value, grip: &Value) -> [f64; 3] {
-        let origin = part.get("3d").and_then(|part| part.get("origin")).and_then(|value| serde_json::from_value::<[f64; 3]>(value.clone()).ok()).unwrap_or_default();
-        let orientation = part.get("3d").and_then(|part| part.get("orientation")).and_then(|value| serde_json::from_value::<[f64; 4]>(value.clone()).ok()).unwrap_or([0.0, 0.0, 0.0, 1.0]);
-        let position = grip.get("3d").and_then(|grip| grip.get("position")).and_then(|value| serde_json::from_value::<[f64; 3]>(value.clone()).ok()).unwrap_or_default();
+        let origin = part.get("3d").and_then(|part| part.get("origin")).and_then(puzzle5d_value_as_f64_3).unwrap_or_default();
+        let orientation = part.get("3d").and_then(|part| part.get("orientation")).and_then(puzzle5d_value_as_f64_4).unwrap_or([0.0, 0.0, 0.0, 1.0]);
+        let position = grip.get("3d").and_then(|grip| grip.get("position")).and_then(puzzle5d_value_as_f64_3).unwrap_or_default();
         let rotated = quat_rotate_vector(orientation, position);
         [origin[0] + rotated[0], origin[1] + rotated[1], origin[2] + rotated[2]]
     }
@@ -5846,9 +5925,10 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle5dPlayApp>> for 
     }
 
     fn extent(&self, _command: &Puzzle5dCommand, snapshot: &Puzzle5dPlaySnapshot, _interaction: &protocol::InteractionState) -> Option<usize> {
-        let parts = snapshot.0.get("parts").and_then(Value::as_array).map_or(0, Vec::len);
-        let fasteners = snapshot.0.get("fasteners").and_then(Value::as_array).map_or(0, Vec::len);
-        let compatibility = snapshot.0.get("kindCompatibility").and_then(Value::as_array).map_or(0, Vec::len);
+        let projection = puzzle5d_projection_value(&snapshot.0);
+        let parts = projection.get("parts").and_then(Value::as_array).map_or(0, Vec::len);
+        let fasteners = projection.get("fasteners").and_then(Value::as_array).map_or(0, Vec::len);
+        let compatibility = projection.get("kindCompatibility").and_then(Value::as_array).map_or(0, Vec::len);
         let items = parts.checked_add(fasteners.checked_mul(parts)?)?.checked_add(compatibility.checked_mul(parts)?)?.checked_add(parts)?;
         (items <= crate::retained_command::PUZZLE_COMMAND_WORK_ITEMS).then_some(items)
     }
@@ -5861,6 +5941,7 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle5dPlayApp>> for 
         _interaction: &protocol::InteractionState,
         _hover: &semio_framework_plugin::app::InteractionHoverState,
     ) -> Result<crate::retained_command::PuzzleCommandWorkStep<EditorApp<Puzzle5dPlayApp>>, Fault> {
+        let projection = puzzle5d_projection_value(&snapshot.0);
         if self.processed_units >= crate::retained_command::PUZZLE_COMMAND_WORK_ITEMS {
             return Err(Fault::from("puzzle5d-proximity-connect-work-capacity"));
         }
@@ -5871,7 +5952,7 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle5dPlayApp>> for 
         }
         match self.stage {
             Puzzle5dProximityConnectStage::Moved => {
-                let Some(part) = snapshot.0.get("parts").and_then(Value::as_array).and_then(|parts| parts.get(self.part_cursor)) else {
+                let Some(part) = projection.get("parts").and_then(Value::as_array).and_then(|parts| parts.get(self.part_cursor)) else {
                     return Ok(self.complete());
                 };
                 self.part_cursor += 1;
@@ -5888,7 +5969,7 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle5dPlayApp>> for 
                 Ok(Puzzle5dPatchPartWork::progress("puzzle5d-proximity-moved", "Finding moved grip", "Verschobener Griff wird gesucht"))
             }
             Puzzle5dProximityConnectStage::Candidate => {
-                let Some(part) = snapshot.0.get("parts").and_then(Value::as_array).and_then(|parts| parts.get(self.part_cursor)) else {
+                let Some(part) = projection.get("parts").and_then(Value::as_array).and_then(|parts| parts.get(self.part_cursor)) else {
                     return Ok(self.complete());
                 };
                 let Some(grip) = part.get("grips").and_then(Value::as_array).and_then(|grips| grips.get(self.grip_cursor)) else {
@@ -5908,7 +5989,7 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle5dPlayApp>> for 
                 }
                 let moved = self.moved_position.ok_or_else(|| Fault::from("puzzle5d-proximity-position-owner"))?;
                 let peer = Self::world_position(part, grip);
-                let radius = command.args().and_then(|args| args.get("radius")).and_then(Value::as_f64).unwrap_or(PUZZLE5D_PROXIMITY_RADIUS).max(0.0);
+                let radius = command.args().and_then(|args| args.get("radius")).and_then(dsl::os_pack::json::Value::as_f64).unwrap_or(PUZZLE5D_PROXIMITY_RADIUS).max(0.0);
                 let dx = moved[0] - peer[0];
                 let dy = moved[1] - peer[1];
                 let dz = moved[2] - peer[2];
@@ -5922,7 +6003,7 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle5dPlayApp>> for 
                 Ok(Puzzle5dPatchPartWork::progress("puzzle5d-proximity-existing", "Checking existing fastener", "Bestehende Verbindung wird geprüft"))
             }
             Puzzle5dProximityConnectStage::Existing => {
-                if let Some(row) = snapshot.0.get("fasteners").and_then(Value::as_array).and_then(|fasteners| fasteners.get(self.fastener_cursor)) {
+                if let Some(row) = projection.get("fasteners").and_then(Value::as_array).and_then(|fasteners| fasteners.get(self.fastener_cursor)) {
                     self.fastener_cursor += 1;
                     let source = row.get("source").and_then(Value::as_str).unwrap_or("");
                     let target = row.get("target").and_then(Value::as_str).unwrap_or("");
@@ -5937,7 +6018,7 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle5dPlayApp>> for 
                 Ok(Puzzle5dPatchPartWork::progress("puzzle5d-proximity-compatibility", "Checking kind compatibility", "Artkompatibilität wird geprüft"))
             }
             Puzzle5dProximityConnectStage::Compatibility => {
-                let rows = snapshot.0.get("kindCompatibility").and_then(Value::as_array).map(Vec::as_slice).unwrap_or_default();
+                let rows = projection.get("kindCompatibility").and_then(Value::as_array).map(Vec::as_slice).unwrap_or_default();
                 if rows.is_empty() || self.candidate_kind.is_none() || self.moved_kind.is_none() {
                     self.stage = Puzzle5dProximityConnectStage::Emit;
                     return Ok(Puzzle5dPatchPartWork::progress("puzzle5d-proximity-emit", "Connecting nearby grip", "Naher Griff wird verbunden"));
@@ -5965,8 +6046,8 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle5dPlayApp>> for 
                 self.fresh_cursor = self.fresh_cursor.saturating_add(1);
                 let source = self.candidate_id.as_ref().cloned().ok_or_else(|| Fault::from("puzzle5d-proximity-source-owner"))?;
                 let target = self.moved_id.as_ref().cloned().ok_or_else(|| Fault::from("puzzle5d-proximity-target-owner"))?;
-                let arg = |key: &str| command.args().and_then(|args| args.get(key)).and_then(Value::as_f64).unwrap_or(0.0);
-                let kind = command.args().and_then(|args| args.get("fastenerKind").or_else(|| args.get("edgeKind"))).and_then(Value::as_str).filter(|kind| !kind.is_empty()).map(str::to_string);
+                let arg = |key: &str| command.args().and_then(|args| args.get(key)).and_then(dsl::os_pack::json::Value::as_f64).unwrap_or(0.0);
+                let kind = command.args().and_then(|args| args.get("fastenerKind").or_else(|| args.get("edgeKind"))).and_then(dsl::os_pack::json::Value::as_str).filter(|kind| !kind.is_empty()).map(str::to_string);
                 self.mutations.push(crate::artifacts::puzzle5d::mutations::connect_grips(id, source, target, kind, arg("gap"), arg("shift"), arg("rise"), arg("rotation"), arg("turn"), arg("tilt"), arg("x"), arg("y")));
                 self.clear_candidate();
                 Ok(Puzzle5dPatchPartWork::progress("puzzle5d-proximity-candidate", "Scanning nearby grip", "Naher Griff wird geprüft"))
@@ -6022,21 +6103,21 @@ impl Default for Puzzle5dPatchGripWork {
 impl Puzzle5dPatchGripWork {
     fn source_len(command: &Puzzle5dCommand) -> usize {
         let args = command.args();
-        args.and_then(|args| args.get("gripFullIds")).and_then(Value::as_array).map_or(0, Vec::len) + usize::from(args.and_then(|args| args.get("gripFullId")).and_then(Value::as_str).is_some())
+        args.and_then(|args| args.get("gripFullIds")).and_then(dsl::os_pack::json::Value::as_array).map_or(0, Vec::len) + usize::from(args.and_then(|args| args.get("gripFullId")).and_then(dsl::os_pack::json::Value::as_str).is_some())
     }
 
     fn source_id(command: &Puzzle5dCommand, index: usize) -> Option<&str> {
         let args = command.args()?;
-        let ids = args.get("gripFullIds").and_then(Value::as_array);
+        let ids = args.get("gripFullIds").and_then(dsl::os_pack::json::Value::as_array);
         if let Some(id) = ids.and_then(|ids| ids.get(index)).and_then(Value::as_str) {
             return (!id.is_empty()).then_some(id);
         }
-        (index == ids.map_or(0, Vec::len)).then(|| args.get("gripFullId").and_then(Value::as_str)).flatten().filter(|id| !id.is_empty())
+        (index == ids.map_or(0, Vec::len)).then(|| args.get("gripFullId").and_then(dsl::os_pack::json::Value::as_str)).flatten().filter(|id| !id.is_empty())
     }
 
     fn patch(command: &Puzzle5dCommand, grip: &mut crate::artifacts::puzzle5d::Puzzle5dGrip) -> bool {
         let Some(args) = command.args() else { return false };
-        let field = args.get("field").and_then(Value::as_str).unwrap_or("");
+        let field = args.get("field").and_then(dsl::os_pack::json::Value::as_str).unwrap_or("");
         let value = args.get("value");
         let delta = args.get("delta");
         let text = value.and_then(Value::as_str);
@@ -6080,7 +6161,8 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle5dPlayApp>> for 
     }
 
     fn extent(&self, command: &Puzzle5dCommand, snapshot: &Puzzle5dPlaySnapshot, _interaction: &protocol::InteractionState) -> Option<usize> {
-        let items = Self::source_len(command).checked_add(snapshot.0.get("parts").and_then(Value::as_array).map_or(0, Vec::len))?;
+        let projection = puzzle5d_projection_value(&snapshot.0);
+        let items = Self::source_len(command).checked_add(projection.get("parts").and_then(Value::as_array).map_or(0, Vec::len))?;
         (items <= crate::retained_command::PUZZLE_COMMAND_WORK_ITEMS).then_some(items)
     }
 
@@ -6092,6 +6174,7 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle5dPlayApp>> for 
         _interaction: &protocol::InteractionState,
         _hover: &semio_framework_plugin::app::InteractionHoverState,
     ) -> Result<crate::retained_command::PuzzleCommandWorkStep<EditorApp<Puzzle5dPlayApp>>, Fault> {
+        let projection = puzzle5d_projection_value(&snapshot.0);
         match self.stage {
             Puzzle5dPatchPartStage::Selection => {
                 if let Some(id) = Self::source_id(command, self.selection_cursor) {
@@ -6106,7 +6189,7 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle5dPlayApp>> for 
                 Ok(Puzzle5dPatchPartWork::progress("puzzle5d-patch-grip", "Patching grip", "Griff wird geändert"))
             }
             Puzzle5dPatchPartStage::Parts => {
-                let Some(part) = snapshot.0.get("parts").and_then(Value::as_array).and_then(|parts| parts.get(self.part_cursor)) else {
+                let Some(part) = projection.get("parts").and_then(Value::as_array).and_then(|parts| parts.get(self.part_cursor)) else {
                     self.stage = Puzzle5dPatchPartStage::Complete;
                     return Ok(crate::retained_command::PuzzleCommandWorkStep::Complete(Emit { artifact_mutations: std::mem::take(&mut self.mutations), ui_scope: UiDirtyScope::Full, ..Default::default() }));
                 };
@@ -6121,7 +6204,7 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle5dPlayApp>> for 
                 self.processed_grips += 1;
                 self.grip_cursor += 1;
                 let part_id = part.get("id").and_then(Value::as_str).ok_or_else(|| Fault::from("puzzle5d-patch-grip-part-id-malformed"))?;
-                let mut grip: crate::artifacts::puzzle5d::Puzzle5dGrip = serde_json::from_value(grip_value).map_err(|_| Fault::from("puzzle5d-patch-grip-malformed"))?;
+                let mut grip: crate::artifacts::puzzle5d::Puzzle5dGrip = <crate::artifacts::puzzle5d::Puzzle5dGrip as dsl::FromValue>::from_value(dsl::os_pack::json::to_dsl_value(&grip_value)).map_err(|_| Fault::from("puzzle5d-patch-grip-malformed"))?;
                 let full_id = puzzle5d_grip_full_id(part_id, &grip.id);
                 if self.selected.contains(&full_id) && Self::patch(command, &mut grip) {
                     let grip_id = grip.id.clone();
@@ -6178,7 +6261,8 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle5dPlayApp>> for 
     }
 
     fn extent(&self, _command: &Puzzle5dCommand, snapshot: &Puzzle5dPlaySnapshot, _interaction: &protocol::InteractionState) -> Option<usize> {
-        snapshot.0.get("fasteners").and_then(Value::as_array).map_or(Some(1), |fasteners| fasteners.len().checked_add(1)).filter(|items| *items <= crate::retained_command::PUZZLE_COMMAND_WORK_ITEMS)
+        let projection = puzzle5d_projection_value(&snapshot.0);
+        projection.get("fasteners").and_then(Value::as_array).map_or(Some(1), |fasteners| fasteners.len().checked_add(1)).filter(|items| *items <= crate::retained_command::PUZZLE_COMMAND_WORK_ITEMS)
     }
 
     fn step(
@@ -6189,8 +6273,9 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle5dPlayApp>> for 
         _interaction: &protocol::InteractionState,
         _hover: &semio_framework_plugin::app::InteractionHoverState,
     ) -> Result<crate::retained_command::PuzzleCommandWorkStep<EditorApp<Puzzle5dPlayApp>>, Fault> {
-        let target = command.args().and_then(|args| args.get("id").or_else(|| args.get("fastenerId"))).and_then(Value::as_str).filter(|id| !id.is_empty());
-        let Some(row) = snapshot.0.get("fasteners").and_then(Value::as_array).and_then(|fasteners| fasteners.get(self.cursor)) else {
+        let projection = puzzle5d_projection_value(&snapshot.0);
+        let target = command.args().and_then(|args| args.get("id").or_else(|| args.get("fastenerId"))).and_then(dsl::os_pack::json::Value::as_str).filter(|id| !id.is_empty());
+        let Some(row) = projection.get("fasteners").and_then(Value::as_array).and_then(|fasteners| fasteners.get(self.cursor)) else {
             return Ok(crate::retained_command::PuzzleCommandWorkStep::Complete(Emit { artifact_mutations: std::mem::take(&mut self.mutations), ui_scope: UiDirtyScope::Full, ..Default::default() }));
         };
         self.cursor += 1;
@@ -6248,11 +6333,12 @@ impl Default for Puzzle5dAddNodeWork {
 
 impl Puzzle5dAddNodeWork {
     fn part_kind(command: &Puzzle5dCommand) -> &str {
-        command.args().and_then(|args| args.get("kind")).and_then(Value::as_str).unwrap_or("Part")
+        command.args().and_then(|args| args.get("kind")).and_then(dsl::os_pack::json::Value::as_str).unwrap_or("Part")
     }
 
-    fn catalogs(snapshot: &Puzzle5dPlaySnapshot) -> &[Value] {
-        snapshot.0.get("kindCatalogs").and_then(|catalogs| catalogs.get("parts")).and_then(Value::as_array).map(Vec::as_slice).unwrap_or_default()
+    fn catalogs(snapshot: &Puzzle5dPlaySnapshot) -> Vec<Value> {
+        let projection = puzzle5d_projection_value(&snapshot.0);
+        projection.get("kindCatalogs").and_then(|catalogs| catalogs.get("parts")).and_then(Value::as_array).cloned().unwrap_or_default()
     }
 }
 
@@ -6278,6 +6364,7 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle5dPlayApp>> for 
         _interaction: &protocol::InteractionState,
         _hover: &semio_framework_plugin::app::InteractionHoverState,
     ) -> Result<crate::retained_command::PuzzleCommandWorkStep<EditorApp<Puzzle5dPlayApp>>, Fault> {
+        let projection = puzzle5d_projection_value(&snapshot.0);
         let catalogs = Self::catalogs(snapshot);
         match self.stage {
             Puzzle5dAddNodeStage::Catalog => {
@@ -6301,27 +6388,27 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle5dPlayApp>> for 
                         return Err(Fault::from("puzzle5d-add-node-grip-capacity"));
                     }
                     let grip_kind = template.get("gripKind").and_then(Value::as_str).unwrap_or("grip").to_string();
-                    let grip_2d: crate::artifacts::puzzle5d::Puzzle5dGrip2d = match template.get("2d").cloned() {
-                        Some(value) => serde_json::from_value(value).map_err(|_| Fault::from("puzzle5d-add-node-grip2d-malformed"))?,
+                    let grip_2d: crate::artifacts::puzzle5d::Puzzle5dGrip2d = match template.get("2d") {
+                        Some(value) => <crate::artifacts::puzzle5d::Puzzle5dGrip2d as dsl::FromValue>::from_value(dsl::os_pack::json::to_dsl_value(value)).map_err(|_| Fault::from("puzzle5d-add-node-grip2d-malformed"))?,
                         None => Default::default(),
                     };
-                    let grip_3d: crate::artifacts::puzzle5d::Puzzle5dGrip3d = match template.get("3d").cloned() {
-                        Some(value) => serde_json::from_value(value).map_err(|_| Fault::from("puzzle5d-add-node-grip3d-malformed"))?,
+                    let grip_3d: crate::artifacts::puzzle5d::Puzzle5dGrip3d = match template.get("3d") {
+                        Some(value) => <crate::artifacts::puzzle5d::Puzzle5dGrip3d as dsl::FromValue>::from_value(dsl::os_pack::json::to_dsl_value(value)).map_err(|_| Fault::from("puzzle5d-add-node-grip3d-malformed"))?,
                         None => Default::default(),
                     };
                     self.grips.push(crate::artifacts::puzzle5d::Puzzle5dGrip { id: format!("v{}", self.grip_cursor), grip_kind: Some(grip_kind), grip_2d, grip_3d });
                     self.grip_cursor += 1;
                     return Ok(Puzzle5dPatchPartWork::progress("puzzle5d-add-node-grip", "Reading grip template", "Griffvorlage wird gelesen"));
                 }
-                let x = command.args().and_then(|args| args.get("x")).and_then(Value::as_f64).unwrap_or(120.0);
-                let y = command.args().and_then(|args| args.get("y")).and_then(Value::as_f64).unwrap_or(120.0);
+                let x = command.args().and_then(|args| args.get("x")).and_then(dsl::os_pack::json::Value::as_f64).unwrap_or(120.0);
+                let y = command.args().and_then(|args| args.get("y")).and_then(dsl::os_pack::json::Value::as_f64).unwrap_or(120.0);
                 let flat_to_world = 1.0 / 48.0;
-                let origin = snapshot.0.get("parts").and_then(Value::as_array).and_then(|parts| parts.first()).map_or([x * flat_to_world, -y * flat_to_world, 0.0], |peer| {
+                let origin = projection.get("parts").and_then(Value::as_array).and_then(|parts| parts.first()).map_or([x * flat_to_world, -y * flat_to_world, 0.0], |peer| {
                     let peer_2d = peer.get("2d");
                     let peer_3d = peer.get("3d");
                     let peer_x = peer_2d.and_then(|part| part.get("x")).and_then(Value::as_f64).unwrap_or_default();
                     let peer_y = peer_2d.and_then(|part| part.get("y")).and_then(Value::as_f64).unwrap_or_default();
-                    let peer_origin = peer_3d.and_then(|part| part.get("origin")).and_then(|value| serde_json::from_value::<[f64; 3]>(value.clone()).ok()).unwrap_or_default();
+                    let peer_origin = peer_3d.and_then(|part| part.get("origin")).and_then(puzzle5d_value_as_f64_3).unwrap_or_default();
                     [peer_origin[0] + (x - peer_x) * flat_to_world, peer_origin[1] - (y - peer_y) * flat_to_world, peer_origin[2]]
                 });
                 let part_kind = Self::part_kind(command).to_string();
@@ -6425,30 +6512,34 @@ impl Puzzle5dAddBrushPartWork {
         work
     }
 
-    fn args<'a>(&'a self, command: &'a Puzzle5dCommand) -> Option<&'a Value> {
-        self.payload.as_ref().or_else(|| command.args())
+    /// 🌉️ `self.payload` (materialized once via `take_payload`/`parse`) and `command.args()` are
+    /// both this file's own first-party `Value` now, so no bridge is needed — an in-progress board
+    /// payload wins, falling back to the dispatch args only when there is none.
+    fn args(&self, command: &Puzzle5dCommand) -> Option<Value> {
+        self.payload.clone().or_else(|| command.args().cloned())
     }
 
-    fn owned_part_kind<'a>(&'a self, command: &'a Puzzle5dCommand) -> &'a str {
-        self.args(command).and_then(|args| args.get("partKind").or_else(|| args.get("objectKindId")).or_else(|| args.get("nodeKind"))).and_then(Value::as_str).filter(|kind| !kind.is_empty()).unwrap_or("Part")
+    fn owned_part_kind(&self, command: &Puzzle5dCommand) -> String {
+        self.args(command)
+            .and_then(|args| args.get("partKind").or_else(|| args.get("objectKindId")).or_else(|| args.get("nodeKind")).and_then(Value::as_str).map(str::to_string))
+            .filter(|kind| !kind.is_empty())
+            .unwrap_or_else(|| "Part".to_string())
     }
 
-    fn catalogs(snapshot: &Puzzle5dPlaySnapshot) -> &[Value] {
+    fn catalogs(snapshot: &Puzzle5dPlaySnapshot) -> Vec<Value> {
         Puzzle5dAddNodeWork::catalogs(snapshot)
     }
 
     fn target(&self, command: &Puzzle5dCommand, interaction: &protocol::InteractionState) -> Option<String> {
         self.args(command)
-            .and_then(|args| args.get("targetVortexFullId").or_else(|| args.get("targetGripFullId")))
-            .and_then(Value::as_str)
+            .and_then(|args| args.get("targetVortexFullId").or_else(|| args.get("targetGripFullId")).and_then(Value::as_str).map(str::to_string))
             .filter(|id| !id.is_empty())
-            .map(str::to_string)
             .or_else(|| interaction.selection.get(PUZZLE5D_INTERACTION_DOMAIN).filter(|selection| selection.granularity == PUZZLE5D_GRANULARITY_GRIP).and_then(|selection| selection.ids.first().cloned()))
     }
 
     fn world_direction(part: &Value, grip: &Value) -> [f64; 3] {
-        let orientation = part.get("3d").and_then(|part| part.get("orientation")).and_then(|value| serde_json::from_value::<[f64; 4]>(value.clone()).ok()).unwrap_or([0.0, 0.0, 0.0, 1.0]);
-        let direction = grip.get("3d").and_then(|grip| grip.get("direction")).and_then(|value| serde_json::from_value::<[f64; 3]>(value.clone()).ok()).unwrap_or([0.0, 0.0, -1.0]);
+        let orientation = part.get("3d").and_then(|part| part.get("orientation")).and_then(puzzle5d_value_as_f64_4).unwrap_or([0.0, 0.0, 0.0, 1.0]);
+        let direction = grip.get("3d").and_then(|grip| grip.get("direction")).and_then(puzzle5d_value_as_f64_3).unwrap_or([0.0, 0.0, -1.0]);
         quat_rotate_vector(orientation, direction)
     }
 }
@@ -6463,7 +6554,8 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle5dPlayApp>> for 
     }
 
     fn extent(&self, _command: &Puzzle5dCommand, snapshot: &Puzzle5dPlaySnapshot, _interaction: &protocol::InteractionState) -> Option<usize> {
-        let items = Self::catalogs(snapshot).len().checked_add(crate::retained_command::PUZZLE_COMMAND_DECODED_ITEMS)?.checked_add(snapshot.0.get("parts").and_then(Value::as_array).map_or(0, Vec::len))?.checked_add(2)?;
+        let projection = puzzle5d_projection_value(&snapshot.0);
+        let items = Self::catalogs(snapshot).len().checked_add(crate::retained_command::PUZZLE_COMMAND_DECODED_ITEMS)?.checked_add(projection.get("parts").and_then(Value::as_array).map_or(0, Vec::len))?.checked_add(2)?;
         (items <= crate::retained_command::PUZZLE_COMMAND_WORK_ITEMS).then_some(items)
     }
 
@@ -6475,6 +6567,7 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle5dPlayApp>> for 
         interaction: &protocol::InteractionState,
         _hover: &semio_framework_plugin::app::InteractionHoverState,
     ) -> Result<crate::retained_command::PuzzleCommandWorkStep<EditorApp<Puzzle5dPlayApp>>, Fault> {
+        let projection = puzzle5d_projection_value(&snapshot.0);
         if self.processed_units >= crate::retained_command::PUZZLE_COMMAND_WORK_ITEMS {
             return Err(Fault::from("puzzle5d-add-brush-part-work-capacity"));
         }
@@ -6488,7 +6581,7 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle5dPlayApp>> for 
                 };
                 let index = self.catalog_cursor;
                 self.catalog_cursor += 1;
-                if entry.get("id").and_then(Value::as_str) == Some(self.owned_part_kind(command)) {
+                if entry.get("id").and_then(Value::as_str) == Some(self.owned_part_kind(command).as_str()) {
                     self.catalog_index = Some(index);
                     self.mesh_url = entry.get("meshUrl").and_then(Value::as_str).filter(|url| !url.is_empty()).map(str::to_string);
                     self.stage = Puzzle5dAddBrushPartStage::Grips;
@@ -6502,8 +6595,8 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle5dPlayApp>> for 
                         return Err(Fault::from("puzzle5d-add-brush-part-grip-capacity"));
                     }
                     let grip_kind = template.get("gripKind").and_then(Value::as_str).unwrap_or("grip").to_string();
-                    let grip_2d = template.get("2d").cloned().map(serde_json::from_value).transpose().map_err(|_| Fault::from("puzzle5d-add-brush-part-grip2d-malformed"))?.unwrap_or_default();
-                    let grip_3d = template.get("3d").cloned().map(serde_json::from_value).transpose().map_err(|_| Fault::from("puzzle5d-add-brush-part-grip3d-malformed"))?.unwrap_or_default();
+                    let grip_2d = template.get("2d").map(|value| <crate::artifacts::puzzle5d::Puzzle5dGrip2d as dsl::FromValue>::from_value(dsl::os_pack::json::to_dsl_value(value))).transpose().map_err(|_| Fault::from("puzzle5d-add-brush-part-grip2d-malformed"))?.unwrap_or_default();
+                    let grip_3d = template.get("3d").map(|value| <crate::artifacts::puzzle5d::Puzzle5dGrip3d as dsl::FromValue>::from_value(dsl::os_pack::json::to_dsl_value(value))).transpose().map_err(|_| Fault::from("puzzle5d-add-brush-part-grip3d-malformed"))?.unwrap_or_default();
                     let id = format!("v{}", self.grip_cursor);
                     if self.created_grip_id.is_none() {
                         self.created_grip_id = Some(id.clone());
@@ -6517,7 +6610,7 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle5dPlayApp>> for 
                 Ok(Puzzle5dPatchPartWork::progress("puzzle5d-brush-target", "Finding target grip", "Zielgriff wird gesucht"))
             }
             Puzzle5dAddBrushPartStage::Target => {
-                let Some(part) = snapshot.0.get("parts").and_then(Value::as_array).and_then(|parts| parts.get(self.part_cursor)) else {
+                let Some(part) = projection.get("parts").and_then(Value::as_array).and_then(|parts| parts.get(self.part_cursor)) else {
                     self.target_id = None;
                     self.stage = Puzzle5dAddBrushPartStage::Create;
                     return Ok(Puzzle5dPatchPartWork::progress("puzzle5d-brush-create", "Creating brush part", "Pinselteil wird erstellt"));
@@ -6538,14 +6631,14 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle5dPlayApp>> for 
                 Ok(Puzzle5dPatchPartWork::progress("puzzle5d-brush-target", "Finding target grip", "Zielgriff wird gesucht"))
             }
             Puzzle5dAddBrushPartStage::Create => {
-                let x = self.args(command).and_then(|args| args.get("x")).and_then(Value::as_f64).unwrap_or(120.0);
-                let y = self.args(command).and_then(|args| args.get("y")).and_then(Value::as_f64).unwrap_or(120.0);
+                let x = self.args(command).and_then(|args| args.get("x").and_then(Value::as_f64)).unwrap_or(120.0);
+                let y = self.args(command).and_then(|args| args.get("y").and_then(Value::as_f64)).unwrap_or(120.0);
                 let origin = match (self.target_position, self.target_direction) {
                     (Some(position), Some(direction)) => [position[0] + direction[0], position[1] + direction[1], position[2] + direction[2]],
                     _ => [x / 48.0, -y / 48.0, 0.0],
                 };
-                let part_kind = self.owned_part_kind(command).to_string();
-                let id = self.args(command).and_then(|args| args.get("nodeId").or_else(|| args.get("partId")).or_else(|| args.get("objectId"))).and_then(Value::as_str).filter(|id| !id.is_empty()).map(str::to_string).unwrap_or_else(|| {
+                let part_kind = self.owned_part_kind(command);
+                let id = self.args(command).and_then(|args| args.get("nodeId").or_else(|| args.get("partId")).or_else(|| args.get("objectId")).and_then(Value::as_str).map(str::to_string)).filter(|id| !id.is_empty()).unwrap_or_else(|| {
                     let id = format!("part-{:016x}-{}", self.operation_nonce, self.fresh_cursor);
                     self.fresh_cursor = self.fresh_cursor.saturating_add(1);
                     id
@@ -6565,7 +6658,7 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle5dPlayApp>> for 
             }
             Puzzle5dAddBrushPartStage::Connect => {
                 if let (Some(source), Some(part), Some(grip)) = (self.target_id.as_ref(), self.created_id.as_ref(), self.created_grip_id.as_ref()) {
-                    let id = self.args(command).and_then(|args| args.get("edgeId")).and_then(Value::as_str).filter(|id| !id.is_empty()).map(str::to_string).unwrap_or_else(|| {
+                    let id = self.args(command).and_then(|args| args.get("edgeId").and_then(Value::as_str).map(str::to_string)).filter(|id| !id.is_empty()).unwrap_or_else(|| {
                         let id = format!("fastener-{:016x}-{}", self.operation_nonce, self.fresh_cursor);
                         self.fresh_cursor = self.fresh_cursor.saturating_add(1);
                         id
@@ -6700,7 +6793,7 @@ impl Default for Puzzle5dBoardEventsWork {
 
 impl Puzzle5dBoardEventsWork {
     fn source<'a>(command: &'a Puzzle5dCommand) -> Result<&'a str, Fault> {
-        command.args().and_then(|args| args.get("eventsJson")).and_then(Value::as_str).ok_or_else(|| Fault::from("puzzle5d-board-events-input-missing"))
+        command.args().and_then(|args| args.get("eventsJson")).and_then(dsl::os_pack::json::Value::as_str).ok_or_else(|| Fault::from("puzzle5d-board-events-input-missing"))
     }
 
     fn progress(stage: &'static str, en: &'static str, de: &'static str) -> crate::retained_command::PuzzleCommandWorkStep<EditorApp<Puzzle5dPlayApp>> {
@@ -6786,7 +6879,7 @@ impl Puzzle5dBoardEventsWork {
     }
 
     fn take_payload(&mut self) -> Value {
-        self.event.as_mut().and_then(Value::as_object_mut).and_then(|event| event.get_mut("payload")).map(Value::take).unwrap_or(Value::Null)
+        self.event.as_mut().and_then(Value::as_object_mut).and_then(|event| event.get_mut("payload")).map(|value| std::mem::replace(value, Value::Null)).unwrap_or(Value::Null)
     }
 
     fn schedule_move(&mut self, payload: &Value) {
@@ -6808,8 +6901,9 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle5dPlayApp>> for 
     }
 
     fn extent(&self, command: &Puzzle5dCommand, snapshot: &Puzzle5dPlaySnapshot, _interaction: &protocol::InteractionState) -> Option<usize> {
+        let projection = puzzle5d_projection_value(&snapshot.0);
         let bytes = Self::source(command).ok()?.len();
-        let document_items = snapshot.0.get("parts").and_then(Value::as_array).map_or(0, Vec::len).checked_add(snapshot.0.get("fasteners").and_then(Value::as_array).map_or(0, Vec::len))?.checked_add(2)?;
+        let document_items = projection.get("parts").and_then(Value::as_array).map_or(0, Vec::len).checked_add(projection.get("fasteners").and_then(Value::as_array).map_or(0, Vec::len))?.checked_add(2)?;
         let items = bytes.checked_mul(document_items)?;
         (bytes <= crate::retained_command::PUZZLE_COMMAND_RAW_BYTES && items <= crate::retained_command::PUZZLE_COMMAND_WORK_ITEMS).then_some(items.max(1))
     }
@@ -6822,6 +6916,7 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle5dPlayApp>> for 
         interaction: &protocol::InteractionState,
         hover: &semio_framework_plugin::app::InteractionHoverState,
     ) -> Result<crate::retained_command::PuzzleCommandWorkStep<EditorApp<Puzzle5dPlayApp>>, Fault> {
+        let projection = puzzle5d_projection_value(&snapshot.0);
         let source = Self::source(command)?;
         match self.stage {
             Puzzle5dBoardEventsStage::Open | Puzzle5dBoardEventsStage::Scan => {
@@ -6830,7 +6925,7 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle5dPlayApp>> for 
             }
             Puzzle5dBoardEventsStage::Decode => {
                 let start = self.event_start.ok_or_else(|| Fault::from("puzzle5d-board-events-event-owner-missing"))?;
-                self.event = Some(serde_json::from_str(source.get(start..self.event_end).ok_or_else(|| Fault::from("puzzle5d-board-events-event-range"))?).map_err(|_| Fault::from("puzzle5d-board-events-event-malformed"))?);
+                self.event = Some(parse(source.get(start..self.event_end).ok_or_else(|| Fault::from("puzzle5d-board-events-event-range"))?).map_err(|_| Fault::from("puzzle5d-board-events-event-malformed"))?);
                 self.stage = Puzzle5dBoardEventsStage::Dispatch;
                 Ok(Self::progress("puzzle5d-board-event-decode", "Decoding board event", "Board-Ereignis wird dekodiert"))
             }
@@ -6839,13 +6934,13 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle5dPlayApp>> for 
                 let payload = self.take_payload();
                 match name.as_deref() {
                     Some("camera") => {
-                        self.camera2d = Some(serde_json::from_value(payload).map_err(|_| Fault::from("puzzle5d-board-events-camera-malformed"))?);
+                        self.camera2d = Some(<Puzzle5dCamera2d as dsl::FromValue>::from_value(dsl::os_pack::json::to_dsl_value(&payload)).map_err(|_| Fault::from("puzzle5d-board-events-camera-malformed"))?);
                         self.next_event();
                     }
                     Some("nodeMove") => self.schedule_move(&payload),
                     Some("nodeDragEnd") => {
                         let mut payload = payload;
-                        self.drag_moves = Some(payload.as_object_mut().and_then(|payload| payload.get_mut("moves")).map(Value::take).unwrap_or(Value::Array(Vec::new())));
+                        self.drag_moves = Some(payload.as_object_mut().and_then(|payload| payload.get_mut("moves")).map(|value| std::mem::replace(value, Value::Null)).unwrap_or(Value::Array(Vec::new())));
                         self.drag_cursor = 0;
                         self.stage = Puzzle5dBoardEventsStage::DragMove;
                     }
@@ -6895,7 +6990,7 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle5dPlayApp>> for 
                 Ok(Self::progress("puzzle5d-board-drag", "Moving board node", "Board-Knoten wird verschoben"))
             }
             Puzzle5dBoardEventsStage::FindMovePart => {
-                let Some(part) = snapshot.0.get("parts").and_then(Value::as_array).and_then(|parts| parts.get(self.part_cursor)) else {
+                let Some(part) = projection.get("parts").and_then(Value::as_array).and_then(|parts| parts.get(self.part_cursor)) else {
                     self.pending_move_id = None;
                     self.stage = if self.drag_moves.is_some() { Puzzle5dBoardEventsStage::DragMove } else { Puzzle5dBoardEventsStage::Scan };
                     return Ok(Self::progress("puzzle5d-board-move", "Finding board node", "Board-Knoten wird gesucht"));
@@ -6916,7 +7011,7 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle5dPlayApp>> for 
                     self.next_event();
                     return Ok(Self::progress("puzzle5d-board-edge", "Checking board edge", "Board-Kante wird geprüft"));
                 }
-                if let Some(fastener) = snapshot.0.get("fasteners").and_then(Value::as_array).and_then(|fasteners| fasteners.get(self.fastener_cursor)) {
+                if let Some(fastener) = projection.get("fasteners").and_then(Value::as_array).and_then(|fasteners| fasteners.get(self.fastener_cursor)) {
                     self.fastener_cursor += 1;
                     let source = fastener.get("source").and_then(Value::as_str);
                     let target = fastener.get("target").and_then(Value::as_str);
@@ -6939,7 +7034,7 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle5dPlayApp>> for 
                     self.next_event();
                     return Ok(Self::progress("puzzle5d-board-delete", "Deleting board node", "Board-Knoten wird gelöscht"));
                 };
-                if let Some(fastener) = snapshot.0.get("fasteners").and_then(Value::as_array).and_then(|fasteners| fasteners.get(self.fastener_cursor)) {
+                if let Some(fastener) = projection.get("fasteners").and_then(Value::as_array).and_then(|fasteners| fasteners.get(self.fastener_cursor)) {
                     self.fastener_cursor += 1;
                     let incident = fastener.get("source").and_then(Value::as_str).is_some_and(|grip| grip.split_once(':').is_some_and(|(part_id, _)| part_id == id))
                         || fastener.get("target").and_then(Value::as_str).is_some_and(|grip| grip.split_once(':').is_some_and(|(part_id, _)| part_id == id));
@@ -7107,11 +7202,12 @@ impl Default for Puzzle5dCreateFastenerWork {
 
 impl Puzzle5dCreateFastenerWork {
     fn endpoint<'a>(command: &'a Puzzle5dCommand, primary: &str, alias: &str) -> &'a str {
-        command.args().and_then(|args| args.get(primary).or_else(|| args.get(alias))).and_then(Value::as_str).filter(|id| !id.is_empty()).unwrap_or("")
+        command.args().and_then(|args| args.get(primary).or_else(|| args.get(alias))).and_then(dsl::os_pack::json::Value::as_str).filter(|id| !id.is_empty()).unwrap_or("")
     }
 
     fn scan_grip(&mut self, snapshot: &Puzzle5dPlaySnapshot, target: &str) -> Puzzle5dGripScan {
-        let Some(part) = snapshot.0.get("parts").and_then(Value::as_array).and_then(|parts| parts.get(self.part_cursor)) else {
+        let projection = puzzle5d_projection_value(&snapshot.0);
+        let Some(part) = projection.get("parts").and_then(Value::as_array).and_then(|parts| parts.get(self.part_cursor)) else {
             return Puzzle5dGripScan::Exhausted;
         };
         let Some(grip) = part.get("grips").and_then(Value::as_array).and_then(|grips| grips.get(self.grip_cursor)) else {
@@ -7135,7 +7231,7 @@ impl Puzzle5dCreateFastenerWork {
     }
 
     fn arg_f64(command: &Puzzle5dCommand, key: &str) -> f64 {
-        command.args().and_then(|args| args.get(key)).and_then(Value::as_f64).unwrap_or(0.0)
+        command.args().and_then(|args| args.get(key)).and_then(dsl::os_pack::json::Value::as_f64).unwrap_or(0.0)
     }
 }
 
@@ -7149,9 +7245,10 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle5dPlayApp>> for 
     }
 
     fn extent(&self, _command: &Puzzle5dCommand, snapshot: &Puzzle5dPlaySnapshot, _interaction: &protocol::InteractionState) -> Option<usize> {
-        let parts = snapshot.0.get("parts").and_then(Value::as_array).map_or(0, Vec::len);
-        let fasteners = snapshot.0.get("fasteners").and_then(Value::as_array).map_or(0, Vec::len);
-        let compatibility = snapshot.0.get("kindCompatibility").and_then(Value::as_array).map_or(0, Vec::len);
+        let projection = puzzle5d_projection_value(&snapshot.0);
+        let parts = projection.get("parts").and_then(Value::as_array).map_or(0, Vec::len);
+        let fasteners = projection.get("fasteners").and_then(Value::as_array).map_or(0, Vec::len);
+        let compatibility = projection.get("kindCompatibility").and_then(Value::as_array).map_or(0, Vec::len);
         let items = parts.checked_mul(2)?.checked_add(fasteners)?.checked_add(compatibility)?.checked_add(1)?;
         (items <= crate::retained_command::PUZZLE_COMMAND_WORK_ITEMS).then_some(items)
     }
@@ -7164,6 +7261,7 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle5dPlayApp>> for 
         _interaction: &protocol::InteractionState,
         _hover: &semio_framework_plugin::app::InteractionHoverState,
     ) -> Result<crate::retained_command::PuzzleCommandWorkStep<EditorApp<Puzzle5dPlayApp>>, Fault> {
+        let projection = puzzle5d_projection_value(&snapshot.0);
         if self.processed_units >= crate::retained_command::PUZZLE_COMMAND_WORK_ITEMS {
             return Err(Fault::from("puzzle5d-create-fastener-work-capacity"));
         }
@@ -7195,7 +7293,7 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle5dPlayApp>> for 
                 Puzzle5dGripScan::Exhausted => Ok(self.complete_empty()),
             },
             Puzzle5dCreateFastenerStage::Existing => {
-                if let Some(fastener) = snapshot.0.get("fasteners").and_then(Value::as_array).and_then(|fasteners| fasteners.get(self.fastener_cursor)) {
+                if let Some(fastener) = projection.get("fasteners").and_then(Value::as_array).and_then(|fasteners| fasteners.get(self.fastener_cursor)) {
                     self.fastener_cursor += 1;
                     let existing_source = fastener.get("source").and_then(Value::as_str).unwrap_or("");
                     let existing_target = fastener.get("target").and_then(Value::as_str).unwrap_or("");
@@ -7212,7 +7310,7 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle5dPlayApp>> for 
                     self.stage = Puzzle5dCreateFastenerStage::Emit;
                     return Ok(Puzzle5dPatchPartWork::progress("puzzle5d-create-fastener-emit", "Creating fastener", "Verbindung wird erstellt"));
                 }
-                let rows = snapshot.0.get("kindCompatibility").and_then(Value::as_array).map(Vec::as_slice).unwrap_or_default();
+                let rows = projection.get("kindCompatibility").and_then(Value::as_array).map(Vec::as_slice).unwrap_or_default();
                 if rows.is_empty() {
                     self.stage = Puzzle5dCreateFastenerStage::Emit;
                     return Ok(Puzzle5dPatchPartWork::progress("puzzle5d-create-fastener-emit", "Creating fastener", "Verbindung wird erstellt"));
@@ -7230,8 +7328,8 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle5dPlayApp>> for 
                 Ok(Puzzle5dPatchPartWork::progress("puzzle5d-create-fastener-compatibility", "Checking kind compatibility", "Artkompatibilität wird geprüft"))
             }
             Puzzle5dCreateFastenerStage::Emit => {
-                let id = command.args().and_then(|args| args.get("id").or_else(|| args.get("fastenerId"))).and_then(Value::as_str).filter(|id| !id.is_empty()).map(str::to_string).unwrap_or_else(|| format!("fastener-{:016x}-0", self.operation_nonce));
-                let fastener_kind = command.args().and_then(|args| args.get("fastenerKind").or_else(|| args.get("edgeKind"))).and_then(Value::as_str).filter(|kind| !kind.is_empty()).map(str::to_string);
+                let id = command.args().and_then(|args| args.get("id").or_else(|| args.get("fastenerId"))).and_then(dsl::os_pack::json::Value::as_str).filter(|id| !id.is_empty()).map(str::to_string).unwrap_or_else(|| format!("fastener-{:016x}-0", self.operation_nonce));
+                let fastener_kind = command.args().and_then(|args| args.get("fastenerKind").or_else(|| args.get("edgeKind"))).and_then(dsl::os_pack::json::Value::as_str).filter(|kind| !kind.is_empty()).map(str::to_string);
                 self.mutation = Some(crate::artifacts::puzzle5d::mutations::connect_grips(
                     id,
                     source.to_string(),
@@ -7326,7 +7424,7 @@ impl Default for Puzzle5dWorldRelocateWork {
 
 impl Puzzle5dWorldRelocateWork {
     fn position(command: &Puzzle5dCommand) -> Option<[f64; 3]> {
-        let values = command.args().and_then(|args| args.get("position")).and_then(Value::as_array)?;
+        let values = command.args().and_then(|args| args.get("position")).and_then(dsl::os_pack::json::Value::as_array)?;
         Some([values.first().and_then(Value::as_f64)?, values.get(1).and_then(Value::as_f64)?, values.get(2).and_then(Value::as_f64)?])
     }
 
@@ -7361,8 +7459,9 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle5dPlayApp>> for 
     }
 
     fn extent(&self, _command: &Puzzle5dCommand, snapshot: &Puzzle5dPlaySnapshot, _interaction: &protocol::InteractionState) -> Option<usize> {
-        let parts = snapshot.0.get("parts").and_then(Value::as_array).map_or(0, Vec::len);
-        let fasteners = snapshot.0.get("fasteners").and_then(Value::as_array).map_or(0, Vec::len);
+        let projection = puzzle5d_projection_value(&snapshot.0);
+        let parts = projection.get("parts").and_then(Value::as_array).map_or(0, Vec::len);
+        let fasteners = projection.get("fasteners").and_then(Value::as_array).map_or(0, Vec::len);
         let items = parts.checked_mul(PUZZLE5D_RELOCATE_GRIPS_PER_PART)?.checked_add(parts.checked_mul(2)?)?.checked_add(fasteners)?;
         (items <= crate::retained_command::PUZZLE_COMMAND_WORK_ITEMS).then_some(items)
     }
@@ -7375,14 +7474,15 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle5dPlayApp>> for 
         _interaction: &protocol::InteractionState,
         _hover: &semio_framework_plugin::app::InteractionHoverState,
     ) -> Result<crate::retained_command::PuzzleCommandWorkStep<EditorApp<Puzzle5dPlayApp>>, Fault> {
+        let projection = puzzle5d_projection_value(&snapshot.0);
         match self.stage {
             Puzzle5dWorldRelocateStage::SourcePart => {
-                let requested = command.args().and_then(|args| args.get("objectId")).and_then(Value::as_str).unwrap_or("");
+                let requested = command.args().and_then(|args| args.get("objectId")).and_then(dsl::os_pack::json::Value::as_str).unwrap_or("");
                 let Some(position) = Self::position(command) else { return Ok(self.complete()) };
-                let Some(row) = snapshot.0.get("parts").and_then(Value::as_array).and_then(|parts| parts.get(self.part_cursor)).cloned() else { return Ok(self.complete()) };
+                let Some(row) = projection.get("parts").and_then(Value::as_array).and_then(|parts| parts.get(self.part_cursor)).cloned() else { return Ok(self.complete()) };
                 self.part_cursor += 1;
                 if row.get("id").and_then(Value::as_str) == Some(requested) {
-                    let mut part: Puzzle5dPart = serde_json::from_value(row).map_err(|_| Fault::from("puzzle5d-world-relocate-source-malformed"))?;
+                    let mut part: Puzzle5dPart = serde_json::from_value(serde_json::Value::from(&dsl::os_pack::json::to_dsl_value(&row))).map_err(|_| Fault::from("puzzle5d-world-relocate-source-malformed"))?;
                     if part.grips.len() > PUZZLE5D_RELOCATE_GRIPS_PER_PART {
                         return Err(Fault::from("puzzle5d-world-relocate-grip-capacity"));
                     }
@@ -7397,7 +7497,7 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle5dPlayApp>> for 
                 Ok(Self::progress("puzzle5d-world-relocate-source", "Finding moved part", "Verschobenes Teil wird gesucht"))
             }
             Puzzle5dWorldRelocateStage::ExistingFasteners => {
-                let Some(row) = snapshot.0.get("fasteners").and_then(Value::as_array).and_then(|rows| rows.get(self.fastener_cursor)) else {
+                let Some(row) = projection.get("fasteners").and_then(Value::as_array).and_then(|rows| rows.get(self.fastener_cursor)) else {
                     self.part_cursor = 0;
                     self.stage = Puzzle5dWorldRelocateStage::CandidatePart;
                     return Ok(Self::progress("puzzle5d-world-relocate-candidate-part", "Finding nearby part", "Nahes Teil wird gesucht"));
@@ -7413,12 +7513,12 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle5dPlayApp>> for 
             }
             Puzzle5dWorldRelocateStage::CandidatePart => {
                 let Some(source) = self.source.as_ref() else { return Ok(self.complete()) };
-                let Some(row) = snapshot.0.get("parts").and_then(Value::as_array).and_then(|parts| parts.get(self.part_cursor)).cloned() else { return Ok(self.complete()) };
+                let Some(row) = projection.get("parts").and_then(Value::as_array).and_then(|parts| parts.get(self.part_cursor)).cloned() else { return Ok(self.complete()) };
                 self.part_cursor += 1;
                 if row.get("id").and_then(Value::as_str) == Some(source.part_id.as_str()) {
                     return Ok(Self::progress("puzzle5d-world-relocate-candidate-part", "Skipping moved part", "Verschobenes Teil wird übersprungen"));
                 }
-                let part: Puzzle5dPart = serde_json::from_value(row).map_err(|_| Fault::from("puzzle5d-world-relocate-candidate-malformed"))?;
+                let part: Puzzle5dPart = serde_json::from_value(serde_json::Value::from(&dsl::os_pack::json::to_dsl_value(&row))).map_err(|_| Fault::from("puzzle5d-world-relocate-candidate-malformed"))?;
                 if part.grips.len() > PUZZLE5D_RELOCATE_GRIPS_PER_PART {
                     return Err(Fault::from("puzzle5d-world-relocate-grip-capacity"));
                 }
@@ -7519,7 +7619,7 @@ impl Default for Puzzle5dSetActiveExampleWork {
 
 impl Puzzle5dSetActiveExampleWork {
     fn target(command: &Puzzle5dCommand) -> Option<&'static Puzzle5dDocument> {
-        let example_id = command.args().and_then(|args| args.get("exampleId")).and_then(Value::as_str).unwrap_or("");
+        let example_id = command.args().and_then(|args| args.get("exampleId")).and_then(dsl::os_pack::json::Value::as_str).unwrap_or("");
         match example_id {
             "" => Some(&EMPTY_EXAMPLE_DOCUMENT),
             PUZZLE5D_EXAMPLE_CONCRETE_FOREST | "concrete" => Some(&CONCRETE_FOREST_EXAMPLE_DOCUMENT),
@@ -7529,8 +7629,8 @@ impl Puzzle5dSetActiveExampleWork {
         }
     }
 
-    fn compatibility_rows(document: &Puzzle5dDocument) -> &[Value] {
-        document.kind_compatibility.as_ref().and_then(Value::as_array).map(Vec::as_slice).unwrap_or_default()
+    fn compatibility_rows(document: &Puzzle5dDocument) -> &[serde_json::Value] {
+        document.kind_compatibility.as_ref().and_then(serde_json::Value::as_array).map(Vec::as_slice).unwrap_or_default()
     }
 
     fn progress(stage: &'static str, en: &'static str, de: &'static str) -> crate::retained_command::PuzzleCommandWorkStep<EditorApp<Puzzle5dPlayApp>> {
@@ -7552,14 +7652,15 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle5dPlayApp>> for 
     }
 
     fn extent(&self, command: &Puzzle5dCommand, snapshot: &Puzzle5dPlaySnapshot, _interaction: &protocol::InteractionState) -> Option<usize> {
+        let projection = puzzle5d_projection_value(&snapshot.0);
         let target = Self::target(command)?;
         let items = snapshot
             .0
             .get("fasteners")
-            .and_then(Value::as_array)
+            .and_then(serde_json::Value::as_array)
             .map_or(0, Vec::len)
-            .checked_add(snapshot.0.get("parts").and_then(Value::as_array).map_or(0, Vec::len))?
-            .checked_add(snapshot.0.get("kindCompatibility").and_then(Value::as_array).map_or(0, Vec::len))?
+            .checked_add(projection.get("parts").and_then(Value::as_array).map_or(0, Vec::len))?
+            .checked_add(projection.get("kindCompatibility").and_then(Value::as_array).map_or(0, Vec::len))?
             .checked_add(Self::compatibility_rows(target).len())?
             .checked_add(target.parts.len())?
             .checked_add(target.fasteners.len())?
@@ -7575,13 +7676,14 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle5dPlayApp>> for 
         _interaction: &protocol::InteractionState,
         _hover: &semio_framework_plugin::app::InteractionHoverState,
     ) -> Result<crate::retained_command::PuzzleCommandWorkStep<EditorApp<Puzzle5dPlayApp>>, Fault> {
+        let projection = puzzle5d_projection_value(&snapshot.0);
         let Some(target) = Self::target(command) else {
             self.stage = Puzzle5dSetActiveExampleStage::Complete;
             return Ok(crate::retained_command::PuzzleCommandWorkStep::Complete(Emit::default()));
         };
         match self.stage {
             Puzzle5dSetActiveExampleStage::ClearFasteners => {
-                if let Some(id) = snapshot.0.get("fasteners").and_then(Value::as_array).and_then(|fasteners| fasteners.get(self.cursor)).and_then(|fastener| fastener.get("id")).and_then(Value::as_str) {
+                if let Some(id) = projection.get("fasteners").and_then(Value::as_array).and_then(|fasteners| fasteners.get(self.cursor)).and_then(|fastener| fastener.get("id")).and_then(Value::as_str) {
                     self.cursor += 1;
                     self.push(crate::artifacts::puzzle5d::mutations::disconnect_grips(id.to_string()))?;
                     return Ok(Self::progress("puzzle5d-example-clear-fastener", "Removing old fastener", "Alte Verbindung wird entfernt"));
@@ -7591,7 +7693,7 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle5dPlayApp>> for 
                 Ok(Self::progress("puzzle5d-example-clear-part", "Removing old part", "Altes Teil wird entfernt"))
             }
             Puzzle5dSetActiveExampleStage::ClearParts => {
-                if let Some(id) = snapshot.0.get("parts").and_then(Value::as_array).and_then(|parts| parts.get(self.cursor)).and_then(|part| part.get("id")).and_then(Value::as_str) {
+                if let Some(id) = projection.get("parts").and_then(Value::as_array).and_then(|parts| parts.get(self.cursor)).and_then(|part| part.get("id")).and_then(Value::as_str) {
                     self.cursor += 1;
                     self.push(crate::artifacts::puzzle5d::mutations::delete_part(id.to_string()))?;
                     return Ok(Self::progress("puzzle5d-example-clear-part", "Removing old part", "Altes Teil wird entfernt"));
@@ -7611,13 +7713,13 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle5dPlayApp>> for 
                 Ok(Self::progress("puzzle5d-example-description", "Updating description", "Beschreibung wird aktualisiert"))
             }
             Puzzle5dSetActiveExampleStage::Description => {
-                let description = target.meta.as_ref().and_then(|meta| meta.get("description")).and_then(Value::as_str).unwrap_or("");
+                let description = target.meta.as_ref().and_then(|meta| meta.get("description")).and_then(serde_json::Value::as_str).unwrap_or("");
                 self.push(crate::artifacts::puzzle5d::mutations::change_description(description.to_string()))?;
                 self.stage = Puzzle5dSetActiveExampleStage::ClearCompatibility;
                 Ok(Self::progress("puzzle5d-example-clear-compatibility", "Removing old compatibility", "Alte Kompatibilität wird entfernt"))
             }
             Puzzle5dSetActiveExampleStage::ClearCompatibility => {
-                if let Some(row) = snapshot.0.get("kindCompatibility").and_then(Value::as_array).and_then(|rows| rows.get(self.cursor)) {
+                if let Some(row) = projection.get("kindCompatibility").and_then(Value::as_array).and_then(|rows| rows.get(self.cursor)) {
                     self.cursor += 1;
                     let source = row.get("source").and_then(Value::as_str).unwrap_or("").to_string();
                     let target = row.get("target").and_then(Value::as_str).unwrap_or("").to_string();
@@ -7631,7 +7733,7 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle5dPlayApp>> for 
             Puzzle5dSetActiveExampleStage::AddCompatibility => {
                 if let Some(row) = Self::compatibility_rows(target).get(self.cursor).cloned() {
                     self.cursor += 1;
-                    let row: crate::artifacts::puzzle5d::Puzzle5dKindCompatibility = serde_json::from_value(row).map_err(|_| Fault::from("puzzle5d-set-active-example-compatibility-malformed"))?;
+                    let row: crate::artifacts::puzzle5d::Puzzle5dKindCompatibility = <crate::artifacts::puzzle5d::Puzzle5dKindCompatibility as dsl::FromValue>::from_value(dsl::DslValue::from(&row)).map_err(|_| Fault::from("puzzle5d-set-active-example-compatibility-malformed"))?;
                     self.push(crate::artifacts::puzzle5d::mutations::connect_kind_compatibility(row.source, row.target, row.bidirectional, row.important, row.specificity))?;
                     return Ok(Self::progress("puzzle5d-example-add-compatibility", "Adding compatibility", "Kompatibilität wird hinzugefügt"));
                 }
@@ -7640,7 +7742,7 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle5dPlayApp>> for 
                 Ok(Self::progress("puzzle5d-example-catalogs", "Updating kind catalogs", "Artenkataloge werden aktualisiert"))
             }
             Puzzle5dSetActiveExampleStage::Catalogs => {
-                let catalogs = target.kind_catalogs.as_ref().map(|catalogs| serde_json::from_value(catalogs.clone())).transpose().map_err(|_| Fault::from("puzzle5d-set-active-example-catalogs-malformed"))?;
+                let catalogs = target.kind_catalogs.as_ref().map(|catalogs| <crate::artifacts::puzzle5d::Puzzle5dKindCatalogs as dsl::FromValue>::from_value(dsl::DslValue::from(catalogs))).transpose().map_err(|_| Fault::from("puzzle5d-set-active-example-catalogs-malformed"))?;
                 self.push(crate::artifacts::puzzle5d::mutations::replace_kind_catalogs(catalogs))?;
                 self.stage = Puzzle5dSetActiveExampleStage::AddParts;
                 Ok(Self::progress("puzzle5d-example-add-part", "Adding example part", "Beispielteil wird hinzugefügt"))
@@ -7649,7 +7751,7 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle5dPlayApp>> for 
                 if let Some(part) = target.parts.get(self.cursor) {
                     self.cursor += 1;
                     let value = serde_json::to_value(part).map_err(|_| Fault::from("puzzle5d-set-active-example-part-malformed"))?;
-                    let part = serde_json::from_value(value).map_err(|_| Fault::from("puzzle5d-set-active-example-part-malformed"))?;
+                    let part = <crate::artifacts::puzzle5d::Puzzle5dPart as dsl::FromValue>::from_value(dsl::DslValue::from(&value)).map_err(|_| Fault::from("puzzle5d-set-active-example-part-malformed"))?;
                     self.push(crate::artifacts::puzzle5d::mutations::create_part(part, None))?;
                     return Ok(Self::progress("puzzle5d-example-add-part", "Adding example part", "Beispielteil wird hinzugefügt"));
                 }
@@ -7760,8 +7862,8 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle5dPlayApp>> for 
     }
 
     fn extent(&self, command: &Puzzle5dCommand, _snapshot: &Puzzle5dPlaySnapshot, _interaction: &protocol::InteractionState) -> Option<usize> {
-        let positions = command.args().and_then(|args| args.get("positions")).and_then(Value::as_array).map_or(0, Vec::len);
-        let indices = command.args().and_then(|args| args.get("indices")).and_then(Value::as_array).map_or(0, Vec::len);
+        let positions = command.args().and_then(|args| args.get("positions")).and_then(dsl::os_pack::json::Value::as_array).map_or(0, Vec::len);
+        let indices = command.args().and_then(|args| args.get("indices")).and_then(dsl::os_pack::json::Value::as_array).map_or(0, Vec::len);
         (positions <= crate::retained_command::PUZZLE_COMMAND_DECODED_ITEMS && indices <= crate::retained_command::PUZZLE_COMMAND_DECODED_ITEMS).then_some(1)
     }
 
@@ -7773,18 +7875,19 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle5dPlayApp>> for 
         _interaction: &protocol::InteractionState,
         _hover: &semio_framework_plugin::app::InteractionHoverState,
     ) -> Result<crate::retained_command::PuzzleCommandWorkStep<EditorApp<Puzzle5dPlayApp>>, Fault> {
+        let projection = puzzle5d_projection_value(&snapshot.0);
         if self.processed_units >= crate::retained_command::PUZZLE_COMMAND_WORK_ITEMS {
             return Err(Fault::from("puzzle5d-precompute-work-capacity"));
         }
         self.processed_units += 1;
         match self.stage {
             Puzzle5dPrecomputeCommandStage::Decode => {
-                self.requested_count = command.args().and_then(|args| args.get("count").or_else(|| args.get("value"))).and_then(Value::as_f64).map_or(0, |value| value.round().max(0.0) as u32).min(PUZZLE5D_FILL_COUNT_MAX);
+                self.requested_count = command.args().and_then(|args| args.get("count").or_else(|| args.get("value"))).and_then(dsl::os_pack::json::Value::as_f64).map_or(0, |value| value.round().max(0.0) as u32).min(PUZZLE5D_FILL_COUNT_MAX);
                 self.stage = if self.tool_id == "registerBrushMesh" { Puzzle5dPrecomputeCommandStage::Positions } else { Puzzle5dPrecomputeCommandStage::Parts };
                 Ok(Self::progress("puzzle5d-precompute-decode", "Reading precompute command", "Vorberechnungsbefehl wird gelesen"))
             }
             Puzzle5dPrecomputeCommandStage::Parts => {
-                let parts = snapshot.0.get("parts").and_then(Value::as_array).map(Vec::as_slice).unwrap_or_default();
+                let parts = projection.get("parts").and_then(Value::as_array).map(Vec::as_slice).unwrap_or_default();
                 let Some(part) = parts.get(self.part_cursor) else {
                     self.stage = Puzzle5dPrecomputeCommandStage::Fasteners;
                     return Ok(Self::progress("puzzle5d-precompute-fastener", "Scanning fastener owner", "Verbindungsinhaber wird geprüft"));
@@ -7797,7 +7900,7 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle5dPlayApp>> for 
                 Ok(Self::progress("puzzle5d-precompute-part", "Scanning part owner", "Teilinhaber wird geprüft"))
             }
             Puzzle5dPrecomputeCommandStage::Grips => {
-                let parts = snapshot.0.get("parts").and_then(Value::as_array).map(Vec::as_slice).unwrap_or_default();
+                let parts = projection.get("parts").and_then(Value::as_array).map(Vec::as_slice).unwrap_or_default();
                 let part = parts.get(self.part_cursor).ok_or_else(|| Fault::from("puzzle5d-precompute-part-cursor"))?;
                 let grips = part.get("grips").and_then(Value::as_array).map(Vec::as_slice).unwrap_or_default();
                 if grips.get(self.grip_cursor).is_some() {
@@ -7810,7 +7913,7 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle5dPlayApp>> for 
                 Ok(Self::progress("puzzle5d-precompute-part", "Advancing part cursor", "Teilzeiger wird fortgesetzt"))
             }
             Puzzle5dPrecomputeCommandStage::Fasteners => {
-                let fasteners = snapshot.0.get("fasteners").and_then(Value::as_array).map(Vec::as_slice).unwrap_or_default();
+                let fasteners = projection.get("fasteners").and_then(Value::as_array).map(Vec::as_slice).unwrap_or_default();
                 if fasteners.get(self.fastener_cursor).is_some() {
                     self.fastener_cursor += 1;
                     return Ok(Self::progress("puzzle5d-precompute-fastener", "Scanning one fastener owner", "Ein Verbindungsinhaber wird geprüft"));
@@ -7819,7 +7922,7 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle5dPlayApp>> for 
                 Ok(Self::progress("puzzle5d-precompute-catalog-part", "Scanning part kind owner", "Teilartinhaber wird geprüft"))
             }
             Puzzle5dPrecomputeCommandStage::CatalogParts => {
-                let entries = snapshot.0.get("kindCatalogs").and_then(|catalogs| catalogs.get("parts")).and_then(Value::as_array).map(Vec::as_slice).unwrap_or_default();
+                let entries = projection.get("kindCatalogs").and_then(|catalogs| catalogs.get("parts")).and_then(Value::as_array).map(Vec::as_slice).unwrap_or_default();
                 if entries.get(self.catalog_cursor).is_some() {
                     self.catalog_cursor += 1;
                     self.candidate_count += 1;
@@ -7830,7 +7933,7 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle5dPlayApp>> for 
                 Ok(Self::progress("puzzle5d-precompute-catalog-grip", "Scanning grip kind owner", "Griffartinhaber wird geprüft"))
             }
             Puzzle5dPrecomputeCommandStage::CatalogGrips => {
-                let entries = snapshot.0.get("kindCatalogs").and_then(|catalogs| catalogs.get("grips")).and_then(Value::as_array).map(Vec::as_slice).unwrap_or_default();
+                let entries = projection.get("kindCatalogs").and_then(|catalogs| catalogs.get("grips")).and_then(Value::as_array).map(Vec::as_slice).unwrap_or_default();
                 if entries.get(self.catalog_cursor).is_some() {
                     self.catalog_cursor += 1;
                     return Ok(Self::progress("puzzle5d-precompute-catalog-grip", "Scanning one grip kind", "Eine Griffart wird geprüft"));
@@ -7839,7 +7942,7 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle5dPlayApp>> for 
                 Ok(Self::progress("puzzle5d-precompute-transfer", "Transferring precompute census", "Vorberechnungszensus wird übertragen"))
             }
             Puzzle5dPrecomputeCommandStage::Positions => {
-                let positions = command.args().and_then(|args| args.get("positions")).and_then(Value::as_array).map(Vec::as_slice).unwrap_or_default();
+                let positions = command.args().and_then(|args| args.get("positions")).and_then(dsl::os_pack::json::Value::as_array).map(Vec::as_slice).unwrap_or_default();
                 if let Some(value) = positions.get(self.payload_cursor) {
                     if value.as_f64().filter(|value| value.is_finite()).is_none() {
                         return Err(Fault::from("puzzle5d-register-mesh-position-malformed"));
@@ -7852,7 +7955,7 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle5dPlayApp>> for 
                 Ok(Self::progress("puzzle5d-register-mesh-index", "Reading mesh indices", "Mesh-Indizes werden gelesen"))
             }
             Puzzle5dPrecomputeCommandStage::Indices => {
-                let indices = command.args().and_then(|args| args.get("indices")).and_then(Value::as_array).map(Vec::as_slice).unwrap_or_default();
+                let indices = command.args().and_then(|args| args.get("indices")).and_then(dsl::os_pack::json::Value::as_array).map(Vec::as_slice).unwrap_or_default();
                 if let Some(value) = indices.get(self.payload_cursor) {
                     if value.as_u64().filter(|value| *value <= u32::MAX as u64).is_none() {
                         return Err(Fault::from("puzzle5d-register-mesh-index-malformed"));
@@ -8418,7 +8521,7 @@ impl ArtifactEditor for Puzzle5dPlayApp {
                     ArtifactReservedToolInput::Action { args, .. } => args.clone(),
                     _ => return Err(Fault::from("puzzle5d paste requires action input")),
                 };
-                ArtifactReservedToolJob::new(Puzzle5dPasteJob::new(request, args))
+                ArtifactReservedToolJob::new(Puzzle5dPasteJob::new(request, args.map(|value| serde_json::Value::from(&value))))
             }
             "import-media" => {
                 let (port, media) = match &request.input {
@@ -8445,7 +8548,7 @@ impl ArtifactEditor for Puzzle5dPlayApp {
         LazyLock::force(&NAKAGIN_EXAMPLE_DOCUMENT);
         LazyLock::force(&CAPSULE_DREAM_EXAMPLE_DOCUMENT);
         LazyLock::force(&PUZZLE5D_EXAMPLE_OPERATIONS);
-        Puzzle5dPlaySnapshot(serde_json::to_value(default_document()).unwrap_or(Value::Null))
+        Puzzle5dPlaySnapshot(serde_json::to_value(default_document()).unwrap_or(serde_json::Value::Null))
     }
 
     fn clipboard_media_type() -> Option<MediaType> {
@@ -8459,7 +8562,7 @@ impl ArtifactEditor for Puzzle5dPlayApp {
         if parts.is_empty() {
             return Err(ClipboardError::EmptySelection);
         }
-        let fragment_value = json!({ "schema": PUZZLE5D_SCHEMA, "parts": parts, "fasteners": fasteners });
+        let fragment_value = serde_json::json!({ "schema": PUZZLE5D_SCHEMA, "parts": parts, "fasteners": fasteners });
         Ok(ClipboardFragment {
             schema: PUZZLE5D_SCHEMA.to_string(),
             media_type: Self::clipboard_media_type().expect("declared above"),
@@ -8476,8 +8579,8 @@ impl ArtifactEditor for Puzzle5dPlayApp {
     /// (the cut parts/fasteners are gone from the document either way, so a stale selection referencing
     /// them is inert until the next real selection action overwrites it).
     fn cut_operations(doc: &ArtifactView<'_, Puzzle5dPlaySnapshot>, _cfg: &ConfigView<'_, Puzzle5dConfig>, interaction: &InteractionView<'_>) -> Vec<Puzzle5dMutation> {
-        let before = doc.snapshot.0.clone();
-        let Ok(document) = serde_json::from_value::<Puzzle5dDocument>(before.clone()) else {
+        let before = puzzle5d_projection_value(&doc.snapshot.0);
+        let Ok(document) = <Puzzle5dDocument as dsl::FromValue>::from_value(dsl::os_pack::json::to_dsl_value(&before)) else {
             return Vec::new();
         };
         let (part_ids, fastener_ids) = puzzle5d_interaction_part_and_fastener_ids(interaction);
@@ -8502,11 +8605,11 @@ impl ArtifactEditor for Puzzle5dPlayApp {
         if fragment.media_type != expected {
             return Err(ClipboardError::IncompatibleMediaType(fragment.media_type));
         }
-        let fragment_value: Value = serde_json::from_str(&fragment.dsl_text).map_err(|error| ClipboardError::ParseFailed(error.to_string()))?;
-        let fragment_parts: Vec<Puzzle5dPart> = serde_json::from_value(fragment_value.get("parts").cloned().unwrap_or_else(|| json!([]))).map_err(|error| ClipboardError::ParseFailed(error.to_string()))?;
-        let fragment_fasteners: Vec<Puzzle5dFastener> = serde_json::from_value(fragment_value.get("fasteners").cloned().unwrap_or_else(|| json!([]))).unwrap_or_default();
-        let before = doc.snapshot.0.clone();
-        let document: Puzzle5dDocument = serde_json::from_value(before.clone()).map_err(|error| ClipboardError::ParseFailed(error.to_string()))?;
+        let fragment_value: serde_json::Value = serde_json::from_str(&fragment.dsl_text).map_err(|error| ClipboardError::ParseFailed(error.to_string()))?;
+        let fragment_parts: Vec<Puzzle5dPart> = serde_json::from_value(fragment_value.get("parts").cloned().unwrap_or_else(|| serde_json::json!([]))).map_err(|error| ClipboardError::ParseFailed(error.to_string()))?;
+        let fragment_fasteners: Vec<Puzzle5dFastener> = serde_json::from_value(fragment_value.get("fasteners").cloned().unwrap_or_else(|| serde_json::json!([]))).unwrap_or_default();
+        let before = puzzle5d_projection_value(&doc.snapshot.0);
+        let document: Puzzle5dDocument = <Puzzle5dDocument as dsl::FromValue>::from_value(dsl::os_pack::json::to_dsl_value(&before)).map_err(|error| ClipboardError::ParseFailed(error.to_string()))?;
         let delta = paste_delta_2d(&fragment_parts, &document.parts, placement);
         let (fresh_parts, fresh_fasteners) = paste_selection_local(&document, &fragment_parts, &fragment_fasteners, delta);
         let mut after = document;
@@ -8520,9 +8623,10 @@ impl ArtifactEditor for Puzzle5dPlayApp {
         command.action_id()
     }
 
-    fn command_from_action(action: &str, args: Option<&Value>) -> Result<Self::Command, Fault> {
-        let window_id = args.and_then(|value| value.get("windowId").or_else(|| value.get("window_id"))).and_then(Value::as_str).map(str::to_string);
-        Puzzle5dCommand::try_from_action(action, args.cloned(), window_id).ok_or_else(|| Fault::from(format!("unknown Puzzle 5D action '{action}'")))
+    fn command_from_action(action: &str, args: Option<&dsl::DslValue>) -> Result<Self::Command, Fault> {
+        let args = args.map(dsl::os_pack::json::from_dsl_value);
+        let window_id = args.as_ref().and_then(|value| value.get("windowId").or_else(|| value.get("window_id"))).and_then(dsl::os_pack::json::Value::as_str).map(str::to_string);
+        Puzzle5dCommand::try_from_action(action, args, window_id).ok_or_else(|| Fault::from(format!("unknown Puzzle 5D action '{action}'")))
     }
 
     /// @emoji 🧩️ Thin typed-command adapter — reconstructs the exact `(action, args, window_id)`
@@ -8602,11 +8706,12 @@ impl ArtifactEditor for Puzzle5dPlayApp {
     }
 
     fn render(body_key: &str, doc: &ArtifactView<'_, Puzzle5dPlaySnapshot>, cfg: &ConfigView<'_, Puzzle5dConfig>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
+        let projection = puzzle5d_projection_value(&doc.snapshot.0);
         let node = with_puzzle5d_app(|app| -> semio_framework_plugin::UiAssemblyResult<_> {
             let config = cfg.snapshot;
             let window_for_body = if body_key == board2d::BODY_KEY { board2d::WINDOW_KIND_ID } else { world3d::WINDOW_KIND_ID };
             let active_utility = puzzle5d_scene_active_utility(config, Some(window_for_body));
-            let envelope = scene_from_projection(&doc.snapshot.0, config.clone(), &active_utility);
+            let envelope = scene_from_projection(&projection, config.clone(), &active_utility);
             let labels = puzzle5d_labels(config).ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("ui.localization.unsupported", "puzzle5d locale or terminology is not recognized"))?;
             match body_key {
                 board2d::BODY_KEY => board2d::render(&envelope),
@@ -8621,6 +8726,7 @@ impl ArtifactEditor for Puzzle5dPlayApp {
     }
 
     fn window_engagements(doc: &ArtifactView<'_, Puzzle5dPlaySnapshot>, cfg: &ConfigView<'_, Puzzle5dConfig>) -> HashMap<String, WindowEngagement> {
+        let projection = puzzle5d_projection_value(&doc.snapshot.0);
         let config = cfg.snapshot;
         let Some(labels) = puzzle5d_labels(config) else {
             return HashMap::new();
@@ -8633,7 +8739,7 @@ impl ArtifactEditor for Puzzle5dPlayApp {
             .flat_map(|window| {
                 window_instance_ids(window).into_iter().map(|wid| {
                     let active_utility = puzzle5d_scene_active_utility(config, Some(&wid));
-                    let envelope = scene_from_projection(&doc.snapshot.0, config.clone(), &active_utility);
+                    let envelope = scene_from_projection(&projection, config.clone(), &active_utility);
                     (wid, edit::puzzle5d_engagement(&envelope, window, labels))
                 })
             })
@@ -8641,6 +8747,7 @@ impl ArtifactEditor for Puzzle5dPlayApp {
     }
 
     fn window_measures(doc: &ArtifactView<'_, Puzzle5dPlaySnapshot>, cfg: &ConfigView<'_, Puzzle5dConfig>) -> HashMap<String, Vec<WindowMeasure>> {
+        let projection = puzzle5d_projection_value(&doc.snapshot.0);
         with_puzzle5d_app(|app| {
             let config = cfg.snapshot;
             let Some(labels) = puzzle5d_labels(config) else {
@@ -8651,7 +8758,7 @@ impl ArtifactEditor for Puzzle5dPlayApp {
                 .flat_map(|window| {
                     window_instance_ids(window).into_iter().map(|wid| {
                         let active_utility = puzzle5d_scene_active_utility(config, Some(&wid));
-                        let envelope = scene_from_projection(&doc.snapshot.0, config.clone(), &active_utility);
+                        let envelope = scene_from_projection(&projection, config.clone(), &active_utility);
                         let measures = if *window == board2d::WINDOW_KIND_ID { board2d::window_measures(&envelope, &app.precompute.borrow(), labels) } else { world3d::window_measures(&envelope, &app.precompute.borrow(), labels) };
                         (wid, measures)
                     })
@@ -8666,6 +8773,7 @@ impl ArtifactEditor for Puzzle5dPlayApp {
         cfg: &ConfigView<'_, Puzzle5dConfig>,
         registry: &semio_framework_plugin::AppActionRegistry,
     ) -> Vec<semio_framework_plugin::ContextMenuItemSpec> {
+        let projection = puzzle5d_projection_value(&doc.snapshot.0);
         let config = cfg.snapshot;
         let Some(labels) = puzzle5d_labels(config) else {
             return Vec::new();
@@ -8674,7 +8782,7 @@ impl ArtifactEditor for Puzzle5dPlayApp {
             return Vec::new();
         };
         let active_utility = puzzle5d_scene_active_utility(config, Some(world3d::WINDOW_KIND_ID));
-        let envelope = scene_from_projection(&doc.snapshot.0, config.clone(), &active_utility);
+        let envelope = scene_from_projection(&projection, config.clone(), &active_utility);
         let part_ids: Vec<String> =
             request.surface.as_ref().map(|surface| surface.selection.iter().filter(|g| g.domain == "object" || g.domain == "node" || g.domain == PUZZLE5D_GRANULARITY_PART).flat_map(|g| g.ids.iter().cloned()).collect()).unwrap_or_default();
         puzzle5d_context_menu_items(&envelope, &part_ids, labels, is_de, registry)
@@ -8928,7 +9036,7 @@ pub(crate) mod testkit {
     /// (that method is FRAMEWORK-reserved now — an app's own actions go exclusively through the typed
     /// `Self::Command` channel). Reconstructs the `Puzzle5dCommand` from the same
     /// `(action, args, window_id)` triple every pre-migration test already passed.
-    pub fn dispatch(app: &mut Puzzle5dApp, action: &str, args: Option<&Value>, window_id: Option<&str>) -> Result<InvocationResult, Fault> {
+    pub fn dispatch(app: &mut Puzzle5dApp, action: &str, args: Option<&dsl::os_pack::json::Value>, window_id: Option<&str>) -> Result<InvocationResult, Fault> {
         // 🕰️ Framework-reserved verbs (undo/redo/checkpoint/…/the six interaction verbs) stay on
         // `handle_action` — ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM added
         // interactionSelect/interactionHover/clearSelection/selectAll/setSelectionMode/
@@ -8952,7 +9060,8 @@ pub(crate) mod testkit {
                 | "setSelectionMode"
                 | "setInteractionGranularity"
         ) {
-            return semio_framework::io::resolve_ready(app.handle_action(action, args, &meta("local")));
+            let dsl_args = args.map(dsl::os_pack::json::to_dsl_value);
+            return semio_framework::io::resolve_ready(app.handle_action(action, dsl_args.as_ref(), &meta("local")));
         }
         semio_framework::io::resolve_ready(app.dispatch_typed(Puzzle5dCommand::from_action(action, args.cloned(), window_id.map(str::to_string)), &meta("local")))
     }
@@ -8962,7 +9071,7 @@ pub(crate) mod testkit {
     /// deleted `setSelection` action.
     pub fn select_id(app: &mut Puzzle5dApp, granularity: &str, id: &str) -> Result<InvocationResult, Fault> {
         let targets = serde_json::to_string(&vec![InteractionTarget { granularity: granularity.into(), id: id.into() }]).unwrap_or_default();
-        dispatch(app, "interactionSelect", Some(&json!({ "domainId": PUZZLE5D_INTERACTION_DOMAIN, "targets": targets, "merge": "replace", "method": "pick" })), None)
+        dispatch(app, "interactionSelect", Some(&dsl::json!({ "domainId": PUZZLE5D_INTERACTION_DOMAIN, "targets": targets, "merge": "replace", "method": "pick" })), None)
     }
 
     /// 🖼️ The rendered body, as a JSON string — every panel/window assertion greps this value.
@@ -8981,7 +9090,7 @@ pub(crate) mod testkit {
                     _ => continue,
                 }
                 .expect("serialize scene");
-                return json!({ "schema": surface.doc_schema, "scene": scene }).to_string();
+                return serde_json::json!({ "schema": surface.doc_schema, "scene": scene }).to_string();
             }
             stack.extend(node.children.iter());
         }
@@ -9397,7 +9506,7 @@ mod tests {
         let mut app = app();
         let loaded = part_count(&app);
         assert!(loaded > 0);
-        dispatch(&mut app, "setActiveExample", Some(&json!({ "exampleId": "" })), None).expect("empty");
+        dispatch(&mut app, "setActiveExample", Some(&dsl::json!({ "exampleId": "" })), None).expect("empty");
         assert_eq!(part_count(&app), 0, "empty example clears the parts");
         semio_framework::io::resolve_ready(app.handle_action("undo", None, &meta("local"))).expect("undo");
         assert_eq!(part_count(&app), loaded, "undo restores the concrete-forest parts");
@@ -9408,15 +9517,15 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn patch_fastener_updates_transform_offsets_and_undoes() {
         let mut app = app();
-        dispatch(&mut app, "setActiveExample", Some(&json!({ "exampleId": PUZZLE5D_EXAMPLE_NAKAGIN })), None).expect("load nakagin (has fasteners)");
+        dispatch(&mut app, "setActiveExample", Some(&dsl::json!({ "exampleId": PUZZLE5D_EXAMPLE_NAKAGIN })), None).expect("load nakagin (has fasteners)");
         let projection = projection_of(&app);
         let fastener_id = projection["fasteners"][0]["id"].as_str().expect("seeded fastener").to_string();
-        dispatch(&mut app, "patchFastener", Some(&json!({ "fastenerId": fastener_id, "field": "gap", "value": 2.5 })), None).expect("patch gap");
+        dispatch(&mut app, "patchFastener", Some(&dsl::json!({ "fastenerId": fastener_id, "field": "gap", "value": 2.5 })), None).expect("patch gap");
         let after = projection_of(&app);
         let fastener = after["fasteners"].as_array().unwrap().iter().find(|entry| entry["id"] == fastener_id).expect("fastener");
         assert_eq!(fastener["gap"], 2.5);
         assert_eq!(fastener["shift"], 0.0);
-        dispatch(&mut app, "patchFastener", Some(&json!({ "fastenerId": fastener_id, "field": "rotation", "value": 30.0 })), None).expect("patch rotation");
+        dispatch(&mut app, "patchFastener", Some(&dsl::json!({ "fastenerId": fastener_id, "field": "rotation", "value": 30.0 })), None).expect("patch rotation");
         let after2 = projection_of(&app);
         let fastener2 = after2["fasteners"].as_array().unwrap().iter().find(|entry| entry["id"] == fastener_id).expect("fastener");
         assert_eq!(fastener2["gap"], 2.5, "earlier gap edit must survive a later rotation edit");
@@ -9456,7 +9565,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn copy_emits_clipboard_fragment_for_the_closed_selection() {
         let mut app = app_with_registry();
-        dispatch(&mut app, "setActiveExample", Some(&json!({ "exampleId": PUZZLE5D_EXAMPLE_NAKAGIN })), None).expect("load nakagin");
+        dispatch(&mut app, "setActiveExample", Some(&dsl::json!({ "exampleId": PUZZLE5D_EXAMPLE_NAKAGIN })), None).expect("load nakagin");
         let first_part_id = first_part_id(&app);
         select_id(&mut app, PUZZLE5D_GRANULARITY_PART, &first_part_id).expect("select");
         let result = semio_framework::io::resolve_ready(app.handle_action("copy", None, &meta("local"))).expect("copy");
@@ -9464,7 +9573,7 @@ mod tests {
         assert_eq!(result.requested_effects.len(), 1);
         let Effect::ClipboardWrite { fragment } = &result.requested_effects[0] else { panic!("expected ClipboardWrite effect") };
         assert_eq!(fragment.source_app, PUZZLE5D_PLAY_APP_ID);
-        let fragment_value: Value = serde_json::from_str(&fragment.dsl_text).expect("fragment dsl_text is JSON");
+        let fragment_value: serde_json::Value = serde_json::from_str(&fragment.dsl_text).expect("fragment dsl_text is JSON");
         assert_eq!(fragment_value["parts"].as_array().expect("parts").len(), 1);
     }
 
@@ -9479,7 +9588,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn cut_removes_selected_part_and_undo_restores_it() {
         let mut app = app_with_registry();
-        dispatch(&mut app, "setActiveExample", Some(&json!({ "exampleId": PUZZLE5D_EXAMPLE_NAKAGIN })), None).expect("load nakagin");
+        dispatch(&mut app, "setActiveExample", Some(&dsl::json!({ "exampleId": PUZZLE5D_EXAMPLE_NAKAGIN })), None).expect("load nakagin");
         let before_count = part_count(&app);
         let first_part_id = first_part_id(&app);
         select_id(&mut app, PUZZLE5D_GRANULARITY_PART, &first_part_id).expect("select");
@@ -9495,7 +9604,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn paste_materializes_fragment_parts_at_original_anchor_with_fresh_ids() {
         let mut app = app_with_registry();
-        dispatch(&mut app, "setActiveExample", Some(&json!({ "exampleId": PUZZLE5D_EXAMPLE_NAKAGIN })), None).expect("load nakagin");
+        dispatch(&mut app, "setActiveExample", Some(&dsl::json!({ "exampleId": PUZZLE5D_EXAMPLE_NAKAGIN })), None).expect("load nakagin");
         let projection = projection_of(&app);
         let first_part_id = first_part_id(&app);
         select_id(&mut app, PUZZLE5D_GRANULARITY_PART, &first_part_id).expect("select");
@@ -9503,7 +9612,7 @@ mod tests {
         let Effect::ClipboardWrite { fragment } = &copy_result.requested_effects[0] else { panic!("expected ClipboardWrite effect") };
         let before_count = part_count(&app);
         let before_ids: HashSet<String> = projection["parts"].as_array().unwrap().iter().map(|part| part["id"].as_str().unwrap_or_default().to_string()).collect();
-        let paste_args = json!({ "fragment": fragment, "anchor": "original", "position": [10.0, 0.0, 0.0] });
+        let paste_args = serde_json::json!({ "fragment": fragment, "anchor": "original", "position": [10.0, 0.0, 0.0] });
         semio_framework::io::resolve_ready(app.handle_action("paste", Some(&paste_args), &meta("local"))).expect("paste");
         assert_eq!(part_count(&app), before_count + 1);
         let after = projection_of(&app);
@@ -9639,7 +9748,7 @@ mod tests {
     async fn add_part_kind_materializes_the_declared_kind_default() {
         // 📝️ P1 arg form: addPartKind with no args materializes the declared `partKind` default and adds a part.
         let mut app = app_with_registry();
-        dispatch(&mut app, "setActiveExample", Some(&json!({ "exampleId": "" })), None).expect("empty");
+        dispatch(&mut app, "setActiveExample", Some(&dsl::json!({ "exampleId": "" })), None).expect("empty");
         let before = part_count(&app);
         let result = dispatch(&mut app, "addPartKind", None, None).expect("addPartKind");
         assert!(!result.mutations.is_empty(), "addPartKind is a Mutation that emits mutations");
@@ -9654,7 +9763,7 @@ mod tests {
         // 🧰️ Switching utilities is the framework View action: no document operations, no undo entry, no re-emitted effect.
         let mut app = app_with_registry();
         let before = projection_of(&app);
-        let result = dispatch(&mut app, SET_ACTIVE_UTILITY_ACTION_ID, Some(&json!({ "utilityId": "brush" })), None).expect("switch utility");
+        let result = dispatch(&mut app, SET_ACTIVE_UTILITY_ACTION_ID, Some(&dsl::json!({ "utilityId": "brush" })), None).expect("switch utility");
         assert!(result.mutations.is_empty(), "utility switching never emits document operations");
         assert!(result.requested_effects.is_empty(), "a user utility switch does not re-emit SetActiveUtility");
         assert_eq!(projection_of(&app), before, "utility switching does not mutate the document");
@@ -9667,12 +9776,12 @@ mod tests {
         // VCS-tracked document or emitting an operation.
         let mut app = app();
         let before = projection_of(&app);
-        let camera2d_result = dispatch(&mut app, "setCamera2d", Some(&json!({ "camera": { "x": 12.5, "y": -6.5, "zoom": 3.5 } })), None).expect("setCamera2d");
+        let camera2d_result = dispatch(&mut app, "setCamera2d", Some(&dsl::json!({ "camera": { "x": 12.5, "y": -6.5, "zoom": 3.5 } })), None).expect("setCamera2d");
         assert!(camera2d_result.mutations.is_empty(), "setCamera2d is a View action and must never emit a document operation");
         assert_eq!(projection_of(&app), before, "setCamera2d must not mutate the document");
         let board = render_body(&mut app, board2d::BODY_KEY);
         assert!(board.contains("12.5") && board.contains("-6.5"), "the new 2D camera pose must be reflected in the rendered runtime state");
-        let camera3d_result = dispatch(&mut app, "setCamera3d", Some(&json!({ "camera": { "position": [42.5, 7.5, 3.5], "target": [1.5, 2.5, 3.5], "zoom": 5.5 } })), None).expect("setCamera3d");
+        let camera3d_result = dispatch(&mut app, "setCamera3d", Some(&dsl::json!({ "camera": { "position": [42.5, 7.5, 3.5], "target": [1.5, 2.5, 3.5], "zoom": 5.5 } })), None).expect("setCamera3d");
         assert!(camera3d_result.mutations.is_empty(), "setCamera3d is a View action and must never emit a document operation");
         assert_eq!(projection_of(&app), before, "setCamera3d must not mutate the document");
         let world = render_body(&mut app, world3d::BODY_KEY);
@@ -9723,7 +9832,7 @@ mod tests {
     async fn engagement_submit_switches_utility_via_host_effect_for_both_windows() {
         // 🧰️ Reconciled dual entry point: the engagement token drives the same host-owned utility switch, once per window.
         let mut app = app();
-        let result = dispatch(&mut app, "engagementSubmit", Some(&json!({ "window": world3d::WINDOW_KIND_ID, "value": "brush" })), None).expect("submit");
+        let result = dispatch(&mut app, "engagementSubmit", Some(&dsl::json!({ "window": world3d::WINDOW_KIND_ID, "value": "brush" })), None).expect("submit");
         let windows: Vec<&str> = result
             .requested_effects
             .iter()
@@ -9750,7 +9859,7 @@ mod tests {
         };
         let start = origin_x(&app);
         for dx in [1.0, 2.0, 3.0] {
-            dispatch(&mut app, "translateSelection", Some(&json!({ "ids": [part_id], "dx": dx, "dy": 0.0, "dz": 0.0 })), None).expect("drag tick");
+            dispatch(&mut app, "translateSelection", Some(&dsl::json!({ "ids": [part_id], "dx": dx, "dy": 0.0, "dz": 0.0 })), None).expect("drag tick");
         }
         assert!((origin_x(&app) - start - 6.0).abs() < 1e-9, "three ticks accumulate 1+2+3 on x");
         semio_framework::io::resolve_ready(app.handle_action("undo", None, &meta("local"))).expect("undo");
@@ -9763,7 +9872,7 @@ mod tests {
     async fn kit_in_retained_import_media_dispatches_the_exact_factory_and_applies_canonical_output() {
         let mut app = app_with_registry();
         let before = projection_of(&app);
-        let fragment = json!({
+        let fragment = serde_json::json!({
             "schema": "manifest",
             "objectKinds": [{
                 "id": "retained-capsule",
@@ -9814,7 +9923,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn kit_in_retained_import_media_upserts_part_and_grip_kinds_into_kind_catalogs() {
         let mut app = app_with_registry();
-        let fragment = json!({
+        let fragment = serde_json::json!({
             "schema": "manifest",
             "objectKinds": [{
                 "id": "capsule",
@@ -9860,7 +9969,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn kit_in_retained_import_media_is_idempotent_on_repeated_delivery() {
         let mut app = app_with_registry();
-        let fragment = json!({
+        let fragment = serde_json::json!({
             "objectKinds": [{ "id": "capsule", "name": "capsule", "label": "Capsule", "meshUrl": "/mesh/capsule.glb", "vortices": [] }],
             "vortexKinds": [],
             "cableKinds": [],

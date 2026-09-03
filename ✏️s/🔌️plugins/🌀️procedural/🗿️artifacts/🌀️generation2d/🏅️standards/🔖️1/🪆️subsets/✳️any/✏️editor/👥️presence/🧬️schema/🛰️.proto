@@ -1,0 +1,15 @@
+syntax = "proto3";
+package semio.app.generation.2d;
+message Generation2dPresence {
+  // @state presence
+  CameraJson camera = 1;
+  // @state presence
+  string show_mode = 2;
+  // @state presence
+  optional string selected_generation_id = 3;
+}
+message CameraJson {
+  double x = 1;
+  double y = 2;
+  double zoom = 3;
+}

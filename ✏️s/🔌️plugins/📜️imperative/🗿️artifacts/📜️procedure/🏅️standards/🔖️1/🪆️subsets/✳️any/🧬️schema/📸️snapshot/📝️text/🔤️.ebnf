@@ -1,0 +1,3 @@
+(* ebnf imperative.procedure.snapshot *)
+document = header, body ;
+header = 'schema', space, 'imperative.procedure.snapshot', newline ;

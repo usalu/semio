@@ -360,26 +360,26 @@
         "order": 175
       }
     },
-    "@generated:procedural2d:react",
-    "@generated:procedural2d:wgpu",
+    "@generated:generation2d:react",
+    "@generated:generation2d:wgpu",
     {
       "name": "🛠️dev🔧️procedural🩻️2d🧊️wgpu🖥️native",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun ./🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/📜️script.ts native procedural2d",
+      "command": "bun ./🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/📜️script.ts native generation2d",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "3_dev",
         "order": 180.2
       }
     },
-    "@generated:procedural3d:react",
-    "@generated:procedural3d:wgpu",
+    "@generated:generation3d:react",
+    "@generated:generation3d:wgpu",
     {
       "name": "🛠️dev🔧️procedural🏙️3d🧊️wgpu🖥️native",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun ./🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/📜️script.ts native procedural3d",
+      "command": "bun ./🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/📜️script.ts native generation3d",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "3_dev",
@@ -456,7 +456,7 @@
       "name": "🛠️dev🔧️procedural🏙️3d🧩️hexagonal🧱️column🧊️wgpu🖥️native",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun ./🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/📜️script.ts native procedural3d",
+      "command": "bun ./🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/📜️script.ts native generation3d",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "3_dev",
@@ -4256,6 +4256,17 @@
       }
     },
     {
+      "name": "📦️catalog-complete🤖️plugin-registry",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/plugin-registry:catalog-complete -- --build-root \"${input:catalogFreshBuildRoot}\"",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 206.066
+      }
+    },
+    {
       "name": "📦️preview🤖️print-latex-tokens",
       "type": "node-terminal",
       "request": "launch",
@@ -4788,6 +4799,13 @@
       }
     }
   ],
+  "inputs": [
+    {
+      "id": "catalogFreshBuildRoot",
+      "type": "promptString",
+      "description": "Absolute fresh plugin catalog build root"
+    }
+  ],
 
   // 🎮️devLaunchers — per-playground-variant dev-launcher metadata (not part of the generated
   // output); see 🖥️launch.ts readSeed() for the exact split contract this marker line supports.
@@ -5278,7 +5296,7 @@
         "uriFormat": "%s"
       }
     },
-    "procedural2d": {
+    "generation2d": {
       "namePrefix": "🔧️procedural🩻️2d",
       "order": 180,
       "command": "bun ./📜️script.ts dev procedural 2d",
@@ -5300,7 +5318,7 @@
         "uriFormat": "%s"
       }
     },
-    "procedural3d": {
+    "generation3d": {
       "namePrefix": "🔧️procedural🏙️3d",
       "order": 190,
       "command": "bun run dev:procedural:3d",
@@ -5602,9 +5620,9 @@
     "trinity-rewriting": {
       "namePrefix": "🔺️trinity♻️rewriting",
       "order": 380,
-      "command": "bun run dev:trinity:rewrite",
+      "command": "bun run dev:trinity:rewriting",
       "reactEnv": {
-        "TRINITY_REWRITE_PLAY_PORT": "{PORT}",
+        "TRINITY_REWRITING_PLAY_PORT": "{PORT}",
         "SEMIO_RENDERER": "react"
       },
       "reactServerReadyAction": {
@@ -5613,7 +5631,7 @@
       },
       "wgpuOrder": 380.1,
       "wgpuEnv": {
-        "TRINITY_REWRITE_PLAY_PORT": "{PORT}",
+        "TRINITY_REWRITING_PLAY_PORT": "{PORT}",
         "SEMIO_RENDERER": "wgpu"
       },
       "wgpuServerReadyAction": {

@@ -1,0 +1,71 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://semio.tech/schema/replication/artifact-bootstrap-fixture-v1.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "formatVersion", "artifact", "payload", "chunkByteLengths", "wire"],
+  "properties": {
+    "$schema": { "type": "string" },
+    "schemaVersion": { "const": 1 },
+    "formatVersion": { "const": 1 },
+    "artifact": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["descriptorHash", "schema", "kind", "packSchemaHash", "baselineFrontier", "requiredTailFrontier"],
+      "properties": {
+        "descriptorHash": { "$ref": "#/$defs/hash" },
+        "schema": { "type": "string", "minLength": 1, "maxLength": 256 },
+        "kind": { "type": "string", "minLength": 1, "maxLength": 256 },
+        "packSchemaHash": { "$ref": "#/$defs/hash" },
+        "baselineFrontier": { "$ref": "#/$defs/frontier" },
+        "requiredTailFrontier": { "$ref": "#/$defs/frontier" }
+      }
+    },
+    "payload": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["packHex", "sprHex", "packLength", "sprLength", "packHash", "sprHash", "aggregateHash"],
+      "properties": {
+        "packHex": { "$ref": "#/$defs/evenHex" },
+        "sprHex": { "$ref": "#/$defs/evenHex" },
+        "packLength": { "type": "integer", "minimum": 1 },
+        "sprLength": { "type": "integer", "minimum": 1 },
+        "packHash": { "$ref": "#/$defs/hash" },
+        "sprHash": { "$ref": "#/$defs/hash" },
+        "aggregateHash": { "$ref": "#/$defs/hash" }
+      }
+    },
+    "chunkByteLengths": {
+      "type": "array",
+      "minItems": 2,
+      "items": { "type": "integer", "minimum": 1, "maximum": 4096 }
+    },
+    "wire": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["inlineWelcomeHex", "chunkedWelcomeHex", "chunkHex", "doneHex"],
+      "properties": {
+        "inlineWelcomeHex": { "$ref": "#/$defs/evenHex" },
+        "chunkedWelcomeHex": { "$ref": "#/$defs/evenHex" },
+        "chunkHex": { "type": "array", "minItems": 2, "items": { "$ref": "#/$defs/evenHex" } },
+        "doneHex": { "$ref": "#/$defs/evenHex" }
+      }
+    }
+  },
+  "$defs": {
+    "hash": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "evenHex": { "type": "string", "minLength": 2, "pattern": "^(?:[0-9a-f]{2})+$" },
+    "frontier": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["documentId", "headEditOrdinal", "headEditId", "lastCommitSeq", "chainHash"],
+      "properties": {
+        "documentId": { "type": "string", "minLength": 1 },
+        "headEditOrdinal": { "type": "integer", "minimum": 0 },
+        "headEditId": { "type": "string" },
+        "lastCommitSeq": { "type": "integer", "minimum": 0 },
+        "chainHash": { "$ref": "#/$defs/hash" }
+      }
+    }
+  }
+}

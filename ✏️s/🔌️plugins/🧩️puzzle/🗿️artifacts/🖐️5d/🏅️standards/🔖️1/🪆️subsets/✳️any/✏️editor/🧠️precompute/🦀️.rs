@@ -6,7 +6,7 @@
 //! 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES): a per-editing-session mutable-state facade
 //! over `puzzle3d`'s own precompute session — genuinely app/session-side behaviour (constructed and
 //! held as a `RefCell` field on `Puzzle5dPlayApp`, and consumed by the brush option's `measure()` and
-//! both `🪟️windows/{◻2d,🧊️3d}`'s `definition()`/`window_measures()`/`render()`), never artifact schema.
+//! both `🪟️windows/{◻️2d,🧊️3d}`'s `definition()`/`window_measures()`/`render()`), never artifact schema.
 
 use crate::artifacts::puzzle3d::Puzzle3dError;
 use crate::artifacts::puzzle5d::Puzzle5dError;
@@ -46,11 +46,11 @@ impl Puzzle5dPrecomputeSession {
     /// `brush_candidates` typed (`BrushCollisionFreeResult`, not a JSON string) — re-serialized here so
     /// this node's own JSON-string surface for its callers stays unchanged.
     pub fn brush_candidates(&self, grip_full_id: &str) -> String {
-        serde_json::to_string(&self.inner.brush_candidates(grip_full_id)).unwrap_or_else(|_| "{}".to_string())
+        dsl::json::to_json_string(&self.inner.brush_candidates(grip_full_id))
     }
 
     pub fn brush_preview_json(&self, grip_full_id: &str, candidate_index: usize) -> Option<String> {
-        self.inner.brush_preview(grip_full_id, candidate_index).and_then(|preview| serde_json::to_string(&preview).ok())
+        self.inner.brush_preview(grip_full_id, candidate_index).map(|preview| dsl::json::to_json_string(&preview))
     }
 
     pub fn fill_preview_object_kind(&self) -> Option<String> {
@@ -67,7 +67,7 @@ impl Puzzle5dPrecomputeSession {
     /// so the `Unit`/`BrushPreview` arms are unreachable in practice.
     fn fixture_outcome_json(outcome: crate::artifacts::puzzle3d::schema::Puzzle3dEngineOutcome) -> Result<String, Puzzle3dError> {
         match outcome {
-            crate::artifacts::puzzle3d::schema::Puzzle3dEngineOutcome::Fixture(fixture) => Ok(serde_json::to_string(&fixture)?),
+            crate::artifacts::puzzle3d::schema::Puzzle3dEngineOutcome::Fixture(fixture) => Ok(dsl::json::to_json_string(&fixture)),
             _ => Err(Puzzle3dError::BrushPlacementRejected),
         }
     }
@@ -82,7 +82,7 @@ impl Puzzle5dPrecomputeSession {
     }
 
     pub fn apply_brush_placement_rust(&mut self, payload_json: &str) -> Result<String, Puzzle5dError> {
-        let payload: BrushPlacePayload = serde_json::from_str(payload_json).map_err(Puzzle3dError::from)?;
+        let payload: BrushPlacePayload = dsl::json::from_json_str(payload_json).map_err(Puzzle3dError::from)?;
         Ok(Self::fixture_outcome_json(self.inner.dispatch(crate::artifacts::puzzle3d::schema::Puzzle3dEngineCommand::ApplyBrushPlacement { payload })?)?)
     }
 
@@ -109,7 +109,7 @@ impl Puzzle5dPrecomputeSession {
     }
 
     pub fn apply_brush_placement_rust(&mut self, payload_json: &str) -> Result<String, Puzzle5dError> {
-        let payload: BrushPlacePayload = serde_json::from_str(payload_json).map_err(Puzzle3dError::from)?;
+        let payload: BrushPlacePayload = dsl::json::from_json_str(payload_json).map_err(Puzzle3dError::from)?;
         Ok(Self::fixture_outcome_json(self.inner.dispatch(crate::artifacts::puzzle3d::schema::Puzzle3dEngineCommand::ApplyBrushPlacement { payload })?)?)
     }
 

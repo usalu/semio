@@ -92,8 +92,8 @@ fn round_trip_oracle(ctx: &Context) -> Result<Outcome, String> {
 mod subject {
     use super::{arranged_input, mutable_input};
     use semio_repo_test_host::{Context, Json, Outcome};
-    use semio_s_plugin_stdio::artifacts::pptx::standards::v_ecma_376::subsets::any::io::export::serializers::encode_pptx;
-    use semio_s_plugin_stdio::artifacts::pptx::standards::v_ecma_376::subsets::any::io::import::deserializers::decode_pptx;
+    use semio_s_plugin_stdio::artifacts::pptx::standards::v_ecma_376::subsets::base::io::export::serializers::encode_pptx;
+    use semio_s_plugin_stdio::artifacts::pptx::standards::v_ecma_376::subsets::base::io::import::deserializers::decode_pptx;
     use semio_s_plugin_stdio::artifacts::pptx::standards::v_ecma_376::subsets::strict::schema::mutations::{apply_pptx_strict_mutation, stamp_conformance_class, vml_markup, PptxStrictMutation};
     use semio_s_plugin_stdio::artifacts::pptx::PptxSnapshot;
     use semio_s_plugin_stdio_test_oracle::artifacts::pptx::standards::v_ecma_376::subsets::strict::{oracle_inverse_spec, project_package};

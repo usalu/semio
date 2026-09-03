@@ -69,7 +69,7 @@ pub fn io() -> semio_framework_plugin::app::declarations::IoDeclaration {
 /// its output is round-tripped through stdio's own real SVG codec (`parse_svg_xml`/`write_svg_xml`)
 /// before being returned, which both validates it is genuinely spec-conformant SVG and exercises the
 /// real stdio engine rather than returning the framework helper's raw string untouched.
-pub fn animate_presentation_document_json_to_svg(value: &serde_json::Value) -> Result<(String, u32, u32), String> {
+pub fn animate_presentation_document_json_to_svg(value: &semio_framework_os_kernel::json::Value) -> Result<(String, u32, u32), String> {
     use semio_s_plugin_stdio::artifacts::svg::schema::snapshot::{parse_svg_xml, write_svg_xml};
     let (svg, width, height) = semio_framework_os::title_card_svg(value, "Animate Presentation", 1280, 720)?;
     let doc = parse_svg_xml(&svg)?;
@@ -86,7 +86,7 @@ pub fn animate_presentation_document_json_to_svg(value: &serde_json::Value) -> R
 /// `w5a--report.md`'s stdio_gaps rather than invented. The framework helpers stay (shared,
 /// non-duplicative utilities, not local ad-hoc codec code); the SVG they produce is still round-
 /// tripped through stdio's real SVG codec before rasterization, same as the title-card path.
-pub fn animate_presentation_document_json_from_dwg(drawing: &semio_s_plugin_stdio::artifacts::dwg::DwgDrawing) -> Result<serde_json::Value, String> {
+pub fn animate_presentation_document_json_from_dwg(drawing: &semio_s_plugin_stdio::artifacts::dwg::DwgDrawing) -> Result<dsl::DslValue, String> {
     use semio_s_plugin_stdio::artifacts::svg::schema::snapshot::{parse_svg_xml, write_svg_xml};
     let (svg, width, height) = semio_framework_os::dwg_drawing_to_svg(drawing)?;
     let validated_svg = write_svg_xml(&parse_svg_xml(&svg)?);
@@ -95,25 +95,26 @@ pub fn animate_presentation_document_json_from_dwg(drawing: &semio_s_plugin_stdi
     let source = crate::artifacts::presentation::FigureTileSource { src: format!("data:image/png;base64,{png_base64}"), kind: "image".into(), frame: frame.clone(), source_aspect: Some(width as f64 / height.max(1) as f64), pdf_page: None };
     let tiles = vec![crate::artifacts::presentation::FigureTileDraft { id: "imported-drawing".into(), name: "Imported Drawing".into(), crop: frame }];
     let deck = crate::artifacts::presentation::presentation_snapshot_with_tiles(&source, &tiles);
-    let value: serde_json::Value = dsl::ToValue::to_value(&deck).into();
-    Ok(value)
+    Ok(dsl::ToValue::to_value(&deck))
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use serde_json::json;
+    use semio_framework_os_kernel::json::{object, Object, Value};
 
     #[test]
     fn animate_presentation_document_json_to_svg_embeds_title() {
-        let (svg, width, height) = animate_presentation_document_json_to_svg(&json!({ "title": "My Deck" })).expect("svg");
+        let document = object([("title".to_string(), Value::from("My Deck"))]);
+        let (svg, width, height) = animate_presentation_document_json_to_svg(&document).expect("svg");
         assert!(svg.contains("My Deck"));
         assert_eq!((width, height), (1280, 720));
     }
 
     #[test]
     fn animate_presentation_document_json_to_svg_falls_back_to_app_label_without_title() {
-        let (svg, _, _) = animate_presentation_document_json_to_svg(&json!({})).expect("svg fallback");
+        let document = Value::Object(Object::new());
+        let (svg, _, _) = animate_presentation_document_json_to_svg(&document).expect("svg fallback");
         assert!(svg.contains("Animate Presentation"));
     }
 
@@ -130,8 +131,7 @@ mod tests {
             extmax: [10.0, 10.0, 0.0],
         };
         let document = animate_presentation_document_json_from_dwg(&drawing).expect("from_dwg");
-        let deck_value: dsl::DslValue = document.into();
-        let deck: crate::artifacts::presentation::PresentationSnapshot = dsl::FromValue::from_value(deck_value).expect("deck");
+        let deck: crate::artifacts::presentation::PresentationSnapshot = dsl::FromValue::from_value(document).expect("deck");
         assert_eq!(deck.schema, crate::artifacts::presentation::PRESENTATION_DOCUMENT_SCHEMA);
         let (source, tiles) = crate::artifacts::presentation::presentation_working_scene(&deck);
         assert_eq!(tiles.len(), 1);
@@ -143,8 +143,7 @@ mod tests {
     fn from_dwg_never_errors_on_empty_drawing() {
         let drawing = semio_s_plugin_stdio::artifacts::dwg::DwgDrawing::default();
         let document = animate_presentation_document_json_from_dwg(&drawing).expect("from_dwg on empty drawing");
-        let deck_value: dsl::DslValue = document.into();
-        let deck: crate::artifacts::presentation::PresentationSnapshot = dsl::FromValue::from_value(deck_value).expect("deck");
+        let deck: crate::artifacts::presentation::PresentationSnapshot = dsl::FromValue::from_value(document).expect("deck");
         let (_, tiles) = crate::artifacts::presentation::presentation_working_scene(&deck);
         assert_eq!(tiles.len(), 1);
     }

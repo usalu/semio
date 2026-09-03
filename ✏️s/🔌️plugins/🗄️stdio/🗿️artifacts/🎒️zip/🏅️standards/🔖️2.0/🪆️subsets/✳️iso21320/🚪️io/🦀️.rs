@@ -5,8 +5,8 @@
 //! `✳️base/🚪️io` already established for this artifact.
 //#region 🎹️DerivedComposition
 pub mod derived_composition {
-    use crate::artifacts::zip::standards::v2_0::subsets::any::schema::snapshot::{ZipEntry, ZipSnapshot};
-    use crate::artifacts::zip::standards::v2_0::subsets::any::schema::ZipComposer as ZipAnyComposer;
+    use crate::artifacts::zip::standards::v2_0::subsets::base::schema::snapshot::{ZipEntry, ZipSnapshot};
+    use crate::artifacts::zip::standards::v2_0::subsets::base::schema::ZipComposer as ZipAnyComposer;
     use crate::artifacts::zip::standards::v2_0::subsets::iso21320::schema::check_iso21320_conformance;
     use crate::artifacts::zip::standards::v2_0::subsets::iso21320::schema::check_iso21320_wire_conformance;
     use dsl::{Diagnostic, FaultCode, Severity, TextSpan};
@@ -33,15 +33,15 @@ pub mod derived_composition {
                 if let Ok((_, inner)) = store::semio_format::unwrap_binary(bytes) {
                     Some(inner.to_vec())
                 } else if matches!(
-                    crate::artifacts::zip::standards::v2_0::subsets::any::io::sniff_zip_bytes(bytes),
-                    crate::artifacts::zip::standards::v2_0::subsets::any::io::SniffConfidence::High | crate::artifacts::zip::standards::v2_0::subsets::any::io::SniffConfidence::Medium
+                    crate::artifacts::zip::standards::v2_0::subsets::base::io::sniff_zip_bytes(bytes),
+                    crate::artifacts::zip::standards::v2_0::subsets::base::io::SniffConfidence::High | crate::artifacts::zip::standards::v2_0::subsets::base::io::SniffConfidence::Medium
                 ) {
                     Some(bytes.to_vec())
                 } else {
                     None
                 }
             }
-            IoPayload::Text(text) => <ZipSnapshot as store::ArtifactDsl>::parse_dsl(text).ok().and_then(|snapshot| crate::artifacts::zip::standards::v2_0::subsets::any::io::encode_zip(&snapshot).ok()),
+            IoPayload::Text(text) => <ZipSnapshot as store::ArtifactDsl>::parse_dsl(text).ok().and_then(|snapshot| crate::artifacts::zip::standards::v2_0::subsets::base::io::encode_zip(&snapshot).ok()),
         }
     }
     //#endregion 🔖️Normalize
@@ -115,7 +115,7 @@ pub mod derived_composition {
     /// now re-derives the same `SubsetValidatorEntry` directly via `subset_validator_entry_of::<
     /// ZipIso21320Validator>()` instead of calling this `register()`. The `ComposerEntry` itself is
     /// registered separately by the standard-level composer aggregator
-    /// (`crate::artifacts::zip::standards::v2_0::subsets::any::io::io_registry::entries()`), matching
+    /// (`crate::artifacts::zip::standards::v2_0::subsets::base::io::io_registry::entries()`), matching
     /// how `✳️base`'s own entry is registered.
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn register() {
@@ -134,7 +134,7 @@ pub mod derived_composition {
         // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
         fn raw_zip_with_flags(flags: u16, version_needed: u16) -> Vec<u8> {
             let data = b"payload";
-            let crc = crate::artifacts::zip::standards::v2_0::subsets::any::io::crc32(data);
+            let crc = crate::artifacts::zip::standards::v2_0::subsets::base::io::crc32(data);
             let name = b"secret.bin";
             let mut local = Vec::new();
             local.extend_from_slice(&0x0403_4b50u32.to_le_bytes());
@@ -204,7 +204,7 @@ pub mod derived_composition {
             let raw = raw_zip_with_flags(FLAG_ENCRYPTED, 20);
             let sources = vec![ComposeSource { dialect: DIALECT_ANY, payload: AnalyzeSource::Binary(&raw) }];
             let composed = ZipIso21320ComposerComposition::compose(&sources).expect("decode+canonicalize must clear forbidden wire bits");
-            let rematerialized = crate::artifacts::zip::standards::v2_0::subsets::any::io::encode_zip(&composed.snapshot).expect("encode canonical logical archive");
+            let rematerialized = crate::artifacts::zip::standards::v2_0::subsets::base::io::encode_zip(&composed.snapshot).expect("encode canonical logical archive");
             assert!(check_iso21320_wire_conformance(&rematerialized).iter().all(|d| d.code.0 != CODE_ENCRYPTED));
         }
 

@@ -114,7 +114,7 @@ pub fn column_letters_of(reference: &str) -> &str {
 
 //#region 🎹️DerivedComposition
 pub mod derived_composition {
-    use crate::artifacts::xlsx::standards::v_ecma_376::subsets::any::schema::XlsxAnalyzer;
+    use crate::artifacts::xlsx::standards::v_ecma_376::subsets::base::schema::XlsxAnalyzer;
     use crate::artifacts::xlsx::XlsxSnapshot;
     use semio_framework_plugin::{AnalyzeSource, ArtifactComposition, ComposeError, ComposeSource, Composition, Dialect, StandardId, SubsetId};
 
@@ -159,7 +159,7 @@ pub use derived_composition::*;
 
 //#region 🚪️DerivedIoRegistry
 pub mod io_registry {
-    use crate::artifacts::xlsx::standards::v_ecma_376::subsets::any::schema::XlsxComposer as XlsxRawAnyComposer;
+    use crate::artifacts::xlsx::standards::v_ecma_376::subsets::base::schema::XlsxComposer as XlsxRawAnyComposer;
     use crate::artifacts::xlsx::standards::v_ecma_376::subsets::strict::schema::XlsxStrictComposer;
     use crate::artifacts::xlsx::standards::v_ecma_376::subsets::transitional::schema::XlsxTransitionalComposer;
     use semio_framework_plugin::{composer_entry_of, ComposerEntry};

@@ -22,7 +22,7 @@ carrier.
   argument lists and for the three things only they state: that this subset tags its mutations
   EXTERNALLY, the payload being `{"CreateSlot": {…}}` with a PascalCase variant name as its single
   key; that `delete-slot` DOES cascade into the edges naming it and says so with an `info`-level
-  `mutation.cascade` diagnostic — the opposite of `s.procedural.procedural2d`'s `delete-widget`, which
+  `mutation.cascade` diagnostic — the opposite of `s.procedural.generation2d`'s `delete-widget`, which
   raises the same code for leaving a dangling synapse standing; and that `change-weight` UPSERTS,
   writing an existing module's weight in place and appending an entry when the table holds none.
 

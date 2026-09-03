@@ -11,7 +11,7 @@ import {
   type BrowserFrameUiMessage,
   type BrowserFrameWorkerMessage,
   type BrowserFrameWorkerPort,
-} from "./🟦️typescript/🧵️browser-frame-transport.ts";
+} from "../🧵️browser-frame-transport/🟦️.ts";
 
 class FakeWorker implements BrowserFrameWorkerPort {
   onmessage: ((event: MessageEvent<BrowserFrameWorkerMessage>) => void) | null = null;
@@ -268,10 +268,9 @@ describe("browser frame worker transport", () => {
 
   it("keeps product discovery and native UI capability out of the UI/Worker seams", () => {
     const root = dirname(fileURLToPath(import.meta.url));
-    const typescript = join(root, "🟦️typescript");
-    const bootSource = readFileSync(join(typescript, "🟦️.ts"), "utf8");
-    const workerSource = readFileSync(join(typescript, "🧵️frame-worker.ts"), "utf8");
-    const rustSource = readFileSync(join(root, "🦀️browser_worker.rs"), "utf8");
+    const bootSource = readFileSync(join(root, "../🧵️browser-boot/🟦️.ts"), "utf8");
+    const workerSource = readFileSync(join(root, "../🧵️frame-worker/🟦️.ts"), "utf8");
+    const rustSource = readFileSync(join(root, "../🧵️browser-worker/🦀️.rs"), "utf8");
     expect(bootSource).not.toContain("PLUGIN_CATALOG");
     expect(bootSource).not.toContain("resolvePlaygroundBoot");
     expect(bootSource).not.toContain("performance.getEntriesByType");

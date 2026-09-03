@@ -78,7 +78,7 @@ pub struct FormsStepPatchEntry {
 }
 
 /// 🩹 Partial step replacement. `blocks`, when set, is the step's FULL new `blocks` list — a
-/// bounded, single-step-scoped whole-value swap (mirrors how a sibling facet's `MathematicalDiff`
+/// bounded, single-step-scoped whole-value swap (mirrors how a sibling facet's `EquationDiff`
 /// replaces a whole bounded sub-collection rather than diffing every element field-by-field), never
 /// a whole-DOCUMENT replacement: every `🧬️mutations/*create-block/*delete-block/*move-block-to-step`
 /// triad leaf builds this by cloning only the touched step(s)' own `blocks` Vec, not `FormsSnapshot`.

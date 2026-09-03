@@ -87,7 +87,7 @@
         "responsibility": "Portable Document Format artifact definition."
       },
       {
-        "directory": "📄txt",
+        "directory": "📄️txt",
         "id": "s.stdio.txt",
         "kind": "artifact",
         "responsibility": "Plain Text artifact definition."
@@ -129,7 +129,7 @@
         "responsibility": "Markdown artifact definition."
       },
       {
-        "directory": "📰xml",
+        "directory": "📰️xml",
         "id": "s.stdio.xml",
         "kind": "artifact",
         "responsibility": "Extensible Markup Language artifact definition."

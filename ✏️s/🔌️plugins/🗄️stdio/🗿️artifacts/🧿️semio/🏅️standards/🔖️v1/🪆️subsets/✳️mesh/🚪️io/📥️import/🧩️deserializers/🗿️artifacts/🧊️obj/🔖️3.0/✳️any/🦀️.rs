@@ -23,7 +23,7 @@
 
 use crate::artifacts::obj::schema::snapshot::ObjFace;
 use crate::artifacts::obj::ObjSnapshot;
-use crate::artifacts::semio::standards::v1::subsets::any::schema::geometry::{SemioPoint3, SemioUv};
+use crate::artifacts::semio::standards::v1::subsets::base::schema::geometry::{SemioPoint3, SemioUv};
 use crate::artifacts::semio::standards::v1::subsets::mesh::schema::snapshot::{SemioMesh, SemioMeshSnapshot, SemioPrimitive, SemioTopology, STDIO_SEMIOMESH_DOCUMENT_SCHEMA};
 use semio_framework_plugin::{ArtifactDeserializer, Dialect, StandardId, SubsetId};
 

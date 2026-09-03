@@ -1,0 +1,146 @@
+{
+  "schema": "stdio.mp4",
+  "ftyp": {
+    "majorBrand": "isom",
+    "minorVersion": 512,
+    "compatibleBrands": [
+      "isom",
+      "avc1"
+    ]
+  },
+  "movie": {
+    "creationTime": 0,
+    "modificationTime": 0,
+    "timescale": 1000,
+    "duration": 2000,
+    "rate": 65536,
+    "volume": 256,
+    "matrix": [
+      65536,
+      0,
+      0,
+      0,
+      65536,
+      0,
+      0,
+      0,
+      1073741824
+    ],
+    "nextTrackId": 2,
+    "title": null,
+    "encoder": null
+  },
+  "tracks": [
+    {
+      "trackId": 1,
+      "timescale": 1000,
+      "codec": {
+        "sps": [
+          [
+            103,
+            66,
+            0,
+            10
+          ]
+        ],
+        "pps": [
+          [
+            104,
+            206,
+            56,
+            128
+          ]
+        ],
+        "nalLengthSize": 4,
+        "extension": null
+      },
+      "width": 16,
+      "height": 16,
+      "metadata": {
+        "creationTime": 0,
+        "modificationTime": 0,
+        "flags": 3,
+        "duration": 2000,
+        "layer": 0,
+        "alternateGroup": 0,
+        "volume": 0,
+        "matrix": [
+          65536,
+          0,
+          0,
+          0,
+          65536,
+          0,
+          0,
+          0,
+          1073741824
+        ],
+        "mediaDuration": 2000,
+        "mediaCreationTime": 0,
+        "mediaModificationTime": 0,
+        "language": "und",
+        "quality": 0,
+        "handlerName": "VideoHandler",
+        "edits": [],
+        "visual": {
+          "dataReferenceIndex": 1,
+          "version": 0,
+          "revisionLevel": 0,
+          "vendor": 0,
+          "temporalQuality": 0,
+          "spatialQuality": 0,
+          "horizontalResolution": 4718592,
+          "verticalResolution": 4718592,
+          "frameCount": 1,
+          "compressorName": "",
+          "depth": 24,
+          "colorTableId": -1
+        },
+        "color": null,
+        "pixelAspectRatio": null,
+        "bitrate": null
+      },
+      "chunkSampleCounts": [
+        3
+      ],
+      "samples": [
+        {
+          "data": [
+            0,
+            0,
+            0,
+            1,
+            101
+          ],
+          "duration": 1000,
+          "ctsOffset": 0,
+          "sync": true
+        },
+        {
+          "data": [
+            0,
+            0,
+            0,
+            1,
+            98
+          ],
+          "duration": 1000,
+          "ctsOffset": 0,
+          "sync": false
+        },
+        {
+          "data": [
+            0,
+            0,
+            0,
+            1,
+            97
+          ],
+          "duration": 1000,
+          "ctsOffset": 0,
+          "sync": false
+        }
+      ]
+    }
+  ]
+}

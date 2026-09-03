@@ -2,7 +2,8 @@
 
 use crate::editor::puzzle5d::puzzle5d_brush_target_grip;
 use crate::editor::puzzle5d::Puzzle5dActionCtx;
-use serde_json::{json, Value};
+use dsl::json;
+use dsl::os_pack::json::Value;
 
 /// 🧱️ `addBrushPart`/`addBrushObject`: tries the engine's collision-free placement for the explicit
 /// payload first, then always runs the paired board placement so both projections land in one part.
@@ -11,7 +12,7 @@ pub fn add_brush_part(ctx: &mut Puzzle5dActionCtx<'_>, args: Option<&Value>) {
     if let Some(payload_value) = args {
         let mut payload = payload_value.clone();
         if let Some(object) = payload.as_object_mut() {
-            if let Some(part_kind) = object.remove("partKind") {
+            if let Some(part_kind) = object.get("partKind").cloned() {
                 object.insert("objectKindId".to_string(), part_kind);
             }
             if object.get("targetVortexFullId").is_none() {

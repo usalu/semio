@@ -88,7 +88,7 @@ pub fn register() {
 /// 📇️ P2-P3 follow-up fix: `dsl::registry::register_schema_spec` (P2-M3's `FullResolver` insertion
 /// API) — genuinely callable here (`BinarySnapshot` derives `dsl::DslRecord`, `BinaryDiff` derives
 /// `dsl::DslDiff`, so both `__dsl_spec`/`__dsl_diff_spec` exist), same 2-call shape as
-/// `txt::register_schema_specs` (`📄txt/…/⚙️engine/🦀️.rs`). Per-mutation-variant specs are
+/// `txt::register_schema_specs` (`📄️txt/…/⚙️engine/🦀️.rs`). Per-mutation-variant specs are
 /// NOT registered here, same as txt — `register_schema_spec` registers one spec under one schema id,
 /// and there is no single canonical id for a Mutation enum's N independently-shaped variants; that
 /// is the genuine scope boundary, not "this facet has too many specs to register any of them."

@@ -19,7 +19,7 @@ Feature: Apply every typed fem3d boundary mutation twice — once in Rust, once 
   genuinely adjudicate is the model algebra, and that is what this one does.
 
   A DEFECT IN THE SPECIFICATION, found while writing the reference and reported rather than worked
-  around, identical to the one its `◻2d` sibling carries. `…/🧬️schema/🧬️mutations/🔣️.json` is a
+  around, identical to the one its `◻️2d` sibling carries. `…/🧬️schema/🧬️mutations/🔣️.json` is a
   verbatim copy of the SNAPSHOT schema with `title` changed to `Fem3dMutation`, and in the snapshot
   schema itself every record `$def` is an EMPTY `{"title": …, "type": "object"}`. The record
   shapes were read off the committed vectors instead — including the one that only they state: an

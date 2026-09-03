@@ -19,14 +19,12 @@
 
 use crate::artifacts::forms::{FormsDiff, FormsSnapshot};
 use protocol::Mutation;
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️FormMutation
 /// 🧬️ Every variant wraps exactly one `protocol::MutationKind<FormsSnapshot, FormMutation>` payload
 /// struct declared in the corresponding triad leaf's `🦠️mutation/🦀️.rs`.
-#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::Mutations, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::Mutations)]
 #[value(tag = "mutation", rename_all = "camelCase")]
-#[serde(tag = "mutation", rename_all = "camelCase")]
 #[mutations(snapshot = FormsSnapshot, diff = FormsDiff, schema = "s.forms.forms")]
 pub enum FormMutation {
     CreateStep(super::create_step::mutation::CreateStep),
@@ -105,20 +103,20 @@ pub fn inverse_form_mutation_steps(mutation: &FormMutation, base: &FormsSnapshot
 /// committed `<slug>/🧪️tests/<fixture>/🦠️mutation/🔣️.json` vectors carry.
 // 🚫️async: E1 pure codec helper (file verified I/O-free) — see R9
 pub fn decode_form_mutation_json(text: &str) -> Result<FormMutation, String> {
-    serde_json::from_str(text).map_err(|error| error.to_string())
+    dsl::os_pack::json::from_json_str(text).map_err(|error| error.to_string())
 }
 
 /// 📥️ Decodes a committed `📸️snapshot/{⬅️before,➡️after}/🔣️.json` vector.
 // 🚫️async: E1 pure codec helper (file verified I/O-free) — see R9
 pub fn decode_form_snapshot_json(text: &str) -> Result<FormsSnapshot, String> {
-    serde_json::from_str(text).map_err(|error| error.to_string())
+    dsl::os_pack::json::from_json_str(text).map_err(|error| error.to_string())
 }
 
 /// 📤️ The snapshot as the same canonical JSON the committed vectors are written in — the
 /// projection an external test host compares through.
 // 🚫️async: E1 pure codec helper (file verified I/O-free) — see R9
 pub fn encode_form_snapshot_json(snapshot: &FormsSnapshot) -> String {
-    serde_json::to_string(snapshot).expect("a FormsSnapshot is always serializable")
+    dsl::os_pack::json::to_json_string(snapshot)
 }
 /// 🌱 Seeds the working-scene cache behind this snapshot's composed `s.stdio.semio.value` `structure` child handle from a committed
 /// `[FormStep]` JSON document, and hands back what it decoded.
@@ -133,7 +131,7 @@ pub fn encode_form_snapshot_json(snapshot: &FormsSnapshot) -> String {
 /// as a fixture file of its own; until then this is the seam that makes the vectors runnable.
 // 🚫️async: E1 pure computation over an in-memory snapshot, consumed from a synchronous external test host — see R9
 pub fn seed_form_scene_json(snapshot: &mut FormsSnapshot, steps_json: &str) -> Result<Vec<crate::artifacts::forms::FormStep>, String> {
-    let steps: Vec<crate::artifacts::forms::FormStep> = serde_json::from_str(steps_json).map_err(|error| error.to_string())?;
+    let steps: Vec<crate::artifacts::forms::FormStep> = dsl::os_pack::json::from_json_str(steps_json).map_err(|error| error.to_string())?;
     crate::artifacts::forms::materialize_forms_steps(&mut snapshot.structure, steps.clone());
     Ok(steps)
 }

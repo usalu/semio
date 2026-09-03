@@ -1,0 +1,4 @@
+module Imperative_procedure_inference;
+type Document = unit {
+    payload: bytes &eod;
+};

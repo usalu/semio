@@ -9,7 +9,6 @@
 
 use semio_framework::{AppDefinition, MediaClass, MediaForm, MediaPortDirection, MediaPortSpec, MediaType, MediaWireFormat, PortMultiplicity};
 use semio_framework::{Locale, Terminology};
-use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, HashSet};
 
 pub const WORKFLOW_SCHEMA: &str = "workflow.graph";
@@ -36,8 +35,7 @@ pub const S_AUTOMATION_SCHEMA: &str = "os.automation";
 /// `framework/product/os/core`'s `workflow` module (`MediaContract`) so the persisted graph carries
 /// its own edge contracts; the negotiation logic itself (`negotiate_media_contract`) stays in
 /// os-core for now since it needs the artifact-kind registry, which doesn't exist at this layer yet.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq)]
 pub struct MediaContract {
     pub kind_id: String,
     pub media_type: MediaType,
@@ -115,7 +113,7 @@ fn media_form_ordinal(form: MediaForm) -> u32 {
         MediaForm::Kit => 11,
         MediaForm::Flow => 12,
         MediaForm::Sequence => 13,
-        MediaForm::Imperative => 14,
+        MediaForm::Procedure => 14,
         MediaForm::Deck => 15,
     }
 }
@@ -136,7 +134,7 @@ fn media_form_from_ordinal(ordinal: u32) -> Result<MediaForm, String> {
         11 => MediaForm::Kit,
         12 => MediaForm::Flow,
         13 => MediaForm::Sequence,
-        14 => MediaForm::Imperative,
+        14 => MediaForm::Procedure,
         15 => MediaForm::Deck,
         other => return Err(format!("unknown media form ordinal {other}")),
     })
@@ -337,8 +335,7 @@ impl ::semio_framework_os_kernel::FromValue for MediaContract {
 /// 🔌️ One instance-scoped wire endpoint on a `WorkflowNode` — `id` is unique within the graph
 /// (`"{node_id}:{spec.id}:{in|out}"`, see `workflow_media_port`), `spec` is the app-level port
 /// declaration it was instantiated from (`semio_framework::MediaPortSpec`).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ::semio_framework_value_derive::ToValue, ::semio_framework_value_derive::FromValue)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, ::semio_framework_value_derive::ToValue, ::semio_framework_value_derive::FromValue)]
 #[value(rename_all = "camelCase")]
 pub struct WorkflowMediaPort {
     pub id: String,
@@ -485,8 +482,7 @@ impl dsl::DslField for WorkflowMediaPort {
 }
 //#endregion 🔖️WorkflowMediaPort
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ::semio_framework_value_derive::ToValue, ::semio_framework_value_derive::FromValue, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, ::semio_framework_value_derive::ToValue, ::semio_framework_value_derive::FromValue, dsl::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct WorkflowPosition {
     pub x: f64,
@@ -496,8 +492,7 @@ pub struct WorkflowPosition {
 }
 
 /// 🧷️ A node IS the app-instance now — see the `🔖️InstanceIdentity` region at the top of this file.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ::semio_framework_value_derive::ToValue, ::semio_framework_value_derive::FromValue, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, ::semio_framework_value_derive::ToValue, ::semio_framework_value_derive::FromValue, dsl::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct WorkflowNode {
     pub id: String,
@@ -515,8 +510,7 @@ pub struct WorkflowNode {
     pub outputs: Vec<WorkflowMediaPort>,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ::semio_framework_value_derive::ToValue, ::semio_framework_value_derive::FromValue, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, ::semio_framework_value_derive::ToValue, ::semio_framework_value_derive::FromValue, dsl::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct WorkflowEdge {
     pub id: String,
@@ -528,8 +522,7 @@ pub struct WorkflowEdge {
     pub contract: MediaContract,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ::semio_framework_value_derive::ToValue, ::semio_framework_value_derive::FromValue, dsl::DslArtifact)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, ::semio_framework_value_derive::ToValue, ::semio_framework_value_derive::FromValue, dsl::DslArtifact)]
 #[value(rename_all = "camelCase")]
 #[dsl(extension = "workflow", layout = "lines")]
 pub struct Workflow {
@@ -637,8 +630,7 @@ pub async fn validate_workflow(graph: &Workflow) -> WorkflowValidation {
 //#endregion 🔖️WorkflowValidator
 
 //#region 🔖️WorkflowPlanner
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ::semio_framework_value_derive::ToValue, ::semio_framework_value_derive::FromValue, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, ::semio_framework_value_derive::ToValue, ::semio_framework_value_derive::FromValue, dsl::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct WorkflowDelivery {
     pub edge_id: String,
@@ -706,8 +698,7 @@ pub async fn plan_workflow(graph: &Workflow, dirty_node_ids: &HashSet<String>) -
 /// `plan_workflow` must produce for them. Ships as a `dsl`+`pack` document — see
 /// `framework/product/os/core/fixtures/*.dsl`/`*.spk` and `README.md` — so the fixture corpus itself
 /// proves the dsl≡pack law instead of riding untyped JSON.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ::semio_framework_value_derive::ToValue, ::semio_framework_value_derive::FromValue, dsl::DslArtifact)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, ::semio_framework_value_derive::ToValue, ::semio_framework_value_derive::FromValue, dsl::DslArtifact)]
 #[value(rename_all = "camelCase")]
 #[dsl(extension = "workflow-fixture")]
 pub struct WorkflowFixture {
@@ -788,8 +779,7 @@ fn create_workflow_parameter_id() -> String {
     format!("param-{n}")
 }
 
-#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, ::semio_framework_value_derive::ToValue, ::semio_framework_value_derive::FromValue)]
-#[serde(rename_all = "lowercase")]
+#[derive(Clone, Debug, PartialEq, Eq, ::semio_framework_value_derive::ToValue, ::semio_framework_value_derive::FromValue)]
 #[value(rename_all = "lowercase")]
 pub enum WorkflowParameterType {
     Numeric,
@@ -798,21 +788,18 @@ pub enum WorkflowParameterType {
     Text,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ::semio_framework_value_derive::ToValue, ::semio_framework_value_derive::FromValue)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, ::semio_framework_value_derive::ToValue, ::semio_framework_value_derive::FromValue)]
 #[value(rename_all = "camelCase")]
 pub struct WorkflowParameterFieldSpec {
     pub field_path: String,
     pub label: String,
-    #[serde(rename = "type")]
     #[value(rename = "type")]
     pub parameter_type: WorkflowParameterType,
 }
 
 /// 🎯️ `field_path` names a `ConfigFieldSpec.key` in the target node's app's declared `ConfigSpec` —
 /// see `validate_workflow_parameter_config_binding` (type-checks against the field's `ConfigFieldShape`).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ::semio_framework_value_derive::ToValue, ::semio_framework_value_derive::FromValue, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, ::semio_framework_value_derive::ToValue, ::semio_framework_value_derive::FromValue, dsl::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct WorkflowParameterBinding {
     pub parameter_id: String,
@@ -820,19 +807,15 @@ pub struct WorkflowParameterBinding {
     pub field_path: String,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ::semio_framework_value_derive::ToValue, ::semio_framework_value_derive::FromValue, dsl::DslEnum)]
-#[serde(tag = "type", rename_all = "lowercase")]
+#[derive(Clone, Debug, PartialEq, ::semio_framework_value_derive::ToValue, ::semio_framework_value_derive::FromValue, dsl::DslEnum)]
 #[value(tag = "type", rename_all = "lowercase")]
 pub enum WorkflowParameter {
     Numeric {
         id: String,
         name: String,
         value: f64,
-        #[serde(skip_serializing_if = "Option::is_none")]
         min: Option<f64>,
-        #[serde(skip_serializing_if = "Option::is_none")]
         max: Option<f64>,
-        #[serde(skip_serializing_if = "Option::is_none")]
         step: Option<f64>,
     },
     Categorical {
@@ -1105,7 +1088,7 @@ pub fn sync_workflow_parameter_ports(graph: &Workflow, bindings: &[WorkflowParam
 /// 🔌️ One declared collection-level input slot a workflow's nodes can bind an in-port to — `selector`
 /// is a glob matched against collection entry paths at run time (W5's `SpaceRunner` job); this crate
 /// only carries the declaration + validates bindings resolve (`validate_workflow_snapshot`).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ::semio_framework_value_derive::ToValue, ::semio_framework_value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, ::semio_framework_value_derive::ToValue, ::semio_framework_value_derive::FromValue)]
 pub struct WorkflowInput {
     pub id: String,
     pub kind_id: String,
@@ -1175,7 +1158,7 @@ impl dsl::DslField for WorkflowInput {
 
 
 /// 🔗️ Binds a declared [`WorkflowInput`] slot onto one node's in-port.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ::semio_framework_value_derive::ToValue, ::semio_framework_value_derive::FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, ::semio_framework_value_derive::ToValue, ::semio_framework_value_derive::FromValue, dsl::DslRecord)]
 pub struct WorkflowInputBinding {
     pub input_id: String,
     pub node_id: String,
@@ -1184,7 +1167,7 @@ pub struct WorkflowInputBinding {
 
 /// 📤️ Names where a node's out-port materializes in the output collection — `path_template` like
 /// `"renders/{node}/{input.stem}.{ext}"` (resolved at run time by W5's `SpaceRunner`).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ::semio_framework_value_derive::ToValue, ::semio_framework_value_derive::FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, ::semio_framework_value_derive::ToValue, ::semio_framework_value_derive::FromValue, dsl::DslRecord)]
 pub struct WorkflowOutputBinding {
     pub node_id: String,
     pub port_id: String,
@@ -1195,7 +1178,7 @@ pub struct WorkflowOutputBinding {
 /// its parameters/bindings, and its declared collection-level inputs/outputs. Absorbs os-core's
 /// dissolved `OsSnapshot` (`programs` moved to `space::SpaceSnapshot`, `active_plugin_id`/
 /// `active_alternative_id` become space-app session state — see `## The inversion` in the plan).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ::semio_framework_value_derive::ToValue, ::semio_framework_value_derive::FromValue, dsl::DslArtifact)]
+#[derive(Clone, Debug, PartialEq, ::semio_framework_value_derive::ToValue, ::semio_framework_value_derive::FromValue, dsl::DslArtifact)]
 #[dsl(id = "os.workflow")]
 pub struct WorkflowSnapshot {
     pub schema: String,
@@ -1357,8 +1340,7 @@ pub fn apply_workflow_operation(document: &WorkflowSnapshot, operation: &Workflo
     next
 }
 
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ::semio_framework_value_derive::ToValue, ::semio_framework_value_derive::FromValue)]
-#[serde(tag = "kind", rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, ::semio_framework_value_derive::ToValue, ::semio_framework_value_derive::FromValue)]
 #[value(tag = "kind", rename_all = "camelCase")]
 pub enum WorkflowDiff {
     #[default]
@@ -1653,8 +1635,7 @@ pub async fn validate_workflow_snapshot(document: &WorkflowSnapshot) -> Workflow
 /// Failed`, not a `Sealed` variant). Hand-crafted `dsl::DslField` (ordinal `Shape::Enum`), not
 /// `#[derive(dsl::DslEnum)]`: this is a plain field-less scalar, not a tagged-variant-with-data sum
 /// type (`DslEnum`/`DslVariants` target the latter — see `WorkflowParameter`).
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ::semio_framework_value_derive::ToValue, ::semio_framework_value_derive::FromValue)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, ::semio_framework_value_derive::ToValue, ::semio_framework_value_derive::FromValue)]
 #[value(rename_all = "camelCase")]
 pub enum RunStatus {
     Pending,
@@ -1710,8 +1691,7 @@ impl dsl::DslField for RunStatus {
 
 /// 🚦️ Per-node outcome of one run — `Computed` (ran fresh), `CacheHit` (memoized against the prior
 /// sealed run's `RunNodeRecord`), `Failed` (the node's `AppChannelHost` exchange errored).
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ::semio_framework_value_derive::ToValue, ::semio_framework_value_derive::FromValue)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, ::semio_framework_value_derive::ToValue, ::semio_framework_value_derive::FromValue)]
 #[value(rename_all = "camelCase")]
 pub enum RunNodeStatus {
     Computed,
@@ -1765,9 +1745,8 @@ impl dsl::DslField for RunNodeStatus {
 /// compat only). Hand-crafted `dsl::DslField` (`Shape::Record`) mirroring `MediaContract`'s own
 /// tag-plus-optional-fields encoding above — a real Rust sum type stays the API surface; the wire
 /// encoding is just a `kind` discriminator text field plus each variant's own optional columns.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ::semio_framework_value_derive::ToValue, ::semio_framework_value_derive::FromValue)]
-#[serde(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase", deny_unknown_fields)]
-#[value(tag = "kind", rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, ::semio_framework_value_derive::ToValue, ::semio_framework_value_derive::FromValue)]
+#[value(tag = "kind", rename_all = "camelCase", deny_unknown_fields)]
 pub enum RunTrigger {
     Manual { actor: String },
     Automation { automation_ref: String, event_fingerprint: String },
@@ -1859,8 +1838,7 @@ impl dsl::DslField for RunTrigger {
 /// plain JSON text sidesteps that risk entirely while staying a lossless round trip. `run::SpaceRunner`
 /// parses it back to `serde_json::Value` when applying the overlay onto a node's config (see
 /// `WorkflowParameterBinding.field_path`).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ::semio_framework_value_derive::ToValue, ::semio_framework_value_derive::FromValue, dsl::DslRecord)]
-#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[derive(Clone, Debug, PartialEq, ::semio_framework_value_derive::ToValue, ::semio_framework_value_derive::FromValue, dsl::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct RunParameterValue {
     pub parameter_id: String,
@@ -1869,8 +1847,7 @@ pub struct RunParameterValue {
 
 /// 🔑️ One port's fingerprint — reused for both a `RunNodeRecord`'s `input_fingerprints` and
 /// `output_fingerprints` (same shape, different table column on the owning row).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ::semio_framework_value_derive::ToValue, ::semio_framework_value_derive::FromValue, dsl::DslRecord)]
-#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[derive(Clone, Debug, PartialEq, ::semio_framework_value_derive::ToValue, ::semio_framework_value_derive::FromValue, dsl::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct PortFingerprint {
     pub port_id: String,
@@ -1879,8 +1856,7 @@ pub struct PortFingerprint {
 
 /// 📤️ Where one node's out-port materialized in the run's own write-only output area — `path` is
 /// relative to the run's own sink (see `run::RunContext`'s doc), never a source-bundle path.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ::semio_framework_value_derive::ToValue, ::semio_framework_value_derive::FromValue, dsl::DslRecord)]
-#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[derive(Clone, Debug, PartialEq, ::semio_framework_value_derive::ToValue, ::semio_framework_value_derive::FromValue, dsl::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct RunOutputArtifact {
     pub port_id: String,
@@ -1893,9 +1869,8 @@ pub struct RunOutputArtifact {
 /// against the PRIOR sealed run's `node_records`, not a side-channel state file. `duration_ms` is
 /// `f64` (not `u64`): the `dsl` engine's scalar `DslField` impls cover `bool`/`f32`/`f64`/`String`
 /// only, no integer width — see `dsl/rs/lib.rs`'s `impl DslField for f64` and neighbors.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ::semio_framework_value_derive::ToValue, ::semio_framework_value_derive::FromValue, dsl::DslRecord)]
-#[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[value(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, ::semio_framework_value_derive::ToValue, ::semio_framework_value_derive::FromValue, dsl::DslRecord)]
+#[value(rename_all = "camelCase", deny_unknown_fields)]
 pub struct RunNodeRecord {
     pub node_id: String,
     pub status: RunNodeStatus,
@@ -1911,8 +1886,7 @@ pub struct RunNodeRecord {
 }
 
 /// 📜️ One run-level or per-node log line — `node_id` empty for a run-level line (see `RunMutation::AppendRunLog`).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ::semio_framework_value_derive::ToValue, ::semio_framework_value_derive::FromValue, dsl::DslRecord)]
-#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[derive(Clone, Debug, PartialEq, ::semio_framework_value_derive::ToValue, ::semio_framework_value_derive::FromValue, dsl::DslRecord)]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 pub struct RunLogLine {
     pub node_id: String,
@@ -1930,7 +1904,7 @@ pub struct RunLogLine {
 /// rejects every further operation, see `🔖️RunMutation` below). Sealing is meant to promote a run
 /// draft→asset later (`space::DraftCatalog`, W5 Lane B's territory) — this wave only carries the flag
 /// and the apply-rejection law, not the promotion wiring itself.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ::semio_framework_value_derive::ToValue, ::semio_framework_value_derive::FromValue, dsl::DslArtifact)]
+#[derive(Clone, Debug, PartialEq, ::semio_framework_value_derive::ToValue, ::semio_framework_value_derive::FromValue, dsl::DslArtifact)]
 #[dsl(id = "os.run")]
 pub struct RunArtifact {
     pub schema: String,
@@ -2062,8 +2036,7 @@ pub fn apply_run_operation(document: &RunArtifact, operation: &RunMutation) -> R
     next
 }
 
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ::semio_framework_value_derive::ToValue, ::semio_framework_value_derive::FromValue)]
-#[serde(tag = "kind", rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, ::semio_framework_value_derive::ToValue, ::semio_framework_value_derive::FromValue)]
 #[value(tag = "kind", rename_all = "camelCase")]
 pub enum RunDiff {
     #[default]
@@ -2578,12 +2551,14 @@ mod tests {
     }
 
     #[test]
-    fn run_payload_serde_uses_exact_camel_case_and_rejects_unknown_fields() {
+    fn run_payload_json_uses_exact_camel_case_and_rejects_unknown_fields() {
         let automation = RunTrigger::Automation { automation_ref: "automation".into(), event_fingerprint: "event".into() };
-        assert_eq!(serde_json::to_value(&automation).expect("RunTrigger JSON"), serde_json::json!({ "kind": "automation", "automationRef": "automation", "eventFingerprint": "event" }));
-        assert!(serde_json::from_value::<RunTrigger>(serde_json::json!({ "kind": "automation", "automation_ref": "automation", "event_fingerprint": "event" })).is_err());
-        assert!(serde_json::from_value::<RunTrigger>(serde_json::json!({ "kind": "manual", "actor": "operator", "extra": true })).is_err());
-        assert!(serde_json::from_value::<RunNodeRecord>(serde_json::json!({ "nodeId": "node", "status": "computed", "documentFingerprint": "document", "configFingerprint": "config", "inputFingerprints": [], "outputFingerprints": [], "outputs": [], "durationMs": 1.0, "extra": true })).is_err());
+        let encoded = dsl::os_pack::json::parse(&dsl::os_pack::json::to_json_string(&automation)).expect("RunTrigger JSON");
+        let expected = dsl::os_pack::json::parse(r#"{"kind":"automation","automationRef":"automation","eventFingerprint":"event"}"#).expect("expected JSON");
+        assert!(dsl::os_pack::json::value_eq_ignoring_object_order(&encoded, &expected));
+        assert!(dsl::os_pack::json::from_json_str::<RunTrigger>(r#"{"kind":"automation","automation_ref":"automation","event_fingerprint":"event"}"#).is_err());
+        assert!(dsl::os_pack::json::from_json_str::<RunTrigger>(r#"{"kind":"manual","actor":"operator","extra":true}"#).is_err());
+        assert!(dsl::os_pack::json::from_json_str::<RunNodeRecord>(r#"{"nodeId":"node","status":"computed","documentFingerprint":"document","configFingerprint":"config","inputFingerprints":[],"outputFingerprints":[],"outputs":[],"durationMs":1.0,"extra":true}"#).is_err());
     }
 
     #[semio_framework_async_macros::async_test]

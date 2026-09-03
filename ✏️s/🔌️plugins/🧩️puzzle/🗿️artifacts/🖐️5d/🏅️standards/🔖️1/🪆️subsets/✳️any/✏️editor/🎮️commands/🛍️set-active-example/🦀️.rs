@@ -9,7 +9,7 @@ use crate::editor::puzzle5d::Puzzle5dActionCtx;
 use crate::editor::puzzle5d::PUZZLE5D_EXAMPLE_CAPSULE_DREAM;
 use crate::editor::puzzle5d::PUZZLE5D_EXAMPLE_CONCRETE_FOREST;
 use crate::editor::puzzle5d::PUZZLE5D_EXAMPLE_NAKAGIN;
-use serde_json::Value;
+use dsl::os_pack::json::Value;
 
 /// 📚️ Loads one of the two shipped examples (or the empty document), resetting the runtime with it.
 pub fn set_active_example(ctx: &mut Puzzle5dActionCtx<'_>, args: Option<&Value>) {

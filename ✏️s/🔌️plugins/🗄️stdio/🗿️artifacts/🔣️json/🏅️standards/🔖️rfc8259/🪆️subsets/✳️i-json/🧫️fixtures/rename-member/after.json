@@ -1,0 +1,11 @@
+{
+  "id": 1,
+  "label": "widget",
+  "tags": [
+    "a",
+    "b"
+  ],
+  "meta": {
+    "count": 2
+  }
+}

@@ -57,7 +57,7 @@ impl protocol::InferenceSpec<StepSnapshot> for StepInference {
 /// entity in `entities`, already O(n) in total entity count with no honest per-entity incremental
 /// decomposition (a merkle dep-chain over this flat entity list costs more than the fold it would
 /// cache) — the default `infer_cached` passthrough is exact.
-impl ArtifactInferrer for crate::artifacts::step::standards::v_ap214::subsets::any::schema::StepBuilder {
+impl ArtifactInferrer for crate::artifacts::step::standards::v_ap214::subsets::base::schema::StepBuilder {
     type Snapshot = StepSnapshot;
     type Inference = StepInference;
 }

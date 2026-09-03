@@ -5,14 +5,13 @@ use crate::artifacts::layout::{LayoutDiff, LayoutSnapshot, Page};
 use crate::artifacts::layout::mutations::{LayoutMutation, delete_page};
 use crate::artifacts::layout::schema::diff::LayoutPagesDelta;
 use protocol::{MutationKind, SemanticDescriptor};
-use serde::{Deserialize, Serialize};
 use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🌱️CreatePage
 /// 🌱️ `index` is descriptive of authoring intent (the append-only `LayoutPagesDelta` apply always
 /// pushes at the end, matching the pre-migration generic append behavior).
 #[derive(Clone, Debug, PartialEq, dsl::MutationLeaf, ToValue, FromValue)]
-#[cfg_attr(test, derive(Serialize, Deserialize))]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[mutation_leaf(contract = ::protocol)]
 pub struct CreatePage {
     pub page: Page,

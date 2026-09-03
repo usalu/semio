@@ -23,9 +23,9 @@ requires the file carrying the derive to be named after the taxonomy's
 `mutationComponentFileKindId` = `rust-source` → emoji `🦀️` + `.rs` = **`🦀️.rs`**.
 Sourcing's aggregate is still at `🧬️mutations/🦀️component.rs`.
 
-The derive returns `to_compile_error()`, so **no** `impl protocol::Mutation<CurateSnapshot> for
+The derive returns `to_compile_error()`, so **no** `impl protocol::Mutation<CurationSnapshot> for
 SourcingMutation` is generated at all — which cascades into ~100 `E0277
-SourcingMutation: Mutation<CurateSnapshot> is not satisfied` at every `MutationKind` impl,
+SourcingMutation: Mutation<CurationSnapshot> is not satisfied` at every `MutationKind` impl,
 the editor/viewer `ArtifactEditor::Mutation` associated type, io, and the operations surface.
 
 Sourcing's mutation **leaves** were already migrated (`🌱create-curated-item/🦀️.rs` + `🔣️.json`);
@@ -37,8 +37,8 @@ inside each leaf directory. Peers already on the canonical name: `🗄️stdio` 
 `protocol::Mutation` (🧰️framework/🔨️modules/📡️replication/🎮️mutation/🦀️.rs:105) now requires
 `const DESCRIPTORS: &'static [MutationLeafDescriptor]` and `fn descriptor(&self)`.
 Two sourcing impls predate that and declare neither:
-- `✏️editor/🎚️config/🦀️component.rs:183` — `SourcingCurateConfigMutation` (8 variants)
-- `✏️editor/👥️presence/🦀️component.rs:93` — `SourcingCuratePresenceMutation` (1 variant)
+- `✏️editor/🎚️config/🦀️component.rs:183` — `SourcingCurationConfigMutation` (8 variants)
+- `✏️editor/👥️presence/🦀️component.rs:93` — `SourcingCurationPresenceMutation` (1 variant)
 
 Reference pattern for a config/presence enum with no leaf triads on disk (placeholder descriptor
 rows): `✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🦀️component.rs:194`.
@@ -48,4 +48,4 @@ rows): `✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️s
 2. Point the aggregate's structural-correspondence test at the canonical `🔣️.json` leaf descriptor
    and drop the legacy duplicate `🔣️component.json` in each of the three leaf directories.
 3. Add `DESCRIPTORS` + `descriptor()` to the config and presence `Mutation` impls.
-4. Rebuild the wasm component, restart `dev sourcing`, verify the curate app live on :6081.
+4. Rebuild the wasm component, restart `dev sourcing`, verify the curation app live on :6081.

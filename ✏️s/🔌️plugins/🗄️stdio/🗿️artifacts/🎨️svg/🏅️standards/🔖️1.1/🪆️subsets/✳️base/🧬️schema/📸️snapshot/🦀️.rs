@@ -1340,8 +1340,8 @@ impl store::ArtifactDsl for SvgSnapshot {
 /// 🧪️ P2-FG3: `stdio.svg` is TEXT-NATIVE (per the W0 census row) — there is no "binary SVG"; the
 /// pack container is the SEMIO envelope wrapping the artifact's own REAL wire text
 /// (`write_svg_xml`/`parse_svg_xml`, themselves `xml_document_to_text`/`xml_document_from_text`)
-/// verbatim, same treatment `📰xml`'s own `ArtifactPack` gives its restated XML text
-/// (`📰xml/…/📸️snapshot/🦀️.rs`'s own P2-FG1 fix). Replaces the previous
+/// verbatim, same treatment `📰️xml`'s own `ArtifactPack` gives its restated XML text
+/// (`📰️xml/…/📸️snapshot/🦀️.rs`'s own P2-FG1 fix). Replaces the previous
 /// generic object-serialization placeholder, which satisfied the trait but did not describe the
 /// structured SVG state frame.
 impl store::ArtifactPack for SvgSnapshot {

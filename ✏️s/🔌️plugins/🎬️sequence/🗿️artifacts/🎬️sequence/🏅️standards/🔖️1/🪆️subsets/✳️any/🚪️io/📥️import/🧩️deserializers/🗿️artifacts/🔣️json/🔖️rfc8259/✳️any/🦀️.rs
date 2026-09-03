@@ -18,7 +18,8 @@ impl Deserializer<SequenceSnapshot> for JsonIntoSequence {
             return Err(IoError { message: "JsonIntoSequence: expected a binary json payload".to_string(), diagnostics: Vec::new() });
         };
         let _ = STDIO_JSON_DOCUMENT_SCHEMA;
-        let fixture: SequenceFixture = serde_json::from_slice(bytes).map_err(|error| IoError { message: format!("JsonIntoSequence: {error}"), diagnostics: Vec::new() })?;
+        let text = std::str::from_utf8(bytes).map_err(|error| IoError { message: format!("JsonIntoSequence: {error}"), diagnostics: Vec::new() })?;
+        let fixture: SequenceFixture = dsl::os_pack::json::from_json_str(text).map_err(|error| IoError { message: format!("JsonIntoSequence: {error}"), diagnostics: Vec::new() })?;
         Ok(IoOutcome::clean(SequenceSnapshot::from_fixture(fixture)))
     }
 }

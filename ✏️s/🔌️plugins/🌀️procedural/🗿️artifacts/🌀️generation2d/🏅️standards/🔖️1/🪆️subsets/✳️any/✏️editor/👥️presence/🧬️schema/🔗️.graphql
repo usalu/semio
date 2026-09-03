@@ -1,0 +1,10 @@
+type Generation2dPresence {
+  camera: CameraJson! @state(class: PRESENCE)
+  showMode: String! @state(class: PRESENCE)
+  selectedGenerationId: String @state(class: PRESENCE)
+}
+type CameraJson {
+  x: Float!
+  y: Float!
+  zoom: Float!
+}

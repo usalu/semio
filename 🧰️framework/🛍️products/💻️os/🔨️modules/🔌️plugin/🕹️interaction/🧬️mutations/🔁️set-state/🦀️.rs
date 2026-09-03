@@ -2,18 +2,14 @@
 
 use crate::app::InteractionConfigMutation;
 use protocol::InteractionState;
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️Payload
-// 🌱️ RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS (26/09/01): `InteractionState`
-// (defined in `📡️replication/📡️wire/🦀️.rs`) now hand-implements `ToValue`/`FromValue` alongside
-// its existing `serde` derive (the composed `BTreeMap<String, DomainSelection/DomainHover/
-// SelectionMode>` chain converted too), so `SetInteractionState`/`InteractionConfigMutation` no
-// longer need to stay serde-only. `#[serde(transparent)]` has no `#[derive(ToValue, FromValue)]`
-// equivalent (see the fan-out playbook's "not supported" list) — hand-written passthrough below.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::MutationLeaf)]
+// 🌱️ `InteractionState` (defined in `📡️replication/📡️wire/🦀️.rs`) carries only the hand-written
+// `ToValue`/`FromValue` codec — its `serde` derive is gone, so this wrapper cannot derive `serde`
+// either. The transparent passthrough it used to get from `#[serde(transparent)]` is supplied by
+// the hand-written impls below, which forward straight to the inner state.
+#[derive(Clone, Debug, PartialEq, dsl::MutationLeaf, serde::Serialize, serde::Deserialize)]
 #[mutation_leaf(contract = ::protocol)]
-#[serde(transparent)]
 pub struct SetInteractionState { pub state: InteractionState }
 
 impl protocol::ToValue for SetInteractionState {

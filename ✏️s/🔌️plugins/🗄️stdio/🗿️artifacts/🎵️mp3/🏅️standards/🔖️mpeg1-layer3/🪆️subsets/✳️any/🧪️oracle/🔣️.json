@@ -157,5 +157,136 @@
         }
       ]
     }
+  ],
+  "fixtureManifests": [
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "set-frames-applied",
+      "class": "handcrafted",
+      "target": {
+        "artifact": "s.stdio.mp3",
+        "standard": "mpeg1-layer3",
+        "subset": "any"
+      },
+      "mutation": "set-frames",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before",
+          "path": "../🧫️fixtures/set-frames/before.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:2d14c3f1dfaea2bf2a02ade2c76a3cb4bbd65705138a5ed21ca64abb0fa88dce",
+          "bytes": 1928
+        },
+        {
+          "role": "expected-after",
+          "path": "../🧫️fixtures/set-frames/after.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:09a807e81e750bbc40f0d05e992a3bbd66031993a93fd2060fc2ea816e9b333d",
+          "bytes": 2359
+        }
+      ],
+      "provenance": {
+        "source": "authored",
+        "license": "public-domain (handcrafted by this repository)",
+        "attribution": "Handcrafted before/after vector authored directly against this subset's own documented schema — Law 2's handcrafted-vector category.",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "ordered-json-v1",
+      "reproducible": true,
+      "family": "mp3-carrier",
+      "notes": "SetFrames{frames:[...]} replaces the whole MPEG frame list with a real 2-frame sequence (frame 2 appended), every header bit-field spelled per the real 4-byte MPEG1 Layer III header layout."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "set-id3v1-applied",
+      "class": "handcrafted",
+      "target": {
+        "artifact": "s.stdio.mp3",
+        "standard": "mpeg1-layer3",
+        "subset": "any"
+      },
+      "mutation": "set-id3v1",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before",
+          "path": "../🧫️fixtures/set-id3v1/before.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:2d14c3f1dfaea2bf2a02ade2c76a3cb4bbd65705138a5ed21ca64abb0fa88dce",
+          "bytes": 1928
+        },
+        {
+          "role": "expected-after",
+          "path": "../🧫️fixtures/set-id3v1/after.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:677be29391827a6ec809344c40c24f58af47a85393149221676ed8bd294d2c14",
+          "bytes": 754
+        }
+      ],
+      "provenance": {
+        "source": "authored",
+        "license": "public-domain (handcrafted by this repository)",
+        "attribution": "Handcrafted before/after vector authored directly against this subset's own documented schema — Law 2's handcrafted-vector category.",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "ordered-json-v1",
+      "reproducible": true,
+      "family": "mp3-carrier",
+      "notes": "SetId3v1{id3v1:None} strips the 128-byte ID3v1 trailer."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "set-id3v2-applied",
+      "class": "handcrafted",
+      "target": {
+        "artifact": "s.stdio.mp3",
+        "standard": "mpeg1-layer3",
+        "subset": "any"
+      },
+      "mutation": "set-id3v2",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before",
+          "path": "../🧫️fixtures/set-id3v2/before.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:2d14c3f1dfaea2bf2a02ade2c76a3cb4bbd65705138a5ed21ca64abb0fa88dce",
+          "bytes": 1928
+        },
+        {
+          "role": "expected-after",
+          "path": "../🧫️fixtures/set-id3v2/after.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:3ea1eafa1255c19b0f3de964256c178a3bc8fa95071c9560b00162f25ae658a0",
+          "bytes": 1972
+        }
+      ],
+      "provenance": {
+        "source": "authored",
+        "license": "public-domain (handcrafted by this repository)",
+        "attribution": "Handcrafted before/after vector authored directly against this subset's own documented schema — Law 2's handcrafted-vector category.",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "ordered-json-v1",
+      "reproducible": true,
+      "family": "mp3-carrier",
+      "notes": "SetId3v2 overwrites the ID3v2 tag's title frame (TIT2) data in place."
+    }
   ]
 }

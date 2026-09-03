@@ -1,0 +1,5 @@
+{
+  "$id": "https://semio.tech/schema/s/procedural/generation2d/snapshot/text.json",
+  "title": "Generation2dSnapshotText",
+  "type": "object"
+}

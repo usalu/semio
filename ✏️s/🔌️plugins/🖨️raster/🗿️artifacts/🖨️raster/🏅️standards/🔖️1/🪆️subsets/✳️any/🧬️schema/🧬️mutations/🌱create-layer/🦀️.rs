@@ -1,17 +1,15 @@
 //! 🌱 `create-layer` — brings a new `RasterLayerNode` into existence at a tree address.
 
 pub mod mutation {
-use serde::{Deserialize, Serialize};
 use crate::artifacts::raster::diff::{diff_add_layer, RasterDiff};
 use crate::artifacts::raster::mutations::{delete_layer, RasterMutation};
 use crate::artifacts::raster::schema::{find_layer, layer_node_id};
 use crate::artifacts::raster::{RasterLayerNode, RasterSnapshot};
 
 //#region 🔖️CreateLayer
-#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::MutationLeaf, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
 #[value(rename_all = "camelCase")]
-#[serde(rename_all = "camelCase")]
 pub struct CreateLayer {
     pub parent_id: Option<String>,
     pub index: usize,

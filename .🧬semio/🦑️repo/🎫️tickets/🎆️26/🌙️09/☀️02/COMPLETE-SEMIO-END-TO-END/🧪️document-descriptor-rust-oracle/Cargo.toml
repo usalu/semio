@@ -1,0 +1,22 @@
+[package]
+name = "document-descriptor-rust-oracle"
+version = "0.0.0"
+edition = "2021"
+
+[workspace]
+
+[features]
+default = ["sqlite"]
+sqlite = []
+postgres = ["dep:sqlx_core", "dep:sqlx_postgres"]
+neo4j = ["dep:neo4rs"]
+
+[dependencies]
+directory = { path = "shim", package = "descriptor-directory-shim" }
+neo4rs = { version = "0.8", optional = true }
+rusqlite = { version = "0.38.0", features = ["bundled"] }
+serde = { version = "1.0.219", features = ["derive"] }
+serde_json = "1.0.140"
+sqlx_core = { package = "sqlx-core", version = "0.8", features = ["_rt-tokio", "_tls-rustls-ring-webpki", "json"], optional = true }
+sqlx_postgres = { package = "sqlx-postgres", version = "0.8", features = ["uuid", "json"], optional = true }
+tokio = { version = "1", features = ["full", "test-util"] }

@@ -11,7 +11,7 @@
 //! order) — see `🔖️ContentBridge` below.
 
 use semio_framework_plugin::{ArtifactKindSpec, Dialect, MediaClass, MediaForm, MediaType, OsMediaCapability, StandardId, SubsetId};
-use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::any::schema::geometry::SemioPoint2;
+use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::base::schema::geometry::SemioPoint2;
 use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::document::schema::snapshot::{DocBlock, DocRun, SemioDocumentSnapshot, STDIO_SEMIODOCUMENT_DOCUMENT_SCHEMA};
 use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::flow::schema::snapshot::{
     FlowEdge as SemioFlowEdge, FlowNode as SemioFlowNode, FlowParam as SemioFlowParam, PortRef as SemioPortRef, SemioFlowSnapshot, STDIO_SEMIOFLOW_DOCUMENT_SCHEMA,
@@ -69,7 +69,7 @@ pub fn flow_content_snapshot_from_steps(steps: &[PlaybookStep]) -> SemioFlowSnap
         .iter()
         .enumerate()
         .map(|(index, step)| {
-            let mut params = vec![SemioFlowParam { key: "blocksJson".into(), value: serde_json::to_string(&step.blocks).unwrap_or_default() }];
+            let mut params = vec![SemioFlowParam { key: "blocksJson".into(), value: protocol::json::to_json_string(&step.blocks) }];
             if let Some(description) = &step.description {
                 params.push(SemioFlowParam { key: "description".into(), value: description.clone() });
             }
@@ -91,7 +91,7 @@ pub fn steps_from_flow_content(content: &SemioFlowSnapshot) -> Vec<PlaybookStep>
         .iter()
         .map(|node| {
             let blocks_json = node.params.iter().find(|param| param.key == "blocksJson").map(|param| param.value.as_str()).unwrap_or("[]");
-            let blocks: Vec<PlaybookBlock> = serde_json::from_str(blocks_json).unwrap_or_default();
+            let blocks: Vec<PlaybookBlock> = protocol::json::from_json_str(blocks_json).unwrap_or_default();
             let description = node.params.iter().find(|param| param.key == "description").map(|param| param.value.clone());
             PlaybookStep { id: node.id.clone(), title: node.label.clone(), description, blocks }
         })
@@ -152,7 +152,7 @@ pub fn steps_from_document(content: &SemioDocumentSnapshot) -> (Option<String>, 
 pub fn flow_content_child_handle(steps: &[PlaybookStep]) -> PlaybookFlowChild {
     use std::hash::{Hash, Hasher};
     let snapshot = flow_content_snapshot_from_steps(steps);
-    let content_json = serde_json::to_string(&snapshot).unwrap_or_default();
+    let content_json = protocol::json::to_json_string(&snapshot);
     let mut hasher = std::collections::hash_map::DefaultHasher::new();
     content_json.hash(&mut hasher);
     let content_hash = hasher.finish();
@@ -167,7 +167,7 @@ pub fn flow_content_child_handle(steps: &[PlaybookStep]) -> PlaybookFlowChild {
 pub fn document_child_handle(title: Option<&str>, steps: &[PlaybookStep]) -> PlaybookDocumentChild {
     use std::hash::{Hash, Hasher};
     let snapshot = document_snapshot_from_steps(title, steps);
-    let content_json = serde_json::to_string(&snapshot).unwrap_or_default();
+    let content_json = protocol::json::to_json_string(&snapshot);
     let mut hasher = std::collections::hash_map::DefaultHasher::new();
     content_json.hash(&mut hasher);
     let content_hash = hasher.finish();
@@ -420,7 +420,7 @@ mod tests {
             "step":1,
             "unit":"panels"
         }"#;
-        let block: PlaybookBlock = serde_json::from_str(json).expect("block json");
+        let block: PlaybookBlock = protocol::json::from_json_str(json).expect("block json");
         assert_eq!(block.min, Some(4.0));
         assert_eq!(block.unit.as_deref(), Some("panels"));
         assert!(block.required.unwrap_or(false));
@@ -496,7 +496,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn scene_owner_fixture_proves_identity_isolation_aba_wire_omission_and_bounded_close() {
-        let fixture: serde_json::Value = serde_json::from_str(include_str!("🧪️fixtures/playbook-scene-owner-law.json")).expect("language-neutral playbook scene fixture");
+        let fixture: protocol::os_pack::json::Value = protocol::json::parse(include_str!("🧪️fixtures/playbook-scene-owner-law.json")).expect("language-neutral playbook scene fixture");
         let cases = fixture["cases"].as_array().expect("fixture cases");
         assert_eq!(fixture["schemaVersion"], 1);
         assert_eq!(fixture["ownedSlots"], 1);

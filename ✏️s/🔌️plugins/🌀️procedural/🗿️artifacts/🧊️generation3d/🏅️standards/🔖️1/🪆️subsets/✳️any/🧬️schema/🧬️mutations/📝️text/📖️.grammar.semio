@@ -1,0 +1,9 @@
+dialect grammar
+grammar generation3d.mutations
+extension generation3d
+start document
+
+document = header body
+header = "schema" SP "procedural.generation3d.mutations" NL
+body = payload NL?
+payload = OCTET+

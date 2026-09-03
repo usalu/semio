@@ -46,8 +46,8 @@
           "app": {
             "enum": [
               "flow",
-              "procedural2d",
-              "procedural3d"
+              "generation2d",
+              "generation3d"
             ]
           },
           "controllerId": {

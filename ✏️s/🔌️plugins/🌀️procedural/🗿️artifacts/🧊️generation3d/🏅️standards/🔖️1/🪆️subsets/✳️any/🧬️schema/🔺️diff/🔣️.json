@@ -1,0 +1,378 @@
+{
+  "$id": "https://semio.tech/schema/s/procedural/generation3d/diff.json",
+  "title": "Generation3dDiff",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [],
+  "properties": {
+    "artifact": {
+      "$ref": "#/$defs/Generation3dArtifact",
+      "x-semio-state": "artifact"
+    },
+    "fixture": {
+      "$ref": "#/$defs/FlowFixture",
+      "x-semio-state": "artifact"
+    },
+    "generation": {
+      "$ref": "#/$defs/GenerationPlayState",
+      "x-semio-state": "artifact"
+    },
+    "selectedNodeIds": {
+      "$ref": "#/$defs/Generation3dStringList",
+      "x-semio-state": "presence"
+    },
+    "lodMode": {
+      "type": "string",
+      "x-semio-state": "config"
+    },
+    "showMode": {
+      "type": "string",
+      "x-semio-state": "config"
+    },
+    "selectionMethod": {
+      "type": "string",
+      "x-semio-state": "config"
+    },
+    "hoveredNodeId": {
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "string"
+        }
+      ],
+      "x-semio-state": "artifact"
+    },
+    "graphCamera": {
+      "$ref": "#/$defs/CameraJson",
+      "x-semio-state": "config"
+    },
+    "previewCamera": {
+      "$ref": "#/$defs/Generation3dPreviewCamera",
+      "x-semio-state": "config"
+    },
+    "sunJson": {
+      "type": "string",
+      "contentMediaType": "application/json",
+      "x-semio-state": "config"
+    },
+    "selectedGenerationId": {
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "string"
+        }
+      ],
+      "x-semio-state": "presence"
+    },
+    "generationPreviewText": {
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "string"
+        }
+      ],
+      "x-semio-state": "artifact"
+    },
+    "activeUtilityId": {
+      "type": "string",
+      "x-semio-state": "presence"
+    },
+    "locale": {
+      "type": "string",
+      "x-semio-state": "config"
+    }
+  },
+  "$defs": {
+    "CameraJson": {
+      "title": "CameraJson",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "x",
+        "y",
+        "zoom"
+      ],
+      "properties": {
+        "x": {
+          "type": "number",
+          "format": "double"
+        },
+        "y": {
+          "type": "number",
+          "format": "double"
+        },
+        "zoom": {
+          "type": "number",
+          "format": "double"
+        }
+      }
+    },
+    "WidgetLayout": {
+      "title": "WidgetLayout",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "x",
+        "y"
+      ],
+      "properties": {
+        "x": {
+          "type": "number",
+          "format": "double"
+        },
+        "y": {
+          "type": "number",
+          "format": "double"
+        }
+      }
+    },
+    "SynapseSpec": {
+      "title": "SynapseSpec",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "from",
+        "to",
+        "fromPort",
+        "toPort"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "from": {
+          "type": "string"
+        },
+        "to": {
+          "type": "string"
+        },
+        "fromPort": {
+          "type": "string"
+        },
+        "toPort": {
+          "type": "string"
+        }
+      }
+    },
+    "Widget": {
+      "title": "Widget",
+      "type": "string",
+      "contentMediaType": "application/json"
+    },
+    "FlowFixture": {
+      "title": "FlowFixture",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "camera",
+        "widgets",
+        "synapses",
+        "layout"
+      ],
+      "properties": {
+        "schema": {
+          "type": "string"
+        },
+        "camera": {
+          "$ref": "#/$defs/CameraJson"
+        },
+        "widgets": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Widget"
+          }
+        },
+        "synapses": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/SynapseSpec"
+          }
+        },
+        "layout": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/WidgetLayout"
+          }
+        }
+      }
+    },
+    "FormGeneration": {
+      "title": "FormGeneration",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "name",
+        "valuesJson"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "valuesJson": {
+          "type": "string",
+          "contentMediaType": "application/json"
+        }
+      }
+    },
+    "GenerationPlayState": {
+      "title": "GenerationPlayState",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "generations"
+      ],
+      "properties": {
+        "generations": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/FormGeneration"
+          }
+        },
+        "selectedGenerationId": {
+          "type": "string"
+        },
+        "previewText": {
+          "type": "string"
+        }
+      }
+    },
+    "Generation3dPreviewCamera": {
+      "title": "Generation3dPreviewCamera",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "positionX",
+        "positionY",
+        "positionZ",
+        "targetX",
+        "targetY",
+        "targetZ",
+        "fov"
+      ],
+      "properties": {
+        "positionX": {
+          "type": "number",
+          "format": "double"
+        },
+        "positionY": {
+          "type": "number",
+          "format": "double"
+        },
+        "positionZ": {
+          "type": "number",
+          "format": "double"
+        },
+        "targetX": {
+          "type": "number",
+          "format": "double"
+        },
+        "targetY": {
+          "type": "number",
+          "format": "double"
+        },
+        "targetZ": {
+          "type": "number",
+          "format": "double"
+        },
+        "fov": {
+          "type": "number",
+          "format": "double"
+        }
+      }
+    },
+    "Generation3dStringList": {
+      "title": "Generation3dStringList",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "values"
+      ],
+      "properties": {
+        "values": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "Generation3dArtifact": {
+      "title": "Generation3dArtifact",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "fixture",
+        "generation",
+        "selectedNodeIds",
+        "lodMode",
+        "showMode",
+        "selectionMethod",
+        "graphCamera",
+        "previewCamera",
+        "sunJson",
+        "activeUtilityId",
+        "locale"
+      ],
+      "properties": {
+        "fixture": {
+          "$ref": "#/$defs/FlowFixture"
+        },
+        "generation": {
+          "$ref": "#/$defs/GenerationPlayState"
+        },
+        "selectedNodeIds": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "lodMode": {
+          "type": "string"
+        },
+        "showMode": {
+          "type": "string"
+        },
+        "selectionMethod": {
+          "type": "string"
+        },
+        "hoveredNodeId": {
+          "type": "string"
+        },
+        "graphCamera": {
+          "$ref": "#/$defs/CameraJson"
+        },
+        "previewCamera": {
+          "$ref": "#/$defs/Generation3dPreviewCamera"
+        },
+        "sunJson": {
+          "type": "string",
+          "contentMediaType": "application/json"
+        },
+        "selectedGenerationId": {
+          "type": "string"
+        },
+        "generationPreviewText": {
+          "type": "string"
+        },
+        "activeUtilityId": {
+          "type": "string"
+        },
+        "locale": {
+          "type": "string"
+        }
+      }
+    }
+  }
+}

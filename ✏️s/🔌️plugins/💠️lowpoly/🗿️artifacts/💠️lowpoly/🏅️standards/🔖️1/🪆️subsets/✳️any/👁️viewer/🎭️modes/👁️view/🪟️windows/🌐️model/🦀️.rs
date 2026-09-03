@@ -74,7 +74,7 @@ fn world_instances_json(snapshot: &LowpolySnapshot) -> String {
 /// (real composed-child mesh resolution is an editor-side, engine-backed pipeline out of scope for a
 /// pure read).
 pub fn render(document: &LowpolySnapshot) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
-    let meshes_json = serde_json::to_string(&[serde_json::json!({ "id": LOWPOLY_VIEW_FALLBACK_MESH_KIND, "data": mesh_from_kind(LOWPOLY_VIEW_FALLBACK_MESH_KIND) })]).unwrap_or_else(|_| "[]".into());
+    let meshes_json = serde_json::to_string(&[serde_json::json!({ "id": LOWPOLY_VIEW_FALLBACK_MESH_KIND, "data": Into::<serde_json::Value>::into(dsl::ToValue::to_value(&mesh_from_kind(LOWPOLY_VIEW_FALLBACK_MESH_KIND))) })]).unwrap_or_else(|_| "[]".into());
     let view = MeshView {
         camera_json: world3d_camera_json(LOWPOLY_VIEW_DEFAULT_CAMERA_POSITION, LOWPOLY_VIEW_DEFAULT_CAMERA_TARGET, LOWPOLY_VIEW_DEFAULT_CAMERA_FOV),
         meshes_json,

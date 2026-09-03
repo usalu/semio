@@ -96,6 +96,41 @@
       ],
       "homepage": "https://github.com/ricosjp/ruststep",
       "rationale": "📐️ THE SECOND CARRIER, ON A DIFFERENT ENGINE FAMILY FROM THE FIRST. `ruststep` is a nom-based structural Part-21 reader; the `dxf` crate is a group-code reader. They share no kernel, so where both witness a mutation the two readings check each other rather than one confirming its own parse.\n\nA STRUCTURAL reader is the right shape here, and this was settled by measurement rather than preference. `SemioCadToStep` emits bare `CARTESIAN_POINT`/`DIRECTION`/`VECTOR`/`LINE` and `CARTESIAN_POINT`/`AXIS2_PLACEMENT_3D`/`CIRCLE` records with no `PRODUCT`, no `SHAPE_DEFINITION_REPRESENTATION` and no context entities. `brepjs` — the one STEP-capable package vendored in this repository, and the qualified oracle for the sibling `brep` subset — was run against a file in exactly that shape through the cc6 probe suite and returned `imported: 0`, because OCCT transfers shapes through product/shape-representation structure and there is nothing here to transfer; the same probe returns `imported: 1` on a committed `brep` fixture, so the negative is attributable to the content. Registering brepjs against this capability would have produced a probe reporting zero shapes on every cad fixture: a green capability standing on evidence never read. ruststep parses the identical file completely, resolving all seven entities, every `#N` reference and both `$` placeholders.\n\nREAD-ONLY, AND THE FIXTURE CLASS SAYS SO. ruststep's lib.rs advertises \"reading and writing\", but 0.4.0's write half does not reach text: `Record`, `DataSection` and `Exchange` all fail to compile in a `println!` because none implements `Display`, and `ast::ser::to_record` stops at an in-memory `Record` whose nesting disagrees with what its own parser produces for the same entity — `CARTESIAN_POINT` serialises to `List([String, Real, Real, Real])` where the parser yields `List([String, List([Real, Real, Real])])`. No third party in this repository can therefore WRITE STEP, so the `step-line-circle` fixtures are classed `handcrafted`, not `third-party-generated`. What ruststep contributes is verification: the generator reads every file back through it and refuses to emit one whose geometry it does not recover exactly.\n\nSCOPE, honestly bounded: the step export leaf drops seven of the nine entity variants (`_ => {} // no B-rep/solid equivalent in this bridge's scope`) and never reads `from.layers` or `from.blocks` at all, so this oracle is registered against five kinds only — `no-mutation`, `set-snapshot`, `add-entity`, `remove-entity` and `set-entity-geometry` — and the probe returns `unsupported` rather than an empty `ok` whenever both sides read back identical. MEASURED: the same `set-entity-geometry` counterexample separates at `maxAbsoluteDelta` 0.000e+00 against 1.000e-01."
+    },
+    {
+      "id": "serde-json-semio-cad-carrier-reader",
+      "kind": "third-party-library",
+      "ecosystem": "rust",
+      "package": "serde_json",
+      "version": "1",
+      "source": {
+        "repository": "https://github.com/serde-rs/json",
+        "license": "MIT OR Apache-2.0"
+      },
+      "engine": {
+        "family": "serde-json",
+        "implementation": "serde_json 1 value tree",
+        "version": "1"
+      },
+      "capabilities": [
+        "semio-v1-cad-mutate"
+      ],
+      "comparisonProfiles": [
+        "ordered-json-v1"
+      ],
+      "license": "MIT OR Apache-2.0",
+      "testOnly": true,
+      "productionReachable": false,
+      "networkDuringExecution": false,
+      "platforms": [
+        "darwin-arm64",
+        "darwin-x64",
+        "linux-x64",
+        "linux-arm64",
+        "win32-x64"
+      ],
+      "homepage": "https://docs.rs/serde_json",
+      "rationale": "📖️ A READER over this subset's own JSON export, covering exactly the one kind whose full forward semantics reduces to a pure structural edit.\n\nadd-layer's production diff (✳️cad/🧬️schema/🧬️mutations/🗂add-layer/🦀️.rs delegating into agg_diff) is NamedTripleDiff{added: vec![layer.clone()], removed: [], modified: []} on SemioCadSnapshot::layers, validated only for a non-duplicate `name` (validate_named_triple, ✳️base/🧬️schema/🧰️triples/🦀️.rs). No computed field, no cross-reference.\n\n`SemioCadSnapshot::layers` is an INLINE `Vec<CadLayer>` carrying its full content directly in this subset's own JSON export (`✳️cad/🧬️schema/📸️snapshot/🦀️.rs`), so a genuinely fresh, unique-keyed `add-layer` payload is a carrier-level fact a third-party JSON implementation witnesses in full — the identical inline-versus-composed discriminator `serde-json-semio-document-carrier-reader`'s own rationale already applies to `document`'s `insert-image`/`remove-image`/`set-image-bytes` (`✳️document/🧪️oracle/🔣️.json`).\n\nThe reading tool is `✳️cad/🏭generator/🦀️json-engine` — its own standalone crate (own `[workspace]`, `[dependencies] serde_json = \"1\"` and nothing else), which builds a deterministic seed document, applies `add-layer` as a domain-blind edit to the JSON tree (never through this repository's own mutation engine), and refuses to write a pair whose projection does not move. Scoped HONESTLY to this one kind: the other kinds this subset's own `semio-v1-cad-mutate` capability names are NOT claimed by this oracle — most carry computed fields, cross-references or binary payloads this generic reader does not attempt (mirroring `dxf-crate-cad-r12-read`'s own partial-coverage precedent in this same file, which likewise reuses the shared capability id rather than declaring a new one for a subset of kinds)."
     }
   ],
   "probes": [

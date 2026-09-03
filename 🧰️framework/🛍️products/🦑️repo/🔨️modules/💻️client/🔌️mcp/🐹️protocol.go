@@ -21,8 +21,19 @@ import (
 
 const (
 	JSONRPCVersion  = "2.0"
-	ProtocolVersion = "2025-06-18"
+	ProtocolVersion = "2025-11-25"
 )
+
+var SupportedProtocolVersions = []string{ProtocolVersion, "2025-06-18", "2025-03-26", "2024-11-05", "2024-10-07"}
+
+func negotiateProtocolVersion(requested string) string {
+	for _, supported := range SupportedProtocolVersions {
+		if requested == supported {
+			return requested
+		}
+	}
+	return ProtocolVersion
+}
 
 const (
 	CodeParseError       = -32700

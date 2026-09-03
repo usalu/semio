@@ -171,7 +171,7 @@ pub mod derived_construction {
         }
 
         async fn rebuild(mut self) -> Self {
-            self.snapshot = crate::artifacts::pptx::standards::v_ecma_376::subsets::any::io::export::serializers::build_minimal_pptx(self.snapshot.presentation);
+            self.snapshot = crate::artifacts::pptx::standards::v_ecma_376::subsets::base::io::export::serializers::build_minimal_pptx(self.snapshot.presentation);
             self
         }
     }
@@ -205,7 +205,7 @@ pub mod derived_analysis {
             // 🕵️ Real sniff: OPC-shaped bytes whose root officeDocument relationship resolves under
             // `ppt/` — disambiguates from docx/xlsx, which share the same zip magic and OPC shape.
             match source {
-                AnalyzeSource::Binary(bytes) if crate::artifacts::pptx::standards::v_ecma_376::subsets::any::io::import::deserializers::sniff_pptx_bytes(bytes) => IoConfidence::High,
+                AnalyzeSource::Binary(bytes) if crate::artifacts::pptx::standards::v_ecma_376::subsets::base::io::import::deserializers::sniff_pptx_bytes(bytes) => IoConfidence::High,
                 AnalyzeSource::Binary(_) | AnalyzeSource::Text(_) => IoConfidence::Low,
             }
         }
@@ -224,8 +224,8 @@ pub mod derived_analysis {
                         }
                     },
                     AnalyzeSource::Binary(bytes) => {
-                        let result = if crate::artifacts::pptx::standards::v_ecma_376::subsets::any::io::import::deserializers::sniff_pptx_bytes(bytes) {
-                            crate::artifacts::pptx::standards::v_ecma_376::subsets::any::io::import::deserializers::decode_pptx(bytes).map_err(|err| err.to_string())
+                        let result = if crate::artifacts::pptx::standards::v_ecma_376::subsets::base::io::import::deserializers::sniff_pptx_bytes(bytes) {
+                            crate::artifacts::pptx::standards::v_ecma_376::subsets::base::io::import::deserializers::decode_pptx(bytes).map_err(|err| err.to_string())
                         } else {
                             <PptxSnapshot as store::ArtifactPack>::decode_pack(bytes).map_err(|err| err.to_string())
                         };
@@ -262,8 +262,8 @@ pub async fn empty_pptx_snapshot() -> PptxSnapshot {
 /// establishes.
 pub async fn demo_pptx_snapshot() -> PptxSnapshot {
     use crate::artifacts::pptx::schema::snapshot::{PptxParagraph, PptxRun, PptxShape, PptxSlide, PptxTransform};
-    use crate::artifacts::pptx::standards::v_ecma_376::subsets::any::io::export::serializers::{build_minimal_pptx, encode_pptx};
-    use crate::artifacts::pptx::standards::v_ecma_376::subsets::any::io::import::deserializers::decode_pptx;
+    use crate::artifacts::pptx::standards::v_ecma_376::subsets::base::io::export::serializers::{build_minimal_pptx, encode_pptx};
+    use crate::artifacts::pptx::standards::v_ecma_376::subsets::base::io::import::deserializers::decode_pptx;
     let presentation = PptxPresentation {
         slides: vec![
             PptxSlide {
@@ -334,9 +334,9 @@ semio_framework_plugin::derive_artifact_facets!(
 mod tests {
     use super::*;
     use crate::artifacts::pptx::schema::snapshot::{PptxParagraph, PptxRun, PptxShape, PptxSlide, PptxTransform};
-    use crate::artifacts::pptx::standards::v_ecma_376::subsets::any::io::export::serializers::{build_minimal_pptx, encode_pptx};
-    use crate::artifacts::pptx::standards::v_ecma_376::subsets::any::io::import::deserializers::{decode_pptx, sniff_pptx_bytes};
-    use crate::artifacts::pptx::standards::v_ecma_376::subsets::any::io::{
+    use crate::artifacts::pptx::standards::v_ecma_376::subsets::base::io::export::serializers::{build_minimal_pptx, encode_pptx};
+    use crate::artifacts::pptx::standards::v_ecma_376::subsets::base::io::import::deserializers::{decode_pptx, sniff_pptx_bytes};
+    use crate::artifacts::pptx::standards::v_ecma_376::subsets::base::io::{
         PptxError, MINIMAL_SLIDE_MASTER_XML, PRESENTATION_CONTENT_TYPE, PRESENTATION_PART, REL_TYPE_OFFICE_DOCUMENT_STRICT, REL_TYPE_SLIDE, REL_TYPE_SLIDE_LAYOUT, REL_TYPE_SLIDE_MASTER, SLIDE_CONTENT_TYPE, SLIDE_LAYOUT_PART,
         SLIDE_MASTER_CONTENT_TYPE, SLIDE_MASTER_PART, THEME_PART,
     };
@@ -632,8 +632,8 @@ mod tests {
                     format!(" compressed_name={} actual_version={} expected_version={} actual_flags={} expected_flags={} actual_method={} expected_method={} actual_time={} expected_time={} actual_date={} expected_date={} actual_crc={} expected_crc={} actual_uncompressed={} expected_uncompressed={} actual_extra={:?} expected_extra={:?} actual_compressed={} expected_compressed={} compressed_prefix={prefix}", left.0, left.1, right.1, left.2, right.2, left.3, right.3, left.4, right.4, left.5, right.5, left.6, right.6, left.7, right.7, left.8, right.8, left.9.len(), right.9.len())
                 })
                 .unwrap_or_default();
-            let actual_zip = crate::artifacts::zip::standards::v2_0::subsets::any::io::decode_zip(&actual).expect("decode actual mismatch");
-            let expected_zip = crate::artifacts::zip::standards::v2_0::subsets::any::io::decode_zip(expected).expect("decode expected mismatch");
+            let actual_zip = crate::artifacts::zip::standards::v2_0::subsets::base::io::decode_zip(&actual).expect("decode actual mismatch");
+            let expected_zip = crate::artifacts::zip::standards::v2_0::subsets::base::io::decode_zip(expected).expect("decode expected mismatch");
             let first_entry = actual_zip.entries.iter().zip(&expected_zip.entries).position(|(left, right)| left != right).unwrap_or(actual_zip.entries.len().min(expected_zip.entries.len()));
             let logical_mismatch_separator = ",";
             let logical_mismatches = actual_zip
@@ -719,11 +719,11 @@ mod tests {
         assert_exact_export(&analyzed, &exact_bytes).await;
 
         let dialect = <PptxAnalyzerAnalysis as ArtifactAnalysis>::DIALECT;
-        let composition = crate::artifacts::pptx::standards::v_ecma_376::subsets::any::io::PptxComposerComposition::compose(&[ComposeSource { dialect, payload: AnalyzeSource::Binary(&exact_bytes) }]).expect("compose native PPTX fixture");
+        let composition = crate::artifacts::pptx::standards::v_ecma_376::subsets::base::io::PptxComposerComposition::compose(&[ComposeSource { dialect, payload: AnalyzeSource::Binary(&exact_bytes) }]).expect("compose native PPTX fixture");
         assert_eq!(composition.snapshot, snapshot);
         assert_exact_export(&composition.snapshot, &exact_bytes).await;
 
-        let zip = crate::artifacts::zip::standards::v2_0::subsets::any::io::decode_zip(&exact_bytes).expect("decode exact zip");
+        let zip = crate::artifacts::zip::standards::v2_0::subsets::base::io::decode_zip(&exact_bytes).expect("decode exact zip");
         assert_eq!(zip.entries.len(), 211);
         assert_eq!(zip.entries.iter().filter(|entry| entry.name.starts_with("ppt/slides/slide") && entry.name.ends_with(".xml")).count(), 62);
         assert_eq!(zip.entries.iter().filter(|entry| entry.name.ends_with(".rels")).count(), 78);
@@ -733,8 +733,8 @@ mod tests {
         assert_eq!(unpacked, snapshot);
         assert_exact_export(&unpacked, &exact_bytes).await;
 
-        let binary = crate::artifacts::pptx::standards::v_ecma_376::subsets::any::io::export::serializers::artifacts::zip::v2_0::any::serialize(&snapshot).expect("serialize exact fixture to binary");
-        let from_binary = crate::artifacts::pptx::standards::v_ecma_376::subsets::any::io::import::deserializers::artifacts::zip::v2_0::any::deserialize(&binary).expect("deserialize exact fixture from binary");
+        let binary = crate::artifacts::pptx::standards::v_ecma_376::subsets::base::io::export::serializers::artifacts::zip::v2_0::any::serialize(&snapshot).expect("serialize exact fixture to binary");
+        let from_binary = crate::artifacts::pptx::standards::v_ecma_376::subsets::base::io::import::deserializers::artifacts::zip::v2_0::any::deserialize(&binary).expect("deserialize exact fixture from binary");
         assert_eq!(from_binary, snapshot);
         assert_exact_export(&from_binary, &exact_bytes).await;
 
@@ -848,7 +848,7 @@ mod tests {
 
             let demo = demo_pptx_snapshot().await;
             let bytes = encode_pptx(&demo).expect("encode demo pptx");
-            let zip = crate::artifacts::zip::standards::v2_0::subsets::any::io::decode_zip(&bytes).expect("decode zip");
+            let zip = crate::artifacts::zip::standards::v2_0::subsets::base::io::decode_zip(&bytes).expect("decode zip");
 
             let fixed_parts = ["[Content_Types].xml", "_rels/.rels", "ppt/presentation.xml"];
             let mut checked = 0;

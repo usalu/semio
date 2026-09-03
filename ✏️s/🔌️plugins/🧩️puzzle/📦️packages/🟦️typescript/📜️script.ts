@@ -100,12 +100,10 @@ function ownerOracle(owner: PublicationOwner, source: string): boolean {
     && production.includes(owner.owner === "Puzzle5dPlayApp"
       ? `registry.register(${factory}::new(&controller_id))`
       : `registry.register(${factory}::new(&controller))`)
-    && (owner.owner === "Puzzle5dPlayApp" || (
-      !production.includes("build_artifact_store_one_item_preparation_factory")
-      && !production.includes("build_draft_store_one_item_preparation_factory")
-      && !production.includes("build_presence_store_one_item_preparation_factory")
-      && !production.includes("build_transient_store_one_item_preparation_factory")
-    ));
+    && (owner.owner === "Puzzle5dPlayApp" || owner.owner === "Puzzle3dPlayApp" || !production.includes("build_artifact_store_one_item_preparation_factory"))
+    && !production.includes("build_draft_store_one_item_preparation_factory")
+    && !production.includes("build_presence_store_one_item_preparation_factory")
+    && !production.includes("build_transient_store_one_item_preparation_factory");
   if (!exactFactory || !exactContracts(contracts, appGroups.filter((group) => group.status === "Migrated")) || !exactArray(proofIds, migrated)) return false;
   if (owner.owner === "Puzzle3dPlayApp") {
     return production.includes("struct Puzzle3dConfigStorePreparationFactory")
@@ -124,7 +122,12 @@ function ownerOracle(owner: PublicationOwner, source: string): boolean {
       && production.includes("fn cancel(&mut self)")
       && production.includes("fn begin_close(&mut self)")
       && production.includes("base.return_to_registry()")
-      && production.includes("fn terminal_is_empty(&self)");
+      && production.includes("fn terminal_is_empty(&self)")
+      && production.includes("struct Puzzle3dArtifactStorePreparationFactory")
+      && production.includes("impl store::ArtifactStoreOneItemPreparationFactory<Puzzle3dPlaySnapshot, Puzzle3dMutation> for Puzzle3dArtifactStorePreparationFactory")
+      && production.includes("impl store::ArtifactStoreOneItemPreparation<Puzzle3dPlaySnapshot, Puzzle3dMutation> for Puzzle3dArtifactStorePreparation")
+      && production.includes("fn build_artifact_store_one_item_preparation_factory()")
+      && production.includes("Some(std::sync::Arc::new(Puzzle3dArtifactStorePreparationFactory))");
   }
   if (owner.owner !== "Puzzle5dPlayApp" && production.includes("build_config_store_one_item_preparation_factory")) return false;
   if (owner.owner !== "Puzzle5dPlayApp") return true;
@@ -151,8 +154,8 @@ function ownerOracle(owner: PublicationOwner, source: string): boolean {
 class PublicationAuthorityAuditScript extends BundleScript {
   async run(): Promise<void> {
     const puzzleRoot = resolve(this.root, "../..");
-    const fixture = await Bun.file(resolve(puzzleRoot, "🔣️publication-authority.json")).json() as PublicationFixture;
-    const schema = await Bun.file(resolve(puzzleRoot, "🔣️publication-authority.schema.json")).json();
+    const fixture = await Bun.file(resolve(puzzleRoot, "🧪️publication-authority/🔣️.json")).json() as PublicationFixture;
+    const schema = await Bun.file(resolve(puzzleRoot, "🧪️publication-authority/🔣️.schema.json")).json();
     const validate = new Ajv({ allErrors: true, strict: true }).compile(schema);
     if (!validate(fixture)) throw new Error(`Puzzle publication fixture failed Ajv validation: ${JSON.stringify(validate.errors)}`);
     if (!fixtureOracle(fixture)) throw new Error("Puzzle publication fixture failed the independent semantic oracle");
@@ -172,10 +175,14 @@ class PublicationAuthorityAuditScript extends BundleScript {
       if (missingContract !== source && ownerOracle(owner, missingContract)) throw new Error(`${owner.owner} accepted a missing publication contract`);
       if (owner.owner === "Puzzle3dPlayApp") {
         const missingPreparation = source.replace("Some(std::sync::Arc::new(Puzzle3dConfigStorePreparationFactory))", "None");
+        const missingArtifactPreparation = source.replace("Some(std::sync::Arc::new(Puzzle3dArtifactStorePreparationFactory))", "None");
         const widenedTerminology = source.replace('matches!(value.as_str(), "native" | "reuse")', 'matches!(value.as_str(), "native" | "reuse" | "other")');
-        const staleAuthority = source.replace("            || request.generation != request.authority.generation()\n", "");
+        // 🧯️ `replaceAll` — the stale-authority guard is duplicated verbatim across the Config and
+        // Artifact preparations; a single-occurrence `.replace` would leave the other copy's guard
+        // intact, and the plain `.includes` check below would then still see the pattern in source.
+        const staleAuthority = source.replaceAll("            || request.generation != request.authority.generation()\n", "");
         const missingProgress = source.replaceAll("ArtifactStoreOneItemPreparationStep::Progress", "ArtifactStoreOneItemPreparationStep::Prepared");
-        if (ownerOracle(owner, missingPreparation) || ownerOracle(owner, widenedTerminology) || ownerOracle(owner, staleAuthority) || ownerOracle(owner, missingProgress)) {
+        if (ownerOracle(owner, missingPreparation) || ownerOracle(owner, missingArtifactPreparation) || ownerOracle(owner, widenedTerminology) || ownerOracle(owner, staleAuthority) || ownerOracle(owner, missingProgress)) {
           throw new Error("Puzzle3d accepted missing Store preparation, a widened mutation envelope, or stale publication authority");
         }
       }

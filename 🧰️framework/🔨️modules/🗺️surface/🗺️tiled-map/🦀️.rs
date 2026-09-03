@@ -8,7 +8,7 @@
 //! (`crate::artifacts::gismap::schema::{snapshot,diff,mutations}`, 12 real triads —
 //! `create/delete/reorder-positions`, `replace-position-data`, `create/delete/reorder-routes`,
 //! `replace-route-data`, `create/delete/reorder-regions`, `replace-region-data`), refreshed wholesale
-//! via [`MapHost::sync_map_json`] by `✏️s/🔌️plugins/🌍️gis/🎛️apps/◻2d/🗺️maphost/🦀️.rs::map_host_from`
+//! via [`MapHost::sync_map_json`] by `✏️s/🔌️plugins/🌍️gis/🎛️apps/◻️2d/🗺️maphost/🦀️.rs::map_host_from`
 //! — the field's own pre-existing docstring already said as much ("mirrored from projection JSON —
 //! not authoritative document state (OS `ArtifactStore` owns packs)"), confirmed rather than merely
 //! trusted. `render_mode`/`vector_style`/`forced_lod_id`/`layer_visibility`/`layer_stroke_scale`

@@ -1,0 +1,19 @@
+semio procedural.generation3d.dsl v1
+schema="flow.fixture"
+camera {
+  x=100 y=-50 zoom=2.5
+}
+layout={
+  rect=x=120 y=-80 width=x=40 y=-120 height=x=40 y=-160
+}
+synapses [id:TEXT wire:WIRE] {
+  e1 width@number->rect@width
+  e2 height@number->rect@height
+}
+generations [id:TEXT name:TEXT values:VAL] {
+}
+widgets {
+  input-slider id="width" label="Width" value=2 min=0.2 max=6 step=0.1
+  input-slider id="height" label="Height" value=1.5 min=0.2 max=6 step=0.1
+  neuron id="rect" neuron-kind=brep.curve.rectangle preview=true input-ports=[ "width" "height" ] output-ports=[ ] params=[ ]
+}

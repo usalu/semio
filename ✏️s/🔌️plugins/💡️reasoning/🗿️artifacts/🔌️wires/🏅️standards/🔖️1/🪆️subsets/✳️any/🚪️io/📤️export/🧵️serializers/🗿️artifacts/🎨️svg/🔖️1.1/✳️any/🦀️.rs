@@ -4,7 +4,7 @@
 //! 🐛️ Fixes a pre-migration bug: the old `serialize` encoded the `WiresSnapshot` to its OWN pack
 //! bytes and then tried to decode those bytes as an `SvgSnapshot` pack — a confused type-pun that
 //! would always fail (the two packs' binary shapes are unrelated). No real wires-graph<->svg
-//! mapping exists — this is now an honest not-yet-implemented stub, the same treatment `📄txt`
+//! mapping exists — this is now an honest not-yet-implemented stub, the same treatment `📄️txt`
 //! already had. `IoFidelity::Lossy`.
 
 use crate::artifacts::wires::WiresSnapshot;

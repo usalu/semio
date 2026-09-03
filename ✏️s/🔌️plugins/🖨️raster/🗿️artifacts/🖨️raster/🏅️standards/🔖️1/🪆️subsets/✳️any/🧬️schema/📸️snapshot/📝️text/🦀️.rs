@@ -34,12 +34,19 @@ mod tests {
         let mut assets = RasterOwnedMap::new();
         assets.insert("asset-1".into(), crate::artifacts::raster::image_asset_child_handle("asset-1", &RasterImageAsset { mime: "image/png".into(), data: b"abc".to_vec() }));
         let mut params = RasterOwnedMap::new();
-        params.insert("brightness".into(), dsl::to_dsl_value(&serde_json::json!(0.06)).expect("dsl value"));
-        params.insert("label".into(), dsl::to_dsl_value(&serde_json::json!("Warm \"Curve\"")).expect("dsl value"));
-        params.insert("enabled".into(), dsl::to_dsl_value(&serde_json::json!(true)).expect("dsl value"));
+        params.insert("brightness".into(), dsl::DslValue::float(0.06));
+        params.insert("label".into(), dsl::DslValue::String("Warm \"Curve\"".to_string()));
+        params.insert("enabled".into(), dsl::DslValue::Bool(true));
         params.insert("fallback".into(), dsl::DslValue::Null);
-        params.insert("curves".into(), dsl::to_dsl_value(&serde_json::json!([[0.0, 0.0], [0.25, 0.2], [1.0, 1.0]])).expect("dsl value"));
-        params.insert("nested".into(), dsl::to_dsl_value(&serde_json::json!({ "inner": 1.5 })).expect("dsl value"));
+        params.insert(
+            "curves".into(),
+            dsl::DslValue::Array(vec![
+                dsl::DslValue::Array(vec![dsl::DslValue::float(0.0), dsl::DslValue::float(0.0)]),
+                dsl::DslValue::Array(vec![dsl::DslValue::float(0.25), dsl::DslValue::float(0.2)]),
+                dsl::DslValue::Array(vec![dsl::DslValue::float(1.0), dsl::DslValue::float(1.0)]),
+            ]),
+        );
+        params.insert("nested".into(), dsl::DslValue::Object(vec![("inner".to_string(), dsl::DslValue::float(1.5))]));
         RasterSnapshot {
             schema: RASTER_DOCUMENT_SCHEMA.into(),
             id: "doc-1".into(),

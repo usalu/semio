@@ -15,7 +15,7 @@ pub const ENTRY_NODE_PREFIX: &str = "entry:";
 //#endregion 🔖️Constants
 
 //#region 🔖️Definition
-/// 🧱️ Stitched into the viewer manifest by `crate::viewer::zip::any::create_zip_any_viewer`.
+/// 🧱️ Stitched into the viewer manifest by `crate::viewer::zip::base::create_zip_any_viewer`.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn definition() -> WindowKindDefinition {
     WindowKindDefinition { label: LocalizedLabel::native("Archive", "Archiv"), icon_id: "archive".into(), ..TreeWindowKit::window_kind() }

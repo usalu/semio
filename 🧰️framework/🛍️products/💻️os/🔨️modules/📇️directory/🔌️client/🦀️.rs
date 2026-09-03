@@ -497,7 +497,7 @@ impl<T: DirectoryTransport + Clone> DirectoryStream<T> {
         match message {
             DirectoryStreamMessage::Event { event } => self.since = self.since.max(event.seq),
             DirectoryStreamMessage::Heartbeat { head_seq } => self.since = self.since.max(*head_seq),
-            DirectoryStreamMessage::Connection { .. } | DirectoryStreamMessage::Presence { .. } => {}
+            DirectoryStreamMessage::Connection { .. } | DirectoryStreamMessage::Presence { .. } | DirectoryStreamMessage::RebootstrapRequired { .. } => {}
         }
     }
 }
@@ -1096,6 +1096,46 @@ mod tests {
         let requests = transport.requests.lock().unwrap();
         assert_eq!(requests[0].url, "http://hub.local/directory/spaces");
         assert_eq!(requests[0].bearer.as_deref(), Some("tok"));
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn space_exposes_the_durable_document_descriptor() {
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../🧫️fixtures/📇️directory/📄️document-descriptor.json")).expect("descriptor fixture");
+        let descriptor = fixture.get("valid").expect("valid descriptor").clone();
+        let transport = FakeTransport::default();
+        transport
+            .push_response(
+                FakeTransport::json_response(
+                    200,
+                    &serde_json::json!({
+                        "id": "space-a",
+                        "name": "Fixture",
+                        "kind": "studio",
+                        "visibility": "private",
+                        "ownerUserId": "user-owner",
+                        "role": "author",
+                        "memberCount": 1,
+                        "documentCount": 1,
+                        "activeConnections": 0,
+                        "createdAtMs": 1,
+                        "updatedAtMs": 2,
+                        "members": [],
+                        "documents": [{ "descriptor": descriptor, "headSeq": 7, "commitSeq": 6, "epoch": 2 }],
+                        "invites": []
+                    }),
+                )
+                .await,
+            )
+            .await;
+        let client = DirectoryClient::new(transport.clone(), "http://hub.local");
+        client.set_token(Some("member-token".into()));
+
+        let detail = client.space(&root_ctx(), "space-a").await.expect("space detail decodes");
+        assert_eq!(detail.documents[0].descriptor.document_id, "shared-document");
+        assert_eq!(detail.documents[0].descriptor.owner.plugin_id, "s.gis");
+        assert_eq!(detail.documents[0].descriptor.bootstrap_frontier.head_seq, 7);
+        let requests = transport.requests.lock().unwrap();
+        assert_eq!(requests[0].bearer.as_deref(), Some("member-token"));
     }
 
     #[semio_framework_async_macros::async_test]

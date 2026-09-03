@@ -1,0 +1,16 @@
+syntax = "proto3";
+package semio.s.imperative.procedure.inference;
+
+// 💡️ Imperative inference schema — topology (depth-first order + nesting depth + cycle-freedom) over the Path/Step tree.
+
+message ProcedureInference {
+  // @derived
+  ProcedureTopology topology = 1;
+}
+
+message ProcedureTopology {
+  repeated string topo_order = 1;
+  map<string, uint32> depth = 2;
+  bool cycle_free = 3;
+  uint32 node_count = 4;
+}

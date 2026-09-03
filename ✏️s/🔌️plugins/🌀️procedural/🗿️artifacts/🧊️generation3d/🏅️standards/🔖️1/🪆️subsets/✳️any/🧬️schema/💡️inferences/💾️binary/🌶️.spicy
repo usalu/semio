@@ -1,0 +1,4 @@
+module Procedural_generation3d_inference;
+type Document = unit {
+    payload: bytes &eod;
+};

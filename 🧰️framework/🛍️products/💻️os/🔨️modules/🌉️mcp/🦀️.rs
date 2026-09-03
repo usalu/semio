@@ -623,13 +623,19 @@ fn registry_override_context_resolve(tools: &mut InMemoryToolRegistry, context_t
 
 //#region 🔖️WorkspaceOptions
 /// 🏠️ ticket 26/08/17/LLM-FIRST-OS-VIA-THE-SEMIO-OS-MCP-GATEWAY packet P7-headless-workspace:
-/// `--hub <url> --space <id> [--token <t>]` — the second binding shape `📋️master.md` §2.1 names
+/// `--hub <url> --space <id> --token <t>` — the second binding shape `📋️master.md` §2.1 names
 /// alongside `--folder`. Shared by `StdioOptions`/`HttpOptions` rather than duplicated per mode.
-#[derive(Debug, Clone, Default, PartialEq, Eq)]
+#[derive(Clone, Default, PartialEq, Eq)]
 pub struct HubOptions {
     pub base_url: String,
     pub space_id: String,
-    pub token: Option<String>,
+    pub token: String,
+}
+
+impl std::fmt::Debug for HubOptions {
+    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        formatter.debug_struct("HubOptions").field("base_url", &self.base_url).field("space_id", &self.space_id).field("token", &"[REDACTED]").finish()
+    }
 }
 
 /// 🏠️ Builds the real `McpServer` for a `--folder`/`--hub`-bound session: opens a real
@@ -661,7 +667,7 @@ fn server_for_workspace_options(principal: AgentPrincipal, audit: std::sync::Arc
 
 //#region 🔖️StdioEntrypoint
 /// ⚙️ Options `📦️bin.rs`'s `stdio` subcommand parses off argv (`semio-os-mcp stdio [--folder <dir>]
-/// [--hub <url> --space <id> [--token <t>]] [--principal <id>] [--scopes a,b]`).
+/// [--hub <url> --space <id> --token <t>] [--principal <id>] [--scopes a,b]`).
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub struct StdioOptions {
     pub folder: Option<String>,
@@ -692,7 +698,7 @@ pub fn run_stdio(options: StdioOptions) -> Result<(), GatewayError> {
 
 //#region 🔖️HttpEntrypoint
 /// ⚙️ Options `📦️bin.rs`'s `http` subcommand parses off argv (`semio-os-mcp http [--port <p>]
-/// [--bind <addr>] --token <t> [--folder <dir>] [--hub <url> --space <id> [--token <t>]]
+/// [--bind <addr>] --token <t> [--folder <dir>] [--hub <url> --space <id> --token <t>]
 /// [--principal <id>] [--scopes a,b] [--audit-dir <dir>] [--allow-origin <origin>]…
 /// [--bridge-token-file <path>]`). `bridge_token_file` (P1c) is WHERE the freshly-minted `/bridge`
 /// secret is written, not the secret itself — unlike `token` (the `/mcp` bearer, chosen by whoever

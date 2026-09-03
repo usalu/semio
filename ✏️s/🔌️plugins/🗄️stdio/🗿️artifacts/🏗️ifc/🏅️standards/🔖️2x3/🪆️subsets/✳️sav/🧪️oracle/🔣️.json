@@ -27,6 +27,30 @@
       },
       "productionReachable": false,
       "networkDuringExecution": false
+    },
+    {
+      "id": "ifcopenshell-ifc-2x3-sav-mutate-reader",
+      "kind": "third-party-library",
+      "ecosystem": "python",
+      "package": "ifcopenshell",
+      "version": "0.8.4.post1",
+      "engine": {
+        "family": "ifcopenshell",
+        "implementation": "IfcOpenShell C++/Python IFC engine",
+        "version": "0.8.4.post1"
+      },
+      "capabilities": [
+        "ifc-2x3-sav-mutate"
+      ],
+      "license": "LGPL-3.0-or-later",
+      "testOnly": true,
+      "productionReachable": false,
+      "networkDuringExecution": false,
+      "homepage": "https://ifcopenshell.org",
+      "rationale": "📖️ A READER, registered separately from this file's `cross-semio-implementation` entry (the `ruststep`-backed dispatcher that COMPUTES what a mutation should produce). IfcOpenShell 0.8.4.post1 is the reference open-source IFC engine: `ifcopenshell.open(path)` runs its own C++ Part-21/EXPRESS parser against the real IFC2X3 schema, entirely independent of this repository's `ruststep` reimplementation or its own production decoder. It is ALREADY declared as an `oracleHostPackages` entry in the shared `✏️s/🔌️plugins/🗄️stdio/🧪️oracle/🔣️.json` (owner `✏️s/🔌️plugins/🗄️stdio`, a real path prefix of every subset under it, ifc included) by this ticket's own A10 shard for the sibling 2x3/✳️base subset's `ifcopenshell-ifc-2x3-base-differential` entry — so it is already resolvable on every stdio test case's host import path and this registration needs no shared-manifest edit at all. This subset's own vocabulary (`set-analysis-model`, `set-group-assignment`, `set-load-group`, `set-view-definition`) is a StructuralAnalysisView-flavoured slice — `IfcStructuralAnalysisModel`, `IfcGroup`/`IfcRelAssignsToGroup`, `IfcStructuralLoadGroup` and the FILE_DESCRIPTION header string are all directly readable through `ifcopenshell.file.by_type`. Verified directly against this subset's own committed fixture before registration.",
+      "comparisonProfiles": [
+        "semantic-ifc-v1"
+      ]
     }
   ],
   "noOracleDecisions": [],
@@ -71,7 +95,8 @@
           "oracleRequirements": [
             {
               "capability": "ifc-2x3-sav-mutate",
-              "qualifyingKind": "third-party-library"
+              "qualifyingKind": "third-party-library",
+              "oracle": "ifcopenshell-ifc-2x3-sav-mutate-reader"
             }
           ]
         },
@@ -90,7 +115,8 @@
           "oracleRequirements": [
             {
               "capability": "ifc-2x3-sav-mutate",
-              "qualifyingKind": "third-party-library"
+              "qualifyingKind": "third-party-library",
+              "oracle": "ifcopenshell-ifc-2x3-sav-mutate-reader"
             }
           ]
         },
@@ -109,7 +135,8 @@
           "oracleRequirements": [
             {
               "capability": "ifc-2x3-sav-mutate",
-              "qualifyingKind": "third-party-library"
+              "qualifyingKind": "third-party-library",
+              "oracle": "ifcopenshell-ifc-2x3-sav-mutate-reader"
             }
           ]
         },
@@ -128,7 +155,8 @@
           "oracleRequirements": [
             {
               "capability": "ifc-2x3-sav-mutate",
-              "qualifyingKind": "third-party-library"
+              "qualifyingKind": "third-party-library",
+              "oracle": "ifcopenshell-ifc-2x3-sav-mutate-reader"
             }
           ]
         },
@@ -147,11 +175,269 @@
           "oracleRequirements": [
             {
               "capability": "ifc-2x3-sav-mutate",
-              "qualifyingKind": "third-party-library"
+              "qualifyingKind": "third-party-library",
+              "oracle": "ifcopenshell-ifc-2x3-sav-mutate-reader"
             }
           ]
         }
       ]
+    }
+  ],
+  "fixtureManifests": [
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "set-analysis-model-applied",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.ifc",
+        "standard": "2x3",
+        "subset": "sav"
+      },
+      "mutation": "set-analysis-model",
+      "outcome": "applied",
+      "units": {
+        "length": "millimetre",
+        "angle": "radian"
+      },
+      "files": [
+        {
+          "role": "expected-before-ifc",
+          "path": "../🧫️fixtures/set-analysis-model-applied/before.ifc",
+          "mediaType": "model/ifc",
+          "sha256": "sha256:b1efd56bbddb4dfc8356743c1f6c5e26b31a299755a323cd9b07df1a4c42d322",
+          "bytes": 188636
+        },
+        {
+          "role": "expected-after-ifc",
+          "path": "../🧫️fixtures/set-analysis-model-applied/after.ifc",
+          "mediaType": "model/ifc",
+          "sha256": "sha256:e358c8ec8bbda4415c04fd36abd63e4d45dbc0df2f59c5f9cd53d1bd905d9694",
+          "bytes": 188631
+        }
+      ],
+      "generator": {
+        "oracle": "ifcopenshell-ifc-2x3-sav-mutate-reader",
+        "packageVersion": "0.8.4.post1",
+        "engineFamily": "ifcopenshell",
+        "engineVersion": "0.8.4.post1",
+        "command": "uv run --group test python3 .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION/🔨️f1-ifc-generate.py",
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "LGPL-3.0-or-later (ifcopenshell)",
+        "attribution": "Generated with IfcOpenShell 0.8.4.post1 (LGPL-3.0-or-later) via a real read+write round trip against this repository's own committed real-world fixture",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "semantic-ifc-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "Set #9200001 IfcStructuralAnalysisModel.Name via ifcopenshell."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "set-group-assignment-applied",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.ifc",
+        "standard": "2x3",
+        "subset": "sav"
+      },
+      "mutation": "set-group-assignment",
+      "outcome": "applied",
+      "units": {
+        "length": "millimetre",
+        "angle": "radian"
+      },
+      "files": [
+        {
+          "role": "expected-before-ifc",
+          "path": "../🧫️fixtures/set-group-assignment-applied/before.ifc",
+          "mediaType": "model/ifc",
+          "sha256": "sha256:b1efd56bbddb4dfc8356743c1f6c5e26b31a299755a323cd9b07df1a4c42d322",
+          "bytes": 188636
+        },
+        {
+          "role": "expected-after-ifc",
+          "path": "../🧫️fixtures/set-group-assignment-applied/after.ifc",
+          "mediaType": "model/ifc",
+          "sha256": "sha256:fbf7aa48da7f4cf2f92e60485187e84998510bd9281ef7a5c7d491d4b917253d",
+          "bytes": 188661
+        }
+      ],
+      "generator": {
+        "oracle": "ifcopenshell-ifc-2x3-sav-mutate-reader",
+        "packageVersion": "0.8.4.post1",
+        "engineFamily": "ifcopenshell",
+        "engineVersion": "0.8.4.post1",
+        "command": "uv run --group test python3 .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION/🔨️f1-ifc-generate.py",
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "LGPL-3.0-or-later (ifcopenshell)",
+        "attribution": "Generated with IfcOpenShell 0.8.4.post1 (LGPL-3.0-or-later) via a real read+write round trip against this repository's own committed real-world fixture",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "semantic-ifc-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "Set #9200003 IfcRelAssignsToGroup.Name via ifcopenshell."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "set-load-group-applied",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.ifc",
+        "standard": "2x3",
+        "subset": "sav"
+      },
+      "mutation": "set-load-group",
+      "outcome": "applied",
+      "units": {
+        "length": "millimetre",
+        "angle": "radian"
+      },
+      "files": [
+        {
+          "role": "expected-before-ifc",
+          "path": "../🧫️fixtures/set-load-group-applied/before.ifc",
+          "mediaType": "model/ifc",
+          "sha256": "sha256:b1efd56bbddb4dfc8356743c1f6c5e26b31a299755a323cd9b07df1a4c42d322",
+          "bytes": 188636
+        },
+        {
+          "role": "expected-after-ifc",
+          "path": "../🧫️fixtures/set-load-group-applied/after.ifc",
+          "mediaType": "model/ifc",
+          "sha256": "sha256:8ba7e11527970997f428638751df3466ef46c183cc5d941a6dd545e46e36fdcd",
+          "bytes": 188643
+        }
+      ],
+      "generator": {
+        "oracle": "ifcopenshell-ifc-2x3-sav-mutate-reader",
+        "packageVersion": "0.8.4.post1",
+        "engineFamily": "ifcopenshell",
+        "engineVersion": "0.8.4.post1",
+        "command": "uv run --group test python3 .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION/🔨️f1-ifc-generate.py",
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "LGPL-3.0-or-later (ifcopenshell)",
+        "attribution": "Generated with IfcOpenShell 0.8.4.post1 (LGPL-3.0-or-later) via a real read+write round trip against this repository's own committed real-world fixture",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "semantic-ifc-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "Set #9200002 IfcStructuralLoadGroup.Name via ifcopenshell."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "set-view-definition-applied",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.ifc",
+        "standard": "2x3",
+        "subset": "sav"
+      },
+      "mutation": "set-view-definition",
+      "outcome": "applied",
+      "units": {
+        "length": "millimetre",
+        "angle": "radian"
+      },
+      "files": [
+        {
+          "role": "expected-before-ifc",
+          "path": "../🧫️fixtures/set-view-definition-applied/before.ifc",
+          "mediaType": "model/ifc",
+          "sha256": "sha256:b1efd56bbddb4dfc8356743c1f6c5e26b31a299755a323cd9b07df1a4c42d322",
+          "bytes": 188636
+        },
+        {
+          "role": "expected-after-ifc",
+          "path": "../🧫️fixtures/set-view-definition-applied/after.ifc",
+          "mediaType": "model/ifc",
+          "sha256": "sha256:b1efd56bbddb4dfc8356743c1f6c5e26b31a299755a323cd9b07df1a4c42d322",
+          "bytes": 188636
+        }
+      ],
+      "generator": {
+        "oracle": "ifcopenshell-ifc-2x3-sav-mutate-reader",
+        "packageVersion": "0.8.4.post1",
+        "engineFamily": "ifcopenshell",
+        "engineVersion": "0.8.4.post1",
+        "command": "uv run --group test python3 .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION/🔨️f1-ifc-generate.py",
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "LGPL-3.0-or-later (ifcopenshell)",
+        "attribution": "Generated with IfcOpenShell 0.8.4.post1 (LGPL-3.0-or-later) via a real read+write round trip against this repository's own committed real-world fixture",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "semantic-ifc-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "Replaced the header FILE_DESCRIPTION's view-definition text via ifcopenshell."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "set-snapshot-applied",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.ifc",
+        "standard": "2x3",
+        "subset": "sav"
+      },
+      "mutation": "set-snapshot",
+      "outcome": "applied",
+      "units": {
+        "length": "millimetre",
+        "angle": "radian"
+      },
+      "files": [
+        {
+          "role": "expected-before-ifc",
+          "path": "../🧫️fixtures/set-snapshot-applied/before.ifc",
+          "mediaType": "model/ifc",
+          "sha256": "sha256:b1efd56bbddb4dfc8356743c1f6c5e26b31a299755a323cd9b07df1a4c42d322",
+          "bytes": 188636
+        },
+        {
+          "role": "expected-after-ifc",
+          "path": "../🧫️fixtures/set-snapshot-applied/after.ifc",
+          "mediaType": "model/ifc",
+          "sha256": "sha256:fdc3c539e4b69896171679173172c5b32999611cdeee1c2eeaee8f0f7bd0574c",
+          "bytes": 188651
+        }
+      ],
+      "generator": {
+        "oracle": "ifcopenshell-ifc-2x3-sav-mutate-reader",
+        "packageVersion": "0.8.4.post1",
+        "engineFamily": "ifcopenshell",
+        "engineVersion": "0.8.4.post1",
+        "command": "uv run --group test python3 .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION/🔨️f1-ifc-generate.py",
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "LGPL-3.0-or-later (ifcopenshell)",
+        "attribution": "Generated with IfcOpenShell 0.8.4.post1 (LGPL-3.0-or-later) via a real read+write round trip against this repository's own committed real-world fixture",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "semantic-ifc-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "Replaced both an IfcStructuralAnalysisModel.Name and an IfcStructuralLoadGroup.Name together, standing in for a wholesale SAV snapshot replacement."
     }
   ]
 }

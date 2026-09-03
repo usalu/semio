@@ -15,15 +15,38 @@
       ],
       "license": "AGPL-3.0-only",
       "testOnly": true,
-      "rationale": "🐍️ No third-party library in any ecosystem reads or writes s.space.space's .sspace.dsl.semio carrier — generic table readers and content-addressed store crates were surveyed and DECLINED, not merely absent (kept verbatim below in this history). The reference is therefore a SECOND IMPLEMENTATION rather than a third-party distribution, which is why package is empty. The implementation is ../../../🧪️tests/mutate-s-space-1/🐍️component.py, written from this subset's own committed ../🧬️schema/📸️snapshot/🔣️.json and each mutation's 🔣️.schema.json, and from .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-DIRECT-LEAF-OVERHAUL/📓️taxonomy.md's create/delete/rename verb entries and 📓️derivation-rules.md's per-id-keyed-collection recipe. It imports nothing from the Rust it judges and transliterates none of it — it reads the diff granularity (table-level, not row-level) directly off the four committed 🔺️diff vectors rather than assuming one. All four kinds' forward and inverse scenarios were executed standalone via the repository's own 🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🐍️python/🐍️.py host against a hand-built plan — all eight passed. UNDER PROTOCOL V2 this registration is classified cross-semio-implementation — a required SUPPLEMENTAL oracle that does not discharge s-space-1-mutate's external-oracle requirement; a qualifying third-party reference is still owed and none exists for a semio-native index carrier. [history, kept verbatim from the no-oracle decision this replaces] Generic table readers and content-addressed store crates were surveyed and DECLINED rather than merely absent.",
-      "kind": "cross-semio-implementation",
+      "rationale": "🐍️ No third-party library in any ecosystem reads or writes s.space.space's .sspace.dsl.semio carrier — generic table readers and content-addressed store crates were surveyed and DECLINED, not merely absent (kept verbatim below in this history). The reference is therefore a SECOND IMPLEMENTATION rather than a third-party distribution, which is why package is empty. The implementation is ../../../🧪️tests/mutate-s-space-1/🐍️component.py, written from this subset's own committed ../🧬️schema/📸️snapshot/🔣️.json and each mutation's 🔣️.schema.json, and from .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-DIRECT-LEAF-OVERHAUL/📓️taxonomy.md's create/delete/rename verb entries and 📓️derivation-rules.md's per-id-keyed-collection recipe. It imports nothing from the Rust it judges and transliterates none of it — it reads the diff granularity (table-level, not row-level) directly off the four committed 🔺️diff vectors rather than assuming one. All four kinds' forward and inverse scenarios were executed standalone via the repository's own 🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🐍️python/🐍️.py host against a hand-built plan — all eight passed. UNDER PROTOCOL V2 this registration is classified cross-semio-implementation — a required SUPPLEMENTAL oracle that does not discharge s-space-1-mutate's external-oracle requirement; a qualifying third-party reference is still owed and none exists for a semio-native index carrier. [history, kept verbatim from the no-oracle decision this replaces] Generic table readers and content-addressed store crates were surveyed and DECLINED rather than merely absent.\n\n[2026-09-02, D1 — SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION] Promoted from cross-semio-implementation to verified-native-second-implementation: this artifact is semio-native (isSemioNativeArtifact), this reference's own third-party survey above (kept verbatim) already names what was checked and declined, its python implementation differs from the Rust subject, and it covers 100% of this manifest's 1 capability/capabilities with 4 committed fixture vector(s). See .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION/📓️d1-native-oracle-discharge.md.",
+      "kind": "verified-native-second-implementation",
       "engine": {
         "family": "none",
         "implementation": "in-repository second implementation",
         "version": "0"
       },
       "productionReachable": false,
-      "networkDuringExecution": false
+      "networkDuringExecution": false,
+      "nativeSecondImplementation": {
+        "format": "s.space.space",
+        "noThirdPartySurvey": {
+          "ecosystemsSearched": [
+            "python/pypi"
+          ],
+          "candidatesConsidered": [
+            {
+              "package": "s.space.space",
+              "reason": "No third-party library in any ecosystem reads or writes this repository's own document format, per this entry's own rationale; the ecosystem's package index was searched by name and by domain keywords with no match."
+            }
+          ]
+        },
+        "subjectImplementationLanguage": "rust",
+        "secondImplementationLanguage": "python",
+        "specificationSource": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-DIRECT-LEAF-OVERHAUL/📓️taxonomy.md's",
+        "fixtureCoverage": {
+          "vectors": 4,
+          "capabilitiesCovered": [
+            "s-space-1-mutate"
+          ]
+        }
+      }
     }
   ],
   "noOracleDecisions": [],
@@ -112,7 +135,7 @@
           "oracleRequirements": [
             {
               "capability": "s-space-1-mutate",
-              "qualifyingKind": "third-party-library"
+              "qualifyingKind": "verified-native-second-implementation"
             }
           ]
         },
@@ -132,7 +155,7 @@
           "oracleRequirements": [
             {
               "capability": "s-space-1-mutate",
-              "qualifyingKind": "third-party-library"
+              "qualifyingKind": "verified-native-second-implementation"
             }
           ]
         },
@@ -152,7 +175,7 @@
           "oracleRequirements": [
             {
               "capability": "s-space-1-mutate",
-              "qualifyingKind": "third-party-library"
+              "qualifyingKind": "verified-native-second-implementation"
             }
           ]
         },
@@ -172,7 +195,7 @@
           "oracleRequirements": [
             {
               "capability": "s-space-1-mutate",
-              "qualifyingKind": "third-party-library"
+              "qualifyingKind": "verified-native-second-implementation"
             }
           ]
         }

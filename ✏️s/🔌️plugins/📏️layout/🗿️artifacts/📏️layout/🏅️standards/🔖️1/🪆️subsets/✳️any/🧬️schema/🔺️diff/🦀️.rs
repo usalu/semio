@@ -2,13 +2,12 @@
 
 use crate::artifacts::layout::{CharacterStyle, GridSettings, ImageLink, ImageLinkPatch, LayoutDrawingChild, Page, PagePatch, ParagraphStyle, ParentPage, Spread, TextStory, TextStoryPatch};
 use schema::ArtifactSchema;
-use serde::{Deserialize, Serialize};
 use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️Diff
 /// 🔺️ Sparse field delta for the layout artifact; persistent entries apply via [`MutationDiff`](protocol::MutationDiff).
 #[derive(Clone, Debug, Default, PartialEq, ArtifactSchema, ToValue, FromValue)]
-#[cfg_attr(test, derive(Serialize, Deserialize))]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(test, serde(rename_all = "camelCase", default))]
 #[value(rename_all = "camelCase", default)]
 #[artifact_schema(id = "s.layout.layout")]
@@ -77,7 +76,7 @@ pub struct LayoutDiff {
 //#region 🔖️DeltaHelpers
 /// 📋 String-list wrapper so optional list diffs stay scalar across formats.
 #[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue)]
-#[cfg_attr(test, derive(Serialize, Deserialize))]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(test, serde(rename_all = "camelCase", default))]
 #[value(rename_all = "camelCase", default)]
 pub struct LayoutStringList {
@@ -85,7 +84,7 @@ pub struct LayoutStringList {
 }
 
 #[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue)]
-#[cfg_attr(test, derive(Serialize, Deserialize))]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(test, serde(rename_all = "camelCase", default))]
 #[value(rename_all = "camelCase", default)]
 pub struct LayoutPagesDelta {
@@ -96,7 +95,7 @@ pub struct LayoutPagesDelta {
 }
 
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
-#[cfg_attr(test, derive(Serialize, Deserialize))]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
 pub struct LayoutPagePatchEntry {
@@ -105,7 +104,7 @@ pub struct LayoutPagePatchEntry {
 }
 
 #[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue)]
-#[cfg_attr(test, derive(Serialize, Deserialize))]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(test, serde(rename_all = "camelCase", default))]
 #[value(rename_all = "camelCase", default)]
 pub struct LayoutStoriesDelta {
@@ -116,7 +115,7 @@ pub struct LayoutStoriesDelta {
 }
 
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
-#[cfg_attr(test, derive(Serialize, Deserialize))]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
 pub struct LayoutStoryPatchEntry {
@@ -125,7 +124,7 @@ pub struct LayoutStoryPatchEntry {
 }
 
 #[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue)]
-#[cfg_attr(test, derive(Serialize, Deserialize))]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(test, serde(rename_all = "camelCase", default))]
 #[value(rename_all = "camelCase", default)]
 pub struct LayoutLinksDelta {
@@ -136,7 +135,7 @@ pub struct LayoutLinksDelta {
 }
 
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
-#[cfg_attr(test, derive(Serialize, Deserialize))]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
 pub struct LayoutLinkPatchEntry {
@@ -145,7 +144,7 @@ pub struct LayoutLinkPatchEntry {
 }
 
 #[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue)]
-#[cfg_attr(test, derive(Serialize, Deserialize))]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(test, serde(rename_all = "camelCase", default))]
 #[value(rename_all = "camelCase", default)]
 pub struct LayoutParagraphStylesDelta {
@@ -156,7 +155,7 @@ pub struct LayoutParagraphStylesDelta {
 }
 
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
-#[cfg_attr(test, derive(Serialize, Deserialize))]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
 pub struct LayoutParagraphStylePatchEntry {
@@ -165,7 +164,7 @@ pub struct LayoutParagraphStylePatchEntry {
 }
 
 #[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue)]
-#[cfg_attr(test, derive(Serialize, Deserialize))]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(test, serde(rename_all = "camelCase", default))]
 #[value(rename_all = "camelCase", default)]
 pub struct LayoutCharacterStylesDelta {
@@ -176,7 +175,7 @@ pub struct LayoutCharacterStylesDelta {
 }
 
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
-#[cfg_attr(test, derive(Serialize, Deserialize))]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
 pub struct LayoutCharacterStylePatchEntry {
@@ -185,7 +184,7 @@ pub struct LayoutCharacterStylePatchEntry {
 }
 
 #[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue)]
-#[cfg_attr(test, derive(Serialize, Deserialize))]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(test, serde(rename_all = "camelCase", default))]
 #[value(rename_all = "camelCase", default)]
 pub struct LayoutParentPagesDelta {
@@ -196,7 +195,7 @@ pub struct LayoutParentPagesDelta {
 }
 
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
-#[cfg_attr(test, derive(Serialize, Deserialize))]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
 pub struct LayoutParentPagePatchEntry {
@@ -205,7 +204,7 @@ pub struct LayoutParentPagePatchEntry {
 }
 
 #[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue)]
-#[cfg_attr(test, derive(Serialize, Deserialize))]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(test, serde(rename_all = "camelCase", default))]
 #[value(rename_all = "camelCase", default)]
 pub struct LayoutSpreadsDelta {
@@ -216,7 +215,7 @@ pub struct LayoutSpreadsDelta {
 }
 
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
-#[cfg_attr(test, derive(Serialize, Deserialize))]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
 pub struct LayoutSpreadPatchEntry {
@@ -226,7 +225,7 @@ pub struct LayoutSpreadPatchEntry {
 
 /// 🩹 Sparse patch for a {@link ParagraphStyle}.
 #[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue)]
-#[cfg_attr(test, derive(Serialize, Deserialize))]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(test, serde(rename_all = "camelCase", default))]
 #[value(rename_all = "camelCase", default)]
 pub struct ParagraphStylePatch {
@@ -235,7 +234,7 @@ pub struct ParagraphStylePatch {
 
 /// 🩹 Sparse patch for a {@link CharacterStyle}.
 #[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue)]
-#[cfg_attr(test, derive(Serialize, Deserialize))]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(test, serde(rename_all = "camelCase", default))]
 #[value(rename_all = "camelCase", default)]
 pub struct CharacterStylePatch {
@@ -244,7 +243,7 @@ pub struct CharacterStylePatch {
 
 /// 🩹 Sparse patch for a {@link ParentPage}.
 #[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue)]
-#[cfg_attr(test, derive(Serialize, Deserialize))]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(test, serde(rename_all = "camelCase", default))]
 #[value(rename_all = "camelCase", default)]
 pub struct ParentPagePatch {
@@ -253,7 +252,7 @@ pub struct ParentPagePatch {
 
 /// 🩹 Sparse patch for a {@link Spread}.
 #[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue)]
-#[cfg_attr(test, derive(Serialize, Deserialize))]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(test, serde(rename_all = "camelCase", default))]
 #[value(rename_all = "camelCase", default)]
 pub struct SpreadPatch {

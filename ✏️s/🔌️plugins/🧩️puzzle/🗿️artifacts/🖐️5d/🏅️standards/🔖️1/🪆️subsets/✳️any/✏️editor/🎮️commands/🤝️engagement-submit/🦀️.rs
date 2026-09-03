@@ -2,7 +2,7 @@
 
 use crate::editor::puzzle5d::modes::edit::windows::{board2d, world3d};
 use crate::editor::puzzle5d::{Puzzle5dActionCtx, PUZZLE5D_PLAY_WINDOWS};
-use serde_json::Value;
+use dsl::os_pack::json::Value;
 
 /// ⌨️ One submitted token: `select`/`brush`/`fill` switch the utility (the 3D window's `select` lands
 /// on the `move` gumball instead), `clear` drops the selection, `rectangle`/`lasso` set the marquee.

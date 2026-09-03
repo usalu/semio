@@ -44,8 +44,8 @@ pub fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Re
     semio_framework_plugin::ArtifactDeclaration::builder(definition)
         .schema(crate::artifacts::pptx::schema::pptx_artifact_schema_descriptor())
         .formats(formats)
-        .inferences([crate::artifacts::pptx::standards::v_ecma_376::subsets::any::schema::inferences::pptx_artifact_inference_descriptor()])
-        .composers(crate::artifacts::pptx::standards::v_ecma_376::subsets::any::io::io_registry::entries())
+        .inferences([crate::artifacts::pptx::standards::v_ecma_376::subsets::base::schema::inferences::pptx_artifact_inference_descriptor()])
+        .composers(crate::artifacts::pptx::standards::v_ecma_376::subsets::base::io::io_registry::entries())
         .subset_validators(pptx_subset_validators())
         .languages(pilot_languages())
         .document_codec_bare::<PptxSnapshot, PptxMutation>(STDIO_PPTX_DOCUMENT_SCHEMA)
@@ -155,7 +155,7 @@ pub fn artifact_kind() -> ArtifactKindSpec {
 //#endregion 🔖️ArtifactKind
 //#region 🚪️DerivedIoRegistry
 pub mod io_registry {
-    use crate::artifacts::pptx::standards::v_ecma_376::subsets::any::io::io_registry as v_ecma_376;
+    use crate::artifacts::pptx::standards::v_ecma_376::subsets::base::io::io_registry as v_ecma_376;
     use semio_framework_plugin::{register_composer_entries, ComposeError, ComposedArtifact, ComposerEntry, Dialect, ErasedComposeSource};
     use std::sync::OnceLock;
 

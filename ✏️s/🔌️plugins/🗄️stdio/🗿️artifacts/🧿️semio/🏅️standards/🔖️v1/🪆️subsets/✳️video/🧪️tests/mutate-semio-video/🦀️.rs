@@ -12,7 +12,7 @@
 //!
 //! Every scenario drives this repository's own production entry points — `parse_semio_video_dsl`/`print_semio_video_dsl` for
 //! the carrier and `apply_semio_video_mutation`/`inverse_semio_video_mutation` for the vocabulary — over the real committed clip
-//! artifact `../../🏅️standards/🔖️v1/🪆️subsets/✳️any/📚️examples/🎥️clip/🖼️assets/🗣️.dsl.semio`, and projects the resulting snapshot as structural JSON for
+//! artifact `../../🏅️standards/🔖️v1/🪆️subsets/✳️base/📚️examples/🎥️clip/🖼️assets/🗣️.dsl.semio`, and projects the resulting snapshot as structural JSON for
 //! `ordered-json-v1` to compare against the Python side's.
 //!
 //! The mutation parameters and the specification-vector paths live in `component.feature`, so both
@@ -41,7 +41,7 @@ const KINDS: &[&str] = &["no-mutation", "set-snapshot", "insert-stream", "remove
 mod subject {
     use semio_repo_test_host::{digest, Context, Json, Outcome};
     use semio_s_plugin_stdio_test_oracle::law::carrier_is_exact;
-    use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::any::schema::mutations::semio_mutation_refusals;
+    use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::base::schema::mutations::semio_mutation_refusals;
     use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::video::schema::mutations::{
         apply_semio_video_mutation, insert_sample, insert_stream, inverse_semio_video_mutation, remove_sample, remove_stream, set_sample_data, set_sample_flags, set_snapshot, set_stream_meta, SemioVideoMutation,
     };

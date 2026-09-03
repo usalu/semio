@@ -1,0 +1,17 @@
+# 💡️ Equation inference schema — topology (graph topological order).
+
+type EquationInference {
+  topology: EquationTopology! @derived
+}
+
+type EquationTopology {
+  topoOrder: [String!]!
+  depth: [EquationTopologyDepthEntry!]!
+  cycleFree: Boolean!
+  nodeCount: Int!
+}
+
+type EquationTopologyDepthEntry {
+  nodeId: String!
+  depth: Int!
+}

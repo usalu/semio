@@ -6,8 +6,19 @@ Violations tracked:
   - ARTIFACT_LEVEL_TESTS: a `🧪️tests/<case>` folder sitting at artifact level instead of subset level.
   - SUBSET_NO_IMPL: a subset folder with no own `🚪️io`/`🧬️schema` implementation.
   - SUBSET_NO_TESTS: a subset with mutations but no own `🧪️tests`.
-  - MUTATION_NO_FIXTURE: a declared mutation with no fixture folder under the subset's `🧫️fixtures`.
-  - MUTATION_NO_TEST: a declared mutation with no test case naming it.
+  - MUTATION_NO_FIXTURE: a declared mutation carrying NEITHER form of committed evidence.
+
+⚠️ This was the ticket's FIRST-HOUR reconnaissance script and its fixture heuristic was wrong: it
+looked only for a `🧫️fixtures/<mutation>` folder, which is not how most of the repository declares
+evidence, and so reported 2168 false positives. Evidence takes two legitimate forms — a v1 physical
+vector bundle at `<mutation>/🧪️tests/<case>/` (`🦠️mutation`, `📸️snapshot/⬅️before`,
+`📸️snapshot/➡️after`, `🔺️diff`, `🎯️outcome`) or a v2 `fixtureManifests` entry in the owning subset's
+`🧪️oracle/🔣️.json`. Both are now checked below.
+
+The AUTHORITY on both of this ticket's laws is the repository's own gate, not this script:
+`bun ./📜️script.ts test contract`, whose `mutation-without-fixture` and `case-above-subset` rules
+were written and hand-calibrated for exactly this question. Use this script for shape reconnaissance
+only.
 """
 from __future__ import annotations
 
@@ -40,6 +51,12 @@ def subdirs(path: Path) -> list[Path]:
     return sorted((p for p in path.iterdir() if p.is_dir() and p.name not in SKIP_DIR_PARTS), key=lambda p: p.name)
 
 
+def bare_name(directory: str) -> str:
+    """🏷️ The kebab-case mutation id inside a leaf directory name, whose emoji prefix may or may not
+    carry a U+FE0F variation selector — splitting on the selector alone silently keeps the emoji."""
+    return "".join(ch for ch in directory if ch.isascii() and (ch.isalnum() or ch == "-")).strip("-")
+
+
 def rel(path: Path) -> str:
     return str(path.relative_to(ROOT))
 
@@ -48,6 +65,14 @@ def scan_mutations(schema: Path) -> list[dict]:
     mutations_root = schema / MUTATIONS_DIR
     out = []
     for mutation in subdirs(mutations_root):
+        descriptor = mutation / "🔣️.json"
+        if not descriptor.is_file():
+            continue
+        try:
+            if "owner" not in json.loads(descriptor.read_text(encoding="utf-8")):
+                continue
+        except (json.JSONDecodeError, OSError):
+            continue
         tests = [t.name for t in subdirs(mutation / TESTS_DIR)]
         out.append(
             {
@@ -63,6 +88,17 @@ def scan_mutations(schema: Path) -> list[dict]:
     return out
 
 
+def oracle_fixture_ids(manifest: Path) -> list[str]:
+    """🧫️ Every fixture id the owner contribution declares, the v2 form of committed evidence."""
+    if not manifest.is_file():
+        return []
+    try:
+        data = json.loads(manifest.read_text(encoding="utf-8"))
+    except (json.JSONDecodeError, OSError):
+        return []
+    return [str(entry.get("id", "")) for entry in data.get("fixtureManifests", [])]
+
+
 def scan_subset(subset: Path) -> dict:
     schema = subset / SCHEMA_DIR
     fixtures = subset / FIXTURES_DIR
@@ -75,6 +111,7 @@ def scan_subset(subset: Path) -> dict:
         "has_generator": (subset / GENERATOR_DIR).is_dir(),
         "has_examples": (subset / EXAMPLES_DIR).is_dir(),
         "fixtures": [f.name for f in subdirs(fixtures)],
+        "oracle_fixture_ids": oracle_fixture_ids(subset / ORACLE_DIR / "🔣️.json"),
         "tests": [t.name for t in subdirs(subset / TESTS_DIR)],
         "mutations": scan_mutations(schema),
     }
@@ -114,6 +151,11 @@ def violations(plugins: list[dict]) -> list[dict]:
             for mutation in artifact["artifact_mutations"]:
                 found.append({"kind": "ARTIFACT_LEVEL_MUTATION", "where": where, "detail": mutation["name"], "path": mutation["path"]})
             for standard in artifact["standards"]:
+                # 🪆️Evidence is looked up by DECLARED ownership, pooled across the standard's subsets:
+                # a leaf directory must sit beside its aggregate (validate_mutation_leaf_source), so its
+                # physical subset is often NOT the subset whose manifest owns and fixtures it.
+                pooled = {str(fixture) for subset in standard["subsets"] for fixture in subset["oracle_fixture_ids"]}
+                pooled |= {fixture for subset in standard["subsets"] for fixture in subset["fixtures"]}
                 for subset in standard["subsets"]:
                     tag = f"{where}/{standard['name']}/{subset['name']}"
                     if not subset["has_io"] and not subset["has_schema"]:
@@ -121,12 +163,11 @@ def violations(plugins: list[dict]) -> list[dict]:
                     if subset["mutations"] and not subset["tests"]:
                         found.append({"kind": "SUBSET_NO_TESTS", "where": tag, "detail": f"{len(subset['mutations'])} mutations, 0 subset tests", "path": subset["path"]})
                     for mutation in subset["mutations"]:
-                        if mutation["name"] not in subset["fixtures"] and not any(
-                            mutation["name"].split("️")[-1] in fixture for fixture in subset["fixtures"]
-                        ):
+                        bare = bare_name(mutation["name"])
+                        vectored = bool(mutation["tests"])
+                        manifested = any(bare in fixture for fixture in pooled)
+                        if not vectored and not manifested:
                             found.append({"kind": "MUTATION_NO_FIXTURE", "where": tag, "detail": mutation["name"], "path": mutation["path"]})
-                        if not mutation["tests"]:
-                            found.append({"kind": "MUTATION_NO_TEST", "where": tag, "detail": mutation["name"], "path": mutation["path"]})
     return found
 
 

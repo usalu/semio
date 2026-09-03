@@ -11,7 +11,7 @@
 //! (fleet brief §6: ruststep is not a second PRODUCER, so nothing here is typed `@mode-differential`).
 
 use semio_repo_test_host::{Adapter, Context, Json, Outcome};
-use semio_s_plugin_stdio_test_oracle::artifacts::step::standards::v_ap214::subsets::any::{oracle_apply_mutation, project_step_ap214_any};
+use semio_s_plugin_stdio_test_oracle::artifacts::step::standards::v_ap214::subsets::base::{oracle_apply_mutation, project_step_ap214_any};
 
 //#region 🔖️Kinds
 /// 🏷️ Mirrors this subset's own `StepMutation::KINDS` (`../../🏅️standards/🔖️ap214/🪆️subsets/✳️base/
@@ -207,11 +207,11 @@ mod subject {
     use super::{inverse_spec, json_spec, json_obj, mutable_input};
     use semio_repo_test_host::{Context, Json, Outcome};
     use semio_s_plugin_stdio::artifacts::step::standards::v_ap214::engine::part21::{parse_part21, write_part21};
-    use semio_s_plugin_stdio::artifacts::step::standards::v_ap214::subsets::any::schema::mutations::{
+    use semio_s_plugin_stdio::artifacts::step::standards::v_ap214::subsets::base::schema::mutations::{
         apply_step_mutation, insert_entity, insert_entity_arg, remove_entity, remove_entity_arg, set_entity_arg, set_entity_name, set_file_description, set_file_name, set_file_schema, set_snapshot, StepMutation,
     };
-    use semio_s_plugin_stdio::artifacts::step::standards::v_ap214::subsets::any::schema::snapshot::{StepEntity, StepFileDescription, StepFileName, StepFileSchema, StepSnapshot, StepValue};
-    use semio_s_plugin_stdio_test_oracle::artifacts::step::standards::v_ap214::subsets::any::project_step_ap214_any;
+    use semio_s_plugin_stdio::artifacts::step::standards::v_ap214::subsets::base::schema::snapshot::{StepEntity, StepFileDescription, StepFileName, StepFileSchema, StepSnapshot, StepValue};
+    use semio_s_plugin_stdio_test_oracle::artifacts::step::standards::v_ap214::subsets::base::project_step_ap214_any;
 
     //#region 🔖️SpecReading
     fn num_field(value: &Json, key: &str) -> Result<f64, String> {

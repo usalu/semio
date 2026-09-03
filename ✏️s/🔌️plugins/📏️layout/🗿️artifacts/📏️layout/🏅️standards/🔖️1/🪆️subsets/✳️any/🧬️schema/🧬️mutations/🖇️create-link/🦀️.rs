@@ -6,12 +6,11 @@ use crate::artifacts::layout::{ImageLink, LayoutDiff, LayoutSnapshot};
 use crate::artifacts::layout::mutations::{LayoutMutation, delete_link};
 use crate::artifacts::layout::schema::diff::LayoutLinksDelta;
 use protocol::{MutationKind, SemanticDescriptor};
-use serde::{Deserialize, Serialize};
 use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🖇️CreateLink
 #[derive(Clone, Debug, PartialEq, dsl::MutationLeaf, ToValue, FromValue)]
-#[cfg_attr(test, derive(Serialize, Deserialize))]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[mutation_leaf(contract = ::protocol)]
 pub struct CreateLink {
     pub link: ImageLink,

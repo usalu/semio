@@ -1,0 +1,9 @@
+dialect grammar
+grammar procedural.generation2d.inference
+extension generation2d.inference
+start document
+
+document = header body
+header = "schema" SP "procedural.generation2d.inference" NL
+body = payload NL?
+payload = OCTET+

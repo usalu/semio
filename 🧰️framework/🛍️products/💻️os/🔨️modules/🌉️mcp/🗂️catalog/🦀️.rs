@@ -313,7 +313,7 @@ fn action_input_schema(capability_id: &str, args: &[manifest::ActionArgDef]) -> 
     let mut properties = serde_json::Map::new();
     let mut required = Vec::new();
     for arg in args {
-        properties.insert(arg.id.clone(), arg.json_schema());
+        properties.insert(arg.id.clone(), dsl_to_json_value(arg.json_schema()).expect("DslValue to JSON schema conversion is infallible"));
         if arg.required {
             required.push(serde_json::Value::String(arg.id.clone()));
         }
@@ -919,10 +919,9 @@ mod quick {
         let capability = catalog.get("cad.editor.translateSelection").expect("translateSelection present");
         assert_eq!(capability.kind, CapabilityKind::Mutation);
         let properties = capability.input_schema["properties"].as_object().expect("object schema");
-        assert!(properties.contains_key("dx"));
-        assert!(properties.contains_key("dy"));
-        assert!(properties.contains_key("dz"));
-        assert!(properties.contains_key("objectIds"));
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️first-party-codecs.json")).expect("language-neutral codec fixture parses");
+        assert_eq!(capability.id.as_str(), fixture["catalog"]["capabilityId"].as_str().expect("fixture capability id"));
+        assert_eq!(properties, fixture["catalog"]["properties"].as_object().expect("fixture properties"));
     }
 
     #[test]

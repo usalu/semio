@@ -8,7 +8,7 @@
 //! (`word/document.xml`, `word/styles.xml`, `[Content_Types].xml`, every `*.rels`). This file never
 //! imports `semio-s-plugin-stdio` — the OPC layer and the WordprocessingML block-tree layer are
 //! reimplemented here, independently, against the two reference crates directly, mirroring the
-//! shape `📰xml/…/🔖️1.0/…/🦀️oracle.rs` (the quick-xml half) and
+//! shape `📰️xml/…/🔖️1.0/…/🦀️oracle.rs` (the quick-xml half) and
 //! `🎒️zip/…/🔖️2.0/…/🦀️oracle.rs` (the zip half) each already establish on their own.
 //!
 //! The vocabulary is per SUBSET, not per artifact: `📕️xlsx`/`🎞️pptx` are also ECMA-376 ZIP+XML
@@ -57,7 +57,7 @@ mod oracles {
     /// 🌳 Owned XML node, used ONLY for the small typed OPC/WordprocessingML documents this oracle
     /// reads (`[Content_Types].xml`, `*.rels`, `word/document.xml`, `word/styles.xml`) — no CDATA,
     /// comment or processing-instruction support, since a real OOXML part never emits any of those
-    /// (unlike `📰xml`'s general-purpose oracle, which has to).
+    /// (unlike `📰️xml`'s general-purpose oracle, which has to).
     #[derive(Clone, Debug, PartialEq)]
     enum XNode {
         Element { name: String, attrs: Vec<(String, String)>, children: Vec<XNode> },
@@ -75,7 +75,7 @@ mod oracles {
     /// 🔓️ Resolves one `Event::GeneralRef` (`&name;` or `&#NNN;`) to its literal text — numeric
     /// character references via `resolve_char_ref`, the five predefined XML entities via
     /// `resolve_xml_entity`, anything else a hard parse error. Same technique
-    /// `📰xml/…/🦀️oracle.rs`'s own `resolve_general_ref` uses, independently rewritten
+    /// `📰️xml/…/🦀️oracle.rs`'s own `resolve_general_ref` uses, independently rewritten
     /// here (this file imports nothing from that module).
     fn resolve_general_ref(reference: &BytesRef) -> Result<String, String> {
         if let Some(ch) = reference.resolve_char_ref().map_err(|error| error.to_string())? {

@@ -11,8 +11,7 @@ pub use super::clear_default_app::{clear_default_app, ClearDefaultApp};
 pub use super::set_default_app::{set_default_app, SetDefaultApp};
 
 /// 🎚️ Typed, invertible opening-preferences mutation vocabulary.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, dsl::Mutations)]
-#[serde(tag = "mutation", rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::Mutations)]
 #[value(tag = "mutation", rename_all = "camelCase")]
 #[mutations(snapshot = OpeningPreferences, diff = OpeningPreferences, schema = "os.config.opening")]
 pub enum OpeningConfigMutation {
@@ -28,8 +27,7 @@ pub use super::change_merge_policy::{
 };
 
 /// 🛡️ Typed, invertible merge-policy mutation vocabulary.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, dsl::Mutations)]
-#[serde(tag = "mutation", rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::Mutations)]
 #[value(tag = "mutation", rename_all = "camelCase")]
 #[mutations(snapshot = MergePolicySetting, diff = MergePolicySetting, schema = "os.config.merge-policy")]
 pub enum MergePolicyConfigMutation {

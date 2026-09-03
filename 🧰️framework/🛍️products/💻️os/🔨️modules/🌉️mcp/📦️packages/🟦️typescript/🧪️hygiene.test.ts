@@ -6,20 +6,53 @@
  * REAL file descriptors. This suite spawns the actual compiled binary and inspects its actual
  * stdout/stderr/exit code — a stray byte on real stdout breaks every real MCP client, which an
  * in-memory `Cursor` test structurally cannot observe. */
-import { existsSync } from "node:fs";
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
+import Ajv2020 from "ajv/dist/2020.js";
 import { describe, expect, it } from "vitest";
-import { resolveMcpBinaryPath, spawnRawMcp } from "../../🟦️.ts";
+import { requireMcpBinary, spawnRawMcp } from "../../🟦️.ts";
 import { getWorkspaceRoot } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 
 const repoRoot = getWorkspaceRoot();
-const bin = resolveMcpBinaryPath(repoRoot);
-const BIN_PRESENT = existsSync(bin);
+const bin = requireMcpBinary(repoRoot);
 
-if (!BIN_PRESENT) {
-  console.warn(`[@semio-tech/framework-os-mcp] hygiene suite SKIPPED — binary not found at ${bin}. Build it first: CARGO_TARGET_DIR=<ticket>/🎯️target cargo build -p semio-framework-os-mcp --bin semio-os-mcp`);
-}
+describe("document descriptor schema oracle", () => {
+  it("accepts the shared Rust and TypeScript fixture with AJV", () => {
+    const schema = JSON.parse(readFileSync(join(repoRoot, "🧰️framework", "🛍️products", "💻️os", "🔨️modules", "📇️directory", "🧬️schema", "🔣️.json"), "utf8")) as object;
+    const fixture = JSON.parse(readFileSync(join(repoRoot, "🧰️framework", "🛍️products", "💻️os", "🧫️fixtures", "📇️directory", "📄️document-descriptor.json"), "utf8")) as { valid: object; conflictingSchemaHash: object; crossSpaceSameDocument: object };
+    const validate = new Ajv2020({ strict: false }).compile({ ...schema, $ref: "#/$defs/DocumentDescriptor" });
+    expect(validate(fixture.valid), JSON.stringify(validate.errors)).toBe(true);
+    expect(validate(fixture.conflictingSchemaHash), JSON.stringify(validate.errors)).toBe(true);
+    expect(validate(fixture.crossSpaceSameDocument), JSON.stringify(validate.errors)).toBe(true);
+    expect(validate({ ...fixture.valid, packSchemaHash: "0".repeat(64) })).toBe(false);
+  });
 
-describe.skipIf(!BIN_PRESENT)("semio-os-mcp — stdio hygiene", () => {
+  it("validates structural artifact authority fixtures and rejects fixed-hash and overflow boundaries with AJV", () => {
+    const schema = JSON.parse(readFileSync(join(repoRoot, "🧰️framework", "🛍️products", "💻️os", "🔨️modules", "📇️directory", "🧬️schema", "🔣️.json"), "utf8")) as object;
+    const fixture = JSON.parse(readFileSync(join(repoRoot, "🧰️framework", "🛍️products", "💻️os", "🧫️fixtures", "📇️directory", "📄️artifact-authority.json"), "utf8")) as {
+      checkpoint: Record<string, unknown>;
+      retention: object;
+      scopeBoundaries: Record<string, object>;
+      invalidBoundaries: { shortHash: number[]; overflowHashByte: number[]; zeroHash: number[]; unsafeInteger: number };
+    };
+    const compile = (reference: string) => new Ajv2020({ strict: false }).compile({ ...schema, $ref: reference });
+    const checkpoint = compile("#/$defs/ArtifactCheckpoint");
+    const retention = compile("#/$defs/ArtifactRetention");
+    const scope = compile("#/$defs/DocumentScope");
+    expect(checkpoint(fixture.checkpoint), JSON.stringify(checkpoint.errors)).toBe(true);
+    expect(retention(fixture.retention), JSON.stringify(retention.errors)).toBe(true);
+    expect(scope(fixture.scopeBoundaries.nonAscii), JSON.stringify(scope.errors)).toBe(true);
+    expect(scope(fixture.scopeBoundaries.emptySpace)).toBe(false);
+    expect(scope(fixture.scopeBoundaries.emptyDocument)).toBe(false);
+    expect(checkpoint({ ...fixture.checkpoint, checkpointId: fixture.invalidBoundaries.shortHash })).toBe(false);
+    expect(checkpoint({ ...fixture.checkpoint, checkpointId: fixture.invalidBoundaries.overflowHashByte })).toBe(false);
+    expect(checkpoint({ ...fixture.checkpoint, checkpointId: fixture.invalidBoundaries.zeroHash })).toBe(false);
+    expect(checkpoint({ ...fixture.checkpoint, publishedAtMs: fixture.invalidBoundaries.unsafeInteger })).toBe(false);
+    expect(checkpoint({ ...fixture.checkpoint, pack: { ...(fixture.checkpoint.pack as object), byteLength: fixture.invalidBoundaries.unsafeInteger } })).toBe(false);
+  });
+});
+
+describe("semio-os-mcp — stdio hygiene", () => {
   it("every stdout line across a whole mixed-traffic session parses as JSON, even around a malformed line", async () => {
     const proc = spawnRawMcp(bin);
     try {

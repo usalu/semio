@@ -1,0 +1,3 @@
+(* ebnf mathematical.equation.inference *)
+document = header, body ;
+header = 'schema', space, 'mathematical.equation.inference', newline ;

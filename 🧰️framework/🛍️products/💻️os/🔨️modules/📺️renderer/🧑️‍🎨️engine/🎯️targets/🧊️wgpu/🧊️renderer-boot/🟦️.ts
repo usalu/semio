@@ -3,7 +3,7 @@
 // #endregion 🧲️Header
 
 import { ICON_NAMES, ICONS } from "@semio-tech/assets";
-import { loadPluginModule, pluginHandleForBridge } from "../../../📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🟦️typescript/🐚️plugin-bridge.ts";
+import { loadPluginModule, pluginHandleForBridge } from "../📦️packages/🦀️rust/🟦️typescript/🐚️plugin-bridge.ts";
 
 export type FrameworkOsWgpuBootOptions = {
   readonly rootId?: string;

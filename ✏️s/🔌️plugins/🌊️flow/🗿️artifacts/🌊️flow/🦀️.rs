@@ -134,7 +134,7 @@ pub fn flow_content_snapshot_from_working(widgets: &[Widget], synapses: &[Synaps
         .map(|widget| {
             let id = crate::artifacts::flow::schema::widget_id(widget).to_string();
             let kind = crate::artifacts::flow::schema::widget_kind_label(widget).to_string();
-            let position = layout.get(&id).map(|entry| semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::any::schema::geometry::SemioPoint2 { x: entry.x, y: entry.y }).unwrap_or_default();
+            let position = layout.get(&id).map(|entry| semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::base::schema::geometry::SemioPoint2 { x: entry.x, y: entry.y }).unwrap_or_default();
             let label = match widget { Widget::InputSlider { label, .. } => label.clone(), _ => kind.clone() };
             SemioFlowNode { id: id.clone(), kind, label, params: widget_params(widget), position }
         })

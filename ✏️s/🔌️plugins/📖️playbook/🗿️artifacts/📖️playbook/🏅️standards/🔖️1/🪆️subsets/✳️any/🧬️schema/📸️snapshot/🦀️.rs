@@ -9,13 +9,21 @@
 
 use crate::artifacts::playbook::PlaybookStep;
 use schema::ArtifactSchema;
+// 🔬️ `Serialize`/`Deserialize` survive ONLY as a `#[cfg(test)]` differential oracle (see
+// `scene_owner_fixture_proves_identity_isolation_aba_wire_omission_and_bounded_close`'s
+// "third-party serde oracle" case in `../../🦀️.rs`, which checks `ArtifactChild::local_owner`'s
+// `#[serde(skip)]` treatment against real serde) — never a production dependency of this crate.
+// `store::ArtifactChild<S>` itself only derives `Serialize`/`Deserialize` under the same
+// `#[cfg(test)]` gate, so this struct's own derive must mirror it exactly.
+#[cfg(test)]
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Snapshot
 /// 📸️ Persisted playbook document snapshot (persistent fields of the artifact). `#[child(...)]`
 /// drives `#[derive(ArtifactSchema)]`'s slot-table emission; never hand-written.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ArtifactSchema)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, ArtifactSchema)]
+#[cfg_attr(test, derive(Serialize, Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[artifact_schema(id = "s.playbook.playbook")]
 pub struct PlaybookSnapshot {
     #[state(artifact)]
@@ -67,6 +75,40 @@ impl PlaybookSnapshot {
     }
 }
 //#endregion 🔖️Snapshot
+
+//#region 🔖️ValueCodec
+/// 🔀️ Hand-written, not derived — mirrors the sibling `PlaybookArtifact` impl one region up
+/// (`../🦀️.rs`'s `🔖️ValueCodec`): `document`/`flow` are `store::ArtifactChild<S>` composed-artifact
+/// handles, bridged per-field through the pre-existing `to_dsl_value`/`from_dsl_value` seam instead
+/// of widening the derive macro to understand child-slot handles.
+impl ::semio_framework_os_kernel::ToValue for PlaybookSnapshot {
+    fn to_value(&self) -> ::semio_framework_os_kernel::DslValue {
+        ::semio_framework_os_kernel::DslValue::object([
+            ("schema".to_string(), ::semio_framework_os_kernel::ToValue::to_value(&self.schema)),
+            ("id".to_string(), ::semio_framework_os_kernel::ToValue::to_value(&self.id)),
+            ("version".to_string(), ::semio_framework_os_kernel::ToValue::to_value(&self.version)),
+            ("title".to_string(), ::semio_framework_os_kernel::ToValue::to_value(&self.title)),
+            ("document".to_string(), ::semio_framework_os_kernel::to_dsl_value(&self.document).expect("ArtifactChild serializes")),
+            ("flow".to_string(), ::semio_framework_os_kernel::to_dsl_value(&self.flow).expect("ArtifactChild serializes")),
+        ])
+    }
+}
+impl ::semio_framework_os_kernel::FromValue for PlaybookSnapshot {
+    fn from_value(value: ::semio_framework_os_kernel::DslValue) -> Result<Self, ::semio_framework_os_kernel::ValueError> {
+        let entries = value.into_object()?;
+        let get = |key: &str| entries.iter().find(|(k, _)| k == key).map(|(_, v)| v.clone());
+        let field = |key: &str| get(key).ok_or_else(|| ::semio_framework_os_kernel::ValueError::new(format!("missing field `{key}`")));
+        Ok(Self {
+            schema: ::semio_framework_os_kernel::FromValue::from_value(field("schema")?)?,
+            id: ::semio_framework_os_kernel::FromValue::from_value(field("id")?)?,
+            version: ::semio_framework_os_kernel::FromValue::from_value(field("version")?)?,
+            title: ::semio_framework_os_kernel::FromValue::from_value(field("title")?)?,
+            document: ::semio_framework_os_kernel::from_dsl_value(field("document")?).map_err(::semio_framework_os_kernel::ValueError::new)?,
+            flow: ::semio_framework_os_kernel::from_dsl_value(field("flow")?).map_err(::semio_framework_os_kernel::ValueError::new)?,
+        })
+    }
+}
+//#endregion 🔖️ValueCodec
 
 //#region 🔖️ChildCodecPrimitives
 /// 🧪️ Real hex/bracket child-handle codec (mirrors writer's/raster's own `enc_child`/`dec_child`) —

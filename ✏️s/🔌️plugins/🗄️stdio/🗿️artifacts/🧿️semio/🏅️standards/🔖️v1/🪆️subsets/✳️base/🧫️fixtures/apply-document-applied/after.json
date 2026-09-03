@@ -1,0 +1,88 @@
+{
+  "schema": "stdio.semio",
+  "subset": {
+    "blocks": [
+      {
+        "kind": "paragraph",
+        "runs": [
+          {
+            "style": {
+              "bold": false,
+              "italic": false,
+              "underline": false
+            },
+            "text": "figure one"
+          }
+        ],
+        "styleId": "body"
+      },
+      {
+        "alt": "first figure",
+        "imageId": "img1",
+        "kind": "image"
+      },
+      {
+        "alt": "second figure",
+        "imageId": "img2",
+        "kind": "image"
+      }
+    ],
+    "images": [
+      {
+        "bytes": [
+          137,
+          80,
+          78,
+          71,
+          13,
+          10,
+          26,
+          10,
+          1,
+          2,
+          3,
+          4
+        ],
+        "id": "img1",
+        "mime": "image/png"
+      },
+      {
+        "bytes": [
+          255,
+          216,
+          255,
+          224,
+          9,
+          8,
+          7,
+          6
+        ],
+        "id": "img2",
+        "mime": "image/jpeg"
+      },
+      {
+        "bytes": [
+          137,
+          80,
+          78,
+          71,
+          99,
+          98,
+          97,
+          96
+        ],
+        "id": "img3",
+        "mime": "image/png"
+      }
+    ],
+    "schema": "s.stdio.semio.document/v1",
+    "styles": [
+      {
+        "basedOn": null,
+        "id": "body",
+        "name": "Body"
+      }
+    ],
+    "subset": "document"
+  }
+}

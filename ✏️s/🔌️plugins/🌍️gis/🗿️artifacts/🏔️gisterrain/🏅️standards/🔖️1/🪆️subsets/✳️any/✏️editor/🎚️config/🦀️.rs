@@ -122,6 +122,53 @@ impl protocol::OpBinary for Gis3dConfigMutation {
 
 //#endregion 🔖️OpCodec
 
+//#region 🌉️TestBridge
+/// 🔮️ One JSON report of applying a `set-camera`/`set-locale` mutation to a `Gis3dConfig`, for a
+/// language-neutral test adapter — the identical shape and purpose
+/// `crate::artifacts::gisterrain::gis_terrain_mutation_report_json` already establishes for the
+/// terrain's own document-level mutations, applied here to gis3d's editor-config artifact (shard
+/// G4, this ticket).
+///
+/// Every field of `Gis3dConfig` (`camera_json`, `locale`) is a plain `String` — this bridge never
+/// needs `serde_json::from_str::<Gis3dConfig>` at all, and so never needs this struct's own
+/// `#[cfg_attr(test, derive(Serialize, Deserialize))]` (unavailable to a `sut`-feature adapter
+/// crate, which links this crate as an ordinary dependency, not under `cfg(test)`). Every type in
+/// this bridge's own signature is a `str`, matching `gis_terrain_mutation_report_json`'s own doc
+/// comment on why that is the whole surface an adapter needs — a generated test host links only
+/// `semio-repo-test-host` and, behind its `sut` feature, this crate, so neither `Gis3dConfigMutation`
+/// nor `Gis3dConfig` can be named there, and hand-transcribing either into a Rust literal would be a
+/// second copy of the committed specification vector, free to drift away from it.
+///
+/// `Mutation<Gis3dConfig>`/`MutationDiff<Gis3dConfig>` (via `#[derive(dsl::Mutations)]` on
+/// `Gis3dConfigMutation`, `#[derive(dsl::MutationLeaf)]` on `SetCamera`/`SetLocale`) are the
+/// UNCONDITIONAL mutation-engine traits every leaf's own `diff`/`apply`/`inverse` already exercise
+/// in this file's own `#[cfg(test)] mod tests` above — never gated by `cfg(test)`, unlike
+/// `Serialize`/`Deserialize`/`ToValue`/`FromValue` — so this bridge reaches the exact same real
+/// production behavior those unit tests already assert, through a route this crate's own default
+/// build always compiles.
+pub fn gis3d_config_mutation_report_json(camera_json: &str, locale: &str, kind: &str, value: &str) -> Result<String, String> {
+    use protocol::{Mutation, MutationDiff};
+    let base = Gis3dConfig { camera_json: camera_json.to_string(), locale: locale.to_string() };
+    let mutation: Gis3dConfigMutation = match kind {
+        "set-camera" => Gis3dConfigMutation::SetCamera(SetCamera { camera_json: value.to_string() }),
+        "set-locale" => Gis3dConfigMutation::SetLocale(SetLocale { value: value.to_string() }),
+        other => return Err(format!("gis3d_config_mutation_report_json: unknown kind {other:?}")),
+    };
+    let applied = mutation.diff(&base).diff().apply(&base).map_err(|error| error.to_string())?;
+    let inverse_steps = mutation.inverse(&base);
+    let mut undone = applied.clone();
+    for step in &inverse_steps {
+        undone = step.diff(&undone).diff().apply(&undone).map_err(|error| error.to_string())?;
+    }
+    let report = serde_json::json!({
+        "base": {"cameraJson": base.camera_json, "locale": base.locale},
+        "snapshot": {"cameraJson": applied.camera_json, "locale": applied.locale},
+        "inverseSnapshot": {"cameraJson": undone.camera_json, "locale": undone.locale},
+    });
+    Ok(report.to_string())
+}
+//#endregion 🌉️TestBridge
+
 //#endregion 🔖️ConfigOperations
 
 //#region 🧪️Tests

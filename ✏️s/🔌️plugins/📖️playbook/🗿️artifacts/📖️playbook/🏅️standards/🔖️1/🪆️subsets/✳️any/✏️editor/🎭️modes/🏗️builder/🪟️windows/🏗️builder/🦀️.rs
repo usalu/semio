@@ -112,7 +112,7 @@ mod tests {
                 ]),
             )),
         };
-        config.contributions_json = serde_json::to_string(&vec![entry]).unwrap();
+        config.contributions_json = protocol::json::to_json_string(&vec![entry]);
         let palette = build_palette(&config);
         assert!(palette.iter().any(|entry| entry.block_kind == "buildingComponent"));
     }

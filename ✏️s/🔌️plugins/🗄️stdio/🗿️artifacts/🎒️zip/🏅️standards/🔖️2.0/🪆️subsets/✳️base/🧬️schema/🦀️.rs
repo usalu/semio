@@ -223,7 +223,7 @@ pub mod derived_analysis {
             // constant. `AnalyzeSource::Text` is the hex-envelope DSL form, not raw container bytes,
             // so it can't be magic-sniffed the same way — treated as low confidence here (the DSL
             // envelope preamble, not this sniff, is what actually recognizes it).
-            use crate::artifacts::zip::standards::v2_0::subsets::any::io::{sniff_zip_bytes, SniffConfidence};
+            use crate::artifacts::zip::standards::v2_0::subsets::base::io::{sniff_zip_bytes, SniffConfidence};
             match source {
                 AnalyzeSource::Binary(bytes) => match sniff_zip_bytes(bytes) {
                     SniffConfidence::High => IoConfidence::High,
@@ -248,8 +248,8 @@ pub mod derived_analysis {
                         }
                     },
                     AnalyzeSource::Binary(bytes) => {
-                        let result = if matches!(crate::artifacts::zip::standards::v2_0::subsets::any::io::sniff_zip_bytes(bytes), crate::artifacts::zip::standards::v2_0::subsets::any::io::SniffConfidence::High) {
-                            crate::artifacts::zip::standards::v2_0::subsets::any::io::decode_zip(bytes).map_err(|err| err.to_string())
+                        let result = if matches!(crate::artifacts::zip::standards::v2_0::subsets::base::io::sniff_zip_bytes(bytes), crate::artifacts::zip::standards::v2_0::subsets::base::io::SniffConfidence::High) {
+                            crate::artifacts::zip::standards::v2_0::subsets::base::io::decode_zip(bytes).map_err(|err| err.to_string())
                         } else {
                             <ZipSnapshot as store::ArtifactPack>::decode_pack(bytes).map_err(|err| err.to_string())
                         };

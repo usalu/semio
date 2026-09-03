@@ -20,6 +20,13 @@ path = "🦀️.rs"
 default = []
 # 🗜️ Deflate segment compression (`CodecId(1)`); off by default so the pure contract stays dependency-light.
 deflate = ["dep:semio-framework-deflate"]
+# 🧪️ Cross-crate opt-in for `OrderedSet`'s hand-written `Serialize`/`Deserialize`
+# (🌱️value/🗂️ordered/🧺️set/🦀️.rs's `ArrayWire` region). Plain `#[cfg(test)]` only covers THIS
+# crate's own oracle test — a downstream crate's `#[cfg(test)]` build never activates a dependency
+# crate's own `#[cfg(test)]` code, so a real cross-crate consumer (`os-flow`'s
+# `Widget`/`FlowPreviewGui`, whose own `#[cfg_attr(test, derive(Serialize, Deserialize))]` needs
+# this bound) must enable this feature explicitly instead.
+ordered-set-serde = []
 
 [dependencies]
 semio-framework-hash = { path = "../../../🔢️hash/📦️packages/🦀️rust" }

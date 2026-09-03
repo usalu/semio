@@ -683,7 +683,7 @@ describe("mutation metadata source provider", () => {
     const repositoryRoot = getWorkspaceRoot();
     const consumerManifest = "✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/Cargo.toml", consumerLibrary = "✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/🦀️.rs", facadeManifest = "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/Cargo.toml", facadeLibrary = "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/🦀️.rs", dslSource = "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/🦀️.rs", sprSource = "🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🦀️.rs", commandSource = "🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🎮️command/🦀️.rs";
     const leaves = [
-      { root: "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄txt/🏅️standards/🔖️utf-8/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs", sourcePath: "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄txt/🏅️standards/🔖️utf-8/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✏️set-line/🦀️.rs" },
+      { root: "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️txt/🏅️standards/🔖️utf-8/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs", sourcePath: "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️txt/🏅️standards/🔖️utf-8/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✏️set-line/🦀️.rs" },
       { root: "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs", sourcePath: "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✏️🔘️change-node-name/🦀️.rs" },
     ] as const;
     const origins = leaves.map(({ sourcePath }) => {
@@ -1525,6 +1525,35 @@ describe("micro-commit", () => {
     expect(countJsonKeys('{"a":1,"b":{"c":2}}')).toBe(3);
   });
 
+  test("JSON ULOC deltas use recursive keys rather than physical Git lines", async () => {
+    const { accumulateUlocDeltasFromPaths, countUnifiedLocForFile } = await import("../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts");
+    const { parse: parseJsonc } = await import("jsonc-parser");
+    const root = mkdtempSync(join(tmpdir(), "semio-json-uloc-"));
+    const before = JSON.stringify({ stable: true });
+    const after = JSON.stringify({ stable: true, entries: Object.fromEntries(Array.from({ length: 150 }, (_, index) => [`key-${index}`, index])) }, null, 2);
+    try {
+      expect(spawnSync("git", ["init"], { cwd: root, encoding: "utf8", env: gitSpawnEnv() }).status).toBe(0);
+      expect(spawnSync("git", ["config", "user.email", "metrics@example.com"], { cwd: root, encoding: "utf8", env: gitSpawnEnv() }).status).toBe(0);
+      expect(spawnSync("git", ["config", "user.name", "Metrics"], { cwd: root, encoding: "utf8", env: gitSpawnEnv() }).status).toBe(0);
+      expect(spawnSync("git", ["config", "commit.gpgsign", "false"], { cwd: root, encoding: "utf8", env: gitSpawnEnv() }).status).toBe(0);
+      writeFileSync(join(root, "metrics.json"), before);
+      expect(spawnSync("git", ["add", "metrics.json"], { cwd: root, encoding: "utf8", env: gitSpawnEnv() }).status).toBe(0);
+      expect(spawnSync("git", ["commit", "-m", "base"], { cwd: root, encoding: "utf8", env: gitSpawnEnv() }).status).toBe(0);
+      writeFileSync(join(root, "metrics.json"), after);
+      expect(spawnSync("git", ["add", "metrics.json"], { cwd: root, encoding: "utf8", env: gitSpawnEnv() }).status).toBe(0);
+      const numstat = spawnSync("git", ["diff", "--cached", "--numstat", "--", "metrics.json"], { cwd: root, encoding: "utf8", env: gitSpawnEnv() }).stdout?.trim().split("\t") ?? [];
+      const added = Number(numstat[0]);
+      const total = countUnifiedLocForFile("metrics.json", after);
+      expect(parseJsonc(after)).toEqual(JSON.parse(after));
+      expect(added).toBeGreaterThan(total);
+      const delta = accumulateUlocDeltasFromPaths(root, [{ path: "metrics.json", added, removed: Number(numstat[1]) }], "HEAD", ":0").get("JSON");
+      expect(delta).toEqual({ added: 151, edited: 0, removed: 0 });
+      expect(delta!.added).toBeLessThanOrEqual(total);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
   test("appendGitDeltaSuffix formats legacy delta-only suffixes", async () => {
     const { appendGitDeltaSuffix, formatBundleUlocSuffix } = await import("../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts");
     expect(appendGitDeltaSuffix("🟦️65k", { added: 700, edited: 200, removed: 10 })).toBe("🟦️65k➕️700✏️200➖️10🟰️910");
@@ -1716,7 +1745,7 @@ describe("playground static sites", () => {
     expect(resolveFrameworkOsPlaygroundPlugin(catalog, ["dag"])).toEqual({ plugin: "dag", rest: [] });
     expect(resolveFrameworkOsPlaygroundPlugin(catalog, ["gis", "2d"])).toEqual({ plugin: "gis2d", rest: [] });
     expect(resolveFrameworkOsPlaygroundPlugin(catalog, ["procedural", "3d", "fixture", "hexagonal-column"])).toEqual({
-      plugin: "procedural3d",
+      plugin: "generation3d",
       rest: ["fixture", "hexagonal-column"],
     });
     expect(resolveFrameworkOsPlaygroundPlugin(catalog, ["trinity", "jack"])).toEqual({ plugin: "trinity-jack", rest: [] });

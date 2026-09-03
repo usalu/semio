@@ -1,0 +1,11 @@
+{
+  "schema": "stdio.tsv",
+  "records": [
+    [
+      "id",
+      "name"
+    ]
+  ],
+  "trailingNewline": true,
+  "lineEnding": "lf"
+}

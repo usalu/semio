@@ -233,7 +233,7 @@ pub use derived_composition::*;
 //#region 🚪️DerivedIoRegistry
 /// 🗄️ Dissolved out of the former `⚙️engine` root (ticket
 /// 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES) — the real `io_registry` module (see the
-/// `🧱️block/◻2d` exemplar's own `🚪️io/🦀️.rs`). The artifact root's OWN `io_registry`
+/// `🧱️block/◻️2d` exemplar's own `🚪️io/🦀️.rs`). The artifact root's OWN `io_registry`
 /// shim (`✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🦀️.rs`) wraps this one behind a
 /// DIFFERENT type (`&'static [&'static ComposerEntry]` vs this module's `&'static [ComposerEntry]`)
 /// — any bare `io_registry::entries()` reachable from artifact-root code silently rebinds to that

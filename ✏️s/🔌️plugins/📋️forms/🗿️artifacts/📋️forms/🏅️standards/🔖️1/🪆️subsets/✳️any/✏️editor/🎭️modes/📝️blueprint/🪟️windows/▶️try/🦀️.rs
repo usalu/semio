@@ -8,7 +8,7 @@ use crate::editor::forms::{effective_try_values, forms_action, parse_contributio
 use semio_framework_plugin::{
     ActionDescriptor, Label, LocalizedLabel, SurfaceKind, UiButtonNode, UiFieldNode, UiInputNode, UiNode, UiPresence, UiSelectItem, UiSelectNode, UiSliderNode, UiStackNode, UiTextNode, UiToggleNode, WindowKindDefinition, WindowOptions,
 };
-use serde_json::{json, Map, Value};
+use dsl::os_pack::json::{object, Object, Value};
 use std::collections::HashMap;
 use std::collections::HashSet;
 
@@ -42,7 +42,7 @@ pub async fn definition() -> WindowKindDefinition {
 
 //#region 🔖️Render
 async fn try_value_action(key: &str) -> ActionDescriptor {
-    forms_action("setTryValue", Some(json!({ "key": key })))
+    forms_action("setTryValue", Some(object([("key".to_string(), Value::from(key))])))
 }
 
 async fn image_question_src(question: &FormQuestion) -> String {
@@ -81,7 +81,7 @@ async fn try_field(question: &FormQuestion, error: Option<&str>, child: UiNode) 
     })
 }
 
-async fn render_try_question(question: &FormQuestion, values: &Map<String, Value>, contributions: &[ProgramContributionEntry], error: Option<&str>, labels: &FormsLabels) -> UiNode {
+async fn render_try_question(question: &FormQuestion, values: &Object, contributions: &[ProgramContributionEntry], error: Option<&str>, labels: &FormsLabels) -> UiNode {
     let value = values.get(&question.id).cloned().unwrap_or_else(|| json_value_from_dsl(question));
     let key = question.id.clone();
     match question.kind.as_str() {
@@ -165,7 +165,7 @@ async fn render_try_question(question: &FormQuestion, values: &Map<String, Value
                                 id: format!("forms-try.{key}.{}.toggle", option.value),
                                 icon_id: "hash".into(),
                                 text: Some(Label::data(option.label.clone())),
-                                on_change: forms_action("setTryValue", Some(json!({ "key": key, "optionValue": option.value }))),
+                                on_change: forms_action("setTryValue", Some(object([("key".to_string(), Value::from(key.clone())), ("optionValue".to_string(), Value::from(option.value.clone()))]))),
                                 presence: UiPresence::selected(selected.contains(&option.value)),
                                 menu: None,
                             })
@@ -200,7 +200,7 @@ async fn render_try_question(question: &FormQuestion, values: &Map<String, Value
                 .iter()
                 .enumerate()
                 .map(|(index, field)| {
-                    let field_value = array.get(index).cloned().unwrap_or(json!(field.value.unwrap_or(0.0)));
+                    let field_value = array.get(index).cloned().unwrap_or(Value::from(field.value.unwrap_or(0.0)));
                     UiNode::Field(UiFieldNode {
                         id: format!("forms-try.{key}.{}", field.key),
                         label: Label::data(field.label.clone().unwrap_or_else(|| field.key.clone())),
@@ -213,8 +213,8 @@ async fn render_try_question(question: &FormQuestion, values: &Map<String, Value
                             value: json_f64_value(&field_value),
                             step: question.step.unwrap_or(0.1),
                             uniform: true,
-                            on_absolute: forms_action("setTryValue", Some(json!({ "key": key, "vectorIndex": index }))),
-                            on_delta: forms_action("setTryValue", Some(json!({ "key": key, "vectorIndex": index }))),
+                            on_absolute: forms_action("setTryValue", Some(object([("key".to_string(), Value::from(key.clone())), ("vectorIndex".to_string(), Value::from(index))]))),
+                            on_delta: forms_action("setTryValue", Some(object([("key".to_string(), Value::from(key.clone())), ("vectorIndex".to_string(), Value::from(index))]))),
                             presence: UiPresence::default(),
                             menu: None,
                         })),
@@ -249,7 +249,7 @@ async fn render_try_question(question: &FormQuestion, values: &Map<String, Value
     }
 }
 
-/// 🔄️ The question's typed default, as a `serde_json::Value` — used when no try value has been entered
+/// 🔄️ The question's typed default, as a `dsl::os_pack::json::Value` — used when no try value has been entered
 /// for it yet.
 async fn json_value_from_dsl(question: &FormQuestion) -> Value {
     crate::artifacts::forms::schema::dsl_to_value(&default_value_for_question(question))
@@ -319,24 +319,24 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn image_question_with_url_src_emits_image_node() {
         let question = FormQuestion { src: Some("https://example.com/picture.png".into()), ..crate::editor::forms::commands::add_question::question_shell("q-image".into(), "Picture".into(), "image".into()) };
-        let node = render_try_question(&question, &Map::new(), &[], None, crate::editor::forms::terminology::forms_play_labels(&FormsConfig::default()));
-        let json = serde_json::to_string(&node).unwrap();
+        let node = render_try_question(&question, &Object::new(), &[], None, crate::editor::forms::terminology::forms_play_labels(&FormsConfig::default()));
+        let json = dsl::os_pack::json::to_json_string(&node);
         assert!(json.contains(r#""type":"image""#));
         assert!(json.contains("https://example.com/picture.png"));
     }
 
     #[semio_framework_async_macros::async_test]
     async fn extension_question_emits_external_slot_when_contribution_registered() {
-        let node = render_try_question(&building_component_question(), &Map::new(), &building_component_contributions(), None, crate::editor::forms::terminology::forms_play_labels(&FormsConfig::default()));
-        let json = serde_json::to_string(&node).unwrap();
+        let node = render_try_question(&building_component_question(), &Object::new(), &building_component_contributions(), None, crate::editor::forms::terminology::forms_play_labels(&FormsConfig::default()));
+        let json = dsl::os_pack::json::to_json_string(&node);
         assert!(json.contains("externalSlot"));
         assert!(json.contains("forms-module-procedural"));
     }
 
     #[semio_framework_async_macros::async_test]
     async fn extension_question_falls_back_without_contribution() {
-        let node = render_try_question(&building_component_question(), &Map::new(), &[], None, crate::editor::forms::terminology::forms_play_labels(&FormsConfig::default()));
-        let json = serde_json::to_string(&node).unwrap();
+        let node = render_try_question(&building_component_question(), &Object::new(), &[], None, crate::editor::forms::terminology::forms_play_labels(&FormsConfig::default()));
+        let json = dsl::os_pack::json::to_json_string(&node);
         assert!(json.contains("Extension unavailable"));
     }
 

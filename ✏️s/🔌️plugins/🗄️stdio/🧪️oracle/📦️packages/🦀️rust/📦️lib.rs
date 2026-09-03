@@ -339,8 +339,8 @@ pub mod artifacts {
                 #[path = "."]
                 pub mod subsets {
                     #[path = "."]
-                    pub mod any {
-                        #[path = "../../../🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/✳️any/🧪️oracle/🦀️.rs"]
+                    pub mod base {
+                        #[path = "../../../🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/✳️base/🧪️oracle/🦀️.rs"]
                         mod component;
                         pub use component::*;
                     }
@@ -643,8 +643,8 @@ pub mod artifacts {
                 #[path = "."]
                 pub mod subsets {
                     #[path = "."]
-                    pub mod any {
-                        #[path = "../../../🗿️artifacts/🎞️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/🧪️oracle/🦀️.rs"]
+                    pub mod base {
+                        #[path = "../../../🗿️artifacts/🎞️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️base/🧪️oracle/🦀️.rs"]
                         mod component;
                         pub use component::*;
                     }
@@ -685,8 +685,8 @@ pub mod artifacts {
                 #[path = "."]
                 pub mod subsets {
                     #[path = "."]
-                    pub mod any {
-                        #[path = "../../../🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/✳️any/🧪️oracle/🦀️.rs"]
+                    pub mod base {
+                        #[path = "../../../🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/✳️base/🧪️oracle/🦀️.rs"]
                         mod component;
                         pub use component::*;
                     }
@@ -824,7 +824,7 @@ pub mod artifacts {
                 pub mod subsets {
                     #[path = "."]
                     pub mod any {
-                        #[path = "../../../🗿️artifacts/📄txt/🏅️standards/🔖️utf-8/🪆️subsets/✳️any/🧪️oracle/🦀️.rs"]
+                        #[path = "../../../🗿️artifacts/📄️txt/🏅️standards/🔖️utf-8/🪆️subsets/✳️any/🧪️oracle/🦀️.rs"]
                         mod component;
                         pub use component::*;
                     }
@@ -859,8 +859,8 @@ pub mod artifacts {
                 #[path = "."]
                 pub mod subsets {
                     #[path = "."]
-                    pub mod any {
-                        #[path = "../../../🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/🧪️oracle/🦀️.rs"]
+                    pub mod base {
+                        #[path = "../../../🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️base/🧪️oracle/🦀️.rs"]
                         mod component;
                         pub use component::*;
                     }
@@ -894,13 +894,13 @@ pub mod artifacts {
                 pub mod subsets {
                     #[path = "."]
                     pub mod any {
-                        #[path = "../../../🗿️artifacts/📰xml/🏅️standards/🔖️1.0/🪆️subsets/✳️base/🧪️oracle/🦀️.rs"]
+                        #[path = "../../../🗿️artifacts/📰️xml/🏅️standards/🔖️1.0/🪆️subsets/✳️base/🧪️oracle/🦀️.rs"]
                         mod component;
                         pub use component::*;
                     }
                     #[path = "."]
                     pub mod valid {
-                        #[path = "../../../🗿️artifacts/📰xml/🏅️standards/🔖️1.0/🪆️subsets/✳️valid/🧪️oracle/🦀️.rs"]
+                        #[path = "../../../🗿️artifacts/📰️xml/🏅️standards/🔖️1.0/🪆️subsets/✳️valid/🧪️oracle/🦀️.rs"]
                         mod component;
                         pub use component::*;
                     }
@@ -917,8 +917,8 @@ pub mod artifacts {
                 #[path = "."]
                 pub mod subsets {
                     #[path = "."]
-                    pub mod any {
-                        #[path = "../../../🗿️artifacts/🎒️zip/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧪️oracle/🦀️.rs"]
+                    pub mod base {
+                        #[path = "../../../🗿️artifacts/🎒️zip/🏅️standards/🔖️2.0/🪆️subsets/✳️base/🧪️oracle/🦀️.rs"]
                         mod component;
                         pub use component::*;
                     }

@@ -129,21 +129,21 @@ impl semio_framework_plugin::ArtifactOwnedDisposer<store::PresenceStore<CadPrese
 mod tests {
     use super::*;
 
-    fn text(value: &serde_json::Value) -> String {
+    fn text(value: &protocol::os_pack::json::Value) -> String {
         value["unit"].as_str().unwrap().repeat(value["repeat"].as_u64().unwrap() as usize)
     }
 
-    fn presence(case: &serde_json::Value) -> CadPresence {
+    fn presence(case: &protocol::os_pack::json::Value) -> CadPresence {
         CadPresence { active_utility_id: text(&case["activeUtility"]), engagement_step: text(&case["engagementStep"]), engagement_pane: (!case["engagementPane"].is_null()).then(|| text(&case["engagementPane"])), ..CadPresence::default() }
     }
 
     #[test]
     fn retained_cad_presence_close_preserves_shared_roots_and_byte_grants() {
-        let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧪️retirement.json")).unwrap();
+        let fixture: protocol::os_pack::json::Value = protocol::json::parse(include_str!("../🧪️retirement.json")).unwrap();
         for case in fixture["cases"].as_array().unwrap() {
             let value = presence(case);
-            let oracle = serde_json::to_value(&value).unwrap();
-            let expected = ["activeUtilityId", "engagementStep", "engagementPane"].into_iter().map(|key| oracle[key].as_str().map_or(0, str::len)).sum::<usize>();
+            let oracle = value.clone();
+            let expected = oracle.active_utility_id.len() + oracle.engagement_step.len() + oracle.engagement_pane.as_deref().map_or(0, str::len);
             assert_eq!(expected, case["expectedBytes"].as_u64().unwrap() as usize);
             let root = Arc::new(value);
             let reader = root.clone();
@@ -152,7 +152,7 @@ mod tests {
             assert_eq!(retirement.close_step(1, 4096).unwrap(), SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
             assert_eq!(retirement.close_step(1, 4096).unwrap(), SnapshotRetirementStep::Complete);
             assert!(retirement.terminal_is_empty());
-            assert_eq!(serde_json::to_value(reader.as_ref()).unwrap(), oracle);
+            assert_eq!(reader.as_ref(), &oracle);
             let mut retirement = CadPresenceRetirementFactory.retire(reader);
             let mut released = 0;
             for turn in 0..128 {
@@ -195,7 +195,7 @@ mod tests {
     #[test]
     fn retained_cad_presence_close_nonempty_roster_retains_readers_and_domain_bytes() {
         use semio_framework_plugin::{ArtifactOwnedDisposer, PluginCloseStep};
-        let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧪️retirement.json")).unwrap();
+        let fixture: protocol::os_pack::json::Value = protocol::json::parse(include_str!("../🧪️retirement.json")).unwrap();
         let value = |name: &str| presence(fixture["cases"].as_array().unwrap().iter().find(|case| case["name"] == name).unwrap());
         for case in fixture["storeCases"].as_array().unwrap() {
             let mut owner = store::PresenceStore::<CadPresence, super::super::CadPresenceMutation>::new(value(case["local"].as_str().unwrap()));
@@ -222,8 +222,8 @@ mod tests {
                     PluginCloseStep::Pending { released_items, released_bytes } => { assert!(released_items <= 1 && released_bytes <= 4096); retired_bytes += released_bytes; }
                     PluginCloseStep::Blocked { .. } => {
                         let captured = reader.take().expect("only the declared captured reader may block CAD close");
-                        let actual = captured.peers().map(|(actor, presence)| (actor.to_owned(), serde_json::to_value(presence).unwrap())).collect::<Vec<_>>();
-                        let expected = case["peers"].as_array().unwrap().iter().map(|peer| (peer["actor"].as_str().unwrap().to_owned(), serde_json::to_value(value(peer["presence"].as_str().unwrap())).unwrap())).collect::<Vec<_>>();
+                        let actual = captured.peers().map(|(actor, presence)| (actor.to_owned(), presence.clone())).collect::<Vec<_>>();
+                        let expected = case["peers"].as_array().unwrap().iter().map(|peer| (peer["actor"].as_str().unwrap().to_owned(), value(peer["presence"].as_str().unwrap()))).collect::<Vec<_>>();
                         assert_eq!(actual, expected);
                         observed_blocked = true;
                     }

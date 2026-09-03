@@ -1,9 +1,0 @@
-dialect grammar
-grammar procedural2d.diff
-extension procedural2d
-start document
-
-document = header body
-header = "schema" SP "procedural.procedural2d.diff" NL
-body = payload NL?
-payload = OCTET+

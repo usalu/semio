@@ -6,7 +6,7 @@ use crate::artifacts::wires::WiresSnapshot;
 use crate::editor::wires::config::{WiresConfig, WiresConfigMutation};
 use crate::editor::wires::{wires_select_effect, WIRES_GRANULARITY_EDGE};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
-use serde_json::json;
+use dsl::DslValue;
 use semio_framework_value_derive::{FromValue, ToValue};
 
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
@@ -22,20 +22,18 @@ pub async fn handle(payload: &AddRelationship, doc: &ArtifactView<'_, WiresSnaps
     let document = doc.snapshot;
     let kind = if payload.kind.is_empty() { "owns" } else { payload.kind.as_str() };
     let edge_id = format!("edge-{}", fixture_edges(&crate::artifacts::wires::wires_working_board(document)).len() + 1);
-    let edge = dsl::to_dsl_value(&json!({
-        "id": edge_id,
-        "edgeKind": format!("wires.{kind}"),
-        "source": "node-1",
-        "target": "node-2"
-    }))
-    .expect("edge serializes");
-    let relationship = dsl::to_dsl_value(&json!({
-        "edgeId": edge_id,
-        "kind": kind,
-        "sourceIdentityId": 1,
-        "targetIdentityId": 2
-    }))
-    .expect("relationship serializes");
+    let edge = DslValue::object([
+        ("id".into(), DslValue::String(edge_id.clone())),
+        ("edgeKind".into(), DslValue::String(format!("wires.{kind}"))),
+        ("source".into(), DslValue::String("node-1".into())),
+        ("target".into(), DslValue::String("node-2".into())),
+    ]);
+    let relationship = DslValue::object([
+        ("edgeId".into(), DslValue::String(edge_id.clone())),
+        ("kind".into(), DslValue::String(kind.into())),
+        ("sourceIdentityId".into(), DslValue::uint(1)),
+        ("targetIdentityId".into(), DslValue::uint(2)),
+    ]);
     Ok(Emit { artifact_mutations: vec![crate::artifacts::wires::mutations::connect_nodes(edge, relationship)], effects: vec![wires_select_effect(&[edge_id], WIRES_GRANULARITY_EDGE, "replace")], ..Default::default() })
 }
 

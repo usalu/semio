@@ -1,7 +1,6 @@
 //! 🌿️ Transparent VCS semantic mutation aggregate.
 
 use crate::artifacts::vcs::VcsSnapshot;
-use serde::{Deserialize, Serialize};
 
 pub use super::add_tag::{add_tag, AddTag};
 pub use super::change_counter::{change_counter, ChangeCounter};
@@ -12,8 +11,10 @@ pub use super::rename_vcs::{rename_vcs, RenameVcs};
 pub use crate::artifacts::vcs::standards::v1::subsets::any::schema::operations::*;
 
 //#region 🔖️Aggregate
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslEnum, dsl::Mutations)]
-#[serde(tag = "mutation", rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslEnum, dsl::Mutations)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(tag = "mutation", rename_all = "camelCase")]
+#[cfg_attr(test, serde(tag = "mutation", rename_all = "camelCase"))]
 #[mutations(snapshot = VcsSnapshot, diff = crate::artifacts::vcs::VcsDiff, schema = "vcs.vcs")]
 pub enum VcsDemoMutation {
     RenameVcs(RenameVcs),

@@ -2,13 +2,23 @@
 //! `26/08/29/LOWPOLY-END-TO-END-COMMANDS-IO-AND-MUTATIONS`.
 //!
 //! Recorded no-oracle decision `lowpoly-io-native-round-trip`
-//! (`../../🏅️standards/🔖️1/🪆️subsets/✳️any/🔣️oracle.json`): exports the committed fixture
+//! (`../../🧪️oracle/🔣️.json`): exports the committed fixture
 //! through this subset's own `🚪️io/📤️export/🧵️serializers/…/serialize_bytes` for each non-PNG
 //! `stdio.*` format `import_stdio_kinds()`/`export_stdio_kinds()` declare, imports the produced
 //! bytes back through the matching `deserialize_bytes`, and requires the round trip to return the
 //! committed document unchanged. Gated behind the generated host's `sut` feature — this case links
 //! this subset's own plugin crate directly (it must, to reach `serialize_bytes`/`deserialize_bytes`),
 //! unlike `mutate-lowpoly-1`, which replays committed vectors without linking it.
+//!
+//! Four of the eight declared formats — `dwg`, `gltf`, `las`, `stl` — are committed, HONEST stubs:
+//! `LowpolyObject.mesh` is a content-addressed handle
+//! (`store::ArtifactChild<SemioMeshSnapshot>`), never embedded geometry, so a synchronous
+//! `&LowpolySnapshot -> …` serializer genuinely cannot reach real mesh vertices for those four
+//! formats. Their own leaf doc comments (`../../🚪️io/📤️export/🧵️serializers/🗿️artifacts/…`) name the
+//! exact reason, and the production crate's own `unimplemented_geometry_formats_error_honestly_instead_of_lying`
+//! unit test (`../../🚪️io/🦀️.rs`) already asserts `serialize_bytes` returns `Err` for all four —
+//! this case asserts that SAME explicit error rather than a round trip for those four rows; the other
+//! four (`json`, `obj`, `ply`, `txt`) still exercise the real round trip.
 
 use semio_repo_test_host::{Adapter, Context, Outcome};
 
@@ -16,6 +26,11 @@ use semio_repo_test_host::{Adapter, Context, Outcome};
 /// 🏷️ Every declared non-PNG format. PNG is independently decoded by the sibling
 /// `io-lowpoly-png-1` Pillow case.
 const FORMATS: &[&str] = &["dwg", "gltf", "json", "las", "obj", "ply", "stl", "txt"];
+
+/// 🚫️ The four formats whose exporter is a committed, HONEST stub: `LowpolyObject.mesh` is a
+/// content-addressed handle, never embedded geometry, so `serialize_bytes` unconditionally returns
+/// `Err` for these — see the module doc comment and each leaf's own doc comment.
+const STUB_FORMATS: &[&str] = &["dwg", "gltf", "las", "stl"];
 //#endregion 🔖️Vocabulary
 
 //#region 🔖️Subject
@@ -67,9 +82,40 @@ mod subject {
         Ok((bytes, imported))
     }
 
+    /// 🚫️ For a `STUB_FORMATS` member: `serialize_bytes` must return the committed HONEST error
+    /// (content-addressed mesh handle unreachable at this layer), never a silent pack-envelope lie
+    /// and never a successful round trip — that would mean the architecture gap this format's own
+    /// leaf doc comment names has closed, which is real news this scenario must be told about by
+    /// hand, not something a weakened assertion should paper over.
+    fn serialize_must_fail_honestly(format: &str, snapshot: &LowpolySnapshot) -> Result<Outcome, String> {
+        let result = match format {
+            "dwg" => export::dwg::v_ac1018::any::serialize_bytes(snapshot),
+            "gltf" => export::gltf::v2_0::any::serialize_bytes(snapshot),
+            "las" => export::las::v1_0::any::serialize_bytes(snapshot),
+            "stl" => export::stl::v_ascii::any::serialize_bytes(snapshot),
+            other => return Err(format!("no stub serializer registered for format {other:?}")),
+        };
+        match result {
+            Ok(_) => Err(format!(
+                "serialize_bytes({format}) succeeded, but {format} is a committed honest-stub exporter expected to error because LowpolyObject.mesh is a content-addressed handle unreachable at this layer -- if this now succeeds, the architecture gap has closed and this scenario must be promoted to a real round trip"
+            )),
+            Err(error) => {
+                let message = error.to_string();
+                if !message.contains("unavailable at the LowpolySnapshot layer") || !message.contains("not implemented") {
+                    return Err(format!("serialize_bytes({format}) failed as expected, but with an unexpected message {message:?} -- expected the honest content-addressed-handle stub wording"));
+                }
+                let projection = semio_repo_test_host::parse_json(&format!("{{\"format\":\"{format}\",\"error\":{message:?}}}"))?;
+                Ok(Outcome::with_raw(message.into_bytes(), projection))
+            }
+        }
+    }
+
     pub fn roundtrip(format: &'static str) -> impl Fn(&Context) -> Result<Outcome, String> {
         move |ctx: &Context| {
             let original = document(ctx)?;
+            if super::STUB_FORMATS.contains(&format) {
+                return serialize_must_fail_honestly(format, &original);
+            }
             let (bytes, imported) = export_then_import(format, &original)?;
             if imported != original {
                 return Err(format!("round trip through {format} did not return the committed document unchanged:\n  before = {original:?}\n  after  = {imported:?}"));

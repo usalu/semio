@@ -292,7 +292,7 @@ pub mod io_registry {
 use semio_framework::MeshImporter;
 use semio_framework_plugin::{ArtifactDeserializer, ArtifactSerializer};
 use semio_s_plugin_stdio::artifacts::obj::standards::v3_0::engine::encode_obj;
-use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::any::schema::geometry::SemioPoint3;
+use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::base::schema::geometry::SemioPoint3;
 use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::io::export::serializers::artifacts::step::v_ap214::any::SemioBrepToStep;
 use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::io::import::deserializers::artifacts::step::v_ap214::any::SemioBrepFromStep;
 use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::schema::engine::{Brep, BrepKernel, GeometryHandle};
@@ -524,7 +524,7 @@ pub fn import_glb_object(bytes: &[u8]) -> Option<semio_s_plugin_stdio::artifacts
 /// 🌉️ Builds a `SemioModelElement` from a live kernel solid handle — id, identity placement, and a
 /// `GeometryRef::Brep{brep_id}` naming the handle. Shared by every native-geometry import path.
 fn model_element_from_solid_handle(id: String, handle: GeometryHandle) -> semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::model::schema::snapshot::SemioModelElement {
-    use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::any::schema::geometry::SemioTransform;
+    use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::base::schema::geometry::SemioTransform;
     use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::model::schema::snapshot::{ElementClass, GeometryRef, SemioModelElement};
     SemioModelElement { id, class: ElementClass::Other { name: "spatial.shape.imported".into() }, placement: SemioTransform::identity(), geometry: GeometryRef::Brep { brep_id: handle.0 }, spatial_id: None, psets: Vec::new() }
 }
@@ -710,14 +710,15 @@ pub fn cad_document_from_dwg(drawing: &semio_s_plugin_stdio::artifacts::dwg::Dwg
 /// ⚠️ See `scene_from_spatial_payload`'s doc comment — same documented gap for a `MeshImporter`
 /// (GLB) payload.
 // 🌉️ `_mesh` is unused (framework `MeshDwgDocumentImporter` registration in the crate root
-// `🦀️.rs` requires this exact shape). Return type is `serde_json::Value`, NOT `DslValue`: this
-// function is registered as `MeshDwgDocumentImporter = fn(&MeshData) -> Result<serde_json::Value, String>`
+// `🦀️.rs` requires this exact shape). Return type is `dsl::os_pack::json::Value`, NOT `DslValue`:
+// this function is registered as
+// `MeshDwgDocumentImporter = fn(&MeshData) -> Result<dsl::os_pack::json::Value, String>`
 // (`🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️.rs`), a genuine framework-owned boundary
-// type out of this plugin's write scope -- see the conversion ticket's `FormGeneration` note for
-// the same pattern. Bridged once, at this exact boundary, from a `DslValue` built the normal way.
-pub fn cad_document_from_mesh(_mesh: &semio_framework_plugin::MeshData) -> Result<serde_json::Value, String> {
+// type out of this plugin's write scope. Bridged once, at this exact boundary, from a `DslValue`
+// built the normal way via `protocol::json::from_dsl_value`.
+pub fn cad_document_from_mesh(_mesh: &semio_framework_plugin::MeshData) -> Result<protocol::json::Value, String> {
     use crate::artifacts::cad::standards::v1::subsets::any::schema::inferences::default_document;
-    Ok(serde_json::Value::from(protocol::ToValue::to_value(&default_document())))
+    Ok(protocol::json::from_dsl_value(&protocol::ToValue::to_value(&default_document())))
 }
 //#endregion 🌉️GeometryBridges
 

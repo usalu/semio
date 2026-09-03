@@ -51,7 +51,7 @@ async fn apply_to(payload: &NodeGraphEdit, doc: &ArtifactView<'_, DagSnapshot>, 
     for sub_operation in &payload.operations {
         match sub_operation {
             DagNodeGraphEditOp::SetFixture { fixture_json } => {
-                if let Ok(fixture) = serde_json::from_str::<DagFixture>(fixture_json) {
+                if let Ok(fixture) = dsl::json::from_json_str::<DagFixture>(fixture_json) {
                     config_mutations.push(DagConfigMutation::SetCamera { x: fixture.camera.x, y: fixture.camera.y, zoom: fixture.camera.zoom });
                     artifact_mutations.extend(dag_snapshot_mutations(document, &dag_document_from_fixture(&fixture).into()));
                 }

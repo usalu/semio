@@ -1,3 +1,0 @@
-(* ebnf procedural.procedural2d.diff *)
-document = header, body ;
-header = 'schema', space, 'procedural.procedural2d.diff', newline ;

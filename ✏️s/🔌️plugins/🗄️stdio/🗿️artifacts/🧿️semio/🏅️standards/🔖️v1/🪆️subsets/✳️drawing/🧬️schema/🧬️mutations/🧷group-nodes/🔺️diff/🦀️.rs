@@ -1,6 +1,6 @@
 //! 🔺️ Diff for `GroupNodes`.
 
-use crate::artifacts::semio::standards::v1::subsets::any::schema::triples::{IndexAdded, IndexedTripleDiff};
+use crate::artifacts::semio::standards::v1::subsets::base::schema::triples::{IndexAdded, IndexedTripleDiff};
 use crate::artifacts::semio::standards::v1::subsets::drawing::schema::diff::{DrawGroupDiff, DrawNodeDiff, NodePath, SemioDrawingDiff, diff_at_path, node_at};
 use crate::artifacts::semio::standards::v1::subsets::drawing::schema::snapshot::{DrawNode, SemioDrawingSnapshot};
 

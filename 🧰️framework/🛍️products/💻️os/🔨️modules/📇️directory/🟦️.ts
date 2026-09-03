@@ -5,6 +5,14 @@
  * config scans for `import.meta.vitest` suites). */
 
 export type {
+  ArtifactBlobRef,
+  ArtifactCheckpoint,
+  ArtifactFrontier,
+  ArtifactHash,
+  ArtifactRetention,
+  PublishedArtifactBlob,
+  PublishedArtifactCheckpoint,
+  CheckpointId,
   ConnectionView,
   DirectoryActor,
   DirectoryActorKind,
@@ -13,6 +21,9 @@ export type {
   DirectoryEvent,
   DirectoryEventBody,
   DirectoryEventInviteRedeemed,
+  DirectoryEventDocumentAnnounced,
+  DirectoryEventArtifactCheckpointPublished,
+  DirectoryEventArtifactRetentionAdvanced,
   DirectoryEventMemberRemoved,
   DirectoryEventMemberUpserted,
   DirectoryEventSpaceArchived,
@@ -25,6 +36,10 @@ export type {
   DirectorySpaceRole,
   DirectorySpaceVisibility,
   DirectoryStreamMessage,
+  DocumentDescriptor,
+  DocumentFrontier,
+  DocumentOwner,
+  DocumentScope,
   DocumentView,
   Hlc,
   InviteView,
@@ -33,13 +48,16 @@ export type {
   UserView,
 } from "./🧬️schema/🟦️.ts";
 
-import type { DirectoryCommand, DirectoryEvent, DirectoryEventBody, DirectoryStreamMessage, MemberView, SpaceView, UserView } from "./🧬️schema/🟦️.ts";
+export { descriptorDigestEncodingV1, descriptorDigestV1, DESCRIPTOR_DIGEST_V1_DOMAIN } from "./🧬️schema/🟦️.ts";
+
+import type { DirectoryCommand, DirectoryEvent, DirectoryEventBody, DirectoryStreamMessage, DocumentDescriptor, MemberView, SpaceView, UserView } from "./🧬️schema/🟦️.ts";
 
 //#region 🔖️ReadModel
 /** 🏠️ One projected space: its `SpaceView` plus the current member roster. */
 export interface DirectorySpace {
   view: SpaceView;
   members: MemberView[];
+  documents: DocumentDescriptor[];
 }
 
 /** 📇️ The directory's whole projected state, folded from the event log. `users` is a side-table
@@ -83,7 +101,7 @@ export function fold(model: DirectoryReadModel, event: DirectoryEvent): Director
   const withSpace = (spaceId: string, mutate: (space: DirectorySpace) => void): void => {
     const existing = spaces.get(spaceId);
     if (!existing) return;
-    const copy: DirectorySpace = { view: { ...existing.view }, members: existing.members.map((member) => ({ ...member })) };
+    const copy: DirectorySpace = { view: { ...existing.view }, members: existing.members.map((member) => ({ ...member })), documents: existing.documents.map((document) => ({ ...document, owner: { ...document.owner }, bootstrapFrontier: { ...document.bootstrapFrontier } })) };
     mutate(copy);
     spaces.set(spaceId, copy);
   };
@@ -107,6 +125,7 @@ export function fold(model: DirectoryReadModel, event: DirectoryEvent): Director
           updatedAtMs: event.recordedAtMs,
         },
         members: [],
+        documents: [],
       });
       break;
     case "space.renamed":
@@ -142,6 +161,16 @@ export function fold(model: DirectoryReadModel, event: DirectoryEvent): Director
       break;
     case "invite.redeemed":
       withSpace(body.spaceId, (space) => upsertMember(space, users, body.userId, body.role, event.recordedAtMs));
+      break;
+    case "document.announced":
+      withSpace(body.descriptor.spaceId, (space) => {
+        if (!space.documents.some((document) => document.documentId === body.descriptor.documentId)) space.documents.push(body.descriptor);
+        space.view.documentCount = space.documents.length;
+        space.view.updatedAtMs = event.recordedAtMs;
+      });
+      break;
+    case "artifact.checkpoint-published":
+    case "artifact.retention-advanced":
       break;
   }
   return next;

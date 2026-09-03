@@ -27,6 +27,30 @@
       },
       "productionReachable": false,
       "networkDuringExecution": false
+    },
+    {
+      "id": "python-pptx-pptx-ecma-376-transitional-mutate-reader",
+      "kind": "third-party-library",
+      "ecosystem": "python",
+      "package": "python-pptx",
+      "version": "1.0.2",
+      "engine": {
+        "family": "python-pptx",
+        "implementation": "python-pptx OPC/OOXML reader",
+        "version": "1.0.2"
+      },
+      "capabilities": [
+        "pptx-ecma-376-transitional-mutate"
+      ],
+      "license": "MIT",
+      "testOnly": true,
+      "productionReachable": false,
+      "networkDuringExecution": false,
+      "homepage": "https://python-pptx.readthedocs.io",
+      "rationale": "📖️ A READER, registered separately from this file's existing `cross-semio-implementation` entry, which COMPUTES what a mutation should produce from this repository's own reading of the spec and therefore cannot discharge this requirement — both halves would descend from one reading of it. python-pptx 1.0.2's `opc` sub-package resolves the real Transitional-conformance-class OPC package (relationships, content types, parts) and its `part._element` escape hatch exposes the parsed root elements directly, so the same conformance-class axes the sibling ✳️strict subset's reader witnesses (namespaces, relationship base, VML/AlternateContent presence) are independently observable here too, against this subset's own committed `shared://📽️.pptx`.",
+      "comparisonProfiles": [
+        "semantic-ooxml-pptx-transitional-v1"
+      ]
     }
   ],
   "mutationCatalogs": [
@@ -79,7 +103,8 @@
           "oracleRequirements": [
             {
               "capability": "pptx-ecma-376-transitional-mutate",
-              "qualifyingKind": "third-party-library"
+              "qualifyingKind": "third-party-library",
+              "oracle": "python-pptx-pptx-ecma-376-transitional-mutate-reader"
             }
           ]
         },
@@ -98,7 +123,8 @@
           "oracleRequirements": [
             {
               "capability": "pptx-ecma-376-transitional-mutate",
-              "qualifyingKind": "third-party-library"
+              "qualifyingKind": "third-party-library",
+              "oracle": "python-pptx-pptx-ecma-376-transitional-mutate-reader"
             }
           ]
         },
@@ -117,7 +143,8 @@
           "oracleRequirements": [
             {
               "capability": "pptx-ecma-376-transitional-mutate",
-              "qualifyingKind": "third-party-library"
+              "qualifyingKind": "third-party-library",
+              "oracle": "python-pptx-pptx-ecma-376-transitional-mutate-reader"
             }
           ]
         },
@@ -136,7 +163,8 @@
           "oracleRequirements": [
             {
               "capability": "pptx-ecma-376-transitional-mutate",
-              "qualifyingKind": "third-party-library"
+              "qualifyingKind": "third-party-library",
+              "oracle": "python-pptx-pptx-ecma-376-transitional-mutate-reader"
             }
           ]
         },
@@ -155,7 +183,8 @@
           "oracleRequirements": [
             {
               "capability": "pptx-ecma-376-transitional-mutate",
-              "qualifyingKind": "third-party-library"
+              "qualifyingKind": "third-party-library",
+              "oracle": "python-pptx-pptx-ecma-376-transitional-mutate-reader"
             }
           ]
         },
@@ -174,11 +203,280 @@
           "oracleRequirements": [
             {
               "capability": "pptx-ecma-376-transitional-mutate",
-              "qualifyingKind": "third-party-library"
+              "qualifyingKind": "third-party-library",
+              "oracle": "python-pptx-pptx-ecma-376-transitional-mutate-reader"
             }
           ]
         }
       ]
+    }
+  ],
+  "fixtureManifests": [
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "set-snapshot-applied",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.pptx",
+        "standard": "ecma-376",
+        "subset": "transitional"
+      },
+      "mutation": "set-snapshot",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before-pptx",
+          "path": "../🧫️fixtures/set-snapshot-applied/before.pptx",
+          "mediaType": "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+          "sha256": "sha256:a0f9a19b621291fe8751afbe99fa539dffd779576f29f64f2097b0a234815d22",
+          "bytes": 28104
+        },
+        {
+          "role": "expected-after-pptx",
+          "path": "../🧫️fixtures/set-snapshot-applied/after.pptx",
+          "mediaType": "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+          "sha256": "sha256:8b30cd5faddb9ba3c0354bfef790343d04ec1d0f0e48fa25375572e0fb7c78cb",
+          "bytes": 28811
+        }
+      ],
+      "provenance": {
+        "source": "generated",
+        "license": "MIT (python-pptx)",
+        "attribution": "Written by python-pptx 1.0.2's own Presentation.save()",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "exact-bytes-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "Whole-presentation snapshot replace: an unrelated valid presentation (two slides instead of one) substituted wholesale.",
+      "generator": {
+        "oracle": "python-pptx-pptx-ecma-376-transitional-mutate-reader",
+        "packageVersion": "1.0.2",
+        "engineFamily": "python-pptx",
+        "engineVersion": "1.0.2",
+        "command": "uv run python3 🔨️f2-gen-pptx-structural-fixtures.py (python-pptx Presentation object model + .save())",
+        "platform": "darwin-arm64"
+      }
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "set-conformance-attribute-applied",
+      "class": "handcrafted",
+      "target": {
+        "artifact": "s.stdio.pptx",
+        "standard": "ecma-376",
+        "subset": "transitional"
+      },
+      "mutation": "set-conformance-attribute",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before-pptx",
+          "path": "../🧫️fixtures/set-conformance-attribute-applied/before.pptx",
+          "mediaType": "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+          "sha256": "sha256:a0f9a19b621291fe8751afbe99fa539dffd779576f29f64f2097b0a234815d22",
+          "bytes": 28104
+        },
+        {
+          "role": "expected-after-pptx",
+          "path": "../🧫️fixtures/set-conformance-attribute-applied/after.pptx",
+          "mediaType": "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+          "sha256": "sha256:2c1ca2c2664fbc57401c114d5cfd4ce312d708cab261f8ecab955dcd1f27b383",
+          "bytes": 28119
+        }
+      ],
+      "provenance": {
+        "source": "authored",
+        "license": "n/a (handcrafted zip/XML patch of an MIT python-pptx base package)",
+        "attribution": "A genuine python-pptx 1.0.2 package hand-patched at the OOXML structural level (see notes); the patched ppt/presentation.xml is re-parsed with lxml to confirm well-formedness and the archive's own zip integrity is re-checked before commit",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "exact-bytes-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "The root <p:presentation>'s conformance attribute set, absent -> \"transitional\"."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "remove-conformance-attribute-applied",
+      "class": "handcrafted",
+      "target": {
+        "artifact": "s.stdio.pptx",
+        "standard": "ecma-376",
+        "subset": "transitional"
+      },
+      "mutation": "remove-conformance-attribute",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before-pptx",
+          "path": "../🧫️fixtures/remove-conformance-attribute-applied/before.pptx",
+          "mediaType": "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+          "sha256": "sha256:2c1ca2c2664fbc57401c114d5cfd4ce312d708cab261f8ecab955dcd1f27b383",
+          "bytes": 28119
+        },
+        {
+          "role": "expected-after-pptx",
+          "path": "../🧫️fixtures/remove-conformance-attribute-applied/after.pptx",
+          "mediaType": "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+          "sha256": "sha256:a0f9a19b621291fe8751afbe99fa539dffd779576f29f64f2097b0a234815d22",
+          "bytes": 28104
+        }
+      ],
+      "provenance": {
+        "source": "authored",
+        "license": "n/a (handcrafted zip/XML patch of an MIT python-pptx base package)",
+        "attribution": "A genuine python-pptx 1.0.2 package hand-patched at the OOXML structural level (see notes); the patched ppt/presentation.xml is re-parsed with lxml to confirm well-formedness and the archive's own zip integrity is re-checked before commit",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "exact-bytes-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "The root <p:presentation>'s conformance attribute removed, \"transitional\" -> absent."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "set-main-namespace-applied",
+      "class": "handcrafted",
+      "target": {
+        "artifact": "s.stdio.pptx",
+        "standard": "ecma-376",
+        "subset": "transitional"
+      },
+      "mutation": "set-main-namespace",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before-pptx",
+          "path": "../🧫️fixtures/set-main-namespace-applied/before.pptx",
+          "mediaType": "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+          "sha256": "sha256:a0f9a19b621291fe8751afbe99fa539dffd779576f29f64f2097b0a234815d22",
+          "bytes": 28104
+        },
+        {
+          "role": "expected-after-pptx",
+          "path": "../🧫️fixtures/set-main-namespace-applied/after.pptx",
+          "mediaType": "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+          "sha256": "sha256:444cc7a75ba9a6c0ad41030e0e3120722307875e664f371eb54131e015e11cd5",
+          "bytes": 28115
+        }
+      ],
+      "provenance": {
+        "source": "authored",
+        "license": "n/a (handcrafted zip/XML patch of an MIT python-pptx base package)",
+        "attribution": "A genuine python-pptx 1.0.2 package hand-patched at the OOXML structural level (see notes); the patched ppt/presentation.xml is re-parsed with lxml to confirm well-formedness and the archive's own zip integrity is re-checked before commit",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "exact-bytes-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "The root <p:presentation>'s main xmlns:p namespace URI changed, Transitional (http://schemas.openxmlformats.org/presentationml/2006/main) -> Strict (http://purl.oclc.org/ooxml/presentationml/main)."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "set-relationship-base-applied",
+      "class": "handcrafted",
+      "target": {
+        "artifact": "s.stdio.pptx",
+        "standard": "ecma-376",
+        "subset": "transitional"
+      },
+      "mutation": "set-relationship-base",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before-pptx",
+          "path": "../🧫️fixtures/set-relationship-base-applied/before.pptx",
+          "mediaType": "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+          "sha256": "sha256:a0f9a19b621291fe8751afbe99fa539dffd779576f29f64f2097b0a234815d22",
+          "bytes": 28104
+        },
+        {
+          "role": "expected-after-pptx",
+          "path": "../🧫️fixtures/set-relationship-base-applied/after.pptx",
+          "mediaType": "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+          "sha256": "sha256:efef531489c2cca52b9e30f576fd4578362ee7eaa30c48c54ff40df9d57e378b",
+          "bytes": 28114
+        }
+      ],
+      "provenance": {
+        "source": "authored",
+        "license": "n/a (handcrafted zip/XML patch of an MIT python-pptx base package)",
+        "attribution": "A genuine python-pptx 1.0.2 package hand-patched at the OOXML structural level (see notes); the patched ppt/presentation.xml is re-parsed with lxml to confirm well-formedness and the archive's own zip integrity is re-checked before commit",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "exact-bytes-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "The root <p:presentation>'s relationships xmlns:r namespace URI changed, Transitional (http://schemas.openxmlformats.org/officeDocument/2006/relationships) -> Strict (http://purl.oclc.org/ooxml/officeDocument/relationships)."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "set-drawing-namespace-applied",
+      "class": "handcrafted",
+      "target": {
+        "artifact": "s.stdio.pptx",
+        "standard": "ecma-376",
+        "subset": "transitional"
+      },
+      "mutation": "set-drawing-namespace",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before-pptx",
+          "path": "../🧫️fixtures/set-drawing-namespace-applied/before.pptx",
+          "mediaType": "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+          "sha256": "sha256:a0f9a19b621291fe8751afbe99fa539dffd779576f29f64f2097b0a234815d22",
+          "bytes": 28104
+        },
+        {
+          "role": "expected-after-pptx",
+          "path": "../🧫️fixtures/set-drawing-namespace-applied/after.pptx",
+          "mediaType": "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+          "sha256": "sha256:d6834da4eb8509a125964349d4dd4f9e3e13331f9051173d283095d5f3f3b9be",
+          "bytes": 28116
+        }
+      ],
+      "provenance": {
+        "source": "authored",
+        "license": "n/a (handcrafted zip/XML patch of an MIT python-pptx base package)",
+        "attribution": "A genuine python-pptx 1.0.2 package hand-patched at the OOXML structural level (see notes); the patched ppt/presentation.xml is re-parsed with lxml to confirm well-formedness and the archive's own zip integrity is re-checked before commit",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "exact-bytes-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "The root <p:presentation>'s drawingml xmlns:a namespace URI changed, Transitional (http://schemas.openxmlformats.org/drawingml/2006/main) -> Strict (http://purl.oclc.org/ooxml/drawingml/main)."
     }
   ]
 }

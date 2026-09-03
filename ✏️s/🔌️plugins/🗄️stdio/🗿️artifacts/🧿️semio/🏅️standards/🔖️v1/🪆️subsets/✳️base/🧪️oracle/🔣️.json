@@ -1,0 +1,1352 @@
+{
+  "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json",
+  "schemaVersion": 2,
+  "_comment": "🧩️ This subset's own contribution: the mutation vocabulary belongs to ONE subset of ONE standard of ONE artifact, so its (non-)oracle registration and catalog live here rather than in a shared manifest. `s.stdio.semio` is the semio ENVELOPE — a union over eighteen semio-native subsets — so no third party reads or writes it and no oracle is registered (see noOracleDecisions below).",
+  "oracles": [],
+  "noOracleDecisions": [
+    {
+      "id": "semio-envelope-routing",
+      "capabilities": [],
+      "rationale": "`s.stdio.semio` is the ENVELOPE union over all eighteen semio subsets; there is no third-party crate that reads or writes `.dsl.semio`/`.pack.semio`, and there could not be one authoritative over a vocabulary whose eighteen wrapper variants each embed another semio-native subset's own mutation enum. What this subset OWNS is not the payload semantics — those belong to the eighteen arms and are covered by their own leaf fixtures and their own cases — but the envelope-level ROUTING: does a wrapped mutation whose arm matches the base snapshot's arm thread through, does a MISMATCHED one get refused with `mutation.target-missing` instead of silently corrupting the document, and is `set-snapshot` genuinely the only verb that can change the subset kind. Every scenario is written against exactly that, with a projection the envelope can answer without naming any arm's snapshot type: `{schema, subset, diagnostics, matchesReference}`. Confidence comes from the committed `(before, mutation, after, diff)` specification vector under `../🧬️schema/🧬️mutations/📄set-snapshot/🧪️tests/`, already unit-tested inside the production crate, plus the routing and inverse laws as metamorphic properties. Honest limits, recorded rather than papered over: the eighteen delegating arms are exercised against each arm's OWN empty snapshot rather than a real-world document, because no real-world `.semio` artifact exists outside this repository and the committed example assets can only be decoded through `store::ArtifactDsl`/`store::ArtifactPack`, traits reached solely via a private extern-crate alias that nothing re-exports — the same structural gap wave 7 recorded for `kit`, `object`, `text` and `table`. Re-exporting those two traits would let this case read the committed `.dsl.semio` examples directly and is the single change that would most strengthen it. WAVE-14 RE-SURVEY (cross-language differential oracles, ticket 26/08/23): a second IMPLEMENTATION in another language was built for five sibling subsets in this same artifact and works end to end, so the route was re-examined here and REJECTED on two concrete, nameable blockers rather than on absence. First, the envelope's own committed documents declare the wrapped arm OPAQUE: the snapshot grammar's `document = artifact-mark subset-line REST` hands off to the arm's own grammar, the binary protocol models the wrapped pack as one opaque trailing `payload` chain, and the mutations grammar is `op = \"noMutation\" | tag \":\" REST`. An envelope-level second implementation can therefore reproduce both committed carriers byte for byte - and it can - but it can say nothing about whether a DELEGATED verb changed the arm it reached, which is exactly what eighteen of this vocabulary's twenty kinds measure. Answering that honestly needs a second implementation of eighteen separate subset vocabularies, not of this one. Second, nothing lets the two languages read the same arm input: this subset exports `parse_semio_envelope_dsl`/`print_semio_envelope_dsl` and `decode_semio_envelope_pack`/`encode_semio_envelope_pack` but NO JSON bridge for `SemioSnapshot` or `SemioMutation`, so the arm snapshots and the wrapped verbs can only be constructed in Rust, inside the subject crate, where a second language cannot see them. Registering a Python oracle that merely restated the routing table would be a transcribed expectation wearing an oracle's name - our own answer on both sides - and is the one thing this platform exists to prevent, so it was not done. The two changes that would unblock a real differential here, in order of leverage: export a JSON bridge for `SemioSnapshot`/`SemioMutation` the way `✳️cad` and `✳️document` already do, and re-export `store::ArtifactDsl`/`store::ArtifactPack` so an external adapter can decode the committed example assets. A third, smaller finding recorded here rather than filed away: the committed snapshot grammar's `subset-tag` production still lists only thirteen tags (brep, mesh, model, value, document, cad, drawing, image, video, audio, animation, presentation, flow) while this catalog and the sibling mutations grammar both declare eighteen arms - `text`, `table`, `graph`, `object` and `kit` are missing from it. 🩹️ NARROWED (ticket SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION, shard E3): the `✳️any`→`✳️base` rename gave this subset its first v2 mutation manifest, whose 19 real kinds (`set-snapshot` plus the eighteen `apply-<arm>` wrappers) each now carry a real `oracleRequirements` entry of their own — a no-oracle decision may never stand in for a live oracle requirement, so `capabilities` is narrowed to empty here. The analysis above is kept as the historical record of what was surveyed and why the routing-level second implementation was rejected; that survey still stands on its own merits.",
+      "substitutes": [
+        "specification-vectors",
+        "metamorphic-laws"
+      ]
+    }
+  ],
+  "mutationCatalogs": [
+    {
+      "id": "semio-v1-base",
+      "capability": "semio-v1-base-mutate",
+      "standardDirectoryName": "🔖️v1",
+      "subsetDirectoryName": "✳️base",
+      "vectors": [
+        {
+          "mutationId": "set-snapshot",
+          "sourceMutationDirectoryName": "📄set-snapshot",
+          "mutationDirectoryName": "📄set-snapshot",
+          "scenarios": [
+            {
+              "id": "replaces-the-envelope-wrapping-a-value-subset",
+              "directoryName": "🧪️replaces-the-envelope-wrapping-a-value-subset"
+            }
+          ]
+        }
+      ],
+      "kinds": [
+        "set-snapshot",
+        "brep",
+        "mesh",
+        "model",
+        "value",
+        "document",
+        "cad",
+        "drawing",
+        "image",
+        "video",
+        "audio",
+        "animation",
+        "presentation",
+        "flow",
+        "text",
+        "table",
+        "graph",
+        "object",
+        "kit"
+      ]
+    }
+  ],
+  "mutationManifests": [
+    {
+      "schema": "semio.repository-test.mutation-manifest/v2",
+      "artifact": "s.stdio.semio",
+      "standard": "v1",
+      "subset": "base",
+      "standardDirectoryName": "🔖️v1",
+      "subsetDirectoryName": "✳️base",
+      "mutations": [
+        {
+          "id": "set-snapshot",
+          "capability": "semio-v1-base-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "set-snapshot",
+            "bridgeVersion": 1,
+            "variant": "SetSnapshot"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "semio-v1-base-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "brep",
+          "capability": "semio-v1-base-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "brep",
+            "bridgeVersion": 1,
+            "variant": "ApplyBrep"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "semio-v1-base-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "mesh",
+          "capability": "semio-v1-base-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "mesh",
+            "bridgeVersion": 1,
+            "variant": "ApplyMesh"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "semio-v1-base-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "model",
+          "capability": "semio-v1-base-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "model",
+            "bridgeVersion": 1,
+            "variant": "ApplyModel"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "semio-v1-base-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "value",
+          "capability": "semio-v1-base-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "value",
+            "bridgeVersion": 1,
+            "variant": "ApplyValue"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "semio-v1-base-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "document",
+          "capability": "semio-v1-base-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "document",
+            "bridgeVersion": 1,
+            "variant": "ApplyDocument"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "semio-v1-base-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "cad",
+          "capability": "semio-v1-base-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "cad",
+            "bridgeVersion": 1,
+            "variant": "ApplyCad"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "semio-v1-base-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "drawing",
+          "capability": "semio-v1-base-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "drawing",
+            "bridgeVersion": 1,
+            "variant": "ApplyDrawing"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "semio-v1-base-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "image",
+          "capability": "semio-v1-base-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "image",
+            "bridgeVersion": 1,
+            "variant": "ApplyImage"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "semio-v1-base-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "video",
+          "capability": "semio-v1-base-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "video",
+            "bridgeVersion": 1,
+            "variant": "ApplyVideo"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "semio-v1-base-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "audio",
+          "capability": "semio-v1-base-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "audio",
+            "bridgeVersion": 1,
+            "variant": "ApplyAudio"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "semio-v1-base-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "animation",
+          "capability": "semio-v1-base-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "animation",
+            "bridgeVersion": 1,
+            "variant": "ApplyAnimation"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "semio-v1-base-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "presentation",
+          "capability": "semio-v1-base-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "presentation",
+            "bridgeVersion": 1,
+            "variant": "ApplyPresentation"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "semio-v1-base-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "flow",
+          "capability": "semio-v1-base-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "flow",
+            "bridgeVersion": 1,
+            "variant": "ApplyFlow"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "semio-v1-base-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "text",
+          "capability": "semio-v1-base-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "text",
+            "bridgeVersion": 1,
+            "variant": "ApplyText"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "semio-v1-base-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "table",
+          "capability": "semio-v1-base-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "table",
+            "bridgeVersion": 1,
+            "variant": "ApplyTable"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "semio-v1-base-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "graph",
+          "capability": "semio-v1-base-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "graph",
+            "bridgeVersion": 1,
+            "variant": "ApplyGraph"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "semio-v1-base-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "object",
+          "capability": "semio-v1-base-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "object",
+            "bridgeVersion": 1,
+            "variant": "ApplyObject"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "semio-v1-base-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "kit",
+          "capability": "semio-v1-base-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "kit",
+            "bridgeVersion": 1,
+            "variant": "ApplyKit"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "semio-v1-base-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "fixtureManifests": [
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "apply-animation-applied",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.semio",
+        "standard": "v1",
+        "subset": "base"
+      },
+      "mutation": "animation",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "radian"
+      },
+      "files": [
+        {
+          "role": "expected-before-json",
+          "path": "../🧫️fixtures/apply-animation-applied/before.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:a18d021faa77eedc871f9b656894286aca777a01bbaa11399577c761f8de40cb",
+          "bytes": 2552
+        },
+        {
+          "role": "expected-after-json",
+          "path": "../🧫️fixtures/apply-animation-applied/after.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:47145888126ad648ae2e03b9936f00092b5652f1188b01e99a81c09635e401b3",
+          "bytes": 4976
+        }
+      ],
+      "generator": {
+        "oracle": "semio-animation-python-independent",
+        "packageVersion": "n/a",
+        "engineFamily": "cpython",
+        "engineVersion": "3",
+        "command": "uv run --group test python3 .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION/🔨️f1-semio-base-generate.py",
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "AGPL-3.0-only",
+        "attribution": "The envelope threading is this file's own; the wrapped `animation` content and its real mutation effect were produced by `semio-animation-python-independent` — that ARM subset's own already-registered verified-native-second-implementation oracle (registered in `../../../../🪆️subsets/✳️animation/🧪️oracle/🔣️.json`, visible here because the oracle registry is repository-wide) — not a third-party package; `class: third-party-generated` is used only because it is the schema's own closest-fitting enum value for a generator-produced fixture.",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "ordered-json-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "Wraps `insert-timeline`, applied to the real `animation` document via that arm's own apply_mutation, inside the envelope's own SemioSnapshot{schema, subset: SemioSubsetSnapshot::Animation(...)} shape (confirmed against this subset's own committed `replaces-the-envelope-wrapping-a-value-subset` vector's JSON encoding). Demonstrates the envelope's own routing law this subset's no-oracle decision names: a wrapped mutation whose arm ('animation') matches the base snapshot's own arm threads through to a real, observable content change."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "apply-audio-applied",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.semio",
+        "standard": "v1",
+        "subset": "base"
+      },
+      "mutation": "audio",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "radian"
+      },
+      "files": [
+        {
+          "role": "expected-before-json",
+          "path": "../🧫️fixtures/apply-audio-applied/before.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:a1afdb405531b63b8856fa92605fc7de6708a0b9657a1dbb2508799f22a5b919",
+          "bytes": 144034
+        },
+        {
+          "role": "expected-after-json",
+          "path": "../🧫️fixtures/apply-audio-applied/after.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:ad9e798dbc0d91dc1c479c2488390a027924cf1c33df01419ebe38197d91dffd",
+          "bytes": 287545
+        }
+      ],
+      "generator": {
+        "oracle": "semio-audio-python-independent",
+        "packageVersion": "n/a",
+        "engineFamily": "cpython",
+        "engineVersion": "3",
+        "command": "uv run --group test python3 .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION/🔨️f1-semio-base-generate.py",
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "AGPL-3.0-only",
+        "attribution": "The envelope threading is this file's own; the wrapped `audio` content and its real mutation effect were produced by `semio-audio-python-independent` — that ARM subset's own already-registered verified-native-second-implementation oracle (registered in `../../../../🪆️subsets/✳️audio/🧪️oracle/🔣️.json`, visible here because the oracle registry is repository-wide) — not a third-party package; `class: third-party-generated` is used only because it is the schema's own closest-fitting enum value for a generator-produced fixture.",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "ordered-json-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "Wraps `insert-channel`, applied to the real `audio` document via that arm's own apply_mutation, inside the envelope's own SemioSnapshot{schema, subset: SemioSubsetSnapshot::Audio(...)} shape (confirmed against this subset's own committed `replaces-the-envelope-wrapping-a-value-subset` vector's JSON encoding). Demonstrates the envelope's own routing law this subset's no-oracle decision names: a wrapped mutation whose arm ('audio') matches the base snapshot's own arm threads through to a real, observable content change."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "apply-flow-applied",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.semio",
+        "standard": "v1",
+        "subset": "base"
+      },
+      "mutation": "flow",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "radian"
+      },
+      "files": [
+        {
+          "role": "expected-before-json",
+          "path": "../🧫️fixtures/apply-flow-applied/before.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:ec45ba1e053f595ebd0b91fe951574d88cecfc69306b81a08d578672e5da0354",
+          "bytes": 156773
+        },
+        {
+          "role": "expected-after-json",
+          "path": "../🧫️fixtures/apply-flow-applied/after.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:4ba6b1aa2c87142d26f9355b03167c386275e213e60d27ae19ee1533b7d18744",
+          "bytes": 157340
+        }
+      ],
+      "generator": {
+        "oracle": "semio-flow-python-independent",
+        "packageVersion": "n/a",
+        "engineFamily": "cpython",
+        "engineVersion": "3",
+        "command": "uv run --group test python3 .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION/🔨️f1-semio-base-generate.py",
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "AGPL-3.0-only",
+        "attribution": "The envelope threading is this file's own; the wrapped `flow` content and its real mutation effect were produced by `semio-flow-python-independent` — that ARM subset's own already-registered verified-native-second-implementation oracle (registered in `../../../../🪆️subsets/✳️flow/🧪️oracle/🔣️.json`, visible here because the oracle registry is repository-wide) — not a third-party package; `class: third-party-generated` is used only because it is the schema's own closest-fitting enum value for a generator-produced fixture.",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "ordered-json-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "Wraps `insert-node`, applied to the real `flow` document via that arm's own apply_mutation, inside the envelope's own SemioSnapshot{schema, subset: SemioSubsetSnapshot::Flow(...)} shape (confirmed against this subset's own committed `replaces-the-envelope-wrapping-a-value-subset` vector's JSON encoding). Demonstrates the envelope's own routing law this subset's no-oracle decision names: a wrapped mutation whose arm ('flow') matches the base snapshot's own arm threads through to a real, observable content change."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "apply-model-applied",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.semio",
+        "standard": "v1",
+        "subset": "base"
+      },
+      "mutation": "model",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "radian"
+      },
+      "files": [
+        {
+          "role": "expected-before-json",
+          "path": "../🧫️fixtures/apply-model-applied/before.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:abf982aeae9d5d44a3a282d58f5c9e6a1e0bc4c25dfae7f8a22f4c3b5264a9fc",
+          "bytes": 291979
+        },
+        {
+          "role": "expected-after-json",
+          "path": "../🧫️fixtures/apply-model-applied/after.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:1eab7c853d9d03be8c1f9e24d99e7b31a027bda6bda29f4ffd21dd0c74a792a1",
+          "bytes": 292467
+        }
+      ],
+      "generator": {
+        "oracle": "semio-model-python-independent",
+        "packageVersion": "n/a",
+        "engineFamily": "cpython",
+        "engineVersion": "3",
+        "command": "uv run --group test python3 .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION/🔨️f1-semio-base-generate.py",
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "AGPL-3.0-only",
+        "attribution": "The envelope threading is this file's own; the wrapped `model` content and its real mutation effect were produced by `semio-model-python-independent` — that ARM subset's own already-registered verified-native-second-implementation oracle (registered in `../../../../🪆️subsets/✳️model/🧪️oracle/🔣️.json`, visible here because the oracle registry is repository-wide) — not a third-party package; `class: third-party-generated` is used only because it is the schema's own closest-fitting enum value for a generator-produced fixture.",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "ordered-json-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "Wraps `insert-spatial-node`, applied to the real `model` document via that arm's own apply_mutation, inside the envelope's own SemioSnapshot{schema, subset: SemioSubsetSnapshot::Model(...)} shape (confirmed against this subset's own committed `replaces-the-envelope-wrapping-a-value-subset` vector's JSON encoding). Demonstrates the envelope's own routing law this subset's no-oracle decision names: a wrapped mutation whose arm ('model') matches the base snapshot's own arm threads through to a real, observable content change."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "apply-presentation-applied",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.semio",
+        "standard": "v1",
+        "subset": "base"
+      },
+      "mutation": "presentation",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "radian"
+      },
+      "files": [
+        {
+          "role": "expected-before-json",
+          "path": "../🧫️fixtures/apply-presentation-applied/before.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:5d3982fe3d40a6cc70ce165c56aedd369d5acd0f474cad5e15a05f74f9027308",
+          "bytes": 1723192
+        },
+        {
+          "role": "expected-after-json",
+          "path": "../🧫️fixtures/apply-presentation-applied/after.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:65cd6ac9f400d750c863971c898788939c30b0ca579f2493377650448d9d3b07",
+          "bytes": 1725085
+        }
+      ],
+      "generator": {
+        "oracle": "semio-presentation-python-independent",
+        "packageVersion": "n/a",
+        "engineFamily": "cpython",
+        "engineVersion": "3",
+        "command": "uv run --group test python3 .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION/🔨️f1-semio-base-generate.py",
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "AGPL-3.0-only",
+        "attribution": "The envelope threading is this file's own; the wrapped `presentation` content and its real mutation effect were produced by `semio-presentation-python-independent` — that ARM subset's own already-registered verified-native-second-implementation oracle (registered in `../../../../🪆️subsets/✳️presentation/🧪️oracle/🔣️.json`, visible here because the oracle registry is repository-wide) — not a third-party package; `class: third-party-generated` is used only because it is the schema's own closest-fitting enum value for a generator-produced fixture.",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "ordered-json-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "Wraps `insert-slide`, applied to the real `presentation` document via that arm's own apply_mutation, inside the envelope's own SemioSnapshot{schema, subset: SemioSubsetSnapshot::Presentation(...)} shape (confirmed against this subset's own committed `replaces-the-envelope-wrapping-a-value-subset` vector's JSON encoding). Demonstrates the envelope's own routing law this subset's no-oracle decision names: a wrapped mutation whose arm ('presentation') matches the base snapshot's own arm threads through to a real, observable content change."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "apply-value-applied",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.semio",
+        "standard": "v1",
+        "subset": "base"
+      },
+      "mutation": "value",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "radian"
+      },
+      "files": [
+        {
+          "role": "expected-before-json",
+          "path": "../🧫️fixtures/apply-value-applied/before.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:ab4f16dd991c26eccade0876388de9fe78523afbaa2abd94fc582d2e96b0faab",
+          "bytes": 2828738
+        },
+        {
+          "role": "expected-after-json",
+          "path": "../🧫️fixtures/apply-value-applied/after.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:f6e38aad3ea4a573434e886e8106d4c7cf8b0a165f037bd6099cf3ce2b0fe0f2",
+          "bytes": 3650710
+        }
+      ],
+      "generator": {
+        "oracle": "semio-value-python-independent",
+        "packageVersion": "n/a",
+        "engineFamily": "cpython",
+        "engineVersion": "3",
+        "command": "uv run --group test python3 .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION/🔨️f1-semio-base-generate.py",
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "AGPL-3.0-only",
+        "attribution": "The envelope threading is this file's own; the wrapped `value` content and its real mutation effect were produced by `semio-value-python-independent` — that ARM subset's own already-registered verified-native-second-implementation oracle (registered in `../../../../🪆️subsets/✳️value/🧪️oracle/🔣️.json`, visible here because the oracle registry is repository-wide) — not a third-party package; `class: third-party-generated` is used only because it is the schema's own closest-fitting enum value for a generator-produced fixture.",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "ordered-json-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "Wraps `insert-list-item`, applied to the real `value` document via that arm's own apply_mutation, inside the envelope's own SemioSnapshot{schema, subset: SemioSubsetSnapshot::Value(...)} shape (confirmed against this subset's own committed `replaces-the-envelope-wrapping-a-value-subset` vector's JSON encoding). Demonstrates the envelope's own routing law this subset's no-oracle decision names: a wrapped mutation whose arm ('value') matches the base snapshot's own arm threads through to a real, observable content change."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "apply-video-applied",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.semio",
+        "standard": "v1",
+        "subset": "base"
+      },
+      "mutation": "video",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "radian"
+      },
+      "files": [
+        {
+          "role": "expected-before-json",
+          "path": "../🧫️fixtures/apply-video-applied/before.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:29df1bd4ca22b561753180d898957837ce4822856d3f47792edc78da65c98f25",
+          "bytes": 223324
+        },
+        {
+          "role": "expected-after-json",
+          "path": "../🧫️fixtures/apply-video-applied/after.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:17510961b1c4ff5cc5b61f377a47a14f8cdcfca723b7d68cbd656fa9db3b29f5",
+          "bytes": 245956
+        }
+      ],
+      "generator": {
+        "oracle": "semio-video-python-independent",
+        "packageVersion": "n/a",
+        "engineFamily": "cpython",
+        "engineVersion": "3",
+        "command": "uv run --group test python3 .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION/🔨️f1-semio-base-generate.py",
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "AGPL-3.0-only",
+        "attribution": "The envelope threading is this file's own; the wrapped `video` content and its real mutation effect were produced by `semio-video-python-independent` — that ARM subset's own already-registered verified-native-second-implementation oracle (registered in `../../../../🪆️subsets/✳️video/🧪️oracle/🔣️.json`, visible here because the oracle registry is repository-wide) — not a third-party package; `class: third-party-generated` is used only because it is the schema's own closest-fitting enum value for a generator-produced fixture.",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "ordered-json-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "Wraps `insert-stream`, applied to the real `video` document via that arm's own apply_mutation, inside the envelope's own SemioSnapshot{schema, subset: SemioSubsetSnapshot::Video(...)} shape (confirmed against this subset's own committed `replaces-the-envelope-wrapping-a-value-subset` vector's JSON encoding). Demonstrates the envelope's own routing law this subset's no-oracle decision names: a wrapped mutation whose arm ('video') matches the base snapshot's own arm threads through to a real, observable content change."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "apply-image-applied",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.semio",
+        "standard": "v1",
+        "subset": "base"
+      },
+      "mutation": "image",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "radian"
+      },
+      "files": [
+        {
+          "role": "expected-before-json",
+          "path": "../🧫️fixtures/apply-image-applied/before.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:8bd3a5b81ff7c3f3aa02b22695e7f7c86ed3c7f15c707d693419f3820ad90195",
+          "bytes": 2799361
+        },
+        {
+          "role": "expected-after-json",
+          "path": "../🧫️fixtures/apply-image-applied/after.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:e410df0e1f4acd1efe13ba93377265f1396bfdde735527cc24f561680e6aab0c",
+          "bytes": 2799361
+        }
+      ],
+      "generator": {
+        "oracle": "semio-image-python-pillow-independent",
+        "packageVersion": "n/a",
+        "engineFamily": "cpython",
+        "engineVersion": "3",
+        "command": "uv run --group test python3 .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION/🔨️f1-semio-base-generate2.py",
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "AGPL-3.0-only",
+        "attribution": "The envelope threading is this file's own; the wrapped `image` content and its real mutation effect were produced by `semio-image-python-pillow-independent` — that ARM subset's own already-registered verified-native-second-implementation oracle (registered in `../../../../🪆️subsets/✳️image/🧪️oracle/🔣️.json`, visible here because the oracle registry is repository-wide) — not a third-party package; `class: third-party-generated` is used only because it is the schema's own closest-fitting enum value for a generator-produced fixture.",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "ordered-json-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "Applies {\"mutation\": \"setDimensions\", \"width\": 195, \"height\": 85} to the real `image` document via that arm's own apply_mutation, inside the envelope's own SemioSnapshot{schema, subset: SemioSubsetSnapshot::Image(...)} shape. Demonstrates the envelope's own routing law: a wrapped mutation whose arm ('image') matches the base snapshot's own arm threads through to a real, observable content change."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "apply-text-applied",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.semio",
+        "standard": "v1",
+        "subset": "base"
+      },
+      "mutation": "text",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "radian"
+      },
+      "files": [
+        {
+          "role": "expected-before-json",
+          "path": "../🧫️fixtures/apply-text-applied/before.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:0911c29940f4fc12232203df8179895370329cedf795d2bd2e6140926734831d",
+          "bytes": 94613
+        },
+        {
+          "role": "expected-after-json",
+          "path": "../🧫️fixtures/apply-text-applied/after.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:c263864b7f795c4836a450e6175161d36a82ecf9fcbba166c562ecfe36954221",
+          "bytes": 94610
+        }
+      ],
+      "generator": {
+        "oracle": "semio-text-python-independent",
+        "packageVersion": "n/a",
+        "engineFamily": "cpython",
+        "engineVersion": "3",
+        "command": "uv run --group test python3 .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION/🔨️f1-semio-base-generate2.py",
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "AGPL-3.0-only",
+        "attribution": "The envelope threading is this file's own; the wrapped `text` content and its real mutation effect were produced by `semio-text-python-independent` — that ARM subset's own already-registered verified-native-second-implementation oracle (registered in `../../../../🪆️subsets/✳️text/🧪️oracle/🔣️.json`, visible here because the oracle registry is repository-wide) — not a third-party package; `class: third-party-generated` is used only because it is the schema's own closest-fitting enum value for a generator-produced fixture.",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "ordered-json-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "Applies {\"EditRun\": {\"index\": 0, \"new_content\": \"F1 mutated run content\"}} to the real `text` document via that arm's own apply_mutation, inside the envelope's own SemioSnapshot{schema, subset: SemioSubsetSnapshot::Text(...)} shape. Demonstrates the envelope's own routing law: a wrapped mutation whose arm ('text') matches the base snapshot's own arm threads through to a real, observable content change."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "apply-table-applied",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.semio",
+        "standard": "v1",
+        "subset": "base"
+      },
+      "mutation": "table",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "radian"
+      },
+      "files": [
+        {
+          "role": "expected-before-json",
+          "path": "../🧫️fixtures/apply-table-applied/before.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:14205758c3e61c577d6c593eebc981691a39e432cb3a86dfaf21c4747120766b",
+          "bytes": 59581
+        },
+        {
+          "role": "expected-after-json",
+          "path": "../🧫️fixtures/apply-table-applied/after.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:f9857461ffc80ba750710dc99afd551076970a77b1df2b04990396650008c761",
+          "bytes": 59586
+        }
+      ],
+      "generator": {
+        "oracle": "semio-table-python-independent",
+        "packageVersion": "n/a",
+        "engineFamily": "cpython",
+        "engineVersion": "3",
+        "command": "uv run --group test python3 .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION/🔨️f1-semio-base-generate2.py",
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "AGPL-3.0-only",
+        "attribution": "The envelope threading is this file's own; the wrapped `table` content and its real mutation effect were produced by `semio-table-python-independent` — that ARM subset's own already-registered verified-native-second-implementation oracle (registered in `../../../../🪆️subsets/✳️table/🧪️oracle/🔣️.json`, visible here because the oracle registry is repository-wide) — not a third-party package; `class: third-party-generated` is used only because it is the schema's own closest-fitting enum value for a generator-produced fixture.",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "ordered-json-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "Applies {\"EditCell\": {\"row_index\": 0, \"column_name\": \"ID\", \"new_value\": {\"kind\": \"str\", \"value\": \"F1-mutated\"}}} to the real `table` document via that arm's own apply_mutation, inside the envelope's own SemioSnapshot{schema, subset: SemioSubsetSnapshot::Table(...)} shape. Demonstrates the envelope's own routing law: a wrapped mutation whose arm ('table') matches the base snapshot's own arm threads through to a real, observable content change."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "apply-graph-applied",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.semio",
+        "standard": "v1",
+        "subset": "base"
+      },
+      "mutation": "graph",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "radian"
+      },
+      "files": [
+        {
+          "role": "expected-before-json",
+          "path": "../🧫️fixtures/apply-graph-applied/before.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:99631b2412e8745dd0542626e4ca06fa349a5970548b36e1418cdbc5fe03c621",
+          "bytes": 222219
+        },
+        {
+          "role": "expected-after-json",
+          "path": "../🧫️fixtures/apply-graph-applied/after.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:2b2890cd1113efe4d415b9e31e209e04a4c7efeb4791f1dd8f436afcac69ad5c",
+          "bytes": 222214
+        }
+      ],
+      "generator": {
+        "oracle": "semio-graph-python-independent",
+        "packageVersion": "n/a",
+        "engineFamily": "cpython",
+        "engineVersion": "3",
+        "command": "uv run --group test python3 .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION/🔨️f1-semio-base-generate2.py",
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "AGPL-3.0-only",
+        "attribution": "The envelope threading is this file's own; the wrapped `graph` content and its real mutation effect were produced by `semio-graph-python-independent` — that ARM subset's own already-registered verified-native-second-implementation oracle (registered in `../../../../🪆️subsets/✳️graph/🧪️oracle/🔣️.json`, visible here because the oracle registry is repository-wide) — not a third-party package; `class: third-party-generated` is used only because it is the schema's own closest-fitting enum value for a generator-produced fixture.",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "ordered-json-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "Applies {\"ChangeNodeLabel\": {\"id\": {\"value\": \"1o$D5QcDP68vy1YIk$DDV$\"}, \"new_label\": \"F1 mutated label\"}} to the real `graph` document via that arm's own apply_mutation, inside the envelope's own SemioSnapshot{schema, subset: SemioSubsetSnapshot::Graph(...)} shape. Demonstrates the envelope's own routing law: a wrapped mutation whose arm ('graph') matches the base snapshot's own arm threads through to a real, observable content change."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "apply-object-applied",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.semio",
+        "standard": "v1",
+        "subset": "base"
+      },
+      "mutation": "object",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "radian"
+      },
+      "files": [
+        {
+          "role": "expected-before-json",
+          "path": "../🧫️fixtures/apply-object-applied/before.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:6bb2e4eee32d618bd65dfe7b5217399a443f54a0750e151811abcc029bb6f4cb",
+          "bytes": 1126
+        },
+        {
+          "role": "expected-after-json",
+          "path": "../🧫️fixtures/apply-object-applied/after.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:bbb62a4afeced035918c1edff5b54e17a37ca8241b967967fea341586193a2da",
+          "bytes": 1135
+        }
+      ],
+      "generator": {
+        "oracle": "semio-object-python-independent",
+        "packageVersion": "n/a",
+        "engineFamily": "cpython",
+        "engineVersion": "3",
+        "command": "uv run --group test python3 .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION/🔨️f1-semio-base-generate2.py",
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "AGPL-3.0-only",
+        "attribution": "The envelope threading is this file's own; the wrapped `object` content and its real mutation effect were produced by `semio-object-python-independent` — that ARM subset's own already-registered verified-native-second-implementation oracle (registered in `../../../../🪆️subsets/✳️object/🧪️oracle/🔣️.json`, visible here because the oracle registry is repository-wide) — not a third-party package; `class: third-party-generated` is used only because it is the schema's own closest-fitting enum value for a generator-produced fixture.",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "ordered-json-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "Applies {\"MoveObject\": {\"translation\": {\"x\": 1001.0, \"y\": 1002.0, \"z\": 1003.0}}} to the real `object` document via that arm's own apply_mutation, inside the envelope's own SemioSnapshot{schema, subset: SemioSubsetSnapshot::Object(...)} shape. Demonstrates the envelope's own routing law: a wrapped mutation whose arm ('object') matches the base snapshot's own arm threads through to a real, observable content change."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "apply-kit-applied",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.semio",
+        "standard": "v1",
+        "subset": "base"
+      },
+      "mutation": "kit",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "radian"
+      },
+      "files": [
+        {
+          "role": "expected-before-json",
+          "path": "../🧫️fixtures/apply-kit-applied/before.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:eaa9cb841182c6d1cff007242e52191d3caf57e325259b7a97e4fae68fb12a01",
+          "bytes": 166496
+        },
+        {
+          "role": "expected-after-json",
+          "path": "../🧫️fixtures/apply-kit-applied/after.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:9b92659319cd8069786b22cfb8de102e4d4b70ae4cbb169cbcb7343d5caac1fa",
+          "bytes": 166515
+        }
+      ],
+      "generator": {
+        "oracle": "semio-kit-python-independent",
+        "packageVersion": "n/a",
+        "engineFamily": "cpython",
+        "engineVersion": "3",
+        "command": "uv run --group test python3 .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION/🔨️f1-semio-base-generate2.py",
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "AGPL-3.0-only",
+        "attribution": "The envelope threading is this file's own; the wrapped `kit` content and its real mutation effect were produced by `semio-kit-python-independent` — that ARM subset's own already-registered verified-native-second-implementation oracle (registered in `../../../../🪆️subsets/✳️kit/🧪️oracle/🔣️.json`, visible here because the oracle registry is repository-wide) — not a third-party package; `class: third-party-generated` is used only because it is the schema's own closest-fitting enum value for a generator-produced fixture.",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "ordered-json-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "Applies {\"RenameType\": {\"id\": \"0IJK4xQ0PB2hjiZlMVI36G\", \"new_name\": \"F1-mutated-type-name\"}} to the real `kit` document via that arm's own apply_mutation, inside the envelope's own SemioSnapshot{schema, subset: SemioSubsetSnapshot::Kit(...)} shape. Demonstrates the envelope's own routing law: a wrapped mutation whose arm ('kit') matches the base snapshot's own arm threads through to a real, observable content change."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "apply-document-applied",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.semio",
+        "standard": "v1",
+        "subset": "base"
+      },
+      "mutation": "document",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "radian"
+      },
+      "files": [
+        {
+          "role": "expected-before-json",
+          "path": "../🧫️fixtures/apply-document-applied/before.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:d860236e92e9ddc3316f569bc75948868cf0e2028422c666e4f357df97f92784",
+          "bytes": 1228
+        },
+        {
+          "role": "expected-after-json",
+          "path": "../🧫️fixtures/apply-document-applied/after.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:f9f4dee1da5771f2b0e8cb8c324516e812b86bda1c8a92ccd38d138310b5f40d",
+          "bytes": 1437
+        }
+      ],
+      "generator": {
+        "oracle": "serde-json-semio-document-carrier-reader",
+        "packageVersion": "1",
+        "engineFamily": "serde-json",
+        "engineVersion": "1",
+        "command": "python3 .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION/🔨️g2-close-document-arm.py",
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "public-domain (synthetic, no third-party content embedded)",
+        "attribution": "The envelope threading is this file's own; the wrapped `document` content and its real mutation effect (insert-image) were produced by `serde-json-semio-document-carrier-reader` — that ARM subset's own already-registered third-party-library oracle (registered in `../../../../🪆️subsets/✳️document/🧪️oracle/🔣️.json`, visible here because the oracle registry is repository-wide), a genuine independent JSON editor over `SemioDocumentSnapshot`'s own inline `images: Vec<DocImage>` carrier, not a third-party package producing THIS file directly; `class: third-party-generated` is used only because it is the schema's own closest-fitting enum value for a generator-produced fixture.",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "ordered-json-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "Applies document's own insert-image mutation (a third image, id img3, appended to the images array) inside the envelope's own SemioSnapshot{schema, subset: SemioSubsetSnapshot::Document(...)} shape. Reuses ✳️document/🧫️fixtures/insert-image's own real before/after pair (produced by serde-json-semio-document-carrier-reader editing the JSON carrier directly, never through this repository's own mutation engine) verbatim, wrapped rather than regenerated. Demonstrates the envelope's own routing law: a wrapped mutation whose arm ('document') matches the base snapshot's own arm threads through to a real, observable content change."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "apply-cad-applied",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.semio",
+        "standard": "v1",
+        "subset": "base"
+      },
+      "mutation": "cad",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "radian"
+      },
+      "files": [
+        {
+          "role": "expected-before-json",
+          "path": "../🧫️fixtures/apply-cad-applied/before.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:cb98b3f99c9c4cf4bcd84794b8078116ec3bd11f749ee02b701a94db13b3fa5c",
+          "bytes": 287
+        },
+        {
+          "role": "expected-after-json",
+          "path": "../🧫️fixtures/apply-cad-applied/after.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:bde932b47debf0edd9e9f334a9666ac0555c7afb841ed2fa96245829b7d07549",
+          "bytes": 413
+        }
+      ],
+      "generator": {
+        "oracle": "serde-json-semio-cad-carrier-reader",
+        "packageVersion": "1",
+        "engineFamily": "serde-json",
+        "engineVersion": "1",
+        "command": "cargo run --release --manifest-path ✳️cad/🏭️generator/🦀️json-engine/Cargo.toml --bin generate -- ../../🧫️fixtures ; python3 .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION/🔨️g4-close-cad-brep-mesh-drawing-arms.py",
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "public-domain (synthetic, no third-party content embedded)",
+        "attribution": "The envelope threading is this file's own; the wrapped `cad` content and its real mutation effect (add-layer) were produced by serde-json-semio-cad-carrier-reader — that ARM subset's own newly-registered third-party-library oracle (registered in ../../../../🪆️subsets/✳️cad/🧪️oracle/🔣️.json, visible here because the oracle registry is repository-wide), a genuine independent JSON editor over SemioCadSnapshot's own inline layers carrier, not a third-party package producing THIS file directly; class: third-party-generated is used only because it is the schema's own closest-fitting enum value for a generator-produced fixture.",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "ordered-json-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "Applies cad's own add-layer mutation (a genuinely fresh, unique-keyed CadLayer appended to layers) inside the envelope's own SemioSnapshot{schema, subset: SemioSubsetSnapshot::Cad(...)} shape. Wraps ✳️cad/🧫️fixtures/add-layer-applied's own real before/after pair (produced by serde-json-semio-cad-carrier-reader editing the JSON carrier directly, never through this repository's own mutation engine) verbatim. Demonstrates the envelope's own routing law: a wrapped mutation whose arm ('cad') matches the base snapshot's own arm threads through to a real, observable content change."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "apply-brep-applied",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.semio",
+        "standard": "v1",
+        "subset": "base"
+      },
+      "mutation": "brep",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "radian"
+      },
+      "files": [
+        {
+          "role": "expected-before-json",
+          "path": "../🧫️fixtures/apply-brep-applied/before.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:1c2fceb3b213be98a48a1adad9a49d04da55e37ab56e3c38db24fb409ecd578b",
+          "bytes": 340
+        },
+        {
+          "role": "expected-after-json",
+          "path": "../🧫️fixtures/apply-brep-applied/after.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:db88b70d390de382e2eb66058035da7014f3bdfa4d0c5df7bf947be5a93bfcfb",
+          "bytes": 465
+        }
+      ],
+      "generator": {
+        "oracle": "serde-json-semio-brep-carrier-reader",
+        "packageVersion": "1",
+        "engineFamily": "serde-json",
+        "engineVersion": "1",
+        "command": "cargo run --release --manifest-path ✳️brep/🏭️generator/🦀️json-engine/Cargo.toml --bin generate -- ../../🧫️fixtures ; python3 .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION/🔨️g4-close-cad-brep-mesh-drawing-arms.py",
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "public-domain (synthetic, no third-party content embedded)",
+        "attribution": "The envelope threading is this file's own; the wrapped `brep` content and its real mutation effect (create-vertex) were produced by serde-json-semio-brep-carrier-reader — that ARM subset's own newly-registered third-party-library oracle (registered in ../../../../🪆️subsets/✳️brep/🧪️oracle/🔣️.json, visible here because the oracle registry is repository-wide), a genuine independent JSON editor over SemioBrepSnapshot's own inline vertices carrier, not a third-party package producing THIS file directly; class: third-party-generated is used only because it is the schema's own closest-fitting enum value for a generator-produced fixture.",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "ordered-json-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "Applies brep's own create-vertex mutation (a genuinely fresh, unique-keyed BrepVertex appended to vertices) inside the envelope's own SemioSnapshot{schema, subset: SemioSubsetSnapshot::Brep(...)} shape. Wraps ✳️brep/🧫️fixtures/create-vertex-applied's own real before/after pair (produced by serde-json-semio-brep-carrier-reader editing the JSON carrier directly, never through this repository's own mutation engine) verbatim. Demonstrates the envelope's own routing law: a wrapped mutation whose arm ('brep') matches the base snapshot's own arm threads through to a real, observable content change."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "apply-mesh-applied",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.semio",
+        "standard": "v1",
+        "subset": "base"
+      },
+      "mutation": "mesh",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "radian"
+      },
+      "files": [
+        {
+          "role": "expected-before-json",
+          "path": "../🧫️fixtures/apply-mesh-applied/before.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:910e779d26c7a29a866006a446d79ef40424db3049b7892e8d218ffec3b504dd",
+          "bytes": 369
+        },
+        {
+          "role": "expected-after-json",
+          "path": "../🧫️fixtures/apply-mesh-applied/after.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:5a2f79baae1996067966e02a0c83327530bf24de1d133a2492be97cbeec50a9f",
+          "bytes": 571
+        }
+      ],
+      "generator": {
+        "oracle": "serde-json-semio-mesh-carrier-reader",
+        "packageVersion": "1",
+        "engineFamily": "serde-json",
+        "engineVersion": "1",
+        "command": "cargo run --release --manifest-path ✳️mesh/🏭️generator/🦀️json-engine/Cargo.toml --bin generate -- ../../🧫️fixtures ; python3 .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION/🔨️g4-close-cad-brep-mesh-drawing-arms.py",
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "public-domain (synthetic, no third-party content embedded)",
+        "attribution": "The envelope threading is this file's own; the wrapped `mesh` content and its real mutation effect (create-material) were produced by serde-json-semio-mesh-carrier-reader — that ARM subset's own newly-registered third-party-library oracle (registered in ../../../../🪆️subsets/✳️mesh/🧪️oracle/🔣️.json, visible here because the oracle registry is repository-wide), a genuine independent JSON editor over SemioMeshSnapshot's own inline materials carrier, not a third-party package producing THIS file directly; class: third-party-generated is used only because it is the schema's own closest-fitting enum value for a generator-produced fixture.",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "ordered-json-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "Applies mesh's own create-material mutation (a genuinely fresh, unique-keyed SemioMaterial appended to materials) inside the envelope's own SemioSnapshot{schema, subset: SemioSubsetSnapshot::Mesh(...)} shape. Wraps ✳️mesh/🧫️fixtures/create-material-applied's own real before/after pair (produced by serde-json-semio-mesh-carrier-reader editing the JSON carrier directly, never through this repository's own mutation engine) verbatim. Demonstrates the envelope's own routing law: a wrapped mutation whose arm ('mesh') matches the base snapshot's own arm threads through to a real, observable content change."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "apply-drawing-applied",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.semio",
+        "standard": "v1",
+        "subset": "base"
+      },
+      "mutation": "drawing",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "radian"
+      },
+      "files": [
+        {
+          "role": "expected-before-json",
+          "path": "../🧫️fixtures/apply-drawing-applied/before.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:6868deec2422d19e66a215a79fbb958d428af72a8a64f835eade9dad6b78d502",
+          "bytes": 392
+        },
+        {
+          "role": "expected-after-json",
+          "path": "../🧫️fixtures/apply-drawing-applied/after.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:fefb1f30ca96d23f15c9fed8ad13ae321fcbab00992a52b57be9055b211eadea",
+          "bytes": 567
+        }
+      ],
+      "generator": {
+        "oracle": "serde-json-semio-drawing-carrier-reader",
+        "packageVersion": "1",
+        "engineFamily": "serde-json",
+        "engineVersion": "1",
+        "command": "cargo run --release --manifest-path ✳️drawing/🏭️generator/🦀️json-engine/Cargo.toml --bin generate -- ../../🧫️fixtures ; python3 .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION/🔨️g4-close-cad-brep-mesh-drawing-arms.py",
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "public-domain (synthetic, no third-party content embedded)",
+        "attribution": "The envelope threading is this file's own; the wrapped `drawing` content and its real mutation effect (create-layer) were produced by serde-json-semio-drawing-carrier-reader — that ARM subset's own newly-registered third-party-library oracle (registered in ../../../../🪆️subsets/✳️drawing/🧪️oracle/🔣️.json, visible here because the oracle registry is repository-wide), a genuine independent JSON editor over SemioDrawingSnapshot's own inline layers carrier, not a third-party package producing THIS file directly; class: third-party-generated is used only because it is the schema's own closest-fitting enum value for a generator-produced fixture.",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "ordered-json-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "Applies drawing's own create-layer mutation (a genuinely fresh, unique-keyed DrawLayer appended to layers) inside the envelope's own SemioSnapshot{schema, subset: SemioSubsetSnapshot::Drawing(...)} shape. Wraps ✳️drawing/🧫️fixtures/create-layer-applied's own real before/after pair (produced by serde-json-semio-drawing-carrier-reader editing the JSON carrier directly, never through this repository's own mutation engine) verbatim. Demonstrates the envelope's own routing law: a wrapped mutation whose arm ('drawing') matches the base snapshot's own arm threads through to a real, observable content change."
+    }
+  ]
+}

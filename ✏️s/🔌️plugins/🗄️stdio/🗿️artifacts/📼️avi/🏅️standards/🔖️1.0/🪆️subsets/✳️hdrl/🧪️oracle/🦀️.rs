@@ -53,7 +53,7 @@
 //! `document`/`raster`/`archive`/...): the `riff` composition it needs is specific to this one
 //! subset's container shape, so it lives here rather than in a shared module.
 //!
-//! Two entry points mirror the `💬️bcf`/`📰xml`/`🎨️svg` precedent: [`oracle_apply_mutation`] performs
+//! Two entry points mirror the `💬️bcf`/`📰️xml`/`🎨️svg` precedent: [`oracle_apply_mutation`] performs
 //! the FORWARD mutation (the `mutate-<kind>` scenarios), [`oracle_apply_mutation_inverse`] performs
 //! the forward mutation and then its computed inverse in sequence (the `inverse-<kind>` scenarios) —
 //! the same "apply, then apply the inverse, land back on the start" law `AviMutation::inverse`

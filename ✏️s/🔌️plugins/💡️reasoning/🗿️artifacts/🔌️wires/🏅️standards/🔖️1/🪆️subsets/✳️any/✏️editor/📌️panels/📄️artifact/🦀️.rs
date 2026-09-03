@@ -55,8 +55,7 @@ async fn wires_relationship_document_label(wires: &dsl::DslValue, edge_id: &str,
 }
 
 fn selection_args(id: &str, granularity: &str) -> semio_framework_plugin::UiAssemblyResult<UiValue> {
-    let targets = serde_json::to_string(&[InteractionTarget { granularity: granularity.into(), id: id.into() }])
-        .map_err(|error| PluginAssemblyError::new("ui.action-argument", error.to_string()))?;
+    let targets = dsl::os_pack::json::to_json_string(&[InteractionTarget { granularity: granularity.into(), id: id.into() }]);
     ui_value_map([
         ("domainId", ui_value_text(WIRES_INTERACTION_GRAPH)?),
         ("merge", ui_value_text("replace")?),

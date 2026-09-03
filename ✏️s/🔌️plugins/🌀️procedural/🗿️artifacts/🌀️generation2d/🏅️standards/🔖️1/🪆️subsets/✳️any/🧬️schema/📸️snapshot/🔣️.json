@@ -1,0 +1,182 @@
+{
+  "$id": "https://semio.tech/schema/s/procedural/generation2d/snapshot.json",
+  "title": "Generation2dSnapshot",
+  "x-semio-retained-discriminator": "P2D2",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "fixture",
+    "generation"
+  ],
+  "properties": {
+    "fixture": {
+      "$ref": "#/$defs/FlowFixture",
+      "x-semio-state": "artifact"
+    },
+    "generation": {
+      "$ref": "#/$defs/GenerationPlayState",
+      "x-semio-state": "artifact"
+    }
+  },
+  "$defs": {
+    "CameraJson": {
+      "title": "CameraJson",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "x",
+        "y",
+        "zoom"
+      ],
+      "properties": {
+        "x": {
+          "type": "number",
+          "format": "double"
+        },
+        "y": {
+          "type": "number",
+          "format": "double"
+        },
+        "zoom": {
+          "type": "number",
+          "format": "double"
+        }
+      }
+    },
+    "WidgetLayout": {
+      "title": "WidgetLayout",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "x",
+        "y"
+      ],
+      "properties": {
+        "x": {
+          "type": "number",
+          "format": "double"
+        },
+        "y": {
+          "type": "number",
+          "format": "double"
+        }
+      }
+    },
+    "SynapseSpec": {
+      "title": "SynapseSpec",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "from",
+        "to",
+        "fromPort",
+        "toPort"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "from": {
+          "type": "string"
+        },
+        "to": {
+          "type": "string"
+        },
+        "fromPort": {
+          "type": "string"
+        },
+        "toPort": {
+          "type": "string"
+        }
+      }
+    },
+    "Widget": {
+      "title": "Widget",
+      "type": "string",
+      "contentMediaType": "application/json"
+    },
+    "FlowFixture": {
+      "title": "FlowFixture",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "camera",
+        "widgets",
+        "synapses",
+        "layout"
+      ],
+      "properties": {
+        "schema": {
+          "type": "string"
+        },
+        "camera": {
+          "$ref": "#/$defs/CameraJson"
+        },
+        "widgets": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Widget"
+          }
+        },
+        "synapses": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/SynapseSpec"
+          }
+        },
+        "layout": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/WidgetLayout"
+          }
+        }
+      }
+    },
+    "FormGeneration": {
+      "title": "FormGeneration",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "name",
+        "valuesJson"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "valuesJson": {
+          "type": "string",
+          "contentMediaType": "application/json"
+        }
+      }
+    },
+    "GenerationPlayState": {
+      "title": "GenerationPlayState",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "generations"
+      ],
+      "properties": {
+        "generations": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/FormGeneration"
+          }
+        },
+        "selectedGenerationId": {
+          "type": "string"
+        },
+        "previewText": {
+          "type": "string"
+        }
+      }
+    }
+  }
+}

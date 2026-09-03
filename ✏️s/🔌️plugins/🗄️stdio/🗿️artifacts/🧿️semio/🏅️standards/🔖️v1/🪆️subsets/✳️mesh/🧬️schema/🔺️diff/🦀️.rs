@@ -9,8 +9,8 @@
 //! own `between`/`apply`/`inverse`/`absorb` algorithm over the shared struct rather than
 //! reinventing the struct itself — see `w1b-type-ownership.md`'s "🧰️triples" entry).
 
-use crate::artifacts::semio::standards::v1::subsets::any::schema::geometry::{SemioPoint3, SemioRgba, SemioUv};
-use crate::artifacts::semio::standards::v1::subsets::any::schema::triples::{dec_named_triple, enc_named_triple, split_top_level, strip_brackets, NamedModified, NamedTripleDiff};
+use crate::artifacts::semio::standards::v1::subsets::base::schema::geometry::{SemioPoint3, SemioRgba, SemioUv};
+use crate::artifacts::semio::standards::v1::subsets::base::schema::triples::{dec_named_triple, enc_named_triple, split_top_level, strip_brackets, NamedModified, NamedTripleDiff};
 use crate::artifacts::semio::standards::v1::subsets::mesh::schema::snapshot::{SemioMaterial, SemioMesh, SemioMeshSnapshot, SemioPrimitive, SemioTexture, SemioTopology};
 use protocol::command::DiffAlgebra;
 use protocol::MutationDiff;
@@ -234,15 +234,15 @@ impl MutationDiff<SemioMeshSnapshot> for SemioMeshDiff {
     fn apply(&self, base: &SemioMeshSnapshot) -> protocol::MutationApplyResult<SemioMeshSnapshot> {
         let mut next = base.clone();
         if let Some(md) = &self.meshes {
-            crate::artifacts::semio::standards::v1::subsets::any::schema::triples::validate_named_triple(&next.meshes, md, |item| item.id.clone(), |added| added.item.id.clone(), ["meshes"])?;
+            crate::artifacts::semio::standards::v1::subsets::base::schema::triples::validate_named_triple(&next.meshes, md, |item| item.id.clone(), |added| added.item.id.clone(), ["meshes"])?;
             apply_named(&mut next.meshes, md, |m| m.id.clone(), apply_mesh);
         }
         if let Some(md) = &self.materials {
-            crate::artifacts::semio::standards::v1::subsets::any::schema::triples::validate_named_triple(&next.materials, md, |item| item.id.clone(), |added| added.item.id.clone(), ["materials"])?;
+            crate::artifacts::semio::standards::v1::subsets::base::schema::triples::validate_named_triple(&next.materials, md, |item| item.id.clone(), |added| added.item.id.clone(), ["materials"])?;
             apply_named(&mut next.materials, md, |m| m.id.clone(), apply_material);
         }
         if let Some(td) = &self.textures {
-            crate::artifacts::semio::standards::v1::subsets::any::schema::triples::validate_named_triple(&next.textures, td, |item| item.id.clone(), |added| added.item.id.clone(), ["textures"])?;
+            crate::artifacts::semio::standards::v1::subsets::base::schema::triples::validate_named_triple(&next.textures, td, |item| item.id.clone(), |added| added.item.id.clone(), ["textures"])?;
             apply_named(&mut next.textures, td, |t| t.id.clone(), apply_texture);
         }
         Ok(next)

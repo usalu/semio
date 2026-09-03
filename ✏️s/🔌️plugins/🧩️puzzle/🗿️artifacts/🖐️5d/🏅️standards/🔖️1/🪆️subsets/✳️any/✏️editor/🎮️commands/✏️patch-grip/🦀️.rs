@@ -1,7 +1,7 @@
 //! ✏️ `patch-grip` command.
 
 use crate::editor::puzzle5d::{puzzle5d_axis_index, puzzle5d_grip_full_id, puzzle5d_resolve_number_edit, Puzzle5dActionCtx};
-use serde_json::Value;
+use dsl::os_pack::json::Value;
 use std::collections::HashSet;
 
 fn arg_id_set(args: Option<&Value>, plural: &str, singular: &str) -> HashSet<String> {

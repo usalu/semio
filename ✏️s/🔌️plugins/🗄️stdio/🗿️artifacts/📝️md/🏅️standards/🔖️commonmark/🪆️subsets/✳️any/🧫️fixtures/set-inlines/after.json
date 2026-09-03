@@ -1,0 +1,37 @@
+{
+  "schema": "stdio.md",
+  "blocks": [
+    {
+      "kind": "heading",
+      "level": 1,
+      "inlines": [
+        {
+          "kind": "text",
+          "text": "Title"
+        }
+      ]
+    },
+    {
+      "kind": "paragraph",
+      "inlines": [
+        {
+          "kind": "text",
+          "text": "Rewritten "
+        },
+        {
+          "kind": "strong",
+          "inlines": [
+            {
+              "kind": "text",
+              "text": "bold"
+            }
+          ]
+        },
+        {
+          "kind": "text",
+          "text": " paragraph."
+        }
+      ]
+    }
+  ]
+}

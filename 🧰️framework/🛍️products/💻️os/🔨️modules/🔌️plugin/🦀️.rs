@@ -3522,7 +3522,7 @@ pub mod app {
 
     //#region 🧭️RuntimeContributions
     /// 🧷️ Typed mesh-to-document executable retained by the plugin runtime for a DWG bridge.
-    pub type MeshDwgDocumentImporter = fn(&semio_framework::MeshData) -> Result<Value, String>;
+    pub type MeshDwgDocumentImporter = fn(&semio_framework::MeshData) -> Result<dsl::os_pack::json::Value, String>;
 
     /// 🧷️ Typed document-to-SVG executable retained by the plugin runtime for 2D export.
     pub type TwoDSvgDocumentRenderer = fn(&Value) -> Result<(String, u32, u32), String>;
@@ -3674,7 +3674,7 @@ pub mod app {
     /// 📤️ Typed mesh-DWG bridge runtime result.
     #[derive(Clone, Debug, PartialEq)]
     pub struct MeshDwgBridgeResult {
-        pub document: Value,
+        pub document: dsl::os_pack::json::Value,
     }
 
     /// 📥️ Typed 2D SVG export runtime request.
@@ -5793,7 +5793,7 @@ pub mod app {
     /// serialized), e.g. `json!({ "application/x-my-widget": descriptor.to_string() })`. Generalizes the
     /// single-hardcoded-MIME-key pattern duplicated per app (each app previously baked its own MIME
     /// constant into this function) — the caller now supplies the key(s) explicitly.
-    pub fn tree_item_with_action_draggable<I: AsRef<str>, L: TryInto<Label>>(id: I, label: L, description: Option<String>, action: (ActionId, Option<UiValue>), drag_data: &Value) -> UiAssemblyResult<BuiltNode> {
+    pub fn tree_item_with_action_draggable<I: AsRef<str>, L: TryInto<Label>>(id: I, label: L, description: Option<String>, action: (ActionId, Option<UiValue>), drag_data: &dsl::os_pack::json::Value) -> UiAssemblyResult<BuiltNode> {
         let (action, args) = action;
         let builder = ui::tree_item(ui_label(label, "draggable-tree-item.label")?);
         let mut builder = builder.try_id(id).map_err(|_| ui_assembly_error("draggable-tree-item.id"))?;
@@ -5809,8 +5809,8 @@ pub mod app {
             let mut fixed = UiFixedMap::default();
             let mut last = UiText::default();
             while fixed.len() < entries.len() {
-                let Some((key, value)) = entries.iter().filter(|(key, _)| key.as_str() > last.as_str()).min_by_key(|(key, _)| key.as_str()) else { break };
-                let key = ui_text(key.clone(), "draggable-tree-item.drag-key")?;
+                let Some((key, value)) = entries.iter().filter(|(key, _)| *key > last.as_str()).min_by_key(|(key, _)| *key) else { break };
+                let key = ui_text(key.to_string(), "draggable-tree-item.drag-key")?;
                 let value = ui_text(value.as_str().map(str::to_string).unwrap_or_else(|| value.to_string()), "draggable-tree-item.drag-value")?;
                 last = key.clone();
                 fixed.try_push(key, value).map_err(|_| ui_assembly_error("draggable-tree-item.drag-data"))?;
@@ -5960,7 +5960,7 @@ pub mod app {
         #[semio_framework_async_macros::async_test]
         async fn tree_item_with_action_draggable_maps_json_object_to_string_drag_data() {
             let action = ActionId::try_v1("app", "addWidget").expect("bounded fixture");
-            let item = tree_item_with_action_draggable("ns.kind.a", "A", None, (action, None), &serde_json::json!({ "application/x-widget": "{\"kind\":\"a\"}" })).expect("bounded fixture");
+            let item = tree_item_with_action_draggable("ns.kind.a", "A", None, (action, None), &dsl::os_pack::json::object([("application/x-widget".to_string(), dsl::os_pack::json::Value::String("{\"kind\":\"a\"}".to_string()))])).expect("bounded fixture");
             let Component::TreeItem(props) = &item.component else { panic!("expected a TreeItem") };
             assert_eq!(props.draggable, Some(true));
             assert!(props.drag_data.as_ref().unwrap().iter().any(|(key, value)| key.as_str() == "application/x-widget" && value.as_str() == "{\"kind\":\"a\"}"));
@@ -9784,8 +9784,7 @@ pub mod app {
 
     /// 🕹️ Framework interaction mutation aggregate; its direct leaf owns metadata and ordinary semantics.
     /// 🧊️ Whole-state cold codecs/evaluation do not certify a retained restore or reserved interaction route.
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-    #[serde(rename_all = "camelCase")]
+    #[derive(Clone, Debug, PartialEq)]
     pub enum InteractionConfigMutation {
         SetState(SetInteractionState),
     }
@@ -9854,11 +9853,11 @@ pub mod app {
     impl ::protocol::OpText for InteractionConfigMutation {
         fn print_op(&self) -> String {
             let InteractionConfigMutation::SetState(state) = self;
-            format!("set-interaction-state {}", serde_json::to_string(state).expect("InteractionState always serializes"))
+            format!("set-interaction-state {}", dsl::os_pack::json::to_json_string(state))
         }
         fn parse_op(line: &str) -> Result<Self, ::store::TextError> {
             let body = line.strip_prefix("set-interaction-state ").ok_or_else(|| ::store::TextError::new(format!("unknown interaction config op '{line}'"), ::store::TextSpan::at(1, 1)))?;
-            let state: protocol::InteractionState = serde_json::from_str(body).map_err(|error| ::store::TextError::new(error.to_string(), ::store::TextSpan::at(1, 1)))?;
+            let state: protocol::InteractionState = dsl::os_pack::json::from_json_str(body).map_err(|error| ::store::TextError::new(error.to_string(), ::store::TextSpan::at(1, 1)))?;
             Ok(InteractionConfigMutation::set_state(state))
         }
     }
@@ -9866,10 +9865,11 @@ pub mod app {
     impl ::protocol::OpBinary for InteractionConfigMutation {
         fn encode_op(&self) -> Result<Vec<u8>, ::protocol::ProtocolError> {
             let InteractionConfigMutation::SetState(state) = self;
-            serde_json::to_vec(state).map_err(|error| ::protocol::ProtocolError::Malformed { what: "interaction-config-mutation", offset: 0, detail: error.to_string() })
+            Ok(dsl::os_pack::json::to_json_string(state).into_bytes())
         }
         fn decode_op(bytes: &[u8]) -> Result<Self, ::protocol::ProtocolError> {
-            let state: protocol::InteractionState = serde_json::from_slice(bytes).map_err(|error| ::protocol::ProtocolError::Malformed { what: "interaction-config-mutation", offset: 0, detail: error.to_string() })?;
+            let text = std::str::from_utf8(bytes).map_err(|error| ::protocol::ProtocolError::Malformed { what: "interaction-config-mutation", offset: 0, detail: error.to_string() })?;
+            let state: protocol::InteractionState = dsl::os_pack::json::from_json_str(text).map_err(|error| ::protocol::ProtocolError::Malformed { what: "interaction-config-mutation", offset: 0, detail: error.to_string() })?;
             Ok(InteractionConfigMutation::set_state(state))
         }
     }
@@ -12212,8 +12212,8 @@ pub mod app {
             self.action_with_args(action_id, None).await
         }
 
-        pub async fn action_args(self, action_id: impl Into<String>, args: Value) -> Self {
-            self.action_with_args(action_id, Some(DslValue::from(&args))).await
+        pub async fn action_args(self, action_id: impl Into<String>, args: DslValue) -> Self {
+            self.action_with_args(action_id, Some(args)).await
         }
 
         async fn action_with_args(mut self, action_id: impl Into<String>, args: Option<DslValue>) -> Self {
@@ -30206,12 +30206,6 @@ pub mod plugin_runtime {
             #[value(skip_serializing_if = "Option::is_none", serialize_with = "section_value_to_value")]
             value: Option<Value>,
         }
-        /// 🌉️ `Effect` (`semio_framework::kernel::Effect`) is foreign and has no `ToValue` impl
-        /// (orphan rule forbids adding one here) — bridges through its existing `Serialize` via
-        /// `serde_json` instead of the derive's default per-element `ToValue::to_value`.
-        fn effects_to_value(effects: &Vec<Effect>) -> protocol::DslValue {
-            protocol::DslValue::from(&serde_json::to_value(effects).expect("requested effects always serialize"))
-        }
         #[derive(Serialize, ToValue, Default)]
         #[serde(rename_all = "camelCase")]
         #[value(rename_all = "camelCase")]
@@ -30238,8 +30232,10 @@ pub mod plugin_runtime {
             #[value(skip_serializing_if = "Option::is_none")]
             labels: Option<SectionResponse>,
             /// ⏱️ See `ArtifactApp::pending_effects` — e.g. a `flowEvalTick` chain resuming after this refresh.
+            /// `Effect` derives `ToValue` directly (`🎠️kernel/🦀️.rs`) — no bridge needed, the
+            /// derive's default per-element `ToValue::to_value` call handles this `Vec<Effect>` field.
             #[serde(skip_serializing_if = "Vec::is_empty")]
-            #[value(skip_serializing_if = "Vec::is_empty", serialize_with = "effects_to_value")]
+            #[value(skip_serializing_if = "Vec::is_empty")]
             requested_effects: Vec<Effect>,
         }
 
@@ -36372,26 +36368,26 @@ pub mod world3d_host {
     }
 
     /** 🌞️ Applies a sun-related action id to `sun`, returning whether it was handled — mirrors `lowpoly`'s `"toggleShowEdges"` action-handler shape. */
-    pub fn apply_world3d_sun_action(sun: &mut WorldSunConfig, action_id: &str, args: Option<&Value>) -> bool {
+    pub fn apply_world3d_sun_action(sun: &mut WorldSunConfig, action_id: &str, args: Option<&store::json::Value>) -> bool {
         match action_id {
             "toggleSun" => {
                 sun.enabled = !sun.enabled;
                 true
             }
             "setSunAzimuth" => {
-                if let Some(value) = args.and_then(|value| value.get("value")).and_then(Value::as_f64) {
+                if let Some(value) = args.and_then(|value| value.get("value")).and_then(store::json::Value::as_f64) {
                     sun.azimuth = value;
                 }
                 true
             }
             "setSunElevation" => {
-                if let Some(value) = args.and_then(|value| value.get("value")).and_then(Value::as_f64) {
+                if let Some(value) = args.and_then(|value| value.get("value")).and_then(store::json::Value::as_f64) {
                     sun.elevation = value;
                 }
                 true
             }
             "setSunIntensity" => {
-                if let Some(value) = args.and_then(|value| value.get("value")).and_then(Value::as_f64) {
+                if let Some(value) = args.and_then(|value| value.get("value")).and_then(store::json::Value::as_f64) {
                     sun.intensity = value;
                 }
                 true
@@ -36655,11 +36651,11 @@ pub mod world3d_host {
     }
 
     /** 📐️ Applies `setProjection`/`setProjectionParam` to `p`, returning whether the action was handled. */
-    pub fn apply_world3d_projection_action(p: &mut WorldProjectionConfig, action_id: &str, args: Option<&Value>) -> bool {
-        let field = args.and_then(|v| v.get("field")).and_then(Value::as_str);
-        let value_str = args.and_then(|v| v.get("value")).and_then(Value::as_str);
-        let value_f64 = args.and_then(|v| v.get("value")).and_then(Value::as_f64);
-        let param = args.and_then(|v| v.get("param")).and_then(Value::as_str);
+    pub fn apply_world3d_projection_action(p: &mut WorldProjectionConfig, action_id: &str, args: Option<&store::json::Value>) -> bool {
+        let field = args.and_then(|v| v.get("field")).and_then(store::json::Value::as_str);
+        let value_str = args.and_then(|v| v.get("value")).and_then(store::json::Value::as_str);
+        let value_f64 = args.and_then(|v| v.get("value")).and_then(store::json::Value::as_f64);
+        let param = args.and_then(|v| v.get("param")).and_then(store::json::Value::as_str);
         match action_id {
             "setProjection" => {
                 match (field, value_str) {
@@ -36712,11 +36708,11 @@ pub mod world3d_host {
     }
 
     /** 📐️ Whether a `setProjection`/`setProjectionParam` action requires a pose recompute (kind/view/variant changes) vs. a pure in-place parameter tweak that keeps the current pose (oblique shear / two-point shift / fov / curvilinear re-shade live). */
-    pub fn world3d_projection_action_moves_pose(action_id: &str, args: Option<&Value>) -> bool {
+    pub fn world3d_projection_action_moves_pose(action_id: &str, args: Option<&store::json::Value>) -> bool {
         if action_id != "setProjection" {
             return false;
         }
-        matches!(args.and_then(|v| v.get("field")).and_then(Value::as_str), Some("orthographicView") | Some("axonometricVariant") | Some("axonometricQuadrant") | Some("obliqueVariant") | Some("perspectiveKind"))
+        matches!(args.and_then(|v| v.get("field")).and_then(store::json::Value::as_str), Some("orthographicView") | Some("axonometricVariant") | Some("axonometricQuadrant") | Some("obliqueVariant") | Some("perspectiveKind"))
     }
     //#endregion 📐️ WorldProjection
 
@@ -37053,14 +37049,14 @@ pub mod world3d_host {
         async fn apply_action_switches_kind_and_leaves_other_kinds_untouched_for_later_recall() {
             let mut p = WorldProjectionConfig::default();
             p.axonometric_angle_a = 22.0;
-            assert!(apply_world3d_projection_action(&mut p, "setProjection", Some(&json!({ "field": "obliqueVariant", "value": "military" }))));
+            assert!(apply_world3d_projection_action(&mut p, "setProjection", Some(&store::json!({ "field": "obliqueVariant", "value": "military" }))));
             assert_eq!(p.kind, "oblique");
             assert_eq!(p.oblique_variant, "military");
             assert_eq!(p.axonometric_angle_a, 22.0);
-            assert!(apply_world3d_projection_action(&mut p, "setProjectionParam", Some(&json!({ "param": "obliqueAngle", "value": 30.0 }))));
+            assert!(apply_world3d_projection_action(&mut p, "setProjectionParam", Some(&store::json!({ "param": "obliqueAngle", "value": 30.0 }))));
             assert_eq!(p.oblique_angle, 30.0);
-            assert!(!world3d_projection_action_moves_pose("setProjectionParam", Some(&json!({ "param": "obliqueAngle" }))));
-            assert!(world3d_projection_action_moves_pose("setProjection", Some(&json!({ "field": "obliqueVariant" }))));
+            assert!(!world3d_projection_action_moves_pose("setProjectionParam", Some(&store::json!({ "param": "obliqueAngle" }))));
+            assert!(world3d_projection_action_moves_pose("setProjection", Some(&store::json!({ "field": "obliqueVariant" }))));
         }
 
         #[semio_framework_async_macros::async_test]

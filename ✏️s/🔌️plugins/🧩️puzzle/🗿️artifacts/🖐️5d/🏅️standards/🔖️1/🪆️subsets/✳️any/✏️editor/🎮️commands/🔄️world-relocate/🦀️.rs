@@ -6,13 +6,16 @@ use crate::editor::puzzle5d::world_grip_position;
 use crate::editor::puzzle5d::Puzzle5dActionCtx;
 use crate::editor::puzzle5d::Puzzle5dFastener;
 use crate::editor::puzzle5d::PUZZLE5D_PROXIMITY_RADIUS;
-use serde_json::Value;
+use dsl::os_pack::json::Value;
 
 /// 🚚️ Drops one part at an explicit world origin, then auto-fastens its first grip to every other
 /// grip that lands within [`PUZZLE5D_PROXIMITY_RADIUS`].
 pub fn world_relocate(ctx: &mut Puzzle5dActionCtx<'_>, args: Option<&Value>) {
     let object_id = args.and_then(|value| value.get("objectId")).and_then(|value| value.as_str()).unwrap_or("");
-    let position = args.and_then(|value| value.get("position")).and_then(|value| serde_json::from_value::<[f64; 3]>(value.clone()).ok());
+    let position = args
+        .and_then(|value| value.get("position"))
+        .and_then(|value| value.as_array())
+        .map(|values| [values.first().and_then(|v| v.as_f64()).unwrap_or(0.0), values.get(1).and_then(|v| v.as_f64()).unwrap_or(0.0), values.get(2).and_then(|v| v.as_f64()).unwrap_or(0.0)]);
     let (Some(part), Some(position)) = (ctx.scene.document.parts.iter_mut().find(|part| part.id == object_id), position) else {
         return;
     };

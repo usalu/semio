@@ -34,7 +34,7 @@ pub fn inverse_vcs_mutation(snapshot: &VcsSnapshot, mutation: &VcsDemoMutation) 
 /// host links only `semio-repo-test-host` and this crate) and cannot name this crate's private
 /// `protocol`/`store` extern-crate aliases either, so the bridge belongs here rather than there.
 pub fn decode_vcs_mutation_json(text: &str) -> Result<VcsDemoMutation, String> {
-    serde_json::from_str(text).map_err(|error| error.to_string())
+    dsl::json::from_json_str(text).map_err(|error| error.to_string())
 }
 
 /// ▶️ [`apply_vcs_mutation`]'s reporting, non-async twin: applies `mutation` in place and returns

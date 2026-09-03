@@ -1,0 +1,74 @@
+{
+  "componentHex": "616263",
+  "componentSha256": "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad",
+  "componentBlake3": "6437b3ac38465133ffb63b75273a8db548c558465d79db03fd359c6cd5bd9d85",
+  "limits": {
+    "componentBytesMax": 67108864,
+    "componentBytesMaxPlusOne": 67108865,
+    "descriptorBytesMax": 4194304,
+    "descriptorBytesMaxPlusOne": 4194305,
+    "identityBytesMax": 256,
+    "identityBytesMaxPlusOne": 257,
+    "codecCountMax": 16384,
+    "codecCountMaxPlusOne": 16385
+  },
+  "bundle": {
+    "schemaVersion": 1,
+    "profiles": [
+      {
+        "id": "fixture",
+        "roots": [
+          { "pluginId": "fixture.editor", "packageId": "fixture.editor.native", "version": "1.2.3" }
+        ]
+      }
+    ],
+    "packages": [
+      {
+        "pluginId": "fixture.editor",
+        "packageId": "fixture.editor.native",
+        "version": "1.2.3",
+        "role": "plugin",
+        "dependencies": [
+          { "pluginId": "fixture.base", "packageId": "fixture.base.native", "version": "1.0.0" }
+        ],
+        "component": {
+          "path": "components/editor.wasm",
+          "byteLength": 3,
+          "sha256": "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad",
+          "blake3": "6437b3ac38465133ffb63b75273a8db548c558465d79db03fd359c6cd5bd9d85"
+        },
+        "descriptor": {
+          "path": "descriptors/editor.descriptor.semio",
+          "byteLength": 1,
+          "sha256": "4bf5122f344554c53bde2ebb8cd2b7e3d1600ad631c385a5d7cce23c7785459a"
+        },
+        "nativeCodecs": [
+          {
+            "artifactKind": "fixture.document",
+            "artifactSchema": "fixture.document@1",
+            "packSchemaHash": "1111111111111111111111111111111111111111111111111111111111111111"
+          }
+        ]
+      },
+      {
+        "pluginId": "fixture.base",
+        "packageId": "fixture.base.native",
+        "version": "1.0.0",
+        "role": "plugin",
+        "dependencies": [],
+        "component": {
+          "path": "components/base.wasm",
+          "byteLength": 3,
+          "sha256": "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad",
+          "blake3": "6437b3ac38465133ffb63b75273a8db548c558465d79db03fd359c6cd5bd9d85"
+        },
+        "descriptor": {
+          "path": "descriptors/base.descriptor.semio",
+          "byteLength": 1,
+          "sha256": "dbc1b4c900ffe48d575b5da5c638040125f65db0fe3e24494b76ea986457d986"
+        },
+        "nativeCodecs": []
+      }
+    ]
+  }
+}

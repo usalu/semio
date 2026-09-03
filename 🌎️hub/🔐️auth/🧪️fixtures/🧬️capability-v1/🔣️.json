@@ -1,0 +1,52 @@
+{
+  "session": {
+    "kind": "session",
+    "capability": "session.v1.000102030405060708090a0b0c0d0e0f.000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f",
+    "selector": "000102030405060708090a0b0c0d0e0f",
+    "secretHex": "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f",
+    "digestHex": "7e7743e4ebc33783595abe01263a27007ee1f964d3e74d485c6797372eb4c64b"
+  },
+  "share": {
+    "kind": "share",
+    "capability": "share.v1.101112131415161718191a1b1c1d1e1f.202122232425262728292a2b2c2d2e2f303132333435363738393a3b3c3d3e3f",
+    "selector": "101112131415161718191a1b1c1d1e1f",
+    "secretHex": "202122232425262728292a2b2c2d2e2f303132333435363738393a3b3c3d3e3f",
+    "digestHex": "665338d5afb1fb60fef849ff53fda1b39877295f115df71dc4fdcd3ebcb16053"
+  },
+  "invite": {
+    "kind": "invite",
+    "capability": "invite.v1.a0a1a2a3a4a5a6a7a8a9aaabacadaeaf.c0c1c2c3c4c5c6c7c8c9cacbcccdcecfd0d1d2d3d4d5d6d7d8d9dadbdcdddedf",
+    "selector": "a0a1a2a3a4a5a6a7a8a9aaabacadaeaf",
+    "secretHex": "c0c1c2c3c4c5c6c7c8c9cacbcccdcecfd0d1d2d3d4d5d6d7d8d9dadbdcdddedf",
+    "digestHex": "08750b9f9dc764ae7754e10f9c8302aad5272f8981c0a3e3dc66281253c51dcc"
+  },
+  "identity": {
+    "provider": "oidc.example",
+    "subject": "sub-123",
+    "digestHex": "45593dc041f65a04550863a86ccda05fe316fdade63487f9584a3def62ed7ce2"
+  },
+  "revocation": {
+    "sessionId": "018f-auth-session-public-id",
+    "previousGeneration": 1,
+    "nextGeneration": 2,
+    "revokedAt": 1770000000000,
+    "reason": "administrator-revoked"
+  },
+  "audit": {
+    "eventKind": "session-revoked",
+    "authSessionId": "018f-auth-session-public-id",
+    "targetUserId": "user-public-id",
+    "provider": "oidc.example",
+    "outcomeCode": "success",
+    "reasonCode": "administrator-revoked",
+    "correlationId": "018f-correlation-public-id",
+    "peerClass": "public-network"
+  },
+  "limits": {
+    "selectorBytes": 16,
+    "secretBytes": 32,
+    "ttlSecondsMax": 31536000,
+    "deviceIdentityBytesMax": 128,
+    "assertionBytesMax": 16384
+  }
+}

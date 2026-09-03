@@ -1,0 +1,5 @@
+{
+  "$id": "https://semio.tech/schema/s/procedural/generation2d/diff/text.json",
+  "title": "Generation2dDiffText",
+  "type": "object"
+}

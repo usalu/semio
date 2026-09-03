@@ -1,6 +1,6 @@
 //! 🌈 `change-material-base-color` — sets a material's PBR base color. SMO's stroke-color precedent: a color is treated as ONE cohesive value (never edited channel-by-channel from outside), so `change`, not `replace`.
 
-use crate::artifacts::semio::standards::v1::subsets::any::schema::geometry::SemioRgba;
+use crate::artifacts::semio::standards::v1::subsets::base::schema::geometry::SemioRgba;
 use crate::artifacts::semio::standards::v1::subsets::mesh::schema::mutations::SemioMeshMutation;
 use crate::artifacts::semio::standards::v1::subsets::mesh::schema::snapshot::SemioMeshSnapshot;
 

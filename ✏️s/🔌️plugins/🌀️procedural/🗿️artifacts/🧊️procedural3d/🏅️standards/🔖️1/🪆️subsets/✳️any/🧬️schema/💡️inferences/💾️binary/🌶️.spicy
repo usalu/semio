@@ -1,4 +1,0 @@
-module Procedural_procedural3d_inference;
-type Document = unit {
-    payload: bytes &eod;
-};

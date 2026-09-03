@@ -6,12 +6,11 @@
 use crate::artifacts::layout::{LayoutDiff, LayoutSnapshot};
 use crate::artifacts::layout::mutations::LayoutMutation;
 use protocol::{MutationKind, SemanticDescriptor};
-use serde::{Deserialize, Serialize};
 use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🧾ChangeDataFields
 #[derive(Clone, Debug, PartialEq, dsl::MutationLeaf, ToValue, FromValue)]
-#[cfg_attr(test, derive(Serialize, Deserialize))]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[mutation_leaf(contract = ::protocol)]
 pub struct ChangeDataFields {
     pub new_json: Option<String>,

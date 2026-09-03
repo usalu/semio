@@ -2,16 +2,14 @@
 //! map. Inverse partner of `add-layer-asset` (see that leaf for why this pair exists).
 
 pub mod mutation {
-use serde::{Deserialize, Serialize};
 use crate::artifacts::raster::diff::{diff_remove_asset, RasterDiff};
 use crate::artifacts::raster::mutations::{add_layer_asset, RasterMutation};
 use crate::artifacts::raster::RasterSnapshot;
 
 //#region 🔖️RemoveLayerAsset
-#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::MutationLeaf, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
 #[value(rename_all = "camelCase")]
-#[serde(rename_all = "camelCase")]
 pub struct RemoveLayerAsset {
     pub asset_id: String,
 }

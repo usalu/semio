@@ -6,8 +6,8 @@
 use crate::artifacts::pptx::schema::mutations::set_shape_text;
 use crate::artifacts::pptx::schema::snapshot::{PptxParagraph, PptxShape, PptxSlide};
 use crate::artifacts::pptx::{PptxMutation, PptxSnapshot, STDIO_PPTX_DOCUMENT_SCHEMA};
-use crate::editor::pptx::standards::v_ecma_376::subsets::any::modes::edit;
-use crate::editor::pptx::standards::v_ecma_376::subsets::any::modes::edit::windows::main;
+use crate::editor::pptx::standards::v_ecma_376::subsets::base::modes::edit;
+use crate::editor::pptx::standards::v_ecma_376::subsets::base::modes::edit::windows::main;
 use semio_framework_plugin::{
     ArtifactEditor, ArtifactView, ConfigView, Dialect, DraftView, Editor, Emit, Fault, Label, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, StandardId, SubsetId,
 };

@@ -1,0 +1,55 @@
+syntax = "proto3";
+package semio.s.mathematical.equation.diff;
+
+message EquationDiff {
+  optional EquationArtifact artifact = 1;
+  optional EquationGraph graph = 2;
+  optional EquationGeometry geometry = 3;
+  // @state config
+  optional double camera_x = 4;
+  // @state config
+  optional double camera_y = 5;
+  // @state config
+  optional double camera_zoom = 6;
+  // @state config
+  optional string locale = 7;
+}
+
+message EquationArtifact {
+  EquationGraph graph = 1;
+  EquationGeometry geometry = 2;
+  double camera_x = 3;
+  double camera_y = 4;
+  double camera_zoom = 5;
+  string locale = 6;
+}
+
+message EquationGraph {
+  bool directed = 1;
+  repeated EquationNode nodes = 2;
+  repeated EquationEdge edges = 3;
+  string algorithm = 4;
+  optional string algorithm_seed = 5;
+}
+
+message EquationNode {
+  string id = 1;
+  string label = 2;
+  double x = 3;
+  double y = 4;
+}
+
+message EquationEdge {
+  string id = 1;
+  string source = 2;
+  string target = 3;
+}
+
+message EquationPoint {
+  double x = 1;
+  double y = 2;
+}
+
+message EquationGeometry {
+  repeated EquationPoint points = 1;
+}

@@ -1,6 +1,6 @@
 # 🌳 `XmlAttr`/`XmlNode`/`XmlDeclaration` are NOT redefined here -- `SvgSnapshot.doc` wraps an
 # XmlDocument and `SvgDiff` diffs that same node tree directly (spec-mandated reuse of xml's NODE
-# model; svg's DIFF types below are its own), so this facet relies on 📰xml's own
+# model; svg's DIFF types below are its own), so this facet relies on 📰️xml's own
 # `📸️snapshot/🔗️.graphql` types being present in the assembled schema, exactly as
 # `stdio.xml`'s own diff/mutations facets rely on `XmlSnapshot` without locally redefining it.
 

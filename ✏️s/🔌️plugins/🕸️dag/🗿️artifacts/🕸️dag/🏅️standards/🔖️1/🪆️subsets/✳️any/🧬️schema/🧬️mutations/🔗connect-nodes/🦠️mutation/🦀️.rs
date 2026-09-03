@@ -4,14 +4,14 @@ use crate::artifacts::dag::mutations::DagMutation;
 use crate::artifacts::dag::DagSnapshot;
 use graph::manifest::PropertyBag;
 use infinite_board_port_directed_dag::EdgeRouteStyle;
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️Mutation
 /// 🔗 `connect-nodes` payload — edge `id` plus both endpoint strings (`"<nodeId>@<portId>"`) and
 /// the edge's own route/property payload.
-#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase")]
-#[serde(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct ConnectNodes {
     pub id: String,
     pub source: String,

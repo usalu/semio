@@ -10169,7 +10169,7 @@ where
         ops.push_str(&OpsHeaderLine::Inverse { edit: edit.id.clone(), ops: inverse }.print_op());
         ops.push('\n');
         for (index, meta) in edit.mutation_meta.iter().enumerate() {
-            let data = serde_json::to_string(meta).map_err(|error| VcsError::Serialize(error.to_string()))?;
+            let data = crate::os_pack::json::to_json_string(meta);
             ops.push_str(&OpsHeaderLine::Metadata { edit: edit.id.clone(), index: index as u32, data }.print_op());
             ops.push('\n');
         }
@@ -10209,13 +10209,13 @@ where
             return Err(VcsError::ValidationFailed(format!("message ledger references unknown edit {}", entry.edit_id)));
         }
         for message in &entry.messages {
-            let data = serde_json::to_string(message).map_err(|error| VcsError::Serialize(error.to_string()))?;
+            let data = crate::os_pack::json::to_json_string(message);
             ops.push_str(&OpsHeaderLine::Message { edit: entry.edit_id.clone(), data }.print_op());
             ops.push('\n');
         }
     }
     for conflict in &envelope.conflicts {
-        let data = serde_json::to_string(conflict).map_err(|error| VcsError::Serialize(error.to_string()))?;
+        let data = crate::os_pack::json::to_json_string(conflict);
         ops.push_str(&OpsHeaderLine::Conflict { data }.print_op());
         ops.push('\n');
     }
@@ -19817,20 +19817,20 @@ pub mod test_support {
 /// _>` (persisting selection + active mode/granularity per app instance through the `HistoryLane::Interaction`
 /// mechanism above) exactly like any other `ArtifactStore<P, _>`. `InteractionState` has no `RecordSpec`/
 /// `dsl_derive` record lowering of its own (a small, framework-internal `BTreeMap`-keyed value, not an app
-/// document), so this bridges through the same schema-less `serde_json::Value` pack codec `os_store`'s
-/// own `impl ArtifactPack for DslValue` ("Compose-only pack bridge") already uses, rather than hand-rolling a
-/// codec. MUST live here, not in `semio-framework-plugin`: the orphan rule requires an impl of a foreign
+/// document), so this bridges through `InteractionState`'s first-party value traits and the schema-less
+/// `ArtifactPack for DslValue` codec rather than serde or a hand-rolled binary format. MUST live here, not
+/// in `semio-framework-plugin`: the orphan rule requires an impl of a foreign
 /// trait for a foreign type to sit in the crate owning one of the two, and both `ArtifactPack` (`os_store`)
 /// and `InteractionState` (this region) are this crate's own — `semio-framework-plugin` only sees both
 /// through its `store`/`protocol` aliases.
 impl ArtifactPack for protocol::InteractionState {
     fn encode_pack_with(&self, options: &PackEncodeOptions) -> Result<Vec<u8>, PackError> {
-        let value = serde_json::to_value(self).map_err(|error| PackError::Schema(error.to_string()))?;
-        ArtifactPack::encode_pack_with(&value, options)
+        let value = <Self as crate::os_dsl::ToValue>::to_value(self);
+        <DslValue as ArtifactPack>::encode_pack_with(&value, options)
     }
     fn decode_pack_with(bytes: &[u8], options: &PackDecodeOptions) -> Result<Self, PackError> {
-        let value = <serde_json::Value as ArtifactPack>::decode_pack_with(bytes, options)?;
-        serde_json::from_value(value).map_err(|error| PackError::Schema(error.to_string()))
+        let value = <DslValue as ArtifactPack>::decode_pack_with(bytes, options)?;
+        <Self as crate::os_dsl::FromValue>::from_value(value).map_err(|error: ValueError| PackError::Schema(error.to_string()))
     }
 }
 //#endregion 🔖️TestSupport
@@ -25044,6 +25044,71 @@ mod tests {
         assert_eq!(parsed.snapshot, store.snapshot().expect("live snapshot"));
     }
 
+    /// @emoji 🔬️ `print_ops_log`'s `metadata `/`message `/`conflict ` records now build their `data`
+    /// payload with `crate::os_pack::json::to_json_string` instead of `serde_json::to_string`
+    /// (RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS, 26/09/02) — direct proof the two
+    /// are byte-identical for `MutationMeta`, `MutationMessage`, and `Conflict`, exercising both the
+    /// sparse (every `Option`/default field omitted) and dense (every optional field populated,
+    /// including `MutationOrigin`'s two non-default enum-variant-with-fields shapes) ends of each
+    /// type's `skip_serializing_if` surface.
+    #[test]
+    fn ops_log_records_to_json_string_match_serde_json_byte_for_byte() {
+        let sparse_meta = crate::os_spr::MutationMeta {
+            mutation_id: None,
+            dependencies: Vec::new(),
+            base_version: 1,
+            author_id: None,
+            timestamp: HybridLogicalTimestamp::new(1, 100),
+            undo_policy: UndoPolicy::ExactBaseOnly,
+            payload_hash: None,
+            semantic_kind: None,
+            label: None,
+            group_id: None,
+            origin: crate::os_spr::MutationOrigin::Owner,
+        };
+        let dense_meta = crate::os_spr::MutationMeta {
+            mutation_id: Some(MutationId("mutation-1".into())),
+            dependencies: vec![MutationId("mutation-0".into())],
+            base_version: 7,
+            author_id: Some(ActorId("actor-1".into())),
+            timestamp: HybridLogicalTimestamp::new(9, 300),
+            undo_policy: UndoPolicy::TransformAgainstConcurrent,
+            payload_hash: Some(crate::os_spr::PayloadHash([7u8; 32])),
+            semantic_kind: Some(SchemaId("demo/v1#set-n".into())),
+            label: Some("set n".into()),
+            group_id: Some("group-1".into()),
+            origin: crate::os_spr::MutationOrigin::Contributed { plugin_id: "plugin-a".into(), mutation_id: SchemaId("mutation-src".into()), payload_hash: crate::os_spr::PayloadHash([3u8; 32]) },
+        };
+        let transaction_meta =
+            crate::os_spr::MutationMeta { origin: crate::os_spr::MutationOrigin::Transaction { initiator: crate::os_spr::ForeignTarget { artifact_id: "artifact-1".into(), artifact_kind: "demo".into(), dialect: Some("v1".into()) } }, ..dense_meta.clone() };
+        for meta in [&sparse_meta, &dense_meta, &transaction_meta] {
+            let mine = crate::os_pack::json::to_json_string(meta);
+            let theirs = serde_json::to_string(meta).expect("serde_json encodes MutationMeta");
+            assert_eq!(mine, theirs, "MutationMeta's ToValue/pack::json bridge diverged from serde_json for origin={:?}", meta.origin);
+        }
+
+        let sparse_message = crate::os_spr::MutationMessage { level: crate::os_dsl::Severity::Warning, code: crate::os_dsl::FaultCode("mutation.no-op".into()), message: "no-op".into(), target: Vec::new(), op_index: None };
+        let dense_message =
+            crate::os_spr::MutationMessage { level: crate::os_dsl::Severity::Fatal, code: crate::os_dsl::FaultCode("mutation.invariant".into()), message: "n invariant violated".into(), target: vec!["n".into()], op_index: Some(2) };
+        for message in [&sparse_message, &dense_message] {
+            let mine = crate::os_pack::json::to_json_string(message);
+            let theirs = serde_json::to_string(message).expect("serde_json encodes MutationMessage");
+            assert_eq!(mine, theirs, "MutationMessage's ToValue/pack::json bridge diverged from serde_json for op_index={:?}", message.op_index);
+        }
+
+        let conflict = crate::os_spr::Conflict {
+            id: crate::os_spr::ConflictId("conflict-1".into()),
+            kind: crate::os_spr::ConflictKind::Degraded { edit_ids: vec!["edit-1".into(), "edit-2".into()] },
+            status: crate::os_spr::ConflictStatus::Open,
+            messages: vec![sparse_message, dense_message],
+            actors: vec![ActorId("actor-1".into()), ActorId("actor-2".into())],
+            timestamp: HybridLogicalTimestamp::new(9, 300),
+        };
+        let mine = crate::os_pack::json::to_json_string(&conflict);
+        let theirs = serde_json::to_string(&conflict).expect("serde_json encodes Conflict");
+        assert_eq!(mine, theirs, "Conflict's ToValue/pack::json bridge diverged from serde_json");
+    }
+
     #[semio_framework_async_macros::async_test]
     async fn document_text_rejects_missing_metadata_and_unknown_cursor_without_synthesis() {
         let mut store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, SeverityMutation>("demo/v1", "strict-text", DemoSnapshot { n: Some(0) }, None)).await;
@@ -25792,6 +25857,19 @@ mod tests {
             let decoded = pack_rt::decode_pack_value(&bytes).expect("decode_pack_value");
             assert!(dsl_value_numeric_insensitive_eq(&decoded, &value), "round-trip mismatch for fixture {name}: {decoded:?} != {value:?}");
         }
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn interaction_state_pack_matches_first_party_value_and_json_oracle() {
+        let oracle: serde_json::Value = serde_json::from_str(include_str!("🧪️interaction-state-pack.json")).unwrap();
+        let value = DslValue::from(&oracle);
+        let state = <protocol::InteractionState as crate::os_dsl::FromValue>::from_value(value.clone()).unwrap();
+        let encoded = <protocol::InteractionState as ArtifactPack>::encode_pack(&state);
+        assert_eq!(encoded, <DslValue as ArtifactPack>::encode_pack(&value));
+        assert_eq!(encoded, <serde_json::Value as ArtifactPack>::encode_pack(&oracle));
+        let decoded = <protocol::InteractionState as ArtifactPack>::decode_pack(&encoded).unwrap();
+        assert_eq!(decoded, state);
+        assert_eq!(serde_json::Value::from(&<protocol::InteractionState as crate::os_dsl::ToValue>::to_value(&decoded)), oracle);
     }
 
     /// @emoji 🪶️ Hex-dumps `pack_rt::encode_wire_value` over the SAME fixture corpus — ground

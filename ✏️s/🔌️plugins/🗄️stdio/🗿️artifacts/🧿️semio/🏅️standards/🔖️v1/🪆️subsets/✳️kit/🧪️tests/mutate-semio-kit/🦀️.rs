@@ -98,7 +98,7 @@ fn plan_mutations(ctx: &Context) -> Result<(Vec<Json>, Json), String> {
 #[cfg(feature = "sut")]
 mod subject {
     use semio_repo_test_host::{parse_json, Context, Json, Outcome};
-    use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::any::schema::mutations::semio_mutation_refusals;
+    use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::base::schema::mutations::semio_mutation_refusals;
     use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::kit::schema::mutations::{apply_semio_kit_mutation, decode_kit_mutation_json, inverse_semio_kit_mutation, SemioKitMutation};
     use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::kit::schema::snapshot::{decode_kit_snapshot_json, decode_semio_kit_pack, encode_kit_snapshot_json, encode_semio_kit_pack, parse_semio_kit_dsl, print_semio_kit_dsl, SemioKitSnapshot};
     use semio_s_plugin_stdio_test_oracle::law::carrier_is_exact;

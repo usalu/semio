@@ -1,0 +1,83 @@
+{
+  "$id": "https://semio.tech/schema/s/equation/equation/mutation.json",
+  "title": "EquationMutation",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["graph", "geometry"],
+  "properties": {
+    "graph": {
+      "$ref": "#/$defs/EquationGraph",
+      "x-semio-state": "artifact"
+    },
+    "geometry": {
+      "$ref": "#/$defs/EquationGeometry",
+      "x-semio-state": "artifact"
+    }
+  },
+  "$defs": {
+    "EquationGraph": {
+      "title": "EquationGraph",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["directed", "nodes", "edges", "algorithm"],
+      "properties": {
+        "directed": { "type": "boolean" },
+        "nodes": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/EquationNode" }
+        },
+        "edges": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/EquationEdge" }
+        },
+        "algorithm": { "type": "string" },
+        "algorithmSeed": { "type": "string" }
+      }
+    },
+    "EquationNode": {
+      "title": "EquationNode",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "label", "x", "y"],
+      "properties": {
+        "id": { "type": "string" },
+        "label": { "type": "string" },
+        "x": { "type": "number", "format": "double" },
+        "y": { "type": "number", "format": "double" }
+      }
+    },
+    "EquationEdge": {
+      "title": "EquationEdge",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "source", "target"],
+      "properties": {
+        "id": { "type": "string" },
+        "source": { "type": "string" },
+        "target": { "type": "string" }
+      }
+    },
+    "EquationPoint": {
+      "title": "EquationPoint",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["x", "y"],
+      "properties": {
+        "x": { "type": "number", "format": "double" },
+        "y": { "type": "number", "format": "double" }
+      }
+    },
+    "EquationGeometry": {
+      "title": "EquationGeometry",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["points"],
+      "properties": {
+        "points": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/EquationPoint" }
+        }
+      }
+    }
+  }
+}

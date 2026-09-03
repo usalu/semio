@@ -5,10 +5,10 @@
 //! emit an artifact mutation. Must not import anything from the sibling mutation-capable surface
 //! (viewer-purity policy — this file stays greppable-clean of that surface's own module path).
 
-use crate::artifacts::xlsx::standards::v_ecma_376::subsets::any::schema::snapshot::XlsxCellValue;
+use crate::artifacts::xlsx::standards::v_ecma_376::subsets::base::schema::snapshot::XlsxCellValue;
 use crate::artifacts::xlsx::{XlsxMutation, XlsxSnapshot, STDIO_XLSX_DOCUMENT_SCHEMA};
-use crate::viewer::xlsx::standards::v_ecma_376::subsets::any::modes::view;
-use crate::viewer::xlsx::standards::v_ecma_376::subsets::any::modes::view::windows::main;
+use crate::viewer::xlsx::standards::v_ecma_376::subsets::base::modes::view;
+use crate::viewer::xlsx::standards::v_ecma_376::subsets::base::modes::view::windows::main;
 use semio_framework_plugin::{ArtifactView, ArtifactViewer, ConfigView, Dialect, Fault, Label, NoConfig, NoConfigMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, StandardId, SubsetId, ViewEmit, Viewer};
 
 //#region 🔖️Dialect

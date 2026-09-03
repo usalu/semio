@@ -4,7 +4,7 @@
 use crate::artifacts::wires::schema::{fixture_json_string, fixture_nodes};
 use crate::artifacts::wires::{WiresSnapshot, MINDMAP_WIRES_SCHEMA};
 use semio_framework_plugin::{ui_stack_vertical, ui_text, Label, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, UiNode, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL};
-use serde_json::Value;
+use dsl::os_pack::json::Value;
 
 //#region 🔖️Constants
 pub const WIRES_PLAY_BODY_PROPERTIES: &str = "reasoning.wires.properties";
@@ -57,7 +57,7 @@ pub type TopicId = canvas::board::NodeId;
 /// 🧯️ WIRES extension errors — fixture (de)serialization and fixed-identity-set validation failures.
 #[derive(Debug)]
 pub enum WiresError {
-    Json(serde_json::Error),
+    Json(dsl::os_pack::json::JsonError),
     FixtureRootNotObject,
     SchemaMismatch,
     IdentitiesMissing,
@@ -87,8 +87,8 @@ impl std::error::Error for WiresError {
     }
 }
 
-impl From<serde_json::Error> for WiresError {
-    fn from(error: serde_json::Error) -> Self {
+impl From<dsl::os_pack::json::JsonError> for WiresError {
+    fn from(error: dsl::os_pack::json::JsonError) -> Self {
         Self::Json(error)
     }
 }
@@ -149,7 +149,7 @@ impl canvas::board::GraphExtension for DefaultWiresExtension {}
 impl DefaultWiresExtension {
     /// 🔗️ Hydrate extension state from `reasoning.wires.fixture` JSON.
     pub async fn from_fixture_json(json: &str) -> Result<Self, WiresError> {
-        let root: Value = serde_json::from_str(json)?;
+        let root: Value = dsl::os_pack::json::parse(json)?;
         let Some(obj) = root.as_object() else {
             return Err(WiresError::FixtureRootNotObject);
         };
@@ -273,7 +273,7 @@ mod tests {
         // then hydrate this crate's JSON-facing extension from its `wires_fixture` value, the same
         // shape `from_fixture_json` has always expected.
         let document = crate::artifacts::wires::schema::metabolism_wires_example_snapshot().expect("valid metabolism fixture mutations");
-        let json = serde_json::to_string(&crate::artifacts::wires::schema::dsl_to_json(&document.wires_fixture)).expect("json");
+        let json = dsl::os_pack::json::to_string(&crate::artifacts::wires::schema::dsl_to_json(&document.wires_fixture));
         let ext = DefaultWiresExtension::from_fixture_json(&json).expect("metabolism fixture");
         assert_eq!(ext.topics.len(), 7);
         assert_eq!(ext.relationships.len(), 9);

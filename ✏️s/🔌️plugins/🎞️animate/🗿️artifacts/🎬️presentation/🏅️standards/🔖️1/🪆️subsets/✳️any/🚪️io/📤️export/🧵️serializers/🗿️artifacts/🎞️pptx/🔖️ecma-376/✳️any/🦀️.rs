@@ -1,5 +1,5 @@
 //! 🚪️ presentation -> pptx — foreign `Serializer<PresentationSnapshot>` (ticket
-//! 26/08/17/CLEAN-ARTIFACT-STANDARD-SUBSET-MECHANISM design.md §3). Structural `serde_json`
+//! 26/08/17/CLEAN-ARTIFACT-STANDARD-SUBSET-MECHANISM design.md §3). Structural `dsl::DslValue`
 //! coercion between `PresentationSnapshot`'s and `PptxSnapshot`'s (unrelated) field shapes — not a real
 //! presentation->pptx semantic mapping (unchanged behaviour, pre-dates this ticket) — `IoFidelity::Lossy`.
 
@@ -17,8 +17,8 @@ impl Serializer<PresentationSnapshot> for PresentationIntoPptx {
     const INTO: Dialect = PPTX_DIALECT;
     const FIDELITY: IoFidelity = IoFidelity::Lossy;
     async fn serialize(from: &PresentationSnapshot) -> IoResult<IoPayload> {
-        let value: serde_json::Value = dsl::ToValue::to_value(from).into();
-        let wire: PptxSnapshot = serde_json::from_value(value).map_err(|error| IoError { message: format!("PresentationIntoPptx: {error}"), diagnostics: Vec::new() })?;
+        let value = dsl::ToValue::to_value(from);
+        let wire: PptxSnapshot = dsl::FromValue::from_value(value).map_err(|error| IoError { message: format!("PresentationIntoPptx: {error}"), diagnostics: Vec::new() })?;
         Ok(IoOutcome::clean(IoPayload::Binary(<PptxSnapshot as store::ArtifactPack>::encode_pack(&wire))))
     }
 }

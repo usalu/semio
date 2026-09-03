@@ -1,7 +1,7 @@
 // 🌳 `SvgSnapshot.doc` wraps an `XmlDocument`, and `SvgDiff`/`SvgNodeDiff` diff that same node
 // tree directly, per the plan's spec-mandated-reuse rule -- svg embeds xml's NODE model (real
 // import, the canonical shape), but declares its own DIFF types below.
-import type { XmlDeclaration, XmlDoctype, XmlNode } from '../../../../../../../📰xml/🏅️standards/🔖️1.0/🪆️subsets/✳️base/🧬️schema/📸️snapshot/🟦️.ts';
+import type { XmlDeclaration, XmlDoctype, XmlNode } from '../../../../../../../📰️xml/🏅️standards/🔖️1.0/🪆️subsets/✳️base/🧬️schema/📸️snapshot/🟦️.ts';
 export type { XmlDeclaration, XmlDoctype, XmlNode };
 
 /** 🔺️ Diff for `stdio.svg`. `declaration`/`doctype` are tri-state (`null` = cleared, absent =

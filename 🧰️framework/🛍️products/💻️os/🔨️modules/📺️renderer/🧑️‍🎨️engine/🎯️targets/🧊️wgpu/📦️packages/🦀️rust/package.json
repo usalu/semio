@@ -7,7 +7,7 @@
   "private": true,
   "bundleKind": "library",
   "exports": {
-    ".": "./🟦️.ts"
+    ".": "./🟦️typescript/📚️library/🟦️.ts"
   },
   "scripts": {
     "test": "bun nx run @semio-tech/framework-renderer-wgpu:test",
@@ -30,7 +30,7 @@
   "repository": {
     "type": "git",
     "url": "https://github.com/usalu/semio.git",
-    "directory": "framework/product/os/module/renderer/wgpu"
+    "directory": "framework/products/os/modules/renderer/engine/targets/wgpu/packages/rust"
   },
   "nx": {
     "includedScripts": []

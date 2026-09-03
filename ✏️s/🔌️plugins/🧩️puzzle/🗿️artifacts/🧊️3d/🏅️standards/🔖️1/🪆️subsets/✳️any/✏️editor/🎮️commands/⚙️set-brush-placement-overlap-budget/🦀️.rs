@@ -1,7 +1,7 @@
 //! ⚙️ `set-brush-placement-overlap-budget` command.
 
 use crate::editor::puzzle3d::{puzzle3d_absolute_or_delta, sync_precompute_session, Puzzle3dActionCtx};
-use serde_json::Value;
+use dsl::os_pack::json::Value;
 
 /// 🖌️ The collision budget every brush/fill placement is tested against — re-syncs the precompute
 /// session immediately so already-cached candidates are recomputed under the new budget.

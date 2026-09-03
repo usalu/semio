@@ -1,0 +1,70 @@
+# 🧬️ Imperative diff schema — sparse field delta over the artifact.
+
+type ProcedureDiff {
+  artifact: ProcedureArtifact @state(class: ARTIFACT)
+  schema: String @state(class: ARTIFACT)
+  path: ProcedurePathDelta @state(class: ARTIFACT)
+  seed: [ProcedureSeedEntry!] @state(class: ARTIFACT)
+  selectedStepIds: ProcedureStringList @state(class: PRESENCE)
+  locale: String @state(class: CONFIG)
+  contributionsJson: String @state(class: CONFIG)
+}
+
+type ProcedureStringList {
+  values: [String!]!
+}
+
+type ProcedurePathRef {
+  owner: String
+  slot: String
+}
+
+type ProcedurePathDelta {
+  pathRef: ProcedurePathRef!
+  steps: ProcedureStepsDelta!
+}
+
+type ProcedureStepsDelta {
+  added: [ProcedureStep!]!
+  removed: [String!]!
+  patched: [ProcedureStepPatchEntry!]!
+  reordered: [String!]
+}
+
+type ProcedureStepPatchEntry {
+  id: String!
+  patch: JSON!
+}
+
+type ProcedurePath {
+  steps: [ProcedureStep!]!
+}
+
+type ProcedureStep {
+  id: String!
+  kind: String!
+  params: JSON
+  bodies: [ProcedureStepBodyEntry!]
+}
+
+type ProcedureStepBodyEntry {
+  slot: String!
+  path: ProcedurePath!
+}
+
+type ProcedureSeedEntry {
+  key: String!
+  value: JSON!
+}
+
+type ProcedureArtifact {
+  schema: String!
+  path: ProcedurePath!
+  seed: [ProcedureSeedEntry!]!
+  selectedStepIds: [String!]!
+  locale: String!
+  contributionsJson: String!
+  runOutputJson: String!
+}
+
+scalar JSON

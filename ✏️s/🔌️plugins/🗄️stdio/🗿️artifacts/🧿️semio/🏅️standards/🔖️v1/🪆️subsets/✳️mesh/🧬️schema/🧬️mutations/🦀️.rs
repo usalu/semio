@@ -57,7 +57,7 @@
 //! (`📌️important.md`): whole-document replace goes through `ArtifactStore::reset`, outside history.
 
 #[cfg(test)]
-use crate::artifacts::semio::standards::v1::subsets::any::schema::geometry::{SemioPoint3, SemioRgba, SemioUv};
+use crate::artifacts::semio::standards::v1::subsets::base::schema::geometry::{SemioPoint3, SemioRgba, SemioUv};
 use crate::artifacts::semio::standards::v1::subsets::mesh::schema::diff::{
     dec_list, dec_material, dec_mesh, dec_point3, dec_primitive, dec_rgba, dec_str, dec_texture, dec_topology, dec_uv, decode_option, enc_list, enc_material, enc_mesh, enc_point3, enc_primitive, enc_rgba, enc_str, enc_texture, enc_topology, enc_uv,
     encode_option, hex_decode, hex_encode, SemioMeshDiff,

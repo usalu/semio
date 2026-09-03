@@ -46,7 +46,7 @@ const KINDS: &[&str] = &["create-column", "delete-column", "rename-column", "reo
 mod subject {
     use semio_repo_test_host::{digest, parse_json, Context, Json, Outcome};
     use semio_s_plugin_stdio::artifacts::csv::standards::v_rfc4180::subsets::any::schema::snapshot::decode_csv;
-    use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::any::schema::mutations::semio_mutation_refusals;
+    use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::base::schema::mutations::semio_mutation_refusals;
     use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::table::schema::mutations::{apply_semio_table_mutation, decode_semio_table_mutation_json, inverse_semio_table_mutation, SemioTableMutation};
     use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::table::schema::snapshot::{
         decode_semio_table_pack, decode_semio_table_snapshot_json, encode_semio_table_pack, encode_semio_table_snapshot_json, parse_semio_table_dsl, print_semio_table_dsl, SemioTableCellKind, SemioTableColumn, SemioTableRow, SemioTableSnapshot,

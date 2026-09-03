@@ -38,4 +38,17 @@ describe("plugin registry generated preview launchers", () => {
       ]);
     });
   });
+
+  it("registers the strict catalog completion target with an explicit fresh build root", () => {
+    const repoRoot = getWorkspaceRoot();
+    const launch = Bun.JSONC.parse(readFileSync(join(repoRoot, ".vscode/launch.json"), "utf8")) as { readonly configurations: readonly LaunchEntry[] };
+    expect(launch.configurations.filter(({ name }) => name === "📦️catalog-complete🤖️plugin-registry")).toEqual([{
+      name: "📦️catalog-complete🤖️plugin-registry",
+      type: "node-terminal",
+      request: "launch",
+      command: "bun nx run @semio-tech/plugin-registry:catalog-complete -- --build-root \"${input:catalogFreshBuildRoot}\"",
+      cwd: "${workspaceFolder}",
+      presentation: { group: "4_build", order: 206.066 },
+    }]);
+  });
 });

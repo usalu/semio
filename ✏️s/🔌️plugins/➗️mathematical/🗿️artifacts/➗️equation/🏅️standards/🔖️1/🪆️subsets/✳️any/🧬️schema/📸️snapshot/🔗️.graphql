@@ -1,0 +1,36 @@
+# 📸️ Equation snapshot schema.
+
+type EquationSnapshot {
+  graph: EquationGraph! @state(class: ARTIFACT)
+  geometry: EquationGeometry! @state(class: ARTIFACT)
+}
+
+type EquationGraph {
+  directed: Boolean!
+  nodes: [EquationNode!]!
+  edges: [EquationEdge!]!
+  algorithm: String!
+  algorithmSeed: String
+}
+
+type EquationNode {
+  id: String!
+  label: String!
+  x: Float!
+  y: Float!
+}
+
+type EquationEdge {
+  id: String!
+  source: String!
+  target: String!
+}
+
+type EquationPoint {
+  x: Float!
+  y: Float!
+}
+
+type EquationGeometry {
+  points: [EquationPoint!]!
+}

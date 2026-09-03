@@ -27,7 +27,7 @@ mod tests {
         let mut app = forms_app();
         let before = render(&mut app, FORMS_PLAY_BODY_CATALOGUE);
         assert!(!before.contains("forms-play-catalogue.buildingComponent"), "catalogue should start without the contributed kind: {before}");
-        dispatch(&mut app, FormsCommand::SetContributions(SetContributions { json: serde_json::to_string(&building_component_contributions()).unwrap() }));
+        dispatch(&mut app, FormsCommand::SetContributions(SetContributions { json: dsl::os_pack::json::to_json_string(&building_component_contributions()) }));
         let after = render(&mut app, FORMS_PLAY_BODY_CATALOGUE);
         assert!(after.contains("forms-play-catalogue.buildingComponent"), "catalogue should list the contributed kind: {after}");
     }

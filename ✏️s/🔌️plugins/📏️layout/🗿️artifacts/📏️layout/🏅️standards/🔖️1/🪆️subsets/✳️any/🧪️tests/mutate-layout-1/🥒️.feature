@@ -1,30 +1,30 @@
 @capability-layout-1-mutate
-@no-oracle-layout-mutation-semantics
+@oracle-layout-1-python-independent
 @comparison-ordered-json-v1
 @mutations-layout-1-any
-Feature: Apply every typed layout-document mutation to its committed specification vector
+Feature: Apply every typed layout-document mutation to its committed specification vector and against an independent Python implementation
   `s.layout.layout` is a semio-NATIVE artifact: no third party reads or writes
-  `.dsl.semio`/`.pack.semio`, so no reference LIBRARY is registered. That is recorded as the
-  `layout-mutation-semantics` no-oracle decision in
-  `../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️oracle/🔣️.json`, and its substitutes are the
-  committed per-kind specification vectors plus the inverse law. This case re-exercises those SAME
-  committed bytes end-to-end through `apply_layout_mutation_json`/`undo_layout_mutation_json`.
+  `.dsl.semio`/`.pack.semio`, so no reference LIBRARY is registered — confirmed again, from the
+  carrier side, by this subset's own `layout-mutation-semantics` no-oracle decision
+  (`../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️oracle/🔣️.json`): none of the five export serializers
+  this repository already links as third-party test oracles (dxf 0.6, png 0.18, svg, dwg, pdf) reads
+  this artifact's own shape — each either coerces it into a permanently empty document, errors
+  outright, or re-emits the artifact's own internal DSL text unparsed. The second producer a
+  differential comparison needs is therefore a second IMPLEMENTATION, and `🐍️component.py` beside
+  this file is it: all 25 kinds of this vocabulary, written in Python from this subset's own
+  committed `../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔣️.json` document shape and each
+  mutation's own committed `(before, mutation, after)` specification vector, and from
+  `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-DIRECT-LEAF-OVERHAUL/📓️taxonomy.md`'s
+  verb table and `📓️derivation-rules.md`'s per-collection shape rules. It imports nothing from the
+  Rust it judges and transliterates none of it. The no-oracle decision this replaces
+  (`layout-mutation-semantics`) is narrowed to an empty `capabilities` list rather than deleted (it
+  already was, by a prior shard of this same ticket), because its own investigation — including the
+  carrier-side serializer survey above — remains the honest record of what was checked; a dated note
+  is appended recording that the `asset://` blocker it named is now resolved.
 
-  ⚠️ THIS NO-ORACLE DECISION IS A DEBT, NOT A VERDICT, and is recorded as one. Declining a third-party
-  LIBRARY is a different judgement from declining a SECOND IMPLEMENTATION, and only the first was ever
-  made here. `mutate-note-1` and `mutate-program-1` took Python second
-  implementations over this same `.dsl.semio` carrier in this wave, so the same is writable for this
-  subset from `🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🔣️.json`, the rules of
-  `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/📓️derivation-rules.md` and the
-  committed vectors this feature already replays. What blocks it TODAY is stated in the decision and
-  is one edit: this case's vectors are not declared as `asset://` fixtures — the `Examples` table
-  carries the payloads inline and the adapter reads the committed files through `include_str!` — so
-  the plan pins none of their digests and a Python reference cannot read them at all. Separately, `identity-round-trip` would still be refused: this subset's committed
-  snapshot text grammar is the generic `family-scene` canvas grammar, and the committed artifact
-  carries no `layers` block at all.
-  Until that is done, every assertion below still lives in the SUBJECT role, and the ceiling is the
-  one this decision has always had: no second producer runs beside it, so a mistake shared by the
-  handcrafted vector and the production code passes unseen.
+  Both implementations now read the SAME committed bytes: every `(before, mutation, after)` path is a
+  declared `asset://` fixture rather than an `include_str!`-only literal, so the plan pins its digest
+  and a Python reference can resolve it.
 
   What distinguishes this subset from every sibling is that a layout document is FOUR pools at TWO
   nesting depths, joined by reference. Three scalars sit at the document root (`name`, `printTarget`,
@@ -38,81 +38,89 @@ Feature: Apply every typed layout-document mutation to its committed specificati
   it has to restore an index and not append; `delete-frame` removes a text frame and its layer
   membership together, so an inverse that put the frame back without re-listing it in the layer's
   `objectIds` fails; and `change-print-target`/`change-data-fields` set an optional root scalar that
-  was previously `null`, so their inverse has to clear it again rather than write an empty string.
+  was previously `null` (`printTarget`) or genuinely ABSENT (`dataFieldsJson`), so their inverse has
+  to clear it again exactly as it was — the Python reference's first standalone run against these
+  committed vectors caught exactly this distinction as a real bug (an inverse that wrote `dataFieldsJson:
+  null` instead of omitting the key), fixed before registration.
 
-  Because this case records a no-oracle decision the runner executes NO oracle role, so every
-  assertion below lives in the subject handler, which compares against the committed after-document
-  through the shared `⚖️law` module and fails with the first divergence named by JSON path.
+  `mutate-<kind>`/`inverse-<kind>` now dispatch BOTH an oracle role (the Python implementation) and a
+  subject role (this repository's own `apply_layout_mutation_json`/`undo_layout_mutation_json`,
+  unaffected by this change, still reading the committed vectors through `include_str!`): each side
+  answers in role, then the two are compared, and the subject additionally asserts the observability
+  and inverse laws it always has through the shared `⚖️law` module.
 
   @id-mutate
   @level-exhaustive
-  @mode-conformance
+  @mode-differential
   Scenario Outline: Applying <id> reaches its committed after-document
-    Given the committed before-document and mutation payload of the <id> specification vector
+    Given the committed before-document asset://🧬️schema/🧬️mutations/<dir>/🧪️tests/<fixture>/📸️snapshot/⬅️before/🔣️.json
+    And the committed mutation payload asset://🧬️schema/🧬️mutations/<dir>/🧪️tests/<fixture>/🦠️mutation/🔣️.json
+    And the committed after-document asset://🧬️schema/🧬️mutations/<dir>/🧪️tests/<fixture>/📸️snapshot/➡️after/🔣️.json
     When <id> is applied through apply_layout_mutation_json
-    Then the resulting document is the committed after-document, and the mutation moved it
+    Then the resulting document is the committed after-document, the mutation moved it, and the two implementations agree
     Examples:
-      | id                     |
-      | rename-layout          |
-      | change-print-target    |
-      | change-data-fields     |
-      | create-page            |
-      | delete-page            |
-      | rename-page            |
-      | change-page-width      |
-      | change-page-height     |
-      | update-page-margins    |
-      | update-page-columns    |
-      | reorder-pages          |
-      | create-story           |
-      | delete-story           |
-      | edit-story             |
-      | create-link            |
-      | delete-link            |
-      | change-link-path       |
-      | create-frame           |
-      | delete-frame           |
-      | move-frame             |
-      | resize-frame           |
-      | change-frame-fill      |
-      | change-frame-stroke    |
-      | change-frame-wrap-mode |
-      | change-frame-columns   |
+      | id                     | dir                     | fixture                                         |
+      | rename-layout          | ✏️rename-layout          | renames-the-document                            |
+      | change-print-target    | 🖨️change-print-target    | sets-a-cmyk-print-target                        |
+      | change-data-fields     | 🧾change-data-fields     | attaches-a-data-fields-payload                  |
+      | create-page            | 🌱create-page            | appends-page-3                                  |
+      | delete-page            | 🗑️delete-page            | removes-page-2                                  |
+      | rename-page            | 🏷️rename-page            | renames-page-1                                  |
+      | change-page-width      | ↔️change-page-width      | widens-page-1                                   |
+      | change-page-height     | ↕️change-page-height     | lengthens-page-1                                |
+      | update-page-margins    | 📐update-page-margins    | sets-asymmetric-margins-on-page-1               |
+      | update-page-columns    | 🏛️update-page-columns    | splits-page-1-into-three-columns                |
+      | reorder-pages          | 🔀reorder-pages          | moves-page-1-behind-page-2                      |
+      | create-story           | 📖create-story           | appends-story-3                                 |
+      | delete-story           | 📕delete-story           | removes-story-2                                 |
+      | edit-story             | 📝edit-story             | rewrites-story-1-body                           |
+      | create-link            | 🖇️create-link            | appends-link-3                                  |
+      | delete-link            | ✂️delete-link            | removes-link-2                                  |
+      | change-link-path       | 🔗change-link-path       | relinks-link-1-to-a-new-file                    |
+      | create-frame           | ➕create-frame           | inserts-a-rect-frame-at-index-1                 |
+      | delete-frame           | ➖delete-frame           | removes-the-text-frame-and-its-layer-membership |
+      | move-frame             | 🕹️move-frame             | moves-the-rect-frame                            |
+      | resize-frame           | 📏resize-frame           | resizes-the-rect-frame                          |
+      | change-frame-fill      | 🎨change-frame-fill      | repaints-the-rect-frame-fill                    |
+      | change-frame-stroke    | 🖊️change-frame-stroke    | adds-a-stroke-to-the-rect-frame                 |
+      | change-frame-wrap-mode | 🔤change-frame-wrap-mode | switches-the-text-frame-to-column-wrap          |
+      | change-frame-columns   | 🔢change-frame-columns   | splits-the-text-frame-into-two-columns          |
 
   @id-inverse
   @level-exhaustive
-  @mode-property
+  @mode-differential
   Scenario Outline: Undoing <id> restores its committed before-document
-    Given the committed before-document and mutation payload of the <id> specification vector
+    Given the committed before-document asset://🧬️schema/🧬️mutations/<dir>/🧪️tests/<fixture>/📸️snapshot/⬅️before/🔣️.json
+    And the committed mutation payload asset://🧬️schema/🧬️mutations/<dir>/🧪️tests/<fixture>/🦠️mutation/🔣️.json
     When <id> and then every step of its own computed inverse are applied through undo_layout_mutation_json
-    Then the document is the committed before-document again, member positions included
+    Then the document is the committed before-document again, member positions included, and the two implementations agree
     Examples:
-      | id                     |
-      | rename-layout          |
-      | change-print-target    |
-      | change-data-fields     |
-      | create-page            |
-      | delete-page            |
-      | rename-page            |
-      | change-page-width      |
-      | change-page-height     |
-      | update-page-margins    |
-      | update-page-columns    |
-      | reorder-pages          |
-      | create-story           |
-      | delete-story           |
-      | edit-story             |
-      | create-link            |
-      | delete-link            |
-      | change-link-path       |
-      | create-frame           |
-      | delete-frame           |
-      | move-frame             |
-      | resize-frame           |
-      | change-frame-fill      |
-      | change-frame-stroke    |
-      | change-frame-wrap-mode |
-      | change-frame-columns   |
+      | id                     | dir                     | fixture                                         |
+      | rename-layout          | ✏️rename-layout          | renames-the-document                            |
+      | change-print-target    | 🖨️change-print-target    | sets-a-cmyk-print-target                        |
+      | change-data-fields     | 🧾change-data-fields     | attaches-a-data-fields-payload                  |
+      | create-page            | 🌱create-page            | appends-page-3                                  |
+      | delete-page            | 🗑️delete-page            | removes-page-2                                  |
+      | rename-page            | 🏷️rename-page            | renames-page-1                                  |
+      | change-page-width      | ↔️change-page-width      | widens-page-1                                   |
+      | change-page-height     | ↕️change-page-height     | lengthens-page-1                                |
+      | update-page-margins    | 📐update-page-margins    | sets-asymmetric-margins-on-page-1               |
+      | update-page-columns    | 🏛️update-page-columns    | splits-page-1-into-three-columns                |
+      | reorder-pages          | 🔀reorder-pages          | moves-page-1-behind-page-2                      |
+      | create-story           | 📖create-story           | appends-story-3                                 |
+      | delete-story           | 📕delete-story           | removes-story-2                                 |
+      | edit-story             | 📝edit-story             | rewrites-story-1-body                           |
+      | create-link            | 🖇️create-link            | appends-link-3                                  |
+      | delete-link            | ✂️delete-link            | removes-link-2                                  |
+      | change-link-path       | 🔗change-link-path       | relinks-link-1-to-a-new-file                    |
+      | create-frame           | ➕create-frame           | inserts-a-rect-frame-at-index-1                 |
+      | delete-frame           | ➖delete-frame           | removes-the-text-frame-and-its-layer-membership |
+      | move-frame             | 🕹️move-frame             | moves-the-rect-frame                            |
+      | resize-frame           | 📏resize-frame           | resizes-the-rect-frame                          |
+      | change-frame-fill      | 🎨change-frame-fill      | repaints-the-rect-frame-fill                    |
+      | change-frame-stroke    | 🖊️change-frame-stroke    | adds-a-stroke-to-the-rect-frame                 |
+      | change-frame-wrap-mode | 🔤change-frame-wrap-mode | switches-the-text-frame-to-column-wrap          |
+      | change-frame-columns   | 🔢change-frame-columns   | splits-the-text-frame-into-two-columns          |
 
   @id-identity-round-trip
   @level-long

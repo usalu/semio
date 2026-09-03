@@ -2,7 +2,6 @@
 
 use crate::artifacts::forms::{forms_snapshot_with_state, FormsResultsChild, FormsStructureChild, FORMS_DOCUMENT_SCHEMA};
 use schema::ArtifactSchema;
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️Snapshot
 /// 📸️ Persisted forms document snapshot (persistent fields of the artifact). Ticket
@@ -12,9 +11,8 @@ use serde::{Deserialize, Serialize};
 /// instead. See `crate::artifacts::forms::🔖️Composition` (`🗿️artifacts/📋️forms/🦀️.rs`)
 /// for the converters/working-scene this slot pair is built and read through. `#[child(...)]`
 /// drives `#[derive(ArtifactSchema)]`'s slot-table emission; never hand-written.
-#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, ArtifactSchema, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, ArtifactSchema)]
 #[value(rename_all = "camelCase")]
-#[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.forms.forms")]
 pub struct FormsSnapshot {
     #[state(artifact)]
@@ -25,7 +23,6 @@ pub struct FormsSnapshot {
     pub version: String,
     #[state(artifact)]
     #[value(skip_serializing_if = "Option::is_none")]
-    #[serde(skip_serializing_if = "Option::is_none")]
     pub title: Option<String>,
     #[state(artifact)]
     #[child(kind = "s.stdio.semio.value")]

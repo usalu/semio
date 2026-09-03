@@ -33,7 +33,7 @@ Feature: Apply every typed semio MESH mutation to a real architectural model, ag
 
   **The model under test is a real one, and its provenance is written down.**
   `local://🗣️.dsl.semio` and its binary twin were derived ONCE from the real committed glTF
-  binary `🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/📚️examples/🌱️metabolism/🖼️assets/🧊️base.glb`
+  binary `🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️base/📚️examples/🌱️metabolism/🖼️assets/🧊️base.glb`
   — a real architectural model from the Metabolism study: 271 MESHES, 459 PRIMITIVES, 1 544 vertices,
   2 184 indices, two draw modes (`LINE_STRIP` and `TRIANGLES`) and two PBR materials. The GLB was
   walked by hand — header, JSON chunk, BIN chunk, accessors read straight out of their buffer views —

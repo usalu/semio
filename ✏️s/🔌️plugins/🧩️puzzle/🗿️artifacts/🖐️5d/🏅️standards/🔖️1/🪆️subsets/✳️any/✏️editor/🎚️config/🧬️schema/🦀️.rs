@@ -33,7 +33,7 @@ pub struct Puzzle5dCamera3d {
     pub zoom: f64,
 }
 
-#[derive(Clone, Debug, PartialEq, ArtifactSchema)]
+#[derive(Clone, Debug, PartialEq, ArtifactSchema, value_derive::ToValue, value_derive::FromValue)]
 #[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.puzzle.puzzle5d.config")]
 pub struct Puzzle5dConfig {

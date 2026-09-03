@@ -25,6 +25,7 @@ import (
 	"strings"
 	"testing"
 	"time"
+	"unicode"
 
 	command "github.com/usalu/semio/repo/client/internal/command"
 	eventstore "github.com/usalu/semio/repo/client/internal/eventstore"
@@ -608,7 +609,7 @@ func TestMcpBootstrapAssetsStayRepoRelative(t *testing.T) {
 		},
 		{
 			name: "native shell bootstrap builds the repo client from its canonical source",
-			path: filepath.Join(repoRoot, "🧰️framework", "🛍️products", "🦑️repo", "🔨️modules", "🔩️native", "🥾️bootstrap", "⌨️script.sh"),
+			path: filepath.Join(repoRoot, "🧰️framework", "🛍️products", "🦑️repo", "🔨️modules", "🔩️native", "🥾️bootstrap", "🐚️.sh"),
 			requiredFragments: []string{
 				`🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/client`,
 				`./🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🔌️mcp`,
@@ -621,7 +622,7 @@ func TestMcpBootstrapAssetsStayRepoRelative(t *testing.T) {
 		},
 		{
 			name: "native windows bootstrap builds the repo client from its canonical source",
-			path: filepath.Join(repoRoot, "🧰️framework", "🛍️products", "🦑️repo", "🔨️modules", "🔩️native", "🥾️bootstrap", "🪟️script.ps1"),
+			path: filepath.Join(repoRoot, "🧰️framework", "🛍️products", "🦑️repo", "🔨️modules", "🔩️native", "🥾️bootstrap", "🔵️.ps1"),
 			requiredFragments: []string{
 				`🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/client.exe`,
 				`./🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🔌️mcp`,
@@ -641,8 +642,16 @@ func TestMcpBootstrapAssetsStayRepoRelative(t *testing.T) {
 				t.Fatalf("failed to read %s: %v", tc.path, err)
 			}
 			text := string(data)
+			compact := func(value string) string {
+				return strings.Map(func(character rune) rune {
+					if unicode.IsSpace(character) {
+						return -1
+					}
+					return character
+				}, value)
+			}
 			for _, fragment := range tc.requiredFragments {
-				if !strings.Contains(text, fragment) {
+				if !strings.Contains(compact(text), compact(fragment)) {
 					t.Fatalf("expected %s to contain %q", tc.path, fragment)
 				}
 			}
@@ -23579,13 +23588,9 @@ func TestMcpStdioInitializeHandshake(t *testing.T) {
 	if repoRoot == "" {
 		t.Skip("repo root not found")
 	}
-	bin := filepath.Join(repoRoot, "🧰️framework", "🛍️products", "🦑️repo", "🔨️modules", "💻️client", "client")
-	if _, err := os.Stat(bin); err != nil {
-		t.Skip("repo client binary not built")
-	}
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
-	cmd := exec.CommandContext(ctx, bin, "--timeout", "50ms", "mcp", "cursor")
+	cmd := exec.CommandContext(ctx, "bun", "./📜️script.ts", "dev", "mcp", "stdio", "cursor")
 	cmd.Dir = repoRoot
 	stdin, err := cmd.StdinPipe()
 	if err != nil {
@@ -23614,7 +23619,7 @@ func TestMcpStdioInitializeHandshake(t *testing.T) {
 	if err != nil {
 		t.Fatalf("read initialize response: %v", err)
 	}
-	if !strings.Contains(line, `"result"`) || !strings.Contains(line, `jsonrpc`) {
+	if !strings.Contains(line, `"result"`) || !strings.Contains(line, `jsonrpc`) || !strings.Contains(line, `"name":"repo-cursor"`) {
 		t.Fatalf("unexpected initialize response: %s", line)
 	}
 }

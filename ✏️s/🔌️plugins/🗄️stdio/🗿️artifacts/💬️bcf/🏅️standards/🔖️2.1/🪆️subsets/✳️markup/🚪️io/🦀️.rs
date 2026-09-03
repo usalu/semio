@@ -447,12 +447,12 @@ pub fn encode_bcf(snap: &BcfSnapshot) -> Result<Vec<u8>, String> {
         entries.push(ZipEntry { name: part.name.clone(), data: part.data.clone(), ..Default::default() });
     }
     let zip_snap = crate::artifacts::zip::ZipSnapshot { schema: crate::artifacts::zip::STDIO_ZIP_DOCUMENT_SCHEMA.into(), entries, comment: String::new() };
-    crate::artifacts::zip::standards::v2_0::subsets::any::io::encode_zip(&zip_snap).map_err(|e| e.to_string())
+    crate::artifacts::zip::standards::v2_0::subsets::base::io::encode_zip(&zip_snap).map_err(|e| e.to_string())
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn decode_bcf(data: &[u8]) -> Result<BcfSnapshot, String> {
-    let zip = crate::artifacts::zip::standards::v2_0::subsets::any::io::decode_zip(data).map_err(|e| e.to_string())?;
+    let zip = crate::artifacts::zip::standards::v2_0::subsets::base::io::decode_zip(data).map_err(|e| e.to_string())?;
 
     let mut version = String::new();
     let mut consumed: std::collections::HashSet<String> = std::collections::HashSet::new();
@@ -629,7 +629,7 @@ mod tests {
             entries: vec![ZipEntry { name: "bcf.version".into(), data: bcf_version_bytes("2.1"), ..Default::default() }, ZipEntry { name: "stray/notes.txt".into(), data: b"not a topic".to_vec(), ..Default::default() }],
             comment: String::new(),
         };
-        let bytes = crate::artifacts::zip::standards::v2_0::subsets::any::io::encode_zip(&zip_snap).unwrap();
+        let bytes = crate::artifacts::zip::standards::v2_0::subsets::base::io::encode_zip(&zip_snap).unwrap();
         let decoded = decode_bcf(&bytes).unwrap();
         assert!(decoded.topics.is_empty());
         assert!(decoded.parts.iter().any(|p| p.name == "stray/notes.txt"));
@@ -1097,7 +1097,7 @@ mod tests {
 
             let demo = demo_bcf_snapshot();
             let bytes = encode_bcf(&demo).expect("encode demo bcf");
-            let zip = crate::artifacts::zip::standards::v2_0::subsets::any::io::decode_zip(&bytes).expect("decode zip");
+            let zip = crate::artifacts::zip::standards::v2_0::subsets::base::io::decode_zip(&bytes).expect("decode zip");
 
             let mut checked = 0;
             for entry in &zip.entries {

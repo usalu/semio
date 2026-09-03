@@ -8,11 +8,13 @@
 // is a same-namespace redefinition (E0252), not a second namespace.
 use dsl::{DslValue, FromValue, ToValue, ValueError};
 // 🚧️ Still needed unconditionally: most `#[cfg(test)] mod …` blocks in this file oracle-test a type
-// through real `serde_json`, AND a handful of production types (`ViewModel`, the `MediaVocabulary`
-// family) stay `#[derive(Serialize, Deserialize)]` — see their own `🚧️ BLOCKED` docstrings — because
-// a sibling `#[path]`-mounted module (`🎠️kernel`, `🛍️products/💻️os/🔨️modules/🔁️workflow`, both
-// owned by other agents this pass) still embeds them by value inside plain serde-deriving types.
-// Ticket 26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS.
+// through real `serde_json`, AND a handful of production types (the `MediaVocabulary` family) stay
+// `#[derive(Serialize, Deserialize)]` — see their own `🚧️ BLOCKED` docstrings — because a sibling
+// `#[path]`-mounted module (`🎠️kernel`, `🛍️products/💻️os/🔨️modules/🔁️workflow`, both owned by
+// other agents this pass) still embeds them by value inside plain serde-deriving types. `ViewModel`
+// itself is now dual-derived (`ToValue`/`FromValue` added alongside serde, not replacing it) — kept
+// additive for the same reason: `🎠️kernel`'s `ActionContext`/`CommandContext` still embed it inside
+// serde-only structs. Ticket 26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS.
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 use ui_wgpu::wgpu::{ActionDescriptor, Locale, LocalizedLabel, NamedLayout, SurfaceKind, Terminology, WindowLayout, WindowOptions};
@@ -4565,61 +4567,74 @@ mod plugin_dependency_tests {
     //#endregion 🔖️ManifestSerdeTests
 }
 
-// 🚧️ BLOCKED (26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS): `locale`/
-// `terminology` below are `ui_wgpu::wgpu::{Locale, Terminology}` — NOT among the seven ui_wgpu
-// keystone types that gained `ToValue`/`FromValue` this ticket (see
-// 📓️ui-wgpu-keystone-seven-value-derive-2026-09-02.md); `🖱️ui` is out of scope this pass. Left
-// serde-only. Revisit once `Locale`/`Terminology` convert.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+// 🚧️ UNBLOCKED (26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS): `locale`/
+// `terminology` are `ui_wgpu::wgpu::{Locale, Terminology}`, which now have hand-written
+// `ToValue`/`FromValue` in `🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️locale_terminology_value.rs`
+// (that crate's own `🤖️generated.rs` is do-not-edit, so the impls live in a sibling `#[path]`
+// mount instead). Kept additive: `ViewModel` is consumed outside this pass by 🛍️products/💻️os
+// (plugin/renderer modules) and ✏️s/🔌️plugins/** while still serde-deriving; ToValue/FromValue
+// added alongside, not replacing, Serialize/Deserialize.
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct ViewModel {
     #[serde(skip_serializing_if = "Option::is_none")]
+    #[value(skip_serializing_if = "Option::is_none")]
     pub active_mode_id: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
+    #[value(skip_serializing_if = "Option::is_none")]
     pub active_window_kind_id: Option<String>,
     /// 🧰️ Per-call overlay: the host-owned active utility for the window targeted by this `render`/`handle_action`
     /// call (`window_id`). On batched `refresh-ui`, the plugin stamps this from
     /// `active_utility_by_window_id` per window entry — never from the focused window alone.
     #[serde(skip_serializing_if = "Option::is_none")]
+    #[value(skip_serializing_if = "Option::is_none")]
     pub active_utility_id: Option<String>,
     /// 🧰️ Host-owned active utility per window **instance** (never a document field, never a VCS operation). The shell
     /// sends the full map on every refresh so plugins can build per-pane scene state; tools stay mode-wide via
     /// `active_tool_id`.
     #[serde(default, skip_serializing_if = "std::collections::HashMap::is_empty")]
+    #[value(default, skip_serializing_if = "std::collections::HashMap::is_empty")]
     pub active_utility_by_window_id: std::collections::HashMap<String, String>,
     /// 🛠️ The host-owned active tool of the active mode (never a document field, never a VCS operation) —
     /// mutually exclusive with `active_utility_id`: activating one clears the other (see the React
     /// shell's `onAction` interceptors).
     #[serde(skip_serializing_if = "Option::is_none")]
+    #[value(skip_serializing_if = "Option::is_none")]
     pub active_tool_id: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
+    #[value(skip_serializing_if = "Option::is_none")]
     pub panel_json: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
+    #[value(skip_serializing_if = "Option::is_none")]
     pub contributions_json: Option<String>,
     /// 🗣️ Active UI locale; plugins resolve their own label set from this via `resolve_labels`/
     /// `app_labels!`. Non-optional — the shell always resolves one (see `initUiLocaleSync`/
     /// `detectShellLocale`) before the first `render`, so "nobody set the locale" is unrepresentable.
     #[serde(default)]
+    #[value(default)]
     pub locale: Locale,
     /// 🗣️ Active terminology id (`Native` default, or an app-declared alternative term set).
     #[serde(default)]
+    #[value(default)]
     pub terminology: Terminology,
     /// 🪟️ The window instance a `render`/`handle_action` call targets — programs key all per-window
     /// option state (grid, LOD, selection mode, …) off this, never off `active_window_kind_id`, so that
     /// two window instances of the same kind (e.g. split top/perspective panes) never share options.
     #[serde(skip_serializing_if = "Option::is_none")]
+    #[value(skip_serializing_if = "Option::is_none")]
     pub window_id: Option<String>,
     /// 🪟️ The live set of open window instances (base + spawned/split), sent on every refresh/action so
     /// `window_engagements`/`window_measures` can return one entry per instance instead of per kind.
     #[serde(default)]
+    #[value(default)]
     pub window_instances: Vec<ViewWindowInstance>,
 }
 
 /// 🪟️ One live window instance, as seen by a plugin: `id` is the instance id (equal to `window_kind_id`
 /// for a base, unsplit window), `window_kind_id` is the `AppDefinition.windowKinds` entry it renders.
-// 🚧️ BLOCKED: see `ViewModel` above — `ViewModel.window_instances: Vec<ViewWindowInstance>` is
-// itself serde-only (blocked on `ui_wgpu::wgpu::{Locale, Terminology}` gaining `ToValue`/
-// `FromValue`), so this type must keep pace with it.
+// 🚧️ UNBLOCKED: was gated on `ViewModel` above, itself gated on `ui_wgpu::wgpu::{Locale,
+// Terminology}` gaining `ToValue`/`FromValue` — both now converted (see `ViewModel`'s own comment).
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
@@ -4960,11 +4975,12 @@ mod agent_contributions_tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    async fn serde_round_trip_uses_camel_case_and_skips_empty_promoted() {
+    async fn canonical_json_round_trip_uses_camel_case_and_skips_empty_promoted() {
         let contributions = AgentContributions { capabilities: vec!["note.editor.deleteSelection".into()], promoted: vec![] };
-        let json = serde_json::to_value(&contributions).unwrap();
+        let text = dsl::os_pack::json::to_json_string(&contributions);
+        let json: serde_json::Value = serde_json::from_str(&text).unwrap();
         assert_eq!(json, serde_json::json!({ "capabilities": ["note.editor.deleteSelection"] }));
-        let round_tripped: AgentContributions = serde_json::from_value(json).unwrap();
+        let round_tripped: AgentContributions = dsl::os_pack::json::from_json_str(&text).unwrap();
         assert_eq!(round_tripped, contributions);
     }
 
@@ -5088,7 +5104,7 @@ pub enum MediaForm {
     Kit,
     Flow,
     Sequence,
-    Imperative,
+    Procedure,
     Deck,
 }
 
@@ -5778,7 +5794,7 @@ mod app_label_tests {
     #[semio_framework_async_macros::async_test]
     async fn effective_args_prefer_staged_then_default() {
         let defs = vec![ActionArgDef::text("a", LocalizedLabel::data("A")).default_value("da"), ActionArgDef::text("b", LocalizedLabel::data("B")).default_value("db"), ActionArgDef::text("c", LocalizedLabel::data("C"))];
-        let staged = dsl::to_dsl_value(&serde_json::json!({ "a": "staged-a" })).unwrap();
+        let staged = dsl::os_pack::json::to_dsl_value(&dsl::json!({ "a": "staged-a" }));
         let effective = effective_action_args(&defs, &staged, None);
         assert_eq!(effective.get("a"), Some(&DslValue::String("staged-a".into())), "staged wins");
         assert_eq!(effective.get("b"), Some(&DslValue::String("db".into())), "default fills in");
@@ -5791,8 +5807,8 @@ mod app_label_tests {
     #[semio_framework_async_macros::async_test]
     async fn effective_args_preserve_a_seeded_arg_not_declared_as_a_form_field() {
         let defs = vec![ActionArgDef::text("email", LocalizedLabel::data("Email")), ActionArgDef::text("role", LocalizedLabel::data("Role")).default_value("author")];
-        let staged = dsl::to_dsl_value(&serde_json::json!({ "email": "user2@semio.dev" })).unwrap();
-        let seed = dsl::to_dsl_value(&serde_json::json!({ "spaceId": "sp-1" })).unwrap();
+        let staged = dsl::os_pack::json::to_dsl_value(&dsl::json!({ "email": "user2@semio.dev" }));
+        let seed = dsl::os_pack::json::to_dsl_value(&dsl::json!({ "spaceId": "sp-1" }));
         let effective = effective_action_args(&defs, &staged, Some(&seed));
         assert_eq!(effective.get("spaceId"), Some(&DslValue::String("sp-1".into())), "the seeded, non-declared arg must reach the dispatched descriptor");
         assert_eq!(effective.get("email"), Some(&DslValue::String("user2@semio.dev".into())), "the form's own staged field still resolves");
@@ -5804,10 +5820,10 @@ mod app_label_tests {
     #[semio_framework_async_macros::async_test]
     async fn effective_args_seed_prefills_a_declared_field_until_staged_overrides_it() {
         let defs = vec![ActionArgDef::text("name", LocalizedLabel::data("Name"))];
-        let seed = dsl::to_dsl_value(&serde_json::json!({ "spaceId": "sp-1", "name": "Old Name" })).unwrap();
+        let seed = dsl::os_pack::json::to_dsl_value(&dsl::json!({ "spaceId": "sp-1", "name": "Old Name" }));
         let untouched = effective_action_args(&defs, &DslValue::Object(Vec::new()), Some(&seed));
         assert_eq!(untouched.get("name"), Some(&DslValue::String("Old Name".into())), "seed pre-fills the declared field");
-        let staged = dsl::to_dsl_value(&serde_json::json!({ "name": "New Name" })).unwrap();
+        let staged = dsl::os_pack::json::to_dsl_value(&dsl::json!({ "name": "New Name" }));
         let edited = effective_action_args(&defs, &staged, Some(&seed));
         assert_eq!(edited.get("name"), Some(&DslValue::String("New Name".into())), "staged still wins over the seed");
         assert_eq!(edited.get("spaceId"), Some(&DslValue::String("sp-1".into())), "the non-declared seed key survives regardless");
@@ -5817,7 +5833,7 @@ mod app_label_tests {
     /// entire seeded context through wholesale — there is no form field to carry it otherwise.
     #[semio_framework_async_macros::async_test]
     async fn effective_args_pass_seed_through_wholesale_when_no_fields_are_declared() {
-        let seed = dsl::to_dsl_value(&serde_json::json!({ "spaceId": "sp-1", "confirmed": true })).unwrap();
+        let seed = dsl::os_pack::json::to_dsl_value(&dsl::json!({ "spaceId": "sp-1", "confirmed": true }));
         let effective = effective_action_args(&[], &DslValue::Object(Vec::new()), Some(&seed));
         assert_eq!(effective.get("spaceId"), Some(&DslValue::String("sp-1".into())));
         assert_eq!(effective.get("confirmed"), Some(&DslValue::Bool(true)));
@@ -5833,7 +5849,7 @@ mod app_label_tests {
         assert!(missing.contains(&"mode".to_string()));
         assert!(missing.contains(&"flag".to_string()));
 
-        let effective = dsl::to_dsl_value(&serde_json::json!({ "mode": "", "flag": false })).unwrap();
+        let effective = dsl::os_pack::json::to_dsl_value(&dsl::json!({ "mode": "", "flag": false }));
         let missing = missing_required_args(&defs, &effective);
         assert_eq!(missing, vec!["mode".to_string()], "empty-string select is unset; false toggle is set");
     }
@@ -6441,7 +6457,7 @@ mod app_label_tests {
 
     #[semio_framework_async_macros::async_test]
     async fn tutorial_event_kind_round_trips_tagged_camel_case() {
-        let action = TutorialEventKind::Action { action: "addObjectKind".into(), args: Some(dsl::to_dsl_value(&serde_json::json!({"kindId": "beam"})).expect("tutorial action args")) };
+        let action = TutorialEventKind::Action { action: "addObjectKind".into(), args: Some(dsl::os_pack::json::to_dsl_value(&dsl::json!({"kindId": "beam"}))) };
         let json = serde_json::to_string(&action).unwrap();
         assert!(json.contains("\"kind\":\"action\""), "{json}");
         let round: TutorialEventKind = serde_json::from_str(&json).unwrap();
@@ -6478,8 +6494,8 @@ mod app_label_tests {
     #[semio_framework_async_macros::async_test]
     async fn tutorial_artifact_event_kind_round_trips_tagged_camel_case() {
         let edit = TutorialArtifactEventKind::Edit {
-            forwards: vec![dsl::to_dsl_value(&serde_json::json!({"op": "translate"})).expect("tutorial forward operation")],
-            backwards: vec![dsl::to_dsl_value(&serde_json::json!({"op": "translate", "inverse": true})).expect("tutorial backward operation")],
+            forwards: vec![dsl::os_pack::json::to_dsl_value(&dsl::json!({"op": "translate"}))],
+            backwards: vec![dsl::os_pack::json::to_dsl_value(&dsl::json!({"op": "translate", "inverse": true}))],
             description: Some("Move object".into()),
             coalesce_key: Some("camera".into()),
         };
@@ -6637,8 +6653,8 @@ mod app_label_tests {
             TutorialArtifactEvent {
                 at: 100,
                 kind: TutorialArtifactEventKind::Edit {
-                    forwards: vec![dsl::to_dsl_value(&serde_json::json!({"op": "add", "id": "a"})).expect("tutorial forward operation")],
-                    backwards: vec![dsl::to_dsl_value(&serde_json::json!({"op": "remove", "id": "a"})).expect("tutorial backward operation")],
+                    forwards: vec![dsl::os_pack::json::to_dsl_value(&dsl::json!({"op": "add", "id": "a"}))],
+                    backwards: vec![dsl::os_pack::json::to_dsl_value(&dsl::json!({"op": "remove", "id": "a"}))],
                     description: None,
                     coalesce_key: None,
                 },
@@ -6646,8 +6662,8 @@ mod app_label_tests {
             TutorialArtifactEvent {
                 at: 200,
                 kind: TutorialArtifactEventKind::Edit {
-                    forwards: vec![dsl::to_dsl_value(&serde_json::json!({"op": "add", "id": "b"})).expect("tutorial forward operation")],
-                    backwards: vec![dsl::to_dsl_value(&serde_json::json!({"op": "remove", "id": "b"})).expect("tutorial backward operation")],
+                    forwards: vec![dsl::os_pack::json::to_dsl_value(&dsl::json!({"op": "add", "id": "b"}))],
+                    backwards: vec![dsl::os_pack::json::to_dsl_value(&dsl::json!({"op": "remove", "id": "b"}))],
                     description: None,
                     coalesce_key: None,
                 },
@@ -6750,19 +6766,19 @@ mod app_label_tests {
     async fn command_and_action_invocations_round_trip_owner_qualified_addresses() {
         let command = CommandInvocation {
             address: CommandAddress { owner: CommandOwnerAddress::Mode { plugin_id: "flow".into(), app_id: "flow".into(), mode_id: "generate".into() }, command_id: "addGeneration".into() },
-            arguments: [("name".into(), json!("A"))].into_iter().collect(),
+            arguments: [("name".into(), dsl::os_pack::json::to_dsl_value(&dsl::json!("A")))].into_iter().collect(),
         };
-        let command_json = serde_json::to_string(&command).unwrap();
+        let command_json = dsl::os_pack::json::to_json_string(&command);
         assert_eq!(command_json, r#"{"address":{"owner":{"mode":{"pluginId":"flow","appId":"flow","modeId":"generate"}},"commandId":"addGeneration"},"arguments":{"name":"A"}}"#);
-        assert_eq!(serde_json::from_str::<CommandInvocation>(&command_json).unwrap(), command);
+        assert_eq!(dsl::os_pack::json::from_json_str::<CommandInvocation>(&command_json).unwrap(), command);
 
         let action = ActionInvocation {
             address: ActionAddress { plugin_id: "flow".into(), app_id: "flow".into(), mode_id: "edit".into(), window_kind_id: "main".into(), window_instance_id: "main-1".into(), action_id: "select".into() },
-            arguments: [("id".into(), json!("node-1"))].into_iter().collect(),
+            arguments: [("id".into(), dsl::os_pack::json::to_dsl_value(&dsl::json!("node-1")))].into_iter().collect(),
         };
-        let action_json = serde_json::to_string(&action).unwrap();
+        let action_json = dsl::os_pack::json::to_json_string(&action);
         assert!(action_json.contains("\"windowInstanceId\":\"main-1\""), "{action_json}");
-        assert_eq!(serde_json::from_str::<ActionInvocation>(&action_json).unwrap(), action);
+        assert_eq!(dsl::os_pack::json::from_json_str::<ActionInvocation>(&action_json).unwrap(), action);
 
         let os = OsDefinition { commands: vec![CommandDefinition::bounded_catalog("toggleFullscreen", LocalizedLabel::data("Toggle Full Screen"), "window", ActionKind::Shell)] };
         assert_eq!(serde_json::from_str::<OsDefinition>(&serde_json::to_string(&os).unwrap()).unwrap(), os);
@@ -6779,7 +6795,7 @@ mod app_label_tests {
 
     #[semio_framework_async_macros::async_test]
     async fn dispatch_action_effect_round_trips_camel_case() {
-        let effect = Effect::DispatchAction { req: RequestId(2), action: "advanceReconstruction".into(), args: Some(dsl::to_dsl_value(&json!({"jobId": "job-1"})).expect("dispatch action args")), delay_ms: 250 };
+        let effect = Effect::DispatchAction { req: RequestId(2), action: "advanceReconstruction".into(), args: Some(dsl::os_pack::json::to_dsl_value(&dsl::json!({"jobId": "job-1"}))), delay_ms: 250 };
         let json = serde_json::to_string(&effect).unwrap();
         assert_eq!(json, r#"{"dispatchAction":{"req":2,"action":"advanceReconstruction","args":{"jobId":"job-1"},"delayMs":250}}"#);
         let round: Effect = serde_json::from_str(&json).unwrap();
@@ -6817,7 +6833,7 @@ mod app_label_tests {
             max_long_edge_px: 1600,
             fps_hint: 30.0,
             payload: None,
-            args: Some(dsl::to_dsl_value(&json!({"streamId": "s1"})).expect("media frame args")),
+            args: Some(dsl::os_pack::json::to_dsl_value(&dsl::json!({"streamId": "s1"}))),
         };
         let json = serde_json::to_string(&effect).unwrap();
         assert!(json.contains("\"requestMediaFrames\""), "{json}");
@@ -6914,11 +6930,11 @@ mod app_label_tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    async fn app_ref_serde_round_trips_as_camel_case() {
+    async fn app_ref_canonical_json_round_trips_as_camel_case() {
         let app_ref = AppRef { plugin_id: "s.cad".into(), app_id: "s.cad.cad@1/*#editor".into() };
-        let json = serde_json::to_string(&app_ref).unwrap();
+        let json = dsl::os_pack::json::to_json_string(&app_ref);
         assert_eq!(json, "{\"pluginId\":\"s.cad\",\"appId\":\"s.cad.cad@1/*#editor\"}");
-        assert_eq!(serde_json::from_str::<AppRef>(&json).unwrap(), app_ref);
+        assert_eq!(dsl::os_pack::json::from_json_str::<AppRef>(&json).unwrap(), app_ref);
     }
     //#endregion 🔖️SurfaceTests
 

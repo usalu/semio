@@ -1,5 +1,0 @@
-{
-  "$id": "https://semio.tech/schema/s/imperative/imperative/inference/text.json",
-  "title": "ImperativeInferenceText",
-  "type": "object"
-}

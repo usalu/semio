@@ -1,0 +1,12 @@
+{
+  "version": 1,
+  "html": "🌐️.html",
+  "manifest": "package.json",
+  "entry": "./📦️index.tsx",
+  "laws": [
+    "html-module-entry-exists",
+    "package-export-matches-html",
+    "entry-contained-by-package",
+    "single-canonical-entry"
+  ]
+}

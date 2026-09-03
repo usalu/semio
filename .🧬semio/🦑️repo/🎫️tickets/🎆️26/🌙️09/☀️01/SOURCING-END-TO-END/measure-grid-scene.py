@@ -87,7 +87,7 @@ def bounding_extent(geometry):
 CELL = 2.0
 UI_FIXED_BYTES = 32 * 1024
 STOCK = os.path.join(
-    "✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curate/🏅️standards/🔖️1/🪆️subsets/✳️any",
+    "✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curation/🏅️standards/🔖️1/🪆️subsets/✳️any",
     "📚️examples/🎬️demo/🧪️expected-stock.json",
 )
 

@@ -96,5 +96,50 @@
         }
       ]
     }
+  ],
+  "fixtureManifests": [
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "set-version-info-applied",
+      "class": "handcrafted",
+      "target": {
+        "artifact": "s.stdio.dwg",
+        "standard": "ac1024",
+        "subset": "any"
+      },
+      "mutation": "set-version-info",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before",
+          "path": "../🧫️fixtures/set-version-info/before.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:4acb6045aa3a7cacd55cc8283c20dc83e1dcd9bb0bf9fe3829583b5b548aeba2",
+          "bytes": 11015
+        },
+        {
+          "role": "expected-after",
+          "path": "../🧫️fixtures/set-version-info/after.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:42460262b4c0f55dd4bffa53f2dd8b1b40af8e89577a8abe1086f6fc442c871b",
+          "bytes": 11017
+        }
+      ],
+      "provenance": {
+        "source": "authored",
+        "license": "public-domain (handcrafted by this repository)",
+        "attribution": "Handcrafted before/after vector authored directly against this subset's own documented schema — Law 2's handcrafted-vector category.",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "ordered-json-v1",
+      "reproducible": true,
+      "family": "dwg-carrier",
+      "notes": "Handcrafted before/after pair reusing this exact subset's own committed set-snapshot DwgSnapshot fixture (LibreDWG-cross-checked against the real architectural.dwg header) as `before`; `after` overwrites SetVersionInfo{version:\"AC1024\",maintenanceVersion,codepage:1252} — the AC1018 tree's own mutation aggregate re-exports this exact leaf from AC1024 (`pub use crate::artifacts::dwg::standards::v_ac1024::subsets::any::schema::mutations::*`), so one real implementation backs both subsets."
+    }
   ]
 }

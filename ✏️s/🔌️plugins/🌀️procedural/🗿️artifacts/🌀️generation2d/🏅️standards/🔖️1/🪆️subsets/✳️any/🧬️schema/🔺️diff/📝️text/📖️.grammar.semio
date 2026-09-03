@@ -1,0 +1,9 @@
+dialect grammar
+grammar generation2d.diff
+extension generation2d
+start document
+
+document = header body
+header = "schema" SP "procedural.generation2d.diff" NL
+body = payload NL?
+payload = OCTET+

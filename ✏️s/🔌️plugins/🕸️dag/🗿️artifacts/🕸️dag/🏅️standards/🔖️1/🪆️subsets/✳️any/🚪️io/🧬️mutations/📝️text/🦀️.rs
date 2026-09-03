@@ -27,7 +27,8 @@ use protocol::OpText;
 /// matching on it, is completely untouched. `DagNodeSpec` (whole node, for `create-node`),
 /// `DagNodeKind` (`replace-node-kind`) and `PropertyBag` (`replace-node-properties`,
 /// `connect-nodes`'s edge properties) don't have a clean DSL scalar shape, so they round-trip as an
-/// opaque `serde_json`-encoded string field here — a documented deviation, not a silent one.
+/// opaque `dsl::json`-encoded (`ToValue`/`FromValue`, not `serde_json`) string field here — a
+/// documented deviation, not a silent one.
 #[derive(Clone, Debug, PartialEq, dsl::DslEnum)]
 enum DagMutationDsl {
     CreateNode { node_json: String },
@@ -78,8 +79,8 @@ impl protocol::OpBinary for DagMutationDsl {
 }
 //#endregion 🔖️HandcraftedOpCodecs
 
-async fn json_of<T: serde::Serialize>(value: &T) -> String {
-    serde_json::to_string(value).expect("dag mutation dsl field must serialize")
+async fn json_of<T: dsl::ToValue>(value: &T) -> String {
+    dsl::json::to_json_string(value)
 }
 
 async fn dag_mutation_to_dsl(mutation: &DagMutation) -> DagMutationDsl {
@@ -103,7 +104,7 @@ async fn dag_mutation_to_dsl(mutation: &DagMutation) -> DagMutationDsl {
 
 async fn dag_mutation_from_dsl(mutation: DagMutationDsl) -> DagMutation {
     match mutation {
-        DagMutationDsl::CreateNode { node_json } => create_node(serde_json::from_str::<DagNodeSpec>(&node_json).expect("dag mutation dsl `node_json` must decode")),
+        DagMutationDsl::CreateNode { node_json } => create_node(dsl::json::from_json_str::<DagNodeSpec>(&node_json).expect("dag mutation dsl `node_json` must decode")),
         DagMutationDsl::DeleteNode { id } => delete_node(id),
         DagMutationDsl::RenameNode { id, new_id } => rename_node(id, new_id),
         DagMutationDsl::ChangeNodeName { id, new_name } => change_node_name(id, new_name),
@@ -112,11 +113,11 @@ async fn dag_mutation_from_dsl(mutation: DagMutationDsl) -> DagMutation {
         DagMutationDsl::ChangeNodeIcon { id, new_icon } => change_node_icon(id, new_icon),
         DagMutationDsl::ChangeNodeAbbreviation { id, new_abbreviation } => change_node_abbreviation(id, new_abbreviation),
         DagMutationDsl::ChangeNodeOperatorKind { id, new_operator_kind } => change_node_operator_kind(id, new_operator_kind),
-        DagMutationDsl::ReplaceNodeKind { id, new_kind_json } => replace_node_kind(id, serde_json::from_str::<DagNodeKind>(&new_kind_json).expect("dag mutation dsl `new_kind_json` must decode")),
-        DagMutationDsl::ReplaceNodeProperties { id, new_properties_json } => replace_node_properties(id, serde_json::from_str::<PropertyBag>(&new_properties_json).expect("dag mutation dsl `new_properties_json` must decode")),
+        DagMutationDsl::ReplaceNodeKind { id, new_kind_json } => replace_node_kind(id, dsl::json::from_json_str::<DagNodeKind>(&new_kind_json).expect("dag mutation dsl `new_kind_json` must decode")),
+        DagMutationDsl::ReplaceNodeProperties { id, new_properties_json } => replace_node_properties(id, dsl::json::from_json_str::<PropertyBag>(&new_properties_json).expect("dag mutation dsl `new_properties_json` must decode")),
         DagMutationDsl::ReorderNodes { order } => reorder_nodes(order),
         DagMutationDsl::ConnectNodes { id, source, target, route_style, properties_json } => {
-            connect_nodes(id, source, target, route_style, serde_json::from_str::<PropertyBag>(&properties_json).expect("dag mutation dsl `properties_json` must decode"))
+            connect_nodes(id, source, target, route_style, dsl::json::from_json_str::<PropertyBag>(&properties_json).expect("dag mutation dsl `properties_json` must decode"))
         }
         DagMutationDsl::DisconnectNodes { id } => disconnect_nodes(id),
     }

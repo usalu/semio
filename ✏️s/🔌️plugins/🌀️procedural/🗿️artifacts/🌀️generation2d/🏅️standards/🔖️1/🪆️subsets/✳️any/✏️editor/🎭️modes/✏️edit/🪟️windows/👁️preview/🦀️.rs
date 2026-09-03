@@ -1,0 +1,97 @@
+//! 👁️ Generation2d play app — the preview window: the evaluated 2D canvas.
+
+use crate::artifacts::generation2d::schema::{collect_drawing_handles_from_eval, scene_layers_from_drawing_handle};
+use crate::artifacts::generation2d::Generation2dSnapshot;
+use crate::editor::generation2d::config::Generation2dConfig;
+use crate::editor::generation2d::GENERATION2D_PLAY_APP_ID;
+use flow::FlowEvalSession;
+use semio_framework_plugin::{BuiltNode, Canvas2dScene, LocalizedLabel, SurfaceKind, WindowKindDefinition, WindowOptions};
+
+//#region 🔖️Constants
+pub const GENERATION2D_PLAY_WINDOW_PREVIEW: &str = "generation2d-preview";
+pub const GENERATION2D_PLAY_BODY_PREVIEW: &str = "generation2d.play.preview";
+const GENERATION2D_PLAY_SURFACE_PREVIEW: &str = "generation2d.play.preview";
+//#endregion 🔖️Constants
+
+//#region 🔖️Definition
+pub fn definition() -> WindowKindDefinition {
+    WindowKindDefinition {
+        id: GENERATION2D_PLAY_WINDOW_PREVIEW.into(),
+        label: LocalizedLabel::native("Preview", "Vorschau"),
+        body_key: GENERATION2D_PLAY_BODY_PREVIEW.into(),
+        surface_kind: SurfaceKind::Canvas2d,
+        icon_id: "preview".into(),
+        options: WindowOptions::default(),
+        actions: Vec::new(),
+        utilities: Vec::new(),
+        interactions: Vec::new(),
+        params_schema: None,
+        artifact_snapshot_schema: None,
+        input_event_schema: None,
+        output_schema: None,
+        capabilities: Vec::new(),
+    }
+}
+//#endregion 🔖️Definition
+
+//#region 🔖️Render
+/// 👁️ Overlays evaluated draw-handle layers, plus (in `"wire"` show mode) a schematic node box per
+/// visible widget.
+pub fn render(document: &Generation2dSnapshot, config: &Generation2dConfig, session: &FlowEvalSession) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
+    let fixture = &document.fixture;
+    let eval_json = session.eval_json();
+    let prefix = "generation2d-preview";
+    let mut layers = Vec::new();
+    if let Ok(outputs) = dsl::json::parse(eval_json) {
+        let mut handles = Vec::new();
+        collect_drawing_handles_from_eval(&outputs, &mut handles);
+        handles.sort();
+        handles.dedup();
+        for handle in handles {
+            layers.extend(scene_layers_from_drawing_handle(&handle, prefix));
+        }
+    }
+    // 🕹️ `render` carries no `InteractionView` (ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM),
+    // so the schematic wire overlay always shows every widget now (the pre-migration "nothing
+    // selected" fallback), rather than filtering to a selection it can no longer read.
+    if config.show_mode == "wire" {
+        for widget in &fixture.widgets {
+            let id = crate::artifacts::generation2d::widget_id(widget).to_string();
+            let (x, y) = fixture.layout.get(&id).map_or((48.0, 240.0), |layout| (layout.x, layout.y));
+            layers.push(dsl::json::Value::Object(
+                [
+                    ("id".to_string(), dsl::json::Value::from(format!("widget-{id}"))),
+                    ("kind".to_string(), dsl::json::Value::from("node")),
+                    ("name".to_string(), dsl::json::Value::from(id)),
+                    ("x".to_string(), dsl::json::Value::from(x)),
+                    ("y".to_string(), dsl::json::Value::from(y)),
+                    ("width".to_string(), dsl::json::Value::from(96.0)),
+                    ("height".to_string(), dsl::json::Value::from(48.0)),
+                ]
+                .into_iter()
+                .collect(),
+            ));
+        }
+    }
+    let _ = GENERATION2D_PLAY_APP_ID;
+    crate::scene_surface(
+        GENERATION2D_PLAY_SURFACE_PREVIEW,
+        semio_framework_plugin::plugin_app_close_prelude::SurfaceKind::Canvas2d,
+        &Canvas2dScene { camera_x: config.camera.x, camera_y: config.camera.y, zoom: config.camera.zoom, layers_json: dsl::json::to_string(&dsl::json::Value::from(layers)), snapshot: None },
+    )
+}
+//#endregion 🔖️Render
+
+//#region 🧪️Tests
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::editor::generation2d::testkit::{app, render as render_body};
+
+    #[test]
+    fn renders_preview_canvas_scene() {
+        let mut app = app();
+        assert!(render_body(&mut app, GENERATION2D_PLAY_BODY_PREVIEW).contains("canvas-2d"));
+    }
+}
+//#endregion 🧪️Tests

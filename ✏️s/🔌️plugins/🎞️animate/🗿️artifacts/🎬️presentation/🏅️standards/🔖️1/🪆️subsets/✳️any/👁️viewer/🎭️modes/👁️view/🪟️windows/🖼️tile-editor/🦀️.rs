@@ -88,8 +88,7 @@ fn deck_to_canvas_layers(deck: &PresentationSnapshot) -> String {
         let (x, y, width, height) = frame_to_canvas(&tile.crop, SCALE);
         layers.push(AnimateViewTileLayer { id: tile.id.clone(), kind: "tile".into(), name: tile.name.clone(), x, y, width, height, data_url: None });
     }
-    let value: serde_json::Value = dsl::ToValue::to_value(&layers).into();
-    value.to_string()
+    dsl::os_pack::json::to_json_string(&layers)
 }
 //#endregion 🔖️CanvasLayers
 
@@ -104,13 +103,16 @@ pub fn render(deck: &PresentationSnapshot) -> BuiltNode {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use serde_json::Value;
+    use dsl::os_pack::json::Value;
 
     #[test]
     fn renders_canvas_2d_scene() {
         let deck = crate::artifacts::presentation::default_presentation_snapshot();
-        let json_str = serde_json::to_string(&render(&deck)).unwrap();
-        assert!(json_str.contains("canvas-2d") || json_str.contains("Canvas2d"));
+        // 🌱️ `BuiltNode` deliberately has no `ToValue`/`FromValue` (framework `🦀️builder.rs`'s own
+        // "DslValue-free exception" for `UiValue`-embedding types), so this reads the surface kind
+        // back off the `Debug` rendering instead of round-tripping through JSON.
+        let debug_str = format!("{:?}", render(&deck));
+        assert!(debug_str.contains("canvas-2d") || debug_str.contains("Canvas2d"));
     }
 
     #[test]
@@ -126,7 +128,7 @@ mod tests {
     fn source_frame_renders_as_actual_image_layer_behind_tiles() {
         let deck = crate::artifacts::presentation::default_presentation_snapshot();
         let layers_json = deck_to_canvas_layers(&deck);
-        let layers: Vec<Value> = serde_json::from_str(&layers_json).unwrap();
+        let layers: Vec<Value> = dsl::os_pack::json::parse(&layers_json).unwrap().as_array().cloned().unwrap_or_default();
         let (source, _) = crate::artifacts::presentation::presentation_working_scene(&deck);
         assert!(!source.src.trim().is_empty());
         let source_layer = layers.first().expect("source layer is first (renders behind tiles)");
@@ -142,7 +144,7 @@ mod tests {
         source.src = String::new();
         let deck = crate::artifacts::presentation::presentation_snapshot_with_tiles(&source, &tiles);
         let layers_json = deck_to_canvas_layers(&deck);
-        let layers: Vec<Value> = serde_json::from_str(&layers_json).unwrap();
+        let layers: Vec<Value> = dsl::os_pack::json::parse(&layers_json).unwrap().as_array().cloned().unwrap_or_default();
         let source_layer = layers.first().expect("source layer presentation");
         assert_eq!(source_layer.get("kind").and_then(|v| v.as_str()), Some("source"));
         assert!(source_layer.get("dataUrl").is_none() || source_layer.get("dataUrl") == Some(&Value::Null));

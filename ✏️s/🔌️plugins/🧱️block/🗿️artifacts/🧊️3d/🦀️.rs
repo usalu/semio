@@ -98,7 +98,7 @@ pub async fn vortex_kinds_from_catalog_and_extra(catalog: &SemioKitSnapshot, ext
 pub async fn catalog_child_handle(kinds: &[Block3dVortexKind]) -> store::ArtifactChild<SemioKitSnapshot> {
     use std::hash::{Hash, Hasher};
     let catalog = catalog_snapshot_from_vortex_kinds(kinds);
-    let canonical = serde_json::to_string(&catalog.types).unwrap_or_default();
+    let canonical = dsl::os_pack::json::to_json_string(&catalog.types);
     let mut hasher = std::collections::hash_map::DefaultHasher::new();
     canonical.hash(&mut hasher);
     let child_id = format!("catalog-{:016x}", hasher.finish());

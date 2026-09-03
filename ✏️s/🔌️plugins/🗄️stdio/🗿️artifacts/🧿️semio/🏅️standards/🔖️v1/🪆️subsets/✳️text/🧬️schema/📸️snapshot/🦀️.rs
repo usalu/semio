@@ -11,7 +11,7 @@
 //! (run + inline marks), but `text` owns runs standalone rather than nested inside block
 //! structure, per this ticket's brief.
 
-use crate::artifacts::semio::standards::v1::subsets::any::schema::triples::{split_top_level, strip_brackets};
+use crate::artifacts::semio::standards::v1::subsets::base::schema::triples::{split_top_level, strip_brackets};
 use schema::ArtifactSchema;
 
 //#region 🔖️Ids

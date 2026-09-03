@@ -1,0 +1,5 @@
+{
+  "$id": "https://semio.tech/schema/s/imperative/imperative/diff/text.json",
+  "title": "ProcedureDiffText",
+  "type": "object"
+}

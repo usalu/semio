@@ -50,8 +50,8 @@ pub(crate) async fn dec_str(s: &str) -> Result<String, String> {
 
 async fn print_dag_snapshot_body(s: &DagSnapshot) -> String {
     let scene = crate::artifacts::dag::dag_working_scene(s);
-    let nodes_json = serde_json::to_string(&scene.nodes).unwrap_or_default();
-    let edges_json = serde_json::to_string(&scene.edges).unwrap_or_default();
+    let nodes_json = dsl::json::to_json_string(&scene.nodes);
+    let edges_json = dsl::json::to_json_string(&scene.edges);
     format!("schema={}\nnodes={}\nedges={}", enc_str(&s.schema), enc_str(&nodes_json), enc_str(&edges_json))
 }
 async fn parse_dag_snapshot_body(body: &str) -> Result<DagSnapshot, String> {
@@ -66,9 +66,9 @@ async fn parse_dag_snapshot_body(body: &str) -> Result<DagSnapshot, String> {
         if let Some(rest) = line.strip_prefix("schema=") {
             schema = Some(dec_str(rest)?);
         } else if let Some(rest) = line.strip_prefix("nodes=") {
-            nodes = Some(serde_json::from_str(&dec_str(rest)?).map_err(|e| e.to_string())?);
+            nodes = Some(dsl::json::from_json_str(&dec_str(rest)?).map_err(|e| e.to_string())?);
         } else if let Some(rest) = line.strip_prefix("edges=") {
-            edges = Some(serde_json::from_str(&dec_str(rest)?).map_err(|e| e.to_string())?);
+            edges = Some(dsl::json::from_json_str(&dec_str(rest)?).map_err(|e| e.to_string())?);
         } else {
             return Err(format!("dag snapshot: unknown line {line:?}"));
         }

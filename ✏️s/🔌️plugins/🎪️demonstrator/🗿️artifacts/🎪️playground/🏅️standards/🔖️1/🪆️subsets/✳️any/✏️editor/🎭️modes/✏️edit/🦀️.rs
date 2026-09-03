@@ -24,7 +24,7 @@ mod tests {
 
     #[test]
     fn the_edit_layout_lists_the_one_window() {
-        let json = serde_json::to_string(&layout()).expect("layout json");
+        let json = dsl::os_pack::json::to_json_string(&layout());
         assert!(json.contains(main::WINDOW_KIND_ID), "layout must reference the main window kind: {json}");
     }
 }

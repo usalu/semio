@@ -264,7 +264,7 @@ impl Mutation<LowpolyConfig> for LowpolyConfigMutation {
 
     /// 🧷️ Provisional per-variant leaf metadata for this hand-written (non-derived) aggregate —
     /// `diff`/`inverse` dispatch here is a plain `match`, not the derive's per-leaf `MutationKind`
-    /// shape. One entry per variant, in declaration order, mirroring `procedural2d`'s identical
+    /// shape. One entry per variant, in declaration order, mirroring `generation2d`'s identical
     /// precedent for its own hand-written config aggregate.
     const DESCRIPTORS: &'static [protocol::MutationLeafDescriptor] = &[
         protocol::MutationLeafDescriptor { schema_version: 1, owner: "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/⚙️set-snapshot", semantic_kind: "set-snapshot", display_name: "Set Snapshot", emoji: "⚙️", aggregate_variant: "Snapshot", payload_schema: "🔣️.schema.json", text_opcode: None, binary_tag: None, invertibility: protocol::MutationInvertibility::ExplicitMutation, diff_participation: protocol::MutationDiffParticipation::Detect, outcome_classes: &[protocol::MutationOutcomeClass::Applied], composition: protocol::MutationComposition::Atomic, required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema] },

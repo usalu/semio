@@ -30,7 +30,7 @@ use semio_framework_plugin::{
     HierarchyProvider, HoverSpec, IconName, InteractionDefinition, InteractionRef, InteractionTopology, Label, LocalizedLabel, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, MergeMode, NoDraft, NoDraftMutation, OsMediaCapability,
     SelectionMethod, SelectionMode, SelectionSpec, TopologyNode, UiNode,
 };
-use serde_json::{json, Map, Value};
+use dsl::os_pack::json::{object, Object, Value};
 use store::EngineHandles;
 
 //#region 🔖️Constants
@@ -133,7 +133,7 @@ async fn forms_fields_topology(spec: &FormsSnapshot) -> DomainTopology {
 
 //#region 🔖️Values
 /// 🔠️ Materializes the independently stored answer leaves for rendering and validation.
-pub async fn try_values_map(config: &FormsConfig) -> Map<String, Value> {
+pub async fn try_values_map(config: &FormsConfig) -> Object {
     config
         .try_values
         .iter_chunks()
@@ -143,12 +143,12 @@ pub async fn try_values_map(config: &FormsConfig) -> Map<String, Value> {
                 raw.push_str(&chunk);
                 raw
             });
-            (key, serde_json::from_str(&raw).unwrap_or(Value::Null))
+            (key, dsl::os_pack::json::parse(&raw).unwrap_or(Value::Null))
         })
         .collect()
 }
 
-pub async fn effective_try_values(spec: &FormsSnapshot, config: &FormsConfig) -> Map<String, Value> {
+pub async fn effective_try_values(spec: &FormsSnapshot, config: &FormsConfig) -> Object {
     crate::artifacts::forms::schema::initial_try_values(spec, &try_values_map(config))
 }
 
@@ -163,7 +163,7 @@ pub async fn reset_try_config_mutations() -> Vec<FormsConfigMutation> {
 /// `Value::Null` on malformed or absent JSON — every one of these fields is best-effort text carried
 /// across the wire, not a validated protocol.
 pub async fn parse_value_json(value_json: &str) -> Value {
-    serde_json::from_str(value_json).unwrap_or(Value::Null)
+    dsl::os_pack::json::parse(value_json).unwrap_or(Value::Null)
 }
 //#endregion 🔖️Values
 
@@ -214,26 +214,26 @@ async fn find_question_kind_contribution<'a>(contributions: &'a [ProgramContribu
     })
 }
 
-async fn extension_params_value(question: &FormQuestion, values: &Map<String, Value>) -> Value {
-    values.get(&question.id).cloned().or_else(|| question.params.as_ref().map(crate::artifacts::forms::schema::dsl_to_value)).unwrap_or_else(|| json!({}))
+async fn extension_params_value(question: &FormQuestion, values: &Object) -> Value {
+    values.get(&question.id).cloned().or_else(|| question.params.as_ref().map(crate::artifacts::forms::schema::dsl_to_value)).unwrap_or_else(|| Value::Object(Object::new()))
 }
 
 async fn extension_render_payload(question: &FormQuestion, params: &Value, surface: &str, interactive: bool) -> String {
-    serde_json::to_string(&json!({
-        "fixtureSlug": question.fixture_slug.clone().unwrap_or_else(|| "hexagonal-mushroom-column".into()),
-        "params": params,
-        "questionId": question.id,
-        "controllerId": FORMS_PLAY_APP_ID,
-        "surface": surface,
-        "interactive": interactive,
-    }))
-    .unwrap_or_else(|_| "{}".into())
+    let payload = object([
+        ("fixtureSlug".to_string(), Value::from(question.fixture_slug.clone().unwrap_or_else(|| "hexagonal-mushroom-column".into()))),
+        ("params".to_string(), params.clone()),
+        ("questionId".to_string(), Value::from(question.id.clone())),
+        ("controllerId".to_string(), Value::from(FORMS_PLAY_APP_ID)),
+        ("surface".to_string(), Value::from(surface)),
+        ("interactive".to_string(), Value::from(interactive)),
+    ]);
+    dsl::os_pack::json::to_string(&payload)
 }
 
 /// 🧩️ Renders a contributed (extension) question kind as a pair of external slots (params editor +
 /// preview), or an "Extension unavailable" diagnostic when no contribution is registered for it. Shared
 /// by the try wizard and the inspection panel's kind-specific editor fields.
-pub async fn render_extension_question(question: &FormQuestion, values: &Map<String, Value>, contributions: &[ProgramContributionEntry], surface: &str, interactive: bool) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+pub async fn render_extension_question(question: &FormQuestion, values: &Object, contributions: &[ProgramContributionEntry], surface: &str, interactive: bool) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     let Some((plugin_id, route)) = find_question_kind_contribution(contributions, &question.kind) else {
         return semio_framework_plugin::ui_text(Label::data(format!("Extension unavailable: {}", question.kind)));
     };
@@ -454,8 +454,8 @@ impl ArtifactEditor for FormsPlayApp {
                 })
             }
             "dictionary:out" => {
-                let values = crate::artifacts::forms::schema::initial_try_values(doc.snapshot, &Map::new());
-                let json = serde_json::to_string(&Value::Object(values)).map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?;
+                let values = crate::artifacts::forms::schema::initial_try_values(doc.snapshot, &Object::new());
+                let json = dsl::os_pack::json::to_string(&Value::Object(values));
                 Ok(semio_framework_plugin::Media { media_type: MediaType { class: MediaClass::Data, form: MediaForm::Value }, payload: MediaPayload::Structured { schema: "form.dictionary".into(), json } })
             }
             _ => Err(MediaError::NotImplemented),
@@ -633,7 +633,7 @@ pub(crate) mod testkit {
     }
 
     pub async fn render(app: &mut FormsApp, body_key: &str) -> String {
-        serde_json::to_string(&app.render(body_key, None, &ViewModel::default()).expect("render")).expect("render json")
+        dsl::os_pack::json::to_json_string(&app.render(body_key, None, &ViewModel::default()).expect("render"))
     }
 
     /// 🧩️ A host contribution registering `"buildingComponent"` as an extension question kind rendered
@@ -758,7 +758,7 @@ mod tests {
     //#region 🔖️ManifestSanity
     #[semio_framework_async_macros::async_test]
     async fn the_manifest_stitches_every_taxonomy_node() {
-        let json = serde_json::to_string(&create_forms_app()).expect("app definition json");
+        let json = dsl::os_pack::json::to_json_string(&create_forms_app());
         for id in [builder::FORMS_PLAY_WINDOW_BLUEPRINT, try_window::FORMS_PLAY_WINDOW_TRY] {
             assert!(json.contains(id), "window kind {id} missing from the manifest: {json}");
         }
@@ -847,15 +847,15 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn extension_question_falls_back_without_contribution() {
-        let node = render_extension_question(&building_component_question(), &Map::new(), &[], "try", true);
-        let json = serde_json::to_string(&node).unwrap();
+        let node = render_extension_question(&building_component_question(), &Object::new(), &[], "try", true);
+        let json = dsl::os_pack::json::to_json_string(&node);
         assert!(json.contains("Extension unavailable"));
     }
 
     #[semio_framework_async_macros::async_test]
     async fn extension_question_emits_external_slot_when_contribution_registered() {
-        let node = render_extension_question(&building_component_question(), &Map::new(), &building_component_contributions(), "try", true);
-        let json = serde_json::to_string(&node).unwrap();
+        let node = render_extension_question(&building_component_question(), &Object::new(), &building_component_contributions(), "try", true);
+        let json = dsl::os_pack::json::to_json_string(&node);
         assert!(json.contains("externalSlot"));
         assert!(json.contains("forms-module-procedural"));
     }
@@ -877,8 +877,8 @@ mod tests {
                 ]),
             )),
         }];
-        let node = render_extension_question(&building_component_question(), &Map::new(), &topic_only, "try", true);
-        let json = serde_json::to_string(&node).unwrap();
+        let node = render_extension_question(&building_component_question(), &Object::new(), &topic_only, "try", true);
+        let json = dsl::os_pack::json::to_json_string(&node);
         assert!(json.contains("externalSlot"));
         assert!(json.contains("forms-module-procedural"));
     }
@@ -938,7 +938,7 @@ mod tests {
         assert_eq!(media.media_type, MediaType { class: MediaClass::Data, form: MediaForm::Value });
         let MediaPayload::Structured { schema, json } = media.payload else { panic!("expected structured payload") };
         assert_eq!(schema, "form.dictionary");
-        let parsed: Value = serde_json::from_str(&json).expect("valid json dictionary");
+        let parsed: Value = dsl::os_pack::json::parse(&json).expect("valid json dictionary");
         assert!(parsed.is_object());
     }
 

@@ -208,7 +208,7 @@ pub fn gis2d_map_out_port() -> semio_framework_plugin::MediaPortSpec {
 }
 
 /// 🎞️ `map:out`'s `Media` value — this document's positions/routes/regions as a `2d.map` structured
-/// payload; reuses the exact descriptor JSON shape the ◻2d window's renderer/`MapHost` already consume,
+/// payload; reuses the exact descriptor JSON shape the ◻️2d window's renderer/`MapHost` already consume,
 /// so there is exactly one "gis map as JSON" shape in the whole app.
 pub fn gis2d_map_media(document: &GisMapSnapshot) -> Media {
     Media { media_type: MediaType { class: MediaClass::TwoD, form: MediaForm::Vector }, payload: MediaPayload::Structured { schema: "2d.map".into(), json: crate::artifacts::gismap::schema::gis_map_descriptor_json(document) } }
@@ -531,9 +531,14 @@ where
 /// 🕹️ `interactionSelect` args for a single-feature pick against the `"features"` domain's
 /// `"feature"` granularity — the generic replacement for the deleted bespoke `setFeatureSelection`
 /// action (ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM).
-fn select_feature_action_args(feature_id: &str) -> Value {
-    let targets = json!([{ "granularity": "feature", "id": feature_id }]).to_string();
-    json!({ "domainId": "features", "targets": targets, "merge": "replace", "method": "pick" })
+fn select_feature_action_args(feature_id: &str) -> dsl::DslValue {
+    let targets = dsl::os_pack::json!([{ "granularity": "feature", "id": feature_id }]).to_string();
+    dsl::DslValue::object([
+        ("domainId".to_string(), dsl::DslValue::String("features".to_string())),
+        ("targets".to_string(), dsl::DslValue::String(targets)),
+        ("merge".to_string(), dsl::DslValue::String("replace".to_string())),
+        ("method".to_string(), dsl::DslValue::String("pick".to_string())),
+    ])
 }
 
 /// 🖱️ On-demand GIS tiled-map context menu from feature hit-test and selection — grouped
@@ -555,10 +560,13 @@ async fn gis2d_context_menu_items(registry: &semio_framework_plugin::AppActionRe
             .await
             .action_args(INTERACTION_SELECT_ACTION_ID, select_feature_action_args(&feature.id))
             .await
-            .action_args("focusFeature", json!({ "featureId": feature.id, "featureKind": kind }))
+            .action_args(
+                "focusFeature",
+                dsl::DslValue::object([("featureId".to_string(), dsl::DslValue::String(feature.id.clone())), ("featureKind".to_string(), dsl::DslValue::String(kind.to_string()))]),
+            )
             .await;
         if kind == "position" {
-            menu = menu.action_args("openSource", json!({ "featureId": feature.id })).await;
+            menu = menu.action_args("openSource", dsl::DslValue::object([("featureId".to_string(), dsl::DslValue::String(feature.id.clone()))])).await;
         }
         return menu.build().await;
     }

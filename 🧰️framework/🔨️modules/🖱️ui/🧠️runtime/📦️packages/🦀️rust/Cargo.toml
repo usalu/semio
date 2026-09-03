@@ -16,11 +16,12 @@ workspace = true
 path = "🦀️.rs"
 
 [dependencies]
-# 🧬️ The builder-side tree is plain data; serializing it lets a guest ship a fixture or a whole tree
-# without going through reconciliation, which the SDK's describe/testkit paths rely on.
-serde = { version = "1.0.219", features = ["derive"] }
 semio-framework-job = { path = "../../../../🧵️job/📦️packages/🦀️rust" }
 ui_contract = { path = "../../../🧬️contract/📦️packages/🦀️rust", package = "semio-framework-ui-contract" }
 
 [dev-dependencies]
+# 🧪️ `TransactionPatch`'s test-only `Serialize` impl and the fixture-oracle tests diff published
+# patches/snapshots against `serde_json` directly — ticket 26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-
+# FOR-S-PLUGINS-AND-ARTIFACTS. No non-test symbol in this crate names `serde` any more.
+serde = { version = "1.0.219", features = ["derive"] }
 serde_json = { version = "1.0.140" }

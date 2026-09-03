@@ -135,13 +135,12 @@ function emitRustFamily(prefix: string, familyName: string, rows: ManifestKindRo
     const variant = pascalCase(row.id);
     const id = row.id;
     ids.push(id);
-    body += `    #[serde(rename = ${rustStr(id)})]\n    ${variant},\n`;
+    body += `    ${variant},\n`;
     consts += `pub const ${prefix.toUpperCase()}_${familyName.toUpperCase()}_${snakeUpper(id)}: &str = ${rustStr(id)};\n`;
   }
   return (
     `${consts}\n` +
-    `#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]\n` +
-    `#[serde(rename_all = "camelCase")]\n` +
+    `#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]\n` +
     `pub enum ${enumName} {\n${body}}\n\n` +
     `impl ${enumName} {\n` +
     `    pub const ALL: &'static [Self] = &[${rows.map((r) => `${enumName}::${pascalCase(r.id)}`).join(", ")}];\n` +
@@ -182,12 +181,13 @@ function emitRustManifest(doc: ManifestDocument): string {
     emitRustFamily(prefix, "Window", familyRows(doc, "windowKinds")) +
     emitRustFamily(prefix, "FileNode", familyRows(doc, "fileNodeKinds")) +
     emitRustFamily(prefix, "Descriptor", familyRows(doc, "descriptorKinds"));
-  // families only reference Serialize/Deserialize when at least one recognized kind family is present — an unconditional import would leave manifests with no recognized family (e.g. note-blocks' blockKinds) with an unused import.
-  const serdeImport = families.length > 0 ? "use serde::{Deserialize, Serialize};\n" : "";
-  let out = `// Generated from ${doc.id}.manifest.json\n\n${serdeImport}use crate::manifest::Manifest;\n\n`;
+  let out = `// Generated from ${doc.id}.manifest.json\n\nuse crate::manifest::Manifest;\n\n`;
   out += families;
   out += `pub const ${prefix.toUpperCase()}_MANIFEST_JSON: &str = ${rustStr(json)};\n\n`;
-  out += `pub fn ${fnName}() -> Manifest {\n    serde_json::from_str(${prefix.toUpperCase()}_MANIFEST_JSON).expect("manifest json")\n}\n`;
+  // 🌉️ `dsl_core::json::from_json_str` (RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS,
+  // 26/09/02 Phase 2) — the `ToValue`/`FromValue` analog of `serde_json::from_str`, routed through
+  // `Manifest`'s own hand-written `FromValue` impl instead of a derive-generated `Deserialize`.
+  out += `pub fn ${fnName}() -> Manifest {\n    dsl_core::json::from_json_str(${prefix.toUpperCase()}_MANIFEST_JSON).expect("manifest json")\n}\n`;
   return out;
 }
 

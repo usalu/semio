@@ -553,8 +553,8 @@ def derive_document_from_json(raw: bytes) -> dict:
 
 
 # region 🔖️Scenario input
-GRAPH_DSL = "asset://🏅️standards/🔖️v1/🪆️subsets/✳️any/📚️examples/🕸️graph/🖼️assets/🗣️.dsl.semio"
-GRAPH_PACK = "asset://🏅️standards/🔖️v1/🪆️subsets/✳️any/📚️examples/🕸️graph/🖼️assets/🎒️.pack.semio"
+GRAPH_DSL = "asset://🏅️standards/🔖️v1/🪆️subsets/✳️base/📚️examples/🕸️graph/🖼️assets/🗣️.dsl.semio"
+GRAPH_PACK = "asset://🏅️standards/🔖️v1/🪆️subsets/✳️base/📚️examples/🕸️graph/🖼️assets/🎒️.pack.semio"
 FOREST_JSON = "local://🔣️.json"
 FOREST_DSL = "local://🧪️hexagonal-cut-concrete-forest/🗣️.dsl.semio"
 FOREST_PACK = "local://🧪️hexagonal-cut-concrete-forest/🎒️.pack.semio"

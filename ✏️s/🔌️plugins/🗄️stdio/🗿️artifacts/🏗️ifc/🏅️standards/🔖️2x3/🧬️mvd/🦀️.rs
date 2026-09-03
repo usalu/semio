@@ -19,7 +19,7 @@
 //! @see 🪆️subsets/✳️sav/🧬️schema/🧬️mutations/🦀️.rs — Structural Analysis View's vocabulary.
 //! @see 🦀️oracle.rs — the reference Part-21 codec the same three subsets' oracles share.
 
-use crate::artifacts::ifc::standards::v2x3::subsets::any::schema::snapshot::Ifc2x3Snapshot;
+use crate::artifacts::ifc::standards::v2x3::subsets::base::schema::snapshot::Ifc2x3Snapshot;
 use crate::artifacts::step::engine::part21::{Part21Instance, Part21Value};
 
 //#region 🔖️ViewDefinition

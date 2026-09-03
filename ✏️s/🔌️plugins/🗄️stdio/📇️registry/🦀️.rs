@@ -209,8 +209,8 @@ pub fn capability_ledger() -> Result<CapabilityLedger, PluginAssemblyError> {
 //#region SourceLoading
 const SOURCES: [&str; 36] = [
     include_str!("../🗿️artifacts/💾️binary/🧬️schema/📜️artifact-definition.json"),
-    include_str!("../🗿️artifacts/📄txt/🧬️schema/📜️artifact-definition.json"),
-    include_str!("../🗿️artifacts/📰xml/🧬️schema/📜️artifact-definition.json"),
+    include_str!("../🗿️artifacts/📄️txt/🧬️schema/📜️artifact-definition.json"),
+    include_str!("../🗿️artifacts/📰️xml/🧬️schema/📜️artifact-definition.json"),
     include_str!("../🗿️artifacts/🗜️deflate/🧬️schema/📜️artifact-definition.json"),
     include_str!("../🗿️artifacts/🎒️zip/🧬️schema/📜️artifact-definition.json"),
     include_str!("../🗿️artifacts/🔣️json/🧬️schema/📜️artifact-definition.json"),
@@ -323,8 +323,12 @@ fn executable_mappings(source: &Source) -> Result<BTreeMap<String, ArtifactExecu
     }
     if source.artifact == "gltf" {
         use protocol::SemanticMutation;
+        let registered: BTreeSet<&str> = source.mutations.iter().filter(|item| item.executable_registration).map(|item| item.id.as_str()).collect();
         for descriptor in crate::artifacts::gltf::schema::mutations::GltfMutation::kinds() {
             let id = format!("s.stdio.gltf.mutation.{}.v1", descriptor.kind);
+            if !registered.contains(id.as_str()) {
+                continue;
+            }
             let identity = ArtifactExecutableIdentity::from_function_pointer(crate::artifacts::gltf::schema::mutations::apply_gltf_mutation as *const ());
             if mappings.insert(id.clone(), identity).is_some() {
                 return Err(failure(format!("{} repeats executable mapping {id}", source.id)));

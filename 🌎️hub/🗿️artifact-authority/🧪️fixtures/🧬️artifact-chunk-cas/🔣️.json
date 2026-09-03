@@ -1,0 +1,96 @@
+{
+  "version": 1,
+  "spaceId": "space-ü",
+  "chunkBytes": 262144,
+  "maximumRawBytes": 67108864,
+  "maximumChunkCount": 256,
+  "maximumManifestBytes": 65536,
+  "vectors": [
+    {
+      "length": 0,
+      "rawSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "chunkCount": 0,
+      "manifestBytes": 131,
+      "manifestId": "00104a3dd81be8fb8ecebd2aa0703dbcb772169d0ef6b0709c1cfdc46c224607",
+      "firstChunkId": null,
+      "lastChunkId": null
+    },
+    {
+      "length": 1,
+      "rawSha256": "6e340b9cffb37a989ca544e6bb780a2c78901d3fb33738768511a30617afa01d",
+      "chunkCount": 1,
+      "manifestBytes": 195,
+      "manifestId": "deaffd3da8ca4d39026c7d27a6bd7358d53f1d957c790403b14f18966fbc6820",
+      "firstChunkId": "68cc23a3e299d7a54f94387b52c1a41812d887ed9a9508943bd058df1996530d",
+      "lastChunkId": "68cc23a3e299d7a54f94387b52c1a41812d887ed9a9508943bd058df1996530d"
+    },
+    {
+      "length": 262143,
+      "rawSha256": "a458f4ee96b05572e35f0aa5e53affb081355e0950ac9b15627f57dabb6d02e7",
+      "chunkCount": 1,
+      "manifestBytes": 195,
+      "manifestId": "536e1dad38ccfad5cac8712f08feecddae9d1081df09116ebc851a213fc22874",
+      "firstChunkId": "8378ae99189d8ada0d1a2bf8fd452158285410f80d8e6b29c4d4d45ec6c74868",
+      "lastChunkId": "8378ae99189d8ada0d1a2bf8fd452158285410f80d8e6b29c4d4d45ec6c74868"
+    },
+    {
+      "length": 262144,
+      "rawSha256": "fe9758859c3428b71f5282417d786bb3e29f0831f7219acee457492f224e4067",
+      "chunkCount": 1,
+      "manifestBytes": 195,
+      "manifestId": "b69d608f7c48a33b404549692676d7ae847d6fb472644c3676cd61256ca65092",
+      "firstChunkId": "631dcce94b5ec2ce402f1abd061e85947581e9d1b10922f9d6082eda1f9dc0c6",
+      "lastChunkId": "631dcce94b5ec2ce402f1abd061e85947581e9d1b10922f9d6082eda1f9dc0c6"
+    },
+    {
+      "length": 262145,
+      "rawSha256": "e2802dc1dd2d38b574e4d08574a3f61287af6c3734ad104c9e868602f897538b",
+      "chunkCount": 2,
+      "manifestBytes": 259,
+      "manifestId": "79a942731d4958a8282cfd264713b95a2984a9c30be49bc404af7252625008bc",
+      "firstChunkId": "631dcce94b5ec2ce402f1abd061e85947581e9d1b10922f9d6082eda1f9dc0c6",
+      "lastChunkId": "d28b27aed9608722da8d5a1e63b91ae2100741524a71f86de694915e216fb98c"
+    }
+  ],
+  "largePair": {
+    "pack": {
+      "length": 33554432,
+      "rawSha256": "e28d0686de51ef7aeb4f4baf887d3d3e2f89fdfd2b7cd8e8032a7189f6249fe2",
+      "chunkCount": 128,
+      "manifestBytes": 8323,
+      "manifestId": "cae4ee66cadd6e57918ca8169e9bdd6643ef8fc420738061e89ed41c4e2fa4af",
+      "firstChunkId": "631dcce94b5ec2ce402f1abd061e85947581e9d1b10922f9d6082eda1f9dc0c6",
+      "lastChunkId": "c4c448c42bedb27eb935e8ef2c62e7c6611bcbdf0033b6ea8ba99b4a542e2967"
+    },
+    "spr": {
+      "length": 33554432,
+      "rawSha256": "e28d0686de51ef7aeb4f4baf887d3d3e2f89fdfd2b7cd8e8032a7189f6249fe2",
+      "chunkCount": 128,
+      "manifestBytes": 8323,
+      "manifestId": "cae4ee66cadd6e57918ca8169e9bdd6643ef8fc420738061e89ed41c4e2fa4af",
+      "firstChunkId": "631dcce94b5ec2ce402f1abd061e85947581e9d1b10922f9d6082eda1f9dc0c6",
+      "lastChunkId": "c4c448c42bedb27eb935e8ef2c62e7c6611bcbdf0033b6ea8ba99b4a542e2967"
+    },
+    "totalLength": 67108864
+  },
+  "retentionLedger": {
+    "reservationMaximumTtlMs": 300000,
+    "reservationGraceMs": 60000,
+    "sweepPageMaximum": 16,
+    "sweepObjectMaximum": 4096,
+    "events": [
+      { "generation": 1, "operation": "reserve", "checkpointId": "1111111111111111111111111111111111111111111111111111111111111111", "expiresAtMs": 200, "objects": ["chunk:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", "manifest:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"] },
+      { "generation": 2, "operation": "publish", "checkpointId": "1111111111111111111111111111111111111111111111111111111111111111" },
+      { "generation": 3, "operation": "reserve", "checkpointId": "2222222222222222222222222222222222222222222222222222222222222222", "expiresAtMs": 300, "objects": ["chunk:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", "manifest:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"] },
+      { "generation": 4, "operation": "publish", "checkpointId": "2222222222222222222222222222222222222222222222222222222222222222" },
+      { "generation": 5, "operation": "retention", "checkpointId": "2222222222222222222222222222222222222222222222222222222222222222" },
+      { "generation": 6, "operation": "reserve", "checkpointId": "3333333333333333333333333333333333333333333333333333333333333333", "expiresAtMs": 350, "objects": ["chunk:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd"] },
+      { "generation": 7, "operation": "space-delete" }
+    ],
+    "snapshots": [
+      { "throughGeneration": 6, "nowMs": 320, "protected": ["chunk:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", "chunk:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd", "manifest:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"], "eligible": ["manifest:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"] },
+      { "throughGeneration": 6, "nowMs": 351, "protected": ["chunk:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", "manifest:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"], "eligible": ["chunk:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd", "manifest:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"] },
+      { "throughGeneration": 7, "nowMs": 351, "protected": [], "eligible": ["chunk:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", "chunk:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd", "manifest:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb", "manifest:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"] }
+    ]
+  }
+}

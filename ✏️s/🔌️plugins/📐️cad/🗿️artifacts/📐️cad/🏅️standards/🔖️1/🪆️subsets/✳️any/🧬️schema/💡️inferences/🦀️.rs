@@ -730,8 +730,8 @@ mod construct_query {
         async fn construct_query_finds_every_face_bounded_by_its_wire() {
             let geometry = box_geometry();
             let json = run_construct_query(&geometry, "MATCH (f:Face)--[:BOUNDED_BY]->(w:Wire) RETURN f.name, w.name").expect("construct query must run");
-            let value: serde_json::Value = serde_json::from_str(&json).expect("valid JSON result");
-            let rows = value["rows"].as_array().expect("rows array");
+            let value = protocol::json::parse(&json).expect("valid JSON result");
+            let rows = value.get("rows").and_then(protocol::os_pack::json::Value::as_array).expect("rows array");
             assert_eq!(rows.len(), 6, "every one of the 6 faces must match exactly its own wire: {json}");
         }
 
@@ -739,8 +739,8 @@ mod construct_query {
         async fn construct_query_filters_edges_by_curve_kind_property() {
             let geometry = box_geometry();
             let json = run_construct_query(&geometry, "MATCH (e:Edge) WHERE e.curveKind = 'line' RETURN e.name").expect("construct query must run");
-            let value: serde_json::Value = serde_json::from_str(&json).expect("valid JSON result");
-            let rows = value["rows"].as_array().expect("rows array");
+            let value = protocol::json::parse(&json).expect("valid JSON result");
+            let rows = value.get("rows").and_then(protocol::os_pack::json::Value::as_array).expect("rows array");
             assert_eq!(rows.len(), 12, "all 12 box edges are line curves: {json}");
         }
 

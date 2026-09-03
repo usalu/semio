@@ -24,24 +24,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "arrayvec"
-version = "0.7.8"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d3fb67a6e08acf24fdeccbac2cb6ac4305825bd1f117462e0e6f2f193345ad56"
-
-[[package]]
-name = "autocfg"
-version = "1.5.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f2032f911046de80f0a198e0901378627c33f59ea0ac00e363d481118bd70a53"
-
-[[package]]
-name = "base64"
-version = "0.22.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "72b3254f16251a8381aa12e40e3c4d2f0199f8c6508fbecb9d91f575e0fbb8c6"
-
-[[package]]
 name = "bitflags"
 version = "2.13.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -52,6 +34,26 @@ name = "bumpalo"
 version = "3.20.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "72f5acc6cb2ba439de613abc23857ec3d78374d8ed5ac84e9d11336e87da8649"
+
+[[package]]
+name = "bytemuck"
+version = "1.25.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "95832e849adfb21180ccb6826a99da14e5d266ae5c2e668e1602cf234f153797"
+dependencies = [
+ "bytemuck_derive",
+]
+
+[[package]]
+name = "bytemuck_derive"
+version = "1.12.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "fc0e56a716f1e132ff6bf4bdac1c944a3fcdc1cae65f70a4a2a1ac3b401d2d1f"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn 3.0.4",
+]
 
 [[package]]
 name = "cfg-if"
@@ -101,15 +103,6 @@ name = "equivalent"
 version = "1.0.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "877a4ace8713b0bcf2a4e7eec82529c029f1d0619886d18145fea96c3ffe5c0f"
-
-[[package]]
-name = "euclid"
-version = "0.22.14"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f1a05365e3b1c6d1650318537c7460c6923f1abdd272ad6842baa2b509957a06"
-dependencies = [
- "num-traits",
-]
 
 [[package]]
 name = "flate2"
@@ -266,18 +259,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "kurbo"
-version = "0.13.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4b60dfc32f652b926df6192e55525b16d186c69d47876c3ead4da5cc9f8450e2"
-dependencies = [
- "arrayvec",
- "euclid",
- "polycool",
- "smallvec",
-]
-
-[[package]]
 name = "leb128fmt"
 version = "0.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -334,15 +315,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "num-traits"
-version = "0.2.19"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "071dfc062690e90b734c0b2273ce72ad0ffa95f0c74596bc250dcfd960262841"
-dependencies = [
- "autocfg",
-]
-
-[[package]]
 name = "once_cell"
 version = "1.21.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -353,15 +325,6 @@ name = "pin-project-lite"
 version = "0.2.17"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a89322df9ebe1c1578d689c92318e070967d1042b512afbe49518723f4e6d5cd"
-
-[[package]]
-name = "polycool"
-version = "0.4.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "50596ddc09eb5ad5f75cacd40209568e66df71baf86e1499a0e99c4cff12a5a6"
-dependencies = [
- "arrayvec",
-]
 
 [[package]]
 name = "prettyplease"
@@ -420,8 +383,9 @@ dependencies = [
  "semio-framework-geometry",
  "semio-framework-number",
  "semio-framework-os-kernel",
- "serde",
- "serde_json",
+ "semio-framework-pack",
+ "semio-framework-replication",
+ "semio-framework-value-derive",
 ]
 
 [[package]]
@@ -430,6 +394,8 @@ version = "0.1.0"
 dependencies = [
  "semio-framework-async",
  "semio-framework-job",
+ "semio-framework-replication",
+ "semio-framework-value-derive",
  "serde",
  "wasm-bindgen",
 ]
@@ -440,7 +406,6 @@ version = "0.1.0"
 dependencies = [
  "js-sys",
  "semio-framework-trace",
- "serde",
  "wasm-bindgen",
 ]
 
@@ -460,10 +425,6 @@ dependencies = [
 [[package]]
 name = "semio-framework-geometry"
 version = "0.1.0"
-dependencies = [
- "kurbo",
- "serde",
-]
 
 [[package]]
 name = "semio-framework-hash"
@@ -487,7 +448,6 @@ version = "0.1.0"
 dependencies = [
  "semio-framework-io-base64",
  "semio-framework-pack",
- "serde",
 ]
 
 [[package]]
@@ -498,11 +458,11 @@ version = "0.1.0"
 name = "semio-framework-os-kernel"
 version = "0.1.0"
 dependencies = [
- "base64",
  "futures",
  "js-sys",
  "semio-framework-async",
  "semio-framework-hash",
+ "semio-framework-io-base64",
  "semio-framework-job",
  "semio-framework-os-kernel-dsl-derive",
  "semio-framework-pack",
@@ -565,8 +525,10 @@ dependencies = [
  "semio-framework-deflate",
  "semio-framework-hash",
  "semio-framework-io-base64",
+ "semio-framework-value-derive",
  "serde",
  "serde_json",
+ "wasm-bindgen",
 ]
 
 [[package]]
@@ -595,10 +557,13 @@ version = "0.1.0"
 name = "semio-framework-ui"
 version = "0.1.0"
 dependencies = [
+ "bytemuck",
+ "semio-framework-job",
  "semio-framework-os-kernel",
  "semio-framework-ui-contract",
  "semio-framework-ui-scene",
  "semio-framework-ui-styling",
+ "semio-framework-value-derive",
  "serde",
  "serde_json",
 ]
@@ -607,7 +572,9 @@ dependencies = [
 name = "semio-framework-ui-contract"
 version = "0.1.0"
 dependencies = [
+ "semio-framework-replication",
  "semio-framework-ui-styling",
+ "semio-framework-value-derive",
  "serde",
 ]
 
@@ -617,7 +584,6 @@ version = "0.1.0"
 dependencies = [
  "semio-framework-job",
  "semio-framework-ui-contract",
- "serde",
 ]
 
 [[package]]
@@ -625,6 +591,7 @@ name = "semio-framework-ui-scene"
 version = "0.1.0"
 dependencies = [
  "semio-framework-geometry",
+ "semio-framework-replication",
  "semio-framework-ui-contract",
  "serde",
 ]
@@ -714,12 +681,6 @@ name = "slab"
 version = "0.4.12"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "0c790de23124f9ab44544d7ac05d60440adc586479ce501c1d6d7da3cd8c9cf5"
-
-[[package]]
-name = "smallvec"
-version = "1.15.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8ed6a63f02c8539c91a8685a86f4099661ba3da017932f6ebbea6de3f0fa7c90"
 
 [[package]]
 name = "socket2"
@@ -926,7 +887,6 @@ version = "0.57.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1ebf944e87a7c253233ad6766e082e3cd714b5d03812acc24c318f549614536e"
 dependencies = [
- "bitflags",
  "wit-bindgen-rust-macro",
 ]
 

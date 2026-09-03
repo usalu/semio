@@ -12,7 +12,7 @@ start diff
 # Same framework-generic `.spk` document container every `#[derive(dsl::DslDiff)]` type in the
 # repo routes through (this ticket's own recipe §2.4/§5 `txt-diffcodec-spk-container-is-
 # framework-level`) -- copied verbatim in shape from `stdio.txt`'s own already-real diff protocol
-# (`📄txt/…/🔺️diff/💾️binary/📡️.protocol.semio`), the first pilot to land this exact
+# (`📄️txt/…/🔺️diff/💾️binary/📡️.protocol.semio`), the first pilot to land this exact
 # pattern; only `protocol`/`schema` above differ.
 #
 # `encode_document` wraps the record in the FULL `.spk` document container

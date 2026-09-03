@@ -27,6 +27,30 @@
       },
       "productionReachable": false,
       "networkDuringExecution": false
+    },
+    {
+      "id": "ifcopenshell-ifc-2x3-cobie-mutate-reader",
+      "kind": "third-party-library",
+      "ecosystem": "python",
+      "package": "ifcopenshell",
+      "version": "0.8.4.post1",
+      "engine": {
+        "family": "ifcopenshell",
+        "implementation": "IfcOpenShell C++/Python IFC engine",
+        "version": "0.8.4.post1"
+      },
+      "capabilities": [
+        "ifc-2x3-cobie-mutate"
+      ],
+      "license": "LGPL-3.0-or-later",
+      "testOnly": true,
+      "productionReachable": false,
+      "networkDuringExecution": false,
+      "homepage": "https://ifcopenshell.org",
+      "rationale": "📖️ A READER, registered separately from this file's `cross-semio-implementation` entry (the `ruststep`-backed dispatcher that COMPUTES what a mutation should produce). IfcOpenShell 0.8.4.post1 is the reference open-source IFC engine: `ifcopenshell.open(path)` runs its own C++ Part-21/EXPRESS parser against the real IFC2X3 schema, entirely independent of this repository's `ruststep` reimplementation or its own production decoder. It is ALREADY declared as an `oracleHostPackages` entry in the shared `✏️s/🔌️plugins/🗄️stdio/🧪️oracle/🔣️.json` (owner `✏️s/🔌️plugins/🗄️stdio`, a real path prefix of every subset under it, ifc included) by this ticket's own A10 shard for the sibling 2x3/✳️base subset's `ifcopenshell-ifc-2x3-base-differential` entry — so it is already resolvable on every stdio test case's host import path and this registration needs no shared-manifest edit at all. This subset's own vocabulary (`set-facility-name`, `set-floor-elevation`, `set-space`, `set-type-assignment`, `set-view-definition`) is a COBie-flavoured slice of core IFC entities, all directly readable through `ifcopenshell.file.by_type` — `f.by_type(\"IfcProject\")[0].Name` (facility name), `f.by_type(\"IfcBuildingStorey\")` `.Elevation` (floor elevation), `f.by_type(\"IfcSpace\")` (space presence/count), `f.by_type(\"IfcTypeObject\")` (type assignment) and the FILE_DESCRIPTION header string (view definition). Verified directly against this subset's own committed fixture before registration.",
+      "comparisonProfiles": [
+        "semantic-ifc-v1"
+      ]
     }
   ],
   "noOracleDecisions": [],
@@ -72,7 +96,8 @@
           "oracleRequirements": [
             {
               "capability": "ifc-2x3-cobie-mutate",
-              "qualifyingKind": "third-party-library"
+              "qualifyingKind": "third-party-library",
+              "oracle": "ifcopenshell-ifc-2x3-cobie-mutate-reader"
             }
           ]
         },
@@ -91,7 +116,8 @@
           "oracleRequirements": [
             {
               "capability": "ifc-2x3-cobie-mutate",
-              "qualifyingKind": "third-party-library"
+              "qualifyingKind": "third-party-library",
+              "oracle": "ifcopenshell-ifc-2x3-cobie-mutate-reader"
             }
           ]
         },
@@ -110,7 +136,8 @@
           "oracleRequirements": [
             {
               "capability": "ifc-2x3-cobie-mutate",
-              "qualifyingKind": "third-party-library"
+              "qualifyingKind": "third-party-library",
+              "oracle": "ifcopenshell-ifc-2x3-cobie-mutate-reader"
             }
           ]
         },
@@ -129,7 +156,8 @@
           "oracleRequirements": [
             {
               "capability": "ifc-2x3-cobie-mutate",
-              "qualifyingKind": "third-party-library"
+              "qualifyingKind": "third-party-library",
+              "oracle": "ifcopenshell-ifc-2x3-cobie-mutate-reader"
             }
           ]
         },
@@ -148,7 +176,8 @@
           "oracleRequirements": [
             {
               "capability": "ifc-2x3-cobie-mutate",
-              "qualifyingKind": "third-party-library"
+              "qualifyingKind": "third-party-library",
+              "oracle": "ifcopenshell-ifc-2x3-cobie-mutate-reader"
             }
           ]
         },
@@ -167,11 +196,320 @@
           "oracleRequirements": [
             {
               "capability": "ifc-2x3-cobie-mutate",
-              "qualifyingKind": "third-party-library"
+              "qualifyingKind": "third-party-library",
+              "oracle": "ifcopenshell-ifc-2x3-cobie-mutate-reader"
             }
           ]
         }
       ]
+    }
+  ],
+  "fixtureManifests": [
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "set-facility-name-applied",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.ifc",
+        "standard": "2x3",
+        "subset": "cobie"
+      },
+      "mutation": "set-facility-name",
+      "outcome": "applied",
+      "units": {
+        "length": "millimetre",
+        "angle": "radian"
+      },
+      "files": [
+        {
+          "role": "expected-before-ifc",
+          "path": "../🧫️fixtures/set-facility-name-applied/before.ifc",
+          "mediaType": "model/ifc",
+          "sha256": "sha256:320f5915d2ce0c3384c779c8ff9eb7e471aaca3bba64ce909760559b452d969c",
+          "bytes": 188288
+        },
+        {
+          "role": "expected-after-ifc",
+          "path": "../🧫️fixtures/set-facility-name-applied/after.ifc",
+          "mediaType": "model/ifc",
+          "sha256": "sha256:5dbc1859b687fa56afb14f18df6860f4e93886587344faa345b3352d8d0af73d",
+          "bytes": 188304
+        }
+      ],
+      "generator": {
+        "oracle": "ifcopenshell-ifc-2x3-cobie-mutate-reader",
+        "packageVersion": "0.8.4.post1",
+        "engineFamily": "ifcopenshell",
+        "engineVersion": "0.8.4.post1",
+        "command": "uv run --group test python3 .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION/🔨️f1-ifc-generate.py",
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "LGPL-3.0-or-later (ifcopenshell)",
+        "attribution": "Generated with IfcOpenShell 0.8.4.post1 (LGPL-3.0-or-later) via a real read+write round trip against this repository's own committed real-world fixture",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "semantic-ifc-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "Set #IfcBuilding.Name (the COBie facility row's own name) via ifcopenshell."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "set-floor-elevation-applied",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.ifc",
+        "standard": "2x3",
+        "subset": "cobie"
+      },
+      "mutation": "set-floor-elevation",
+      "outcome": "applied",
+      "units": {
+        "length": "millimetre",
+        "angle": "radian"
+      },
+      "files": [
+        {
+          "role": "expected-before-ifc",
+          "path": "../🧫️fixtures/set-floor-elevation-applied/before.ifc",
+          "mediaType": "model/ifc",
+          "sha256": "sha256:320f5915d2ce0c3384c779c8ff9eb7e471aaca3bba64ce909760559b452d969c",
+          "bytes": 188288
+        },
+        {
+          "role": "expected-after-ifc",
+          "path": "../🧫️fixtures/set-floor-elevation-applied/after.ifc",
+          "mediaType": "model/ifc",
+          "sha256": "sha256:b15e293ccf40010a65b5bad3f9317c936b619dad48926c7e15ec1dc8ecd6cd81",
+          "bytes": 188288
+        }
+      ],
+      "generator": {
+        "oracle": "ifcopenshell-ifc-2x3-cobie-mutate-reader",
+        "packageVersion": "0.8.4.post1",
+        "engineFamily": "ifcopenshell",
+        "engineVersion": "0.8.4.post1",
+        "command": "uv run --group test python3 .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION/🔨️f1-ifc-generate.py",
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "LGPL-3.0-or-later (ifcopenshell)",
+        "attribution": "Generated with IfcOpenShell 0.8.4.post1 (LGPL-3.0-or-later) via a real read+write round trip against this repository's own committed real-world fixture",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "semantic-ifc-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "Set #145 IfcBuildingStorey ('Grond floor')'s Elevation to 999.0 via ifcopenshell."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "set-space-applied",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.ifc",
+        "standard": "2x3",
+        "subset": "cobie"
+      },
+      "mutation": "set-space",
+      "outcome": "applied",
+      "units": {
+        "length": "millimetre",
+        "angle": "radian"
+      },
+      "files": [
+        {
+          "role": "expected-before-ifc",
+          "path": "../🧫️fixtures/set-space-applied/before.ifc",
+          "mediaType": "model/ifc",
+          "sha256": "sha256:320f5915d2ce0c3384c779c8ff9eb7e471aaca3bba64ce909760559b452d969c",
+          "bytes": 188288
+        },
+        {
+          "role": "expected-after-ifc",
+          "path": "../🧫️fixtures/set-space-applied/after.ifc",
+          "mediaType": "model/ifc",
+          "sha256": "sha256:7869764354d82996bc1d01165f28c46608e414dbf9775928b0cb2a29a546e28a",
+          "bytes": 188457
+        }
+      ],
+      "generator": {
+        "oracle": "ifcopenshell-ifc-2x3-cobie-mutate-reader",
+        "packageVersion": "0.8.4.post1",
+        "engineFamily": "ifcopenshell",
+        "engineVersion": "0.8.4.post1",
+        "command": "uv run --group test python3 .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION/🔨️f1-ifc-generate.py",
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "LGPL-3.0-or-later (ifcopenshell)",
+        "attribution": "Generated with IfcOpenShell 0.8.4.post1 (LGPL-3.0-or-later) via a real read+write round trip against this repository's own committed real-world fixture",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "semantic-ifc-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "Created a new #IfcSpace ('Room 101') via ifcopenshell.api.root.create_entity — this fixture's own real-world source has no IfcSpace, so COBie's set-space mutation is witnessed by a genuine third-party-constructed entity rather than an edit of a pre-existing one. GlobalId pinned to a fixed literal after creation so the fixture is byte-reproducible across regenerations."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "set-type-assignment-applied",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.ifc",
+        "standard": "2x3",
+        "subset": "cobie"
+      },
+      "mutation": "set-type-assignment",
+      "outcome": "applied",
+      "units": {
+        "length": "millimetre",
+        "angle": "radian"
+      },
+      "files": [
+        {
+          "role": "expected-before-ifc",
+          "path": "../🧫️fixtures/set-type-assignment-applied/before.ifc",
+          "mediaType": "model/ifc",
+          "sha256": "sha256:320f5915d2ce0c3384c779c8ff9eb7e471aaca3bba64ce909760559b452d969c",
+          "bytes": 188288
+        },
+        {
+          "role": "expected-after-ifc",
+          "path": "../🧫️fixtures/set-type-assignment-applied/after.ifc",
+          "mediaType": "model/ifc",
+          "sha256": "sha256:8e808691a2b9948b2fd85d37a7a5235f6739397b5619f0e78c0c989e63ae76eb",
+          "bytes": 188312
+        }
+      ],
+      "generator": {
+        "oracle": "ifcopenshell-ifc-2x3-cobie-mutate-reader",
+        "packageVersion": "0.8.4.post1",
+        "engineFamily": "ifcopenshell",
+        "engineVersion": "0.8.4.post1",
+        "command": "uv run --group test python3 .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION/🔨️f1-ifc-generate.py",
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "LGPL-3.0-or-later (ifcopenshell)",
+        "attribution": "Generated with IfcOpenShell 0.8.4.post1 (LGPL-3.0-or-later) via a real read+write round trip against this repository's own committed real-world fixture",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "semantic-ifc-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "Set #712585 IfcRelDefinesByType.Name via ifcopenshell."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "set-view-definition-applied",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.ifc",
+        "standard": "2x3",
+        "subset": "cobie"
+      },
+      "mutation": "set-view-definition",
+      "outcome": "applied",
+      "units": {
+        "length": "millimetre",
+        "angle": "radian"
+      },
+      "files": [
+        {
+          "role": "expected-before-ifc",
+          "path": "../🧫️fixtures/set-view-definition-applied/before.ifc",
+          "mediaType": "model/ifc",
+          "sha256": "sha256:320f5915d2ce0c3384c779c8ff9eb7e471aaca3bba64ce909760559b452d969c",
+          "bytes": 188288
+        },
+        {
+          "role": "expected-after-ifc",
+          "path": "../🧫️fixtures/set-view-definition-applied/after.ifc",
+          "mediaType": "model/ifc",
+          "sha256": "sha256:4e2f16c084a475886fc45583641a1172123211444da357f915f07290f1a3c7f4",
+          "bytes": 188276
+        }
+      ],
+      "generator": {
+        "oracle": "ifcopenshell-ifc-2x3-cobie-mutate-reader",
+        "packageVersion": "0.8.4.post1",
+        "engineFamily": "ifcopenshell",
+        "engineVersion": "0.8.4.post1",
+        "command": "uv run --group test python3 .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION/🔨️f1-ifc-generate.py",
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "LGPL-3.0-or-later (ifcopenshell)",
+        "attribution": "Generated with IfcOpenShell 0.8.4.post1 (LGPL-3.0-or-later) via a real read+write round trip against this repository's own committed real-world fixture",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "semantic-ifc-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "Replaced the header FILE_DESCRIPTION's view-definition text via ifcopenshell's own header object."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "set-snapshot-applied",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.ifc",
+        "standard": "2x3",
+        "subset": "cobie"
+      },
+      "mutation": "set-snapshot",
+      "outcome": "applied",
+      "units": {
+        "length": "millimetre",
+        "angle": "radian"
+      },
+      "files": [
+        {
+          "role": "expected-before-ifc",
+          "path": "../🧫️fixtures/set-snapshot-applied/before.ifc",
+          "mediaType": "model/ifc",
+          "sha256": "sha256:320f5915d2ce0c3384c779c8ff9eb7e471aaca3bba64ce909760559b452d969c",
+          "bytes": 188288
+        },
+        {
+          "role": "expected-after-ifc",
+          "path": "../🧫️fixtures/set-snapshot-applied/after.ifc",
+          "mediaType": "model/ifc",
+          "sha256": "sha256:f390850ec1fecad9de3eb1d3e704b15d4640d29a4ad41d7ce7a7e80a2eac4933",
+          "bytes": 188317
+        }
+      ],
+      "generator": {
+        "oracle": "ifcopenshell-ifc-2x3-cobie-mutate-reader",
+        "packageVersion": "0.8.4.post1",
+        "engineFamily": "ifcopenshell",
+        "engineVersion": "0.8.4.post1",
+        "command": "uv run --group test python3 .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION/🔨️f1-ifc-generate.py",
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "LGPL-3.0-or-later (ifcopenshell)",
+        "attribution": "Generated with IfcOpenShell 0.8.4.post1 (LGPL-3.0-or-later) via a real read+write round trip against this repository's own committed real-world fixture",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "semantic-ifc-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "Replaced both #IfcBuilding.Name and the first #IfcBuildingStorey.Elevation together, standing in for a wholesale COBie snapshot replacement (ifcopenshell has no single bulk-document type; the combined edit is the observable surface)."
     }
   ]
 }

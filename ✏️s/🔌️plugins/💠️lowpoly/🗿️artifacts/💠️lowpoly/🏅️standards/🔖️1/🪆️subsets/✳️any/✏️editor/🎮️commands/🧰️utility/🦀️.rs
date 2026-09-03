@@ -9,7 +9,6 @@ use crate::editor::lowpoly::session::LowpolyScratch;
 use crate::editor::lowpoly::view::{is_paint_utility, utility_params_value};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use serde::{Deserialize, Serialize};
-use serde_json::{Map, Value};
 
 //#region 🔖️SetUtilityParam
 pub mod set_utility_param {
@@ -23,17 +22,19 @@ pub mod set_utility_param {
         pub value_json: String,
     }
 
+    /// 🌉️ `utility_params_value` (owned outside this ticket slice, `🧭️view/🦀️.rs`) still hands back a
+    /// real `serde_json::Value` — bridged into a `DslValue` immediately via the unconditional
+    /// `🌱️value/🦀️.rs` conversion, so the merge itself never touches `serde_json`.
     pub fn handle(payload: &SetUtilityParam, _doc: &ArtifactView<'_, LowpolySnapshot>, cfg: &ConfigView<'_, LowpolyConfig>, _ctx: &mut LowpolyScratch) -> Result<Emit<LowpolyMutation, LowpolyConfigMutation>, Fault> {
-        let mut params = utility_params_value(cfg.snapshot);
-        let value: Value = serde_json::from_str(&payload.value_json).unwrap_or(Value::Null);
-        if let Some(map) = params.as_object_mut() {
-            map.insert(payload.key.clone(), value);
-        } else {
-            let mut map = Map::new();
-            map.insert(payload.key.clone(), value);
-            params = Value::Object(map);
+        let params = utility_params_value(cfg.snapshot);
+        let mut entries: Vec<(String, dsl::DslValue)> = dsl::DslValue::from(&params).as_object().map(|entries| entries.to_vec()).unwrap_or_default();
+        let value = dsl::json::from_json_str::<dsl::DslValue>(&payload.value_json).unwrap_or(dsl::DslValue::Null);
+        match entries.iter_mut().find(|(key, _)| key == &payload.key) {
+            Some(entry) => entry.1 = value,
+            None => entries.push((payload.key.clone(), value)),
         }
-        Ok(Emit::config(vec![LowpolyConfigMutation::SetUtilityParams { json: params.to_string() }]))
+        let json = dsl::json::to_json_string(&dsl::DslValue::object(entries));
+        Ok(Emit::config(vec![LowpolyConfigMutation::SetUtilityParams { json }]))
     }
 }
 //#endregion 🔖️SetUtilityParam

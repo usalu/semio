@@ -8,7 +8,7 @@
 //! Ticket 26/08/11/ARTIFACT-STANDARD-SUBSETS-REAL-VOCABULARIES: real ISO/IEC 29500-1 Strict
 //! conformance-class subset, same shared pattern as `📜️docx`/`📕️xlsx` ecma-376 ✳️strict.
 
-pub use crate::artifacts::pptx::standards::v_ecma_376::subsets::any::schema::*;
+pub use crate::artifacts::pptx::standards::v_ecma_376::subsets::base::schema::*;
 //#region 🧬️Mutations
 // 🧬️ This subset's OWN conformance-class vocabulary, mounted here rather than in the crate's shared
 // `🦀️.rs`: that file is one wiring file for every stdio artifact at once, and the rationale the
@@ -24,7 +24,7 @@ pub mod mutations;
 
 //#region 🏗️DerivedConstruction
 pub mod derived_construction {
-    use crate::artifacts::pptx::standards::v_ecma_376::subsets::any::schema::PptxBuilder as PptxAnyBuilder;
+    use crate::artifacts::pptx::standards::v_ecma_376::subsets::base::schema::PptxBuilder as PptxAnyBuilder;
     use crate::artifacts::pptx::standards::v_ecma_376::subsets::strict::schema::check_strict_conformance;
     use crate::artifacts::pptx::schema::mutations::set_snapshot;
     use crate::artifacts::pptx::{PptxDiff, PptxMutation, PptxSnapshot};
@@ -132,7 +132,7 @@ pub use derived_construction::*;
 
 //#region 🧐️DerivedAnalysis
 pub mod derived_analysis {
-    use crate::artifacts::pptx::standards::v_ecma_376::subsets::any::schema::{PptxAnalyzer as PptxAnyAnalyzer, PptxParts};
+    use crate::artifacts::pptx::standards::v_ecma_376::subsets::base::schema::{PptxAnalyzer as PptxAnyAnalyzer, PptxParts};
     use crate::artifacts::pptx::PptxSnapshot;
     use crate::artifacts::zip::opc::OpcPackage;
     use dsl::{Diagnostic, FaultCode, FaultScope, Severity, TextSpan};
@@ -162,7 +162,7 @@ pub mod derived_analysis {
     /// Transitional or Strict officeDocument relationship type.
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn main_part_path(opc: &OpcPackage) -> Option<String> {
-        crate::artifacts::pptx::standards::v_ecma_376::subsets::any::io::resolve_office_document_relationship(opc)
+        crate::artifacts::pptx::standards::v_ecma_376::subsets::base::io::resolve_office_document_relationship(opc)
     }
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9

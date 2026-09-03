@@ -1,29 +1,25 @@
 @capability-presentation-1-mutate
-@no-oracle-presentation-figure-deck-mutation-semantics
+@oracle-presentation-1-python-independent
 @comparison-ordered-json-v1
 @mutations-presentation-1-any
-Feature: Apply every typed animate PRESENTATION mutation to the real committed figure deck
-  `s.animate.presentation` is a semio-NATIVE artifact — the `animate.presentation.dsl` envelope is defined by
-  this repository alone and no package in any ecosystem reads it — so this case carries a recorded
-  no-oracle decision (`presentation-figure-deck-mutation-semantics`, in
-  `../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️oracle/🔣️.json`) rather than a registered
-  reference library.
+Feature: Apply every typed animate PRESENTATION mutation to the real committed figure deck and against an independent Python implementation
+  `s.animate.presentation` is a semio-NATIVE artifact — the `animate.presentation.dsl` envelope is
+  defined by this repository alone and no package in any ecosystem reads it. The second producer a
+  differential comparison needs is therefore a second IMPLEMENTATION, and `🐍️component.py` beside
+  this file is it: written in Python from this subset's own committed
+  `🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🔣️.json` and from
+  `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-DIRECT-LEAF-OVERHAUL/📓️taxonomy.md`'s
+  `resize`/`replace`/`create`/`delete`/`rename`/`reorder` verb entries and
+  `📓️derivation-rules.md`'s per-ordered-collection recipe. It imports nothing from the Rust it judges
+  and transliterates none of it. The no-oracle decision this replaces
+  (`presentation-figure-deck-mutation-semantics`) is narrowed to an empty `capabilities` list rather
+  than deleted, because its own investigation remains the honest record of what was checked.
 
-  ⚠️ THIS NO-ORACLE DECISION IS A DEBT, NOT A VERDICT, and is recorded as one. Declining a third-party
-  LIBRARY is a different judgement from declining a SECOND IMPLEMENTATION, and only the first was ever
-  made here. `mutate-note-1` and `mutate-program-1` took Python second
-  implementations over this same `.dsl.semio` carrier in this wave, so the same is writable for this
-  subset from `🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🔣️.json`, the rules of
-  `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/📓️derivation-rules.md` and the
-  committed vectors this feature already replays. What blocks it TODAY is stated in the decision and
-  is one edit: this case's vectors are not declared as `asset://` fixtures — the `Examples` table
-  carries the payloads inline and the adapter reads the committed files through `include_str!` — so
-  the plan pins none of their digests and a Python reference cannot read them at all. Separately, `identity-round-trip` would still be refused: this subset's committed
-  snapshot text grammar is the repository-wide placeholder `payload = OCTET+`, whose header production
-  declares `"schema" SP "stdio.json"` against an artifact whose own first line says otherwise.
-  Until that is done, every assertion below still lives in the SUBJECT role, and the ceiling is the
-  one this decision has always had: no second producer runs beside it, so a mistake shared by the
-  handcrafted vector and the production code passes unseen.
+  ⚠️ Honest boundary. `source` is not decodable from any committed fixture this reference can read —
+  only the real `.dsl.semio` example's own parser resolves it — so `resize-source-frame` and
+  `replace-source` are modelled with `source` as an OPAQUE marker (touched vs not) rather than real
+  content; the seven `tiles`-scoped kinds are verified for real against this case's own committed
+  `local://🔣️.json` base graph, already declared as this case's local fixture.
 
   📄️ The base document is real and committed. `asset://📚️examples/🎬️demo/🖼️assets/🗣️.dsl.semio` is
   parsed by production's own `parse_dsl`, and the figure SOURCE every scenario starts from is whatever
@@ -53,15 +49,15 @@ Feature: Apply every typed animate PRESENTATION mutation to the real committed f
 
   @id-mutate
   @level-exhaustive
-  @mode-conformance
+  @mode-differential
   Scenario Outline: Apply <id> to the real committed deck and observe it move
     Given the real committed deck artifact asset://📚️examples/🎬️demo/🖼️assets/🗣️.dsl.semio
     And its composed presentation child seeded from local://🔣️.json
-    When the <id> mutation is applied through apply_presentation_mutation
+    When the <id> mutation is applied through apply_presentation_mutation, and separately by the Python reference
       """
       {"kind": "<id>", "params": <params>}
       """
-    Then the resulting projection differs from the base projection
+    Then the resulting projection differs from the base projection in both implementations
     Examples:
       | id                  | params                                                                                                                                                           |
       | resize-source-frame | {"ResizeSourceFrame":{"newFrame":{"x":0.0,"y":0.0,"width":1.0,"height":1.0}}}                                                                                    |
@@ -76,16 +72,16 @@ Feature: Apply every typed animate PRESENTATION mutation to the real committed f
 
   @id-inverse
   @level-exhaustive
-  @mode-property
+  @mode-differential
   Scenario Outline: Undoing <id> restores the real committed deck exactly
     Given the real committed deck artifact asset://📚️examples/🎬️demo/🖼️assets/🗣️.dsl.semio
     And its composed presentation child seeded from local://🔣️.json
-    When the <id> mutation is applied through apply_presentation_mutation
+    When the <id> mutation is applied through apply_presentation_mutation, and separately by the Python reference
       """
       {"kind": "<id>", "params": <params>}
       """
-    And every step of its own computed inverse is applied through apply_presentation_mutation
-    Then the projection equals the base projection again
+    And every step of its own computed inverse is applied through apply_presentation_mutation, and separately by the Python reference
+    Then the projection equals the base projection again in both implementations
     Examples:
       | id                  | params                                                                                                                                                           |
       | resize-source-frame | {"ResizeSourceFrame":{"newFrame":{"x":0.0,"y":0.0,"width":1.0,"height":1.0}}}                                                                                    |

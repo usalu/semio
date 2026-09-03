@@ -26,13 +26,13 @@
 
 use crate::artifacts::dag::{DagContentChild, DagFixtureEdge, DagNodeSpec};
 use schema::ArtifactSchema;
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️Snapshot
 /// 📸️ Persisted DAG document snapshot — schema tag plus the composed `graph` content child.
-#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, ArtifactSchema, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, ArtifactSchema)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase")]
-#[serde(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[artifact_schema(id = "s.dag.dag")]
 pub struct DagSnapshot {
     #[state(artifact)]
@@ -100,10 +100,10 @@ impl DagSnapshot {
 /// is exactly what makes it a usable observability surface here: the handle's `childId` is a digest
 /// of the child's content, so it moves if and only if the working scene moved.
 ///
-/// A thin `serde_json` wrapper (already a direct dependency of this crate, used behind this
-/// interface per CLAUDE.md's "external libraries behind an interface" rule, never a new one).
+/// A thin `dsl::json` wrapper (this facet's own first-party `DslValue` JSON codec, used behind
+/// this interface per CLAUDE.md's "external libraries behind an interface" rule).
 pub fn encode_dag_snapshot_json(snapshot: &DagSnapshot) -> String {
-    serde_json::to_string(snapshot).expect("DagSnapshot serialization is infallible")
+    dsl::json::to_json_string(snapshot)
 }
 
 /// 📥️ The inverse of [`encode_dag_snapshot_json`] — decodes those committed specification vectors
@@ -111,7 +111,7 @@ pub fn encode_dag_snapshot_json(snapshot: &DagSnapshot) -> String {
 /// than re-declaring it as a Rust literal beside it. Reaching `serde_json` from that adapter is
 /// impossible: the generated test host links only this crate and `semio-repo-test-host`.
 pub fn decode_dag_snapshot_json(text: &str) -> Result<DagSnapshot, String> {
-    serde_json::from_str(text).map_err(|error| error.to_string())
+    dsl::json::from_json_str(text).map_err(|error| error.to_string())
 }
 
 /// 📝️ Parses `.dag.dsl.semio` text into a [`DagSnapshot`], attaching the working scene to the child

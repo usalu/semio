@@ -13,7 +13,7 @@
 #[derive(Clone, Debug, PartialEq)]
 pub enum PptxError {
     Opc(crate::artifacts::zip::opc::OpcError),
-    Zip(crate::artifacts::zip::standards::v2_0::subsets::any::io::ZipError),
+    Zip(crate::artifacts::zip::standards::v2_0::subsets::base::io::ZipError),
     MissingPresentationRelationship,
     MissingPart(String),
     Xml { part: String, detail: String },
@@ -40,8 +40,8 @@ impl From<crate::artifacts::zip::opc::OpcError> for PptxError {
         Self::Opc(e)
     }
 }
-impl From<crate::artifacts::zip::standards::v2_0::subsets::any::io::ZipError> for PptxError {
-    fn from(e: crate::artifacts::zip::standards::v2_0::subsets::any::io::ZipError) -> Self {
+impl From<crate::artifacts::zip::standards::v2_0::subsets::base::io::ZipError> for PptxError {
+    fn from(e: crate::artifacts::zip::standards::v2_0::subsets::base::io::ZipError) -> Self {
         Self::Zip(e)
     }
 }
@@ -161,7 +161,7 @@ pub const MINIMAL_THEME_XML: &str = concat!(
 
 //#region 🎹️DerivedComposition
 pub mod derived_composition {
-    use crate::artifacts::pptx::standards::v_ecma_376::subsets::any::schema::PptxAnalyzer;
+    use crate::artifacts::pptx::standards::v_ecma_376::subsets::base::schema::PptxAnalyzer;
     use crate::artifacts::pptx::PptxSnapshot;
     use semio_framework_plugin::{AnalyzeSource, ArtifactComposition, ComposeError, ComposeSource, Composition, Dialect, StandardId, SubsetId};
 
@@ -206,7 +206,7 @@ pub use derived_composition::*;
 
 //#region 🚪️DerivedIoRegistry
 pub mod io_registry {
-    use crate::artifacts::pptx::standards::v_ecma_376::subsets::any::schema::PptxComposer as PptxRawAnyComposer;
+    use crate::artifacts::pptx::standards::v_ecma_376::subsets::base::schema::PptxComposer as PptxRawAnyComposer;
     use crate::artifacts::pptx::standards::v_ecma_376::subsets::strict::schema::PptxStrictComposer;
     use crate::artifacts::pptx::standards::v_ecma_376::subsets::transitional::schema::PptxTransitionalComposer;
     use semio_framework_plugin::{composer_entry_of, ComposerEntry};

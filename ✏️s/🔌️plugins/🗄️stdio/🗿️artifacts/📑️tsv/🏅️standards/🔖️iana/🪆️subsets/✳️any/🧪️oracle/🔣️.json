@@ -193,5 +193,265 @@
         }
       ]
     }
+  ],
+  "fixtureManifests": [
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "insert-row-applied",
+      "class": "handcrafted",
+      "target": {
+        "artifact": "s.stdio.tsv",
+        "standard": "iana",
+        "subset": "any"
+      },
+      "mutation": "insert-row",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before",
+          "path": "../🧫️fixtures/insert-row/before.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:16f1e8cccccf2d76b93a6694ad492ae0c67ba54912faec89c8b95e584d863b76",
+          "bytes": 173
+        },
+        {
+          "role": "expected-after",
+          "path": "../🧫️fixtures/insert-row/after.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:18e5088acb92f3b857022562f46dac813c18e5e7eb219625dcca4a3645aa6722",
+          "bytes": 212
+        }
+      ],
+      "provenance": {
+        "source": "authored",
+        "license": "public-domain (handcrafted by this repository)",
+        "attribution": "Handcrafted before/after vector authored directly against this subset's own documented schema — Law 2's handcrafted-vector category.",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "ordered-json-v1",
+      "reproducible": true,
+      "family": "tsv-carrier",
+      "notes": "InsertRow{index:2,row:[\"2\",\"gadget\"]} appends a real tab-separated data row."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "remove-row-applied",
+      "class": "handcrafted",
+      "target": {
+        "artifact": "s.stdio.tsv",
+        "standard": "iana",
+        "subset": "any"
+      },
+      "mutation": "remove-row",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before",
+          "path": "../🧫️fixtures/remove-row/before.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:16f1e8cccccf2d76b93a6694ad492ae0c67ba54912faec89c8b95e584d863b76",
+          "bytes": 173
+        },
+        {
+          "role": "expected-after",
+          "path": "../🧫️fixtures/remove-row/after.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:89f948c87cbe87aa467a7d434bcff6cd0bda419b2c0c807f53d58a5ee9a956f6",
+          "bytes": 134
+        }
+      ],
+      "provenance": {
+        "source": "authored",
+        "license": "public-domain (handcrafted by this repository)",
+        "attribution": "Handcrafted before/after vector authored directly against this subset's own documented schema — Law 2's handcrafted-vector category.",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "ordered-json-v1",
+      "reproducible": true,
+      "family": "tsv-carrier",
+      "notes": "RemoveRow{index:1} drops the data row, leaving the header."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "set-snapshot-applied",
+      "class": "handcrafted",
+      "target": {
+        "artifact": "s.stdio.tsv",
+        "standard": "iana",
+        "subset": "any"
+      },
+      "mutation": "set-snapshot",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before",
+          "path": "../🧫️fixtures/set-snapshot/before.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:16f1e8cccccf2d76b93a6694ad492ae0c67ba54912faec89c8b95e584d863b76",
+          "bytes": 173
+        },
+        {
+          "role": "expected-after",
+          "path": "../🧫️fixtures/set-snapshot/after.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:86f9fe2f2dbc9dbb7418927618b0fb6c456eea6ba049b7eb4643ca6e4966e072",
+          "bytes": 181
+        }
+      ],
+      "provenance": {
+        "source": "authored",
+        "license": "public-domain (handcrafted by this repository)",
+        "attribution": "Handcrafted before/after vector authored directly against this subset's own documented schema — Law 2's handcrafted-vector category.",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "ordered-json-v1",
+      "reproducible": true,
+      "family": "tsv-carrier",
+      "notes": "SetSnapshot replaces the whole TsvSnapshot with a different, equally well-formed one."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "set-line-ending-applied",
+      "class": "handcrafted",
+      "target": {
+        "artifact": "s.stdio.tsv",
+        "standard": "iana",
+        "subset": "any"
+      },
+      "mutation": "set-line-ending",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before",
+          "path": "../🧫️fixtures/set-line-ending/before.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:16f1e8cccccf2d76b93a6694ad492ae0c67ba54912faec89c8b95e584d863b76",
+          "bytes": 173
+        },
+        {
+          "role": "expected-after",
+          "path": "../🧫️fixtures/set-line-ending/after.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:d5c0f14b503c3e1fb5b2e939ed745810e28cf0bf025561eb7e74e2b4a05c92ea",
+          "bytes": 175
+        }
+      ],
+      "provenance": {
+        "source": "authored",
+        "license": "public-domain (handcrafted by this repository)",
+        "attribution": "Handcrafted before/after vector authored directly against this subset's own documented schema — Law 2's handcrafted-vector category.",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "ordered-json-v1",
+      "reproducible": true,
+      "family": "tsv-carrier",
+      "notes": "SetLineEnding{lineEnding:crLf} switches the declared newline style, IANA TSV's own inherited text-line convention."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "set-trailing-newline-applied",
+      "class": "handcrafted",
+      "target": {
+        "artifact": "s.stdio.tsv",
+        "standard": "iana",
+        "subset": "any"
+      },
+      "mutation": "set-trailing-newline",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before",
+          "path": "../🧫️fixtures/set-trailing-newline/before.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:16f1e8cccccf2d76b93a6694ad492ae0c67ba54912faec89c8b95e584d863b76",
+          "bytes": 173
+        },
+        {
+          "role": "expected-after",
+          "path": "../🧫️fixtures/set-trailing-newline/after.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:71965e2981e6fc14974b4bffc5f872f874fcd726c8c79e15e38404a165e52ed6",
+          "bytes": 174
+        }
+      ],
+      "provenance": {
+        "source": "authored",
+        "license": "public-domain (handcrafted by this repository)",
+        "attribution": "Handcrafted before/after vector authored directly against this subset's own documented schema — Law 2's handcrafted-vector category.",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "ordered-json-v1",
+      "reproducible": true,
+      "family": "tsv-carrier",
+      "notes": "SetTrailingNewline{trailingNewline:false} drops the final trailing newline."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "set-cell-applied",
+      "class": "handcrafted",
+      "target": {
+        "artifact": "s.stdio.tsv",
+        "standard": "iana",
+        "subset": "any"
+      },
+      "mutation": "set-cell",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before",
+          "path": "../🧫️fixtures/set-cell/before.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:16f1e8cccccf2d76b93a6694ad492ae0c67ba54912faec89c8b95e584d863b76",
+          "bytes": 173
+        },
+        {
+          "role": "expected-after",
+          "path": "../🧫️fixtures/set-cell/after.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:86f9fe2f2dbc9dbb7418927618b0fb6c456eea6ba049b7eb4643ca6e4966e072",
+          "bytes": 181
+        }
+      ],
+      "provenance": {
+        "source": "authored",
+        "license": "public-domain (handcrafted by this repository)",
+        "attribution": "Handcrafted before/after vector authored directly against this subset's own documented schema — Law 2's handcrafted-vector category.",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "ordered-json-v1",
+      "reproducible": true,
+      "family": "tsv-carrier",
+      "notes": "SetCell{rowIndex:1,fieldIndex:1,value:\"renamed-widget\"} overwrites one cell in place."
+    }
   ]
 }

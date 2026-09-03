@@ -1,0 +1,45 @@
+syntax = "proto3";
+package semio.s.mathematical.equation;
+
+message EquationArtifact {
+  EquationGraph graph = 1;
+  EquationGeometry geometry = 2;
+  // @state config
+  double camera_x = 3;
+  // @state config
+  double camera_y = 4;
+  // @state config
+  double camera_zoom = 5;
+  // @state config
+  string locale = 6;
+}
+
+message EquationGraph {
+  bool directed = 1;
+  repeated EquationNode nodes = 2;
+  repeated EquationEdge edges = 3;
+  string algorithm = 4;
+  optional string algorithm_seed = 5;
+}
+
+message EquationNode {
+  string id = 1;
+  string label = 2;
+  double x = 3;
+  double y = 4;
+}
+
+message EquationEdge {
+  string id = 1;
+  string source = 2;
+  string target = 3;
+}
+
+message EquationPoint {
+  double x = 1;
+  double y = 2;
+}
+
+message EquationGeometry {
+  repeated EquationPoint points = 1;
+}

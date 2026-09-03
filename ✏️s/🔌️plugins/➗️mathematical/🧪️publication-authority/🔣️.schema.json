@@ -5,7 +5,7 @@
   "required": ["schema", "owner", "source", "routes", "laws", "ui"],
   "properties": {
     "schema": { "const": "semio.app.publication-authority.v1" },
-    "owner": { "const": "MathematicalPlayApp" },
+    "owner": { "const": "EquationPlayApp" },
     "source": { "type": "string", "minLength": 1 },
     "routes": {
       "type": "array",

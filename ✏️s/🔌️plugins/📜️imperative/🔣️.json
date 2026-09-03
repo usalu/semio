@@ -7,10 +7,10 @@
     "version": "0.1.0",
     "apps": [
       {
-        "id": "s.imperative.imperative@1/*#editor",
+        "id": "s.imperative.procedure@1/*#editor",
         "role": "editor",
         "dialect": {
-          "artifactKind": "s.imperative.imperative",
+          "artifactKind": "s.imperative.procedure",
           "standard": "1",
           "subset": "*"
         },
@@ -29,7 +29,7 @@
           "imperative"
         ],
         "iconId": "imperative",
-        "controllerId": "s.imperative.imperative@1/*#editor",
+        "controllerId": "s.imperative.procedure@1/*#editor",
         "modes": [
           {
             "id": "edit",
@@ -3995,49 +3995,49 @@
           {
             "keys": "mod+z",
             "action": {
-              "controllerId": "s.imperative.imperative@1/*#editor",
+              "controllerId": "s.imperative.procedure@1/*#editor",
               "action": "undo"
             }
           },
           {
             "keys": "mod+shift+z",
             "action": {
-              "controllerId": "s.imperative.imperative@1/*#editor",
+              "controllerId": "s.imperative.procedure@1/*#editor",
               "action": "redo"
             }
           },
           {
             "keys": "mod+c",
             "action": {
-              "controllerId": "s.imperative.imperative@1/*#editor",
+              "controllerId": "s.imperative.procedure@1/*#editor",
               "action": "copy"
             }
           },
           {
             "keys": "mod+x",
             "action": {
-              "controllerId": "s.imperative.imperative@1/*#editor",
+              "controllerId": "s.imperative.procedure@1/*#editor",
               "action": "cut"
             }
           },
           {
             "keys": "mod+v",
             "action": {
-              "controllerId": "s.imperative.imperative@1/*#editor",
+              "controllerId": "s.imperative.procedure@1/*#editor",
               "action": "paste"
             }
           },
           {
             "keys": "escape",
             "action": {
-              "controllerId": "s.imperative.imperative@1/*#editor",
+              "controllerId": "s.imperative.procedure@1/*#editor",
               "action": "clearSelection"
             }
           },
           {
             "keys": "mod+a",
             "action": {
-              "controllerId": "s.imperative.imperative@1/*#editor",
+              "controllerId": "s.imperative.procedure@1/*#editor",
               "action": "selectAll"
             }
           }
@@ -4196,9 +4196,9 @@
         "mediaOutputs": [],
         "artifactKinds": [
           {
-            "id": "computation.imperative",
+            "id": "computation.procedure",
             "name": "Imperative",
-            "sourceFormat": "imperative.document",
+            "sourceFormat": "procedure.document",
             "componentKind": "imperative",
             "dimension": "graph",
             "mediaCapability": "meshOnly",
@@ -4206,7 +4206,7 @@
               "class": "computation",
               "form": "imperative"
             },
-            "schema": "imperative.document",
+            "schema": "procedure.document",
             "exportFormats": [],
             "importFormats": [],
             "exportStdioKinds": [],
@@ -4220,7 +4220,7 @@
           "variants": []
         },
         "io": {
-          "documentSchema": "imperative.document/v1",
+          "documentSchema": "procedure.document/v1",
           "documentMediaType": {
             "class": "computation",
             "form": "imperative"
@@ -4234,7 +4234,7 @@
                 "class": "data",
                 "form": "value"
               },
-              "kindId": "computation.imperative",
+              "kindId": "computation.procedure",
               "required": false,
               "multiplicity": "many"
             }
@@ -4242,7 +4242,7 @@
           "exportFormats": [],
           "importFormats": [],
           "artifact": {
-            "id": "computation.imperative",
+            "id": "computation.procedure",
             "name": "Imperative",
             "dimension": "graph",
             "componentKind": "imperative"
@@ -4250,10 +4250,10 @@
         }
       },
       {
-        "id": "s.imperative.imperative@1/*#viewer",
+        "id": "s.imperative.procedure@1/*#viewer",
         "role": "viewer",
         "dialect": {
-          "artifactKind": "s.imperative.imperative",
+          "artifactKind": "s.imperative.procedure",
           "standard": "1",
           "subset": "*"
         },
@@ -4272,7 +4272,7 @@
           "imperative"
         ],
         "iconId": "imperative",
-        "controllerId": "s.imperative.imperative@1/*#viewer",
+        "controllerId": "s.imperative.procedure@1/*#viewer",
         "modes": [
           {
             "id": "view",
@@ -5957,35 +5957,35 @@
           {
             "keys": "mod+z",
             "action": {
-              "controllerId": "s.imperative.imperative@1/*#viewer",
+              "controllerId": "s.imperative.procedure@1/*#viewer",
               "action": "undo"
             }
           },
           {
             "keys": "mod+shift+z",
             "action": {
-              "controllerId": "s.imperative.imperative@1/*#viewer",
+              "controllerId": "s.imperative.procedure@1/*#viewer",
               "action": "redo"
             }
           },
           {
             "keys": "mod+c",
             "action": {
-              "controllerId": "s.imperative.imperative@1/*#viewer",
+              "controllerId": "s.imperative.procedure@1/*#viewer",
               "action": "copy"
             }
           },
           {
             "keys": "mod+x",
             "action": {
-              "controllerId": "s.imperative.imperative@1/*#viewer",
+              "controllerId": "s.imperative.procedure@1/*#viewer",
               "action": "cut"
             }
           },
           {
             "keys": "mod+v",
             "action": {
-              "controllerId": "s.imperative.imperative@1/*#viewer",
+              "controllerId": "s.imperative.procedure@1/*#viewer",
               "action": "paste"
             }
           }
@@ -6026,7 +6026,7 @@
           "variants": []
         },
         "io": {
-          "documentSchema": "imperative.document/v1",
+          "documentSchema": "procedure.document/v1",
           "documentMediaType": {
             "class": "data",
             "form": "value"
@@ -6063,7 +6063,7 @@
   "activationEvents": [
     {
       "onArtifactKind": {
-        "kind": "computation.imperative"
+        "kind": "computation.procedure"
       }
     }
   ],

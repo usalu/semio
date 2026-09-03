@@ -13,7 +13,7 @@ use semio_framework_plugin::{Plugin, PluginApp};
 // `AppDefinition`, not `App` — see `.editor::<…>(…)` below.
 use cad::editor::cad::{create_cad_app, CadPlayApp};
 use gis::editor::gis2d::{create_gis2d_app, Gis2dPlayApp};
-use procedural::editor::procedural3d::{create_procedural3d_app, Procedural3dPlayApp};
+use procedural::editor::generation3d::{create_generation3d_app, Generation3dPlayApp};
 use process::editor::process3d::{create_process3d_app, Process3dPlayApp};
 use process::viewer::process3d::{create_process3d_viewer, Process3dViewer};
 use puzzle::editor::puzzle3d::{create_puzzle3d_app, Puzzle3dPlayApp};
@@ -30,7 +30,7 @@ semio_framework_dispatch_macros::dyn_enum_close! {
     pub enum DemonstratorApps: PluginApp {
         PlaygroundEditor(semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::EditorApp<crate::editor::playground::PlaygroundEditor>>),
         PlaygroundViewer(semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::ViewerApp<crate::viewer::playground::PlaygroundViewer>>),
-        Procedural3dEditor(semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::EditorApp<Procedural3dPlayApp>>),
+        Generation3dEditor(semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::EditorApp<Generation3dPlayApp>>),
         CadEditor(semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::EditorApp<CadPlayApp>>),
         Puzzle3dEditor(semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::EditorApp<Puzzle3dPlayApp>>),
         SourcingEditor(semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::EditorApp<SourcingCurationApp>>),
@@ -53,8 +53,8 @@ pub fn plugin() -> Result<Plugin<DemonstratorApps>, semio_framework_plugin::Plug
         .editor_mutation_roster::<crate::editor::playground::PlaygroundEditor>()
         .viewer::<crate::viewer::playground::PlaygroundViewer>(crate::viewer::playground::create_playground_viewer())
         .viewer_mutation_roster::<crate::viewer::playground::PlaygroundViewer>()
-        .editor::<Procedural3dPlayApp>(create_procedural3d_app())
-        .editor_mutation_roster::<Procedural3dPlayApp>()
+        .editor::<Generation3dPlayApp>(create_generation3d_app())
+        .editor_mutation_roster::<Generation3dPlayApp>()
         .editor::<CadPlayApp>(create_cad_app())
         .editor_mutation_roster::<CadPlayApp>()
         .editor::<Puzzle3dPlayApp>(create_puzzle3d_app())
@@ -128,7 +128,7 @@ mod tests {
             vec![
                 "s.demonstrator.playground@1/*#editor",
                 "s.demonstrator.playground@1/*#viewer",
-                "s.procedural.procedural3d@1/*#editor",
+                "s.procedural.generation3d@1/*#editor",
                 "s.cad.cad@1/*#editor",
                 "s.puzzle.puzzle3d@1/*#editor",
                 "s.sourcing.curation@1/*#editor",
@@ -158,7 +158,7 @@ mod tests {
                 assert_eq!(command.semantics.execution.interactive_job, semio_framework_plugin::InteractiveJobClassification::Migrated, "host catalogue command in {} must be admitted as migrated interactive work", app.id);
             }
         }
-        let procedural = test_bundle().manifest.apps.into_iter().find(|app| app.id == "s.procedural.procedural3d@1/*#editor").expect("procedural surface");
+        let procedural = test_bundle().manifest.apps.into_iter().find(|app| app.id == "s.procedural.generation3d@1/*#editor").expect("procedural surface");
         let tick = procedural.commands.iter().find(|command| command.id == "flowEvalTick").expect("recursive evaluation command");
         assert!(!tick.in_palette);
         assert!(tick.args.is_empty());
@@ -185,7 +185,7 @@ mod tests {
         let runtime = semio_framework_plugin::plugin_runtime::PluginRuntime::<DemonstratorApps>::new();
         semio_framework_plugin::plugin_runtime::install_plugin_bundle(&runtime, test_bundle());
         let apps: &[(&str, &[&str])] = &[
-            ("s.procedural.procedural3d@1/*#editor", &["procedural.play.main", "procedural.play.preview", "procedural.play.generations", "procedural.play.generate-form", "procedural.play.generate-preview"]),
+            ("s.procedural.generation3d@1/*#editor", &["procedural.play.main", "procedural.play.preview", "procedural.play.generations", "procedural.play.generate-form", "procedural.play.generate-preview"]),
             ("s.cad.cad@1/*#editor", &["cad.play.shape", "cad.play.building", "cad.play.energy", "cad.play.structure-classic"]),
             ("s.puzzle.puzzle3d@1/*#editor", &["puzzle3d.play.composite"]),
             ("s.sourcing.curation@1/*#editor", &["sourcing.pool", "sourcing.curated", "sourcing.preview", "sourcing.grid"]),

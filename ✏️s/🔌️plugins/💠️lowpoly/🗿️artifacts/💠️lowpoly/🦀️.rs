@@ -3,7 +3,6 @@
 
 use protocol::{Identified, Patchable};
 use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::mesh::schema::snapshot::SemioMeshSnapshot;
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️Pixels
 pub use crate::artifacts::lowpoly::schema::mutations::LowpolyMutation;
@@ -25,29 +24,10 @@ pub fn empty_paint_pixels() -> Vec<u8> {
     pixels
 }
 
-/// @emoji 🧬️ Base64 (de)serialization for a raw RGBA layer buffer so persisted documents stay ~1.4 MB
-/// per layer instead of a multi-megabyte JSON integer array. Empty/missing decodes to opaque white.
-mod pixels_base64 {
-    use serde::{Deserialize, Deserializer, Serializer};
-
-    pub fn serialize<S: Serializer>(pixels: &[u8], serializer: S) -> Result<S::Ok, S::Error> {
-        serializer.serialize_str(&base64_codec::base64_standard_encode(pixels))
-    }
-
-    pub fn deserialize<'de, D: Deserializer<'de>>(deserializer: D) -> Result<Vec<u8>, D::Error> {
-        let encoded = String::deserialize(deserializer)?;
-        if encoded.is_empty() {
-            return Ok(super::empty_paint_pixels());
-        }
-        base64_codec::base64_standard_decode(encoded.as_bytes()).map_err(serde::de::Error::custom)
-    }
-}
 //#endregion 🔖️Pixels
 
 //#region 🔖️Snapshot
 #[derive(Clone, Debug, PartialEq, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
-#[cfg_attr(test, derive(Serialize, Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
 pub struct LowpolyTransform {
     #[dsl(coord)]
@@ -63,15 +43,14 @@ impl Default for LowpolyTransform {
 }
 
 /// @emoji 🖌️ One paint layer of an object: compositing metadata plus its persisted RGBA pixel buffer.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
 #[value(rename_all = "camelCase")]
 pub struct LowpolyPaintLayer {
     pub name: String,
     pub visible: bool,
     pub opacity: f32,
     pub blend_mode: String,
-    #[serde(with = "pixels_base64", default = "empty_paint_pixels")]
+    #[value(default = "empty_paint_pixels")]
     #[dsl(base64)]
     pub pixels: Vec<u8>,
 }
@@ -101,8 +80,6 @@ pub fn mesh_child_handle(object_id: &str, mesh_json: &str) -> store::ArtifactChi
 }
 
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
-#[cfg_attr(test, derive(Serialize, Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
 pub struct LowpolyObject {
     pub id: String,
@@ -136,7 +113,6 @@ pub struct LowpolyObject {
     /// The type/mutation-vocabulary/persistence layer is still fully real; only the derive-generated
     /// SCHEMA INTROSPECTION table is incomplete for it.
     pub mesh: Option<store::ArtifactChild<SemioMeshSnapshot>>,
-    #[cfg_attr(test, serde(default))]
     #[value(default)]
     pub paint_layers: Vec<LowpolyPaintLayer>,
 }
@@ -156,8 +132,6 @@ pub use crate::artifacts::lowpoly::snapshot::schema::snapshot_from_mesh_json;
 /// @emoji 🎯️ Ephemeral component selection — never part of the document, threaded into the compute
 /// session so mesh operations know their target vertices/edges/faces.
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
-#[cfg_attr(test, derive(Serialize, Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
 pub struct LowpolySelectionTargets {
     pub mesh: bool,
@@ -173,14 +147,10 @@ impl Default for LowpolySelectionTargets {
 }
 
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
-#[cfg_attr(test, derive(Serialize, Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
 pub struct LowpolySelection {
-    #[cfg_attr(test, serde(default))]
     #[value(default)]
     pub targets: LowpolySelectionTargets,
-    #[cfg_attr(test, serde(default))]
     #[value(default)]
     pub keys: Vec<String>,
     pub mode: String,
@@ -196,8 +166,6 @@ impl Default for LowpolySelection {
 
 //#region 🔖️Patches
 #[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
-#[cfg_attr(test, derive(Serialize, Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
 pub struct LowpolyObjectPatch {
     pub name: Option<String>,
@@ -518,7 +486,7 @@ async fn artifact_schema_descriptor_leaves_parse_and_field_states_match_snapshot
     use schema::{parse_state_class_kebab, ArtifactSchemaFields};
     let descriptor = crate::artifacts::lowpoly::schema::lowpoly_artifact_schema_descriptor();
     assert_eq!(descriptor.id, "s.lowpoly.lowpoly");
-    let schema: serde_json::Value = serde_json::from_str(descriptor.snapshot.json_schema).expect("snapshot json");
+    let schema: dsl::os_pack::json::Value = dsl::os_pack::json::from_json_str(descriptor.snapshot.json_schema).expect("snapshot json");
     assert_eq!(schema["title"], "LowpolySnapshot");
     let properties = schema["properties"].as_object().expect("properties");
     let mut json_states: Vec<(String, _)> = properties

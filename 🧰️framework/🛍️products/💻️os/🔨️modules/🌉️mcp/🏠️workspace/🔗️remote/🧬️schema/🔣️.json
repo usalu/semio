@@ -1,0 +1,76 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://semio.tech/schema/mcp/authenticated-hub-descriptor-index-fixture-v1.json",
+  "title": "Authenticated Hub Descriptor Index Fixture",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["contractVersion", "limits", "cases"],
+  "properties": {
+    "contractVersion": { "const": 1 },
+    "limits": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["maxDocuments", "maxTokenBytes", "maxDiagnosticBytes", "operationTimeoutMs"],
+      "properties": {
+        "maxDocuments": { "const": 4096 },
+        "maxTokenBytes": { "const": 4096 },
+        "maxDiagnosticBytes": { "const": 4096 },
+        "operationTimeoutMs": { "const": 10000 }
+      }
+    },
+    "cases": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["noToken", "expiredToken", "publicWithoutMembership", "memberReady", "sameDocumentOtherSpace", "memberRevoked", "streamReconnect"],
+      "properties": {
+        "noToken": { "$ref": "#/$defs/case" },
+        "expiredToken": { "$ref": "#/$defs/case" },
+        "publicWithoutMembership": { "$ref": "#/$defs/case" },
+        "memberReady": { "$ref": "#/$defs/case" },
+        "sameDocumentOtherSpace": { "$ref": "#/$defs/case" },
+        "memberRevoked": { "$ref": "#/$defs/case" },
+        "streamReconnect": { "$ref": "#/$defs/case" }
+      }
+    }
+  },
+  "$defs": {
+    "case": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["tokenPresent", "responses", "expected"],
+      "properties": {
+        "tokenPresent": { "type": "boolean" },
+        "responses": {
+          "type": "array",
+          "maxItems": 2,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["status", "body"],
+            "properties": {
+              "status": { "type": "integer", "minimum": 100, "maximum": 599 },
+              "body": {}
+            }
+          }
+        },
+        "streamMessage": { "type": "object" },
+        "expected": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["state", "errorCode", "cacheAction", "resourceUris", "noTokenLeak"],
+          "properties": {
+            "state": { "enum": ["unbound", "refreshing", "ready", "revoked"] },
+            "errorCode": { "type": ["string", "null"] },
+            "cacheAction": { "enum": ["none", "publish", "invalidate"] },
+            "resourceUris": {
+              "type": "array",
+              "uniqueItems": true,
+              "items": { "type": "string", "pattern": "^semio://" }
+            },
+            "noTokenLeak": { "const": true }
+          }
+        }
+      }
+    }
+  }
+}

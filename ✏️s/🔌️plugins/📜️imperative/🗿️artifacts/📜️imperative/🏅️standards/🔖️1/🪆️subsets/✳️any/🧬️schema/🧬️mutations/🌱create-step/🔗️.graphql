@@ -1,5 +1,0 @@
-"""🌱 Direct create-step payload."""
-input CreateStepInput {
-  pathRef: ImperativePathRefInput!
-  step: ImperativeStepInput!
-}

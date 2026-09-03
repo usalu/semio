@@ -46,7 +46,15 @@ use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::schema
 // (`🧰️framework/**` is outside this packet's lease); flagged for W1-A in the migration report.
 use semio_framework_plugin::app::{ArtifactEditor, Dialect, Editor};
 use semio_framework_value_derive::{FromValue, ToValue};
-use serde_json::{json, Value};
+// 🌉️ Test harness only — `protocol::json` (the `pack::json` re-export) carries its own first-party
+// `json!` macro (`Value`-producing, same object/array literal syntax as `serde_json::json!`) and
+// `Value` type (`Index`/`PartialEq<&str>`/`as_*` parity with `serde_json::Value`), so no
+// `serde_json` dependency survives even here (ticket 26/09/01/
+// RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS).
+#[cfg(test)]
+use protocol::json;
+#[cfg(test)]
+use protocol::os_pack::json::Value;
 use std::collections::HashMap;
 use store::EngineHandles;
 
@@ -319,8 +327,8 @@ pub fn cad_action(action: &str, args: Option<semio_framework_plugin::UiValue>) -
 }
 
 /// 🪟️ Bridges window chrome, which still carries the retained WGPU action descriptor.
-pub fn cad_window_action(action: &str, args: Option<Value>) -> ActionDescriptor {
-    ActionDescriptor { controller_id: CAD_PLAY_CONTROLLER_ID.into(), action: action.into(), args: semio_framework::optional_json_to_dsl(args) }
+pub fn cad_window_action(action: &str, args: Option<protocol::DslValue>) -> ActionDescriptor {
+    ActionDescriptor { controller_id: CAD_PLAY_CONTROLLER_ID.into(), action: action.into(), args }
 }
 
 /// 🧱️ Admits one fixed CAD UI text value.
@@ -2221,11 +2229,10 @@ pub(crate) mod testkit {
     }
 
     /// 🔀️ Keeps the legacy test-harness call shape while exercising the production action bridge —
-    /// `cad_command_from_action` now speaks `DslValue` (trait-boundary conversion), so this bridges
-    /// the still-`serde_json`-shaped test-harness `args` via the framework's infallible
-    /// `DslValue: From<&serde_json::Value>` impl right at the call site.
+    /// `cad_command_from_action` speaks `DslValue`, so this bridges the `pack::json::Value`-shaped
+    /// test-harness `args` via `protocol::json::to_dsl_value` right at the call site.
     pub fn command_from_action(action: &str, args: Option<&Value>) -> CadCommand {
-        cad_command_from_action(action, args.map(protocol::DslValue::from).as_ref()).unwrap_or_else(|error| panic!("command_from_action: {error:?}"))
+        cad_command_from_action(action, args.map(protocol::json::to_dsl_value).as_ref()).unwrap_or_else(|error| panic!("command_from_action: {error:?}"))
     }
 
     /// 🕹️ Drives one action against a bare `CadPlayApp` (unwrapped, config defaulted) so tests can
@@ -2421,7 +2428,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn retained_cad_presence_close_empty_lanes_have_exact_owners() {
-        let fixture: Value = serde_json::from_str(include_str!("👥️presence/🧪️retirement.json")).unwrap();
+        let fixture: Value = protocol::json::parse(include_str!("👥️presence/🧪️retirement.json")).unwrap();
         let maximum_items = fixture["grant"]["maximumItems"].as_u64().unwrap() as usize;
         let maximum_bytes = fixture["grant"]["maximumBytes"].as_u64().unwrap() as usize;
         let envelope = store::create_document_envelope::<NoDraft, NoDraftMutation>("draft.empty", "cad-draft-close", NoDraft::default(), None);
@@ -2447,7 +2454,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn retained_factory_proofs_activate_the_real_cad_manifest_and_close_under_the_production_grant() {
-        let fixture: Value = serde_json::from_str(include_str!("../🧪️retained-jobs/🔣️.json")).expect("CAD activation fixture");
+        let fixture: Value = protocol::json::parse(include_str!("../🧪️retained-jobs/🔣️.json")).expect("CAD activation fixture");
         let activation = &fixture["activation"];
         let controller = activation["controller"].as_str().expect("controller");
         let bus = semio_framework::ActionBus::new();
@@ -2521,7 +2528,7 @@ mod tests {
 
     #[test]
     fn retained_route_fixture_matches_the_exact_owner_manifest_and_laws() {
-        let fixture: Value = serde_json::from_str(include_str!("../🧪️retained-jobs/🔣️.json")).expect("CAD retained route fixture");
+        let fixture: Value = protocol::json::parse(include_str!("../🧪️retained-jobs/🔣️.json")).expect("CAD retained route fixture");
         let routes = fixture.get("routes").and_then(Value::as_array).expect("route array");
         let route_ids = routes.iter().map(|route| route.get("id").and_then(Value::as_str).expect("route id")).collect::<std::collections::BTreeSet<_>>();
         let command_ids = every_command()
@@ -2531,7 +2538,7 @@ mod tests {
             .collect::<std::collections::BTreeSet<_>>();
         assert_eq!(routes.len(), 40);
         assert_eq!(route_ids, command_ids);
-        assert_eq!(fixture.get("admittedRoutes"), Some(&json!(CAD_RETAINED_TOOL_IDS)));
+        assert_eq!(fixture.get("admittedRoutes"), Some(&Value::Array(CAD_RETAINED_TOOL_IDS.iter().map(|id| Value::from(*id)).collect())));
         assert_eq!(fixture.pointer("/limits/closePageBytes").and_then(Value::as_u64), Some(semio_framework_job::JOB_PAYLOAD_PAGE_BYTES as u64));
         assert_eq!(fixture.get("laws"), Some(&json!(["ownerLocal", "progress", "cancel", "freshness", "ackBeforeClose", "incrementalClose", "terminalEmpty"])));
         assert!(routes.iter().all(|route| {
@@ -2643,7 +2650,7 @@ mod tests {
         assert_eq!(working.objects.len(), 1, "the empty layer must not contribute an object");
         assert_eq!(working.objects[0].label, "outline");
         let value = cad_document_from_dwg(&drawing).expect("cad document from dwg");
-        let scene: CadSnapshot = serde_json::from_value(value).expect("valid cad scene");
+        let scene: CadSnapshot = protocol::FromValue::from_value(value).expect("valid cad scene");
         assert!(scene.shape_model.is_some(), "a real per-layer object must mint a shape-model child");
     }
 
@@ -2653,7 +2660,7 @@ mod tests {
         let working = cad_working_scene_from_dwg(&drawing);
         assert!(working.objects.is_empty());
         let value = cad_document_from_dwg(&drawing).expect("cad document from empty dwg");
-        let scene: CadSnapshot = serde_json::from_value(value).expect("valid cad scene");
+        let scene: CadSnapshot = protocol::FromValue::from_value(value).expect("valid cad scene");
         assert!(scene.shape_model.is_none(), "no layers means no real geometry to mint a child from");
     }
 
@@ -2682,7 +2689,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn forest_energy_world_mesh_survives_scene_roundtrip() {
         let scene = forest_working_scene();
-        let roundtrip: CadWorkingScene = serde_json::from_str(&serde_json::to_string(&scene).expect("serialize")).expect("deserialize");
+        let roundtrip: CadWorkingScene = protocol::json::from_json_str(&protocol::json::to_json_string(&scene)).expect("deserialize");
         let object = roundtrip.energy_objects.first().expect("energy object");
         let mesh = object_mesh_data(object, roundtrip.energy_geometry.as_ref());
         let min_z = mesh.positions.as_chunks::<3>().0.iter().map(|vertex| vertex[2]).fold(f32::INFINITY, f32::min);
@@ -2753,11 +2760,11 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn default_example_and_forest_scene_parse_as_projections() {
-        let default_json = serde_json::to_string(&default_document()).unwrap();
-        let default_scene: CadSnapshot = serde_json::from_str(&default_json).unwrap();
+        let default_json = protocol::json::to_json_string(&default_document());
+        let default_scene: CadSnapshot = protocol::json::from_json_str(&default_json).unwrap();
         assert_eq!(default_scene.schema, CAD_PLAY_DOCUMENT_SCHEMA);
-        let forest_json = serde_json::to_string(&forest_play_scene()).unwrap();
-        let forest_scene: CadSnapshot = serde_json::from_str(&forest_json).unwrap();
+        let forest_json = protocol::json::to_json_string(&forest_play_scene());
+        let forest_scene: CadSnapshot = protocol::json::from_json_str(&forest_json).unwrap();
         assert_eq!(forest_scene.id, CAD_EXAMPLE_FOREST_LEFT);
         assert!(!forest_working_scene().building_objects.is_empty());
     }
@@ -2844,7 +2851,7 @@ mod tests {
                 (semio_framework_plugin::FRAMEWORK_PANEL_TAB_INSPECTION_ID, Some(inspection::CAD_PLAY_BODY_PROPERTIES)),
             ]
         );
-        let layout_json = serde_json::to_string(&edit::layout()).expect("layout json");
+        let layout_json = protocol::json::to_json_string(&edit::layout());
         for window_kind_id in [shape::WINDOW_KIND_ID, building::WINDOW_KIND_ID, energy::WINDOW_KIND_ID, structure_classic::WINDOW_KIND_ID] {
             assert!(layout_json.contains(window_kind_id), "default quad layout must place {window_kind_id}: {layout_json}");
         }
@@ -3077,10 +3084,10 @@ mod tests {
         let mut app = new_app().await;
         let before = app.snapshot().expect("snapshot").nodes.len();
         app.dispatch_typed(CadCommand::AddNode(add_node::AddNode { kind: "solid".into() }), &meta("local")).await.expect("add node");
-        let projection_after_add = serde_json::to_string(&app.snapshot().expect("snapshot")).unwrap();
+        let projection_after_add = protocol::json::to_json_string(&app.snapshot().expect("snapshot"));
         let result = app.dispatch_typed(CadCommand::SetActiveUtility(set_active_utility::SetActiveUtility { utility_id: CAD_DISLOCATE_UTILITY_ID.into() }), &meta("local")).await.expect("set active utility");
         assert!(result.mutations.is_empty(), "utility switch must emit zero operations");
-        let projection_after_switch = serde_json::to_string(&app.snapshot().expect("snapshot")).unwrap();
+        let projection_after_switch = protocol::json::to_json_string(&app.snapshot().expect("snapshot"));
         assert_eq!(projection_after_add, projection_after_switch, "utility switch must not mutate the projection");
         app.handle_action("undo", None, &meta("local")).await.expect("undo");
         assert_eq!(app.snapshot().expect("snapshot").nodes.len(), before, "a single undo reverts the addNode — proving the utility switch created no history entry");
@@ -3127,9 +3134,9 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn add_object_through_wrapper_is_a_documented_no_op() {
         let mut app = new_app().await;
-        let before = serde_json::to_string(&app.snapshot().expect("snapshot")).unwrap();
+        let before = protocol::json::to_json_string(&app.snapshot().expect("snapshot"));
         app.dispatch_typed(CadCommand::AddObject(add_object::AddObject { typology: Some("spatial.shape.primitive.box".into()) }), &meta("local")).await.expect("add object dispatch");
-        let after = serde_json::to_string(&app.snapshot().expect("snapshot")).unwrap();
+        let after = protocol::json::to_json_string(&app.snapshot().expect("snapshot"));
         assert_eq!(before, after, "addObject is a documented no-op until the child-dispatch seam lands");
     }
 
@@ -3252,7 +3259,7 @@ mod tests {
     }
 
     fn persisted_preview_stamp(config: &CadConfig) -> CadPreviewStamp {
-        CadPreviewStamp { operation: serde_json::from_str(config.engagement_preview_operation_json.as_ref().expect("persisted operation identity")).expect("valid persisted operation identity"), generation: config.engagement_preview_generation }
+        CadPreviewStamp { operation: protocol::json::from_json_str(config.engagement_preview_operation_json.as_ref().expect("persisted operation identity")).expect("valid persisted operation identity"), generation: config.engagement_preview_generation }
     }
 
     fn spatial_scene_import_args() -> Value {
@@ -3295,7 +3302,7 @@ mod tests {
         let emit = drive_with_config(&app, &scene, "worldPointerMove", Some(json!({ "pane": "shape", "position": [3.0, 4.0, 0.0] })), &config);
         let config = config_after(&emit, &config);
         let first = app.gesture_preview(&config).expect("a live engagement session is previewable");
-        let value: Value = serde_json::from_slice(&first.payload).expect("payload is valid json");
+        let value: Value = protocol::json::parse_bytes(&first.payload).expect("payload is valid json");
         assert_eq!(value["context"]["cursor"], json!([3.0, 4.0, 0.0]));
 
         let emit = drive_with_config(&app, &scene, "worldPointerMove", Some(json!({ "pane": "shape", "position": [5.0, 6.0, 0.0] })), &config);
@@ -3304,7 +3311,7 @@ mod tests {
         assert_eq!(second.stamp.operation, first.stamp.operation);
         assert_eq!(second.stamp.generation, first.stamp.generation + 1, "the persisted preview generation advances exactly once per changed checkpoint");
         assert!(second.is_fresher_than(&first.stamp));
-        let value_after_second: Value = serde_json::from_slice(&second.payload).expect("payload is valid json");
+        let value_after_second: Value = protocol::json::parse_bytes(&second.payload).expect("payload is valid json");
         assert_eq!(value_after_second["context"]["cursor"], json!([5.0, 6.0, 0.0]), "preview tracks the live cursor, not the gesture start");
 
         let emit = drive_with_config(&app, &scene, "engagementAbort", None, &config);
@@ -3460,12 +3467,12 @@ mod tests {
         assert_eq!(preview_a_again.stamp.generation, preview_a.stamp.generation + 2);
         assert_ne!(preview_a.stamp, preview_a_again.stamp, "ABA payload equality cannot reproduce a freshness stamp");
 
-        let restarted: CadConfig = serde_json::from_slice(&serde_json::to_vec(&at_a_again).expect("config checkpoint")).expect("cold reopen config");
+        let restarted: CadConfig = protocol::json::from_json_str(&protocol::json::to_json_string(&at_a_again)).expect("cold reopen config");
         assert_eq!(app.gesture_preview(&restarted).expect("reopened preview").stamp, preview_a_again.stamp);
 
         let mut other_app = restarted.clone();
         other_app.engagement_preview_operation_json =
-            Some(serde_json::to_string(&CadPreviewOperationIdentity { app_instance_id: 2, parent_document_id: "cad-test-document".into(), operation_id: 1, operation_generation: 1, canonical_base_revision: "00".repeat(32) }).expect("identity"));
+            Some(protocol::json::to_json_string(&CadPreviewOperationIdentity { app_instance_id: 2, parent_document_id: "cad-test-document".into(), operation_id: 1, operation_generation: 1, canonical_base_revision: "00".repeat(32) }));
         let collision = app.gesture_preview(&other_app).expect("other app preview");
         assert_eq!(collision.stamp.generation, preview_a_again.stamp.generation, "forced finite-generation collision fixture");
         assert_ne!(collision.stamp.operation, preview_a_again.stamp.operation);
@@ -3498,7 +3505,7 @@ mod tests {
         let ctx = CadDispatchCtx { interaction: CadInteractionSnapshot::default(), preview_operation: Some(operation) };
         assert!(preview_transition_snapshot_of(&runtime, &decoded, &ctx).is_err(), "incrementing the maximum generation must fail closed");
 
-        let json_schema: Value = serde_json::from_str(include_str!("🎚️config/🧬️schema/🔣️.json")).expect("CAD config JSON descriptor");
+        let json_schema: Value = protocol::json::parse(include_str!("🎚️config/🧬️schema/🔣️.json")).expect("CAD config JSON descriptor");
         let generation_schema = &json_schema["properties"]["engagementPreviewGeneration"];
         assert_eq!(generation_schema["minimum"], json!(0));
         assert_eq!(generation_schema["maximum"], json!(CAD_PREVIEW_GENERATION_MAX));
@@ -3659,11 +3666,11 @@ mod tests {
         // comment). This locks in the honest current behavior — a coalesced multi-tick drag emits
         // nothing to undo — rather than letting it silently drift.
         let mut app = new_app().await;
-        let before = serde_json::to_string(&app.snapshot().expect("snapshot")).unwrap();
+        let before = protocol::json::to_json_string(&app.snapshot().expect("snapshot"));
         for _ in 0..3 {
             app.dispatch_typed(CadCommand::TranslateSelection(translate_selection::TranslateSelection { object_ids: vec!["object-box-1".into()], dx: 1.0, dy: 0.0, dz: 0.0 }), &meta("local")).await.expect("translate tick");
         }
-        let after = serde_json::to_string(&app.snapshot().expect("snapshot")).unwrap();
+        let after = protocol::json::to_json_string(&app.snapshot().expect("snapshot"));
         assert_eq!(before, after, "translateSelection is a documented no-op until the child-dispatch seam lands");
     }
     //#endregion 🔖️History

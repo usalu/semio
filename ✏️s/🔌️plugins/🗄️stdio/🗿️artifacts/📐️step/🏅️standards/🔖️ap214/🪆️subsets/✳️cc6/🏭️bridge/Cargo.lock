@@ -383,8 +383,9 @@ dependencies = [
  "semio-framework-geometry",
  "semio-framework-number",
  "semio-framework-os-kernel",
- "serde",
- "serde_json",
+ "semio-framework-pack",
+ "semio-framework-replication",
+ "semio-framework-value-derive",
 ]
 
 [[package]]
@@ -393,6 +394,8 @@ version = "0.1.0"
 dependencies = [
  "semio-framework-async",
  "semio-framework-job",
+ "semio-framework-replication",
+ "semio-framework-value-derive",
  "serde",
  "wasm-bindgen",
 ]
@@ -422,9 +425,6 @@ dependencies = [
 [[package]]
 name = "semio-framework-geometry"
 version = "0.1.0"
-dependencies = [
- "serde",
-]
 
 [[package]]
 name = "semio-framework-graph"
@@ -435,8 +435,6 @@ dependencies = [
  "semio-framework-os-kernel-neural-engine",
  "semio-framework-ui-contract",
  "semio-framework-value-derive",
- "serde",
- "serde_json",
 ]
 
 [[package]]
@@ -601,7 +599,9 @@ dependencies = [
 name = "semio-framework-ui-contract"
 version = "0.1.0"
 dependencies = [
+ "semio-framework-replication",
  "semio-framework-ui-styling",
+ "semio-framework-value-derive",
  "serde",
 ]
 
@@ -611,7 +611,6 @@ version = "0.1.0"
 dependencies = [
  "semio-framework-job",
  "semio-framework-ui-contract",
- "serde",
 ]
 
 [[package]]

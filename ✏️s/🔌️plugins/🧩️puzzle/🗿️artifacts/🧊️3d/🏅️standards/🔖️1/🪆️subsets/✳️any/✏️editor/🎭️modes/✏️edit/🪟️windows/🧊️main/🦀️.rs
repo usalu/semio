@@ -159,7 +159,13 @@ pub fn world_instances_geometry_json(fixture: &Puzzle3dFixture) -> String {
 
 /// 🗄️ Cheap change key for everything the instance/mesh payloads (and the document tree) derive from.
 pub fn fixture_geometry_fingerprint(fixture: &Puzzle3dFixture) -> u64 {
-    let payload = serde_json::to_string(&(&fixture.objects, &fixture.references, &fixture.target_volumes, &fixture.meta)).unwrap_or_default();
+    let payload = format!(
+        "{}{}{}{}",
+        dsl::os_pack::json::to_json_string(&fixture.objects),
+        dsl::os_pack::json::to_json_string(&fixture.references),
+        dsl::os_pack::json::to_json_string(&fixture.target_volumes),
+        dsl::os_pack::json::to_json_string(&fixture.meta),
+    );
     let mut hasher = std::collections::hash_map::DefaultHasher::new();
     payload.hash(&mut hasher);
     hasher.finish()
@@ -393,11 +399,11 @@ pub fn world_brush_preview_json(session: &Puzzle3dPrecomputeSession, envelope: &
     let vortex_id = envelope.runtime.suggestion_menu.as_ref().map(|menu| menu.vortex_full_id.clone()).filter(|id| !id.is_empty())?;
     let preview = session.brush_preview(&vortex_id, envelope.runtime.brush_candidate_index)?;
     let color = object_kind_color(&envelope.fixture.meta, Some(preview.object_kind_id.as_str()));
-    let mut value = serde_json::to_value(&preview).ok()?;
-    if let Some(obj) = value.as_object_mut() {
-        obj.insert("color".into(), json!(color));
+    let mut value = dsl::ToValue::to_value(&preview);
+    if let dsl::DslValue::Object(entries) = &mut value {
+        entries.push(("color".to_string(), dsl::DslValue::String(color)));
     }
-    serde_json::to_string(&value).ok()
+    Some(dsl::json::to_json_string(&value))
 }
 
 /// 🪣️ Latest-wins bounded fill diagnostic, with an optional ghost projection.

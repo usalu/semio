@@ -14,7 +14,7 @@ import { cleanup, fireEvent, render, screen, waitFor } from "@semio-tech/ui-reac
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { buildTaskManagerTableScene, createTaskManagerDispatcher, taskManagerColumns, taskManagerRowAction, taskManagerRows, TaskManagerPanel, type TaskManagerLabels, type TaskManagerRow } from "./🟦️.tsx";
 import { ActivationRegistry, type ShardBudget } from "../../../../../../../🔨️modules/🎠️kernel/🟦️.ts";
-import { ShardClient, type ShardWorkerLike } from "../../../../../../../🔨️modules/🎭️actor/📦️packages/🟦️typescript/🟦️";
+import { ShardClient, type ShardWorkerLike } from "../../../../../../../🔨️modules/🎭️actor/🧵️shard-client/🟦️.ts";
 import { OwnedResidentLedger } from "../../../../../../../🔨️modules/🌱️value/💾️resident/🟦️.ts";
 // #endregion 🔌️Adapters
 

@@ -8,7 +8,6 @@
 
 use crate::artifacts::dag::diff::DagDiff;
 use crate::artifacts::dag::DagSnapshot;
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️Store
 pub type DagEnvelope = store::ArtifactEnvelope<DagSnapshot, DagMutation>;
@@ -23,9 +22,10 @@ pub type DagStore = store::ArtifactStore<DagSnapshot, DagMutation>;
 /// replacement — whole-collection/whole-document replace is not an in-history mutation (see
 /// `crate::editor::dag::DagPlayApp` no longer overriding `whole_document_operation`; use
 /// `store::ArtifactStore::reset` for a real whole-document load).
-#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::Mutations, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::Mutations)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(tag = "mutation", rename_all = "camelCase")]
-#[serde(tag = "mutation", rename_all = "camelCase")]
+#[cfg_attr(test, serde(tag = "mutation", rename_all = "camelCase"))]
 #[mutations(snapshot = DagSnapshot, diff = DagDiff, schema = "dag.dag")]
 pub enum DagMutation {
     CreateNode(CreateNode),
@@ -93,7 +93,7 @@ pub const KINDS: &[&str] = &[
 /// and cannot name this crate's private `protocol`/`store` extern-crate aliases either, so the
 /// bridge belongs here rather than there.
 pub fn decode_dag_mutation_json(text: &str) -> Result<DagMutation, String> {
-    serde_json::from_str(text).map_err(|error| error.to_string())
+    dsl::json::from_json_str(text).map_err(|error| error.to_string())
 }
 
 /// ▶️ [`apply_dag_mutation`]'s reporting, non-async twin: applies `mutation` in place and returns

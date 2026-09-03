@@ -1,0 +1,44 @@
+{
+  "contractVersion": 1,
+  "identity": {
+    "aliases": { "landingAppId": "home", "hostAppId": "studio" },
+    "apps": [
+      { "id": "first.unrelated@1/*#editor", "role": "editor", "dialect": { "artifactKind": "first.unrelated" } },
+      { "id": "s.space.home@1/*#editor", "role": "editor", "dialect": { "artifactKind": "s.space.home" } },
+      { "id": "s.space.studio@1/*#editor", "role": "editor", "dialect": { "artifactKind": "s.space.studio" } },
+      { "id": "s.space.home@1/*#viewer", "role": "viewer", "dialect": { "artifactKind": "s.space.home" } }
+    ],
+    "expected": {
+      "landingAppId": "s.space.home@1/*#editor",
+      "hostAppId": "s.space.studio@1/*#editor"
+    }
+  },
+  "bootstrap": {
+    "progress": {
+      "kind": "artifact-bootstrap-progress",
+      "documentId": "document-a",
+      "receivedBytes": 128,
+      "totalBytes": 512,
+      "receivedChunks": 1,
+      "totalChunks": 4
+    },
+    "failure": {
+      "kind": "artifact-bootstrap-failed",
+      "documentId": "document-a",
+      "code": "invalid-bootstrap",
+      "message": "descriptor digest mismatch",
+      "retryable": false
+    },
+    "rebootstrap": {
+      "kind": "artifact-rebootstrap-required",
+      "documentId": "document-a",
+      "message": "rebootstrap-required",
+      "retryable": true
+    },
+    "expected": {
+      "en": "Restoring document: 128 of 512 bytes; 1 of 4 chunks.",
+      "de": "Dokument wird wiederhergestellt: 128 von 512 Bytes; 1 von 4 Blöcken.",
+      "rebootstrapEn": "The server requires a fresh authoritative restore."
+    }
+  }
+}

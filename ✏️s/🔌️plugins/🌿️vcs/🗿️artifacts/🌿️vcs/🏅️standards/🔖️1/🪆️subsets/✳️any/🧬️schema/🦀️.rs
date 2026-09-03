@@ -1,7 +1,6 @@
 //! 🧬️ VCS artifact schema — every field of the artifact with its state class.
 
 use schema::ArtifactSchema;
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️DocumentHelpers
 /// 🌱️ The artifact's empty/default snapshot — used as `VcsPlayApp::initial_snapshot()` and by every
@@ -14,8 +13,10 @@ pub fn empty_vcs_snapshot() -> crate::artifacts::vcs::VcsSnapshot {
 
 //#region 🔖️Artifact
 /// 🧬️ Full VCS demo artifact state across the artifact, presence and config lanes.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ArtifactSchema)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, ArtifactSchema)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[artifact_schema(id = "s.vcs.vcs")]
 pub struct VcsArtifact {
     #[state(artifact)]
@@ -29,10 +30,10 @@ pub struct VcsArtifact {
     #[state(artifact)]
     pub status: String,
     #[state(artifact)]
-    #[serde(default)]
+    #[value(default)]
     pub tags: Vec<String>,
     #[state(presence)]
-    #[serde(default)]
+    #[value(default)]
     pub selected_checkpoint_ids: Vec<String>,
     #[state(config)]
     pub locale: String,

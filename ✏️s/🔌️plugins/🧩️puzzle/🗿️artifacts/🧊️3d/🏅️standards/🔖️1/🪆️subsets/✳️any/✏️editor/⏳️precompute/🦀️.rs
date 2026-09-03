@@ -1014,9 +1014,7 @@ impl Puzzle3dCollision {
             let scene = Arc::make_mut(scene);
             scene.weights.object_weights = object_weights;
             scene.weights.vortex_weights = vortex_weights;
-            if let Ok(normalized) = serde_json::to_string(&*scene) {
-                self.scene_json = Some(normalized);
-            }
+            self.scene_json = Some(dsl::os_pack::json::to_json_string(&*scene));
         }
         self.brush_cache.clear();
         if self.fill.is_none() {
@@ -1049,7 +1047,7 @@ impl Puzzle3dCollision {
     }
 
     pub(crate) fn set_scene(&mut self, json: &str) -> Result<(), Puzzle3dError> {
-        let mut scene: SceneConfig = serde_json::from_str(json)?;
+        let mut scene: SceneConfig = dsl::os_pack::json::from_json_str(json)?;
         // 🪣️ After the fill slider materializes objects into the document, every incidental action
         // (hover, pick, mesh register sync, …) re-feeds that applied projection here. Treating it as a
         // brand-new scene used to `rebuild_queue()` and bake the filled objects into `fill.base`, after
@@ -1059,7 +1057,7 @@ impl Puzzle3dCollision {
             if let Some(fill) = self.fill.as_ref().and_then(|fill| fill.try_lock().ok()) {
                 Self::strip_fill_plan_from_fixture(&mut scene.fixture, &fill);
             }
-            let normalized = serde_json::to_string(&scene)?;
+            let normalized = dsl::os_pack::json::to_json_string(&scene);
             if let Some(current) = &mut self.scene {
                 let current = Arc::make_mut(current);
                 current.overlap_budget = scene.overlap_budget;
@@ -1072,7 +1070,7 @@ impl Puzzle3dCollision {
             self.scene_json = Some(normalized);
             return Ok(());
         }
-        let normalized = serde_json::to_string(&scene)?;
+        let normalized = dsl::os_pack::json::to_json_string(&scene);
         if self.scene_json.as_deref() == Some(normalized.as_str()) {
             return Ok(());
         }
@@ -1934,7 +1932,7 @@ impl Puzzle3dPrecomputeSession {
     pub fn dispatch(&mut self, command: Puzzle3dEngineCommand) -> Result<Puzzle3dEngineOutcome, Puzzle3dError> {
         match command {
             Puzzle3dEngineCommand::SetScene { scene } => {
-                let json = serde_json::to_string(&scene)?;
+                let json = dsl::os_pack::json::to_json_string(&scene);
                 self.set_scene(&json)?;
                 Ok(Puzzle3dEngineOutcome::Unit)
             }

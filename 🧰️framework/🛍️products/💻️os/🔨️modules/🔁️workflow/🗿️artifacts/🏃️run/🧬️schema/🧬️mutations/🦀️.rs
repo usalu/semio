@@ -1,5 +1,4 @@
 use super::{RunArtifact, RunDiff};
-use serde::{Deserialize, Serialize};
 use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️Leaves
@@ -22,8 +21,7 @@ pub use start_run_node::StartRunNode;
 //#endregion 🔖️Leaves
 
 //#region 🔖️Aggregate
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, dsl::Mutations, dsl::DslOps)]
-#[serde(tag = "operation", rename_all = "camelCase", deny_unknown_fields)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::Mutations, dsl::DslOps)]
 #[value(tag = "operation", rename_all = "camelCase", deny_unknown_fields)]
 #[mutations(snapshot = RunArtifact, diff = RunDiff, schema = "os.run")]
 pub enum RunMutation {

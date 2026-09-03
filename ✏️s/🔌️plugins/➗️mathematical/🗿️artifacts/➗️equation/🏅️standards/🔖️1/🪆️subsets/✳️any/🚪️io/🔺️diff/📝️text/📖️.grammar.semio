@@ -1,0 +1,9 @@
+dialect grammar
+grammar equation.diff
+extension equation
+start document
+
+document = header body
+header = "schema" SP "mathematical.equation.diff" NL
+body = payload NL?
+payload = OCTET+

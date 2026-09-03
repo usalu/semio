@@ -1,5 +1,4 @@
 use super::{DagDiff, DagSnapshot};
-use serde::{Deserialize, Serialize};
 use semio_framework_value_derive::{FromValue, ToValue};
 
 #[path = "➕️create-node/🦀️.rs"] mod create_node;
@@ -32,8 +31,7 @@ pub use replace_node_kind::ReplaceNodeKind;
 pub use replace_node_properties::ReplaceNodeProperties;
 pub use resize_node::ResizeNode;
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, dsl::Mutations, dsl::DslOps)]
-#[serde(tag = "operation", rename_all = "camelCase", deny_unknown_fields)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::Mutations, dsl::DslOps)]
 #[value(tag = "operation", rename_all = "camelCase", deny_unknown_fields)]
 #[mutations(snapshot = DagSnapshot, diff = DagDiff, schema = "dag.dag")]
 pub enum DagMutation {

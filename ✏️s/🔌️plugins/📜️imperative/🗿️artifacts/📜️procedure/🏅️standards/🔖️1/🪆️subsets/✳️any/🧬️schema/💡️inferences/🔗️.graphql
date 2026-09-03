@@ -1,0 +1,17 @@
+# 💡️ Imperative inference schema — topology (depth-first order + nesting depth + cycle-freedom) over the Path/Step tree.
+
+type ProcedureInference {
+  topology: ProcedureTopology! @derived
+}
+
+type ProcedureTopology {
+  topoOrder: [String!]!
+  depth: [ProcedureDepthEntry!]!
+  cycleFree: Boolean!
+  nodeCount: Int!
+}
+
+type ProcedureDepthEntry {
+  stepId: String!
+  depth: Int!
+}

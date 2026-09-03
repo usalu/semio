@@ -48,6 +48,7 @@ use std::sync::Arc;
 
 use crate::db_durability::Frontier;
 use crate::db_ids::*;
+use crate::db_storage::WalStorage;
 use crate::*;
 use protocol::MutationDiff as _;
 
@@ -152,7 +153,7 @@ async fn decode_pathmap(bytes: &[u8]) -> Result<DslValue, DbError> {
 /// `store::pack_rt`'s binary encoding, not raw JSON text), which is exactly the "wire error:
 /// truncated" bug this function exists to make structurally impossible to repeat.
 pub async fn encode_pathmap_json(value: &serde_json::Value) -> Result<Vec<u8>, DbError> {
-    Ok(encode_pathmap(&dsl::to_dsl_value(value).map_err(dsl_err)?).await)
+    Ok(encode_pathmap(&DslValue::from(value)).await)
 }
 
 /// @emoji 🧰️ Inverse of `encode_pathmap_json` — also the general "read back one stored/queried
@@ -162,7 +163,7 @@ pub async fn encode_pathmap_json(value: &serde_json::Value) -> Result<Vec<u8>, D
 /// codec), never raw JSON text — a caller reaching for `serde_json::from_slice` on them directly
 /// hits exactly the "expected value" parse error this function exists to make impossible.
 pub async fn decode_pathmap_json(bytes: &[u8]) -> Result<serde_json::Value, DbError> {
-    dsl::from_dsl_value(decode_pathmap(bytes).await?).map_err(dsl_err)
+    Ok(serde_json::Value::from(decode_pathmap(bytes).await?))
 }
 
 /// @emoji 🧮️ Flattens a diff/inverse pathmap object into `(path, Some(value) | None)` pairs per this
@@ -229,7 +230,7 @@ pub async fn envelope_from_operation<P, Op>(
     default_timestamp: protocol::HybridLogicalTimestamp,
 ) -> Result<protocol::MutationEnvelope, DbError>
 where
-    P: serde::Serialize,
+    P: dsl::ToValue,
     Op: protocol::Mutation<P>,
 {
     let diff = op.diff(base);
@@ -883,20 +884,20 @@ fn retire_artifact_state_owner(owner: ArtifactStateRetirementCursor) -> Result<(
         return Ok(());
     }
     let mut retired = ARTIFACT_STATE_RETIREMENT.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
-    if let Some(index) = artifact_state_vacant_retirement_slot(0, &retired) {
+    if let Some(index) = artifact_state_vacant_retirement_slot(0, &retired[..]) {
         retired[index] = Some(owner);
         Ok(())
     } else {
         drop(retired);
         ARTIFACT_STATE_RETIREMENT_PRESSURE_FAULT.store(true, std::sync::atomic::Ordering::Release);
         let mut overflow = ARTIFACT_STATE_RETIREMENT_OVERFLOW.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
-        if let Some(index) = artifact_state_vacant_retirement_slot(1, &overflow) {
+        if let Some(index) = artifact_state_vacant_retirement_slot(1, &overflow[..]) {
             overflow[index] = Some(owner);
             return Ok(());
         }
         drop(overflow);
         let mut quarantine = ARTIFACT_STATE_RETIREMENT_QUARANTINE.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
-        let Some(index) = artifact_state_vacant_retirement_slot(2, &quarantine) else { return Err(owner) };
+        let Some(index) = artifact_state_vacant_retirement_slot(2, &quarantine[..]) else { return Err(owner) };
         quarantine[index] = Some(owner);
         Ok(())
     }
@@ -912,7 +913,7 @@ pub fn artifact_state_retirement_maintenance_step() -> Result<bool, DbError> {
             let mut quarantine = ARTIFACT_STATE_RETIREMENT_QUARANTINE.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
             let Some(index) = quarantine.iter().position(Option::is_some) else { return Ok(false) };
             let mut retired = ARTIFACT_STATE_RETIREMENT.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
-            let Some(target) = artifact_state_vacant_retirement_slot(0, &retired) else {
+            let Some(target) = artifact_state_vacant_retirement_slot(0, &retired[..]) else {
                 drop(retired);
                 let owner = quarantine[index].as_mut().ok_or_else(|| DbError::Internal("artifact quarantine retirement changed owner".to_string()))?;
                 if !owner.close_step()? {
@@ -924,7 +925,7 @@ pub fn artifact_state_retirement_maintenance_step() -> Result<bool, DbError> {
             return Ok(true);
         };
         let mut retired = ARTIFACT_STATE_RETIREMENT.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
-        let Some(target) = artifact_state_vacant_retirement_slot(0, &retired) else {
+        let Some(target) = artifact_state_vacant_retirement_slot(0, &retired[..]) else {
             drop(retired);
             let owner = overflow[index].as_mut().ok_or_else(|| DbError::Internal("artifact overflow retirement changed owner".to_string()))?;
             if !owner.close_step()? {
@@ -1060,7 +1061,7 @@ impl DocumentState {
 /// real deployment supplies whatever backend it wants at `ArtifactEngineConfig` construction time.
 /// `db_engine`'s `SecurityAuthzHook` is the real `db_security::SecurityGate`-backed implementation.
 pub trait AuthzHook: Send + Sync {
-    async fn authorize(&self, actor: &protocol::ActorId, envelope: &protocol::MutationEnvelope) -> Result<(), DbError>;
+    fn authorize(&self, actor: &protocol::ActorId, envelope: &protocol::MutationEnvelope) -> impl Future<Output = Result<(), DbError>> + Send;
 }
 
 /// @emoji 🟢️ The default `AuthzHook`: authorizes everything. Correct for a single-tenant/test
@@ -1688,7 +1689,7 @@ impl<A: AuthzHook + 'static, V: VersionGraph + 'static> ArtifactEngine<A, V> {
     /// (never touches the WAL), per the contract's preview law. Backed by a real
     /// `db_preview::PreviewStore` this revision (previously a local, minimal stand-in).
     pub async fn publish_preview(&mut self, entries: &[(String, Option<serde_json::Value>)], now_ms: u64) -> Result<db_preview::PreviewId, DbError> {
-        let dsl_entries: Vec<(String, Option<DslValue>)> = entries.iter().map(|(path, value)| Ok((path.clone(), value.as_ref().map(|json| dsl::to_dsl_value(json).map_err(dsl_err)).transpose()?))).collect::<Result<Vec<_>, DbError>>()?;
+        let dsl_entries: Vec<(String, Option<DslValue>)> = entries.iter().map(|(path, value)| (path.clone(), value.as_ref().map(DslValue::from))).collect();
         let touched = entries_touched(&dsl_entries);
         let envelope = protocol::MutationEnvelope {
             mutation_id: protocol::MutationId(format!("preview-{}", entries.len())),
@@ -2123,6 +2124,22 @@ pub struct HistoryReplayReservation {
     scratch: Option<Vec<u8>>,
     retained_operation_bytes: u64,
     retained_result_bytes: u64,
+}
+
+impl std::fmt::Debug for HistoryReplayReservation {
+    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        formatter
+            .debug_struct("HistoryReplayReservation")
+            .field("source_pages", &self.source_pages.len())
+            .field("source_page_count", &self.source_page_count)
+            .field("result_pages", &self.result_pages.len())
+            .field("operation_ids", &self.operation_ids.len())
+            .field("entries", &self.entries.len())
+            .field("scratch", &self.scratch.as_ref().map(Vec::len))
+            .field("retained_operation_bytes", &self.retained_operation_bytes)
+            .field("retained_result_bytes", &self.retained_result_bytes)
+            .finish()
+    }
 }
 
 impl HistoryReplayReservation {
@@ -3202,7 +3219,7 @@ impl HistoryReplayFuture {
         let Some(reservation) = self.reservation.as_ref() else {
             return Err(DbError::Closed);
         };
-        let retained_bytes = Ok(reservation.retained_result_bytes);
+        let retained_bytes = reservation.retained_result_bytes;
         let retained_items = reservation
             .result_pages
             .len()
@@ -3210,9 +3227,7 @@ impl HistoryReplayFuture {
             .and_then(|items| items.checked_add(reservation.entries.len()))
             .and_then(|items| items.checked_add(1))
             .ok_or(DbError::LimitExceeded("history retained result items"));
-        let (Ok(retained_bytes), Ok(retained_items)) = (retained_bytes, retained_items) else {
-            return Err(DbError::LimitExceeded("history retained result credit"));
-        };
+        let retained_items = retained_items?;
         let Some(mut reservation) = self.reservation.take() else {
             return Err(DbError::Closed);
         };
@@ -3301,7 +3316,23 @@ impl HistoryReplayFuture {
                             let storage = this.storage.clone();
                             let document = this.document.clone();
                             let (index, len, offset) = (*index, *len, *offset);
-                            next = Some(HistoryReplayPhase::PageRead { index, len, offset, requested, future: Box::pin(async move { storage.wal().await.read(&document, index, pack::ByteRange { offset, len: requested }).await }) });
+                            next = Some(HistoryReplayPhase::PageRead {
+                                index,
+                                len,
+                                offset,
+                                requested,
+                                future: Box::pin(async move {
+                                    let mut retained = storage.wal().await.read(&document, index, pack::ByteRange { offset, len: requested }).await?;
+                                    let mut page = Vec::with_capacity(retained.len());
+                                    for fragment in retained.fragments() {
+                                        page.extend_from_slice(fragment);
+                                    }
+                                    while !retained.terminal_is_empty() {
+                                        retained.close_step()?;
+                                    }
+                                    Ok(page.into_boxed_slice().into_vec())
+                                }),
+                            });
                         }
                         None => fault = Some(DbError::LimitExceeded("history page remaining bytes")),
                     }
@@ -4187,7 +4218,7 @@ mod tests {
     }
 
     async fn envelope(id: &str, deps: &[&str], actor: &str, entries: &[(&str, serde_json::Value)]) -> protocol::MutationEnvelope {
-        let object: Vec<(String, DslValue)> = entries.iter().map(|(path, value)| (path.to_string(), dsl::to_dsl_value(value).expect("test envelope dsl"))).collect();
+        let object: Vec<(String, DslValue)> = entries.iter().map(|(path, value)| (path.to_string(), DslValue::from(value))).collect();
         protocol::MutationEnvelope {
             mutation_id: protocol::MutationId(id.to_string()),
             document_id: document_id().await,
@@ -4234,45 +4265,72 @@ mod tests {
     mod bridge {
         use super::*;
 
-        #[derive(Clone, serde::Serialize, serde::Deserialize)]
-        struct Counter(i64);
+        #[derive(Clone, serde::Serialize, serde::Deserialize, store::ToValue, store::FromValue)]
+        struct Counter {
+            value: i64,
+        }
 
-        #[derive(Clone, Default, serde::Serialize, serde::Deserialize)]
-        struct AddDiff(i64);
+        #[derive(Clone, Default, serde::Serialize, serde::Deserialize, store::ToValue, store::FromValue)]
+        struct AddDiff {
+            amount: i64,
+        }
 
         impl protocol::MutationDiff<Counter> for AddDiff {
             fn apply(&self, base: &Counter) -> protocol::MutationApplyResult<Counter> {
-                Ok(Counter(base.0 + self.0))
+                Ok(Counter { value: base.value + self.amount })
             }
             fn absorb(&mut self, other: Self) {
-                self.0 += other.0;
+                self.amount += other.amount;
             }
         }
 
-        #[derive(Clone, serde::Serialize, serde::Deserialize)]
-        struct Add(i64);
+        #[derive(Clone, serde::Serialize, serde::Deserialize, store::ToValue, store::FromValue)]
+        struct Add {
+            amount: i64,
+        }
+
+        const ADD_DESCRIPTOR: protocol::MutationLeafDescriptor = protocol::MutationLeafDescriptor {
+            schema_version: 1,
+            owner: "framework/os/db/artifact/test-add",
+            semantic_kind: "add",
+            display_name: "Add",
+            emoji: "➕️",
+            aggregate_variant: "Add",
+            payload_schema: "db.artifact.test-add/v1",
+            text_opcode: None,
+            binary_tag: None,
+            invertibility: protocol::MutationInvertibility::ExplicitMutation,
+            diff_participation: protocol::MutationDiffParticipation::Detect,
+            outcome_classes: &[protocol::MutationOutcomeClass::Applied],
+            composition: protocol::MutationComposition::Atomic,
+            required_language_surfaces: &[protocol::MutationLanguageSurface::Rust],
+        };
 
         impl protocol::Mutation<Counter> for Add {
             type Diff = AddDiff;
+            const DESCRIPTORS: &'static [protocol::MutationLeafDescriptor] = &[ADD_DESCRIPTOR];
+            fn descriptor(&self) -> &'static protocol::MutationLeafDescriptor {
+                &ADD_DESCRIPTOR
+            }
             fn diff(&self, _base: &Counter) -> protocol::MutationOutcome<AddDiff> {
-                protocol::MutationOutcome::new(AddDiff(self.0))
+                protocol::MutationOutcome::new(AddDiff { amount: self.amount })
             }
             fn inverse(&self, _base: &Counter) -> Vec<Self> {
-                vec![Add(-self.0)]
+                vec![Add { amount: -self.amount }]
             }
         }
 
         #[semio_framework_async_macros::async_test]
         async fn envelope_from_operation_uses_operation_and_diff_traits() {
-            let base = Counter(10);
-            let op = Add(5);
+            let base = Counter { value: 10 };
+            let op = Add { amount: 5 };
             let envelope = envelope_from_operation(document_id().await, "counter", &op, &base, protocol::ActorId("alice".to_string()), protocol::MutationId("op-add-1".to_string()), protocol::HybridLogicalTimestamp::new(1, 0)).await.unwrap();
             let entries = diff_entries(&envelope.diff).await.unwrap();
             assert_eq!(entries.len(), 1);
             let (path, value) = &entries[0];
             assert_eq!(path, "counter");
             let new_value: Counter = dsl::from_dsl_value(value.clone().unwrap()).unwrap();
-            assert_eq!(new_value.0, 15);
+            assert_eq!(new_value.value, 15);
         }
     }
     //#endregion 🔖️Bridge
@@ -4517,8 +4575,8 @@ mod tests {
             document_id: document_id().await,
             actor: protocol::ActorId("alice".to_string()),
             dependencies: Vec::new(),
-            diff: protocol::ArtifactDiff { schema: protocol::SchemaId(DB_PATHMAP_SCHEMA.to_string()), payload: encode_pathmap(&dsl::to_dsl_value(&serde_json::json!({ "x": 1 })).expect("dsl")).await },
-            inverse: protocol::InverseMutation { schema: protocol::SchemaId(DB_PATHMAP_SCHEMA.to_string()), payload: encode_pathmap(&dsl::to_dsl_value(&serde_json::json!({ "x": null })).expect("dsl")).await },
+            diff: protocol::ArtifactDiff { schema: protocol::SchemaId(DB_PATHMAP_SCHEMA.to_string()), payload: encode_pathmap(&DslValue::from(&serde_json::json!({ "x": 1 }))).await },
+            inverse: protocol::InverseMutation { schema: protocol::SchemaId(DB_PATHMAP_SCHEMA.to_string()), payload: encode_pathmap(&DslValue::from(&serde_json::json!({ "x": null }))).await },
             timestamp: protocol::HybridLogicalTimestamp::new(0, 0),
         };
         engine.submit(CommandBatch::new(vec![original]).await.unwrap(), SubmitOptions::default(), 0).await.unwrap();
@@ -4783,7 +4841,7 @@ mod tests {
         drop(fault);
         let mut resumed = take_history_replay_reservation_construction_fault(generation).expect("checked-out Drop returned exact partial owner");
         assert!(matches!(resumed.take_error(), Some(DbError::Unavailable(_))));
-        let mut previous_pages = 3;
+        let mut previous_pages = 3usize;
         while !resumed.terminal_is_empty() {
             assert!(resumed.close_step());
             let pages = resumed.retained_result_page_count();

@@ -1,0 +1,185 @@
+{
+  "$id": "https://semio.tech/schema/s/imperative/imperative/diff.json",
+  "title": "ProcedureDiff",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [],
+  "properties": {
+    "artifact": {
+      "title": "ProcedureArtifact",
+      "type": "object",
+      "x-semio-state": "artifact"
+    },
+    "schema": {
+      "type": "string",
+      "x-semio-state": "artifact"
+    },
+    "path": {
+      "$ref": "#/$defs/ProcedurePathDelta",
+      "x-semio-state": "artifact"
+    },
+    "seed": {
+      "type": "object",
+      "additionalProperties": true,
+      "x-semio-state": "artifact"
+    },
+    "selectedStepIds": {
+      "$ref": "#/$defs/ProcedureStringList",
+      "x-semio-state": "presence"
+    },
+    "locale": {
+      "type": "string",
+      "x-semio-state": "config"
+    },
+    "contributionsJson": {
+      "type": "string",
+      "x-semio-state": "config"
+    }
+  },
+  "$defs": {
+    "ProcedureStringList": {
+      "title": "ProcedureStringList",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "values"
+      ],
+      "properties": {
+        "values": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "ProcedurePathRef": {
+      "title": "ProcedurePathRef",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [],
+      "properties": {
+        "owner": {
+          "type": "string"
+        },
+        "slot": {
+          "type": "string"
+        }
+      }
+    },
+    "ProcedurePathDelta": {
+      "title": "ProcedurePathDelta",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "pathRef",
+        "steps"
+      ],
+      "properties": {
+        "pathRef": {
+          "$ref": "#/$defs/ProcedurePathRef"
+        },
+        "steps": {
+          "$ref": "#/$defs/ProcedureStepsDelta"
+        }
+      }
+    },
+    "ProcedureStepsDelta": {
+      "title": "ProcedureStepsDelta",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "added",
+        "removed",
+        "patched"
+      ],
+      "properties": {
+        "added": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ProcedureStep"
+          }
+        },
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "patched": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ProcedureStepPatchEntry"
+          }
+        },
+        "reordered": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "ProcedureStepPatchEntry": {
+      "title": "ProcedureStepPatchEntry",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "patch"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "patch": {
+          "type": "object",
+          "additionalProperties": true
+        }
+      }
+    },
+    "ProcedurePath": {
+      "title": "ProcedurePath",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "steps"
+      ],
+      "properties": {
+        "steps": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ProcedureStep"
+          }
+        }
+      }
+    },
+    "ProcedureStep": {
+      "title": "ProcedureStep",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "kind"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "kind": {
+          "type": "string"
+        },
+        "params": {
+          "type": "object",
+          "additionalProperties": true
+        },
+        "bodies": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/ProcedurePath"
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,9 +1,0 @@
-dialect grammar
-grammar mathematical.diff
-extension mathematical
-start document
-
-document = header body
-header = "schema" SP "mathematical.mathematical.diff" NL
-body = payload NL?
-payload = OCTET+

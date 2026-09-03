@@ -74,7 +74,7 @@ pub mod cache {
         /// 🧾️ Records cache metadata on disk.
         pub fn write_index(&self) -> Result<(), VideoError> {
             let index_path = self.root.join("index.json");
-            let payload = serde_json::to_string_pretty(&self.access_order).map_err(VideoError::json("cache index"))?;
+            let payload = dsl::os_pack::json::to_string_pretty(&dsl::os_pack::json::from_dsl_value(&dsl::ToValue::to_value(&self.access_order)));
             fs::write(index_path, payload).map_err(VideoError::io("cache index"))?;
             Ok(())
         }
@@ -434,8 +434,8 @@ pub mod render {
         let sections = recorder.inner.sections().clone();
         let sections_path = config.output_dir.join("sections.json");
         fs::create_dir_all(&config.output_dir).map_err(VideoError::io("output dir"))?;
-        let sections_value: serde_json::Value = dsl::ToValue::to_value(&sections).into();
-        fs::write(&sections_path, serde_json::to_string_pretty(&sections_value).map_err(VideoError::json("sections json"))?).map_err(VideoError::io("sections write"))?;
+        let sections_value = dsl::os_pack::json::from_dsl_value(&dsl::ToValue::to_value(&sections));
+        fs::write(&sections_path, dsl::os_pack::json::to_string_pretty(&sections_value)).map_err(VideoError::io("sections write"))?;
 
         let camera = recorder.inner.camera().clone();
         let mut renderer = VelloRenderer::new(config.width, config.height).await?;
@@ -1317,8 +1317,6 @@ pub use writer::{flush_partial_movie_cache, write_sections_srt, SceneFileWriter}
 pub enum VideoError {
     /// 📁️ A filesystem operation (create/read/write/remove) failed.
     Io { context: &'static str, source: std::io::Error },
-    /// 🧾️ JSON (de)serialization failed.
-    Json { context: &'static str, source: serde_json::Error },
     /// 🗑️ Cache eviction found an empty access order (invariant violation).
     CacheEvictionEmpty,
     /// 📡️ GPU readback channel closed before a result arrived.
@@ -1331,7 +1329,6 @@ impl std::fmt::Display for VideoError {
     fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             Self::Io { context, source } => write!(formatter, "{context}: {source}"),
-            Self::Json { context, source } => write!(formatter, "{context}: {source}"),
             Self::CacheEvictionEmpty => formatter.write_str("cache eviction: empty order"),
             Self::ReadbackChannelClosed => formatter.write_str("readback channel closed"),
             Self::Backend { context, message } => write!(formatter, "{context}: {message}"),
@@ -1343,7 +1340,6 @@ impl std::error::Error for VideoError {
     fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
         match self {
             Self::Io { source, .. } => Some(source),
-            Self::Json { source, .. } => Some(source),
             Self::CacheEvictionEmpty | Self::ReadbackChannelClosed | Self::Backend { .. } => None,
         }
     }
@@ -1353,10 +1349,6 @@ impl VideoError {
     /// 📁️ Curries an io::Error mapper tagged with `context` for `.map_err(...)`.
     pub(crate) fn io(context: &'static str) -> impl Fn(std::io::Error) -> Self {
         move |source| Self::Io { context, source }
-    }
-    /// 🧾️ Curries a serde_json::Error mapper tagged with `context` for `.map_err(...)`.
-    pub(crate) fn json(context: &'static str) -> impl Fn(serde_json::Error) -> Self {
-        move |source| Self::Json { context, source }
     }
     /// 🖥️ Builds a backend-failure variant from any Display/Debug-formatted foreign error.
     pub(crate) fn backend(context: &'static str, message: impl std::fmt::Display) -> Self {

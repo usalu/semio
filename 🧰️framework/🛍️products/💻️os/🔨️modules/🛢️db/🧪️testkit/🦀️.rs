@@ -613,11 +613,42 @@ async fn recovered_state_matches_prefix(recovered: &db_artifact::ArtifactEngine,
         return false;
     }
     for i in 0..expected_committed {
-        if recovered.get(&format!("path-{i}")).await.is_none() {
+        if !query_result_is_present(recovered.get(&format!("path-{i}")).await).await {
             return false;
         }
     }
-    expected_committed >= ops.len() || recovered.get(&format!("path-{expected_committed}")).await.is_none()
+    expected_committed >= ops.len() || !query_result_is_present(recovered.get(&format!("path-{expected_committed}")).await).await
+}
+
+async fn query_bytes_into_vec(mut bytes: db_query::QueryBytes) -> Vec<u8> {
+    let mut owned = Vec::with_capacity(bytes.len());
+    for fragment in bytes.fragments() {
+        owned.extend_from_slice(fragment);
+    }
+    while !bytes.terminal_is_empty() {
+        bytes.close_step().expect("testkit: query bytes close");
+        semio_framework_async::yield_once().await;
+    }
+    owned
+}
+
+#[cfg(test)]
+async fn db_io_pages_into_vec(mut pages: DbIoPages) -> Vec<u8> {
+    let mut owned = Vec::with_capacity(pages.len());
+    for fragment in pages.fragments() {
+        owned.extend_from_slice(fragment);
+    }
+    while !pages.terminal_is_empty() {
+        pages.close_step().expect("testkit: DB I/O pages close");
+        semio_framework_async::yield_once().await;
+    }
+    owned
+}
+
+async fn query_result_is_present(result: Result<Option<db_query::QueryBytes>, DbError>) -> bool {
+    let Ok(Some(bytes)) = result else { return false };
+    query_bytes_into_vec(bytes).await;
+    true
 }
 //#endregion 🔖️CrashHarness
 
@@ -813,14 +844,16 @@ pub async fn assert_inverse_undo_roundtrip(seed: u64) {
     let target = envelope.mutation_id.clone();
     engine.submit(single_envelope_batch(envelope).await, db_artifact::SubmitOptions::default(), 1).await.expect("submit forward");
 
-    let after_forward: serde_json::Value = db_artifact::decode_pathmap_json(&engine.get(&path).await.expect("forward value present")).await.expect("json");
+    let after_forward_bytes = engine.get(&path).await.expect("forward value query").expect("forward value present");
+    let after_forward: serde_json::Value = db_artifact::decode_pathmap_json(&query_bytes_into_vec(after_forward_bytes).await).await.expect("json");
     assert_eq!(after_forward, forward_value);
 
     engine.undo(&target, protocol::MutationId("op-undo".to_string()), protocol::ActorId("actor-1".to_string()), 2).await.expect("undo");
-    assert!(engine.get(&path).await.is_none(), "undo must apply the recorded inverse — path deleted");
+    assert!(!query_result_is_present(engine.get(&path).await).await, "undo must apply the recorded inverse — path deleted");
 
     engine.undo(&protocol::MutationId("op-undo".to_string()), protocol::MutationId("op-redo".to_string()), protocol::ActorId("actor-1".to_string()), 3).await.expect("redo (undo of undo)");
-    let after_redo: serde_json::Value = db_artifact::decode_pathmap_json(&engine.get(&path).await.expect("redo value present")).await.expect("json");
+    let after_redo_bytes = engine.get(&path).await.expect("redo value query").expect("redo value present");
+    let after_redo: serde_json::Value = db_artifact::decode_pathmap_json(&query_bytes_into_vec(after_redo_bytes).await).await.expect("json");
     assert_eq!(after_redo, forward_value, "undoing the undo (redo) must restore the exact original value — inverse-of-inverse roundtrip");
 }
 
@@ -882,7 +915,7 @@ pub async fn assert_fencing_excludes_stale_writer(storage: &impl CatalogStorage)
     assert!(matches!(stale_attempt, Err(DbError::Fenced { .. })), "a writer presenting a superseded epoch must be fenced, not silently accepted");
 
     let (root_bytes, root_epoch) = storage.read_root().await.expect("read_root").expect("root must exist after the winning write");
-    assert_eq!(root_bytes, b"writer-a", "the fenced writer must never have overwritten the root");
+    assert_eq!(root_bytes, b"writer-a".as_slice(), "the fenced writer must never have overwritten the root");
     assert_eq!(root_epoch, winner_epoch);
 }
 
@@ -916,10 +949,12 @@ pub async fn assert_preview_never_durable(seed: u64) {
     assert_eq!(lengths_before, lengths_after, "publishing a preview must never append a single byte to the wal");
     assert_eq!(engine.frontier().await, frontier_before, "a preview must never advance the document's committed frontier");
 
-    let previewed: serde_json::Value = db_artifact::decode_pathmap_json(&engine.preview_get(&preview_id, &path).await.expect("preview_get").expect("preview value present")).await.expect("json");
+    let previewed_bytes = engine.preview_get(&preview_id, &path).await.expect("preview_get").expect("preview value present");
+    let previewed: serde_json::Value = db_artifact::decode_pathmap_json(&query_bytes_into_vec(previewed_bytes).await).await.expect("json");
     assert_eq!(previewed, preview_value, "the preview overlay must shadow the committed value for its own reader");
 
-    let committed_still: serde_json::Value = db_artifact::decode_pathmap_json(&engine.get(&path).await.expect("committed value still present")).await.expect("json");
+    let committed_bytes = engine.get(&path).await.expect("committed value query").expect("committed value still present");
+    let committed_still: serde_json::Value = db_artifact::decode_pathmap_json(&query_bytes_into_vec(committed_bytes).await).await.expect("json");
     assert_eq!(committed_still, committed_value, "a preview must never mutate the canonical committed state");
 }
 
@@ -1244,7 +1279,7 @@ mod tests {
             let core_document = ArtifactId(document.0);
             let wal_facet = db_actor::block_on(storage.wal());
             let len = db_actor::block_on(wal_facet.segment_len(&core_document, 0)).unwrap();
-            let bytes = db_actor::block_on(wal_facet.read(&core_document, 0, pack::ByteRange { offset: 0, len })).unwrap();
+            let bytes = db_io_pages_into_vec(db_actor::block_on(wal_facet.read(&core_document, 0, pack::ByteRange { offset: 0, len })).unwrap()).await;
 
             let truncation_report = pack_testkit::fuzz_truncation(&bytes, pack_testkit::CorruptionLevel::Exhaustive, decode_wal_bytes);
             assert!(truncation_report.cases_panicked.is_empty(), "wal recovery must never panic on truncated input: {:?}", truncation_report.cases_panicked);

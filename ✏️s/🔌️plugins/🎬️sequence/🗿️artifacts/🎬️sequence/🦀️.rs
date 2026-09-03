@@ -2,11 +2,10 @@
 
 use neural_engine::{Dictionary, Value};
 use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability};
-use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::any::schema::geometry::SemioPoint2;
+use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::base::schema::geometry::SemioPoint2;
 use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::flow::schema::snapshot::{
     FlowEdge as SemioFlowEdge, FlowNode as SemioFlowNode, FlowParam as SemioFlowParam, PortRef as SemioPortRef, SemioFlowSnapshot, STDIO_SEMIOFLOW_DOCUMENT_SCHEMA,
 };
-use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
 pub use crate::artifacts::sequence::schema::mutations::SequenceMutation;
@@ -42,8 +41,10 @@ pub const SEQUENCE_DIALECT: semio_framework_plugin::Dialect = semio_framework_pl
 /// producing a fence the lexer can't close and a confirmed parse failure ("unterminated fenced
 /// block"). Genuine ENGINE GAP (`Shape::Embed` inside a `Shape::Table` column), out of scope here —
 /// verified empirically, not worked around.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(transparent)]
+#[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(transparent)]
+#[cfg_attr(test, serde(transparent))]
 pub struct StepParams(pub Dictionary);
 
 impl StepParams {
@@ -68,11 +69,11 @@ impl dsl::DslField for StepParams {
         dsl::Shape::Text
     }
     async fn to_value(&self) -> dsl::FieldValue {
-        dsl::FieldValue::Text(serde_json::to_string(&self.0).unwrap_or_else(|_| "{}".into()))
+        dsl::FieldValue::Text(dsl::os_pack::json::to_json_string(&self.0))
     }
     async fn from_value(value: &dsl::FieldValue) -> Result<Self, String> {
         match value {
-            dsl::FieldValue::Text(text) => serde_json::from_str(text).map(Self).map_err(|err| err.to_string()),
+            dsl::FieldValue::Text(text) => dsl::os_pack::json::from_json_str(text).map(Self).map_err(|err| err.to_string()),
             other => Err(format!("expected Text, found {other:?}")),
         }
     }
@@ -83,8 +84,10 @@ impl dsl::DslField for StepParams {
 /// would require this file to depend on the DAG layout kernel just to move a camera in and out,
 /// which would pull graph-layout machinery into the plain entity component for no reason a data
 /// schema needs — an artifact must never depend on an app either way.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslRecord)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct SequenceCamera {
     pub x: f64,
     pub y: f64,
@@ -100,40 +103,51 @@ impl Default for SequenceCamera {
 /// 🎯️ Only ever embedded `#[dsl(block)]`-wrapped (on `SequenceStep::slot`), so it carries no
 /// `#[dsl(keyword = "...")]` of its own — the embedding field already supplies the bare `slot`
 /// leading keyword.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslRecord)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct SlotRef {
     #[dsl(refs = "step")]
     pub owner: String,
     pub name: String,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslRecord)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct SequenceStep {
     #[dsl(defines = "step")]
     pub id: String,
     pub kind: String,
-    #[serde(default)]
+    #[value(default)]
+    #[cfg_attr(test, serde(default))]
     pub params: StepParams,
-    #[serde(default)]
+    #[value(default)]
+    #[cfg_attr(test, serde(default))]
     pub x: f64,
-    #[serde(default)]
+    #[value(default)]
+    #[cfg_attr(test, serde(default))]
     pub y: f64,
-    #[serde(default)]
+    #[value(default)]
+    #[cfg_attr(test, serde(default))]
     #[dsl(block)]
     pub slot: Option<SlotRef>,
-    #[serde(default)]
+    #[value(default)]
+    #[cfg_attr(test, serde(default))]
     pub collapsed: bool,
 }
 
-/// 🔌️ Runtime edge shape (id/from/to step ids) — kept plain `Serialize`/`Deserialize` only; the
+/// 🔌️ Runtime edge shape (id/from/to step ids) — kept plain `ToValue`/`FromValue` only; the
 /// `.sequence` DSL text and op-log representations go through the `SequenceEdgeDsl` mirror (see
 /// `🗣️dsl`) instead of deriving `dsl::DslRecord` here directly, so this struct (and every consumer
 /// matching on `.from`/`.to` — `connect_steps`, `sync_edges_from_dag`, ...) stays untouched by the
 /// unified `dsl::Wire` connection syntax.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct SequenceEdge {
     pub id: String,
     pub from: String,
@@ -173,7 +187,7 @@ fn sequence_step_params(step: &SequenceStep) -> Vec<SemioFlowParam> {
     fn p(key: &str, value: String) -> SemioFlowParam {
         SemioFlowParam { key: key.into(), value }
     }
-    vec![p("params", serde_json::to_string(&step.params.0).unwrap_or_default()), p("slot", serde_json::to_string(&step.slot).unwrap_or_else(|_| "null".into())), p("collapsed", step.collapsed.to_string())]
+    vec![p("params", dsl::os_pack::json::to_json_string(&step.params.0)), p("slot", dsl::os_pack::json::to_json_string(&step.slot)), p("collapsed", step.collapsed.to_string())]
 }
 
 /// 🌉 Inverse of [`sequence_step_params`] — reconstructs a `SequenceStep` from a `FlowNode`'s `id`/
@@ -184,10 +198,10 @@ fn sequence_step_from_node(node: &SemioFlowNode) -> SequenceStep {
     SequenceStep {
         id: node.id.clone(),
         kind: node.kind.clone(),
-        params: StepParams(serde_json::from_str(get("params")).unwrap_or_default()),
+        params: StepParams(dsl::os_pack::json::from_json_str(get("params")).unwrap_or_default()),
         x: node.position.x,
         y: node.position.y,
-        slot: serde_json::from_str::<Option<SlotRef>>(get("slot")).unwrap_or(None),
+        slot: dsl::os_pack::json::from_json_str::<Option<SlotRef>>(get("slot")).unwrap_or(None),
         collapsed: get("collapsed").parse().unwrap_or(false),
     }
 }
@@ -218,7 +232,7 @@ pub fn working_from_sequence_content_snapshot(content: &SemioFlowSnapshot) -> (V
 pub fn sequence_content_child_handle(steps: &[SequenceStep], edges: &[SequenceEdge]) -> SequenceContentChild {
     use std::hash::{Hash, Hasher};
     let snapshot = sequence_content_snapshot_from_working(steps, edges);
-    let content_json = serde_json::to_string(&snapshot).unwrap_or_default();
+    let content_json = dsl::os_pack::json::to_json_string(&snapshot);
     let mut hasher = std::collections::hash_map::DefaultHasher::new();
     content_json.hash(&mut hasher);
     let content_hash = hasher.finish();

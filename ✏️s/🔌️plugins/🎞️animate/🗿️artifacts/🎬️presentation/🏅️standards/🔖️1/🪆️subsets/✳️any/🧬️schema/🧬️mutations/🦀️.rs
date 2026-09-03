@@ -256,12 +256,11 @@ pub fn inverse_presentation_mutation(snapshot: &PresentationSnapshot, mutation: 
 
 /// 📥️ Decodes this facet's own externally-tagged (`{"CreateTile": { … }}`) JSON projection — the
 /// shape the `mutate-presentation-1` case's `Examples` rows carry — into a real [`PresentationMutation`]. A
-/// thin `serde_json` wrapper (already a direct dependency of this crate, used behind this interface
-/// per CLAUDE.md's "external libraries behind an interface" rule, never a new one), so the test
-/// adapter reads the committed feature row instead of re-declaring it as a Rust literal beside it.
+/// thin first-party `dsl::os_pack::json` wrapper, so the test adapter reads the committed feature row
+/// instead of re-declaring it as a Rust literal beside it.
 pub fn decode_presentation_mutation_json(text: &str) -> Result<PresentationMutation, String> {
-    let json: serde_json::Value = serde_json::from_str(text).map_err(|error| error.to_string())?;
-    let value: dsl::DslValue = json.into();
+    let json = dsl::os_pack::json::parse(text).map_err(|error| error.to_string())?;
+    let value = dsl::os_pack::json::to_dsl_value(&json);
     dsl::FromValue::from_value(value).map_err(|error| error.to_string())
 }
 
@@ -274,8 +273,13 @@ pub fn decode_presentation_mutation_json(text: &str) -> Result<PresentationMutat
 /// standard library does not promise. `animation` carries no content at all today.
 pub fn encode_presentation_projection_json(snapshot: &PresentationSnapshot) -> String {
     let (source, tiles) = crate::artifacts::presentation::presentation_working_scene(snapshot);
-    let source_json: serde_json::Value = dsl::ToValue::to_value(&source).into();
-    let tiles_json: serde_json::Value = dsl::ToValue::to_value(&tiles).into();
-    serde_json::json!({ "schema": snapshot.schema, "source": source_json, "tiles": tiles_json }).to_string()
+    let source_json = dsl::os_pack::json::from_dsl_value(&dsl::ToValue::to_value(&source));
+    let tiles_json = dsl::os_pack::json::from_dsl_value(&dsl::ToValue::to_value(&tiles));
+    let value = dsl::os_pack::json::object([
+        ("schema".to_string(), dsl::os_pack::json::Value::from(snapshot.schema.clone())),
+        ("source".to_string(), source_json),
+        ("tiles".to_string(), tiles_json),
+    ]);
+    dsl::os_pack::json::to_string(&value)
 }
 //#endregion 🔖️Apply

@@ -20,7 +20,7 @@ from the format's own committed specification:
 * the pack body is the committed protocol `…/📸️snapshot/💾️binary/📡️.protocol.semio` and its
   Kaitai mirror, which declare `format` and the varint-length-prefixed `schema` and then stop at one
   opaque `payload` chain by their own admission. That layer was DERIVED from the committed
-  `✳️any/📚️examples/🖍️sketch` bytes against their readable DSL twin — which between them exhibit
+  `✳️base/📚️examples/🖍️sketch` bytes against their readable DSL twin — which between them exhibit
   every node tag and every segment tag, including the arc — and the derivation is pinned by
   re-encoding that committed file byte for byte, which a misreading could not do;
 * the seventeen verbs, their argument lists and their JSON wire form are the committed grammar

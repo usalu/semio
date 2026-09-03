@@ -1,6 +1,5 @@
 //! 🏷️ DAG mutation — `RenameNode`: changes a node's identity key (its `id`), cascading to every
 //! edge endpoint string that referenced it (`"<id>@<port>"`).
-use serde::{Deserialize, Serialize};
 use crate::artifacts::dag::diff::DagDiff;
 use crate::artifacts::dag::mutations::DagMutation;
 use crate::artifacts::dag::DagSnapshot;
@@ -8,9 +7,10 @@ use crate::artifacts::dag::DagSnapshot;
 //#region 🔖️Mutation
 /// 🏷️ `rename-node` payload — the node's `id` is its identity field (its separate `name` display
 /// field has its own `change-node-name` mutation).
-#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase")]
-#[serde(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct RenameNode {
     pub id: String,
     pub new_id: String,

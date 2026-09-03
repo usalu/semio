@@ -27,6 +27,30 @@
       },
       "productionReachable": false,
       "networkDuringExecution": false
+    },
+    {
+      "id": "openpyxl-xlsx-ecma-376-strict-mutate-reader",
+      "kind": "third-party-library",
+      "ecosystem": "python",
+      "package": "openpyxl",
+      "version": "3.1.5",
+      "engine": {
+        "family": "openpyxl",
+        "implementation": "openpyxl OOXML SpreadsheetML reader/writer",
+        "version": "3.1.5"
+      },
+      "capabilities": [
+        "xlsx-ecma-376-strict-mutate"
+      ],
+      "license": "MIT",
+      "testOnly": true,
+      "productionReachable": false,
+      "networkDuringExecution": false,
+      "homepage": "https://openpyxl.readthedocs.io",
+      "rationale": "📖️ A READER, registered separately from this file's existing `cross-semio-implementation` entry, which COMPUTES what a mutation should produce from this repository's own reading of the spec and therefore cannot discharge this requirement — both halves would descend from one reading of it. openpyxl 3.1.5's `load_workbook` opens the real OPC package and its underlying `openpyxl.xml` XML layer exposes each part's parsed root element, witnessing this subset's conformance-class axes (main SpreadsheetML namespace, relationship base, `conformance=\"strict\"`) the same way the format's document-level entry witnesses cell content. Verified against this subset's own committed `shared://📕️reuse-marketplaces.xlsx`.",
+      "comparisonProfiles": [
+        "semantic-ooxml-xlsx-strict-v1"
+      ]
     }
   ],
   "mutationCatalogs": [
@@ -81,7 +105,8 @@
           "oracleRequirements": [
             {
               "capability": "xlsx-ecma-376-strict-mutate",
-              "qualifyingKind": "third-party-library"
+              "qualifyingKind": "third-party-library",
+              "oracle": "openpyxl-xlsx-ecma-376-strict-mutate-reader"
             }
           ]
         },
@@ -100,7 +125,8 @@
           "oracleRequirements": [
             {
               "capability": "xlsx-ecma-376-strict-mutate",
-              "qualifyingKind": "third-party-library"
+              "qualifyingKind": "third-party-library",
+              "oracle": "openpyxl-xlsx-ecma-376-strict-mutate-reader"
             }
           ]
         },
@@ -119,7 +145,8 @@
           "oracleRequirements": [
             {
               "capability": "xlsx-ecma-376-strict-mutate",
-              "qualifyingKind": "third-party-library"
+              "qualifyingKind": "third-party-library",
+              "oracle": "openpyxl-xlsx-ecma-376-strict-mutate-reader"
             }
           ]
         },
@@ -138,7 +165,8 @@
           "oracleRequirements": [
             {
               "capability": "xlsx-ecma-376-strict-mutate",
-              "qualifyingKind": "third-party-library"
+              "qualifyingKind": "third-party-library",
+              "oracle": "openpyxl-xlsx-ecma-376-strict-mutate-reader"
             }
           ]
         },
@@ -157,7 +185,8 @@
           "oracleRequirements": [
             {
               "capability": "xlsx-ecma-376-strict-mutate",
-              "qualifyingKind": "third-party-library"
+              "qualifyingKind": "third-party-library",
+              "oracle": "openpyxl-xlsx-ecma-376-strict-mutate-reader"
             }
           ]
         },
@@ -176,7 +205,8 @@
           "oracleRequirements": [
             {
               "capability": "xlsx-ecma-376-strict-mutate",
-              "qualifyingKind": "third-party-library"
+              "qualifyingKind": "third-party-library",
+              "oracle": "openpyxl-xlsx-ecma-376-strict-mutate-reader"
             }
           ]
         },
@@ -195,7 +225,8 @@
           "oracleRequirements": [
             {
               "capability": "xlsx-ecma-376-strict-mutate",
-              "qualifyingKind": "third-party-library"
+              "qualifyingKind": "third-party-library",
+              "oracle": "openpyxl-xlsx-ecma-376-strict-mutate-reader"
             }
           ]
         },
@@ -214,11 +245,366 @@
           "oracleRequirements": [
             {
               "capability": "xlsx-ecma-376-strict-mutate",
-              "qualifyingKind": "third-party-library"
+              "qualifyingKind": "third-party-library",
+              "oracle": "openpyxl-xlsx-ecma-376-strict-mutate-reader"
             }
           ]
         }
       ]
+    }
+  ],
+  "fixtureManifests": [
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "set-snapshot-applied",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.xlsx",
+        "standard": "ecma-376",
+        "subset": "strict"
+      },
+      "mutation": "set-snapshot",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before-xlsx",
+          "path": "../🧫️fixtures/set-snapshot-applied/before.xlsx",
+          "mediaType": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+          "sha256": "sha256:e9d36125478496457a721f2b6e072b53c2ec134ca8cb29eb33b073e578d0339e",
+          "bytes": 4823
+        },
+        {
+          "role": "expected-after-xlsx",
+          "path": "../🧫️fixtures/set-snapshot-applied/after.xlsx",
+          "mediaType": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+          "sha256": "sha256:cd07b253ec928b6568d0cda5cad15e8e71f106bf2d90fba5552df63fea62da8c",
+          "bytes": 5256
+        }
+      ],
+      "provenance": {
+        "source": "generated",
+        "license": "MIT (openpyxl)",
+        "attribution": "Written by openpyxl 3.1.5's own Workbook.save()",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "exact-bytes-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "Whole-workbook snapshot replace: an unrelated valid workbook (different cell content, an extra sheet) substituted wholesale.",
+      "generator": {
+        "oracle": "openpyxl-xlsx-ecma-376-strict-mutate-reader",
+        "packageVersion": "3.1.5",
+        "engineFamily": "openpyxl",
+        "engineVersion": "3.1.5",
+        "command": "uv run python3 🔨️f2-gen-xlsx-structural-fixtures.py (openpyxl Workbook object model + .save())",
+        "platform": "darwin-arm64"
+      }
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "set-conformance-attribute-applied",
+      "class": "handcrafted",
+      "target": {
+        "artifact": "s.stdio.xlsx",
+        "standard": "ecma-376",
+        "subset": "strict"
+      },
+      "mutation": "set-conformance-attribute",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before-xlsx",
+          "path": "../🧫️fixtures/set-conformance-attribute-applied/before.xlsx",
+          "mediaType": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+          "sha256": "sha256:e9d36125478496457a721f2b6e072b53c2ec134ca8cb29eb33b073e578d0339e",
+          "bytes": 4823
+        },
+        {
+          "role": "expected-after-xlsx",
+          "path": "../🧫️fixtures/set-conformance-attribute-applied/after.xlsx",
+          "mediaType": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+          "sha256": "sha256:9203b5355a8bff39cb45b7cf15a9f7d53c1f61a506e124f622ab2cdf96ac35cd",
+          "bytes": 4836
+        }
+      ],
+      "provenance": {
+        "source": "authored",
+        "license": "n/a (handcrafted zip/XML patch of an MIT openpyxl base package)",
+        "attribution": "A genuine openpyxl 3.1.5 package hand-patched at the OOXML structural level (see notes); the patched xl/workbook.xml is re-parsed with lxml to confirm well-formedness and the archive's own zip integrity is re-checked before commit",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "exact-bytes-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "The root <workbook>'s conformance attribute set, absent -> \"strict\"."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "remove-conformance-attribute-applied",
+      "class": "handcrafted",
+      "target": {
+        "artifact": "s.stdio.xlsx",
+        "standard": "ecma-376",
+        "subset": "strict"
+      },
+      "mutation": "remove-conformance-attribute",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before-xlsx",
+          "path": "../🧫️fixtures/remove-conformance-attribute-applied/before.xlsx",
+          "mediaType": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+          "sha256": "sha256:9203b5355a8bff39cb45b7cf15a9f7d53c1f61a506e124f622ab2cdf96ac35cd",
+          "bytes": 4836
+        },
+        {
+          "role": "expected-after-xlsx",
+          "path": "../🧫️fixtures/remove-conformance-attribute-applied/after.xlsx",
+          "mediaType": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+          "sha256": "sha256:e9d36125478496457a721f2b6e072b53c2ec134ca8cb29eb33b073e578d0339e",
+          "bytes": 4823
+        }
+      ],
+      "provenance": {
+        "source": "authored",
+        "license": "n/a (handcrafted zip/XML patch of an MIT openpyxl base package)",
+        "attribution": "A genuine openpyxl 3.1.5 package hand-patched at the OOXML structural level (see notes); the patched xl/workbook.xml is re-parsed with lxml to confirm well-formedness and the archive's own zip integrity is re-checked before commit",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "exact-bytes-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "The root <workbook>'s conformance attribute removed, \"strict\" -> absent."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "set-main-namespace-applied",
+      "class": "handcrafted",
+      "target": {
+        "artifact": "s.stdio.xlsx",
+        "standard": "ecma-376",
+        "subset": "strict"
+      },
+      "mutation": "set-main-namespace",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before-xlsx",
+          "path": "../🧫️fixtures/set-main-namespace-applied/before.xlsx",
+          "mediaType": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+          "sha256": "sha256:e9d36125478496457a721f2b6e072b53c2ec134ca8cb29eb33b073e578d0339e",
+          "bytes": 4823
+        },
+        {
+          "role": "expected-after-xlsx",
+          "path": "../🧫️fixtures/set-main-namespace-applied/after.xlsx",
+          "mediaType": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+          "sha256": "sha256:f5ade382487eee9d660f1bc9f668911e2b5509236badd3f8424c8df86cd3d5be",
+          "bytes": 4832
+        }
+      ],
+      "provenance": {
+        "source": "authored",
+        "license": "n/a (handcrafted zip/XML patch of an MIT openpyxl base package)",
+        "attribution": "A genuine openpyxl 3.1.5 package hand-patched at the OOXML structural level (see notes); the patched xl/workbook.xml is re-parsed with lxml to confirm well-formedness and the archive's own zip integrity is re-checked before commit",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "exact-bytes-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "The root <workbook>'s default xmlns namespace URI changed, Transitional (http://schemas.openxmlformats.org/spreadsheetml/2006/main) -> Strict (http://purl.oclc.org/ooxml/spreadsheetml/main)."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "set-relationships-namespace-applied",
+      "class": "handcrafted",
+      "target": {
+        "artifact": "s.stdio.xlsx",
+        "standard": "ecma-376",
+        "subset": "strict"
+      },
+      "mutation": "set-relationships-namespace",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before-xlsx",
+          "path": "../🧫️fixtures/set-relationships-namespace-applied/before.xlsx",
+          "mediaType": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+          "sha256": "sha256:e9d36125478496457a721f2b6e072b53c2ec134ca8cb29eb33b073e578d0339e",
+          "bytes": 4823
+        },
+        {
+          "role": "expected-after-xlsx",
+          "path": "../🧫️fixtures/set-relationships-namespace-applied/after.xlsx",
+          "mediaType": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+          "sha256": "sha256:d7d0ce9e003b7668f7c4fcc144348a76423bd3119d236ac90d7d7a8ab23696ca",
+          "bytes": 4832
+        }
+      ],
+      "provenance": {
+        "source": "authored",
+        "license": "n/a (handcrafted zip/XML patch of an MIT openpyxl base package)",
+        "attribution": "A genuine openpyxl 3.1.5 package hand-patched at the OOXML structural level (see notes); the patched xl/workbook.xml is re-parsed with lxml to confirm well-formedness and the archive's own zip integrity is re-checked before commit",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "exact-bytes-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "The <sheet> element's own local xmlns:r relationships namespace URI changed, Transitional (http://schemas.openxmlformats.org/officeDocument/2006/relationships) -> Strict (http://purl.oclc.org/ooxml/officeDocument/relationships)."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "set-worksheet-content-type-applied",
+      "class": "handcrafted",
+      "target": {
+        "artifact": "s.stdio.xlsx",
+        "standard": "ecma-376",
+        "subset": "strict"
+      },
+      "mutation": "set-worksheet-content-type",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before-xlsx",
+          "path": "../🧫️fixtures/set-worksheet-content-type-applied/before.xlsx",
+          "mediaType": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+          "sha256": "sha256:e9d36125478496457a721f2b6e072b53c2ec134ca8cb29eb33b073e578d0339e",
+          "bytes": 4823
+        },
+        {
+          "role": "expected-after-xlsx",
+          "path": "../🧫️fixtures/set-worksheet-content-type-applied/after.xlsx",
+          "mediaType": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+          "sha256": "sha256:4ef7b219af1e0ab56cdc69e9f3535f1a617e4eac74addd0e3b6a0988fabd757d",
+          "bytes": 4825
+        }
+      ],
+      "provenance": {
+        "source": "authored",
+        "license": "n/a (handcrafted zip/XML patch of an MIT openpyxl base package)",
+        "attribution": "A genuine openpyxl 3.1.5 package hand-patched at the OOXML structural level (see notes); the patched xl/workbook.xml is re-parsed with lxml to confirm well-formedness and the archive's own zip integrity is re-checked before commit",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "exact-bytes-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "[Content_Types].xml's own Override for /xl/worksheets/sheet1.xml changed to a different real OOXML content-type value (application/vnd.openxmlformats-officedocument.spreadsheetml.chartsheet+xml), demonstrating the declared-content-type mutation this subset's vocabulary names -- not asserted to make the part a functional chartsheet."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "insert-vml-part-applied",
+      "class": "handcrafted",
+      "target": {
+        "artifact": "s.stdio.xlsx",
+        "standard": "ecma-376",
+        "subset": "strict"
+      },
+      "mutation": "insert-vml-part",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before-xlsx",
+          "path": "../🧫️fixtures/insert-vml-part-applied/before.xlsx",
+          "mediaType": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+          "sha256": "sha256:e9d36125478496457a721f2b6e072b53c2ec134ca8cb29eb33b073e578d0339e",
+          "bytes": 4823
+        },
+        {
+          "role": "expected-after-xlsx",
+          "path": "../🧫️fixtures/insert-vml-part-applied/after.xlsx",
+          "mediaType": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+          "sha256": "sha256:df32ee4304affb4e72378527e266ebbf169a088b577a76b01660ca7ae61c3f6c",
+          "bytes": 5115
+        }
+      ],
+      "provenance": {
+        "source": "authored",
+        "license": "n/a (handcrafted zip/XML patch of an MIT openpyxl base package)",
+        "attribution": "A genuine openpyxl 3.1.5 package hand-patched at the OOXML structural level (see notes); the patched xl/workbook.xml is re-parsed with lxml to confirm well-formedness and the archive's own zip integrity is re-checked before commit",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "exact-bytes-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "A legacy VML drawing part (xl/vmlDrawing1.vml) added to the package, with its Content_Types.xml Default and a workbook.xml.rels relationship wiring it in."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "remove-vml-part-applied",
+      "class": "handcrafted",
+      "target": {
+        "artifact": "s.stdio.xlsx",
+        "standard": "ecma-376",
+        "subset": "strict"
+      },
+      "mutation": "remove-vml-part",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before-xlsx",
+          "path": "../🧫️fixtures/remove-vml-part-applied/before.xlsx",
+          "mediaType": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+          "sha256": "sha256:df32ee4304affb4e72378527e266ebbf169a088b577a76b01660ca7ae61c3f6c",
+          "bytes": 5115
+        },
+        {
+          "role": "expected-after-xlsx",
+          "path": "../🧫️fixtures/remove-vml-part-applied/after.xlsx",
+          "mediaType": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+          "sha256": "sha256:8b42d74d51c944d3264641e9aa041a3ff80abf5fe6e02dcd8fb31348c05967d3",
+          "bytes": 4823
+        }
+      ],
+      "provenance": {
+        "source": "authored",
+        "license": "n/a (handcrafted zip/XML patch of an MIT openpyxl base package)",
+        "attribution": "A genuine openpyxl 3.1.5 package hand-patched at the OOXML structural level (see notes); the patched xl/workbook.xml is re-parsed with lxml to confirm well-formedness and the archive's own zip integrity is re-checked before commit",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "exact-bytes-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "The VML drawing part, its content-type default and its relationship removed, inverse of insert-vml-part."
     }
   ]
 }

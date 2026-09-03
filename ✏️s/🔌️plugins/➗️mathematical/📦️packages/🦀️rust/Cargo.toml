@@ -16,7 +16,7 @@ role = "plugin"
 
 [[package.metadata.semio.playground]]
 variant = "mathematical"
-app = "s.mathematical.mathematical@1/*#editor"
+app = "s.mathematical.equation@1/*#editor"
 aliases = ["mathematical", "math"]
 ports = { react = 6084, wgpu = 6184 }
 

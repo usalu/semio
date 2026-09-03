@@ -5,7 +5,7 @@ import "s_stdio_xml/snapshot.proto";
 
 // 🌳 svg embeds xml's NODE model directly (per the plan's spec-mandated-reuse rule) but declares
 // its own DIFF messages below -- `semio.s_stdio_xml.snapshot.XmlNode`/`XmlDeclaration` are the
-// real, canonical messages (see 📰xml's own `📸️snapshot/🛰️.proto`), never redefined here.
+// real, canonical messages (see 📰️xml's own `📸️snapshot/🛰️.proto`), never redefined here.
 
 message SvgDiff {
   optional NullableXmlDeclaration declaration = 1;

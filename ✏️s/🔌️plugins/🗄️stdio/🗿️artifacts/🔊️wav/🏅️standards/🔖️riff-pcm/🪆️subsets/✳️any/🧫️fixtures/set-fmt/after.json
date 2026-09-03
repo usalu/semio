@@ -1,0 +1,21 @@
+{
+  "schema": "stdio.wav",
+  "fmt": {
+    "audioFormat": 1,
+    "channels": 2,
+    "sampleRate": 48000,
+    "byteRate": 192000,
+    "blockAlign": 4,
+    "bitsPerSample": 16
+  },
+  "data": {
+    "kind": "pcm16",
+    "value": [
+      1,
+      -1,
+      100,
+      -100
+    ]
+  },
+  "otherChunks": []
+}

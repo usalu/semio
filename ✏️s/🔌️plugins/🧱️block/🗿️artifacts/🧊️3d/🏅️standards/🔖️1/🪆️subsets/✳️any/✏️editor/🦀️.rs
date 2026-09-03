@@ -34,7 +34,7 @@ use semio_framework_plugin::{
 // `ArtifactEditor`/`Editor` above (closed by W0-F). Mirrors the sibling `👁️viewer`'s own gap note.
 use semio_framework::{DomainTopology, GranularityDefinition, HierarchyProvider, HoverSpec, InteractionDefinition, InteractionRef, InteractionTopology, MergeMode, SelectionMethod, SelectionMode, SelectionSpec, TopologyNode};
 use semio_framework_plugin::app::{Dialect, InteractionView};
-use serde_json::Value;
+use dsl::os_pack::json::Value;
 use std::collections::{BTreeMap, HashMap};
 use store::EngineHandles;
 
@@ -709,7 +709,7 @@ mod tests {
         match media.payload {
             MediaPayload::Structured { schema, json } => {
                 assert_eq!(schema, "kit.catalog");
-                let value: Value = serde_json::from_str(&json).expect("valid json");
+                let value: serde_json::Value = serde_json::from_str(&json).expect("valid json");
                 assert_eq!(value["objectKinds"][0]["id"], "Capsule J");
             }
             other => panic!("expected Structured payload, got {other:?}"),

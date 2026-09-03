@@ -1,0 +1,50 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "semio://plugin-catalog/verification-plan/v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "nodes", "expectedOrder", "parentFailure"],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "nodes": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 256,
+      "items": { "$ref": "#/$defs/node" }
+    },
+    "expectedOrder": {
+      "type": "array",
+      "items": { "type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$" }
+    },
+    "parentFailure": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["failedPluginId", "statuses", "publication"],
+      "properties": {
+        "failedPluginId": { "type": "string" },
+        "statuses": {
+          "type": "object",
+          "additionalProperties": { "enum": ["verified", "failed", "blocked", "cancelled"] }
+        },
+        "publication": { "const": "withheld" }
+      }
+    }
+  },
+  "$defs": {
+    "node": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["pluginId", "role", "dependsOn"],
+      "properties": {
+        "pluginId": { "type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$" },
+        "role": { "enum": ["plugin", "extension"] },
+        "dependsOn": {
+          "type": "array",
+          "maxItems": 128,
+          "uniqueItems": true,
+          "items": { "type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$" }
+        }
+      }
+    }
+  }
+}

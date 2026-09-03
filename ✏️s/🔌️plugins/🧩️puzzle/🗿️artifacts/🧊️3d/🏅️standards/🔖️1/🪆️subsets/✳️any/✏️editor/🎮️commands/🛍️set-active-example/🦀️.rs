@@ -2,7 +2,7 @@
 
 use crate::editor::puzzle3d::config::Puzzle3dRuntime;
 use crate::editor::puzzle3d::{default_fixture, empty_fixture, nakagin_fixture, resolve_puzzle3d_attractions, Puzzle3dActionCtx, PUZZLE3D_EXAMPLE_CONCRETE_FOREST, PUZZLE3D_EXAMPLE_NAKAGIN};
-use serde_json::Value;
+use dsl::os_pack::json::Value;
 
 pub fn set_active_example(ctx: &mut Puzzle3dActionCtx<'_>, args: Option<&Value>) {
     let example_id = args.and_then(|value| value.get("exampleId")).and_then(|value| value.as_str()).unwrap_or("");

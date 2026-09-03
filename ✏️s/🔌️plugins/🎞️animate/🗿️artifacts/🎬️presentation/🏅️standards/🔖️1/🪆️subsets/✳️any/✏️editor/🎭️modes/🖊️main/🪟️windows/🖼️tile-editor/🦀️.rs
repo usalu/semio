@@ -71,8 +71,7 @@ fn deck_to_canvas_layers(deck: &PresentationSnapshot) -> String {
         let (x, y, width, height) = frame_to_canvas(&tile.crop, SCALE);
         layers.push(TileCanvasLayer { id: tile.id.clone(), kind: "tile".into(), name: tile.name.clone(), x, y, width, height, data_url: None });
     }
-    let value: serde_json::Value = dsl::ToValue::to_value(&layers).into();
-    value.to_string()
+    dsl::os_pack::json::to_json_string(&layers)
 }
 //#endregion 🔖️CanvasLayers
 
@@ -90,7 +89,7 @@ mod tests {
     use crate::editor::animate::testkit::{presentation_app, render as render_body};
     use crate::editor::animate::PresentationCommand;
     use semio_framework_plugin::testkit::meta;
-    use serde_json::Value;
+    use dsl::os_pack::json::Value;
 
     #[semio_framework_async_macros::async_test]
     async fn renders_canvas_2d_scene() {
@@ -113,7 +112,7 @@ mod tests {
         app.dispatch_typed(PresentationCommand::SeedGrid(crate::editor::animate::commands::seed_grid::SeedGrid { rows: 1, columns: 2 }), &meta("local")).await.expect("seed grid");
         let deck = app.snapshot().await.expect("projection");
         let layers_json = deck_to_canvas_layers(&deck);
-        let layers: Vec<Value> = serde_json::from_str(&layers_json).unwrap();
+        let layers: Vec<Value> = dsl::os_pack::json::parse(&layers_json).unwrap().as_array().cloned().unwrap_or_default();
         let (source, _) = crate::artifacts::presentation::presentation_working_scene(&deck);
         assert!(!source.src.trim().is_empty());
         let source_layer = layers.first().expect("source layer is first (renders behind tiles)");
@@ -133,7 +132,7 @@ mod tests {
         source.src = String::new();
         let deck = crate::artifacts::presentation::presentation_snapshot_with_tiles(&source, &tiles);
         let layers_json = deck_to_canvas_layers(&deck);
-        let layers: Vec<Value> = serde_json::from_str(&layers_json).unwrap();
+        let layers: Vec<Value> = dsl::os_pack::json::parse(&layers_json).unwrap().as_array().cloned().unwrap_or_default();
         let source_layer = layers.first().expect("source layer presentation");
         assert_eq!(source_layer.get("kind").and_then(|v| v.as_str()), Some("source"));
         assert!(source_layer.get("dataUrl").is_none() || source_layer.get("dataUrl") == Some(&Value::Null));
@@ -146,7 +145,7 @@ mod tests {
         source.kind = "pdf".into();
         let deck = crate::artifacts::presentation::presentation_snapshot_with_tiles(&source, &tiles);
         let layers_json = deck_to_canvas_layers(&deck);
-        let layers: Vec<Value> = serde_json::from_str(&layers_json).unwrap();
+        let layers: Vec<Value> = dsl::os_pack::json::parse(&layers_json).unwrap().as_array().cloned().unwrap_or_default();
         let source_layer = layers.first().expect("source layer presentation");
         assert_eq!(source_layer.get("kind").and_then(|v| v.as_str()), Some("source"));
     }

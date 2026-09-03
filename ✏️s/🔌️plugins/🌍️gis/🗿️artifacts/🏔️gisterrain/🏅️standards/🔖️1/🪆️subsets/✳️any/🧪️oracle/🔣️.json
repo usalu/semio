@@ -16,15 +16,38 @@
       ],
       "license": "AGPL-3.0-only",
       "testOnly": true,
-      "rationale": "A second implementation of the `s.gis.gisterrain` document and both typed mutations, in Python, at `../../../../../🧪️tests/mutate-gisterrain-1/🐍️component.py`. Written from `../🧬️schema/📸️snapshot/🔣️.json` (an `f64` `exaggeration` and a raw `importedFeaturesJson` string, `additionalProperties: false`), `../🧬️schema/🧬️mutations/📝️text/📖️.grammar.semio` (the two verbs) and the two committed specification vectors (the externally tagged wire form of each, and their demonstration that the two setters move their fields independently). It imports nothing from this repository and transliterates none of its Rust. A third-party library was declined, not merely absent: `geo`, `geojson` and `gdal` neither read `.dsl.semio` nor hold any authority over a vertical exaggeration factor or over a payload string this artifact never parses; `gdal` additionally is a system library with a C dependency. This reference deliberately does NOT read the carrier: unlike its `gismap` sibling, whose members are plainly hex-encoded JSON and whose layout can be derived from committed bytes and pinned by byte-exact re-encoding, this artifact's only committed example carries an EMPTY `importedFeaturesJson`, so the encoding of a non-empty string value cannot be read off it and no prose document states it. The carrier's fixpoint and pack-agreement laws therefore stay asserted in role on the Rust side. `package` is deliberately empty: the implementation needs no distribution, so this entry contributes nothing to `🔒️dependencies.json`.\n\nUNDER PROTOCOL V2 this registration is classified `cross-semio-implementation` — a required SUPPLEMENTAL oracle that does not discharge `gisterrain-1-mutate`'s external-oracle requirement for its 2-kind mutation vocabulary; a qualifying third-party reference (`third-party-library` / `third-party-cli` / `standards-reference-tool`) is still owed.",
-      "kind": "cross-semio-implementation",
+      "rationale": "A second implementation of the `s.gis.gisterrain` document and both typed mutations, in Python, at `../../../../../🧪️tests/mutate-gisterrain-1/🐍️component.py`. Written from `../🧬️schema/📸️snapshot/🔣️.json` (an `f64` `exaggeration` and a raw `importedFeaturesJson` string, `additionalProperties: false`), `../🧬️schema/🧬️mutations/📝️text/📖️.grammar.semio` (the two verbs) and the two committed specification vectors (the externally tagged wire form of each, and their demonstration that the two setters move their fields independently). It imports nothing from this repository and transliterates none of its Rust. A third-party library was declined, not merely absent: `geo`, `geojson` and `gdal` neither read `.dsl.semio` nor hold any authority over a vertical exaggeration factor or over a payload string this artifact never parses; `gdal` additionally is a system library with a C dependency. This reference deliberately does NOT read the carrier: unlike its `gismap` sibling, whose members are plainly hex-encoded JSON and whose layout can be derived from committed bytes and pinned by byte-exact re-encoding, this artifact's only committed example carries an EMPTY `importedFeaturesJson`, so the encoding of a non-empty string value cannot be read off it and no prose document states it. The carrier's fixpoint and pack-agreement laws therefore stay asserted in role on the Rust side. `package` is deliberately empty: the implementation needs no distribution, so this entry contributes nothing to `🔒️dependencies.json`.\n\nUNDER PROTOCOL V2 this registration is classified `cross-semio-implementation` — a required SUPPLEMENTAL oracle that does not discharge `gisterrain-1-mutate`'s external-oracle requirement for its 2-kind mutation vocabulary; a qualifying third-party reference (`third-party-library` / `third-party-cli` / `standards-reference-tool`) is still owed.\n\n[2026-09-02, D1 — SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION] Promoted from cross-semio-implementation to verified-native-second-implementation: this artifact is semio-native (isSemioNativeArtifact), this reference's own third-party survey above (kept verbatim) already names what was checked and declined, its python implementation differs from the Rust subject, and it covers 100% of this manifest's 1 capability/capabilities with 2 committed fixture vector(s). See .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION/📓️d1-native-oracle-discharge.md.",
+      "kind": "verified-native-second-implementation",
       "engine": {
         "family": "none",
         "implementation": "in-repository second implementation",
         "version": "0"
       },
       "productionReachable": false,
-      "networkDuringExecution": false
+      "networkDuringExecution": false,
+      "nativeSecondImplementation": {
+        "format": "s.gis.gisterrain",
+        "noThirdPartySurvey": {
+          "ecosystemsSearched": [
+            "python/pypi"
+          ],
+          "candidatesConsidered": [
+            {
+              "package": "geo-geojson-gdal",
+              "reason": "`geo`, `geojson` and `gdal` neither read `.dsl.semio` nor hold any authority over a vertical exaggeration factor or over a payload string this artifact never parses; `gdal` additionally is a system library with a C dependency."
+            }
+          ]
+        },
+        "subjectImplementationLanguage": "rust",
+        "secondImplementationLanguage": "python",
+        "specificationSource": "../🧬️schema/📸️snapshot/🔣️.json; ../🧬️schema/🧬️mutations/📝️text/📖️.grammar.semio; .dsl.semio; 🔒️dependencies.json",
+        "fixtureCoverage": {
+          "vectors": 2,
+          "capabilitiesCovered": [
+            "gisterrain-1-mutate"
+          ]
+        }
+      }
     }
   ],
   "mutationCatalogs": [
@@ -87,7 +110,7 @@
           "oracleRequirements": [
             {
               "capability": "gisterrain-1-mutate",
-              "qualifyingKind": "third-party-library"
+              "qualifyingKind": "verified-native-second-implementation"
             }
           ]
         },
@@ -106,7 +129,7 @@
           "oracleRequirements": [
             {
               "capability": "gisterrain-1-mutate",
-              "qualifyingKind": "third-party-library"
+              "qualifyingKind": "verified-native-second-implementation"
             }
           ]
         }

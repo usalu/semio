@@ -1,7 +1,6 @@
 //! 📜️ Compile-time graph manifest kernel: schema, registry, and strict validation.
 
 use neural_engine::{Value, ValueType};
-use serde::{Deserialize, Deserializer, Serialize, Serializer};
 
 pub mod generated {
     include!("../🤖️generated/🦀️registry.rs");
@@ -17,31 +16,44 @@ include!("🦀️generated-value-bridge.rs");
 pub use crate::manifest::Manifest as GraphManifest;
 
 //#region ⚠️ Errors
-/// 🚨️ Compile-time `valueType` parsing failures.
-#[derive(Clone, Debug, PartialEq)]
-pub enum GraphManifestError {
-    /// 📦️ A single-key `valueType` object didn't carry a recognized `schema` key.
-    UnsupportedValueTypeObject(serde_json::Value),
-    /// 🔍️ A `valueType` value wasn't a string or a `{schema}` object.
-    UnsupportedValueType(serde_json::Value),
-}
-
-impl std::fmt::Display for GraphManifestError {
-    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            Self::UnsupportedValueTypeObject(value) => write!(formatter, "unsupported valueType object {value}"),
-            Self::UnsupportedValueType(value) => write!(formatter, "unsupported valueType {value}"),
-        }
+// 🌉️ `value_type_from_value` below is a `#[value(deserialize_with = "...")]` hook (RUNTIME-
+// DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS, 26/09/02 Phase 2) — the direct successor of
+// the old serde `deserialize_with = "deserialize_value_type"` hook (and its `GraphManifestError`/
+// `parse_value_type_value` helpers), NOT dead code: `ValueType`'s own native `dsl_core::FromValue`
+// impl decodes its internally-tagged `{"kind": "boolean"}` shape only, but every `*.manifest.json`
+// fixture (embedded verbatim as `${PREFIX}_MANIFEST_JSON` by `🤖️generated/🦀️*.rs`) spells
+// `valueType` as a bare string (`"boolean"`/`"text"`/...) or a `{"schema": "..."}` object — the
+// same gap the serde hook used to bridge. Confirmed by `cargo test -p semio-framework-graph`:
+// dropping this hook broke `nakagin_manifest_loads` et al. with `ValueError("nodeKinds.41.
+// properties.0.valueType.kind")` before this fix landed. The encode direction needs no matching
+// hook: `ValueType::to_value`'s native shape is self-consistent for `Manifest::to_value()`'s own
+// round trip (nothing needs it to reproduce the fixture text byte-for-byte) — the old
+// `serialize_value_type` hook was itself just a thin wrapper over the same native `to_value` call.
+fn value_type_from_value(value: dsl_core::DslValue) -> Result<ValueType, dsl_core::ValueError> {
+    if let Ok(value_type) = <ValueType as dsl_core::FromValue>::from_value(value.clone()) {
+        return Ok(value_type);
+    }
+    match &value {
+        dsl_core::DslValue::String(s) => Ok(match s.as_str() {
+            "boolean" | "bool" => ValueType::Boolean,
+            "integer" | "int" => ValueType::Integer,
+            "number" | "decimal" | "float" => ValueType::Decimal,
+            "text" | "string" => ValueType::Text,
+            "object" | "any" => ValueType::Any,
+            schema => ValueType::Schema(schema.to_string()),
+        }),
+        dsl_core::DslValue::Object(entries) if entries.len() == 1 => match entries.first() {
+            Some((key, dsl_core::DslValue::String(schema))) if key == "schema" => Ok(ValueType::Schema(schema.clone())),
+            _ => Err(dsl_core::ValueError::new(format!("unsupported valueType object {value:?}"))),
+        },
+        other => Err(dsl_core::ValueError::new(format!("unsupported valueType {other:?}"))),
     }
 }
-
-impl std::error::Error for GraphManifestError {}
 //#endregion ⚠️ Errors
 
 // #region 🔖️Property
 /// 📊️ Runtime property value for graph instances.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(untagged)]
+#[derive(Clone, Debug, Default, PartialEq)]
 pub enum PropertyValue {
     #[default]
     Null,
@@ -162,9 +174,10 @@ impl dsl_core::DslField for PropertyValue {
 /// distinct from `DslField`/`FieldValue` above, the text/binary DSL grammar's own trait, see that
 /// region's header note) for the identical reason `DslField` binds as `Shape::Value`: reuse the
 /// same recursive `property_value_to_dsl_value`/`dsl_value_to_property_value` walk rather than a
-/// second one. `#[serde(untagged)]` (kept, additive, on the derive above) has no `#[derive(ToValue,
-/// FromValue)]` equivalent — an untagged enum needs exactly this kind of hand-written structural
-/// match, per the fan-out playbook's "Not supported by the derive" list.
+/// second one. An untagged enum (this was `#[serde(untagged)]`, now serde-free — Phase 2,
+/// RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS 26/09/02) has no `#[derive(ToValue,
+/// FromValue)]` equivalent — it needs exactly this kind of hand-written structural match, per the
+/// fan-out playbook's "Not supported by the derive" list.
 impl dsl_core::ToValue for PropertyValue {
     fn to_value(&self) -> dsl_core::DslValue {
         property_value_to_dsl_value(self)
@@ -179,72 +192,24 @@ impl dsl_core::FromValue for PropertyValue {
 //#endregion 🔖️ToFromValue
 
 /// 🏷️ Compile-time property kind.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue)]
 #[value(rename_all = "camelCase")]
 pub enum PropertyKind {
     Data,
     Derived,
 }
 
-// 🚫️async: E1 pure computation consumed by serde's derive-generated `Deserialize::deserialize`
-// (a `deserialize_with` hook) — `Deserialize::deserialize` is an externally-declared trait method
-// and is sync, so the hook it calls synchronously must stay sync too. See R9.
-fn deserialize_value_type<'de, D>(deserializer: D) -> Result<ValueType, D::Error>
-where
-    D: Deserializer<'de>,
-{
-    let raw = serde_json::Value::deserialize(deserializer)?;
-    parse_value_type_value(&raw).map_err(serde::de::Error::custom)
-}
-
-// 🚫️async: E1 — `serialize_with` hook called synchronously from derive-generated `Serialize::serialize`. See R9.
-fn serialize_value_type<S>(value: &ValueType, serializer: S) -> Result<S::Ok, S::Error>
-where
-    S: Serializer,
-{
-    <ValueType as dsl_core::ToValue>::to_value(value).serialize(serializer)
-}
-
-// 🚫️async: E1 pure computation, no I/O, whose only consumer (`deserialize_value_type` above) is
-// itself sync-pinned by serde's external `Deserialize` trait. See R9.
-fn parse_value_type_value(raw: &serde_json::Value) -> Result<ValueType, GraphManifestError> {
-    if let Ok(vt) = <ValueType as dsl_core::FromValue>::from_value(dsl_core::DslValue::from(raw)) {
-        return Ok(vt);
-    }
-    match raw {
-        serde_json::Value::String(s) => Ok(match s.as_str() {
-            "boolean" | "bool" => ValueType::Boolean,
-            "integer" | "int" => ValueType::Integer,
-            "number" | "decimal" | "float" => ValueType::Decimal,
-            "text" | "string" => ValueType::Text,
-            "object" | "any" => ValueType::Any,
-            schema => ValueType::Schema(schema.into()),
-        }),
-        serde_json::Value::Object(map) if map.len() == 1 => {
-            if let Some(schema) = map.get("schema").and_then(|v| v.as_str()) {
-                return Ok(ValueType::Schema(schema.into()));
-            }
-            Err(GraphManifestError::UnsupportedValueTypeObject(raw.clone()))
-        }
-        other => Err(GraphManifestError::UnsupportedValueType(other.clone())),
-    }
-}
-
 /// 📋️ Property definition on a kind.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[value(rename_all = "camelCase")]
 pub struct PropertyDef {
     pub name: String,
     pub kind: PropertyKind,
-    #[serde(default, deserialize_with = "deserialize_value_type", serialize_with = "serialize_value_type")]
-    // 🌉️ No `with` clause needed: `ValueType` already implements `dsl_core::ToValue`/`FromValue`
-    // directly (the very impls `deserialize_value_type`/`serialize_value_type` call internally for
-    // the serde path above), so the derive's default per-field conversion is already equivalent.
-    #[value(default)]
+    // 🌉️ `deserialize_with` mirrors the old serde hook — see `value_type_from_value`'s own
+    // docstring above (this crate's `⚠️ Errors` region) for why it is still needed. The plain
+    // per-field `ToValue::to_value` stays for the encode direction (no `serialize_with`).
+    #[value(default, deserialize_with = "value_type_from_value")]
     pub value_type: ValueType,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub expr: Option<String>,
 }
@@ -277,16 +242,14 @@ pub type PropertyBag = std::collections::BTreeMap<String, PropertyValue>;
 
 // #region 🔖️Manifest
 /// 🔌️ Port direction on a node.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue)]
 #[value(rename_all = "camelCase")]
 pub enum PortDirection {
     In,
     Out,
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, Default, value_derive::ToValue, value_derive::FromValue)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Default, value_derive::ToValue, value_derive::FromValue)]
 #[value(rename_all = "camelCase")]
 pub enum PortModelAxis {
     #[default]
@@ -294,8 +257,7 @@ pub enum PortModelAxis {
     Normal,
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, Default, value_derive::ToValue, value_derive::FromValue)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Default, value_derive::ToValue, value_derive::FromValue)]
 #[value(rename_all = "camelCase")]
 pub enum DirectednessAxis {
     #[default]
@@ -303,38 +265,29 @@ pub enum DirectednessAxis {
     Undirected,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, Default, value_derive::ToValue, value_derive::FromValue)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, Default, value_derive::ToValue, value_derive::FromValue)]
 #[value(rename_all = "camelCase")]
 pub struct ManifestAxes {
-    #[serde(default)]
     #[value(default)]
     pub port_model: PortModelAxis,
-    #[serde(default)]
     #[value(default)]
     pub directedness: DirectednessAxis,
 }
 
 /// 🏷️ Kind row in a manifest family.
 ///
-/// 🌉️ Hand-written, not derived: `presentation: Option<serde_json::Value>` has no `ToValue`/
-/// `FromValue` impl for `serde_json::Value` (only the `DslValue <-> serde_json::Value` `From`
-/// bridges in `🌱️value/🦀️.rs` exist), so `#[derive(ToValue, FromValue)]` would fail to compile on
-/// that field. Every other field mirrors the derive's own per-field convention exactly.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+/// 🌉️ Hand-written, not derived: `#[derive(ToValue, FromValue)]` requires every field's type to
+/// carry the same rename convention as a per-field attribute, but `presentation` is already the
+/// schema-erased `DslValue` itself (arbitrary-shaped, no meaningful rename), so it is simpler to
+/// spell the whole impl by hand than to special-case one field's attribute.
+#[derive(Clone, Debug, PartialEq)]
 pub struct KindDef {
     pub id: String,
-    #[serde(default)]
     pub name: String,
-    #[serde(default)]
     pub properties: Vec<PropertyDef>,
-    #[serde(default)]
     pub ports: Vec<String>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub direction: Option<PortDirection>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub presentation: Option<serde_json::Value>,
+    pub presentation: Option<dsl_core::DslValue>,
 }
 
 impl dsl_core::ToValue for KindDef {
@@ -349,7 +302,7 @@ impl dsl_core::ToValue for KindDef {
             entries.push(("direction".to_string(), dsl_core::ToValue::to_value(&self.direction)));
         }
         if let Some(presentation) = &self.presentation {
-            entries.push(("presentation".to_string(), dsl_core::DslValue::from(presentation)));
+            entries.push(("presentation".to_string(), presentation.clone()));
         }
         dsl_core::DslValue::object(entries)
     }
@@ -373,7 +326,7 @@ impl dsl_core::FromValue for KindDef {
                 "properties" => properties = <Vec<PropertyDef> as dsl_core::FromValue>::from_value(entry).map_err(|e| e.under("properties"))?,
                 "ports" => ports = <Vec<String> as dsl_core::FromValue>::from_value(entry).map_err(|e| e.under("ports"))?,
                 "direction" => direction = Some(<PortDirection as dsl_core::FromValue>::from_value(entry).map_err(|e| e.under("direction"))?),
-                "presentation" => presentation = Some(serde_json::Value::from(&entry)),
+                "presentation" => presentation = Some(entry),
                 _ => {}
             }
         }
@@ -400,41 +353,27 @@ impl KindDef {
 
 /// 📜️ Compile-time schema for a graph.
 ///
-/// 🌉️ Hand-written, not derived: `edge_tips`/`kind_compatibility: Vec<serde_json::Value>` have no
-/// `ToValue`/`FromValue` for their element type — same reason as `KindDef` above.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+/// 🌉️ Hand-written, not derived — same reason as `KindDef` above: `edge_tips`/`kind_compatibility`
+/// are schema-erased `DslValue` trees, arbitrary-shaped, so a plain field-list derive buys nothing
+/// over spelling the impl directly.
+#[derive(Clone, Debug, PartialEq)]
 pub struct Manifest {
     pub schema: String,
     pub id: String,
-    #[serde(default)]
     pub name: String,
-    #[serde(default)]
     pub axes: ManifestAxes,
-    #[serde(default)]
     pub node_kinds: Vec<KindDef>,
-    #[serde(default)]
     pub edge_kinds: Vec<KindDef>,
-    #[serde(default)]
     pub port_kinds: Vec<KindDef>,
-    #[serde(default)]
     pub wire_kinds: Vec<KindDef>,
-    #[serde(default)]
     pub layer_kinds: Vec<KindDef>,
-    #[serde(default)]
     pub language_kinds: Vec<KindDef>,
-    #[serde(default)]
     pub surface_kinds: Vec<KindDef>,
-    #[serde(default)]
     pub window_kinds: Vec<KindDef>,
-    #[serde(default)]
     pub file_node_kinds: Vec<KindDef>,
-    #[serde(default)]
     pub descriptor_kinds: Vec<KindDef>,
-    #[serde(default)]
-    pub edge_tips: Vec<serde_json::Value>,
-    #[serde(default)]
-    pub kind_compatibility: Vec<serde_json::Value>,
+    pub edge_tips: Vec<dsl_core::DslValue>,
+    pub kind_compatibility: Vec<dsl_core::DslValue>,
 }
 
 impl dsl_core::ToValue for Manifest {
@@ -454,8 +393,8 @@ impl dsl_core::ToValue for Manifest {
             ("windowKinds".to_string(), dsl_core::ToValue::to_value(&self.window_kinds)),
             ("fileNodeKinds".to_string(), dsl_core::ToValue::to_value(&self.file_node_kinds)),
             ("descriptorKinds".to_string(), dsl_core::ToValue::to_value(&self.descriptor_kinds)),
-            ("edgeTips".to_string(), dsl_core::DslValue::Array(self.edge_tips.iter().map(dsl_core::DslValue::from).collect())),
-            ("kindCompatibility".to_string(), dsl_core::DslValue::Array(self.kind_compatibility.iter().map(dsl_core::DslValue::from).collect())),
+            ("edgeTips".to_string(), dsl_core::DslValue::Array(self.edge_tips.clone())),
+            ("kindCompatibility".to_string(), dsl_core::DslValue::Array(self.kind_compatibility.clone())),
         ])
     }
 }
@@ -501,13 +440,13 @@ impl dsl_core::FromValue for Manifest {
                     let dsl_core::DslValue::Array(items) = entry else {
                         return Err(dsl_core::ValueError::new("expected an array for edgeTips").under("edgeTips"));
                     };
-                    edge_tips = items.iter().map(serde_json::Value::from).collect();
+                    edge_tips = items;
                 }
                 "kindCompatibility" => {
                     let dsl_core::DslValue::Array(items) = entry else {
                         return Err(dsl_core::ValueError::new("expected an array for kindCompatibility").under("kindCompatibility"));
                     };
-                    kind_compatibility = items.iter().map(serde_json::Value::from).collect();
+                    kind_compatibility = items;
                 }
                 _ => {}
             }
@@ -581,51 +520,40 @@ impl Manifest {
 }
 
 /// 🔺️ Trinity-shaped manifest projection for jack/ram consumers.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[value(rename_all = "camelCase")]
 pub struct TrinityManifest {
-    #[serde(default)]
     #[value(default)]
     pub node_kinds: Vec<TrinityNodeKindDef>,
-    #[serde(default)]
     #[value(default)]
     pub edge_kinds: Vec<TrinityEdgeKindDef>,
-    #[serde(default)]
     #[value(default)]
     pub port_kinds: Vec<TrinityPortKindDef>,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[value(rename_all = "camelCase")]
 pub struct TrinityNodeKindDef {
     pub name: String,
-    #[serde(default)]
     #[value(default)]
     pub properties: Vec<PropertyDef>,
-    #[serde(default, rename = "portKinds")]
     #[value(default, rename = "portKinds")]
     pub port_kinds: Vec<String>,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[value(rename_all = "camelCase")]
 pub struct TrinityEdgeKindDef {
     pub name: String,
-    #[serde(default)]
     #[value(default)]
     pub properties: Vec<PropertyDef>,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[value(rename_all = "camelCase")]
 pub struct TrinityPortKindDef {
     pub name: String,
     pub direction: PortDirection,
-    #[serde(default)]
     #[value(default)]
     pub properties: Vec<PropertyDef>,
 }

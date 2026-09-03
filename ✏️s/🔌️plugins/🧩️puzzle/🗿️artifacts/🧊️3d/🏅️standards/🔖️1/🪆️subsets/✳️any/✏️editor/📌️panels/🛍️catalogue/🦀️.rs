@@ -7,7 +7,8 @@ use crate::editor::puzzle3d::{ui_label, Puzzle3dScene, PUZZLE3D_PLAY_CONTROLLER_
 use semio_framework_plugin::plugin_app_close_prelude::{Buildable, BuiltNode, HasBase, HasChildren, Trigger};
 use semio_framework_plugin::{ActionFactory, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL};
 use semio_framework_ui_contract as ui;
-use serde_json::{json, Value};
+use dsl::json;
+use dsl::os_pack::json::Value;
 
 //#region 🔖️Constants
 pub const BODY_KEY: &str = "puzzle.3d.play.kinds";
@@ -48,15 +49,16 @@ fn fixed_nodes(values: impl IntoIterator<Item = semio_framework_plugin::UiAssemb
     Ok(nodes)
 }
 
-fn catalog_entry_label(entry: &Value) -> String {
+fn catalog_entry_label(entry: &dsl::DslValue) -> String {
     entry.get("label").and_then(|value| value.as_str()).or_else(|| entry.get("name").and_then(|value| value.as_str())).or_else(|| entry.get("id").and_then(|value| value.as_str())).unwrap_or("kind").into()
 }
 
-fn object_kind_vortex_items(entry: &Value) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::UiFixedList<semio_framework_plugin::BuiltNode>> {
+fn object_kind_vortex_items(entry: &dsl::DslValue) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::UiFixedList<semio_framework_plugin::BuiltNode>> {
     let mut nodes = semio_framework_plugin::UiFixedList::default();
-    for (index, template) in entry.get("vortices").and_then(Value::as_array).into_iter().flatten().enumerate() {
-        let vortex_kind = template.get("vortexKind").and_then(Value::as_str).unwrap_or("vortex");
-        let position = template.get("position").cloned().unwrap_or(json!([0.0, 0.0, 0.0])).to_string();
+    for (index, template) in entry.get("vortices").and_then(dsl::DslValue::as_array).into_iter().flatten().enumerate() {
+        let vortex_kind = template.get("vortexKind").and_then(dsl::DslValue::as_str).unwrap_or("vortex");
+        let position_value = template.get("position").cloned().unwrap_or_else(|| dsl::ToValue::to_value(&[0.0, 0.0, 0.0]));
+        let position = dsl::os_pack::json::from_dsl_value(&position_value).to_string();
         let node = ui::tree_item(ui_label(vortex_kind)?)
             .try_id(format!("puzzle3d-kind-vortex.{index}.{vortex_kind}"))
             .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.catalogue.vortex", "vortex id admission failed"))?
@@ -69,14 +71,14 @@ fn object_kind_vortex_items(entry: &Value) -> semio_framework_plugin::UiAssembly
     Ok(nodes)
 }
 
-fn object_kind_item(entry: &Value) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+fn object_kind_item(entry: &dsl::DslValue) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     let kind_id = entry.get("id").and_then(|value| value.as_str()).unwrap_or("kind").to_string();
     let mesh_url = entry
         .get("meshUrl")
         .and_then(|value| value.as_str())
         .filter(|url| !url.is_empty())
         .map(str::to_string)
-        .or_else(|| entry.get("representations").and_then(Value::as_array).into_iter().flatten().filter_map(|rep| rep.get("url").and_then(Value::as_str)).find(|url| !url.is_empty()).map(str::to_string));
+        .or_else(|| entry.get("representations").and_then(dsl::DslValue::as_array).into_iter().flatten().filter_map(|rep| rep.get("url").and_then(dsl::DslValue::as_str)).find(|url| !url.is_empty()).map(str::to_string));
     let draggable = mesh_url.is_some();
     let action_args = ui_map_value([("objectKind", ui_text_value(&kind_id)?)])?;
     let (action, args) = ActionFactory::new(PUZZLE3D_PLAY_CONTROLLER_ID).action("addObjectKind", Some(action_args))?;
@@ -96,7 +98,9 @@ fn object_kind_item(entry: &Value) -> semio_framework_plugin::UiAssemblyResult<s
     if draggable {
         let mut payload = json!({ "objectKind": kind_id });
         if let Some(url) = mesh_url {
-            payload["meshUrl"] = json!(url);
+            if let Some(object) = payload.as_object_mut() {
+                object.insert("meshUrl", Value::from(url));
+            }
         }
         let mut drag_data = semio_framework_ui_contract::UiFixedMap::default();
         drag_data
@@ -110,7 +114,7 @@ fn object_kind_item(entry: &Value) -> semio_framework_plugin::UiAssemblyResult<s
     builder.try_build().map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.catalogue.object", "object row admission failed"))
 }
 
-fn catalog_kind_item(entry: &Value, icon_id: &str) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+fn catalog_kind_item(entry: &dsl::DslValue, icon_id: &str) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     let kind_id = entry.get("id").and_then(|value| value.as_str()).unwrap_or("kind").to_string();
     ui::tree_item(ui_label(catalog_entry_label(entry))?)
         .try_id(format!("puzzle3d-kind-entry:{kind_id}"))
@@ -164,7 +168,7 @@ mod tests {
             .expect("draggable object kind");
         let drag_data = draggable.drag_data.as_ref().expect("drag data");
         let encoded = drag_data.iter().find(|(mime, _)| mime.as_str() == PUZZLE3D_CATALOGUE_DRAG_MIME).map(|(_, value)| value.as_str()).expect("catalogue mime");
-        let payload: Value = serde_json::from_str(encoded).expect("drag payload json");
+        let payload: Value = dsl::os_pack::json::parse(encoded).expect("drag payload json");
         assert!(payload.get("objectKind").and_then(Value::as_str).is_some(), "drag payload must carry objectKind");
         assert!(payload.get("meshUrl").and_then(Value::as_str).filter(|url| !url.is_empty()).is_some(), "drag payload must carry meshUrl for preview");
     }

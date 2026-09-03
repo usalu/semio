@@ -8,8 +8,8 @@
 
 use crate::artifacts::zip::schema::mutations::{rename_entry, set_archive_comment};
 use crate::artifacts::zip::{ZipMutation, ZipSnapshot, STDIO_ZIP_DOCUMENT_SCHEMA};
-use crate::editor::zip::any::modes::edit;
-use crate::editor::zip::any::modes::edit::windows::main;
+use crate::editor::zip::base::modes::edit;
+use crate::editor::zip::base::modes::edit::windows::main;
 use semio_framework_plugin::{
     ArtifactEditor, ArtifactView, ConfigView, Dialect, DraftView, Editor, Emit, Fault, Label, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, StandardId, SubsetId,
 };

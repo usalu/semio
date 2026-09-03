@@ -3,8 +3,8 @@
 //! "Subset snapshot cores" table, `cad` row). `CadEntity` carries the full 9-variant vocabulary
 //! (Line/Arc/Circle/Ellipse/Polyline/Text/Insert/Solid/Dimension).
 
-use crate::artifacts::semio::standards::v1::subsets::any::schema::geometry::SemioPoint2;
-use crate::artifacts::semio::standards::v1::subsets::any::schema::triples::{split_top_level, strip_brackets};
+use crate::artifacts::semio::standards::v1::subsets::base::schema::geometry::SemioPoint2;
+use crate::artifacts::semio::standards::v1::subsets::base::schema::triples::{split_top_level, strip_brackets};
 use schema::ArtifactSchema;
 
 //#region 🔖️Ids

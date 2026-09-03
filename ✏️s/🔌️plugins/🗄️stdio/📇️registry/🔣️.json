@@ -1,8 +1,8 @@
 {
   "artifact_definition_paths": [
     "../🗿️artifacts/💾️binary/🧬️schema/📜️artifact-definition.json",
-    "../🗿️artifacts/📄txt/🧬️schema/📜️artifact-definition.json",
-    "../🗿️artifacts/📰xml/🧬️schema/📜️artifact-definition.json",
+    "../🗿️artifacts/📄️txt/🧬️schema/📜️artifact-definition.json",
+    "../🗿️artifacts/📰️xml/🧬️schema/📜️artifact-definition.json",
     "../🗿️artifacts/🗜️deflate/🧬️schema/📜️artifact-definition.json",
     "../🗿️artifacts/🎒️zip/🧬️schema/📜️artifact-definition.json",
     "../🗿️artifacts/🔣️json/🧬️schema/📜️artifact-definition.json",

@@ -2,11 +2,13 @@
   "name": "@semio-tech/framework-os-mcp",
   "$schema": "../../../../../../../node_modules/nx/schemas/project-schema.json",
   "namedInputs": {
-    "default": ["{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🟦️.ts", "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/**/🦀️.rs", "{projectRoot}/**/*"]
+    "default": ["{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🟦️.ts", "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/**/🦀️.rs", "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🧫️fixtures/🧱️binary-gate.json", "{projectRoot}/**/*"]
   },
   "targets": {
     "test": {
       "executor": "nx:run-commands",
+      "cache": false,
+      "dependsOn": [{ "target": "build", "projects": ["@semio-tech/framework-os-mcp-rs"] }],
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts test",
@@ -15,6 +17,8 @@
     },
     "test-quick": {
       "executor": "nx:run-commands",
+      "cache": false,
+      "dependsOn": [{ "target": "build", "projects": ["@semio-tech/framework-os-mcp-rs"] }],
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts test quick",
@@ -23,6 +27,8 @@
     },
     "test-long": {
       "executor": "nx:run-commands",
+      "cache": false,
+      "dependsOn": [{ "target": "build", "projects": ["@semio-tech/framework-os-mcp-rs"] }],
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts test long",
@@ -31,6 +37,8 @@
     },
     "test-exhaustive": {
       "executor": "nx:run-commands",
+      "cache": false,
+      "dependsOn": [{ "target": "build", "projects": ["@semio-tech/framework-os-mcp-rs"] }],
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts test exhaustive",

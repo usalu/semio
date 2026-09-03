@@ -1,0 +1,27 @@
+{
+  "schemaVersion": 1,
+  "maximumInlineBytes": 65536,
+  "registries": [
+    {
+      "id": "guest-relay-mounted",
+      "capacity": 16,
+      "storage": "heap"
+    },
+    {
+      "id": "shard-replay-seeds",
+      "capacity": 256,
+      "storage": "heap"
+    },
+    {
+      "id": "shard-replay-refusals",
+      "capacity": 512,
+      "storage": "heap"
+    },
+    {
+      "id": "shard-deferred-owner-ring",
+      "capacity": 256,
+      "storage": "heap"
+    }
+  ],
+  "expectedSummary": "4/4 heap-mounted registries; inline owners <= 65536 bytes"
+}

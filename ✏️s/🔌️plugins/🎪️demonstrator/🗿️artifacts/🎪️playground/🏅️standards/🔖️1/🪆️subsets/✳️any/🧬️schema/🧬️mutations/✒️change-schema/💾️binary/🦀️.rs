@@ -45,12 +45,13 @@ impl protocol::OpBinary for PlaygroundMutation {
 
 /// 📦️ Encodes the direct payload independently of aggregate framing.
 pub fn encode_payload(value: &ChangeSchema) -> Result<Vec<u8>, String> {
-    serde_json::to_vec(value).map_err(|error| error.to_string())
+    Ok(dsl::os_pack::json::to_json_string(value).into_bytes())
 }
 
 /// 📖️ Decodes the direct payload independently of aggregate framing.
 pub fn decode_payload(value: &[u8]) -> Result<ChangeSchema, String> {
-    serde_json::from_slice(value).map_err(|error| error.to_string())
+    let text = std::str::from_utf8(value).map_err(|error| error.to_string())?;
+    dsl::os_pack::json::from_json_str(text).map_err(|error| error.to_string())
 }
 
 //#region 🧪️RoundTrip

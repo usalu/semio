@@ -413,7 +413,7 @@ func (session *Session) route(ctx context.Context, request Request) (any, *RPCEr
 			return nil, rpcError(CodeInvalidRequest, "already initialized")
 		}
 		var params InitializeParams
-		if err := DecodeParams(request.Params, &params); err != nil || params.ProtocolVersion != ProtocolVersion || params.ClientInfo.Name == "" || params.ClientInfo.Version == "" {
+		if err := DecodeParams(request.Params, &params); err != nil || params.ProtocolVersion == "" || params.ClientInfo.Name == "" || params.ClientInfo.Version == "" {
 			return nil, rpcError(CodeInvalidParams, "invalid initialize params")
 		}
 		session.mu.Lock()
@@ -423,7 +423,7 @@ func (session *Session) route(ctx context.Context, request Request) (any, *RPCEr
 		}
 		session.phase = phaseInitialized
 		session.mu.Unlock()
-		return InitializeResult{ProtocolVersion: ProtocolVersion, Capabilities: session.server.capabilities(), ServerInfo: session.server.config.ServerInfo, Instructions: session.server.config.Instructions}, nil
+		return InitializeResult{ProtocolVersion: negotiateProtocolVersion(params.ProtocolVersion), Capabilities: session.server.capabilities(), ServerInfo: session.server.config.ServerInfo, Instructions: session.server.config.Instructions}, nil
 	}
 	if phase != phaseReady {
 		return nil, rpcError(CodeNotInitialized, "session not initialized")

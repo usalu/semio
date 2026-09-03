@@ -19,7 +19,8 @@ class GraphNodes {
   #retirement: OwnedUiNodeIndexRetirement | null = null;
   #node: OwnedUiNode | null = null;
   #nodeRetirement: UiNodeRetirement | null = null;
-  constructor(source: OwnedUiNodeIndex, private readonly grant: () => NumericIndexGrant) { this.#index = source.capture(); }
+  private readonly grant: () => NumericIndexGrant;
+  constructor(source: OwnedUiNodeIndex, grant: () => NumericIndexGrant) { this.grant = grant; this.#index = source.capture(); }
   get size(): number { return this.#index!.size; }
 
   *#releaseNode(): Program<void> {

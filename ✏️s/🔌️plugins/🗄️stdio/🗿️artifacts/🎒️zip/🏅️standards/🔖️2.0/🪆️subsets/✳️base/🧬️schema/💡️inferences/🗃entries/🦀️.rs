@@ -4,7 +4,7 @@
 //! central directory for exactly this kind of summary — this facet is the honest in-memory
 //! equivalent over the already-decoded `ZipSnapshot`, not a re-parse of the wire format.
 
-use crate::artifacts::zip::standards::v2_0::subsets::any::schema::snapshot::ZipSnapshot;
+use crate::artifacts::zip::standards::v2_0::subsets::base::schema::snapshot::ZipSnapshot;
 use std::collections::hash_map::DefaultHasher;
 use std::hash::{Hash, Hasher};
 
@@ -47,7 +47,7 @@ impl Default for ZipEntries {
 //#region 🧪️Tests
 mod tests {
     use super::*;
-    use crate::artifacts::zip::standards::v2_0::subsets::any::schema::snapshot::ZipEntry;
+    use crate::artifacts::zip::standards::v2_0::subsets::base::schema::snapshot::ZipEntry;
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn entry(name: &str, data: &[u8]) -> ZipEntry {

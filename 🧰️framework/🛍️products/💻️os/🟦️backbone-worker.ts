@@ -6,9 +6,9 @@
  */
 // #endregion Header
 
-import type { ArtifactPresencePeer, ClientFrame, MutationEnvelope, ServerFrame, WireAckStage, WireFrontierSummary, WireLane, WireMutationEnvelope } from "@semio-tech/framework-replication";
-import type { ArtifactActorConfig, ArtifactActorMsg, ArtifactEvent, ArtifactSyncStatus, BackboneWorkerRequest, BackboneWorkerResponse, BackboneWorkerWireMessage, CommandAckOutcome, DirectoryCommand, DirectoryStreamMessage, PersistenceBinding, RemoteState } from "./🟦️";
-import { decodeClientFrame, decodePresencePeer, decodeServerFrame, encodeClientFrame, encodePresencePeer, encodeServerFrame } from "@semio-tech/framework-replication";
+import type { ArtifactBootstrapControl, ArtifactBootstrapProgress, ArtifactPresencePeer, ClientFrame, MutationEnvelope, ServerFrame, WireAckStage, WireArtifactBootstrap, WireFrontierSummary, WireLane, WireMutationEnvelope } from "@semio-tech/framework-replication";
+import type { ArtifactActorConfig, ArtifactActorMsg, ArtifactBootstrapWorkerEvent, ArtifactEvent, ArtifactSyncStatus, BackboneWorkerRequest, BackboneWorkerResponse, BackboneWorkerWireMessage, CommandAckOutcome, DirectoryCommand, DirectoryStreamMessage, PersistenceBinding, RemoteState } from "./🟦️";
+import { ArtifactBootstrapAssembler, DEFAULT_ARTIFACT_BOOTSTRAP_LIMITS, decodeClientFrame, decodePresencePeer, decodeServerFrame, encodeClientFrame, encodePresencePeer, encodeServerFrame } from "@semio-tech/framework-replication";
 import { DirectoryClient, HUB_RECONNECT_MAX_MS, HUB_RECONNECT_MIN_MS, decodeBackboneWorkerRequest, decodeBackboneWorkerResponse, decodeDocumentPackBytes, decodePackValue, encodeBackboneWorkerRequest, encodeBackboneWorkerResponse, encodeDocumentPackBytes, encodePackValue } from "./🟦️";
 /** 🎚️ config-lane attach (contract freeze §4) — `OpeningPreferences` is a kernel type (domain-neutral
  * framework), never redefined here; see this file's `🔖️ConfigLane` region. */
@@ -108,6 +108,8 @@ const BLOB_FETCH_TIMEOUT_MS = 15_000;
 /** 🗃️ Bounded local outbound-mutation queue (finding 5) — see {@link rejectMutationQueueOverflow}
  * for the overflow contract: reject and report, never silently drop. */
 const PENDING_MUTATIONS_QUEUE_LIMIT = 2_000;
+const ARTIFACT_BOOTSTRAP_DEADLINE_MS = 15_000;
+const ARTIFACT_BOOTSTRAP_DIAGNOSTIC_MAX_BYTES = 4_096;
 // 🔁️ HUB_RECONNECT_MIN_MS/MAX_MS moved to `🟦️.ts`'s `🔖️HubBinding` region (imported above)
 // — single source of truth shared with `DirectoryClient.stream`'s reconnect loop.
 /** ♻️ Coordinator follow-up (finding 4b): how long a hub OR SSE connection must stay open before a
@@ -187,6 +189,14 @@ type ArtifactState = {
   /** 🏔️ Last frontier the hub reported (`Welcome.server_frontier` / `Commands.frontier` /
    * `Ack.frontier`) — the wire-v2 replacement for the old `sinceVersion: number` counter. */
   frontier: WireFrontierSummary | null;
+  pendingResumeToken: string | null;
+  requiredTailFrontier: WireFrontierSummary | null;
+  artifactBootstrap: ArtifactBootstrapAssembler | null;
+  artifactBootstrapDeadlineMs: number | null;
+  artifactBootstrapProgress: ArtifactBootstrapProgress[];
+  currentPack: Uint8Array | null;
+  currentSpr: Uint8Array | null;
+  hubFrameChain: Promise<void>;
   /** 🎟️ The hub's last `Welcome.resume_token`, echoed back on the next `hello` after a reconnect. */
   resumeToken: string | null;
   /** 🎨️ This connection's hub-assigned session color (`ServerFrame::Session.color`) — `null` until
@@ -591,19 +601,22 @@ function connectHubOnce(state: ArtifactState, binding: Extract<PersistenceBindin
       }, "command");
     };
     socket.onmessage = (messageEvent) => {
-      try {
-        const bytes = new Uint8Array(messageEvent.data as ArrayBuffer);
-        handleHubFrame(state, decodeServerFrame(bytes).frame);
-      } catch (error) {
-        console.error("[backbone-worker] malformed hub frame", state.config.documentId, error);
-      }
+      state.hubFrameChain = state.hubFrameChain.then(async () => {
+        try {
+          const bytes = new Uint8Array(messageEvent.data as ArrayBuffer);
+          await handleHubFrame(state, decodeServerFrame(bytes).frame);
+        } catch (error) {
+          console.error("[backbone-worker] malformed hub frame", state.config.documentId, error);
+          rejectArtifactBootstrap(state, error);
+        }
+      });
     };
     socket.onclose = () => {
       state.docAbort.signal.removeEventListener("abort", onAbort);
       if (sustainedHealthTimer != null) clearTimeout(sustainedHealthTimer);
       if (state.socket === socket) state.socket = null;
-      for (const envelopes of state.pendingBatches.values()) state.outbox.push(...envelopes);
-      state.pendingBatches.clear();
+      abortArtifactBootstrap(state);
+      requeuePendingBatches(state);
       if (state.docAbort.signal.aborted) {
         resolve();
         return;
@@ -646,7 +659,7 @@ function sendWireFrame(state: ArtifactState, frame: ClientFrame, lane: WireLane)
 function relayMutationsToHub(state: ArtifactState, envelopes: readonly MutationEnvelope[]): void {
   if (envelopes.length === 0) return;
   if (state.socket?.readyState !== WebSocket.OPEN) {
-    state.outbox.push(...envelopes);
+    queueOutbox(state, envelopes);
     return;
   }
   const batchId = state.nextBatchId;
@@ -708,36 +721,231 @@ function handleAck(state: ArtifactState, batchId: number, stages: readonly WireA
   }
 }
 
-function handleHubFrame(state: ArtifactState, frame: ServerFrame): void {
+function equalByteArrays(left: readonly number[], right: readonly number[]): boolean {
+  return left.length === right.length && left.every((byte, index) => byte === right[index]);
+}
+
+function equalFrontiers(left: WireFrontierSummary, right: WireFrontierSummary): boolean {
+  return left.document_id === right.document_id
+    && left.head_edit_ordinal === right.head_edit_ordinal
+    && left.head_edit_id === right.head_edit_id
+    && left.last_commit_seq === right.last_commit_seq
+    && equalByteArrays(left.chain_hash, right.chain_hash);
+}
+
+function queueOutbox(state: ArtifactState, envelopes: readonly MutationEnvelope[]): void {
+  const queued = new Set(state.outbox.map((envelope) => envelope.id));
+  for (const envelope of envelopes) {
+    if (!queued.has(envelope.id)) {
+      queued.add(envelope.id);
+      state.outbox.push(envelope);
+    }
+  }
+}
+
+function requeuePendingBatches(state: ArtifactState): void {
+  const batches = [...state.pendingBatches.entries()].sort(([left], [right]) => left - right);
+  state.pendingBatches.clear();
+  for (const [, envelopes] of batches) queueOutbox(state, envelopes);
+}
+
+function emitBootstrapProgress(state: ArtifactState, progress: ArtifactBootstrapProgress): void {
+  const previous = state.artifactBootstrapProgress.at(-1);
+  if (previous && (progress.receivedBytes < previous.receivedBytes || progress.receivedChunks < previous.receivedChunks)) throw new Error("artifact bootstrap progress regressed");
+  state.artifactBootstrapProgress.push(progress);
+  post({ kind: "artifact-bootstrap-progress", documentId: state.config.documentId, receivedBytes: progress.receivedBytes, totalBytes: progress.totalBytes, receivedChunks: progress.receivedChunks, totalChunks: progress.totalChunks });
+}
+
+function bootstrapControl(state: ArtifactState): ArtifactBootstrapControl {
+  return {
+    isCancelled: () => state.closed || state.docAbort.signal.aborted,
+    nowMs: () => Date.now(),
+    onProgress: (progress) => emitBootstrapProgress(state, progress),
+  };
+}
+
+function abortArtifactBootstrap(state: ArtifactState): void {
+  state.artifactBootstrap?.abort();
+  state.artifactBootstrap = null;
+  state.artifactBootstrapDeadlineMs = null;
+  state.pendingResumeToken = null;
+  state.requiredTailFrontier = null;
+}
+
+function boundedBootstrapDiagnostic(error: unknown): string {
+  const message = error instanceof Error ? error.message : String(error);
+  if (new TextEncoder().encode(message).byteLength <= ARTIFACT_BOOTSTRAP_DIAGNOSTIC_MAX_BYTES) return message;
+  let end = message.length;
+  while (end > 0 && new TextEncoder().encode(message.slice(0, end)).byteLength > ARTIFACT_BOOTSTRAP_DIAGNOSTIC_MAX_BYTES - 3) end -= 1;
+  return `${message.slice(0, end)}...`;
+}
+
+function artifactBootstrapFailure(state: ArtifactState, error: unknown): Extract<ArtifactBootstrapWorkerEvent, { readonly kind: "artifact-bootstrap-failed" }> {
+  const message = boundedBootstrapDiagnostic(error);
+  const normalized = message.toLowerCase();
+  const cancelled = state.closed || state.docAbort.signal.aborted || normalized.includes("cancel");
+  const deadline = normalized.includes("deadline") || normalized.includes("timed out") || normalized.includes("timeout");
+  const invalid = normalized.includes("snapshot") || normalized.includes("schema") || normalized.includes("digest") || normalized.includes("descriptor") || normalized.includes("scope") || normalized.includes("chunk") || normalized.includes("frontier") || normalized.includes("without an active transfer") || normalized.includes("before artifact");
+  const code = cancelled ? "cancelled" : deadline ? "deadline-exceeded" : invalid ? "invalid-bootstrap" : "transport-failure";
+  return { kind: "artifact-bootstrap-failed", documentId: state.config.documentId, code, message, retryable: code !== "invalid-bootstrap" };
+}
+
+function rejectArtifactBootstrap(state: ArtifactState, error: unknown): void {
+  const failure = artifactBootstrapFailure(state, error);
+  abortArtifactBootstrap(state);
+  post(failure);
+  state.socket?.close();
+}
+
+function requireArtifactRebootstrap(state: ArtifactState): void {
+  abortArtifactBootstrap(state);
+  state.currentPack = null;
+  state.currentSpr = null;
+  state.frontier = null;
+  state.resumeToken = null;
+  state.artifactBootstrapProgress = [];
+  setRemote(state, { kind: "connecting" });
+  post({ kind: "artifact-rebootstrap-required", documentId: state.config.documentId, message: "rebootstrap-required", retryable: true });
+  state.socket?.close();
+}
+
+function validateArtifactBootstrapIdentity(state: ArtifactState, bootstrap: WireArtifactBootstrap, serverFrontier: WireFrontierSummary): void {
+  if (bootstrap.artifact_schema !== state.config.schema) throw new Error("artifact bootstrap schema mismatch");
+  if (bootstrap.baseline_frontier.document_id !== state.config.documentId || bootstrap.required_tail_frontier.document_id !== state.config.documentId || serverFrontier.document_id !== state.config.documentId) throw new Error("artifact bootstrap document mismatch");
+  const packSchemaHash = state.config.packSchemaHash;
+  if (!packSchemaHash || packSchemaHash.length !== 32 || packSchemaHash.every((byte) => byte === 0) || !equalByteArrays(bootstrap.pack_schema_hash, packSchemaHash)) throw new Error("artifact bootstrap pack schema mismatch");
+  if (!equalFrontiers(bootstrap.required_tail_frontier, serverFrontier)) throw new Error("artifact bootstrap required tail does not match welcome frontier");
+}
+
+function finishCatchupIfReady(state: ArtifactState): void {
+  if (!state.requiredTailFrontier || !state.frontier || !equalFrontiers(state.frontier, state.requiredTailFrontier)) return;
+  state.requiredTailFrontier = null;
+  if (state.pendingResumeToken !== null) state.resumeToken = state.pendingResumeToken;
+  state.pendingResumeToken = null;
+  setRemote(state, { kind: "live", peerCount: 0 });
+  if (state.outbox.length > 0) {
+    const outbox = state.outbox.splice(0);
+    relayMutationsToHub(state, outbox);
+  }
+}
+
+async function installArtifactBootstrap(state: ArtifactState, assembler: ArtifactBootstrapAssembler, done: { readonly descriptor_hash: readonly number[]; readonly chunk_count: number } | null): Promise<void> {
+  const pair = await assembler.finish(done, bootstrapControl(state));
+  const folder = folderBinding(state.config);
+  if (folder) await writeFolder(state, folder, Array.from(pair.pack), Array.from(pair.spr));
+  state.currentPack = Uint8Array.from(pair.pack);
+  state.currentSpr = Uint8Array.from(pair.spr);
+  state.artifactBootstrap = null;
+  state.artifactBootstrapDeadlineMs = null;
+  state.frontier = assembler.bootstrap.baseline_frontier;
+  emitEvent(state.config.documentId, { kind: "snapshotReplaced", pack: Array.from(pair.pack), spr: Array.from(pair.spr) });
+  if (state.outbox.length > 0) emitEvent(state.config.documentId, { kind: "remoteMutations", envelopes: [...state.outbox] });
+  finishCatchupIfReady(state);
+}
+
+async function startArtifactBootstrap(state: ArtifactState, bootstrap: WireArtifactBootstrap, resumeToken: string, serverFrontier: WireFrontierSummary): Promise<void> {
+  abortArtifactBootstrap(state);
+  state.artifactBootstrapProgress = [];
+  validateArtifactBootstrapIdentity(state, bootstrap, serverFrontier);
+  state.pendingResumeToken = resumeToken;
+  state.requiredTailFrontier = bootstrap.required_tail_frontier;
+  state.artifactBootstrapDeadlineMs = Date.now() + ARTIFACT_BOOTSTRAP_DEADLINE_MS;
+  const assembler = new ArtifactBootstrapAssembler(bootstrap, bootstrap.descriptor_hash, DEFAULT_ARTIFACT_BOOTSTRAP_LIMITS, state.artifactBootstrapDeadlineMs, bootstrapControl(state));
+  state.artifactBootstrap = assembler;
+  if (bootstrap.inline !== null) {
+    await installArtifactBootstrap(state, assembler, null);
+  }
+}
+
+async function handleHubFrame(state: ArtifactState, frame: ServerFrame): Promise<void> {
   if (typeof frame === "string") return; // no unit-variant `ServerFrame` exists today; defensive.
   if ("Welcome" in frame) {
-    state.resumeToken = frame.Welcome.resume_token;
-    state.frontier = frame.Welcome.server_frontier;
-    // 📡️ `Welcome` no longer carries a presence roster (wire v2 splits it into its own `Presence`
-    // frame) — `peerCount` is corrected once that frame arrives.
-    setRemote(state, { kind: "live", peerCount: 0 });
-    // 📦️ Pack-based snapshot bootstrap (`Welcome.bootstrap.Snapshot`): no client-side pack decoder
-    // wired this wave (db/pack integration is a CW6+ hub-rebuild concern, mirrors the Rust actor's
-    // identical deferral) — accepted and ignored; catch-up relies on the hub's follow-up `Commands`.
-    // ♻️ Finding 5's "flushed on reconnect" half: anything queued while the hub was unreachable
-    // (offline edits, or a prior batch whose dead socket never delivered its `Ack`) is relayed now
-    // that the handshake succeeded — never left stranded waiting for another local edit to trigger it.
-    if (state.outbox.length > 0) relayMutationsToHub(state, state.outbox.splice(0));
+    requeuePendingBatches(state);
+    const bootstrap = frame.Welcome.bootstrap;
+    if (bootstrap === "None") {
+      abortArtifactBootstrap(state);
+      state.resumeToken = frame.Welcome.resume_token;
+      state.frontier = frame.Welcome.server_frontier;
+      setRemote(state, { kind: "live", peerCount: 0 });
+      if (state.outbox.length > 0) relayMutationsToHub(state, state.outbox.splice(0));
+      return;
+    }
+    if (bootstrap === "Tail") {
+      abortArtifactBootstrap(state);
+      state.pendingResumeToken = frame.Welcome.resume_token;
+      state.requiredTailFrontier = frame.Welcome.server_frontier;
+      finishCatchupIfReady(state);
+      return;
+    }
+    if ("Snapshot" in bootstrap) {
+      rejectArtifactBootstrap(state, new Error("database-private snapshot cannot seed an artifact client"));
+      return;
+    }
+    try {
+      await startArtifactBootstrap(state, bootstrap.ArtifactBootstrap, frame.Welcome.resume_token, frame.Welcome.server_frontier);
+    } catch (error) {
+      rejectArtifactBootstrap(state, error);
+    }
     return;
   }
   if ("SnapshotChunk" in frame || "SnapshotDone" in frame) {
-    // 📦️ See the `Welcome.bootstrap.Snapshot` note above — accepted and ignored.
+    rejectArtifactBootstrap(state, new Error("database-private snapshot frame cannot seed an artifact client"));
+    return;
+  }
+  if ("RebootstrapRequired" in frame) {
+    const binding = hubBinding(state.config);
+    const control = frame.RebootstrapRequired.control;
+    if (!binding || control.space_id !== binding.spaceId || control.document_id !== state.config.documentId || control.baseline_frontier.document_id !== state.config.documentId) {
+      rejectArtifactBootstrap(state, new Error("rebootstrap control scope mismatch"));
+    } else {
+      requireArtifactRebootstrap(state);
+    }
+    return;
+  }
+  if ("ArtifactBootstrapChunk" in frame) {
+    const assembler = state.artifactBootstrap;
+    if (!assembler) {
+      rejectArtifactBootstrap(state, new Error("artifact bootstrap chunk arrived without an active transfer"));
+      return;
+    }
+    try {
+      assembler.push(frame.ArtifactBootstrapChunk, bootstrapControl(state));
+    } catch (error) {
+      rejectArtifactBootstrap(state, error);
+    }
+    return;
+  }
+  if ("ArtifactBootstrapDone" in frame) {
+    const assembler = state.artifactBootstrap;
+    if (!assembler) {
+      rejectArtifactBootstrap(state, new Error("artifact bootstrap completion arrived without an active transfer"));
+      return;
+    }
+    try {
+      await installArtifactBootstrap(state, assembler, frame.ArtifactBootstrapDone);
+    } catch (error) {
+      rejectArtifactBootstrap(state, error);
+    }
     return;
   }
   if ("Commands" in frame) {
-    state.frontier = frame.Commands.frontier;
+    if (state.artifactBootstrap) {
+      rejectArtifactBootstrap(state, new Error("tail arrived before artifact bootstrap completion"));
+      return;
+    }
     if (frame.Commands.origin !== state.config.actor) {
       const envelopes = frame.Commands.envelopes.map(fromWireEnvelope);
       emitEvent(state.config.documentId, { kind: "remoteMutations", envelopes });
     }
+    state.frontier = frame.Commands.frontier;
+    finishCatchupIfReady(state);
     return;
   }
   if ("Ack" in frame) {
+    if (state.artifactBootstrap || state.requiredTailFrontier) {
+      rejectArtifactBootstrap(state, new Error("ack arrived before artifact catch-up completion"));
+      return;
+    }
     state.frontier = frame.Ack.frontier;
     handleAck(state, frame.Ack.batch_id, frame.Ack.stages);
     return;
@@ -1045,6 +1253,14 @@ function openArtifact(config: ArtifactActorConfig): void {
     pendingMutations: [],
     status: { persisted: false, pendingMutations: 0, remote: { kind: "detached" } },
     frontier: null,
+    pendingResumeToken: null,
+    requiredTailFrontier: null,
+    artifactBootstrap: null,
+    artifactBootstrapDeadlineMs: null,
+    artifactBootstrapProgress: [],
+    currentPack: null,
+    currentSpr: null,
+    hubFrameChain: Promise.resolve(),
     resumeToken: null,
     sessionColor: null,
     pendingBatches: new Map(),
@@ -1073,6 +1289,7 @@ function closeArtifact(documentId: string): void {
   const state = artifacts.get(documentId);
   if (!state) return;
   state.closed = true;
+  abortArtifactBootstrap(state);
   // 🛑️ Finding 3: cancels every in-flight folder/blob fetch this document owns and unblocks any
   // pending reconnect backoff delay immediately — no fetch or reconnect loop can pin this document
   // after this line.
@@ -1245,6 +1462,194 @@ if (import.meta.vitest) {
     });
 
   });
+
+  //#region 🧪️ArtifactBootstrapRestore
+  type ArtifactBootstrapFixture = Readonly<{
+    artifact: Readonly<{ schema: string; packSchemaHash: string; requiredTailFrontier: Readonly<{ documentId: string; headEditOrdinal: number; headEditId: string; lastCommitSeq: number; chainHash: string }> }>;
+    payload: Readonly<{ packHex: string; sprHex: string }>;
+    wire: Readonly<{ inlineWelcomeHex: string; chunkedWelcomeHex: string; chunkHex: readonly string[]; doneHex: string }>;
+  }>;
+
+  function bytesFromHex(hex: string): Uint8Array {
+    return Uint8Array.from(hex.match(/../g)?.map((byte) => Number.parseInt(byte, 16)) ?? []);
+  }
+
+  async function artifactBootstrapFixture(): Promise<ArtifactBootstrapFixture> {
+    const { readFile } = await import("node:fs/promises");
+    return JSON.parse(await readFile(new URL("../../🔨️modules/📡️replication/🧫️fixtures/🧫️artifact-bootstrap/🔣️.json", import.meta.url), "utf8")) as ArtifactBootstrapFixture;
+  }
+
+  function fixtureConfig(fixture: ArtifactBootstrapFixture): ArtifactActorConfig {
+    return { documentId: fixture.artifact.requiredTailFrontier.documentId, schema: fixture.artifact.schema, packSchemaHash: Array.from(bytesFromHex(fixture.artifact.packSchemaHash)), bindings: [], actor: "actor-bootstrap-test", watchExternal: false };
+  }
+
+  function decodeFixtureFrame(hex: string): ServerFrame {
+    return decodeServerFrame(bytesFromHex(hex)).frame;
+  }
+
+  function fixtureRequiredFrontier(fixture: ArtifactBootstrapFixture): WireFrontierSummary {
+    const frontier = fixture.artifact.requiredTailFrontier;
+    return { document_id: frontier.documentId, head_edit_ordinal: frontier.headEditOrdinal, head_edit_id: frontier.headEditId, last_commit_seq: frontier.lastCommitSeq, chain_hash: Array.from(bytesFromHex(frontier.chainHash)) };
+  }
+
+  async function installFixture(fixture: ArtifactBootstrapFixture, chunked: boolean): Promise<ArtifactState> {
+    const config = fixtureConfig(fixture);
+    openArtifact(config);
+    const state = artifacts.get(config.documentId)!;
+    await handleHubFrame(state, decodeFixtureFrame(chunked ? fixture.wire.chunkedWelcomeHex : fixture.wire.inlineWelcomeHex));
+    if (chunked) {
+      for (const chunk of fixture.wire.chunkHex) await handleHubFrame(state, decodeFixtureFrame(chunk));
+      await handleHubFrame(state, decodeFixtureFrame(fixture.wire.doneHex));
+    }
+    return state;
+  }
+
+  describe("artifact bootstrap atomic restore", () => {
+    it("installs the exact neutral inline and chunked pair and reaches Live only at the authenticated tail", async () => {
+      const fixture = await artifactBootstrapFixture();
+      const pack = bytesFromHex(fixture.payload.packHex);
+      const spr = bytesFromHex(fixture.payload.sprHex);
+      const inline = await installFixture(fixture, false);
+      expect(inline.currentPack).toEqual(pack);
+      expect(inline.currentSpr).toEqual(spr);
+      expect(inline.status.remote.kind).not.toBe("live");
+      const inlinePack = inline.currentPack;
+      const inlineSpr = inline.currentSpr;
+      const inlineProgress = [...inline.artifactBootstrapProgress];
+      await handleHubFrame(inline, { Commands: { envelopes: [], origin: inline.config.actor, frontier: fixtureRequiredFrontier(fixture) } });
+      expect(inline.status.remote.kind).toBe("live");
+      expect(inline.resumeToken).toBe("resume-bootstrap-1");
+      closeArtifact(inline.config.documentId);
+
+      const chunked = await installFixture(fixture, true);
+      expect(chunked.currentPack).toEqual(pack);
+      expect(chunked.currentSpr).toEqual(spr);
+      expect(chunked.currentPack).toEqual(inlinePack);
+      expect(chunked.currentSpr).toEqual(inlineSpr);
+      expect(chunked.artifactBootstrapProgress.every((progress, index, all) => index === 0 || (progress.receivedBytes >= all[index - 1]!.receivedBytes && progress.receivedChunks >= all[index - 1]!.receivedChunks))).toBe(true);
+      expect(chunked.artifactBootstrapProgress.at(-1)).toMatchObject({ receivedBytes: pack.length + spr.length, receivedChunks: fixture.wire.chunkHex.length });
+      expect(inlineProgress.at(-1)).toMatchObject({ receivedBytes: pack.length + spr.length });
+      closeArtifact(chunked.config.documentId);
+    });
+
+    it("does not reach Live for a same-ordinal frontier with a different authenticated head or chain", async () => {
+      const fixture = await artifactBootstrapFixture();
+      const state = await installFixture(fixture, false);
+      const wrong = { ...fixtureRequiredFrontier(fixture), head_edit_id: "edit-wrong", chain_hash: Array(32).fill(0x55) };
+      await handleHubFrame(state, { Commands: { envelopes: [], origin: state.config.actor, frontier: wrong } });
+      expect(state.status.remote.kind).not.toBe("live");
+      expect(state.requiredTailFrontier).not.toBeNull();
+      expect(state.resumeToken).toBeNull();
+      await handleHubFrame(state, { Commands: { envelopes: [], origin: state.config.actor, frontier: fixtureRequiredFrontier(fixture) } });
+      expect(state.status.remote.kind).toBe("live");
+      closeArtifact(state.config.documentId);
+    });
+
+    it("invalidates the committed session before rebootstrap and bounds typed failure diagnostics", async () => {
+      const fixture = await artifactBootstrapFixture();
+      const state = await installFixture(fixture, false);
+      state.config = { ...state.config, bindings: [{ kind: "hub", baseUrl: "http://hub.test", spaceId: "space-a" }] };
+      state.resumeToken = "stale-resume";
+      await handleHubFrame(state, {
+        RebootstrapRequired: {
+          control: {
+            space_id: "space-a",
+            document_id: state.config.documentId,
+            checkpoint_id: Array(32).fill(1),
+            descriptor_hash: Array(32).fill(2),
+            baseline_frontier: fixtureRequiredFrontier(fixture),
+          },
+        },
+      });
+      expect(state.currentPack).toBeNull();
+      expect(state.currentSpr).toBeNull();
+      expect(state.frontier).toBeNull();
+      expect(state.resumeToken).toBeNull();
+      expect(state.status.remote.kind).toBe("connecting");
+      const diagnostic = artifactBootstrapFailure(state, new Error("€".repeat(4_096)));
+      expect(new TextEncoder().encode(diagnostic.message).byteLength).toBeLessThanOrEqual(ARTIFACT_BOOTSTRAP_DIAGNOSTIC_MAX_BYTES);
+      closeArtifact(state.config.documentId);
+    });
+
+    it("discards malformed and disconnected staging, preserves the prior commit, and restarts fresh", async () => {
+      const fixture = await artifactBootstrapFixture();
+      const config = fixtureConfig(fixture);
+      openArtifact(config);
+      const state = artifacts.get(config.documentId)!;
+      state.currentPack = Uint8Array.of(9);
+      state.currentSpr = Uint8Array.of(8);
+      const priorFrontier: WireFrontierSummary = { document_id: state.config.documentId, head_edit_ordinal: 1, head_edit_id: "old", last_commit_seq: 1, chain_hash: Array(32).fill(7) };
+      state.frontier = priorFrontier;
+      await handleHubFrame(state, decodeFixtureFrame(fixture.wire.chunkedWelcomeHex));
+      const malformed = structuredClone(decodeFixtureFrame(fixture.wire.chunkHex[0]!));
+      if (!("ArtifactBootstrapChunk" in malformed)) throw new Error("fixture chunk expected");
+      const malformedFrame: ServerFrame = { ArtifactBootstrapChunk: { ...malformed.ArtifactBootstrapChunk, descriptor_hash: malformed.ArtifactBootstrapChunk.descriptor_hash.map((byte, index) => index === 0 ? byte ^ 0xff : byte) } };
+      await handleHubFrame(state, malformedFrame);
+      expect(state.currentPack).toEqual(Uint8Array.of(9));
+      expect(state.currentSpr).toEqual(Uint8Array.of(8));
+      expect(state.frontier).toEqual(priorFrontier);
+      expect(state.artifactBootstrap).toBeNull();
+
+      await handleHubFrame(state, { SnapshotDone: { seq_count: 1 } });
+      expect(state.currentPack).toEqual(Uint8Array.of(9));
+      expect(state.currentSpr).toEqual(Uint8Array.of(8));
+      expect(state.frontier).toEqual(priorFrontier);
+      expect(state.artifactBootstrap).toBeNull();
+
+      await handleHubFrame(state, decodeFixtureFrame(fixture.wire.chunkedWelcomeHex));
+      await handleHubFrame(state, decodeFixtureFrame(fixture.wire.chunkHex[0]!));
+      abortArtifactBootstrap(state);
+      expect(state.frontier).toEqual(priorFrontier);
+      await handleHubFrame(state, decodeFixtureFrame(fixture.wire.chunkedWelcomeHex));
+      for (const chunk of fixture.wire.chunkHex) await handleHubFrame(state, decodeFixtureFrame(chunk));
+      await handleHubFrame(state, decodeFixtureFrame(fixture.wire.doneHex));
+      expect(state.currentPack).toEqual(bytesFromHex(fixture.payload.packHex));
+      expect(state.currentSpr).toEqual(bytesFromHex(fixture.payload.sprHex));
+      closeArtifact(state.config.documentId);
+    });
+
+    it("preserves one pending local edit across replacement and catch-up without duplicate replay", async () => {
+      const fixture = await artifactBootstrapFixture();
+      const state = await installFixture(fixture, false);
+      const local = { ...sampleEnvelope(), id: "pending-local", document: state.config.documentId, schemaVersion: state.config.schema };
+      queueOutbox(state, [local, local]);
+      expect(state.outbox.map((envelope) => envelope.id)).toEqual(["pending-local"]);
+      await handleHubFrame(state, { Commands: { envelopes: [], origin: state.config.actor, frontier: fixtureRequiredFrontier(fixture) } });
+      expect(state.outbox.map((envelope) => envelope.id)).toEqual(["pending-local"]);
+      expect(state.pendingBatches.size).toBe(0);
+      closeArtifact(state.config.documentId);
+    });
+
+    it("commits neither pair nor frontier when the atomic folder envelope PUT fails", async () => {
+      const fixture = await artifactBootstrapFixture();
+      const config = fixtureConfig(fixture);
+      openArtifact(config);
+      const state = artifacts.get(config.documentId)!;
+      state.config = { ...state.config, bindings: [{ kind: "folder", path: "/tmp/bootstrap-put-failure" }] };
+      state.currentPack = Uint8Array.of(1);
+      state.currentSpr = Uint8Array.of(2);
+      const priorFrontier: WireFrontierSummary = { document_id: state.config.documentId, head_edit_ordinal: 1, head_edit_id: "old", last_commit_seq: 1, chain_hash: Array(32).fill(6) };
+      state.frontier = priorFrontier;
+      const originalFetch = globalThis.fetch;
+      let puts = 0;
+      globalThis.fetch = (async (_input: string | URL | Request, init?: RequestInit) => {
+        if (init?.method === "PUT") puts += 1;
+        return { ok: false, status: 500, statusText: "fixture failure", headers: { get: () => null }, json: async () => ({}), text: async () => "" } as unknown as Response;
+      }) as typeof fetch;
+      try {
+        await handleHubFrame(state, decodeFixtureFrame(fixture.wire.inlineWelcomeHex));
+        expect(puts).toBe(1);
+        expect(state.currentPack).toEqual(Uint8Array.of(1));
+        expect(state.currentSpr).toEqual(Uint8Array.of(2));
+        expect(state.frontier).toEqual(priorFrontier);
+        expect(state.artifactBootstrap).toBeNull();
+      } finally {
+        globalThis.fetch = originalFetch;
+        closeArtifact(state.config.documentId);
+      }
+    });
+  });
+  //#endregion 🧪️ArtifactBootstrapRestore
 
   //#region 🔖️IdentityTests
   describe("identity config facet", () => {
@@ -1662,7 +2067,7 @@ if (import.meta.vitest) {
       }
     });
 
-    it("a mutation made while offline is queued, then flushed once the hub reconnects (Welcome flushes the outbox)", () => {
+    it("a mutation made while offline is queued, then flushed once the hub reconnects (Welcome flushes the outbox)", async () => {
       FakeHubWebSocket.instances = [];
       const originalWebSocket = globalThis.WebSocket;
       (globalThis as unknown as { WebSocket: unknown }).WebSocket = FakeHubWebSocket;
@@ -1704,6 +2109,7 @@ if (import.meta.vitest) {
           },
         };
         socket.onmessage?.({ data: encodeServerFrame(welcome, "command").buffer as ArrayBuffer });
+        await state.hubFrameChain;
 
         // ♻️ The `Welcome` handshake flushes the outbox — the offline mutation is relayed now,
         // never left stranded waiting for the next local edit to trigger a resend.

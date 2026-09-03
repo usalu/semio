@@ -7,7 +7,7 @@
 //! two packs' binary shapes are unrelated) or, worse, silently accept a payload that merely
 //! happened to already be `.wires`-shaped text as if it were a real SVG import. No real
 //! svg-graph<->wires-graph mapping exists — this is now an honest not-yet-implemented stub, the
-//! same treatment `📄txt` already had. `IoFidelity::Lossy`.
+//! same treatment `📄️txt` already had. `IoFidelity::Lossy`.
 
 use crate::artifacts::wires::WiresSnapshot;
 use semio_framework::io::io_mechanism::Deserializer;

@@ -1,7 +1,7 @@
 //! ✏️ Xlsx editor (ecma-376/✳️base) — the `edit` mode: a single-window layout hosting the `🪟️main`
 //! table over the workbook's flattened cells (see the surface root's `xlsx_flat_cells` doc comment).
 
-use crate::editor::xlsx::standards::v_ecma_376::subsets::any::modes::edit::windows::main;
+use crate::editor::xlsx::standards::v_ecma_376::subsets::base::modes::edit::windows::main;
 use semio_framework_plugin::{LocalizedLabel, ModeDefinition, WindowLayout, WindowLayoutRoot, WindowLayoutStackNode, WindowLayoutWindowNode};
 
 pub const XLSX_EDIT_MODE_ID: &str = "edit";

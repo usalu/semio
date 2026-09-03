@@ -9,7 +9,7 @@
 //! history, this snapshot holds only the two-string handle (`child_id`/`target`), never embedded
 //! content (per `📌️important.md`'s composition section).
 
-use crate::artifacts::semio::standards::v1::subsets::any::schema::geometry::SemioTransform;
+use crate::artifacts::semio::standards::v1::subsets::base::schema::geometry::SemioTransform;
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::SemioBrepSnapshot;
 use crate::artifacts::semio::standards::v1::subsets::mesh::schema::snapshot::SemioMeshSnapshot;
 use crate::artifacts::semio::standards::v1::subsets::value::schema::snapshot::SemioValueSnapshot;
@@ -131,7 +131,7 @@ pub(crate) fn enc_child<S>(c: &store::ArtifactChild<S>) -> String {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn dec_child<S>(s: &str) -> Result<store::ArtifactChild<S>, String> {
-    let parts = crate::artifacts::semio::standards::v1::subsets::any::schema::triples::split_top_level(crate::artifacts::semio::standards::v1::subsets::any::schema::triples::strip_brackets(s)?, ',');
+    let parts = crate::artifacts::semio::standards::v1::subsets::base::schema::triples::split_top_level(crate::artifacts::semio::standards::v1::subsets::base::schema::triples::strip_brackets(s)?, ',');
     let [child_id, target] = parts.as_slice() else { return Err(format!("child handle: expected 2 fields, got {}", parts.len())) };
     Ok(store::ArtifactChild::new(dec_str(child_id)?, dec_ref(target)?))
 }
@@ -156,12 +156,12 @@ pub(crate) fn enc_transform(t: &SemioTransform) -> String {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn dec_transform(s: &str) -> Result<SemioTransform, String> {
-    let parts = crate::artifacts::semio::standards::v1::subsets::any::schema::triples::split_top_level(crate::artifacts::semio::standards::v1::subsets::any::schema::triples::strip_brackets(s)?, ',');
+    let parts = crate::artifacts::semio::standards::v1::subsets::base::schema::triples::split_top_level(crate::artifacts::semio::standards::v1::subsets::base::schema::triples::strip_brackets(s)?, ',');
     let [tx, ty, tz, rx, ry, rz, rw, sx, sy, sz] = parts.as_slice() else {
         return Err(format!("transform: expected 10 fields, got {}", parts.len()));
     };
     let f = |s: &str| s.trim().parse::<f64>().map_err(|e| e.to_string());
-    use crate::artifacts::semio::standards::v1::subsets::any::schema::geometry::{SemioPoint3, SemioQuaternion};
+    use crate::artifacts::semio::standards::v1::subsets::base::schema::geometry::{SemioPoint3, SemioQuaternion};
     Ok(SemioTransform { translation: SemioPoint3 { x: f(tx)?, y: f(ty)?, z: f(tz)? }, rotation: SemioQuaternion { x: f(rx)?, y: f(ry)?, z: f(rz)?, w: f(rw)? }, scale: SemioPoint3 { x: f(sx)?, y: f(sy)?, z: f(sz)? } })
 }
 //#endregion 🔖️ChildCodecPrimitives
@@ -267,7 +267,7 @@ pub(crate) fn write_transform(out: &mut Vec<u8>, t: &SemioTransform) {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn read_transform(reader: &mut store::ByteReader<'_>) -> Result<SemioTransform, String> {
-    use crate::artifacts::semio::standards::v1::subsets::any::schema::geometry::{SemioPoint3, SemioQuaternion};
+    use crate::artifacts::semio::standards::v1::subsets::base::schema::geometry::{SemioPoint3, SemioQuaternion};
     let mut next = || -> Result<f64, String> { Ok(f64::from_le_bytes(reader.read_bytes(8).map_err(|e| e.to_string())?.try_into().map_err(|_| "transform: short read".to_string())?)) };
     Ok(SemioTransform { translation: SemioPoint3 { x: next()?, y: next()?, z: next()? }, rotation: SemioQuaternion { x: next()?, y: next()?, z: next()?, w: next()? }, scale: SemioPoint3 { x: next()?, y: next()?, z: next()? } })
 }
@@ -403,7 +403,7 @@ pub fn decode_semio_object_pack(bytes: &[u8]) -> Result<SemioObjectSnapshot, Str
 #[cfg(test)]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn demo_object_snapshot() -> SemioObjectSnapshot {
-    use crate::artifacts::semio::standards::v1::subsets::any::schema::geometry::{SemioPoint3, SemioQuaternion};
+    use crate::artifacts::semio::standards::v1::subsets::base::schema::geometry::{SemioPoint3, SemioQuaternion};
     let dialect = |subset: &str| store::os_io::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: subset.into() };
     SemioObjectSnapshot {
         schema: STDIO_SEMIOOBJECT_DOCUMENT_SCHEMA.into(),

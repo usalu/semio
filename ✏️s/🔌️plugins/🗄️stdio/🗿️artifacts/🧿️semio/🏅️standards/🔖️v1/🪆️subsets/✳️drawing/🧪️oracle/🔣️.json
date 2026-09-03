@@ -15,7 +15,7 @@
       ],
       "license": "AGPL-3.0-only",
       "testOnly": true,
-      "rationale": "🔮️ No third party reads or writes semio's own `.dsl.semio`/`.pack.semio` envelope, and the earlier `semio-drawing-mutation-semantics` decision's survey still stands on its merits: `usvg`/`resvg` model SVG, which has no counterpart for this subset's anonymous recursive `DrawNode` tree addressed by a structural `NodePath` and none at all for the four hierarchy verbs, while `lyon`/`kurbo` model path geometry alone and could adjudicate at most `replace-path`. What has changed is that a second producer no longer has to be a third-party library: `🧪️tests/mutate-semio-drawing/🐍️component.py` is an independent Python implementation of the carrier, the DSL grammar, the pack frame, the recursive node tree and all seventeen verbs, written from the committed specification documents alone — the snapshot and mutation text grammars, the binary protocol and its Kaitai mirror, and the semio envelope in the framework carrier module. It imports nothing from and transliterates nothing of the Rust it judges. It was pinned before use: it reproduces the committed `✳️any/📚️examples/🖍️sketch` artifact byte for byte in both encodings — one document that exhibits every node tag and every segment tag including the arc — and it reaches all seventeen committed after-snapshots. The SVG fixtures are still in the picture, but on the INPUT side only, where the old objection does not apply: the real committed `mouse.svg` and `qr-code.svg` were read once by an independent `xml.etree` reader plus a path-data scanner written from the SVG 1.1 §8.3 grammar — never our own svg bridge — to derive the real three-layer, 1 006-node drawing both implementations now mutate.\n\nUNDER PROTOCOL V2 this registration is classified `cross-semio-implementation` — a required SUPPLEMENTAL oracle that does not discharge `semio-v1-drawing-mutate`'s external-oracle requirement for its 17-kind mutation vocabulary; a qualifying third-party reference (`third-party-library` / `third-party-cli` / `standards-reference-tool`) is still owed.",
+      "rationale": "🔮️ No third party reads or writes semio's own `.dsl.semio`/`.pack.semio` envelope, and the earlier `semio-drawing-mutation-semantics` decision's survey still stands on its merits: `usvg`/`resvg` model SVG, which has no counterpart for this subset's anonymous recursive `DrawNode` tree addressed by a structural `NodePath` and none at all for the four hierarchy verbs, while `lyon`/`kurbo` model path geometry alone and could adjudicate at most `replace-path`. What has changed is that a second producer no longer has to be a third-party library: `🧪️tests/mutate-semio-drawing/🐍️component.py` is an independent Python implementation of the carrier, the DSL grammar, the pack frame, the recursive node tree and all seventeen verbs, written from the committed specification documents alone — the snapshot and mutation text grammars, the binary protocol and its Kaitai mirror, and the semio envelope in the framework carrier module. It imports nothing from and transliterates nothing of the Rust it judges. It was pinned before use: it reproduces the committed `✳️base/📚️examples/🖍️sketch` artifact byte for byte in both encodings — one document that exhibits every node tag and every segment tag including the arc — and it reaches all seventeen committed after-snapshots. The SVG fixtures are still in the picture, but on the INPUT side only, where the old objection does not apply: the real committed `mouse.svg` and `qr-code.svg` were read once by an independent `xml.etree` reader plus a path-data scanner written from the SVG 1.1 §8.3 grammar — never our own svg bridge — to derive the real three-layer, 1 006-node drawing both implementations now mutate.\n\nUNDER PROTOCOL V2 this registration is classified `cross-semio-implementation` — a required SUPPLEMENTAL oracle that does not discharge `semio-v1-drawing-mutate`'s external-oracle requirement for its 17-kind mutation vocabulary; a qualifying third-party reference (`third-party-library` / `third-party-cli` / `standards-reference-tool`) is still owed.",
       "kind": "cross-semio-implementation",
       "engine": {
         "family": "none",
@@ -129,6 +129,41 @@
       ],
       "homepage": "https://docs.rs/lopdf",
       "rationale": "📄️ A THIRD READER, DELIBERATELY NARROW: FOUR OF THE SEVENTEEN KINDS.\n\nThe pdf export is REAL and its own module doc states its boundary honestly: one `PdfPage` per `DrawLayer`, `media_box` from the canvas, page text = every `DrawNode::Text.value` in that layer's tree joined by newlines (`…📄️pdf/🔖️1.7/✳️any/🦀️.rs:17–32,43–57`); `Path`, `Group` and `Image` are explicitly dropped (line 30). Its own test proves real bytes through `encode_pdf`/`decode_pdf` (lines 99–102).\n\nWHAT IT DISCHARGES: `create-layer` and `delete-layer`, because a layer IS a page here and `lopdf` counts pages independently; `create-node` and `delete-node`, when the node is a `Text`, because the page's extracted text gains or loses a line.\n\nWHAT IT CANNOT DISCHARGE. PDF carries no geometry, no position and no colour for this subset, so `move-node`, `drag-nodes`, `rotate`, `scale`, `replace-path`, `replace-fill`, `change-stroke-color` and `change-stroke-width` are invisible in it by construction. `reorder-nodes`, `group`, `ungroup`, `flatten` and `unflatten` do not change the DFS order of the text values in this subset's committed scenarios, so the page text is byte-identical before and after. The `pdf-compare` probe returns `unsupported` rather than an empty `ok` when handed a carrier that cannot encode what is being asked about, because an empty result read as ok would let a mutation pass against evidence that was never in the file."
+    },
+    {
+      "id": "serde-json-semio-drawing-carrier-reader",
+      "kind": "third-party-library",
+      "ecosystem": "rust",
+      "package": "serde_json",
+      "version": "1",
+      "source": {
+        "repository": "https://github.com/serde-rs/json",
+        "license": "MIT OR Apache-2.0"
+      },
+      "engine": {
+        "family": "serde-json",
+        "implementation": "serde_json 1 value tree",
+        "version": "1"
+      },
+      "capabilities": [
+        "semio-v1-drawing-mutate"
+      ],
+      "comparisonProfiles": [
+        "ordered-json-v1"
+      ],
+      "license": "MIT OR Apache-2.0",
+      "testOnly": true,
+      "productionReachable": false,
+      "networkDuringExecution": false,
+      "platforms": [
+        "darwin-arm64",
+        "darwin-x64",
+        "linux-x64",
+        "linux-arm64",
+        "win32-x64"
+      ],
+      "homepage": "https://docs.rs/serde_json",
+      "rationale": "📖️ A READER over this subset's own JSON export, covering exactly the one kind whose full forward semantics reduces to a pure structural edit.\n\ncreate-layer's production diff (create-layer/🔺️diff/🦀️.rs) inserts a caller-supplied DrawLayer at index.min(base.layers.len()); an index at or past the end is a plain append, and a duplicate id already present in base is rejected outright (fatal). No computed field, no cross-reference for an end-of-list index.\n\n`SemioDrawingSnapshot::layers` is an INLINE `Vec<DrawLayer>` carrying its full content directly in this subset's own JSON export (`✳️drawing/🧬️schema/📸️snapshot/🦀️.rs`), so a genuinely fresh, unique-keyed `create-layer` payload is a carrier-level fact a third-party JSON implementation witnesses in full — the identical inline-versus-composed discriminator `serde-json-semio-document-carrier-reader`'s own rationale already applies to `document`'s `insert-image`/`remove-image`/`set-image-bytes` (`✳️document/🧪️oracle/🔣️.json`).\n\nThe reading tool is `✳️drawing/🏭generator/🦀️json-engine` — its own standalone crate (own `[workspace]`, `[dependencies] serde_json = \"1\"` and nothing else), which builds a deterministic seed document, applies `create-layer` as a domain-blind edit to the JSON tree (never through this repository's own mutation engine), and refuses to write a pair whose projection does not move. Scoped HONESTLY to this one kind: the other kinds this subset's own `semio-v1-drawing-mutate` capability names are NOT claimed by this oracle — most carry computed fields, cross-references or binary payloads this generic reader does not attempt (mirroring `dxf-crate-cad-r12-read`'s own partial-coverage precedent in this same file, which likewise reuses the shared capability id rather than declaring a new one for a subset of kinds)."
     }
   ],
   "mutationCatalogs": [

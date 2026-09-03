@@ -1,10 +1,8 @@
 use super::super::{DagDelta, DagDiff, DagMutation, DagSnapshot, DagFixtureEdge, EdgeRouteStyle, PropertyBag, DisconnectNodes};
-use serde::{Deserialize, Serialize};
 use semio_framework_value_derive::{FromValue, ToValue};
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, dsl::DslRecord, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
-#[serde(rename_all = "camelCase", deny_unknown_fields)]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[dsl(keyword = "connect-nodes")]
 pub struct ConnectNodes { pub id: String, pub source: String, pub target: String, pub route_style: EdgeRouteStyle, pub properties: PropertyBag, pub index: u64 }

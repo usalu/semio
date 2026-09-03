@@ -163,33 +163,45 @@ async fn to_actor_turn_result_in_place(result: &mut TurnResult, session: u64, wa
         semio_framework::kernel::TurnStatus::CheckpointReady { checkpoint } => semio_framework_actor::TurnStatus::CheckpointReady { checkpoint: checkpoint.clone() },
         semio_framework::kernel::TurnStatus::Faulted(detail) => semio_framework_actor::TurnStatus::Faulted { detail: detail.clone() },
     };
-    let owner = std::mem::take(&mut result.ui_patches);
-    let mut patch_transport = match semio_framework::kernel::UiTurnPatchTransportProducer::try_new(session, owner) {
-        Ok(producer) => producer,
-        Err(owner) => {
-            result.ui_patches = owner;
-            while !result.ui_patches.close_step() {
-                semio_framework_async::yield_once().await;
-            }
-            return Err(semio_framework::Fault::new(semio_framework::FaultOrigin::Framework, semio_framework::FaultCode::new("plugin.turn-patches-admission"), "fixed turn patch transport admission refused the exact owner"));
+    if let Err(reason) = result.validate_ui_patch_receipt() {
+        while !result.ui_patches.close_step() {
+            semio_framework_async::yield_once().await;
         }
-    };
-    loop {
-        match patch_transport.drive_one(session, false, false) {
-            semio_framework::kernel::UiTurnPatchTransportStep::MoreWork | semio_framework::kernel::UiTurnPatchTransportStep::Blocked => semio_framework_async::yield_once().await,
-            semio_framework::kernel::UiTurnPatchTransportStep::Ready => break,
-            semio_framework::kernel::UiTurnPatchTransportStep::Cancelled | semio_framework::kernel::UiTurnPatchTransportStep::Stale => {
-                return Err(semio_framework::Fault::new(semio_framework::FaultOrigin::Framework, semio_framework::FaultCode::new("plugin.turn-patches-transport"), "fixed turn patch transport became stale before publication"));
-            }
-            semio_framework::kernel::UiTurnPatchTransportStep::Fault(reason) => return Err(semio_framework::Fault::new(semio_framework::FaultOrigin::Framework, semio_framework::FaultCode::new("plugin.turn-patches-transport"), reason)),
-        }
+        return Err(semio_framework::Fault::new(semio_framework::FaultOrigin::Framework, semio_framework::FaultCode::new("plugin.turn-patches-receipt"), reason));
     }
     let effects = serde_json::to_vec(&result.effects).map_err(|error| semio_framework::Fault::new(semio_framework::FaultOrigin::Framework, semio_framework::FaultCode::new("plugin.turn-effects-encode"), error.to_string()))?;
     let command_ingress = serde_json::to_vec(&result.command_ingress).map_err(|error| semio_framework::Fault::new(semio_framework::FaultOrigin::Framework, semio_framework::FaultCode::new("plugin.turn-ingress-encode"), error.to_string()))?;
-    let ui_patches = loop {
-        match patch_transport.take_ready().map_err(|reason| semio_framework::Fault::new(semio_framework::FaultOrigin::Framework, semio_framework::FaultCode::new("plugin.turn-patches-publication"), reason))? {
-            Some(token) => break token.to_vec(),
-            None => semio_framework_async::yield_once().await,
+    let mut owner = std::mem::take(&mut result.ui_patches);
+    let ui_patches = if owner.is_empty() {
+        while !owner.close_step() {
+            semio_framework_async::yield_once().await;
+        }
+        Vec::new()
+    } else {
+        let mut patch_transport = match semio_framework::kernel::UiTurnPatchTransportProducer::try_new(session, owner) {
+            Ok(producer) => producer,
+            Err(mut owner) => {
+                while !owner.close_step() {
+                    semio_framework_async::yield_once().await;
+                }
+                return Err(semio_framework::Fault::new(semio_framework::FaultOrigin::Framework, semio_framework::FaultCode::new("plugin.turn-patches-admission"), "fixed turn patch transport admission refused the exact owner"));
+            }
+        };
+        loop {
+            match patch_transport.drive_one(session, false, false) {
+                semio_framework::kernel::UiTurnPatchTransportStep::MoreWork | semio_framework::kernel::UiTurnPatchTransportStep::Blocked => semio_framework_async::yield_once().await,
+                semio_framework::kernel::UiTurnPatchTransportStep::Ready => break,
+                semio_framework::kernel::UiTurnPatchTransportStep::Cancelled | semio_framework::kernel::UiTurnPatchTransportStep::Stale => {
+                    return Err(semio_framework::Fault::new(semio_framework::FaultOrigin::Framework, semio_framework::FaultCode::new("plugin.turn-patches-transport"), "fixed turn patch transport became stale before publication"));
+                }
+                semio_framework::kernel::UiTurnPatchTransportStep::Fault(reason) => return Err(semio_framework::Fault::new(semio_framework::FaultOrigin::Framework, semio_framework::FaultCode::new("plugin.turn-patches-transport"), reason)),
+            }
+        }
+        loop {
+            match patch_transport.take_ready().map_err(|reason| semio_framework::Fault::new(semio_framework::FaultOrigin::Framework, semio_framework::FaultCode::new("plugin.turn-patches-publication"), reason))? {
+                Some(token) => break token.to_vec(),
+                None => semio_framework_async::yield_once().await,
+            }
         }
     };
     Ok(semio_framework_actor::TurnResult { ui_patches, effects, command_ingress, lifecycle_receipt: result.lifecycle_receipt, ui_patch_receipt: result.ui_patch_receipt, next_wake: result.next_wake, status, usage: semio_framework_actor::Usage { fuel: result.fuel_used, wall_us, memory_bytes } })
@@ -330,8 +342,8 @@ pub struct ShardLoop {
     /// 📰️ Independently minted operation identity retained from spawn until terminal outcome.
     job_authorities: HashMap<(u64, u64), JobAuthority>,
     /// 📄️ Fixed, generation-qualified original spawn owners retained for live restart and replay.
-    replay_seeds: [Option<MountedReplaySeed>; JOB_REPLAY_SEED_SLOT_CAPACITY],
-    replay_seed_refusals: [Option<ReplaySpawnRefusal>; JOB_REPLAY_REFUSAL_SLOT_CAPACITY],
+    replay_seeds: Box<[Option<MountedReplaySeed>]>,
+    replay_seed_refusals: Box<[Option<ReplaySpawnRefusal>]>,
     replay_seed_cursor: usize,
     next_job_operation: u64,
     /// 🚦 `JobPlacement` (inline/isolated/exclusive) captured per `running_jobs` entry at
@@ -758,7 +770,7 @@ struct OwnerSlot<T> {
 }
 
 pub(super) struct FixedOwnerRing<T, const N: usize> {
-    slots: [Option<OwnerSlot<T>>; N],
+    slots: Box<[Option<OwnerSlot<T>>]>,
     head: usize,
     tail: usize,
     len: usize,
@@ -769,7 +781,7 @@ pub(super) struct FixedOwnerRing<T, const N: usize> {
 
 impl<T, const N: usize> FixedOwnerRing<T, N> {
     pub fn new(byte_capacity: usize) -> Self {
-        Self { slots: std::array::from_fn(|_| None), head: 0, tail: 0, len: 0, bytes: 0, byte_capacity, next_generation: 1 }
+        Self { slots: std::iter::repeat_with(|| None).take(N).collect(), head: 0, tail: 0, len: 0, bytes: 0, byte_capacity, next_generation: 1 }
     }
 
     pub fn is_empty(&self) -> bool {
@@ -902,8 +914,8 @@ impl ShardLoop {
             running_jobs: BTreeSet::new(),
             job_turns: HashMap::new(),
             job_authorities: HashMap::new(),
-            replay_seeds: std::array::from_fn(|_| None),
-            replay_seed_refusals: std::array::from_fn(|_| None),
+            replay_seeds: std::iter::repeat_with(|| None).take(JOB_REPLAY_SEED_SLOT_CAPACITY).collect(),
+            replay_seed_refusals: std::iter::repeat_with(|| None).take(JOB_REPLAY_REFUSAL_SLOT_CAPACITY).collect(),
             replay_seed_cursor: 0,
             next_job_operation: 1,
             job_placement: HashMap::new(),
@@ -2200,6 +2212,7 @@ impl GuestRuntime for RecordingRuntime {
             fuel_used: 0,
             command_ingress: semio_framework::kernel::CommandIngressStatus::Idle,
             lifecycle_receipt: None,
+            ui_patch_receipt: None,
         })
     }
     async fn start_job(&self, _inst: &mut GuestInstance, _job: u64, _kind: &str, _input: Vec<u8>) -> Result<(), TurnFault> {
@@ -2220,6 +2233,19 @@ impl GuestRuntime for RecordingRuntime {
     }
 }
 //#endregion 🧪️TestDoubles
+
+#[cfg(test)]
+fn fixture_instance_close_request() -> semio_framework::kernel::ActorInstanceCloseRequest {
+    semio_framework::kernel::ActorInstanceCloseRequest {
+        lifetime: semio_framework::kernel::ActorInstanceLifetime { activation_generation: 1, instance_id: 7, guest_lifetime: 13 },
+        request_sequence: 9,
+    }
+}
+
+#[cfg(test)]
+fn fixture_instance_close_event() -> Event {
+    Event::InstanceClose(fixture_instance_close_request())
+}
 
 #[cfg(test)]
 mod tests {
@@ -2270,6 +2296,18 @@ mod tests {
         encode_payload_envelope(to, seq, Payload::Event { bytes: serde_json::to_vec(event).expect("encode event") }).await
     }
 
+    #[test]
+    fn instance_close_event_matches_the_shared_first_party_fixture_and_serde_structure() {
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../🔨️modules/🎭️actor/🚪️lifetime/🧪️fixture/🔣️.json")).expect("shared actor lifecycle fixture");
+        let mut independent = fixture["vectors"].as_array().expect("lifecycle vectors").iter().find(|row| row["value"]["kind"] == "close").expect("close vector")["value"].clone();
+        independent.as_object_mut().expect("close value object").remove("kind");
+        let first_party: serde_json::Value = serde_json::from_str(&dsl::os_pack::json::to_json_string(&fixture_instance_close_request())).expect("first-party close JSON");
+        assert_eq!(first_party, independent);
+        let event = fixture_instance_close_event();
+        let serde_wire = serde_json::to_vec(&event).expect("serde event JSON");
+        assert_eq!(serde_json::from_slice::<Event>(&serde_wire).expect("decode serde event JSON"), event);
+    }
+
     /// ✉️ Generic envelope builder for `Suspend`/`Resume`/`Cancel` payload tests —
     /// `encode_event_envelope` above stays as a thin wrapper over this so existing tests are
     /// untouched. terra-shard-grants: wraps in `ShardFrame::Envelope` — the transport now carries
@@ -2301,7 +2339,7 @@ mod tests {
         mock.script_turn(actor, scripted).await;
 
         let (transport, probe) = LoopbackTransport::paired().await;
-        probe.push_inbound(encode_event_envelope(actor, 1, &Event::InstanceClose).await).await;
+        probe.push_inbound(encode_event_envelope(actor, 1, &fixture_instance_close_event()).await).await;
 
         let mut shard = ShardLoop::new(Arc::new(GuestRuntimes::Mock(mock.clone())), ShardTransports::Loopback(transport)).await;
         shard.register(actor, instance);
@@ -2327,7 +2365,7 @@ mod tests {
         let mock = Arc::new(MockGuestRuntime::new().await);
         let (transport, probe) = LoopbackTransport::paired().await;
         let stranger = ActorId(99);
-        probe.push_inbound(encode_event_envelope(stranger, 1, &Event::InstanceClose).await).await;
+        probe.push_inbound(encode_event_envelope(stranger, 1, &fixture_instance_close_event()).await).await;
 
         let mut shard = ShardLoop::new(Arc::new(GuestRuntimes::Mock(mock)), ShardTransports::Loopback(transport)).await;
         let driven = pump(&mut shard).await.expect("pump succeeds even with an unknown actor");
@@ -2387,7 +2425,7 @@ mod tests {
         mock.script_turn(actor, MockGuestRuntime::idle_turn().await).await;
 
         let (transport, probe) = LoopbackTransport::paired().await;
-        probe.push_inbound(encode_event_envelope(actor, 1, &Event::InstanceClose).await).await;
+        probe.push_inbound(encode_event_envelope(actor, 1, &fixture_instance_close_event()).await).await;
         probe.push_inbound(encode_payload_envelope(actor, 2, Payload::JobStep { turn: test_job_turn(actor, job_id, 0, 0) }).await).await;
 
         let mut shard = ShardLoop::new(Arc::new(GuestRuntimes::Mock(mock.clone())), ShardTransports::Loopback(transport)).await;
@@ -2471,7 +2509,7 @@ mod tests {
         mock.script_turn(actor, turn).await;
 
         let (transport, probe) = LoopbackTransport::paired().await;
-        probe.push_inbound(encode_event_envelope(actor, 1, &Event::InstanceClose).await).await;
+        probe.push_inbound(encode_event_envelope(actor, 1, &fixture_instance_close_event()).await).await;
         probe.push_inbound(encode_payload_envelope(actor, 2, Payload::JobStep { turn: test_job_turn(actor, job_id, 0, 0) }).await).await;
         let mut shard = ShardLoop::new(Arc::new(GuestRuntimes::Mock(mock)), ShardTransports::Loopback(transport)).await;
         shard.register(actor, instance);
@@ -2499,7 +2537,7 @@ mod tests {
         mock.fail_next_cancel();
 
         let (transport, probe) = LoopbackTransport::paired().await;
-        probe.push_inbound(encode_event_envelope(actor, 1, &Event::InstanceClose).await).await;
+        probe.push_inbound(encode_event_envelope(actor, 1, &fixture_instance_close_event()).await).await;
         let mut shard = ShardLoop::new(Arc::new(GuestRuntimes::Mock(mock.clone())), ShardTransports::Loopback(transport)).await;
         shard.register(actor, instance);
 
@@ -2516,7 +2554,7 @@ mod tests {
                     && message == "ShardLoop::pump: cancel-job 889 failed; actor 23 retired: guest trapped: scripted cancel-job failure"
         ));
 
-        probe.push_inbound(encode_event_envelope(actor, 2, &Event::InstanceClose).await).await;
+        probe.push_inbound(encode_event_envelope(actor, 2, &fixture_instance_close_event()).await).await;
         assert_eq!(pump(&mut shard).await.expect("post-retirement pump"), 0);
         assert_eq!(mock.cancel_admissions(), 1, "retirement must not retry cancellation");
         assert!(matches!(decode_outcomes(&probe.take_outbound().await).await.as_slice(), [ShardOutcome::Fault { actor: reported, .. }] if *reported == actor.0));
@@ -2616,7 +2654,7 @@ mod tests {
         mock.script_job_step(actor, JobStep::Running { progress: None }).await;
 
         let (transport, probe) = LoopbackTransport::paired().await;
-        probe.push_inbound(encode_event_envelope(actor, 1, &Event::InstanceClose).await).await;
+        probe.push_inbound(encode_event_envelope(actor, 1, &fixture_instance_close_event()).await).await;
         probe.push_inbound(encode_payload_envelope(actor, 2, Payload::JobStep { turn: test_job_turn(actor, job_id, 0, 0) }).await).await;
         let mut shard = ShardLoop::new(Arc::new(GuestRuntimes::Mock(mock)), ShardTransports::Loopback(transport)).await;
         shard.register(actor, instance);
@@ -2658,7 +2696,7 @@ mod tests {
         mock.script_job_step(actor, JobStep::Running { progress: None }).await;
 
         let (transport, probe) = LoopbackTransport::paired().await;
-        probe.push_inbound(encode_event_envelope(actor, 1, &Event::InstanceClose).await).await;
+        probe.push_inbound(encode_event_envelope(actor, 1, &fixture_instance_close_event()).await).await;
         probe.push_inbound(encode_payload_envelope(actor, 2, Payload::JobStep { turn: test_job_turn(actor, job_id, 0, 0) }).await).await;
         let mut shard = ShardLoop::new(Arc::new(GuestRuntimes::Mock(mock.clone())), ShardTransports::Loopback(transport)).await;
         shard.register(actor, instance);
@@ -2706,7 +2744,7 @@ mod tests {
         mock.script_job_step(actor, JobStep::Running { progress: None }).await;
 
         let (transport, probe) = LoopbackTransport::paired().await;
-        probe.push_inbound(encode_event_envelope(actor, 1, &Event::InstanceClose).await).await;
+        probe.push_inbound(encode_event_envelope(actor, 1, &fixture_instance_close_event()).await).await;
         probe.push_inbound(encode_payload_envelope(actor, 2, Payload::JobStep { turn: test_job_turn(actor, inline_job, 0, 0) }).await).await;
         probe.push_inbound(encode_payload_envelope(actor, 3, Payload::JobStep { turn: test_job_turn(actor, exclusive_job, 0, 0) }).await).await;
         let mut shard = ShardLoop::new(Arc::new(GuestRuntimes::Mock(mock)), ShardTransports::Loopback(transport)).await;
@@ -2784,6 +2822,10 @@ mod tests {
                     effects: vec![2],
                     command_ingress: vec![3],
                     lifecycle_receipt: None,
+                    ui_patch_receipt: Some(semio_framework_actor::instance_lifetime::ActorUiPatchReceipt {
+                        lifetime: semio_framework_actor::instance_lifetime::ActorInstanceLifetime { activation_generation: 1, instance_id: 7, guest_lifetime: 13 },
+                        patch_sequence: 1,
+                    }),
                     next_wake: Some(3),
                     status: semio_framework_actor::TurnStatus::MoreWork,
                     usage: semio_framework_actor::Usage { fuel: 4, wall_us: 5, memory_bytes: 6 },
@@ -3003,6 +3045,7 @@ mod tests {
             fuel_used: 999,
             command_ingress: semio_framework::kernel::CommandIngressStatus::Idle,
             lifecycle_receipt: None,
+            ui_patch_receipt: None,
         };
         let bridged = to_actor_turn_result(kernel_result, 1, 1234, 5678).await.expect("fixed turn encoding");
         assert_eq!(bridged.next_wake, Some(42));
@@ -3010,8 +3053,8 @@ mod tests {
         assert_eq!(bridged.usage.fuel, 999, "usage.fuel comes from the kernel TurnResult's own fuel_used");
         assert_eq!(bridged.usage.wall_us, 1234, "wall_us is host-measured, passed straight through");
         assert_eq!(bridged.usage.memory_bytes, 5678, "memory_bytes is host-measured, passed straight through");
-        let mut patches = semio_framework::kernel::UiTurnPatchTransportLease::try_from_token(&bridged.ui_patches, 1).expect("exact test transport").take_owner().unwrap_or_else(|_| panic!("exact test owner"));
-        while !patches.close_step() {}
+        assert!(bridged.ui_patches.is_empty());
+        assert_eq!(bridged.ui_patch_receipt, None);
     }
 
     #[semio_framework_async_macros::async_test]
@@ -3031,12 +3074,63 @@ mod tests {
                 fuel_used: 0,
                 command_ingress: semio_framework::kernel::CommandIngressStatus::Idle,
                 lifecycle_receipt: None,
+                ui_patch_receipt: None,
             };
             let bridged = to_actor_turn_result(kernel_result, 1, 0, 0).await.expect("fixed turn encoding");
             assert_eq!(bridged.status, expected);
-            let mut patches = semio_framework::kernel::UiTurnPatchTransportLease::try_from_token(&bridged.ui_patches, 1).expect("exact test transport").take_owner().unwrap_or_else(|_| panic!("exact test owner"));
-            while !patches.close_step() {}
+            assert!(bridged.ui_patches.is_empty());
+            assert_eq!(bridged.ui_patch_receipt, None);
         }
+    }
+
+    /// 📤️ Repeated validated empty turns use the canonical empty actor representation without
+    /// reserving transport slots, while one populated owner retains its single-claim lifecycle.
+    #[semio_framework_async_macros::async_test]
+    async fn empty_turns_bypass_patch_transport_while_one_populated_owner_claims_once() {
+        for session in 1..=semio_framework::kernel::UI_TURN_PATCH_TRANSPORT_SLOTS * 2 {
+            let result = TurnResult {
+                ui_patches: semio_framework::kernel::UiTurnPatches::default(),
+                effects: vec![],
+                presence: vec![],
+                next_wake: None,
+                status: semio_framework::kernel::TurnStatus::Idle,
+                fuel_used: 0,
+                command_ingress: semio_framework::kernel::CommandIngressStatus::Idle,
+                lifecycle_receipt: None,
+                ui_patch_receipt: None,
+            };
+            let bridged = to_actor_turn_result(result, session as u64, 0, 0).await.expect("validated empty turn");
+            assert!(bridged.ui_patches.is_empty());
+            assert_eq!(bridged.ui_patch_receipt, None);
+        }
+
+        let mut patches = semio_framework::kernel::UiTurnPatches::default();
+        let patch = serde_json::from_value(serde_json::json!({ "surface": "stack-authority", "baseRevision": 0, "revision": 1, "ops": [] })).expect("one patch fixture");
+        patches.try_push_ui_patch(patch).expect("one patch owner");
+        let receipt = semio_framework::kernel::ActorUiPatchReceipt {
+            lifetime: semio_framework::kernel::ActorInstanceLifetime { activation_generation: 1, instance_id: 7, guest_lifetime: 13 },
+            patch_sequence: 1,
+        };
+        let result = TurnResult {
+            ui_patches: patches,
+            effects: vec![],
+            presence: vec![],
+            next_wake: None,
+            status: semio_framework::kernel::TurnStatus::Idle,
+            fuel_used: 0,
+            command_ingress: semio_framework::kernel::CommandIngressStatus::Idle,
+            lifecycle_receipt: None,
+            ui_patch_receipt: Some(receipt),
+        };
+        let session = 800_001;
+        let bridged = to_actor_turn_result(result, session, 0, 0).await.expect("populated turn");
+        assert_eq!(bridged.ui_patch_receipt, Some(receipt));
+        let lease = semio_framework::kernel::UiTurnPatchTransportLease::try_from_token(&bridged.ui_patches, session).expect("one exact claim");
+        assert!(semio_framework::kernel::UiTurnPatchTransportLease::try_from_token(&bridged.ui_patches, session).is_err());
+        let mut owner = lease.take_owner().unwrap_or_else(|_| panic!("one exact owner"));
+        assert_eq!(owner.len(), 1);
+        while !owner.close_step() {}
+        assert!(semio_framework::kernel::UiTurnPatchTransportLease::try_from_token(&bridged.ui_patches, session).is_err());
     }
     //#endregion 🔖️BudgetBridge
 
@@ -3076,7 +3170,7 @@ mod tests {
                 deadline_ms: None,
                 coalesce: None,
                 cancel_of: None,
-                payload: Payload::Event { bytes: serde_json::to_vec(&Event::InstanceClose).expect("encode") },
+                payload: Payload::Event { bytes: serde_json::to_vec(&fixture_instance_close_event()).expect("encode") },
             };
             let mut bytes = Vec::new();
             ShardFrame::Grant { actor, budget: background_budget, envelopes: vec![envelope] }.pack_encode(&mut bytes).await;
@@ -3099,7 +3193,7 @@ mod tests {
             deadline_ms: None,
             coalesce: None,
             cancel_of: None,
-            payload: Payload::Event { bytes: serde_json::to_vec(&Event::InstanceClose).expect("encode") },
+            payload: Payload::Event { bytes: serde_json::to_vec(&fixture_instance_close_event()).expect("encode") },
         };
         let mut interactive_bytes = Vec::new();
         ShardFrame::Grant { actor: interactive_actor, budget: interactive_budget, envelopes: vec![interactive_envelope] }.pack_encode(&mut interactive_bytes).await;
@@ -3138,7 +3232,7 @@ mod tests {
         let (transport, probe) = LoopbackTransport::paired().await;
         let mut shard = ShardLoop::new(Arc::new(GuestRuntimes::Mock(mock.clone())), ShardTransports::Loopback(transport)).await;
         shard.register(actor, instance);
-        probe.push_inbound(encode_payload_envelope(actor, 1, Payload::Event { bytes: serde_json::to_vec(&Event::InstanceClose).expect("encode") }).await).await;
+        probe.push_inbound(encode_payload_envelope(actor, 1, Payload::Event { bytes: serde_json::to_vec(&fixture_instance_close_event()).expect("encode") }).await).await;
 
         let driven = pump(&mut shard).await.expect("pump");
         assert_eq!(driven, 1);

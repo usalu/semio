@@ -17,7 +17,7 @@ Feature: Apply every typed semio BREP mutation to the real concrete-forest struc
   decision it replaces is gone, because there is now a reference to compare against.
 
   🌲️ **The solid under test is a real building structure.** The richest `stdio.semio.brep` document
-  committed anywhere in this artifact is the three-vertex demo solid under `✳️any`'s example set —
+  committed anywhere in this artifact is the three-vertex demo solid under `✳️base`'s example set —
   537 bytes, which is a fixture, not a solid. So the document every mutation row below runs on was
   derived ONCE — by `🐍️derive-brep-fixture.py` in the ticket folder — from the real committed
   `♻️mit-bestand/🖼️asset/🏚️abbau-aufbau/📐️hexagonal-cut-concrete-forest-left-bim.stp`, the real

@@ -1,7 +1,7 @@
 //! 🧩️ `add-node` command.
 
 use crate::editor::puzzle5d::{add_palette_part, Puzzle5dActionCtx};
-use serde_json::Value;
+use dsl::os_pack::json::Value;
 
 /// 🎨️ Palette drop at a flat point — the volume origin is derived from the nearest peer part.
 pub fn add_node(ctx: &mut Puzzle5dActionCtx<'_>, args: Option<&Value>) {

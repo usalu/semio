@@ -1,0 +1,90 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://semio.tech/schema/hub/auth/capability-v1.json",
+  "title": "Hub Auth Capability V1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["session", "share", "invite", "identity", "revocation", "audit", "limits"],
+  "properties": {
+    "session": { "$ref": "#/$defs/CapabilityVector" },
+    "share": { "$ref": "#/$defs/CapabilityVector" },
+    "invite": { "$ref": "#/$defs/CapabilityVector" },
+    "identity": { "$ref": "#/$defs/IdentityVector" },
+    "revocation": { "$ref": "#/$defs/RevocationVector" },
+    "audit": { "$ref": "#/$defs/AuditVector" },
+    "limits": { "$ref": "#/$defs/Limits" }
+  },
+  "$defs": {
+    "LowerHex32": { "type": "string", "pattern": "^[0-9a-f]{32}$" },
+    "LowerHex64": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "SessionCapability": { "type": "string", "pattern": "^session\\.v1\\.[0-9a-f]{32}\\.[0-9a-f]{64}$" },
+    "ShareCapability": { "type": "string", "pattern": "^share\\.v1\\.[0-9a-f]{32}\\.[0-9a-f]{64}$" },
+    "InviteCapability": { "type": "string", "pattern": "^invite\\.v1\\.[0-9a-f]{32}\\.[0-9a-f]{64}$" },
+    "CapabilityVector": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "capability", "selector", "secretHex", "digestHex"],
+      "properties": {
+        "kind": { "type": "string", "enum": ["session", "share", "invite"] },
+        "capability": { "type": "string", "minLength": 106, "maxLength": 108 },
+        "selector": { "$ref": "#/$defs/LowerHex32" },
+        "secretHex": { "$ref": "#/$defs/LowerHex64" },
+        "digestHex": { "$ref": "#/$defs/LowerHex64" }
+      }
+    },
+    "IdentityVector": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["provider", "subject", "digestHex"],
+      "properties": {
+        "provider": { "type": "string", "minLength": 1, "maxLength": 256 },
+        "subject": { "type": "string", "minLength": 1, "maxLength": 256 },
+        "digestHex": { "$ref": "#/$defs/LowerHex64" }
+      }
+    },
+    "Limits": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["selectorBytes", "secretBytes", "ttlSecondsMax", "deviceIdentityBytesMax", "assertionBytesMax"],
+      "properties": {
+        "selectorBytes": { "const": 16 },
+        "secretBytes": { "const": 32 },
+        "ttlSecondsMax": { "const": 31536000 },
+        "deviceIdentityBytesMax": { "const": 128 },
+        "assertionBytesMax": { "const": 16384 }
+      }
+    },
+    "RevocationVector": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["sessionId", "previousGeneration", "nextGeneration", "revokedAt", "reason"],
+      "properties": {
+        "sessionId": { "type": "string", "minLength": 1, "maxLength": 256 },
+        "previousGeneration": { "const": 1 },
+        "nextGeneration": { "const": 2 },
+        "revokedAt": { "type": "integer" },
+        "reason": { "type": "string", "minLength": 1, "maxLength": 256 }
+      }
+    },
+    "AuditVector": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["eventKind", "authSessionId", "targetUserId", "provider", "outcomeCode", "reasonCode", "correlationId", "peerClass"],
+      "properties": {
+        "eventKind": { "const": "session-revoked" },
+        "authSessionId": { "type": "string", "minLength": 1, "maxLength": 256 },
+        "targetUserId": { "type": "string", "minLength": 1, "maxLength": 256 },
+        "provider": { "type": "string", "minLength": 1, "maxLength": 256 },
+        "outcomeCode": { "const": "success" },
+        "reasonCode": { "type": "string", "minLength": 1, "maxLength": 256 },
+        "correlationId": { "type": "string", "minLength": 1, "maxLength": 256 },
+        "peerClass": { "type": "string", "minLength": 1, "maxLength": 256 }
+      }
+    }
+  },
+  "allOf": [
+    { "type": "object", "properties": { "session": { "type": "object", "properties": { "kind": { "const": "session" }, "capability": { "$ref": "#/$defs/SessionCapability" } } } } },
+    { "type": "object", "properties": { "share": { "type": "object", "properties": { "kind": { "const": "share" }, "capability": { "$ref": "#/$defs/ShareCapability" } } } } },
+    { "type": "object", "properties": { "invite": { "type": "object", "properties": { "kind": { "const": "invite" }, "capability": { "$ref": "#/$defs/InviteCapability" } } } } }
+  ]
+}

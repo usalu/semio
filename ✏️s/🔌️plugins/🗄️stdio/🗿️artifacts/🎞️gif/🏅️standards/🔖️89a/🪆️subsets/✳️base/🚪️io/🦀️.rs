@@ -425,7 +425,7 @@ pub fn register_artifact_inferences() {
 }
 
 /// 📌️ P2-FG2: 5-role `LanguageSpec` registration (Document/Ops/Diff/Pack/Spr) — same shape as
-/// 87a's own sibling registration and the recipe's `📄txt` exemplar. `diff`'s `protocol` slot
+/// 87a's own sibling registration and the recipe's `📄️txt` exemplar. `diff`'s `protocol` slot
 /// stays `None` (the 5-role scheme has no dedicated "diff binary" role, even though
 /// `🔺️diff/💾️binary/📡️.protocol.semio` is a real, conformance-tested file — its
 /// binary form is exercised directly by `protocol_walk_law` below).

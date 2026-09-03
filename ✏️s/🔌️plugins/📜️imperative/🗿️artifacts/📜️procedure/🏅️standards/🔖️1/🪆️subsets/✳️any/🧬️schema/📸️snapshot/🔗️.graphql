@@ -1,0 +1,30 @@
+# 🧬️ Imperative snapshot schema — artifact-lane fields only.
+
+type ProcedureSnapshot {
+  schema: String! @state(class: ARTIFACT)
+  path: ProcedurePath! @state(class: ARTIFACT)
+  seed: [ProcedureSeedEntry!]! @state(class: ARTIFACT)
+}
+
+type ProcedurePath {
+  steps: [ProcedureStep!]!
+}
+
+type ProcedureStep {
+  id: String!
+  kind: String!
+  params: JSON
+  bodies: [ProcedureStepBodyEntry!]
+}
+
+type ProcedureStepBodyEntry {
+  slot: String!
+  path: ProcedurePath!
+}
+
+type ProcedureSeedEntry {
+  key: String!
+  value: JSON!
+}
+
+scalar JSON

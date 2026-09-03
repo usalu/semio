@@ -252,5 +252,351 @@
         }
       ]
     }
+  ],
+  "fixtureManifests": [
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "insert-sample-applied",
+      "class": "handcrafted",
+      "target": {
+        "artifact": "s.stdio.mp4",
+        "standard": "isobmff",
+        "subset": "any"
+      },
+      "mutation": "insert-sample",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before",
+          "path": "../🧫️fixtures/insert-sample/before.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:b934a19ee9a35cbd07b9d4d2ff48b445d987681f7949ded6acb56b265086e393",
+          "bytes": 2460
+        },
+        {
+          "role": "expected-after",
+          "path": "../🧫️fixtures/insert-sample/after.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:fe53cac7f0859a39ec251cfa6ff4616ec6972bed996e6aa80dd7c688128aad39",
+          "bytes": 2667
+        }
+      ],
+      "provenance": {
+        "source": "authored",
+        "license": "public-domain (handcrafted by this repository)",
+        "attribution": "Handcrafted before/after vector authored directly against this subset's own documented schema — Law 2's handcrafted-vector category.",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "ordered-json-v1",
+      "reproducible": true,
+      "family": "mp4-carrier",
+      "notes": "Handcrafted Mp4Snapshot before/after pair, schema and base track data taken from this subset's own committed set-snapshot leaf fixture (a real single-track AVC/H.264 document). InsertSample{trackIndex:0,index:1,sample} inserts a real NAL-unit-shaped H.264 sample between the two existing samples, matching the committed set-snapshot leaf's own AVC track."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "insert-track-applied",
+      "class": "handcrafted",
+      "target": {
+        "artifact": "s.stdio.mp4",
+        "standard": "isobmff",
+        "subset": "any"
+      },
+      "mutation": "insert-track",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before",
+          "path": "../🧫️fixtures/insert-track/before.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:b934a19ee9a35cbd07b9d4d2ff48b445d987681f7949ded6acb56b265086e393",
+          "bytes": 2460
+        },
+        {
+          "role": "expected-after",
+          "path": "../🧫️fixtures/insert-track/after.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:8f93e8cdce037f5e2a612017871fcdb87099e1b831bdeafe5554e40f743120a4",
+          "bytes": 4415
+        }
+      ],
+      "provenance": {
+        "source": "authored",
+        "license": "public-domain (handcrafted by this repository)",
+        "attribution": "Handcrafted before/after vector authored directly against this subset's own documented schema — Law 2's handcrafted-vector category.",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "ordered-json-v1",
+      "reproducible": true,
+      "family": "mp4-carrier",
+      "notes": "Handcrafted Mp4Snapshot before/after pair, schema and base track data taken from this subset's own committed set-snapshot leaf fixture (a real single-track AVC/H.264 document). InsertTrack{index:1,track} appends a second, identically-shaped video track and bumps movie.nextTrackId — the field the box header itself must stay consistent with."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "remove-track-applied",
+      "class": "handcrafted",
+      "target": {
+        "artifact": "s.stdio.mp4",
+        "standard": "isobmff",
+        "subset": "any"
+      },
+      "mutation": "remove-track",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before",
+          "path": "../🧫️fixtures/remove-track/before.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:8f93e8cdce037f5e2a612017871fcdb87099e1b831bdeafe5554e40f743120a4",
+          "bytes": 4415
+        },
+        {
+          "role": "expected-after",
+          "path": "../🧫️fixtures/remove-track/after.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:b934a19ee9a35cbd07b9d4d2ff48b445d987681f7949ded6acb56b265086e393",
+          "bytes": 2460
+        }
+      ],
+      "provenance": {
+        "source": "authored",
+        "license": "public-domain (handcrafted by this repository)",
+        "attribution": "Handcrafted before/after vector authored directly against this subset's own documented schema — Law 2's handcrafted-vector category.",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "ordered-json-v1",
+      "reproducible": true,
+      "family": "mp4-carrier",
+      "notes": "Handcrafted Mp4Snapshot before/after pair, schema and base track data taken from this subset's own committed set-snapshot leaf fixture (a real single-track AVC/H.264 document). RemoveTrack{index:1} drops the second track, restoring the single-track document."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "set-sample-sync-applied",
+      "class": "handcrafted",
+      "target": {
+        "artifact": "s.stdio.mp4",
+        "standard": "isobmff",
+        "subset": "any"
+      },
+      "mutation": "set-sample-sync",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before",
+          "path": "../🧫️fixtures/set-sample-sync/before.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:b934a19ee9a35cbd07b9d4d2ff48b445d987681f7949ded6acb56b265086e393",
+          "bytes": 2460
+        },
+        {
+          "role": "expected-after",
+          "path": "../🧫️fixtures/set-sample-sync/after.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:7e18655f9843da96b6e87a6c6b013a58029a2e11b0ffe47c52a809740904a811",
+          "bytes": 2459
+        }
+      ],
+      "provenance": {
+        "source": "authored",
+        "license": "public-domain (handcrafted by this repository)",
+        "attribution": "Handcrafted before/after vector authored directly against this subset's own documented schema — Law 2's handcrafted-vector category.",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "ordered-json-v1",
+      "reproducible": true,
+      "family": "mp4-carrier",
+      "notes": "Handcrafted Mp4Snapshot before/after pair, schema and base track data taken from this subset's own committed set-snapshot leaf fixture (a real single-track AVC/H.264 document). SetSampleSync{trackIndex:0,index:1,sync:true} promotes the second sample to a sync (key) frame in place — the exact mutation this subset's own committed set-snapshot fixture's scenario name describes."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "set-track-codec-applied",
+      "class": "handcrafted",
+      "target": {
+        "artifact": "s.stdio.mp4",
+        "standard": "isobmff",
+        "subset": "any"
+      },
+      "mutation": "set-track-codec",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before",
+          "path": "../🧫️fixtures/set-track-codec/before.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:b934a19ee9a35cbd07b9d4d2ff48b445d987681f7949ded6acb56b265086e393",
+          "bytes": 2460
+        },
+        {
+          "role": "expected-after",
+          "path": "../🧫️fixtures/set-track-codec/after.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:9c5515473b8d9b0b2fb2baa7d5f13e448485a81eb67c1fcbd1a5ff62710ab5e0",
+          "bytes": 2461
+        }
+      ],
+      "provenance": {
+        "source": "authored",
+        "license": "public-domain (handcrafted by this repository)",
+        "attribution": "Handcrafted before/after vector authored directly against this subset's own documented schema — Law 2's handcrafted-vector category.",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "ordered-json-v1",
+      "reproducible": true,
+      "family": "mp4-carrier",
+      "notes": "Handcrafted Mp4Snapshot before/after pair, schema and base track data taken from this subset's own committed set-snapshot leaf fixture (a real single-track AVC/H.264 document). SetTrackCodec{trackIndex:0,codec} replaces the SPS/PPS NAL units in place with a different real High-profile AVC parameter set, leaving nalLengthSize (the ISOBMFF avcC length-prefix size) unchanged."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "set-ftyp-applied",
+      "class": "handcrafted",
+      "target": {
+        "artifact": "s.stdio.mp4",
+        "standard": "isobmff",
+        "subset": "any"
+      },
+      "mutation": "set-ftyp",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before",
+          "path": "../🧫️fixtures/set-ftyp/before.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:b934a19ee9a35cbd07b9d4d2ff48b445d987681f7949ded6acb56b265086e393",
+          "bytes": 2460
+        },
+        {
+          "role": "expected-after",
+          "path": "../🧫️fixtures/set-ftyp/after.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:83a2c6750adbb22644f0f0aebd27d80bda57fdf9af89b75e5f2ee9c61ae468c7",
+          "bytes": 2472
+        }
+      ],
+      "provenance": {
+        "source": "authored",
+        "license": "public-domain (handcrafted by this repository)",
+        "attribution": "Handcrafted before/after vector authored directly against this subset's own documented schema — Law 2's handcrafted-vector category.",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "ordered-json-v1",
+      "reproducible": true,
+      "family": "mp4-carrier",
+      "notes": "Handcrafted Mp4Snapshot before/after pair, schema and base track data taken from this subset's own committed set-snapshot leaf fixture (a real single-track AVC/H.264 document). SetFtyp replaces the whole ftyp box — major brand, minor version and compatible-brands list — with a different real ISOBMFF brand combination."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "set-track-dimensions-applied",
+      "class": "handcrafted",
+      "target": {
+        "artifact": "s.stdio.mp4",
+        "standard": "isobmff",
+        "subset": "any"
+      },
+      "mutation": "set-track-dimensions",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before",
+          "path": "../🧫️fixtures/set-track-dimensions/before.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:b934a19ee9a35cbd07b9d4d2ff48b445d987681f7949ded6acb56b265086e393",
+          "bytes": 2460
+        },
+        {
+          "role": "expected-after",
+          "path": "../🧫️fixtures/set-track-dimensions/after.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:a3ea9ec828b15302061fa48f203c03fbf2f3fc2ade4645ed25d236b47be4b994",
+          "bytes": 2460
+        }
+      ],
+      "provenance": {
+        "source": "authored",
+        "license": "public-domain (handcrafted by this repository)",
+        "attribution": "Handcrafted before/after vector authored directly against this subset's own documented schema — Law 2's handcrafted-vector category.",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "ordered-json-v1",
+      "reproducible": true,
+      "family": "mp4-carrier",
+      "notes": "Handcrafted Mp4Snapshot before/after pair, schema and base track data taken from this subset's own committed set-snapshot leaf fixture (a real single-track AVC/H.264 document). SetTrackDimensions{trackIndex:0,width:32,height:24} overwrites the track header's presentation width/height (tkhd) in place."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "remove-sample-applied",
+      "class": "handcrafted",
+      "target": {
+        "artifact": "s.stdio.mp4",
+        "standard": "isobmff",
+        "subset": "any"
+      },
+      "mutation": "remove-sample",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before",
+          "path": "../🧫️fixtures/remove-sample/before.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:b934a19ee9a35cbd07b9d4d2ff48b445d987681f7949ded6acb56b265086e393",
+          "bytes": 2460
+        },
+        {
+          "role": "expected-after",
+          "path": "../🧫️fixtures/remove-sample/after.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:25041b5586fd21ed4113c24fd552020c731545ce1fdf645b3222e11be3e47a34",
+          "bytes": 2253
+        }
+      ],
+      "provenance": {
+        "source": "authored",
+        "license": "public-domain (handcrafted by this repository)",
+        "attribution": "Handcrafted before/after vector authored directly against this subset's own documented schema — Law 2's handcrafted-vector category.",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "ordered-json-v1",
+      "reproducible": true,
+      "family": "mp4-carrier",
+      "notes": "Handcrafted Mp4Snapshot before/after pair, schema and base track data taken from this subset's own committed set-snapshot leaf fixture (a real single-track AVC/H.264 document). RemoveSample{trackIndex:0,index:0} drops the first (sync) sample, leaving the second."
+    }
   ]
 }

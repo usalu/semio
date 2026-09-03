@@ -46,5 +46,33 @@
         "metamorphic-laws"
       ]
     }
+  ],
+  "mutationCatalogs": [
+    {
+      "id": "sequence-1-any-step",
+      "capability": "sequence-1-step-mutate",
+      "standardDirectoryName": "🔖️1",
+      "subsetDirectoryName": "✳️any",
+      "kinds": [
+        "create-step",
+        "delete-step",
+        "move-step",
+        "edit-step-params",
+        "change-step-collapsed",
+        "duplicate-step"
+      ],
+      "vectors": []
+    },
+    {
+      "id": "sequence-1-any-dependency",
+      "capability": "sequence-1-dependency-mutate",
+      "standardDirectoryName": "🔖️1",
+      "subsetDirectoryName": "✳️any",
+      "kinds": [
+        "connect-steps",
+        "disconnect-steps"
+      ],
+      "vectors": []
+    }
   ]
 }

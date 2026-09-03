@@ -2,6 +2,8 @@
 
 use crate::db_ids::{ActorId, ArtifactId, DbError};
 use semio_framework_dispatch_macros::dyn_enum;
+use std::future::Future;
+use std::pin::Pin;
 
 //#region 🔖️VersionGraph
 /// @emoji 📝️ One committed, content-addressed change to record in the version graph — the
@@ -38,19 +40,22 @@ pub struct CheckpointRequest {
 #[dyn_enum]
 pub trait VersionGraph: Send + Sync {
     /// @emoji 📝️ Records `change` against `document`, returning its assigned change id.
-    async fn record_change(&self, document: &ArtifactId, change: ChangeRecord) -> Result<String, DbError>;
+    fn record_change<'a>(&'a self, document: &'a ArtifactId, change: ChangeRecord) -> VersionGraphFuture<'a, String>;
 
     /// @emoji 🏁️ Records a checkpoint over previously-recorded changes, returning its assigned
     /// content-addressed checkpoint id (`vcs`'s own concern how that id is derived).
-    async fn checkpoint(&self, document: &ArtifactId, request: CheckpointRequest) -> Result<String, DbError>;
+    fn checkpoint<'a>(&'a self, document: &'a ArtifactId, request: CheckpointRequest) -> VersionGraphFuture<'a, String>;
 
     /// @emoji 🔀️ The nearest common ancestor checkpoint of `a` and `b`, or `None` if they share
     /// none (disjoint histories).
-    async fn merge_base(&self, document: &ArtifactId, a: &str, b: &str) -> Result<Option<String>, DbError>;
+    fn merge_base<'a>(&'a self, document: &'a ArtifactId, a: &'a str, b: &'a str) -> VersionGraphFuture<'a, Option<String>>;
 
     /// @emoji 🎯️ The current head checkpoint id of `alternative`, or `None` if it has none yet.
-    async fn head(&self, document: &ArtifactId, alternative: &str) -> Result<Option<String>, DbError>;
+    fn head<'a>(&'a self, document: &'a ArtifactId, alternative: &'a str) -> VersionGraphFuture<'a, Option<String>>;
 }
+
+/// @emoji 🧵️ A worker-safe version-graph operation future with its input borrow lifetime preserved.
+pub type VersionGraphFuture<'a, T> = Pin<Box<dyn Future<Output = Result<T, DbError>> + Send + 'a>>;
 
 /// @emoji 🚫️ A `VersionGraph` that answers every call with `DbError::Unimplemented` rather than
 /// panicking — the extension seam this crate offers for a `vcs`-feature-disabled deployment (or a
@@ -60,20 +65,20 @@ pub trait VersionGraph: Send + Sync {
 pub struct NullVersionGraph;
 
 impl VersionGraph for NullVersionGraph {
-    async fn record_change(&self, _document: &ArtifactId, _change: ChangeRecord) -> Result<String, DbError> {
-        Err(DbError::Unimplemented("VersionGraph is not wired up (vcs feature disabled)"))
+    fn record_change<'a>(&'a self, _document: &'a ArtifactId, _change: ChangeRecord) -> VersionGraphFuture<'a, String> {
+        Box::pin(async { Err(DbError::Unimplemented("VersionGraph is not wired up (vcs feature disabled)")) })
     }
 
-    async fn checkpoint(&self, _document: &ArtifactId, _request: CheckpointRequest) -> Result<String, DbError> {
-        Err(DbError::Unimplemented("VersionGraph is not wired up (vcs feature disabled)"))
+    fn checkpoint<'a>(&'a self, _document: &'a ArtifactId, _request: CheckpointRequest) -> VersionGraphFuture<'a, String> {
+        Box::pin(async { Err(DbError::Unimplemented("VersionGraph is not wired up (vcs feature disabled)")) })
     }
 
-    async fn merge_base(&self, _document: &ArtifactId, _a: &str, _b: &str) -> Result<Option<String>, DbError> {
-        Err(DbError::Unimplemented("VersionGraph is not wired up (vcs feature disabled)"))
+    fn merge_base<'a>(&'a self, _document: &'a ArtifactId, _a: &'a str, _b: &'a str) -> VersionGraphFuture<'a, Option<String>> {
+        Box::pin(async { Err(DbError::Unimplemented("VersionGraph is not wired up (vcs feature disabled)")) })
     }
 
-    async fn head(&self, _document: &ArtifactId, _alternative: &str) -> Result<Option<String>, DbError> {
-        Err(DbError::Unimplemented("VersionGraph is not wired up (vcs feature disabled)"))
+    fn head<'a>(&'a self, _document: &'a ArtifactId, _alternative: &'a str) -> VersionGraphFuture<'a, Option<String>> {
+        Box::pin(async { Err(DbError::Unimplemented("VersionGraph is not wired up (vcs feature disabled)")) })
     }
 }
 //#endregion 🔖️VersionGraph

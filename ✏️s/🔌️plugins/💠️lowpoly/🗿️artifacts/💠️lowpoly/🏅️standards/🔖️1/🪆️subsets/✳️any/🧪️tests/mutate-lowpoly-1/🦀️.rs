@@ -2,11 +2,11 @@
 //! `26/08/23/END-TO-END-TESTING-REFACTOR`.
 //!
 //! Recorded no-oracle decision `lowpoly-mutation-semantics`
-//! (`../../🏅️standards/🔖️1/🪆️subsets/✳️any/🔣️oracle.json`): this is a semio-NATIVE
+//! (`../../🧪️oracle/🔣️.json`): this is a semio-NATIVE
 //! document and `LowpolyMutation` IS its specification, so there is nothing third-party to register. What
 //! stands in for an oracle is named there and exercised here: the committed
 //! `(before, mutation, diff, outcome, after)` quintets under
-//! `../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/<kind>/🧪️tests/<fixture>/`, replayed
+//! `../../🧬️schema/🧬️mutations/<kind>/🧪️tests/<fixture>/`, replayed
 //! through the platform, plus two metamorphic laws asserted IN ROLE.
 //!
 //! **Where the assertions live.** A recorded no-oracle case runs NO oracle role — the runner
@@ -25,7 +25,7 @@
 //! `apply(inverse(m), apply(m, base)) == base` stays with the production `inverse()` implementation
 //! and the per-leaf fixture tests that already exercise it.
 //!
-//! @see ../../../../../🗄️stdio/🧪️oracle/⚖️law/🦀️.rs — the shared law helpers.
+//! @see ../../../../../../../../../🗄️stdio/🧪️oracle/⚖️law/🦀️.rs — the shared law helpers.
 
 use semio_repo_test_host::{Adapter, Context, Json, Outcome};
 
@@ -37,7 +37,7 @@ use semio_repo_test_host::{Adapter, Context, Json, Outcome};
 /// implicit `🦀️component/` child directory.
 #[path = "."]
 mod shared {
-    #[path = "../../../../../🗄️stdio/🧪️oracle/⚖️law/🦀️.rs"]
+    #[path = "../../../../../../../../../🗄️stdio/🧪️oracle/⚖️law/🦀️.rs"]
     pub mod law;
 }
 use shared::law;
@@ -45,7 +45,7 @@ use shared::law;
 
 //#region 🔖️Vocabulary
 /// 🏷️ Mirrors `LowpolyMutation::KINDS`
-/// (`../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs`) — duplicated, not
+/// (`../../🧬️schema/🧬️mutations/🦀️.rs`) — duplicated, not
 /// imported, because this host must not link the plugin crate.
 /// `kinds_match_the_enum_and_the_catalog` in that production file keeps the const honest against the
 /// enum and the manifest; the contract's coverage gate keeps this list honest against the

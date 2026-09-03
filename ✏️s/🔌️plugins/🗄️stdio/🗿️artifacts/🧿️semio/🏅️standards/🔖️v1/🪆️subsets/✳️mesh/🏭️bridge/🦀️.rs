@@ -30,9 +30,9 @@ mod artifacts {
                     pub mod any {
                         #[path = "."]
 pub mod schema {
-    #[path = "../../✳️any/🧬️schema/🧮️geometry/🦀️.rs"]
+    #[path = "../../✳️base/🧬️schema/🧮️geometry/🦀️.rs"]
     pub mod geometry;
-    #[path = "../../✳️any/🧬️schema/🧰️triples/🦀️.rs"]
+    #[path = "../../✳️base/🧬️schema/🧰️triples/🦀️.rs"]
     pub mod triples;
 }
                     }

@@ -1,0 +1,20 @@
+{
+  "formatVersion": 1,
+  "description": "Language-neutral exact catalog identity and failure-atomic immutable publication vector",
+  "identity": {
+    "pluginId": "fixture.authority",
+    "packageId": "fixture.authority.package",
+    "version": "1.2.3",
+    "packageHash": "2222222222222222222222222222222222222222222222222222222222222222",
+    "artifactKind": "fixture.number",
+    "artifactSchema": "fixture.number@1",
+    "packSchemaHash": "1111111111111111111111111111111111111111111111111111111111111111"
+  },
+  "pack": [49, 51],
+  "spr": [115, 101, 101, 100, 0, 0, 0, 1, 53, 0, 0, 0, 2, 45, 50],
+  "packSha256": "3fdba35f04dc8c462986c992bcf875546257113072a909c162f7e470e581e278",
+  "sprSha256": "ec51adbbbb7bc6c781fa2bf8c8ddf1c0edbdcb7a1376509bc2cbf6774ee591d8",
+  "aggregateSha256": "e29f9287b42b0642d71995e2d00cc27312b9a568f1d0a2f87fbb6e369632ad35",
+  "failureStages": ["packStage", "sprStage", "packRead", "sprRead", "publisher"],
+  "expectedPublisherCallsOnAnyPrepublicationFailure": 0
+}

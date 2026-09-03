@@ -6,7 +6,7 @@ use crate::artifacts::wires::WiresSnapshot;
 use crate::editor::wires::config::{WiresConfig, WiresConfigMutation};
 use crate::editor::wires::{wires_select_effect, WIRES_GRANULARITY_NODE};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
-use serde_json::json;
+use dsl::DslValue;
 use semio_framework_value_derive::{FromValue, ToValue};
 
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
@@ -22,17 +22,16 @@ pub async fn handle(payload: &AddNode, doc: &ArtifactView<'_, WiresSnapshot>, _c
     let document = doc.snapshot;
     let kind = if payload.kind.is_empty() { "identity" } else { payload.kind.as_str() };
     let id = format!("node-{}", fixture_nodes(&crate::artifacts::wires::wires_working_board(document)).len() + 1);
-    let node = dsl::to_dsl_value(&json!({
-        "id": id,
-        "nodeKind": kind,
-        "shape": "circle",
-        "x": 0.0,
-        "y": 0.0,
-        "radius": 24.0,
-        "text": id,
-        "handles": []
-    }))
-    .expect("node serializes");
+    let node = DslValue::object([
+        ("id".into(), DslValue::String(id.clone())),
+        ("nodeKind".into(), DslValue::String(kind.into())),
+        ("shape".into(), DslValue::String("circle".into())),
+        ("x".into(), DslValue::float(0.0)),
+        ("y".into(), DslValue::float(0.0)),
+        ("radius".into(), DslValue::float(24.0)),
+        ("text".into(), DslValue::String(id.clone())),
+        ("handles".into(), DslValue::Array(vec![])),
+    ]);
     Ok(Emit { artifact_mutations: vec![crate::artifacts::wires::mutations::create_node(node)], effects: vec![wires_select_effect(&[id], WIRES_GRANULARITY_NODE, "replace")], ..Default::default() })
 }
 

@@ -4,12 +4,13 @@
 //! `impl protocol::Inference<VcsSnapshot>` calls it directly.
 
 use crate::artifacts::vcs::VcsSnapshot;
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️Summary
 /// 📊️ Scalar summary of the tags/notes free-form fields.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct VcsSummary {
     pub tag_count: u32,
     pub notes_word_count: u32,

@@ -9,7 +9,6 @@ use crate::editor::lowpoly::terminology::LowpolyLabels;
 use crate::editor::lowpoly::view::LowpolyView;
 use crate::editor::lowpoly::{lowpoly_window_engagement, lowpoly_window_measures};
 use semio_framework_plugin::{scene_surface, Canvas2dScene, PluginAssemblyError, SurfaceKind, UtilityRef, WindowEngagementSlot, WindowKindDefinition, WindowMeasure, WindowOptions};
-use serde_json::json;
 use std::collections::HashMap;
 
 //#region 🔖️Constants
@@ -58,25 +57,25 @@ pub fn window_measures(config: &LowpolyConfig, labels: &LowpolyLabels) -> Vec<Wi
 fn uv_canvas_layers_json(doc: &LowpolyDocument, view: LowpolyView<'_>, texture_cache: &HashMap<String, String>) -> String {
     use crate::editor::lowpoly::view::resolve_active_object_id;
     let object_id = resolve_active_object_id(view.snapshot, view.config);
-    let mut layers = Vec::new();
+    let mut layers: Vec<dsl::DslValue> = Vec::new();
     if let Some(texture) = texture_cache.get(&object_id) {
         let size = LOWPOLY_PAINT_TEXTURE_SIZE as f64;
-        layers.push(json!({
-            "id": "uv-paint-texture",
-            "kind": "image",
-            "name": "Paint",
-            "x": -size * 0.5,
-            "y": -size * 0.5,
-            "width": size,
-            "height": size,
-            "dataUrl": format!("data:image/png;base64,{texture}"),
-        }));
+        layers.push(dsl::DslValue::object([
+            ("id".to_string(), dsl::DslValue::String("uv-paint-texture".to_string())),
+            ("kind".to_string(), dsl::DslValue::String("image".to_string())),
+            ("name".to_string(), dsl::DslValue::String("Paint".to_string())),
+            ("x".to_string(), dsl::DslValue::float(-size * 0.5)),
+            ("y".to_string(), dsl::DslValue::float(-size * 0.5)),
+            ("width".to_string(), dsl::DslValue::float(size)),
+            ("height".to_string(), dsl::DslValue::float(size)),
+            ("dataUrl".to_string(), dsl::DslValue::String(format!("data:image/png;base64,{texture}"))),
+        ]));
     }
     if let Ok(mesh) = doc.active_mesh() {
         if let Ok(transfer) = LowpolyDocument::tessellate_transfer_json(mesh) {
-            let edge_uvs: Vec<f32> = transfer.get("edgeUvs").and_then(|value| serde_json::from_value(value.clone()).ok()).unwrap_or_default();
-            let edge_is_seam: Vec<u8> = transfer.get("edgeIsSeam").and_then(|value| serde_json::from_value(value.clone()).ok()).unwrap_or_default();
-            let mut points = Vec::new();
+            let edge_uvs: Vec<f32> = transfer.get("edgeUvs").and_then(|value| dsl::FromValue::from_value(value.clone().into()).ok()).unwrap_or_default();
+            let edge_is_seam: Vec<u8> = transfer.get("edgeIsSeam").and_then(|value| dsl::FromValue::from_value(value.clone().into()).ok()).unwrap_or_default();
+            let mut points: Vec<[f64; 2]> = Vec::new();
             for chunk in edge_uvs.as_chunks::<4>().0 {
                 let u0 = chunk[0] as f64;
                 let v0 = (1.0 - chunk[1]) as f64;
@@ -86,16 +85,16 @@ fn uv_canvas_layers_json(doc: &LowpolyDocument, view: LowpolyView<'_>, texture_c
                 points.push([u0 * scale - scale * 0.5, v0 * scale - scale * 0.5]);
                 points.push([u1 * scale - scale * 0.5, v1 * scale - scale * 0.5]);
             }
-            layers.push(json!({
-                "id": "uv-wireframe",
-                "kind": "polyline",
-                "name": "UV Wireframe",
-                "points": points,
-                "seams": edge_is_seam,
-            }));
+            layers.push(dsl::DslValue::object([
+                ("id".to_string(), dsl::DslValue::String("uv-wireframe".to_string())),
+                ("kind".to_string(), dsl::DslValue::String("polyline".to_string())),
+                ("name".to_string(), dsl::DslValue::String("UV Wireframe".to_string())),
+                ("points".to_string(), dsl::ToValue::to_value(&points)),
+                ("seams".to_string(), dsl::ToValue::to_value(&edge_is_seam)),
+            ]));
         }
     }
-    serde_json::to_string(&layers).unwrap_or_else(|_| "[]".into())
+    dsl::json::to_json_string(&layers)
 }
 
 pub fn render(view: LowpolyView<'_>, loaded: Option<&LowpolyDocument>, texture_cache: &HashMap<String, String>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {

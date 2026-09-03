@@ -1,7 +1,0 @@
-syntax = "proto3";
-package semio.imperative.v1;
-
-message CreateStep {
-  ImperativePathRef path_ref = 1;
-  ImperativeStep step = 2;
-}

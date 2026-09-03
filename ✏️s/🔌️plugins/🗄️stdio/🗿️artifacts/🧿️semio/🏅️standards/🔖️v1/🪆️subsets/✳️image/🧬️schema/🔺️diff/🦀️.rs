@@ -9,7 +9,7 @@
 //! following the docx/gif precedent (`f6-docx-ecma-376-report.md`, `f6-final-summary.md` §4.4). No
 //! `snapshot: Option<SemioImageSnapshot>` full-replace slot anywhere.
 
-use crate::artifacts::semio::standards::v1::subsets::any::schema::triples::{
+use crate::artifacts::semio::standards::v1::subsets::base::schema::triples::{
     dec_indexed_triple, dec_named_triple, enc_indexed_triple, enc_named_triple, split_top_level, strip_brackets, IndexAdded, IndexModified, IndexedTripleDiff, NamedModified, NamedTripleDiff,
 };
 use crate::artifacts::semio::standards::v1::subsets::image::schema::snapshot::{SemioColorspace, SemioImageFrame, SemioImageMetadataEntry, SemioImageSnapshot};
@@ -459,11 +459,11 @@ impl MutationDiff<SemioImageSnapshot> for SemioImageDiff {
             next.icc = v.clone();
         }
         if let Some(d) = &self.frames {
-            crate::artifacts::semio::standards::v1::subsets::any::schema::triples::validate_indexed_triple(d, next.frames.len(), ["frames"])?;
+            crate::artifacts::semio::standards::v1::subsets::base::schema::triples::validate_indexed_triple(d, next.frames.len(), ["frames"])?;
             frames_apply(&mut next.frames, d);
         }
         if let Some(d) = &self.metadata {
-            crate::artifacts::semio::standards::v1::subsets::any::schema::triples::validate_named_triple(&next.metadata, d, |item| item.key.clone(), |item| item.key.clone(), ["metadata"])?;
+            crate::artifacts::semio::standards::v1::subsets::base::schema::triples::validate_named_triple(&next.metadata, d, |item| item.key.clone(), |item| item.key.clone(), ["metadata"])?;
             metadata_apply(&mut next.metadata, d);
         }
         Ok(next)

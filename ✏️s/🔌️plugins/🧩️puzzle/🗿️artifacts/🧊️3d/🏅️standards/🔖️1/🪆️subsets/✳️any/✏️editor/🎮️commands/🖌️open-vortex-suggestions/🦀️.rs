@@ -3,7 +3,7 @@
 use crate::editor::puzzle3d::config::Puzzle3dSuggestionMenu;
 use crate::editor::puzzle3d::sync_precompute_session;
 use crate::editor::puzzle3d::Puzzle3dActionCtx;
-use serde_json::Value;
+use dsl::os_pack::json::Value;
 
 /// 💡️ One-shot suggestion popup: opens the picker over `fullId` WITHOUT switching the host-owned
 /// utility/tool into brush mode. 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: no

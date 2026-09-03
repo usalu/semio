@@ -1,7 +1,7 @@
 //! 👁️ Xlsx viewer (ecma-376/✳️base) — the `view` mode: read-only twin of the sibling mutation-capable
 //! surface's own single-window layout, same `🪟️main` table, no edit affordances.
 
-use crate::viewer::xlsx::standards::v_ecma_376::subsets::any::modes::view::windows::main;
+use crate::viewer::xlsx::standards::v_ecma_376::subsets::base::modes::view::windows::main;
 use semio_framework_plugin::{LocalizedLabel, ModeDefinition, WindowLayout, WindowLayoutRoot, WindowLayoutStackNode, WindowLayoutWindowNode};
 
 pub const XLSX_VIEW_MODE_ID: &str = "view";

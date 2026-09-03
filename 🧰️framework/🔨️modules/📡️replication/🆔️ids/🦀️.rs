@@ -5,38 +5,42 @@
 // shapes unchanged from their framework-core originals.
 
 /// @emoji 🆔️ A stable identifier for one operation instance (an `Edit`'s forward/backward op).
+/// 🌱️ Serde's derives are kept ALONGSIDE the hand-written `ToValue`/`FromValue` twin below
+/// (RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS, 26/09/02): `🎠️kernel`/`🛂️manifest`
+/// (off-limits, owned by another agent) still fan out through this id via their own serde derives,
+/// so blind-removing here breaks `cargo check -p semio-framework`. Drop once those consumers move.
 #[derive(Clone, Debug, PartialEq, Eq, Hash, serde::Serialize, serde::Deserialize)]
 #[serde(transparent)]
 pub struct MutationId(pub String);
 
 /// @emoji 🧑️ A stable identifier for one collaborating actor.
+/// 🌱️ Same reason as `MutationId` above — real `🎠️kernel` consumer.
 #[derive(Clone, Debug, PartialEq, Eq, Hash, serde::Serialize, serde::Deserialize)]
 #[serde(transparent)]
 pub struct ActorId(pub String);
 
 /// @emoji 📄️ A stable identifier for one document.
+/// 🌱️ Same reason as `MutationId` above — real `🎠️kernel` consumer.
 #[derive(Clone, Debug, PartialEq, Eq, Hash, serde::Serialize, serde::Deserialize)]
 #[serde(transparent)]
 pub struct ArtifactId(pub String);
 
 /// @emoji 🔢️ A monotone document version counter.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, serde::Serialize, serde::Deserialize)]
-#[serde(transparent)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub struct ArtifactVersion(pub u64);
 
 /// @emoji 🧬️ A stable identifier for one document/operation schema.
+/// 🌱️ Same reason as `MutationId` above — real `🎠️kernel`/`🛂️manifest` consumers.
 #[derive(Clone, Debug, PartialEq, Eq, Hash, serde::Serialize, serde::Deserialize)]
 #[serde(transparent)]
 pub struct SchemaId(pub String);
 
 /// @emoji 🔢️ A schema's version number.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
-#[serde(transparent)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct SchemaVersion(pub u32);
 
 /// @emoji #⃣ A blake3 content hash over an operation/snapshot payload.
-#[derive(Clone, Debug, PartialEq, Eq, Hash, serde::Serialize, serde::Deserialize)]
-#[serde(transparent)]
+#[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub struct PayloadHash(pub [u8; 32]);
 
 /// 🌉️ Hand-written, not derived — same DAG reason as `HybridLogicalTimestamp` above (this crate
@@ -141,7 +145,7 @@ impl crate::value::FromValue for PayloadHash {
 
 /// @emoji ⏰️ A hybrid logical clock tick: physical time plus a logical tiebreak plus the
 /// originating actor (the third tiebreak — see the module note on the ordering fix above).
-#[derive(Clone, Copy, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct HybridLogicalTimestamp {
     pub actor: u64,
     pub physical_ms: u64,

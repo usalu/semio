@@ -12,7 +12,7 @@
 //! Every scenario drives this repository's own production entry points —
 //! `parse_semio_audio_dsl`/`print_semio_audio_dsl` for the carrier and
 //! `apply_semio_audio_mutation`/`inverse_semio_audio_mutation` for the vocabulary — over the real
-//! committed tone artifact `../../🏅️standards/🔖️v1/🪆️subsets/✳️any/📚️examples/🎵️tone/🖼️assets/
+//! committed tone artifact `../../🏅️standards/🔖️v1/🪆️subsets/✳️base/📚️examples/🎵️tone/🖼️assets/
 //! 🗣️.dsl.semio`, and projects the resulting snapshot as structural JSON for
 //! `ordered-json-v1` to compare against the Python side's.
 //!
@@ -42,7 +42,7 @@ const KINDS: &[&str] = &["no-mutation", "set-snapshot", "set-sample-rate", "set-
 mod subject {
     use semio_repo_test_host::{digest, Context, Json, Outcome};
     use semio_s_plugin_stdio_test_oracle::law::carrier_is_exact;
-    use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::any::schema::mutations::semio_mutation_refusals;
+    use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::base::schema::mutations::semio_mutation_refusals;
     use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::audio::schema::mutations::{
         apply_semio_audio_mutation, insert_channel, insert_tag, inverse_semio_audio_mutation, remove_channel, remove_tag, set_channel_samples, set_format, set_sample_rate, set_snapshot, set_tag_value, SemioAudioMutation,
     };

@@ -30,7 +30,6 @@ use semio_framework_plugin::{
     NoDraft, NoDraftMutation, SelectionMethod, SelectionMode, SelectionSpec, UiNode, UtilityCategory, UtilityDefinition, WindowEngagement, WindowEngagementInput, WindowEngagementOption, WindowEngagementPossible, WindowEngagementStatus,
     WindowMeasure,
 };
-use serde_json::{json, Value};
 use std::collections::HashMap;
 use protocol::{Mutation, MutationDiff};
 use store::ArtifactPack;
@@ -53,7 +52,7 @@ pub fn lowpoly_action(action: &str, args: Option<semio_framework_plugin::UiValue
 }
 
 /// 🪟️ Bridges window chrome, which still carries the retained WGPU action descriptor.
-pub fn lowpoly_window_action(action: &str, args: Option<Value>) -> ActionDescriptor {
+pub fn lowpoly_window_action(action: &str, args: Option<serde_json::Value>) -> ActionDescriptor {
     ActionDescriptor { controller_id: LOWPOLY_PLAY_CONTROLLER_ID.into(), action: action.into(), args: semio_framework::optional_json_to_dsl(args) }
 }
 
@@ -172,7 +171,7 @@ pub fn lowpoly_window_measures(config: &LowpolyConfig, labels: &LowpolyLabels) -
 /// 🧮️ Shared leaf builder for one utility-param slider — used by the `🧲️snap` option and by
 /// `paint_utility_params_group` below.
 #[allow(clippy::too_many_arguments, reason = "one WindowMeasure::Slider literal per call site; a params struct would only move the same 8 fields around for this single builder")]
-pub fn utility_param_slider(id: &str, label: LabelText, key: &str, params: &Value, default: f64, min: f64, max: f64, step: f64) -> WindowMeasure {
+pub fn utility_param_slider(id: &str, label: LabelText, key: &str, params: &serde_json::Value, default: f64, min: f64, max: f64, step: f64) -> WindowMeasure {
     WindowMeasure::Slider {
         id: format!("lowpoly-measure-{id}"),
         label: Some(label.into()),
@@ -184,7 +183,7 @@ pub fn utility_param_slider(id: &str, label: LabelText, key: &str, params: &Valu
         loading: None,
         disabled: None,
         reveal: None,
-        on_change: lowpoly_window_action("setUtilityParam", Some(json!({ "key": key }))),
+        on_change: lowpoly_window_action("setUtilityParam", Some((&dsl::DslValue::object([("key".to_string(), dsl::DslValue::String(key.to_string()))])).into())),
         waiting: None,
     }
 }
@@ -193,7 +192,7 @@ pub fn utility_param_slider(id: &str, label: LabelText, key: &str, params: &Valu
 /// hardness sliders, tagged `active_utility_id: Some(utility)` so `partition_window_measures` surfaces
 /// them in the Utility Options rail only while that exact utility is active. Both utilities stamp
 /// through the same `stamp_brush` path, so they share an identical param set.
-pub fn paint_utility_params_group(utility: &str, params: &Value, labels: &LowpolyLabels) -> WindowMeasure {
+pub fn paint_utility_params_group(utility: &str, params: &serde_json::Value, labels: &LowpolyLabels) -> WindowMeasure {
     let slider = |suffix: &str, label: LabelText, key: &str, default: f64, min: f64, max: f64, step: f64| WindowMeasure::Slider {
         id: format!("lowpoly-measure-{utility}-{suffix}"),
         label: Some(label.into()),
@@ -205,7 +204,7 @@ pub fn paint_utility_params_group(utility: &str, params: &Value, labels: &Lowpol
         loading: None,
         disabled: None,
         reveal: None,
-        on_change: lowpoly_window_action("setUtilityParam", Some(json!({ "key": key }))),
+        on_change: lowpoly_window_action("setUtilityParam", Some((&dsl::DslValue::object([("key".to_string(), dsl::DslValue::String(key.to_string()))])).into())),
         waiting: None,
     };
     WindowMeasure::Group {
@@ -1530,7 +1529,7 @@ fn lowpoly_export_media(port: &str, doc: &ArtifactView<'_, LowpolySnapshot>, scr
         "mesh:out" => {
             let mesh = crate::editor::lowpoly::engine::lowpoly_mesh_from_document(doc.snapshot, &scratch.mesh_workspace_map()).map_err(|error| MediaError::Payload(port.into(), error))?;
             let mesh_document = crate::artifacts::lowpoly::schema::mesh_document_from_mesh(&mesh).map_err(|error| MediaError::Payload(port.into(), error))?;
-            let json = serde_json::to_string(&mesh_document).map_err(|error| MediaError::Payload(port.into(), error.to_string()))?;
+            let json = dsl::json::to_json_string(&dsl::DslValue::from(&mesh_document));
             Ok(Media { media_type: MediaType { class: MediaClass::ThreeD, form: MediaForm::Mesh }, payload: MediaPayload::Structured { schema: "mesh.document".into(), json } })
         }
         "document:out" => {
@@ -1743,7 +1742,7 @@ impl ArtifactEditor for LowpolyPlayApp {
                 let MediaPayload::Structured { json, .. } = &media.payload else {
                     return Err(MediaError::Payload(port.into(), "mesh:in importer only accepts a Structured payload".into()));
                 };
-                let mesh_document: Value = serde_json::from_str(json).map_err(|error| MediaError::Payload(port.into(), error.to_string()))?;
+                let mesh_document: serde_json::Value = dsl::json::from_json_str::<dsl::DslValue>(json).map(|value| (&value).into()).map_err(|error| MediaError::Payload(port.into(), error.to_string()))?;
                 let mesh = crate::artifacts::lowpoly::schema::mesh_from_mesh_document(&mesh_document).map_err(|error| MediaError::Payload(port.into(), error))?;
                 let projection_json = crate::artifacts::lowpoly::schema::lowpoly_document_from_mesh(&mesh).map_err(|error| MediaError::Payload(port.into(), error))?;
                 let snapshot: LowpolySnapshot = dsl::json::from_json_str(&projection_json.to_string()).map_err(|error| MediaError::Payload(port.into(), error.to_string()))?;

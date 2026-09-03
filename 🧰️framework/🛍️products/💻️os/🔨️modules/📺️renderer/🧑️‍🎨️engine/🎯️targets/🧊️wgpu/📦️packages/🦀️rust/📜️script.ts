@@ -143,14 +143,14 @@ export async function renderBrowserEntry(entryPath: string): Promise<string> {
 }
 
 async function buildBootScript(bundleRoot: string): Promise<void> {
-  const bootTs = join(bundleRoot, "🟦️typescript/🟦️.ts");
+  const bootTs = join(bundleRoot, "../../🧵️browser-boot/🟦️.ts");
   const bootJs = join(bundleRoot, "🟦️typescript/🟨️boot.js");
   writeFileSync(bootJs, await renderBrowserEntry(bootTs), "utf8");
 }
 
 /** @emoji 🧵️ Renders the frame worker without invoking Trunk, Cargo, or the WASM build. */
 export async function renderFrameWorker(bundleRoot: string): Promise<{ path: string; content: string }> {
-  const workerTs = join(bundleRoot, "🟦️typescript/🧵️frame-worker.ts");
+  const workerTs = join(bundleRoot, "../../🧵️frame-worker/🟦️.ts");
   const workerJs = join(bundleRoot, "🟦️typescript/🟨️frame-worker.js");
   return { path: workerJs, content: await renderBrowserEntry(workerTs) };
 }
@@ -287,7 +287,7 @@ class TestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     const { rest } = resolveTestLevel(segments);
     await runCargoTestBudgeted([crateName], this.repoRoot, rest);
-    await runVitest(this.root, rest, "🧪️tests/🟦️.ts");
+    await runVitest(this.root, rest, "🟦️typescript/🧪️test/🟦️s.ts");
   }
 }
 
@@ -302,14 +302,14 @@ class NativeTestScript extends BundleScript {
 /** @emoji 🧵️ Runs the browser Worker transport protocol without invoking Cargo. */
 class BrowserWorkerTestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
-    await runVitest(this.root, ["🧪️browser-frame-transport.test.ts", "🧪️browser-interactive-job-port.test.ts", ...segments], "🧪️tests/🟦️.ts");
+    await runVitest(this.root, ["🧪️tests/🟦️browser-frame-transport.ts", "🧪️tests/🟦️browser-interactive-job-port.ts", ...segments], "🟦️typescript/🧪️test/🟦️s.ts");
   }
 }
 
 /** @emoji 🧾️ Runs the deterministic in-memory frame-worker owner contract. */
 class PreviewGeneratedTestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
-    await runVitest(this.root, ["🧪️index.test.ts", ...segments], "🧪️tests/🟦️.ts");
+    await runVitest(this.root, ["🧪️tests/🟦️package-integration.ts", ...segments], "🟦️typescript/🧪️test/🟦️s.ts");
   }
 }
 
@@ -349,7 +349,7 @@ class CheckFrameWorkerScript extends BundleScript {
 //#region 🔖️LintScript
 /** 🎨️Raw color-construction calls (`Rgba::new`/`from_srgb8`) must live only inside `framework/ui/wgpu`'s theme module — the renderer takes every color via `ui_wgpu::Theme`. */
 function collectWgpuColorLiteralViolations(bundleRoot: string): string[] {
-  const libPath = join(bundleRoot, "🦀️.rs");
+  const libPath = join(bundleRoot, "../../🧊️renderer/🦀️.rs");
   if (!existsSync(libPath)) return [];
   const text = readFileSync(libPath, "utf8");
   const violations: string[] = [];

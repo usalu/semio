@@ -1,0 +1,232 @@
+//! 🧮️ Equation play app — view state (`EquationConfig`) and its operation enum
+//! (`EquationConfigMutation`).
+//!
+//! This is APP state, not document state: it lives at app level rather than under `🗿️artifacts/` because
+//! nothing in it survives into the `.equation` document. It still round-trips through a real
+//! `ArtifactStore` (with a real `backwards`), so camera/locale edits are VCS'd exactly like document
+//! content — absorbs the former app-struct `RefCell` (`MathPlayRuntime::camera`, the node-graph viewport)
+//! plus the locale the UI used to read off the deleted `ViewModel`.
+
+use crate::artifacts::equation::EquationCamera;
+use protocol::Mutation;
+// 🌱️ Additive `ToValue`/`FromValue` — required by `Mutation<P>`/`MutationDiff<P>`'s trait bound
+// (`EquationConfigMutation` implements `Mutation<EquationConfig>` below); see
+// `🦀️.rs`'s own docstring note on this crate's interim (not-yet-serde-free) state.
+use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
+
+//#region 🔖️Config
+#[derive(Clone, Debug, PartialEq, ToValueDerive, FromValueDerive, dsl::DslArtifact)]
+#[value(rename_all = "camelCase", default)]
+#[dsl(id = "equation.config", layout = "lines")]
+pub struct EquationConfig {
+    /// 🎥️ Node-graph viewport camera — session-only, never a document field. Was
+    /// `MathPlayRuntime::camera`.
+    #[dsl(block)]
+    pub camera: EquationCamera,
+    /// 🗣️ BCP-47 locale tag — was read off `view_state.locale`.
+    pub locale: String,
+}
+
+//#region 🔖️ArtifactCodec
+/// 📜️ Handcrafted ArtifactDsl (P6): uses this type's `__dsl_*` helpers + parse/print, not derive emission.
+impl store::ArtifactDsl for EquationConfig {
+    const EXTENSION: &'static str = Self::__DSL_EXTENSION;
+    async fn envelope_id() -> &'static str {
+        Self::__DSL_ENVELOPE_ID
+    }
+    async fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
+        let body = match store::semio_format::split_text_preamble(text) {
+            Ok((_, rest)) => rest,
+            Err(_) => text,
+        };
+        let record = dsl::parse(body, &Self::__dsl_spec(), &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Document })?;
+        Self::__dsl_from_record(&record)
+    }
+    async fn print_dsl(&self) -> String {
+        let body = dsl::print(&self.__dsl_to_record(), &Self::__dsl_spec(), dsl::JoinMode::Document);
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
+        store::semio_format::wrap_text(&envelope, &body)
+    }
+}
+
+/// 📦️ Handcrafted ArtifactPack (P6): envelope-wrapped pack body via `__dsl_*` record lowering.
+impl store::ArtifactPack for EquationConfig {
+    async fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
+        let inner = store::pack_rt::encode_document(&Self::__dsl_spec(), &self.__dsl_to_record(), options)?;
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::Schema(e.to_string()))?;
+        Ok(store::semio_format::wrap_binary(&envelope, &inner))
+    }
+    async fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
+        let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|e| store::PackError::Schema(e.to_string()))?;
+        if envelope.envelope_id() != <Self as store::ArtifactDsl>::envelope_id() {
+            return Err(store::PackError::Schema(format!("pack envelope mismatch: expected {}, got {}", <Self as store::ArtifactDsl>::envelope_id(), envelope.envelope_id())));
+        }
+        let (record, _report) = store::pack_rt::decode_document(&inner, &Self::__dsl_spec(), options)?;
+        Self::__dsl_from_record(&record).map_err(store::text_error_to_pack_error)
+    }
+    async fn record_spec() -> Option<dsl::RecordSpec> {
+        Some(Self::__dsl_spec())
+    }
+}
+
+//#endregion 🔖️ArtifactCodec
+
+impl Default for EquationConfig {
+    fn default() -> Self {
+        Self { camera: EquationCamera::default(), locale: "en-US".into() }
+    }
+}
+
+store::impl_whole_record_config!(EquationConfig);
+//#endregion 🔖️Config
+
+//#region 🔖️ConfigMutations
+/// 🧮️ `EquationConfig`'s operation enum — one variant per settled interaction (mirrors the pre-migration
+/// `MathPlayRuntime` field writes); each variant's `backwards()` re-emits the SAME variant with the old
+/// field value read from `base` (no whole-config snapshot sentinel). `Mutation::Diff` is the WHOLE
+/// `EquationConfig` (not a granular patch type), `diff()` returns "the full config after this op", and
+/// `protocol::MutationDiff<EquationConfig>::apply` for `EquationConfig` itself (see `store::impl_whole_record_config!`)
+/// just returns that snapshot verbatim, ignoring `base`.
+#[derive(Clone, Debug, PartialEq, ToValueDerive, FromValueDerive, dsl::DslOps)]
+pub enum EquationConfigMutation {
+    #[dsl(key = "camera")]
+    SetCamera {
+        #[dsl(block)]
+        camera: EquationCamera,
+    },
+    #[dsl(key = "locale")]
+    SetLocale { value: String },
+}
+
+//#region 🔖️OpCodec
+impl protocol::OpText for EquationConfigMutation {
+    async fn parse_op(line: &str) -> Result<Self, store::TextError> {
+        let variants = <Self as dsl::DslVariants>::variants();
+        for (keyword, spec_fn) in &variants {
+            let probe = format!("{} ", keyword);
+            if line == keyword.as_str() || line.starts_with(&probe) {
+                let record = dsl::parse(line, &spec_fn(), &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Inline })?;
+                return <Self as dsl::DslVariants>::from_named_record(keyword, &record);
+            }
+        }
+        Err(dsl::__rt::field_error(format!("unknown operation line '{line}'")))
+    }
+    async fn print_op(&self) -> String {
+        let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
+        let variants = <Self as dsl::DslVariants>::variants();
+        let spec_fn = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| *s).expect("variant spec must exist for its own keyword");
+        dsl::print(&record, &spec_fn(), dsl::JoinMode::Inline)
+    }
+}
+
+/// 🎯️ Handcrafted OpBinary (P6).
+impl protocol::OpBinary for EquationConfigMutation {
+    async fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+        const OP_BINARY_FORMAT: u8 = 1;
+        let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
+        let variants = <Self as dsl::DslVariants>::variants();
+        let ordinal = variants.iter().position(|(k, _)| *k == keyword).ok_or(protocol::ProtocolError::Malformed { what: "op variant", offset: 0, detail: format!("keyword {keyword:?} is not a declared variant") })?;
+        let spec = (variants[ordinal].1)();
+        let body = store::pack_rt::encode_record_body(&spec, &record, &store::PackEncodeOptions::default()).map_err(protocol::ProtocolError::from)?;
+        let mut out = Vec::with_capacity(body.len() + 3);
+        out.push(OP_BINARY_FORMAT);
+        store::pack_rt::write_varint_u64(&mut out, ordinal as u64);
+        out.extend_from_slice(&body);
+        Ok(out)
+    }
+    async fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+        const OP_BINARY_FORMAT: u8 = 1;
+        let mut reader = store::pack_rt::ByteReader::new(bytes);
+        let format = reader.read_u8()?;
+        if format != OP_BINARY_FORMAT {
+            return Err(protocol::ProtocolError::Malformed { what: "op format", offset: 0, detail: format!("unsupported op format {format}") });
+        }
+        let ordinal = reader.read_varint_u64()?;
+        let variants = <Self as dsl::DslVariants>::variants();
+        let (keyword, spec_fn) = variants.get(ordinal as usize).ok_or(protocol::ProtocolError::Malformed { what: "op variant", offset: 1, detail: format!("ordinal {ordinal} out of range for {} declared variants", variants.len()) })?;
+        let spec = spec_fn();
+        let body = &bytes[reader.position()..];
+        let (record, _report) = store::pack_rt::decode_record_body(body, &spec, &store::PackDecodeOptions::default()).map_err(protocol::ProtocolError::from)?;
+        <Self as dsl::DslVariants>::from_named_record(keyword, &record).map_err(|error| protocol::ProtocolError::Malformed { what: "op record", offset: reader.position() as u64, detail: error.to_string() })
+    }
+}
+
+//#endregion 🔖️OpCodec
+
+impl Mutation<EquationConfig> for EquationConfigMutation {
+    type Diff = EquationConfig;
+
+    async fn diff(&self, base: &EquationConfig) -> protocol::MutationOutcome<EquationConfig> {
+        let mut next = base.clone();
+        match self {
+            EquationConfigMutation::SetCamera { camera } => {
+                if &base.camera == camera {
+                    return protocol::MutationOutcome::empty().warn("mutation.no-op", "Camera is already at the requested position.");
+                }
+                next.camera = camera.clone();
+            }
+            EquationConfigMutation::SetLocale { value } => {
+                if &base.locale == value {
+                    return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Locale is already \"{}\".", value));
+                }
+                next.locale = value.clone();
+            }
+        }
+        protocol::MutationOutcome::new(next)
+    }
+
+    async fn inverse(&self, base: &EquationConfig) -> Vec<Self> {
+        match self {
+            EquationConfigMutation::SetCamera { .. } => vec![EquationConfigMutation::SetCamera { camera: base.camera.clone() }],
+            EquationConfigMutation::SetLocale { .. } => vec![EquationConfigMutation::SetLocale { value: base.locale.clone() }],
+        }
+    }
+}
+//#endregion 🔖️ConfigMutations
+
+//#region 🧪️Tests
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[semio_framework_async_macros::async_test]
+    async fn math_config_default_is_the_identity_camera_and_english_locale() {
+        let config = EquationConfig::default();
+        assert_eq!(config.camera, EquationCamera::default());
+        assert_eq!(config.locale, "en-US");
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn math_config_dsl_round_trips() {
+        let config = EquationConfig { camera: EquationCamera { x: 5.0, y: 6.0, zoom: 2.0 }, locale: "de-DE".into() };
+        store::os_store::test_support::assert_dsl_round_trip(&config);
+        store::os_store::test_support::assert_dsl_pack_equivalence(&config);
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn config_operation_set_camera_diff_writes_the_targeted_field() {
+        let base = EquationConfig::default();
+        let camera = EquationCamera { x: 5.0, y: 6.0, zoom: 2.0 };
+        let operation = EquationConfigMutation::SetCamera { camera: camera.clone() };
+        assert_eq!(Mutation::diff(&operation, &base).diff().camera, camera);
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn config_operation_set_camera_round_trips() {
+        let base = EquationConfig::default();
+        let camera = EquationCamera { x: 5.0, y: 6.0, zoom: 2.0 };
+        let operation = EquationConfigMutation::SetCamera { camera: camera.clone() };
+        let next = Mutation::diff(&operation, &base).diff().clone();
+        assert_eq!(next.camera, camera);
+        let backwards = Mutation::inverse(&operation, &base);
+        assert_eq!(backwards, vec![EquationConfigMutation::SetCamera { camera: base.camera.clone() }]);
+        assert_eq!(Mutation::diff(&backwards[0], &next).diff().clone(), base);
+        store::os_store::test_support::assert_op_line_round_trip(&operation);
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn config_operation_set_locale_round_trips() {
+        store::os_store::test_support::assert_op_line_round_trip(&EquationConfigMutation::SetLocale { value: "de-DE".into() });
+    }
+}
+//#endregion 🧪️Tests

@@ -418,7 +418,18 @@
     }
   ],
   "noOracleDecisions": [],
-  "mutationCatalogs": [],
+  "mutationCatalogs": [
+    {
+      "id": "note-1-any-document",
+      "capability": "note-1-document-mutate",
+      "standardDirectoryName": "🔖️1",
+      "subsetDirectoryName": "✳️any",
+      "kinds": [
+        "rename-note"
+      ],
+      "vectors": []
+    }
+  ],
   "comparisonProfiles": [
     {
       "id": "semantic-note-dxf-ink-v1",

@@ -20,7 +20,7 @@ use std::collections::HashMap;
 
 use semio_framework_plugin::{ArtifactSerializer, Dialect, StandardId, SubsetId};
 
-use crate::artifacts::semio::standards::v1::subsets::any::schema::geometry::SemioPoint3;
+use crate::artifacts::semio::standards::v1::subsets::base::schema::geometry::SemioPoint3;
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::{BrepCurve, BrepSurface, SemioBrepSnapshot};
 use crate::artifacts::step::engine::part21::{Part21Builder, Part21Header, Part21Value};
 use crate::artifacts::step::schema::snapshot::StepSnapshot;

@@ -17,8 +17,6 @@ use semio_framework_plugin::{
 #[cfg(test)]
 use semio_framework_plugin::{ui_inspector_mixed_text, ui_inspector_mixed_toggle, UiSelectItem, UiSelectNode};
 use protocol::DslValue;
-#[cfg(test)]
-use serde_json::json;
 
 //#region 🔖️Constants
 pub const CAD_PLAY_BODY_PROPERTIES: &str = "cad.play.properties";
@@ -37,10 +35,8 @@ pub fn definition() -> PanelTabDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-/// 🌉️ `semio_framework::optional_json_to_dsl` is a genuine framework boundary (`🎯️action-bus/🦀️.rs`)
-/// still typed `Option<serde_json::Value> -> Option<DslValue>` — bridged once, here, at the call.
 fn cad_action(action: &str, args: Option<DslValue>) -> ActionDescriptor {
-    ActionDescriptor { controller_id: CAD_PLAY_APP_ID.into(), action: action.into(), args: semio_framework::optional_json_to_dsl(args.map(|value| serde_json::Value::from(&value))) }
+    ActionDescriptor { controller_id: CAD_PLAY_APP_ID.into(), action: action.into(), args }
 }
 
 /// ⚠️ Ticket `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM` wave 3: the object/primitive inspector
@@ -84,6 +80,11 @@ pub fn inspector_quat_group(id: &str, label: impl Into<Label>, values: &[[f64; 4
 }
 
 #[cfg(test)]
+fn patch_selection_args(object_ids: &[String], field: String) -> DslValue {
+    DslValue::object([("objectIds".to_string(), DslValue::Array(object_ids.iter().map(|id| DslValue::String(id.clone())).collect())), ("field".to_string(), DslValue::String(field))])
+}
+
+#[cfg(test)]
 pub(crate) fn object_inspector_group(objects: &[&CadObject], term_labels: &CadLabels) -> UiInspectorFieldGroup {
     let object_ids: Vec<String> = objects.iter().map(|object| object.id.clone()).collect();
     let labels: Vec<String> = objects.iter().map(|object| object.label.clone()).collect();
@@ -112,7 +113,7 @@ pub(crate) fn object_inspector_group(objects: &[&CadObject], term_labels: &CadLa
                     value: label_mixed.value.clone(),
                     placeholder: label_mixed.placeholder.map(Label::data),
                     commit: None,
-                    on_change: cad_action("patchSelection", Some(json!({ "objectIds": object_ids, "field": "label" }).into())),
+                    on_change: cad_action("patchSelection", Some(patch_selection_args(&object_ids, "label".to_string()))),
                     min: None,
                     max: None,
                     step: None,
@@ -134,7 +135,7 @@ pub(crate) fn object_inspector_group(objects: &[&CadObject], term_labels: &CadLa
                     value: typology_mixed.value.clone(),
                     items: TYPOLOGY_CATALOG.iter().map(|entry| UiSelectItem { value: entry.typology.into(), label: Label::data(typology_label(entry.typology, term_labels)) }).collect(),
                     placeholder: typology_mixed.placeholder.map(Label::data),
-                    on_change: cad_action("patchSelection", Some(json!({ "objectIds": object_ids, "field": "typology" }).into())),
+                    on_change: cad_action("patchSelection", Some(patch_selection_args(&object_ids, "typology".to_string()))),
                     presence: UiPresence::default(),
                     menu: None,
                 })),
@@ -151,7 +152,7 @@ pub(crate) fn object_inspector_group(objects: &[&CadObject], term_labels: &CadLa
                     id: "cad-play-inspector.object.hidden.toggle".into(),
                     icon_id: "eye-off".into(),
                     text: None,
-                    on_change: cad_action("patchSelection", Some(json!({ "objectIds": object_ids, "field": "hidden" }).into())),
+                    on_change: cad_action("patchSelection", Some(patch_selection_args(&object_ids, "hidden".to_string()))),
                     presence: UiPresence::selected(hidden_mixed.pressed),
                     menu: None,
                 })),
@@ -168,7 +169,7 @@ pub(crate) fn object_inspector_group(objects: &[&CadObject], term_labels: &CadLa
                     id: "cad-play-inspector.object.locked.toggle".into(),
                     icon_id: "lock".into(),
                     text: None,
-                    on_change: cad_action("patchSelection", Some(json!({ "objectIds": object_ids, "field": "locked" }).into())),
+                    on_change: cad_action("patchSelection", Some(patch_selection_args(&object_ids, "locked".to_string()))),
                     presence: UiPresence::selected(locked_mixed.pressed),
                     menu: None,
                 })),
@@ -180,13 +181,13 @@ pub(crate) fn object_inspector_group(objects: &[&CadObject], term_labels: &CadLa
             }),
             {
                 let object_ids = object_ids.clone();
-                ui_inspector_vec3_group("cad-play-inspector.object.origin", term_labels.position, &origins, 0.1, move |axis| cad_action("patchSelection", Some(json!({ "objectIds": object_ids, "field": format!("origin.{axis}") }).into())))
+                ui_inspector_vec3_group("cad-play-inspector.object.origin", term_labels.position, &origins, 0.1, move |axis| cad_action("patchSelection", Some(patch_selection_args(&object_ids, format!("origin.{axis}")))))
             },
             {
                 let object_ids = object_ids.clone();
-                ui_inspector_vec3_group("cad-play-inspector.object.scale", term_labels.scale, &scales, 0.1, move |axis| cad_action("patchSelection", Some(json!({ "objectIds": object_ids, "field": format!("scale.{axis}") }).into())))
+                ui_inspector_vec3_group("cad-play-inspector.object.scale", term_labels.scale, &scales, 0.1, move |axis| cad_action("patchSelection", Some(patch_selection_args(&object_ids, format!("scale.{axis}")))))
             },
-            inspector_quat_group("cad-play-inspector.object.orientation", term_labels.rotation, &orientations, 0.01, |axis| cad_action("patchSelection", Some(json!({ "objectIds": object_ids, "field": format!("orientation.{axis}") }).into()))),
+            inspector_quat_group("cad-play-inspector.object.orientation", term_labels.rotation, &orientations, 0.01, |axis| cad_action("patchSelection", Some(patch_selection_args(&object_ids, format!("orientation.{axis}"))))),
         ],
     }
 }
@@ -295,7 +296,7 @@ mod tests {
         first.orientation = Some([0.0, 0.0, 0.0, 1.0]);
         second.orientation = Some([0.0, 0.707, 0.0, 0.707]);
         let group = object_inspector_group(&[&first, &second], cad_labels(&CadConfig::default()));
-        let json = serde_json::to_string(&ui_inspector_groups_to_tree(&[group])).unwrap();
+        let json = protocol::json::to_json_string(&ui_inspector_groups_to_tree(&[group]));
         assert!(json.contains("Mixed"));
         assert!(json.contains("cad-play-inspector.object.orientation"));
     }
@@ -309,7 +310,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn cad_labels_resolve_native_by_default() {
         let object = make_object_for_typology("spatial.shape.primitive.box", 0, CadPaneId::Shape);
-        let json = serde_json::to_string(&ui_inspector_groups_to_tree(&[object_inspector_group(&[&object], cad_labels(&CadConfig::default()))])).unwrap();
+        let json = protocol::json::to_json_string(&ui_inspector_groups_to_tree(&[object_inspector_group(&[&object], cad_labels(&CadConfig::default()))]));
         assert!(json.contains("\"Object\""));
         assert!(!json.contains("Building component"));
     }
@@ -332,7 +333,7 @@ mod tests {
     async fn cad_labels_resolve_native_terminology_in_german() {
         let config = CadConfig { terminology: "native".into(), locale: "de".into(), ..CadConfig::default() };
         let object = make_object_for_typology("spatial.shape.primitive.box", 0, CadPaneId::Shape);
-        let json = serde_json::to_string(&ui_inspector_groups_to_tree(&[object_inspector_group(&[&object], cad_labels(&config))])).unwrap();
+        let json = protocol::json::to_json_string(&ui_inspector_groups_to_tree(&[object_inspector_group(&[&object], cad_labels(&config))]));
         assert!(json.contains("\"Objekt\""));
     }
 
@@ -340,7 +341,7 @@ mod tests {
     async fn cad_labels_resolve_reuse_terminology_for_primitive() {
         let config = CadConfig { terminology: "reuse".into(), locale: "de".into(), ..CadConfig::default() };
         let object = make_object_for_typology("spatial.shape.primitive.box", 0, CadPaneId::Shape);
-        let json = serde_json::to_string(&ui_inspector_groups_to_tree(&[primitive_inspector_group(&object, cad_labels(&config), "box-solid", "solid")])).unwrap();
+        let json = protocol::json::to_json_string(&ui_inspector_groups_to_tree(&[primitive_inspector_group(&object, cad_labels(&config), "box-solid", "solid")]));
         assert!(json.contains("Bauteil"));
     }
 }

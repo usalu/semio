@@ -5,8 +5,8 @@
 //! `✳️base/🚪️io` and pdf `1.7/✳️a/🚪️io` already established for this artifact family.
 //#region 🎹️DerivedComposition
 pub mod derived_composition {
-    use crate::artifacts::xlsx::standards::v_ecma_376::subsets::any::schema::snapshot::XlsxSnapshot;
-    use crate::artifacts::xlsx::standards::v_ecma_376::subsets::any::schema::XlsxComposer as XlsxAnyComposer;
+    use crate::artifacts::xlsx::standards::v_ecma_376::subsets::base::schema::snapshot::XlsxSnapshot;
+    use crate::artifacts::xlsx::standards::v_ecma_376::subsets::base::schema::XlsxComposer as XlsxAnyComposer;
     use crate::artifacts::xlsx::standards::v_ecma_376::subsets::strict::schema::check_strict_conformance;
     use dsl::{Diagnostic, FaultCode, Severity, TextSpan};
     use semio_framework_plugin::{register_subset_validator, subset_validator_entry_of, ArtifactComposition, ComposeError, ComposeSource, Composition, Dialect, IoPayload, StandardId, SubsetId, SubsetValidator, SubsetValidatorEntry};
@@ -94,7 +94,7 @@ pub mod derived_composition {
     #[cfg(test)]
     mod tests {
         use super::*;
-        use crate::artifacts::xlsx::standards::v_ecma_376::subsets::any::schema::snapshot::XlsxWorkbook;
+        use crate::artifacts::xlsx::standards::v_ecma_376::subsets::base::schema::snapshot::XlsxWorkbook;
         use crate::artifacts::xlsx::standards::v_ecma_376::subsets::strict::schema::XlsxStrictBuilderConstruction as XlsxStrictBuilder;
         use crate::artifacts::xlsx::standards::v_ecma_376::subsets::strict::schema::{CODE_CONFORMANCE_ATTRIBUTE, CODE_NAMESPACE_MISMATCH};
         use semio_framework_plugin::{AnalyzeSource, ArtifactBuilder as _};
@@ -124,7 +124,7 @@ pub mod derived_composition {
 
         #[semio_framework_async_macros::async_test]
         async fn transitional_shaped_document_fails_compose_with_real_diagnostic() {
-            let snapshot = crate::artifacts::xlsx::standards::v_ecma_376::subsets::any::io::export::serializers::build_minimal_xlsx(XlsxWorkbook::default());
+            let snapshot = crate::artifacts::xlsx::standards::v_ecma_376::subsets::base::io::export::serializers::build_minimal_xlsx(XlsxWorkbook::default());
             let bytes = <XlsxSnapshot as store::ArtifactPack>::encode_pack(&snapshot);
             let sources = vec![ComposeSource { dialect: DIALECT_ANY, payload: AnalyzeSource::Binary(&bytes) }];
             let err = XlsxStrictComposerComposition::compose(&sources).expect_err("a Transitional-shaped workbook.xml must not stamp strict");

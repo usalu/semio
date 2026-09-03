@@ -38,6 +38,12 @@ Use the latest wip ueli branch: github.com/usalu/semio/tree/🐙ueli/⛳wip at t
 
 ---
 
+Use the main chat with GPT 5.6 Sol Ultra for main plan coordination, use multiple GPT 5.6 Sol Extra High agents for task execution, use multiple GPT 5.6 Terra Extra High agents for read-only exploration and audits.
+Always use a work fleet of maximum possible parallel agents.
+There are other agents working on other logical, even if they work on the same files, dont stop and keep on to work in conjuntion with them, just focus on your task.
+
+---
+
 Use the main chat with Opus 5 High for main plan coordination, use multiple Sonnet 5 High agents for task execution, use multiple Haiku 4.5 agents for read-only exploration.
 Always use a work fleet of maximum possible parallel agents.
 There are other agents working on other logical, even if they work on the same files, dont stop and keep on to work in conjuntion with them, just focus on your task.

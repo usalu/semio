@@ -68,7 +68,7 @@ const PNG_SIGNATURE: [u8; 8] = [137, 80, 78, 71, 13, 10, 26, 10];
 //#region Crc
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn png_crc32(data: &[u8]) -> u32 {
-    crate::artifacts::zip::standards::v2_0::subsets::any::io::crc32(data)
+    crate::artifacts::zip::standards::v2_0::subsets::base::io::crc32(data)
 }
 //#endregion Crc
 

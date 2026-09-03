@@ -309,7 +309,7 @@ fn regenerate_presentation_parts(opc: &mut OpcPackage, presentation: &PptxPresen
 pub fn build_minimal_pptx(presentation: PptxPresentation) -> PptxSnapshot {
     let draft = PptxSnapshot::from_parts(OpcPackage::empty(), Vec::new(), presentation);
     let bytes = encode_pptx(&draft).expect("minimal logical pptx materialization");
-    crate::artifacts::pptx::standards::v_ecma_376::subsets::any::io::import::deserializers::decode_pptx(&bytes).expect("minimal logical pptx decode")
+    crate::artifacts::pptx::standards::v_ecma_376::subsets::base::io::import::deserializers::decode_pptx(&bytes).expect("minimal logical pptx decode")
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -461,7 +461,7 @@ pub fn encode_pptx(snap: &PptxSnapshot) -> Result<Vec<u8>, PptxError> {
     }
     let presentation_path = resolve_office_document_relationship(&opc);
     let has_authoritative_presentation_xml = presentation_path.as_ref().is_some_and(|path| snap.xml_parts.iter().any(|part| &part.path == path));
-    let presentation_changed = has_authoritative_presentation_xml && crate::artifacts::pptx::standards::v_ecma_376::subsets::any::io::import::deserializers::project_presentation(&snap.opc, &snap.xml_parts)? != snap.presentation;
+    let presentation_changed = has_authoritative_presentation_xml && crate::artifacts::pptx::standards::v_ecma_376::subsets::base::io::import::deserializers::project_presentation(&snap.opc, &snap.xml_parts)? != snap.presentation;
     if !has_authoritative_presentation_xml || presentation_changed {
         regenerate_presentation_parts(&mut opc, &snap.presentation);
     }

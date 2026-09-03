@@ -7,13 +7,12 @@
 use crate::artifacts::playground::standards::v1::subsets::any::schema::snapshot::PlaygroundSnapshot;
 use schema::ArtifactSchema;
 use semio_framework_plugin::ArtifactInferrer;
-use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 
 //#region 🧭️Topology
 /// 🧭️ Playground topology is honestly empty because its snapshot owns only schema metadata.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct PlaygroundTopology {
     pub topo_order: Vec<String>,
     pub depth: BTreeMap<String, u32>,
@@ -31,8 +30,8 @@ fn infer_topology(_snapshot: &PlaygroundSnapshot) -> PlaygroundTopology {
 /// `💡️inferences/` (currently: `topology`, backed by the `🧭topology/` slug dir) — `PlaygroundSnapshot`
 /// is today's minimal schema stub (`schema: String` only, see its own doc comment), so `topology`
 /// here is honestly always the vacuous empty graph until this artifact grows real domain entities.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ArtifactSchema)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
+#[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.demonstrator.playground.inference")]
 pub struct PlaygroundInference {
     #[derived]

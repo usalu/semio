@@ -1,13 +1,13 @@
-//! 🌐️ `stdio.semio` artifact root — the inbuilt semio semantic artifact (standard `v1`, 13
-//! schema-owning domain subsets + the `✳️any` envelope union). See the master plan's
+//! 🌐️ `stdio.semio` artifact root — the inbuilt semio semantic artifact (standard `v1`, 18
+//! schema-owning domain subsets + the `✳️base` envelope union). See the master plan's
 //! "Architecture > The semio artifact" section.
 
 use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability};
 
-pub use crate::artifacts::semio::standards::v1::subsets::any::schema::SemioArtifact;
-pub use crate::artifacts::semio::standards::v1::subsets::any::schema::diff::SemioDiff;
-pub use crate::artifacts::semio::standards::v1::subsets::any::schema::mutations::SemioMutation;
-pub use crate::artifacts::semio::standards::v1::subsets::any::schema::snapshot::SemioSnapshot;
+pub use crate::artifacts::semio::standards::v1::subsets::base::schema::SemioArtifact;
+pub use crate::artifacts::semio::standards::v1::subsets::base::schema::diff::SemioDiff;
+pub use crate::artifacts::semio::standards::v1::subsets::base::schema::mutations::SemioMutation;
+pub use crate::artifacts::semio::standards::v1::subsets::base::schema::snapshot::SemioSnapshot;
 
 /// 🏷️ Document schema / DSL envelope id.
 pub const STDIO_SEMIO_DOCUMENT_SCHEMA: &str = "stdio.semio";
@@ -42,7 +42,7 @@ pub fn artifact_kind() -> ArtifactKindSpec {
 //#endregion 🔖️ArtifactKind
 
 //#region 🔖️Register
-/// 🗂️ Registers all 19 of `v1`'s subsets' IO composers (14 domain subsets + `text` + `✳️any`
+/// 🗂️ Registers all 19 of `v1`'s subsets' IO composers (18 domain subsets + `✳️base`
 /// itself) — dissolved out of the former standard-level `⚙️engine` (ticket
 /// 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES). `semio` is one of stdio's 10
 /// deliberate imperative-`register()` artifacts (never converted to the `ArtifactDeclaration`
@@ -68,7 +68,7 @@ pub fn register() {
     crate::artifacts::semio::standards::v1::subsets::graph::io::register();
     crate::artifacts::semio::standards::v1::subsets::object::io::register();
     crate::artifacts::semio::standards::v1::subsets::kit::io::register();
-    crate::artifacts::semio::standards::v1::subsets::any::io::register();
+    crate::artifacts::semio::standards::v1::subsets::base::io::register();
 }
 //#endregion 🔖️Register
 
@@ -227,7 +227,7 @@ macro_rules! retire_struct {
     };
 }
 
-use subsets::any::schema::geometry::{SemioPoint2, SemioPoint3, SemioQuaternion, SemioRgba, SemioTransform, SemioUv};
+use subsets::base::schema::geometry::{SemioPoint2, SemioPoint3, SemioQuaternion, SemioRgba, SemioTransform, SemioUv};
 use subsets::{
     animation::schema::mutations as animation_mutation, audio::schema::mutations as audio_mutation, brep::schema::mutations as brep_mutation, cad::schema::mutations as cad_mutation, document::schema::mutations as document_mutation,
     drawing::schema::mutations as drawing_mutation, flow::schema::mutations as flow_mutation, graph::schema::mutations as graph_mutation, image::schema::mutations as image_mutation, kit::schema::mutations as kit_mutation,
@@ -1372,7 +1372,7 @@ async fn subset_of_persisted_envelope(envelope_pack: &[u8]) -> Result<String, ds
 
 //#region 🚪️DerivedIoRegistry
 pub mod io_registry {
-    use crate::artifacts::semio::standards::v1::subsets::any::io::io_registry as v1;
+    use crate::artifacts::semio::standards::v1::subsets::base::io::io_registry as v1;
     use semio_framework_plugin::{ComposeError, ComposedArtifact, ComposerEntry, Dialect, ErasedComposeSource, register_composer_entries};
     use std::sync::OnceLock;
 

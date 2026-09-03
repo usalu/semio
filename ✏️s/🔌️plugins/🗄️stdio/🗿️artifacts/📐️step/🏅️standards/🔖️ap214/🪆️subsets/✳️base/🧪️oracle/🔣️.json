@@ -27,6 +27,30 @@
       },
       "productionReachable": false,
       "networkDuringExecution": false
+    },
+    {
+      "id": "steputils-step-ap214-base-mutate-reader",
+      "kind": "third-party-library",
+      "ecosystem": "python",
+      "package": "steputils",
+      "version": "0.1",
+      "engine": {
+        "family": "steputils",
+        "implementation": "steputils Part-21/STEP reader",
+        "version": "0.1"
+      },
+      "capabilities": [
+        "step-ap214-base-mutate"
+      ],
+      "license": "MIT",
+      "testOnly": true,
+      "productionReachable": false,
+      "networkDuringExecution": false,
+      "homepage": "https://github.com/mozman/steputils",
+      "rationale": "📖️ A READER, registered separately from this file's existing `cross-semio-implementation` entry, which COMPUTES what a mutation should produce from this repository's own reading of the spec and therefore cannot discharge this requirement — both halves would descend from one reading of it. steputils 0.1 (by mozman, the same author as the widely-used `ezdxf` DXF library) is a from-scratch pure-Python ISO 10303-21 (Part 21 / STEP physical file) reader, entirely independent of this repository's Rust `ruststep`-based reimplementation. `steputils.p21.readfile(path)` parses the real header and data section — `stepfile.header['FILE_SCHEMA']`, `FILE_DESCRIPTION`, and every data entity by its STEP instance name — directly witnessing this subset's AP214 entity/attribute vocabulary. Verified against this subset's own committed `shared://🧪️hexagonal-cut-concrete-forest-left-ap214/📐️.stp`: `readfile` parsed the real file and reported its genuine `FILE_SCHEMA` entry, `('AUTOMOTIVE_DESIGN')` — AP214's own schema name.",
+      "comparisonProfiles": [
+        "semantic-step-v1"
+      ]
     }
   ],
   "noOracleDecisions": [],
@@ -67,7 +91,7 @@
     {
       "id": "semantic-step-v1",
       "description": "STEP (ISO 10303-21) exchange structures compared by declared FILE_SCHEMA and the full id-keyed entity graph (name plus positional argument values, reals tolerant). Header timestamp, preprocessor/originating-system strings, comment placement and line-wrapping are writer freedom -- the same normative surface `StepDiff`/`StepMutation` themselves operate over.",
-      "tolerance": 0.000001,
+      "tolerance": 1e-06,
       "ignoreKeys": [
         "timestamp",
         "preprocessorVersion",
@@ -102,7 +126,8 @@
           "oracleRequirements": [
             {
               "capability": "step-ap214-base-mutate",
-              "qualifyingKind": "third-party-library"
+              "qualifyingKind": "third-party-library",
+              "oracle": "steputils-step-ap214-base-mutate-reader"
             }
           ]
         },
@@ -121,7 +146,8 @@
           "oracleRequirements": [
             {
               "capability": "step-ap214-base-mutate",
-              "qualifyingKind": "third-party-library"
+              "qualifyingKind": "third-party-library",
+              "oracle": "steputils-step-ap214-base-mutate-reader"
             }
           ]
         },
@@ -140,7 +166,8 @@
           "oracleRequirements": [
             {
               "capability": "step-ap214-base-mutate",
-              "qualifyingKind": "third-party-library"
+              "qualifyingKind": "third-party-library",
+              "oracle": "steputils-step-ap214-base-mutate-reader"
             }
           ]
         },
@@ -159,7 +186,8 @@
           "oracleRequirements": [
             {
               "capability": "step-ap214-base-mutate",
-              "qualifyingKind": "third-party-library"
+              "qualifyingKind": "third-party-library",
+              "oracle": "steputils-step-ap214-base-mutate-reader"
             }
           ]
         },
@@ -178,7 +206,8 @@
           "oracleRequirements": [
             {
               "capability": "step-ap214-base-mutate",
-              "qualifyingKind": "third-party-library"
+              "qualifyingKind": "third-party-library",
+              "oracle": "steputils-step-ap214-base-mutate-reader"
             }
           ]
         },
@@ -197,7 +226,8 @@
           "oracleRequirements": [
             {
               "capability": "step-ap214-base-mutate",
-              "qualifyingKind": "third-party-library"
+              "qualifyingKind": "third-party-library",
+              "oracle": "steputils-step-ap214-base-mutate-reader"
             }
           ]
         },
@@ -216,7 +246,8 @@
           "oracleRequirements": [
             {
               "capability": "step-ap214-base-mutate",
-              "qualifyingKind": "third-party-library"
+              "qualifyingKind": "third-party-library",
+              "oracle": "steputils-step-ap214-base-mutate-reader"
             }
           ]
         },
@@ -235,7 +266,8 @@
           "oracleRequirements": [
             {
               "capability": "step-ap214-base-mutate",
-              "qualifyingKind": "third-party-library"
+              "qualifyingKind": "third-party-library",
+              "oracle": "steputils-step-ap214-base-mutate-reader"
             }
           ]
         },
@@ -254,7 +286,8 @@
           "oracleRequirements": [
             {
               "capability": "step-ap214-base-mutate",
-              "qualifyingKind": "third-party-library"
+              "qualifyingKind": "third-party-library",
+              "oracle": "steputils-step-ap214-base-mutate-reader"
             }
           ]
         },
@@ -273,11 +306,473 @@
           "oracleRequirements": [
             {
               "capability": "step-ap214-base-mutate",
-              "qualifyingKind": "third-party-library"
+              "qualifyingKind": "third-party-library",
+              "oracle": "steputils-step-ap214-base-mutate-reader"
             }
           ]
         }
       ]
+    }
+  ],
+  "fixtureManifests": [
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "insert-entity-applied",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.step",
+        "standard": "ap214",
+        "subset": "base"
+      },
+      "mutation": "insert-entity",
+      "outcome": "applied",
+      "units": {
+        "length": "millimetre",
+        "angle": "radian"
+      },
+      "files": [
+        {
+          "role": "expected-before-step",
+          "path": "../🧫️fixtures/insert-entity-applied/before.stp",
+          "mediaType": "model/step",
+          "sha256": "sha256:3cf8d51d396eb6ca6a5f233dd37d126e2d729f884dc602a53075801df801c94a",
+          "bytes": 77828
+        },
+        {
+          "role": "expected-after-step",
+          "path": "../🧫️fixtures/insert-entity-applied/after.stp",
+          "mediaType": "model/step",
+          "sha256": "sha256:fdc8ba0cb51647a68f57fe20be450505b99162c2771fab1fa383ba5a2dcbde73",
+          "bytes": 77895
+        }
+      ],
+      "generator": {
+        "oracle": "steputils-step-ap214-base-mutate-reader",
+        "packageVersion": "0.1",
+        "engineFamily": "steputils",
+        "engineVersion": "0.1",
+        "command": "uv run --group test python3 .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION/🔨️f1-step-generate.py",
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "MIT (steputils)",
+        "attribution": "Generated with steputils 0.1 (MIT, mozman) via a real parse+write round trip against this repository's own committed real-world fixture 🧪️hexagonal-cut-concrete-forest-left-ap214/📐️.stp",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "semantic-step-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "Inserted a new #99001 CARTESIAN_POINT entity with no prior referent — a genuine raw insert, produced and re-serialized by steputils' own writer."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "insert-entity-arg-applied",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.step",
+        "standard": "ap214",
+        "subset": "base"
+      },
+      "mutation": "insert-entity-arg",
+      "outcome": "applied",
+      "units": {
+        "length": "millimetre",
+        "angle": "radian"
+      },
+      "files": [
+        {
+          "role": "expected-before-step",
+          "path": "../🧫️fixtures/insert-entity-arg-applied/before.stp",
+          "mediaType": "model/step",
+          "sha256": "sha256:3cf8d51d396eb6ca6a5f233dd37d126e2d729f884dc602a53075801df801c94a",
+          "bytes": 77828
+        },
+        {
+          "role": "expected-after-step",
+          "path": "../🧫️fixtures/insert-entity-arg-applied/after.stp",
+          "mediaType": "model/step",
+          "sha256": "sha256:115b9cce727816d7718c8958795e130f76e86c721266309e16b7a99b3b2efb3e",
+          "bytes": 77843
+        }
+      ],
+      "generator": {
+        "oracle": "steputils-step-ap214-base-mutate-reader",
+        "packageVersion": "0.1",
+        "engineFamily": "steputils",
+        "engineVersion": "0.1",
+        "command": "uv run --group test python3 .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION/🔨️f1-step-generate.py",
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "MIT (steputils)",
+        "attribution": "Generated with steputils 0.1 (MIT, mozman) via a real parse+write round trip against this repository's own committed real-world fixture 🧪️hexagonal-cut-concrete-forest-left-ap214/📐️.stp",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "semantic-step-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "Inserted a new positional string argument at index 1 of #820 PRODUCT_DEFINITION_CONTEXT, growing its arity from 3 to 4."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "remove-entity-applied",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.step",
+        "standard": "ap214",
+        "subset": "base"
+      },
+      "mutation": "remove-entity",
+      "outcome": "applied",
+      "units": {
+        "length": "millimetre",
+        "angle": "radian"
+      },
+      "files": [
+        {
+          "role": "expected-before-step",
+          "path": "../🧫️fixtures/remove-entity-applied/before.stp",
+          "mediaType": "model/step",
+          "sha256": "sha256:3cf8d51d396eb6ca6a5f233dd37d126e2d729f884dc602a53075801df801c94a",
+          "bytes": 77828
+        },
+        {
+          "role": "expected-after-step",
+          "path": "../🧫️fixtures/remove-entity-applied/after.stp",
+          "mediaType": "model/step",
+          "sha256": "sha256:aa6b439daf8da467b2bccc1a706747c0e7ca220dca27c8e778c7ab3d59755b68",
+          "bytes": 77728
+        }
+      ],
+      "generator": {
+        "oracle": "steputils-step-ap214-base-mutate-reader",
+        "packageVersion": "0.1",
+        "engineFamily": "steputils",
+        "engineVersion": "0.1",
+        "command": "uv run --group test python3 .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION/🔨️f1-step-generate.py",
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "MIT (steputils)",
+        "attribution": "Generated with steputils 0.1 (MIT, mozman) via a real parse+write round trip against this repository's own committed real-world fixture 🧪️hexagonal-cut-concrete-forest-left-ap214/📐️.stp",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "semantic-step-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "Removed #824 APPLICATION_PROTOCOL_DEFINITION outright. Confirmed zero inbound references in the source fixture, so no other instance is left dangling by this specific removal."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "remove-entity-arg-applied",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.step",
+        "standard": "ap214",
+        "subset": "base"
+      },
+      "mutation": "remove-entity-arg",
+      "outcome": "applied",
+      "units": {
+        "length": "millimetre",
+        "angle": "radian"
+      },
+      "files": [
+        {
+          "role": "expected-before-step",
+          "path": "../🧫️fixtures/remove-entity-arg-applied/before.stp",
+          "mediaType": "model/step",
+          "sha256": "sha256:3cf8d51d396eb6ca6a5f233dd37d126e2d729f884dc602a53075801df801c94a",
+          "bytes": 77828
+        },
+        {
+          "role": "expected-after-step",
+          "path": "../🧫️fixtures/remove-entity-arg-applied/after.stp",
+          "mediaType": "model/step",
+          "sha256": "sha256:6a083afff5373af7b6afb81b049a40bd29779946ee59176e74dd275730f927f2",
+          "bytes": 77825
+        }
+      ],
+      "generator": {
+        "oracle": "steputils-step-ap214-base-mutate-reader",
+        "packageVersion": "0.1",
+        "engineFamily": "steputils",
+        "engineVersion": "0.1",
+        "command": "uv run --group test python3 .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION/🔨️f1-step-generate.py",
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "MIT (steputils)",
+        "attribution": "Generated with steputils 0.1 (MIT, mozman) via a real parse+write round trip against this repository's own committed real-world fixture 🧪️hexagonal-cut-concrete-forest-left-ap214/📐️.stp",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "semantic-step-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "Removed the empty description argument (index 2) of #827 PRODUCT, shrinking its arity from 4 to 3."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "set-entity-arg-applied",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.step",
+        "standard": "ap214",
+        "subset": "base"
+      },
+      "mutation": "set-entity-arg",
+      "outcome": "applied",
+      "units": {
+        "length": "millimetre",
+        "angle": "radian"
+      },
+      "files": [
+        {
+          "role": "expected-before-step",
+          "path": "../🧫️fixtures/set-entity-arg-applied/before.stp",
+          "mediaType": "model/step",
+          "sha256": "sha256:3cf8d51d396eb6ca6a5f233dd37d126e2d729f884dc602a53075801df801c94a",
+          "bytes": 77828
+        },
+        {
+          "role": "expected-after-step",
+          "path": "../🧫️fixtures/set-entity-arg-applied/after.stp",
+          "mediaType": "model/step",
+          "sha256": "sha256:f65bed91cf9b9b80f7ce6765a611e4df601c5b757e56ab9befbbb76655cbe2ef",
+          "bytes": 77836
+        }
+      ],
+      "generator": {
+        "oracle": "steputils-step-ap214-base-mutate-reader",
+        "packageVersion": "0.1",
+        "engineFamily": "steputils",
+        "engineVersion": "0.1",
+        "command": "uv run --group test python3 .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION/🔨️f1-step-generate.py",
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "MIT (steputils)",
+        "attribution": "Generated with steputils 0.1 (MIT, mozman) via a real parse+write round trip against this repository's own committed real-world fixture 🧪️hexagonal-cut-concrete-forest-left-ap214/📐️.stp",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "semantic-step-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "Replaced argument index 0 of #827 PRODUCT ('Document' -> 'Renamed Document')."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "set-entity-name-applied",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.step",
+        "standard": "ap214",
+        "subset": "base"
+      },
+      "mutation": "set-entity-name",
+      "outcome": "applied",
+      "units": {
+        "length": "millimetre",
+        "angle": "radian"
+      },
+      "files": [
+        {
+          "role": "expected-before-step",
+          "path": "../🧫️fixtures/set-entity-name-applied/before.stp",
+          "mediaType": "model/step",
+          "sha256": "sha256:3cf8d51d396eb6ca6a5f233dd37d126e2d729f884dc602a53075801df801c94a",
+          "bytes": 77828
+        },
+        {
+          "role": "expected-after-step",
+          "path": "../🧫️fixtures/set-entity-name-applied/after.stp",
+          "mediaType": "model/step",
+          "sha256": "sha256:cb7268120ee2df8a364f1386d8122dd374c67f14b311831a56ba4b2e5ce8134c",
+          "bytes": 77836
+        }
+      ],
+      "generator": {
+        "oracle": "steputils-step-ap214-base-mutate-reader",
+        "packageVersion": "0.1",
+        "engineFamily": "steputils",
+        "engineVersion": "0.1",
+        "command": "uv run --group test python3 .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION/🔨️f1-step-generate.py",
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "MIT (steputils)",
+        "attribution": "Generated with steputils 0.1 (MIT, mozman) via a real parse+write round trip against this repository's own committed real-world fixture 🧪️hexagonal-cut-concrete-forest-left-ap214/📐️.stp",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "semantic-step-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "Renamed the type keyword of #824 from APPLICATION_PROTOCOL_DEFINITION to APPLICATION_PROTOCOL_DEFINITION_RENAMED — a raw entity-name rewrite, args untouched."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "set-file-description-applied",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.step",
+        "standard": "ap214",
+        "subset": "base"
+      },
+      "mutation": "set-file-description",
+      "outcome": "applied",
+      "units": {
+        "length": "millimetre",
+        "angle": "radian"
+      },
+      "files": [
+        {
+          "role": "expected-before-step",
+          "path": "../🧫️fixtures/set-file-description-applied/before.stp",
+          "mediaType": "model/step",
+          "sha256": "sha256:3cf8d51d396eb6ca6a5f233dd37d126e2d729f884dc602a53075801df801c94a",
+          "bytes": 77828
+        },
+        {
+          "role": "expected-after-step",
+          "path": "../🧫️fixtures/set-file-description-applied/after.stp",
+          "mediaType": "model/step",
+          "sha256": "sha256:5e9ca68f273a6c61d345be7271575ec4bc103259334eea29118bcd1928d10772",
+          "bytes": 77859
+        }
+      ],
+      "generator": {
+        "oracle": "steputils-step-ap214-base-mutate-reader",
+        "packageVersion": "0.1",
+        "engineFamily": "steputils",
+        "engineVersion": "0.1",
+        "command": "uv run --group test python3 .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION/🔨️f1-step-generate.py",
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "MIT (steputils)",
+        "attribution": "Generated with steputils 0.1 (MIT, mozman) via a real parse+write round trip against this repository's own committed real-world fixture 🧪️hexagonal-cut-concrete-forest-left-ap214/📐️.stp",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "semantic-step-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "Replaced the header FILE_DESCRIPTION's description list."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "set-file-name-applied",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.step",
+        "standard": "ap214",
+        "subset": "base"
+      },
+      "mutation": "set-file-name",
+      "outcome": "applied",
+      "units": {
+        "length": "millimetre",
+        "angle": "radian"
+      },
+      "files": [
+        {
+          "role": "expected-before-step",
+          "path": "../🧫️fixtures/set-file-name-applied/before.stp",
+          "mediaType": "model/step",
+          "sha256": "sha256:3cf8d51d396eb6ca6a5f233dd37d126e2d729f884dc602a53075801df801c94a",
+          "bytes": 77828
+        },
+        {
+          "role": "expected-after-step",
+          "path": "../🧫️fixtures/set-file-name-applied/after.stp",
+          "mediaType": "model/step",
+          "sha256": "sha256:5dc55c1c0cb6a6dbbb3cdad2222a3b341093d13cccf0f941ea727e00fcd7cee9",
+          "bytes": 77809
+        }
+      ],
+      "generator": {
+        "oracle": "steputils-step-ap214-base-mutate-reader",
+        "packageVersion": "0.1",
+        "engineFamily": "steputils",
+        "engineVersion": "0.1",
+        "command": "uv run --group test python3 .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION/🔨️f1-step-generate.py",
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "MIT (steputils)",
+        "attribution": "Generated with steputils 0.1 (MIT, mozman) via a real parse+write round trip against this repository's own committed real-world fixture 🧪️hexagonal-cut-concrete-forest-left-ap214/📐️.stp",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "semantic-step-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "Replaced the header FILE_NAME's name/author/organization fields."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "set-file-schema-applied",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.step",
+        "standard": "ap214",
+        "subset": "base"
+      },
+      "mutation": "set-file-schema",
+      "outcome": "applied",
+      "units": {
+        "length": "millimetre",
+        "angle": "radian"
+      },
+      "files": [
+        {
+          "role": "expected-before-step",
+          "path": "../🧫️fixtures/set-file-schema-applied/before.stp",
+          "mediaType": "model/step",
+          "sha256": "sha256:3cf8d51d396eb6ca6a5f233dd37d126e2d729f884dc602a53075801df801c94a",
+          "bytes": 77828
+        },
+        {
+          "role": "expected-after-step",
+          "path": "../🧫️fixtures/set-file-schema-applied/after.stp",
+          "mediaType": "model/step",
+          "sha256": "sha256:eecb3fa36142fe81c679d97dfc60d35e2f914b85c20ab4292946f00de647fb3a",
+          "bytes": 77852
+        }
+      ],
+      "generator": {
+        "oracle": "steputils-step-ap214-base-mutate-reader",
+        "packageVersion": "0.1",
+        "engineFamily": "steputils",
+        "engineVersion": "0.1",
+        "command": "uv run --group test python3 .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION/🔨️f1-step-generate.py",
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "MIT (steputils)",
+        "attribution": "Generated with steputils 0.1 (MIT, mozman) via a real parse+write round trip against this repository's own committed real-world fixture 🧪️hexagonal-cut-concrete-forest-left-ap214/📐️.stp",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "semantic-step-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "Replaced the header FILE_SCHEMA's schema list, adding a second declared schema."
     }
   ]
 }

@@ -38,7 +38,6 @@ semio_framework_plugin::app_labels! {
         workshop: native_en "Workshop", native_de "Werkstatt", reuse_en "Workshop", reuse_de "Werkstatt";
         machines: native_en "Machines", native_de "Maschinen", reuse_en "Machines", reuse_de "Maschinen";
         remove_machine: native_en "Remove Machine", native_de "Maschine entfernen", reuse_en "Remove Machine", reuse_de "Maschine entfernen";
-        installed: native_en "Installed", native_de "Installiert", reuse_en "Installed", reuse_de "Installiert";
         id_field: native_en "ID", native_de "ID", reuse_en "ID", reuse_de "ID";
         kind_field: native_en "Kind", native_de "Art", reuse_en "Kind", reuse_de "Art";
         axis_field: native_en "Axis", native_de "Achse", reuse_en "Axis", reuse_de "Achse";

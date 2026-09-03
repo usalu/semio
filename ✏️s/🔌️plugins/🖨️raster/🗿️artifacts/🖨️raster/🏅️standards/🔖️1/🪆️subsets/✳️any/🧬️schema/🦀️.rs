@@ -395,8 +395,8 @@ pub fn semio_fixture_snapshot() -> RasterSnapshot {
     let emblem = RasterImageAsset { mime: "image/png".into(), data: base64_codec::base64_standard_decode("iVBORw0KGgoAAAANSUhEUgAAAAIAAAACCAYAAABytg0kAAAAEklEQVR42mP4z8DwHwyBNBgAAEnICfcD2WTxAAAAAElFTkSuQmCC").unwrap_or_default() };
     assets.insert("semio-emblem".into(), crate::artifacts::raster::mint_raster_asset_child("semio-emblem", &emblem));
     let mut params = RasterOwnedMap::new();
-    params.insert("brightness".into(), dsl::to_dsl_value(&serde_json::json!(0.12)).expect("dsl value"));
-    params.insert("contrast".into(), dsl::to_dsl_value(&serde_json::json!(0.08)).expect("dsl value"));
+    params.insert("brightness".into(), dsl::DslValue::float(0.12));
+    params.insert("contrast".into(), dsl::DslValue::float(0.08));
     RasterSnapshot {
         schema: RASTER_DOCUMENT_SCHEMA.into(),
         id: "semio-demo".into(),

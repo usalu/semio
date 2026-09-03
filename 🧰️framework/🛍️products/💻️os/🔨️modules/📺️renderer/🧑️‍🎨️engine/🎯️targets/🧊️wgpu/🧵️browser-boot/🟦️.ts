@@ -2,7 +2,7 @@
 /** @emoji 🧵️ Browser UI isolate host for the dedicated frame Worker. */
 
 import { BrowserFrameTransport, type BrowserFramePointer, type BrowserFrameWorkerFaultCode } from "../🧵️browser-frame-transport/🟦️";
-import { setInteractiveJobPort } from "../🧵️browser-frame-transport/🟦️";
+import { setInteractiveJobPort } from "../../../../../../../../🔨️modules/🖱️ui/🧱️elements/🔌️Ports/🟦️.ts";
 
 const RENDERER_MODULE_URL = new URL("./semio-framework-os-renderer-wgpu.js", import.meta.url).href;
 const RENDERER_WASM_URL = new URL("./semio-framework-os-renderer-wgpu_bg.wasm", import.meta.url).href;

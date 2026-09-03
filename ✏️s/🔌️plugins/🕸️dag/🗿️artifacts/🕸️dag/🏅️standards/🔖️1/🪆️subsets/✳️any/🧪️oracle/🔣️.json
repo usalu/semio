@@ -2,18 +2,55 @@
   "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json",
   "schemaVersion": 2,
   "_comment": "🧩️ This subset's own contribution. `dag.dag` is a semio-NATIVE port-directed computation graph whose nodes and edges live in a composed `s.stdio.semio.graph` child, so no oracle is registered and the evidence rests on the committed per-kind rejection vectors plus the inverse law over the real committed example document (see noOracleDecisions).",
-  "oracles": [],
-  "noOracleDecisions": [
+  "oracles": [
     {
-      "id": "dag-1-port-directed-graph-mutation-semantics",
-      "capabilities": [],
-      "rationale": "Nothing third-party reads `.dag.dsl.semio`, and no graph format holds an opinion about a PORT-directed edge — an edge whose endpoints are named ports owned by two nodes rather than the nodes themselves. THAT SURVEY STANDS, AND IT IS NOT WHAT THIS DECISION NOW RESTS ON. Surveying and declining a third-party LIBRARY is a different judgement from declining a SECOND IMPLEMENTATION, and until this re-examination that is the only judgement this decision had ever made. The sentence it used to lean on — that this subset's own shape IS its specification and so not a fact an external implementation could confirm or refute — is refuted inside this repository: `mutate-puzzle-2d-1` and `mutate-puzzle-3d-1`, whose documents carry ports inside nodes and cascade on delete, took Python second implementations over this same `.dsl.semio` carrier, from the same kind of committed material, and between them they surfaced findings no single-implementation case could produce. So THIS DECISION IS A DEBT, NOT A JUDGEMENT, and it is recorded as one here rather than left reading as a verdict.\n\nWHAT A SECOND IMPLEMENTATION HERE WOULD BE WRITTEN FROM: `../🧬️schema/📸️snapshot/🔣️.json` for the document's members, the rules of `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/📓️derivation-rules.md` that this vocabulary was derived by, and the fourteen committed `(before, mutation, after, outcome)` specification vectors under `../🧬️schema/🧬️mutations/<kind>/🧪️tests/<fixture>/`. The nearest transferable recipe is `mutate-puzzle-2d-1`, which models exactly that: handles inside nodes, edges naming handles, and a cascade when either goes.\n\nWHAT BLOCKS IT TODAY, precisely. This case's committed specification vectors are NOT declared as `asset://` fixtures. Its `Examples` table carries the payloads inline, and the Rust adapter reaches the committed `(before, mutation, after, outcome)` files through `include_str!` instead. Two consequences follow: the execution plan does not pin those files' digests, so a silently edited vector changes the result rather than the plan; and a Python reference cannot read them at all, because the Python host resolves a fixture only through the plan and raises on an undeclared URI. Declaring them — the shape `mutate-program-1`, `mutate-note-1` and `mutate-block-3d-1` already use — is the one edit that unblocks this case, and it strengthens the case whether or not a reference follows. AND, SEPARATELY, `identity-round-trip` WOULD STILL BE REFUSED. This subset's committed snapshot text grammar is the repository-wide PLACEHOLDER: its whole body is `payload = OCTET+` and its header production declares `\"schema\" SP \"stdio.json\"`, which the committed artifact contradicts on its own first line. A second reader cannot parse what no document describes — the finding `mutate-iso16757-1`, `mutate-vdi3805-1`, `mutate-program-1` and `mutate-writer-1` all report against their own subsets.\n\nWHAT IS ASSERTED IN THE MEANTIME is unchanged and is listed in `substitutes`: the committed specification vectors, replayed end to end through the platform, and the metamorphic laws the subject handler asserts in role. The ceiling on all of it is unchanged too and is worth restating: no second producer runs beside them, so a mistake shared by the handcrafted vector and the production code passes unseen.\n\n[C2 2026-09-02] Narrowed `capabilities` to remove 'dag-1-mutate': a mutation manifest already requires an external-oracle discharge for this capability (tracked honestly as `missing-external-oracle`), so a no-oracle decision claiming the same capability made that gap invisible to `no-oracle-covers-mutation` without discharging it. The rationale above is kept verbatim as the record of what was actually investigated; only the claim is withdrawn. See .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION/📓️c2-native-artifact-oracles.md.",
-      "substitutes": [
-        "specification-vectors",
-        "metamorphic-laws"
-      ]
+      "id": "dag-1-python-independent",
+      "ecosystem": "python",
+      "package": "",
+      "capabilities": [
+        "dag-1-mutate"
+      ],
+      "comparisonProfiles": [
+        "ordered-json-v1"
+      ],
+      "license": "AGPL-3.0-only",
+      "testOnly": true,
+      "rationale": "🐍️ No third-party library reads or writes dag.dag's .dag.dsl.semio carrier — a port-directed computation graph whose edge endpoints are node@port strings no generic graph format has an opinion about. The reference is therefore a SECOND IMPLEMENTATION rather than a third-party distribution. The implementation is ../../../🧪️tests/mutate-dag-1/🐍️component.py, written from this subset's own committed ../🧬️schema/📸️snapshot/🔣️.json and each mutation's 🔣️.schema.json, and from .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-DIRECT-LEAF-OVERHAUL/📓️taxonomy.md's create/delete/rename/change/move/resize/replace/connect/disconnect/reorder verb entries. It imports nothing from the Rust it judges and transliterates none of it. DagSnapshot persists neither nodes nor edges (one content-addressed child handle only), so no committed fixture carries a decodable graph; all fourteen committed vectors are rejections and this reference reproduces exactly that closed table (thirteen target-missing, one duplicate-id, reorder-nodes self-contained from its own order list) rather than claiming to model a graph it cannot see. All fourteen kinds' forward and inverse scenarios were executed standalone via the repository's own 🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🐍️python/🐍️.py host against a hand-built plan — all twenty-eight passed on the first run.",
+      "kind": "verified-native-second-implementation",
+      "engine": {
+        "family": "none",
+        "implementation": "in-repository second implementation",
+        "version": "0"
+      },
+      "productionReachable": false,
+      "networkDuringExecution": false,
+      "nativeSecondImplementation": {
+        "format": "s.dag.dag",
+        "noThirdPartySurvey": {
+          "ecosystemsSearched": [
+            "rust/crates.io",
+            "python/pypi"
+          ],
+          "candidatesConsidered": [
+            {
+              "package": "generic graph crates (e.g. petgraph)",
+              "reason": "No generic graph format holds an opinion about an edge whose endpoints are node@port strings owned by two separate nodes, per this subsets own domain shape."
+            }
+          ]
+        },
+        "subjectImplementationLanguage": "rust",
+        "secondImplementationLanguage": "python",
+        "specificationSource": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-DIRECT-LEAF-OVERHAUL/📓️taxonomy.md; ../🧬️schema/📸️snapshot/🔣️.json; each mutation's own 🔣️.schema.json",
+        "fixtureCoverage": {
+          "vectors": 14,
+          "capabilitiesCovered": [
+            "dag-1-mutate"
+          ]
+        }
+      }
     }
   ],
+  "noOracleDecisions": [],
   "mutationCatalogs": [
     {
       "id": "dag-1-any",
@@ -219,7 +256,7 @@
           "oracleRequirements": [
             {
               "capability": "dag-1-mutate",
-              "qualifyingKind": "third-party-library"
+              "qualifyingKind": "verified-native-second-implementation"
             }
           ]
         },
@@ -239,7 +276,7 @@
           "oracleRequirements": [
             {
               "capability": "dag-1-mutate",
-              "qualifyingKind": "third-party-library"
+              "qualifyingKind": "verified-native-second-implementation"
             }
           ]
         },
@@ -259,7 +296,7 @@
           "oracleRequirements": [
             {
               "capability": "dag-1-mutate",
-              "qualifyingKind": "third-party-library"
+              "qualifyingKind": "verified-native-second-implementation"
             }
           ]
         },
@@ -279,7 +316,7 @@
           "oracleRequirements": [
             {
               "capability": "dag-1-mutate",
-              "qualifyingKind": "third-party-library"
+              "qualifyingKind": "verified-native-second-implementation"
             }
           ]
         },
@@ -299,7 +336,7 @@
           "oracleRequirements": [
             {
               "capability": "dag-1-mutate",
-              "qualifyingKind": "third-party-library"
+              "qualifyingKind": "verified-native-second-implementation"
             }
           ]
         },
@@ -318,7 +355,7 @@
           "oracleRequirements": [
             {
               "capability": "dag-1-mutate",
-              "qualifyingKind": "third-party-library"
+              "qualifyingKind": "verified-native-second-implementation"
             }
           ]
         },
@@ -338,7 +375,7 @@
           "oracleRequirements": [
             {
               "capability": "dag-1-mutate",
-              "qualifyingKind": "third-party-library"
+              "qualifyingKind": "verified-native-second-implementation"
             }
           ]
         },
@@ -358,7 +395,7 @@
           "oracleRequirements": [
             {
               "capability": "dag-1-mutate",
-              "qualifyingKind": "third-party-library"
+              "qualifyingKind": "verified-native-second-implementation"
             }
           ]
         },
@@ -378,7 +415,7 @@
           "oracleRequirements": [
             {
               "capability": "dag-1-mutate",
-              "qualifyingKind": "third-party-library"
+              "qualifyingKind": "verified-native-second-implementation"
             }
           ]
         },
@@ -398,7 +435,7 @@
           "oracleRequirements": [
             {
               "capability": "dag-1-mutate",
-              "qualifyingKind": "third-party-library"
+              "qualifyingKind": "verified-native-second-implementation"
             }
           ]
         },
@@ -417,7 +454,7 @@
           "oracleRequirements": [
             {
               "capability": "dag-1-mutate",
-              "qualifyingKind": "third-party-library"
+              "qualifyingKind": "verified-native-second-implementation"
             }
           ]
         },
@@ -437,7 +474,7 @@
           "oracleRequirements": [
             {
               "capability": "dag-1-mutate",
-              "qualifyingKind": "third-party-library"
+              "qualifyingKind": "verified-native-second-implementation"
             }
           ]
         },
@@ -457,7 +494,7 @@
           "oracleRequirements": [
             {
               "capability": "dag-1-mutate",
-              "qualifyingKind": "third-party-library"
+              "qualifyingKind": "verified-native-second-implementation"
             }
           ]
         },
@@ -477,7 +514,7 @@
           "oracleRequirements": [
             {
               "capability": "dag-1-mutate",
-              "qualifyingKind": "third-party-library"
+              "qualifyingKind": "verified-native-second-implementation"
             }
           ]
         }

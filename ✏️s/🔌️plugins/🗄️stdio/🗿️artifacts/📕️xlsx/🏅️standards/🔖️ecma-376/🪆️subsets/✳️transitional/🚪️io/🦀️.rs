@@ -5,8 +5,8 @@
 //! `✳️base/🚪️io` and `✳️strict/🚪️io` already established for this artifact family.
 //#region 🎹️DerivedComposition
 pub mod derived_composition {
-    use crate::artifacts::xlsx::standards::v_ecma_376::subsets::any::schema::snapshot::XlsxSnapshot;
-    use crate::artifacts::xlsx::standards::v_ecma_376::subsets::any::schema::XlsxComposer as XlsxAnyComposer;
+    use crate::artifacts::xlsx::standards::v_ecma_376::subsets::base::schema::snapshot::XlsxSnapshot;
+    use crate::artifacts::xlsx::standards::v_ecma_376::subsets::base::schema::XlsxComposer as XlsxAnyComposer;
     use crate::artifacts::xlsx::standards::v_ecma_376::subsets::transitional::schema::check_transitional_conformance;
     use dsl::{Diagnostic, FaultCode, Severity, TextSpan};
     use semio_framework_plugin::{register_subset_validator, subset_validator_entry_of, ArtifactComposition, ComposeError, ComposeSource, Composition, Dialect, IoPayload, StandardId, SubsetId, SubsetValidator, SubsetValidatorEntry};
@@ -89,7 +89,7 @@ pub mod derived_composition {
     #[cfg(test)]
     mod tests {
         use super::*;
-        use crate::artifacts::xlsx::standards::v_ecma_376::subsets::any::schema::snapshot::XlsxWorkbook;
+        use crate::artifacts::xlsx::standards::v_ecma_376::subsets::base::schema::snapshot::XlsxWorkbook;
         use crate::artifacts::xlsx::standards::v_ecma_376::subsets::transitional::schema::XlsxTransitionalBuilderConstruction as XlsxTransitionalBuilder;
         use crate::artifacts::xlsx::standards::v_ecma_376::subsets::transitional::schema::CODE_NAMESPACE_MISMATCH;
         use semio_framework_plugin::{AnalyzeSource, ArtifactBuilder as _};
@@ -112,7 +112,7 @@ pub mod derived_composition {
             // `engine::decode_xlsx` without an intervening regenerate. Same technique the PDF/A 1.7
             // pilot's composer tests use for the analogous reason.
             use crate::artifacts::xlsx::standards::v_ecma_376::subsets::strict::schema::stamp_strict_namespace;
-            let strict_snapshot = stamp_strict_namespace(crate::artifacts::xlsx::standards::v_ecma_376::subsets::any::io::export::serializers::build_minimal_xlsx(XlsxWorkbook::default()));
+            let strict_snapshot = stamp_strict_namespace(crate::artifacts::xlsx::standards::v_ecma_376::subsets::base::io::export::serializers::build_minimal_xlsx(XlsxWorkbook::default()));
             // 🩹 `engine::encode_xlsx` itself regenerates workbook.xml as Transitional-shaped (the
             // very thing this comment above warns about) -- encoding the OPC package directly, NOT
             // through `encode_xlsx`, is what actually avoids the regenerate.

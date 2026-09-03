@@ -4,21 +4,6 @@
 
 import "./🎨️.css";
 
-// [DEBUG] temporary shard turn probe
-{
-  const proto = Worker.prototype as unknown as { postMessage: (m: unknown, t?: unknown) => void };
-  const original = proto.postMessage;
-  proto.postMessage = function (message: unknown, transfer?: unknown) {
-    try {
-      const record = message as { kind?: string; events?: readonly { kind?: string; payload?: object }[] };
-      if (record && record.kind === "turn" && Array.isArray(record.events) && record.events.length > 0) {
-        console.error("[DEBUG] outgoing turn", JSON.stringify(record.events.map((event) => ({ k: event.kind, keys: Object.keys(event.payload ?? {}).join("|") }))).slice(0, 500), "STACK", String(new Error().stack).split("\n").slice(1, 8).join(" <- "));
-      }
-    } catch {}
-    return transfer === undefined ? original.call(this, message) : (original as (m: unknown, t: unknown) => void).call(this, message, transfer);
-  };
-}
-
 export type { PluginBuildTarget } from "../🔌️plugin/📇️registry/🤖️generated/🟦️plugins.ts";
 export { PLUGIN_BUILD_TARGETS, EXTENSION_TARGETS, PROGRAM_TARGETS, pluginModuleUrl, extensionModuleUrl } from "../🔌️plugin/📇️registry/🤖️generated/🟦️plugins.ts";
 export { PLAYGROUND_SESSION } from "./🤖️generated/🟦️session.ts";

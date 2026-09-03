@@ -15,7 +15,6 @@ use crate::editor::lowpoly::config::LowpolyConfig;
 use crate::editor::lowpoly::engine::LowpolyDocument;
 use crate::editor::lowpoly::session::LowpolyScratch;
 use semio_framework_plugin::app::InteractionView;
-use serde_json::Value;
 
 //#region 🔖️View
 /// @emoji 🧭️ A borrowed read view — the document projection plus the config — threaded into the
@@ -119,8 +118,7 @@ pub fn selection_from_state(active_object_id: &str, selected: &protocol::DomainS
 /// domain-bound tree's hover is translated generically by the renderer now, like its selection click
 /// modifiers, never by an app-built per-row action.
 pub fn mesh_select_action(granularity: &str, target_id: &str, merge: &str) -> semio_framework_plugin::UiAssemblyResult<(semio_framework_plugin::ActionId, Option<semio_framework_plugin::UiValue>)> {
-    let targets =
-        serde_json::to_string(&[semio_framework_plugin::InteractionTarget { granularity: granularity.into(), id: target_id.into() }]).map_err(|error| semio_framework_plugin::PluginAssemblyError::new("ui.action-argument", error.to_string()))?;
+    let targets = dsl::json::to_json_string(&[semio_framework_plugin::InteractionTarget { granularity: granularity.into(), id: target_id.into() }]);
     let args =
         crate::editor::lowpoly::ui_value_map([("domainId", crate::editor::lowpoly::ui_value_text(MESH_INTERACTION_DOMAIN)?), ("targets", crate::editor::lowpoly::ui_value_text(targets)?), ("merge", crate::editor::lowpoly::ui_value_text(merge)?)])?;
     crate::editor::lowpoly::lowpoly_action("interactionSelect", Some(args))
@@ -139,7 +137,7 @@ pub fn primitive_kind(kind: &str) -> &str {
     }
 }
 
-pub fn mirror_axis_from_param(params: &Value) -> semio_framework_3d::mesh::MirrorAxis {
+pub fn mirror_axis_from_param(params: &serde_json::Value) -> semio_framework_3d::mesh::MirrorAxis {
     match utility_param_u32(params, "mirrorAxis", 0) {
         1 => semio_framework_3d::mesh::MirrorAxis::Y,
         2 => semio_framework_3d::mesh::MirrorAxis::Z,
@@ -147,22 +145,29 @@ pub fn mirror_axis_from_param(params: &Value) -> semio_framework_3d::mesh::Mirro
     }
 }
 
-pub fn utility_param_f32(params: &Value, key: &str, default: f32) -> f32 {
+pub fn utility_param_f32(params: &serde_json::Value, key: &str, default: f32) -> f32 {
     params.get(key).and_then(|value| value.as_f64()).map_or(default, |v| v as f32)
 }
 
-pub fn utility_param_u32(params: &Value, key: &str, default: u32) -> u32 {
+pub fn utility_param_u32(params: &serde_json::Value, key: &str, default: u32) -> u32 {
     params.get(key).and_then(|value| value.as_u64()).map_or(default, |v| v as u32)
 }
 
-pub fn utility_param_f64(params: &Value, key: &str, default: f64) -> f64 {
+pub fn utility_param_f64(params: &serde_json::Value, key: &str, default: f64) -> f64 {
     utility_param_f32(params, key, default as f32) as f64
 }
 
-/// 🧮️ Parses `config.utility_params_json` back into a `Value` — the flattened `LowpolyConfig` field
-/// carries it as canonical JSON text since a raw `Value` field has no direct DSL binding.
-pub fn utility_params_value(config: &LowpolyConfig) -> Value {
-    serde_json::from_str(&config.utility_params_json).unwrap_or_default()
+/// 🧮️ Parses `config.utility_params_json` back into a `serde_json::Value` — the flattened
+/// `LowpolyConfig` field carries it as canonical JSON text since a raw `Value` field has no direct
+/// DSL binding. The return type stays `serde_json::Value` (fully qualified, no `use`): every
+/// consumer of this fn's output outside this ticket's 7-file slice (`🎮️commands/🔷️mesh-edit`,
+/// `🖌️session`, `🛠️options/🧲️snap`/`🖌️paint-params-brush`/`🧽️paint-params-eraser`) still expects
+/// that exact type, so only the parse itself routes off `serde_json::from_str` — through
+/// `dsl::json::from_json_str` (the first-party JSON-text parser, ticket
+/// `26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS`) into a `DslValue`, bridged
+/// to `serde_json::Value` at this one boundary.
+pub fn utility_params_value(config: &LowpolyConfig) -> serde_json::Value {
+    dsl::json::from_json_str::<dsl::DslValue>(&config.utility_params_json).map(|value| (&value).into()).unwrap_or_default()
 }
 
 pub fn euler_degrees_to_quaternion(rotation: [f32; 3]) -> [f64; 4] {

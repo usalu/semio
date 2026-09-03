@@ -1,7 +1,7 @@
 //! 🔗️ `delete-fastener` command.
 
 use crate::editor::puzzle5d::Puzzle5dActionCtx;
-use serde_json::Value;
+use dsl::os_pack::json::Value;
 
 fn arg_str<'a>(args: Option<&'a Value>, key: &str) -> Option<&'a str> {
     args.and_then(|value| value.get(key)).and_then(Value::as_str).filter(|text| !text.is_empty())

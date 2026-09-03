@@ -12,23 +12,17 @@
  * `📓️luna-mcpspec-audit.md`'s own audited response shape (`{resultType, protocolVersion,
  * capabilities, serverInfo, _meta?}`) exactly, NOT a bug. The full supported-version SET is exposed
  * authoritatively via the `-32022` error's `data.supported` array instead — asserted below. */
-import { existsSync } from "node:fs";
 import { beforeEach, describe, expect, it } from "vitest";
-import { resolveMcpBinaryPath, spawnRawMcp, type RawMcpProcess } from "../../🟦️.ts";
+import { requireMcpBinary, spawnRawMcp, type RawMcpProcess } from "../../🟦️.ts";
 import { getWorkspaceRoot } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 
 const repoRoot = getWorkspaceRoot();
-const bin = resolveMcpBinaryPath(repoRoot);
-const BIN_PRESENT = existsSync(bin);
+const bin = requireMcpBinary(repoRoot);
 const META_KEY = "io.modelcontextprotocol/protocolVersion";
 const MODERN_VERSION = "2026-07-28";
 const SUPPORTED = [MODERN_VERSION, "2025-11-25", "2025-06-18"];
 
-if (!BIN_PRESENT) {
-  console.warn(`[@semio-tech/framework-os-mcp] modern-era suite SKIPPED — binary not found at ${bin}. Build it first: CARGO_TARGET_DIR=<ticket>/🎯️target cargo build -p semio-framework-os-mcp --bin semio-os-mcp`);
-}
-
-describe.skipIf(!BIN_PRESENT)("semio-os-mcp — modern era (2026-07-28, raw JSON-RPC, no SDK)", () => {
+describe("semio-os-mcp — modern era (2026-07-28, raw JSON-RPC, no SDK)", () => {
   let procs: RawMcpProcess[] = [];
 
   beforeEach(() => {

@@ -191,11 +191,9 @@ pub trait Mutation<P>: Clone + crate::value::ToValue + crate::value::FromValue {
 
 //#region 🪪️MutationLeafDescriptor
 /// 🧷️ Schema vocabulary for one direct mutation's inversion behavior.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, serde::Serialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 #[repr(u8)]
-#[serde(rename_all = "kebab-case")]
 pub enum MutationInvertibility {
-    #[serde(rename = "self")]
     SelfInvertible,
     ExplicitMutation,
     Plan,
@@ -220,9 +218,8 @@ impl crate::value::ToValue for MutationInvertibility {
 }
 
 /// 🧷️ Schema vocabulary for one direct mutation's diff participation.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, serde::Serialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 #[repr(u8)]
-#[serde(rename_all = "kebab-case")]
 pub enum MutationDiffParticipation {
     Detect,
     ApplyOnly,
@@ -246,9 +243,8 @@ impl crate::value::ToValue for MutationDiffParticipation {
 }
 
 /// 🧷️ Schema vocabulary for one direct mutation's observable outcomes.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, serde::Serialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 #[repr(u8)]
-#[serde(rename_all = "kebab-case")]
 pub enum MutationOutcomeClass {
     Applied,
     Info,
@@ -274,9 +270,8 @@ impl crate::value::ToValue for MutationOutcomeClass {
 }
 
 /// 🧷️ Schema vocabulary for one direct mutation's composition form.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, serde::Serialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 #[repr(u8)]
-#[serde(rename_all = "kebab-case")]
 pub enum MutationComposition {
     Atomic,
     Composite,
@@ -290,9 +285,8 @@ impl crate::value::ToValue for MutationComposition {
 }
 
 /// 🧷️ Schema vocabulary for a direct mutation's required language surfaces.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, serde::Serialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 #[repr(u8)]
-#[serde(rename_all = "kebab-case")]
 pub enum MutationLanguageSurface {
     Rust,
     Typescript,
@@ -322,8 +316,7 @@ impl crate::value::ToValue for MutationLanguageSurface {
 }
 
 /// 🧷️ Exact fourteen-field static metadata contract for one direct mutation leaf.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, serde::Serialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct MutationLeafDescriptor {
     pub schema_version: u32,
     pub owner: &'static str,
@@ -868,15 +861,12 @@ mod mutation_leaf_metadata_tests {
 /// the transitional state the serde-fanout playbook prescribes ("add alongside, do not blind-swap").
 /// Attributes are restored verbatim from 67fb4216b2 so the serde wire shape stays byte-identical to
 /// the twin. Drop them once every consumer in `🔗️causal`/`📡️wire`/`⚔️conflict` moves to `ToValue`.
-#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq)]
 pub struct MutationMessage {
     pub level: crate::diagnostic::Severity,
     pub code: crate::diagnostic::FaultCode,
     pub message: String,
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub target: Vec<String>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub op_index: Option<u32>,
 }
 
@@ -1177,12 +1167,10 @@ pub trait DiffCodec: Sized {
 /// identity travels as plain strings, never `semio_framework::*`/`io::*` types — see the
 /// dependency-edge law at `.🦑️repo/🎫️tickets/26/08/16/PLUGIN-DEPENDENCIES-ARTIFACT-CONTRIBUTIONS-AND-COMPOSITE-MUTATIONS/📋️contract-freeze.md`
 /// §0.
-#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq)]
 pub struct ForeignTarget {
     pub artifact_id: String,
     pub artifact_kind: String,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub dialect: Option<String>,
 }
 
@@ -1227,8 +1215,7 @@ impl crate::value::FromValue for ForeignTarget {
 
 /// @emoji 🪜️ One foreign hop of a [`Planner`]'s plan: the target artifact, the mutation/contributed
 /// id it dispatches, its already-encoded payload, and a human label.
-#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq)]
 pub struct ForeignStep {
     pub target: ForeignTarget,
     pub mutation_id: crate::ids::SchemaId,
@@ -1283,28 +1270,22 @@ impl crate::value::FromValue for ForeignStep {
 /// `String`/`Option<String>` to the `protocol_core` newtypes and `timestamp` upgraded from
 /// `Option<HybridLogicalTimestamp>` to a required field (an edit's op always has a tick by the time
 /// it is durable).
-#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct MutationMeta {
-    #[serde(skip_serializing_if = "Option::is_none")]
     pub mutation_id: Option<crate::ids::MutationId>,
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub dependencies: Vec<crate::ids::MutationId>,
     pub base_version: u64,
-    #[serde(skip_serializing_if = "Option::is_none")]
     pub author_id: Option<crate::ids::ActorId>,
     pub timestamp: crate::ids::HybridLogicalTimestamp,
     pub undo_policy: crate::UndoPolicy,
-    #[serde(skip_serializing_if = "Option::is_none")]
     pub payload_hash: Option<crate::ids::PayloadHash>,
     /// @emoji 🗣️ `"<doc-schema>#<kind>"` once the authoring mutation implements [`SemanticMutation`]
     /// — additive, `None` for mutations still on generic vocabulary. Populated by callers (store
     /// replay tightens this once a store's `Mutation: SemanticMutation<P>`, at the final ratchet);
     /// this crate never derives it implicitly to avoid a premature trait-bound change here.
-    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub semantic_kind: Option<crate::ids::SchemaId>,
     /// @emoji 🏷️ Human undo/history label captured at authoring time (`MutationKind::label`/
     /// `SemanticMutation::label`), so history UI stops reverse-engineering one from `print_op`.
-    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub label: Option<String>,
     /// @emoji 🧑‍🤝‍🧑️ Composite-gesture stamp: `Some(id)` when this edit was authored as one member
     /// of a multi-document composite gesture (the future `CompositionCoordinator`'s atomic
@@ -1318,7 +1299,6 @@ pub struct MutationMeta {
     /// decision record. Callers holding a real `InvocationId` pass `.0`; this field round-trips
     /// through `Edit.mutation_meta` into the `.spr` history log (`HistoryOpMeta.group_id`,
     /// `📡️spr/📜️history/🦀️.rs`) so it survives persistence and sync.
-    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub group_id: Option<String>,
     /// @emoji 🔀️ Provenance of this operation: `Owner` (default, omitted from wire — the
     /// overwhelming common case, an edit authored by the artifact's own owner logic), `Contributed`
@@ -1327,7 +1307,6 @@ pub struct MutationMeta {
     /// elsewhere). Additive, mirrors `group_id`/`semantic_kind`/`label` above — see
     /// `.🦑️repo/🎫️tickets/26/08/16/PLUGIN-DEPENDENCIES-ARTIFACT-CONTRIBUTIONS-AND-COMPOSITE-MUTATIONS/📋️contract-freeze.md`
     /// §1.
-    #[serde(default, skip_serializing_if = "MutationOrigin::is_owner")]
     pub origin: MutationOrigin,
 }
 
@@ -1417,23 +1396,17 @@ impl crate::value::FromValue for MutationMeta {
 
 /// @emoji 📝️ One coalesced batch of operations, forward and backward, plus their causal metadata.
 /// Moved verbatim from `crate::os_store::Edit` (was `vcs/rs/lib.rs` L73).
-#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq)]
 pub struct Edit<Op> {
     pub id: String,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub actor: Option<String>,
     pub forwards: Vec<Op>,
     pub inverse: Vec<Op>,
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub mutation_meta: Vec<MutationMeta>,
-    #[serde(skip_serializing_if = "Option::is_none")]
     pub description: Option<String>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub coalesce_key: Option<String>,
     pub sequence_number: i32,
     pub started_at: String,
-    #[serde(skip_serializing_if = "Option::is_none")]
     pub finished_at: Option<String>,
 }
 
@@ -1519,8 +1492,7 @@ impl<Op: crate::value::FromValue> crate::value::FromValue for Edit<Op> {
 /// @emoji 🔀️ Provenance of one [`MutationMeta`]-described operation. `Owner` is the default (and
 /// the overwhelming common case), omitted from wire by `MutationMeta.origin`'s
 /// `skip_serializing_if`.
-#[derive(Clone, Debug, Default, PartialEq, serde::Serialize, serde::Deserialize)]
-#[serde(rename_all = "camelCase", tag = "kind")]
+#[derive(Clone, Debug, Default, PartialEq)]
 pub enum MutationOrigin {
     #[default]
     Owner,

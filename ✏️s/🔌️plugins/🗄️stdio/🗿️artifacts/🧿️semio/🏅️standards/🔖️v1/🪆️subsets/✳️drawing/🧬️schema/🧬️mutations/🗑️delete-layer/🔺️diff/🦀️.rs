@@ -1,6 +1,6 @@
 //! 🔺️ Diff for `DeleteLayer`.
 
-use crate::artifacts::semio::standards::v1::subsets::any::schema::triples::IndexedTripleDiff;
+use crate::artifacts::semio::standards::v1::subsets::base::schema::triples::IndexedTripleDiff;
 use crate::artifacts::semio::standards::v1::subsets::drawing::schema::diff::SemioDrawingDiff;
 use crate::artifacts::semio::standards::v1::subsets::drawing::schema::snapshot::SemioDrawingSnapshot;
 

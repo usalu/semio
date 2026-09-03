@@ -879,20 +879,20 @@ fn retire_query_rows(owner: QueryRows) -> Result<(), QueryRows> {
         return Ok(());
     }
     let mut retired = QUERY_RETIRED_ROWS.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
-    if let Some(index) = query_rows_vacant_retirement_slot(0, &retired) {
+    if let Some(index) = query_rows_vacant_retirement_slot(0, &retired[..]) {
         retired[index] = Some(owner);
         Ok(())
     } else {
         drop(retired);
         QUERY_RETIREMENT_PRESSURE_FAULT.store(true, std::sync::atomic::Ordering::Release);
         let mut overflow = QUERY_RETIRED_ROWS_OVERFLOW.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
-        if let Some(index) = query_rows_vacant_retirement_slot(1, &overflow) {
+        if let Some(index) = query_rows_vacant_retirement_slot(1, &overflow[..]) {
             overflow[index] = Some(owner);
             return Ok(());
         }
         drop(overflow);
         let mut quarantine = QUERY_RETIRED_ROWS_QUARANTINE.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
-        let Some(index) = query_rows_vacant_retirement_slot(2, &quarantine) else { return Err(owner) };
+        let Some(index) = query_rows_vacant_retirement_slot(2, &quarantine[..]) else { return Err(owner) };
         quarantine[index] = Some(owner);
         Ok(())
     }
@@ -927,7 +927,7 @@ pub fn query_rows_maintenance_step() -> Result<bool, DbError> {
             let mut quarantine = QUERY_RETIRED_ROWS_QUARANTINE.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
             let Some(index) = quarantine.iter().position(Option::is_some) else { return Ok(false) };
             let mut retired = QUERY_RETIRED_ROWS.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
-            let Some(target) = query_rows_vacant_retirement_slot(0, &retired) else {
+            let Some(target) = query_rows_vacant_retirement_slot(0, &retired[..]) else {
                 drop(retired);
                 let owner = quarantine[index].as_mut().ok_or_else(|| DbError::Internal("query quarantine retirement changed row owner".to_string()))?;
                 if !owner.close_step()? {
@@ -939,7 +939,7 @@ pub fn query_rows_maintenance_step() -> Result<bool, DbError> {
             return Ok(true);
         };
         let mut retired = QUERY_RETIRED_ROWS.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
-        let Some(target) = query_rows_vacant_retirement_slot(0, &retired) else {
+        let Some(target) = query_rows_vacant_retirement_slot(0, &retired[..]) else {
             drop(retired);
             let owner = overflow[index].as_mut().ok_or_else(|| DbError::Internal("query overflow retirement changed row owner".to_string()))?;
             if !owner.close_step()? {
@@ -1000,7 +1000,8 @@ pub trait QuerySource {
     /// `PVec`'s below, which is index-addressed).
     async fn get(&self, id: RowId, control: &mut QueryCursorControl) -> Result<Option<QueryRow>, DbError> {
         let mut rows = self.scan(control).await?;
-        let found = rows.iter().position(|row| row.id() == id).and_then(|index| rows.take(index));
+        let found_index = rows.iter().position(|row| row.id() == id);
+        let found = found_index.and_then(|index| rows.take(index));
         control.grant()?;
         let _ = rows.close_step()?;
         drop(rows);

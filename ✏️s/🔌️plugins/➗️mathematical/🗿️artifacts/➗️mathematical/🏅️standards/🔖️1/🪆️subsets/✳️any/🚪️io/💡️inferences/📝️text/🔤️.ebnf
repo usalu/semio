@@ -1,3 +1,0 @@
-(* ebnf mathematical.mathematical.inference *)
-document = header, body ;
-header = 'schema', space, 'mathematical.mathematical.inference', newline ;

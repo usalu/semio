@@ -7,7 +7,7 @@
 
 pub use crate::artifacts::semio::standards::v1::subsets::text::schema::mutations::SemioTextMutation;
 
-use crate::artifacts::semio::standards::v1::subsets::any::schema::triples::{split_top_level, strip_brackets};
+use crate::artifacts::semio::standards::v1::subsets::base::schema::triples::{split_top_level, strip_brackets};
 use crate::artifacts::semio::standards::v1::subsets::text::schema::mutations::{
     add_mark::AddMark, change_run_language::ChangeRunLanguage, edit_run::EditRun, insert_run::InsertRun, remove_mark::RemoveMark, remove_run::RemoveRun, reorder_runs::ReorderRuns,
 };

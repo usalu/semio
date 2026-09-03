@@ -4,7 +4,6 @@
 //! (`↔️move-block`, wired by `🦀️.rs`) predates the semantic rename; the Rust module is still
 //! `move_block`, the type/variant/kind are `move-block-to-step`.
 
-use serde::{Deserialize, Serialize};
 use crate::artifacts::forms::{FormMutation, FormsDiff, FormsSnapshot};
 use protocol::{MutationKind, SemanticDescriptor};
 
@@ -12,7 +11,7 @@ use protocol::{MutationKind, SemanticDescriptor};
 /// 🚚️ Moves the block `block_id` (currently inside `step_id`) into `to_step_id`'s `blocks`, at a
 /// FINAL-state `index` within the destination. `step_id == to_step_id` is a plain reorder within one
 /// step.
-#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue)]
 pub struct MoveBlockToStep {
     pub step_id: String,
     pub block_id: String,

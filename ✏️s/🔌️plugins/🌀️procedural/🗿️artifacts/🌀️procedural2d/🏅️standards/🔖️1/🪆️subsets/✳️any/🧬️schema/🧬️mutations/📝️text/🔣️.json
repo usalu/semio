@@ -1,5 +1,0 @@
-{
-  "$id": "https://semio.tech/schema/s/procedural/procedural2d/mutation/text.json",
-  "title": "Procedural2dMutationsText",
-  "type": "object"
-}

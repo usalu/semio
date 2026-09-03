@@ -240,5 +240,394 @@
         }
       ]
     }
+  ],
+  "fixtureManifests": [
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "insert-array-element-applied",
+      "class": "handcrafted",
+      "target": {
+        "artifact": "s.stdio.json",
+        "standard": "rfc8259",
+        "subset": "i-json"
+      },
+      "mutation": "insert-array-element",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before",
+          "path": "../🧫️fixtures/insert-array-element/before.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:dfb20f3eed522765e2ab2417457ac5d0e036cbcb748c0ccb9a3cc2c9f75725bc",
+          "bytes": 100
+        },
+        {
+          "role": "expected-after",
+          "path": "../🧫️fixtures/insert-array-element/after.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:f561e46fc30d2c0c89a851a8107b0158f95a6cc88e0d188f5158e0192fd51194",
+          "bytes": 109
+        }
+      ],
+      "provenance": {
+        "source": "authored",
+        "license": "public-domain (handcrafted by this repository)",
+        "attribution": "Handcrafted before/after vector authored directly against this subset's own documented schema — Law 2's handcrafted-vector category.",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "ordered-json-v1",
+      "reproducible": true,
+      "family": "i-json-carrier",
+      "notes": "Handcrafted I-JSON (RFC 7493) before/after document pair. InsertArrayElement{path:tags,index:2,value:\"c\"} appends a third I-JSON-safe array element."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "remove-array-element-applied",
+      "class": "handcrafted",
+      "target": {
+        "artifact": "s.stdio.json",
+        "standard": "rfc8259",
+        "subset": "i-json"
+      },
+      "mutation": "remove-array-element",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before",
+          "path": "../🧫️fixtures/remove-array-element/before.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:dfb20f3eed522765e2ab2417457ac5d0e036cbcb748c0ccb9a3cc2c9f75725bc",
+          "bytes": 100
+        },
+        {
+          "role": "expected-after",
+          "path": "../🧫️fixtures/remove-array-element/after.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:38dd5c3e6b02e948976a5ac493502f59fad32904867d76e6badcde7035faba94",
+          "bytes": 91
+        }
+      ],
+      "provenance": {
+        "source": "authored",
+        "license": "public-domain (handcrafted by this repository)",
+        "attribution": "Handcrafted before/after vector authored directly against this subset's own documented schema — Law 2's handcrafted-vector category.",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "ordered-json-v1",
+      "reproducible": true,
+      "family": "i-json-carrier",
+      "notes": "Handcrafted I-JSON (RFC 7493) before/after document pair. RemoveArrayElement{path:tags,index:0} drops the first array element."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "remove-member-applied",
+      "class": "handcrafted",
+      "target": {
+        "artifact": "s.stdio.json",
+        "standard": "rfc8259",
+        "subset": "i-json"
+      },
+      "mutation": "remove-member",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before",
+          "path": "../🧫️fixtures/remove-member/before.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:dfb20f3eed522765e2ab2417457ac5d0e036cbcb748c0ccb9a3cc2c9f75725bc",
+          "bytes": 100
+        },
+        {
+          "role": "expected-after",
+          "path": "../🧫️fixtures/remove-member/after.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:a9b54115812eca4af41b462c18e87fd26fd4d97a3a253110f18e025d1862476a",
+          "bytes": 68
+        }
+      ],
+      "provenance": {
+        "source": "authored",
+        "license": "public-domain (handcrafted by this repository)",
+        "attribution": "Handcrafted before/after vector authored directly against this subset's own documented schema — Law 2's handcrafted-vector category.",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "ordered-json-v1",
+      "reproducible": true,
+      "family": "i-json-carrier",
+      "notes": "Handcrafted I-JSON (RFC 7493) before/after document pair. RemoveMember{path:root,key:meta} deletes an object member."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "rename-member-applied",
+      "class": "handcrafted",
+      "target": {
+        "artifact": "s.stdio.json",
+        "standard": "rfc8259",
+        "subset": "i-json"
+      },
+      "mutation": "rename-member",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before",
+          "path": "../🧫️fixtures/rename-member/before.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:dfb20f3eed522765e2ab2417457ac5d0e036cbcb748c0ccb9a3cc2c9f75725bc",
+          "bytes": 100
+        },
+        {
+          "role": "expected-after",
+          "path": "../🧫️fixtures/rename-member/after.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:76d314714b3ab68ea479443fb82a8237ef0be96d0f2679d884a98ead66d6f6e3",
+          "bytes": 101
+        }
+      ],
+      "provenance": {
+        "source": "authored",
+        "license": "public-domain (handcrafted by this repository)",
+        "attribution": "Handcrafted before/after vector authored directly against this subset's own documented schema — Law 2's handcrafted-vector category.",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "ordered-json-v1",
+      "reproducible": true,
+      "family": "i-json-carrier",
+      "notes": "Handcrafted I-JSON (RFC 7493) before/after document pair. RenameMember{path:root,from:name,to:label} renames a member, preserving its value and the other members' order."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "set-safe-number-applied",
+      "class": "handcrafted",
+      "target": {
+        "artifact": "s.stdio.json",
+        "standard": "rfc8259",
+        "subset": "i-json"
+      },
+      "mutation": "set-safe-number",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before",
+          "path": "../🧫️fixtures/set-safe-number/before.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:dfb20f3eed522765e2ab2417457ac5d0e036cbcb748c0ccb9a3cc2c9f75725bc",
+          "bytes": 100
+        },
+        {
+          "role": "expected-after",
+          "path": "../🧫️fixtures/set-safe-number/after.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:262c2b8a0354b711afb2b605d8629bfff10141a1eeb41c9abcbefc255ca9dbd6",
+          "bytes": 115
+        }
+      ],
+      "provenance": {
+        "source": "authored",
+        "license": "public-domain (handcrafted by this repository)",
+        "attribution": "Handcrafted before/after vector authored directly against this subset's own documented schema — Law 2's handcrafted-vector category.",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "ordered-json-v1",
+      "reproducible": true,
+      "family": "i-json-carrier",
+      "notes": "Handcrafted I-JSON (RFC 7493) before/after document pair. SetSafeNumber sets a member to the literal lexeme 9007199254740991 — the largest I-JSON-safe integer (2^53-1, RFC 7493 section 2.2) — proving the mutation is scoped to values that round-trip exactly through an IEEE 754 double, the whole point of I-JSON's number restriction."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "set-snapshot-applied",
+      "class": "handcrafted",
+      "target": {
+        "artifact": "s.stdio.json",
+        "standard": "rfc8259",
+        "subset": "i-json"
+      },
+      "mutation": "set-snapshot",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before",
+          "path": "../🧫️fixtures/set-snapshot/before.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:dfb20f3eed522765e2ab2417457ac5d0e036cbcb748c0ccb9a3cc2c9f75725bc",
+          "bytes": 100
+        },
+        {
+          "role": "expected-after",
+          "path": "../🧫️fixtures/set-snapshot/after.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:4f28f4b9ae19fd07341b215f808cdabbea09adf4fcba4f35e8733494ef7ea1f9",
+          "bytes": 91
+        }
+      ],
+      "provenance": {
+        "source": "authored",
+        "license": "public-domain (handcrafted by this repository)",
+        "attribution": "Handcrafted before/after vector authored directly against this subset's own documented schema — Law 2's handcrafted-vector category.",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "ordered-json-v1",
+      "reproducible": true,
+      "family": "i-json-carrier",
+      "notes": "Handcrafted I-JSON (RFC 7493) before/after document pair. SetSnapshot replaces the whole document with a different, equally I-JSON-compliant document."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "set-string-applied",
+      "class": "handcrafted",
+      "target": {
+        "artifact": "s.stdio.json",
+        "standard": "rfc8259",
+        "subset": "i-json"
+      },
+      "mutation": "set-string",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before",
+          "path": "../🧫️fixtures/set-string/before.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:dfb20f3eed522765e2ab2417457ac5d0e036cbcb748c0ccb9a3cc2c9f75725bc",
+          "bytes": 100
+        },
+        {
+          "role": "expected-after",
+          "path": "../🧫️fixtures/set-string/after.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:2eb7c6e2e14f2aea966a9eea9bb25e761d0d550a85aee46bf90f3a43ce4c1403",
+          "bytes": 108
+        }
+      ],
+      "provenance": {
+        "source": "authored",
+        "license": "public-domain (handcrafted by this repository)",
+        "attribution": "Handcrafted before/after vector authored directly against this subset's own documented schema — Law 2's handcrafted-vector category.",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "ordered-json-v1",
+      "reproducible": true,
+      "family": "i-json-carrier",
+      "notes": "Handcrafted I-JSON (RFC 7493) before/after document pair. SetString{path:name,value:\"renamed-widget\"} overwrites a string member in place."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "set-top-level-applied",
+      "class": "handcrafted",
+      "target": {
+        "artifact": "s.stdio.json",
+        "standard": "rfc8259",
+        "subset": "i-json"
+      },
+      "mutation": "set-top-level",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before",
+          "path": "../🧫️fixtures/set-top-level/before.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:dfb20f3eed522765e2ab2417457ac5d0e036cbcb748c0ccb9a3cc2c9f75725bc",
+          "bytes": 100
+        },
+        {
+          "role": "expected-after",
+          "path": "../🧫️fixtures/set-top-level/after.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:d50f762c4215c178befdfa18227e23b0d7c46460f1f7cc4d6851b1c1b0283d10",
+          "bytes": 24
+        }
+      ],
+      "provenance": {
+        "source": "authored",
+        "license": "public-domain (handcrafted by this repository)",
+        "attribution": "Handcrafted before/after vector authored directly against this subset's own documented schema — Law 2's handcrafted-vector category.",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "ordered-json-v1",
+      "reproducible": true,
+      "family": "i-json-carrier",
+      "notes": "Handcrafted I-JSON (RFC 7493) before/after document pair. SetTopLevel replaces the root itself — an Object becomes an Array — the one mutation whose target is the document's own top-level shape, which I-JSON (RFC 7493 §2.1) restricts to Object or Array."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "upsert-member-applied",
+      "class": "handcrafted",
+      "target": {
+        "artifact": "s.stdio.json",
+        "standard": "rfc8259",
+        "subset": "i-json"
+      },
+      "mutation": "upsert-member",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before",
+          "path": "../🧫️fixtures/upsert-member/before.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:dfb20f3eed522765e2ab2417457ac5d0e036cbcb748c0ccb9a3cc2c9f75725bc",
+          "bytes": 100
+        },
+        {
+          "role": "expected-after",
+          "path": "../🧫️fixtures/upsert-member/after.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:a1babdf751d198bcc7117bef4922e74a48c8856cb15df33c10b4de0c06c0998c",
+          "bytes": 117
+        }
+      ],
+      "provenance": {
+        "source": "authored",
+        "license": "public-domain (handcrafted by this repository)",
+        "attribution": "Handcrafted before/after vector authored directly against this subset's own documented schema — Law 2's handcrafted-vector category.",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "ordered-json-v1",
+      "reproducible": true,
+      "family": "i-json-carrier",
+      "notes": "Handcrafted I-JSON (RFC 7493) before/after document pair. UpsertMember{path:root,key:extra,value:true} inserts a new member (the member is absent on `before`, so this exercises the INSERT half of upsert; a present-key case would exercise the overwrite half)."
+    }
   ]
 }

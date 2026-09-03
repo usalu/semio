@@ -1,17 +1,15 @@
 //! 👁️ `change-layer-visible` — sets an id-addressed layer's `visible` scalar.
 
 pub mod mutation {
-use serde::{Deserialize, Serialize};
 use crate::artifacts::raster::diff::{diff_patch_layer, RasterDiff};
 use crate::artifacts::raster::mutations::RasterMutation;
 use crate::artifacts::raster::schema::{find_layer, layer_visible};
 use crate::artifacts::raster::{RasterLayerNode, RasterLayerPatch, RasterSnapshot};
 
 //#region 🔖️ChangeLayerVisible
-#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::MutationLeaf, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
 #[value(rename_all = "camelCase")]
-#[serde(rename_all = "camelCase")]
 pub struct ChangeLayerVisible {
     pub layer_id: String,
     pub new_visible: bool,

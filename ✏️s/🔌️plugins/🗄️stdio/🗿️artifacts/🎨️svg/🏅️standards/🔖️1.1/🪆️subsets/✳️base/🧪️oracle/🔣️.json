@@ -1,7 +1,7 @@
 {
   "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json",
   "schemaVersion": 2,
-  "_comment": "🎨️ This subset's own contribution to the repository test platform: `quick-xml` 0.42 registered as the independent reference reader/writer for SVG 1.1 `any` mutation coverage, the exhaustive 11-kind `SvgMutation` vocabulary it is measured against, and the tolerant-numeric comparison profile the decomposed `viewBox`/`transform` geometry needs. The shared stdio manifest does not register `quick-xml` under any `svg-*` capability at all (only the 📰xml 1.0 subset, a sibling owner, reaches it for its own vocabulary), so this is a first registration, not a reuse.",
+  "_comment": "🎨️ This subset's own contribution to the repository test platform: `quick-xml` 0.42 registered as the independent reference reader/writer for SVG 1.1 `any` mutation coverage, the exhaustive 11-kind `SvgMutation` vocabulary it is measured against, and the tolerant-numeric comparison profile the decomposed `viewBox`/`transform` geometry needs. The shared stdio manifest does not register `quick-xml` under any `svg-*` capability at all (only the 📰️xml 1.0 subset, a sibling owner, reaches it for its own vocabulary), so this is a first registration, not a reuse.",
   "oracles": [
     {
       "id": "quick-xml-svg-1-1-mutate",

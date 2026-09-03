@@ -47,7 +47,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn render_lists_one_row_per_cell() {
-        use crate::artifacts::xlsx::standards::v_ecma_376::subsets::any::schema::snapshot::{XlsxCell, XlsxCellValue, XlsxSheet, XlsxWorkbook};
+        use crate::artifacts::xlsx::standards::v_ecma_376::subsets::base::schema::snapshot::{XlsxCell, XlsxCellValue, XlsxSheet, XlsxWorkbook};
         let document = XlsxSnapshot { workbook: XlsxWorkbook { sheets: vec![XlsxSheet { name: "Sheet1".into(), cells: vec![XlsxCell { row: 1, col: 0, value: XlsxCellValue::Number(1.0) }] }], ..Default::default() }, ..XlsxSnapshot::default() };
         let node = render(&document).expect("render");
         let Component::Surface(props) = node.component else { panic!("expected a retained table surface") };

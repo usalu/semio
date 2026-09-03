@@ -35,7 +35,7 @@ fn point_entity(id: u64, x: f64, y: f64) -> StepEntity {
 /// 📐️ Real `LINE` → `CARTESIAN_POINT` + `DIRECTION` + `VECTOR` decomposition (the inverse of the
 /// import leaf's resolution): direction is the normalized `b - a`, magnitude is `|b - a|`.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn line_entities(ids: &mut IdGen, a: &crate::artifacts::semio::standards::v1::subsets::any::schema::geometry::SemioPoint2, b: &crate::artifacts::semio::standards::v1::subsets::any::schema::geometry::SemioPoint2) -> Vec<StepEntity> {
+fn line_entities(ids: &mut IdGen, a: &crate::artifacts::semio::standards::v1::subsets::base::schema::geometry::SemioPoint2, b: &crate::artifacts::semio::standards::v1::subsets::base::schema::geometry::SemioPoint2) -> Vec<StepEntity> {
     let (dx, dy) = (b.x - a.x, b.y - a.y);
     let magnitude = (dx * dx + dy * dy).sqrt();
     let (ndx, ndy) = if magnitude > 0.0 { (dx / magnitude, dy / magnitude) } else { (1.0, 0.0) };
@@ -51,7 +51,7 @@ fn line_entities(ids: &mut IdGen, a: &crate::artifacts::semio::standards::v1::su
 /// left `Unset` — `$`, spec-legal for an unoriented 2D-only placement, matching real AP214 usage
 /// when orientation is unspecified).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn circle_entities(ids: &mut IdGen, center: &crate::artifacts::semio::standards::v1::subsets::any::schema::geometry::SemioPoint2, radius: f64) -> Vec<StepEntity> {
+fn circle_entities(ids: &mut IdGen, center: &crate::artifacts::semio::standards::v1::subsets::base::schema::geometry::SemioPoint2, radius: f64) -> Vec<StepEntity> {
     let p = point_entity(ids.next(), center.x, center.y);
     let placement = StepEntity { id: ids.next(), name: "AXIS2_PLACEMENT_3D".into(), args: vec![StepValue::String(String::new()), StepValue::Reference(p.id), StepValue::Unset, StepValue::Unset], complex: vec![] };
     let circle = StepEntity { id: ids.next(), name: "CIRCLE".into(), args: vec![StepValue::String(String::new()), StepValue::Reference(placement.id), StepValue::Real(radius)], complex: vec![] };
@@ -88,7 +88,7 @@ impl ArtifactSerializer for SemioCadToStep {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::semio::standards::v1::subsets::any::schema::geometry::SemioPoint2;
+    use crate::artifacts::semio::standards::v1::subsets::base::schema::geometry::SemioPoint2;
     use crate::artifacts::semio::standards::v1::subsets::cad::schema::snapshot::CadEntityRecord;
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9

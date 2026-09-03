@@ -1,0 +1,19 @@
+{
+  "schema": "stdio.deflate",
+  "compressionMethod": 8,
+  "windowBits": 7,
+  "compressionLevelHint": "default",
+  "dictId": null,
+  "payload": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10
+  ]
+}

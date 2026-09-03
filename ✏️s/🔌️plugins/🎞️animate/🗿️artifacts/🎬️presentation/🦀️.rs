@@ -95,7 +95,7 @@ const ANIMATION_CHILD_ARTIFACT_ID: &str = "animate-presentation-deck-animation";
 /// cache, the same class of documented gap every `UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM` exemplar
 /// (lowpoly/cad/writer) has left for its own composed slot.
 pub fn presentation_snapshot_from_source_tiles(source: &FigureTileSource, tiles: &[FigureTileDraft]) -> semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::presentation::schema::snapshot::SemioPresentationSnapshot {
-    use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::any::schema::geometry::SemioPoint2;
+    use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::base::schema::geometry::SemioPoint2;
     use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::document::schema::snapshot::DocBlock;
     use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::presentation::schema::snapshot::{SemioPresentationSnapshot, Slide, SlideFrame, SlideMaster, SlidePictureImage, SlideShape, STDIO_SEMIOPRESENTATION_DOCUMENT_SCHEMA};
 
@@ -153,7 +153,7 @@ pub fn source_tiles_from_presentation_snapshot(snapshot: &semio_s_plugin_stdio::
 pub fn presentation_child_handle(source: &FigureTileSource, tiles: &[FigureTileDraft]) -> PresentationChild {
     use std::hash::{Hash, Hasher};
     let content = presentation_snapshot_from_source_tiles(source, tiles);
-    let content_json = serde_json::to_string(&content).unwrap_or_default();
+    let content_json = dsl::os_pack::json::to_json_string(&content);
     let mut hasher = std::collections::hash_map::DefaultHasher::new();
     content_json.hash(&mut hasher);
     let content_hash = hasher.finish();
@@ -170,7 +170,7 @@ pub fn presentation_child_handle(source: &FigureTileSource, tiles: &[FigureTileD
 /// natural extension: per-tile camera-pan/transition timing) without another schema migration.
 pub fn animation_child_handle() -> AnimationChild {
     use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::animation::schema::snapshot::SemioAnimationSnapshot;
-    let content_json = serde_json::to_string(&SemioAnimationSnapshot::default()).unwrap_or_default();
+    let content_json = dsl::os_pack::json::to_json_string(&SemioAnimationSnapshot::default());
     use std::hash::{Hash, Hasher};
     let mut hasher = std::collections::hash_map::DefaultHasher::new();
     content_json.hash(&mut hasher);

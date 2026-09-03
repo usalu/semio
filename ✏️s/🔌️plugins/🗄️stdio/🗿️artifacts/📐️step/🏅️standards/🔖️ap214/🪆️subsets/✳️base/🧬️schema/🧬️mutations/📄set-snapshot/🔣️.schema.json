@@ -1,0 +1,275 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "snapshot"
+  ],
+  "properties": {
+    "snapshot": {
+      "$ref": "#/$defs/StepSnapshot"
+    }
+  },
+  "$defs": {
+    "StepSnapshot": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema"
+      ],
+      "properties": {
+        "schema": {
+          "type": "string"
+        },
+        "header": {
+          "$ref": "#/$defs/StepHeader"
+        },
+        "entities": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/StepEntity"
+          }
+        }
+      }
+    },
+    "StepHeader": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [],
+      "properties": {
+        "fileDescription": {
+          "$ref": "#/$defs/StepFileDescription"
+        },
+        "fileName": {
+          "$ref": "#/$defs/StepFileName"
+        },
+        "fileSchema": {
+          "$ref": "#/$defs/StepFileSchema"
+        }
+      }
+    },
+    "StepFileDescription": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [],
+      "properties": {
+        "description": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "implementationLevel": {
+          "type": "string"
+        }
+      }
+    },
+    "StepFileName": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [],
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "timestamp": {
+          "type": "string"
+        },
+        "author": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "organization": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "preprocessorVersion": {
+          "type": "string"
+        },
+        "originatingSystem": {
+          "type": "string"
+        },
+        "authorization": {
+          "type": "string"
+        }
+      }
+    },
+    "StepFileSchema": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [],
+      "properties": {
+        "schemas": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "StepEntity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "name"
+      ],
+      "properties": {
+        "id": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "name": {
+          "type": "string"
+        },
+        "args": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/StepValue"
+          }
+        },
+        "complex": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/StepComplexType"
+          }
+        }
+      }
+    },
+    "StepComplexType": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name"
+      ],
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "args": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/StepValue"
+          }
+        }
+      }
+    },
+    "StepValue": {
+      "description": "step's own typed Part-21 argument value (see StepSnapshot's own docstring). Unit variants (unset/derived) are bare strings; data-carrying variants are a one-key object keyed by the camelCased variant name, matching value_derive's default externally-tagged enum representation.",
+      "anyOf": [
+        {
+          "const": "unset"
+        },
+        {
+          "const": "derived"
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "integer"
+          ],
+          "properties": {
+            "integer": {
+              "type": "integer"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "real"
+          ],
+          "properties": {
+            "real": {
+              "type": "number"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "string"
+          ],
+          "properties": {
+            "string": {
+              "type": "string"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "enum"
+          ],
+          "properties": {
+            "enum": {
+              "type": "string"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "reference"
+          ],
+          "properties": {
+            "reference": {
+              "type": "integer",
+              "minimum": 0
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "aggregate"
+          ],
+          "properties": {
+            "aggregate": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/StepValue"
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "typedValue"
+          ],
+          "properties": {
+            "typedValue": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "typeName",
+                "value"
+              ],
+              "properties": {
+                "typeName": {
+                  "type": "string"
+                },
+                "value": {
+                  "$ref": "#/$defs/StepValue"
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  "title": "SetSnapshot"
+}

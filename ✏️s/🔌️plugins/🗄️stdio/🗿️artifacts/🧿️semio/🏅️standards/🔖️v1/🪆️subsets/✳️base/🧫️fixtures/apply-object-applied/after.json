@@ -1,0 +1,58 @@
+{
+  "schema": "stdio.semio",
+  "subset": {
+    "schema": "stdio.semio.object",
+    "transform": {
+      "translation": {
+        "x": 1001.0,
+        "y": 1002.0,
+        "z": 1003.0
+      },
+      "rotation": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0,
+        "w": 1.0
+      },
+      "scale": {
+        "x": 1.0,
+        "y": 1.0,
+        "z": 1.0
+      }
+    },
+    "brep": {
+      "childId": "brep-01",
+      "target": {
+        "artifactId": "crate-brep",
+        "dialect": {
+          "artifactKind": "s.stdio.semio",
+          "standard": "v1",
+          "subset": "brep"
+        }
+      }
+    },
+    "mesh": {
+      "childId": "mesh-01",
+      "target": {
+        "artifactId": "crate-mesh",
+        "dialect": {
+          "artifactKind": "s.stdio.semio",
+          "standard": "v1",
+          "subset": "mesh"
+        }
+      }
+    },
+    "properties": {
+      "childId": "props-01",
+      "target": {
+        "artifactId": "crate-props",
+        "dialect": {
+          "artifactKind": "s.stdio.semio",
+          "standard": "v1",
+          "subset": "value"
+        }
+      }
+    },
+    "subset": "object"
+  }
+}

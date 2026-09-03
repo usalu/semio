@@ -17,14 +17,27 @@ const MUTATION: &str = include_str!("🦠️mutation/🔣️.json");
 const DIFF: &str = include_str!("🔺️diff/🔣️.json");
 const OUTCOME: &str = include_str!("🎯️outcome/🔣️.json");
 
+/// 🔓️ Decodes committed fixture JSON through the artifact's own value codec — these types carry
+/// `ToValue`/`FromValue`, never `serde`, because `LowpolyObject.mesh` is an `ArtifactChild` handle.
+fn from_json<T: dsl::FromValue>(text: &str) -> T {
+    let parsed: serde_json::Value = serde_json::from_str(text).expect("fixture json parses");
+    dsl::FromValue::from_value(dsl::DslValue::from(parsed)).expect("fixture json decodes")
+}
+
+/// 🔒️ Re-encodes through the same codec so canonicality assertions compare like with like.
+fn to_json<T: dsl::ToValue>(value: &T) -> serde_json::Value {
+    dsl::ToValue::to_value(value).into()
+}
+
+
 fn before() -> LowpolySnapshot {
-    serde_json::from_str(BEFORE).expect("before snapshot decodes")
+    from_json(BEFORE)
 }
 fn expected_after() -> LowpolySnapshot {
-    serde_json::from_str(AFTER).expect("after snapshot decodes")
+    from_json(AFTER)
 }
 fn mutation() -> LowpolyMutation {
-    serde_json::from_str(MUTATION).expect("mutation decodes")
+    from_json(MUTATION)
 }
 
 /// ▶️ The mutation carries `before` to exactly the committed `after`.
@@ -51,12 +64,12 @@ async fn inverse_restores_before() {
 #[semio_framework_async_macros::async_test]
 async fn committed_json_is_canonical() {
     for (side, text) in [("before", BEFORE), ("after", AFTER)] {
-        let decoded: LowpolySnapshot = serde_json::from_str(text).expect("snapshot decodes");
-        let reencoded = serde_json::to_value(&decoded).expect("snapshot encodes");
+        let decoded: LowpolySnapshot = from_json(text);
+        let reencoded = to_json(&decoded);
         let original: serde_json::Value = serde_json::from_str(text).expect("snapshot reparses");
         assert_eq!(reencoded, original, "change-paint-layer-opacity/fades-the-base-layer-to-half: committed {side} JSON is not canonical");
     }
-    let reencoded = serde_json::to_value(mutation()).expect("mutation encodes");
+    let reencoded = to_json(&mutation());
     let original: serde_json::Value = serde_json::from_str(MUTATION).expect("mutation reparses");
     assert_eq!(reencoded, original, "change-paint-layer-opacity/fades-the-base-layer-to-half: committed mutation JSON is not canonical");
 }
@@ -74,7 +87,7 @@ async fn declared_outcome_holds() {
         .messages()
         .iter()
         .map(|message| {
-            let level = serde_json::to_value(message.level).expect("severity encodes");
+            let level = to_json(&message.level);
             (level.as_str().unwrap_or_default().to_string(), message.code.0.clone())
         })
         .collect();
@@ -105,7 +118,7 @@ async fn declared_outcome_holds() {
 async fn produces_committed_diff() {
     let base = before();
     let raised = <LowpolyMutation as protocol::Mutation<LowpolySnapshot>>::diff(&mutation(), &base);
-    let produced = serde_json::to_value(raised.diff()).expect("produced diff encodes");
+    let produced = to_json(raised.diff());
     let committed: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff decodes");
     assert_eq!(produced, committed, "change-paint-layer-opacity/fades-the-base-layer-to-half: produced diff differs from the committed 🔺️diff/🔣️.json");
 }
@@ -113,8 +126,8 @@ async fn produces_committed_diff() {
 /// 🔣️ The committed diff is itself canonical and decodes to the artifact's own diff type.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_is_canonical() {
-    let decoded: LowpolyDiff = serde_json::from_str(DIFF).expect("committed diff decodes");
-    let reencoded = serde_json::to_value(&decoded).expect("diff re-encodes");
+    let decoded: LowpolyDiff = from_json(DIFF);
+    let reencoded = to_json(&decoded);
     let original: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff reparses");
     assert_eq!(reencoded, original, "change-paint-layer-opacity/fades-the-base-layer-to-half: committed diff JSON is not canonical");
 }
@@ -123,7 +136,7 @@ async fn committed_diff_is_canonical() {
 /// complete description of what `change-paint-layer-opacity` changed, not a summary of it.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
-    let decoded: LowpolyDiff = serde_json::from_str(DIFF).expect("committed diff decodes");
+    let decoded: LowpolyDiff = from_json(DIFF);
     let produced = <LowpolyDiff as protocol::MutationDiff<LowpolySnapshot>>::apply(&decoded, &before()).expect("committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "change-paint-layer-opacity/fades-the-base-layer-to-half: committed diff did not carry before to after");
 }

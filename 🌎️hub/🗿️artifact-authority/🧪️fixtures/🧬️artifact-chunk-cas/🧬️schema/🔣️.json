@@ -1,0 +1,118 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://semio.tech/schema/hub/artifact-chunk-cas-v1.fixture.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "spaceId", "chunkBytes", "maximumRawBytes", "maximumChunkCount", "maximumManifestBytes", "vectors", "largePair", "retentionLedger"],
+  "properties": {
+    "version": { "const": 1 },
+    "spaceId": { "type": "string", "minLength": 1, "maxLength": 1024 },
+    "chunkBytes": { "const": 262144 },
+    "maximumRawBytes": { "const": 67108864 },
+    "maximumChunkCount": { "const": 256 },
+    "maximumManifestBytes": { "const": 65536 },
+    "vectors": {
+      "type": "array",
+      "minItems": 5,
+      "maxItems": 5,
+      "items": { "$ref": "#/$defs/vector" }
+    },
+    "largePair": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["pack", "spr", "totalLength"],
+      "properties": {
+        "pack": { "$ref": "#/$defs/vector" },
+        "spr": { "$ref": "#/$defs/vector" },
+        "totalLength": { "const": 67108864 }
+      }
+    },
+    "retentionLedger": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["reservationMaximumTtlMs", "reservationGraceMs", "sweepPageMaximum", "sweepObjectMaximum", "events", "snapshots"],
+      "properties": {
+        "reservationMaximumTtlMs": { "const": 300000 },
+        "reservationGraceMs": { "const": 60000 },
+        "sweepPageMaximum": { "const": 16 },
+        "sweepObjectMaximum": { "const": 4096 },
+        "events": {
+          "type": "array",
+          "minItems": 7,
+          "maxItems": 7,
+          "items": { "$ref": "#/$defs/ledgerEvent" }
+        },
+        "snapshots": {
+          "type": "array",
+          "minItems": 3,
+          "maxItems": 3,
+          "items": { "$ref": "#/$defs/ledgerSnapshot" }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "hash": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "objectToken": { "type": "string", "pattern": "^(chunk|manifest):[0-9a-f]{64}$" },
+    "ledgerEvent": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["generation", "operation", "checkpointId", "expiresAtMs", "objects"],
+          "properties": {
+            "generation": { "type": "integer", "minimum": 1, "maximum": 7 },
+            "operation": { "const": "reserve" },
+            "checkpointId": { "$ref": "#/$defs/hash" },
+            "expiresAtMs": { "type": "integer", "minimum": 1 },
+            "objects": { "type": "array", "minItems": 1, "maxItems": 258, "uniqueItems": true, "items": { "$ref": "#/$defs/objectToken" } }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["generation", "operation", "checkpointId"],
+          "properties": {
+            "generation": { "type": "integer", "minimum": 1, "maximum": 7 },
+            "operation": { "enum": ["publish", "retention"] },
+            "checkpointId": { "$ref": "#/$defs/hash" }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["generation", "operation"],
+          "properties": {
+            "generation": { "type": "integer", "minimum": 1, "maximum": 7 },
+            "operation": { "const": "space-delete" }
+          }
+        }
+      ]
+    },
+    "ledgerSnapshot": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["throughGeneration", "nowMs", "protected", "eligible"],
+      "properties": {
+        "throughGeneration": { "type": "integer", "minimum": 1, "maximum": 7 },
+        "nowMs": { "type": "integer", "minimum": 0 },
+        "protected": { "type": "array", "uniqueItems": true, "items": { "$ref": "#/$defs/objectToken" } },
+        "eligible": { "type": "array", "uniqueItems": true, "items": { "$ref": "#/$defs/objectToken" } }
+      }
+    },
+    "vector": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["length", "rawSha256", "chunkCount", "manifestBytes", "manifestId", "firstChunkId", "lastChunkId"],
+      "properties": {
+        "length": { "type": "integer", "minimum": 0, "maximum": 67108864 },
+        "rawSha256": { "$ref": "#/$defs/hash" },
+        "chunkCount": { "type": "integer", "minimum": 0, "maximum": 256 },
+        "manifestBytes": { "type": "integer", "minimum": 1, "maximum": 65536 },
+        "manifestId": { "$ref": "#/$defs/hash" },
+        "firstChunkId": { "oneOf": [{ "$ref": "#/$defs/hash" }, { "type": "null" }] },
+        "lastChunkId": { "oneOf": [{ "$ref": "#/$defs/hash" }, { "type": "null" }] }
+      }
+    }
+  }
+}

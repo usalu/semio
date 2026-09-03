@@ -47,7 +47,7 @@ const KINDS: &[&str] = &["no-mutation", "set-snapshot", "set-value", "set-map-en
 mod subject {
     use semio_repo_test_host::{digest, parse_json, Context, Json, Outcome};
     use semio_s_plugin_stdio::artifacts::json::standards::v_rfc8259::subsets::base::schema::snapshot::{parse_json_text, JsonMember, JsonValue};
-    use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::any::schema::mutations::semio_mutation_refusals;
+    use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::base::schema::mutations::semio_mutation_refusals;
     use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::value::schema::mutations::{
         apply_semio_value_mutation, insert_list_item, inverse_semio_value_mutation, remove_list_item, remove_map_entry, remove_node, set_map_entry, set_node, set_snapshot, set_value, SemioValueMutation, SemioValuePath, SemioValuePathSegment,
     };
@@ -277,8 +277,8 @@ mod subject {
     //#region 🔖️Input
     /// 🕸️ The six-member demo graph, in both encodings the domain commits for it — small, but the
     /// only `stdio.semio.value` bytes in this artifact a codec other than the Python one wrote.
-    const GRAPH_DSL: &str = "asset://🏅️standards/🔖️v1/🪆️subsets/✳️any/📚️examples/🕸️graph/🖼️assets/🗣️.dsl.semio";
-    const GRAPH_PACK: &str = "asset://🏅️standards/🔖️v1/🪆️subsets/✳️any/📚️examples/🕸️graph/🖼️assets/🎒️.pack.semio";
+    const GRAPH_DSL: &str = "asset://🏅️standards/🔖️v1/🪆️subsets/✳️base/📚️examples/🕸️graph/🖼️assets/🗣️.dsl.semio";
+    const GRAPH_PACK: &str = "asset://🏅️standards/🔖️v1/🪆️subsets/✳️base/📚️examples/🕸️graph/🖼️assets/🎒️.pack.semio";
     /// 🌲️ The real 424 KB building model, its source and its binary twin.
     const FOREST_JSON: &str = "local://🔣️.json";
     const FOREST_DSL: &str = "local://🧪️hexagonal-cut-concrete-forest/🗣️.dsl.semio";

@@ -8,7 +8,6 @@ use crate::artifacts::layout::{Frame, LayoutSnapshot};
 use crate::editor::layout::terminology::{layout_labels, preflight_msg, LayoutLabels};
 use crate::editor::layout::{layout_action, ui_value_map, ui_value_text};
 use semio_framework_plugin::{tree_item_desc, tree_item_with_action, Label, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, PluginAssemblyError, UiFixedList, UiText, UiValue};
-use serde::{Deserialize, Serialize};
 use serde_json::json;
 use semio_framework_value_derive::{FromValue, ToValue};
 

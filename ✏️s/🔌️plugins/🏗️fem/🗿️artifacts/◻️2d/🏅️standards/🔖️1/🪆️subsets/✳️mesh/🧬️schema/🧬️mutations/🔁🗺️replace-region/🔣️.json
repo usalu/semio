@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "owner": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️mesh/🧬️schema/🧬️mutations/🔁🗺️replace-region",
+  "semanticKind": "replace-region",
+  "displayName": "Replace Region",
+  "emoji": "🔁🗺️",
+  "aggregateVariant": "ReplaceRegion",
+  "payloadSchema": "🔣️.schema.json",
+  "textOpcode": "replace-region",
+  "binaryTag": null,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "detect",
+  "outcomeClasses": [
+    "error",
+    "info",
+    "applied"
+  ],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": [
+    "rust",
+    "json-schema",
+    "text",
+    "binary"
+  ]
+}

@@ -2,12 +2,11 @@
 
 use crate::artifacts::vcs::VcsSnapshot;
 use crate::editor::vcs::terminology::VcsPlayLabels;
-use crate::editor::vcs::vcs_action;
+use crate::editor::vcs::{ui_value_map, ui_value_text, vcs_action};
 use semio_framework_plugin::{
     ui_inspector_groups_to_tree, ui_inspector_readonly_field, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, UiFieldNode, UiInputNode, UiInspectorFieldGroup, UiNode, UiPresence, FRAMEWORK_PANEL_TAB_INSPECTION_ID,
     FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
 };
-use serde_json::json;
 
 //#region 🔖️Constants
 pub const VCS_PLAY_BODY_INSPECTION: &str = "vcs.play.inspection";
@@ -44,7 +43,7 @@ pub fn render(projection: &VcsSnapshot, labels: &VcsPlayLabels) -> UiNode {
                     value: projection.title.clone(),
                     placeholder: None,
                     commit: Some("blur".into()),
-                    on_change: vcs_action("patchSnapshot", Some(json!({ "field": "title" }))),
+                    on_change: vcs_action("patchSnapshot", Some(ui_value_map([("field", ui_value_text("title").expect("static field name fits ui text capacity"))]).expect("single-entry field map fits ui map capacity"))),
                     min: None,
                     max: None,
                     step: None,
@@ -67,7 +66,7 @@ pub fn render(projection: &VcsSnapshot, labels: &VcsPlayLabels) -> UiNode {
                     value: projection.counter.to_string(),
                     placeholder: None,
                     commit: Some("blur".into()),
-                    on_change: vcs_action("patchSnapshot", Some(json!({ "field": "counter" }))),
+                    on_change: vcs_action("patchSnapshot", Some(ui_value_map([("field", ui_value_text("counter").expect("static field name fits ui text capacity"))]).expect("single-entry field map fits ui map capacity"))),
                     min: None,
                     max: None,
                     step: None,
@@ -90,7 +89,7 @@ pub fn render(projection: &VcsSnapshot, labels: &VcsPlayLabels) -> UiNode {
                     value: projection.status.clone(),
                     placeholder: None,
                     commit: Some("blur".into()),
-                    on_change: vcs_action("patchSnapshot", Some(json!({ "field": "status" }))),
+                    on_change: vcs_action("patchSnapshot", Some(ui_value_map([("field", ui_value_text("status").expect("static field name fits ui text capacity"))]).expect("single-entry field map fits ui map capacity"))),
                     min: None,
                     max: None,
                     step: None,
@@ -113,7 +112,7 @@ pub fn render(projection: &VcsSnapshot, labels: &VcsPlayLabels) -> UiNode {
                     value: projection.notes.clone(),
                     placeholder: None,
                     commit: Some("blur".into()),
-                    on_change: vcs_action("patchSnapshot", Some(json!({ "field": "notes" }))),
+                    on_change: vcs_action("patchSnapshot", Some(ui_value_map([("field", ui_value_text("notes").expect("static field name fits ui text capacity"))]).expect("single-entry field map fits ui map capacity"))),
                     min: None,
                     max: None,
                     step: None,

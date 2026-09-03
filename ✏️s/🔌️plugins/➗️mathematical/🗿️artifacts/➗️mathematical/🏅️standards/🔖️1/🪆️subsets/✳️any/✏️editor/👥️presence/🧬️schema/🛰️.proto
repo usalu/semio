@@ -1,4 +1,0 @@
-syntax = "proto3";
-package semio.app.mathematical.mathematical.presence;
-
-message MathematicalPresence {}

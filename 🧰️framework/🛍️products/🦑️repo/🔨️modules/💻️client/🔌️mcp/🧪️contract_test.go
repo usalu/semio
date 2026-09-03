@@ -16,11 +16,14 @@ import (
 	"io"
 	"net"
 	"os"
+	"slices"
 	"strings"
 	"sync"
 	"sync/atomic"
 	"testing"
 	"time"
+
+	"github.com/usalu/semio/repo/client"
 )
 
 // #region 🧫️Fixture
@@ -34,6 +37,106 @@ type contractFixture struct {
 		Request  string `json:"request"`
 		Response string `json:"response"`
 	} `json:"vectors"`
+}
+
+type entrypointContractFixture struct {
+	Schema             string   `json:"schema"`
+	ProfileEnvironment string   `json:"profileEnvironment"`
+	Arguments          []string `json:"arguments"`
+	ProtocolVersions   []string `json:"protocolVersions"`
+	Profiles           []struct {
+		Slug       string `json:"slug"`
+		Kind       string `json:"kind"`
+		ServerName string `json:"serverName"`
+	} `json:"profiles"`
+	Flow []string `json:"flow"`
+}
+
+func TestRepositoryEntrypointContract(t *testing.T) {
+	data, err := os.ReadFile("🧫️fixtures/entrypoint-contract.json")
+	if err != nil {
+		t.Fatal(err)
+	}
+	var fixture entrypointContractFixture
+	if err := decodeExact(data, &fixture); err != nil {
+		t.Fatal(err)
+	}
+	if fixture.Schema != "semio.repo.mcp.entrypoint/1" || fixture.ProfileEnvironment != MCPProfileEnvironment || len(fixture.Arguments) != 0 {
+		t.Fatalf("unexpected entrypoint fixture identity: %#v", fixture)
+	}
+	wantFlow := []string{"initialize", "notifications/initialized", "resources/list", "resources/read:repo://goals", "tools/list", "tools/call"}
+	if !slices.Equal(fixture.Flow, wantFlow) {
+		t.Fatalf("entrypoint flow got=%q want=%q", fixture.Flow, wantFlow)
+	}
+	if !slices.Equal(fixture.ProtocolVersions, SupportedProtocolVersions) {
+		t.Fatalf("protocol versions got=%q want=%q", SupportedProtocolVersions, fixture.ProtocolVersions)
+	}
+	for _, profile := range fixture.Profiles {
+		t.Run(profile.Slug, func(t *testing.T) {
+			kind, err := resolveMCPProfile(fixture.Arguments, func(key string) (string, bool) {
+				if key != fixture.ProfileEnvironment {
+					t.Fatalf("profile lookup key got=%q want=%q", key, fixture.ProfileEnvironment)
+				}
+				return profile.Slug, true
+			})
+			if err != nil {
+				t.Fatal(err)
+			}
+			if string(kind) != profile.Kind || client.McpServerName(kind) != profile.ServerName {
+				t.Fatalf("profile %q resolved kind=%q server=%q", profile.Slug, kind, client.McpServerName(kind))
+			}
+			server, err := NewRepositoryServerFor(&testRepository{}, kind)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if server.config.ServerInfo.Name != profile.ServerName {
+				t.Fatalf("server name got=%q want=%q", server.config.ServerInfo.Name, profile.ServerName)
+			}
+			open := server.tools["ticket_open"].schema.InputSchema.Properties
+			_, hasPlan := open["plan_id"]
+			_, hasSpec := open["spec_id"]
+			if profile.Kind == "kiro" {
+				if hasPlan || !hasSpec {
+					t.Fatalf("kiro ticket schema plan=%v spec=%v", hasPlan, hasSpec)
+				}
+			} else if profile.Kind == "generic" {
+				if hasPlan || hasSpec {
+					t.Fatalf("generic ticket schema plan=%v spec=%v", hasPlan, hasSpec)
+				}
+			} else if !hasPlan || hasSpec {
+				t.Fatalf("profile %q ticket schema plan=%v spec=%v", profile.Kind, hasPlan, hasSpec)
+			}
+		})
+	}
+	for _, version := range fixture.ProtocolVersions {
+		server, err := NewRepositoryServer(&testRepository{})
+		if err != nil {
+			t.Fatal(err)
+		}
+		session, err := server.Connect("protocol-"+version, nil)
+		if err != nil {
+			t.Fatal(err)
+		}
+		payload := fmt.Sprintf(`{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":%q,"capabilities":{},"clientInfo":{"name":"fixture","version":"1"}}}`, version)
+		response, err := session.Dispatch(context.Background(), []byte(payload))
+		if err != nil {
+			t.Fatal(err)
+		}
+		var envelope Response
+		if err := json.Unmarshal(response, &envelope); err != nil {
+			t.Fatal(err)
+		}
+		var initialized InitializeResult
+		if err := json.Unmarshal(envelope.Result, &initialized); err != nil {
+			t.Fatal(err)
+		}
+		if initialized.ProtocolVersion != version {
+			t.Fatalf("negotiated protocol got=%q want=%q", initialized.ProtocolVersion, version)
+		}
+	}
+	if _, err := resolveMCPProfile([]string{"mcp", "client"}, func(string) (string, bool) { return "", false }); err == nil {
+		t.Fatal("legacy CLI delegation arguments must be rejected")
+	}
 }
 
 func TestG2CanonicalGoldenVectors(t *testing.T) {
@@ -123,14 +226,16 @@ func TestG2ProductionOwnedRuntimePipe(t *testing.T) {
 }
 
 func TestG2ProductionComponentRejectsDirectDelegationMutation(t *testing.T) {
-	source, err := os.ReadFile("🐹️.go")
+	source, err := os.ReadFile("🐹️component.go")
 	if err != nil {
 		t.Fatal(err)
 	}
-	if bytes.Contains(source, []byte("client.RunMCP")) {
-		t.Fatal("production restored direct G1 MCP delegation")
+	for _, forbidden := range [][]byte{[]byte("client.RunMCP"), []byte("client.RunCLI"), []byte(`[]string{"mcp"`)} {
+		if bytes.Contains(source, forbidden) {
+			t.Fatalf("production restored legacy delegation marker %q", forbidden)
+		}
 	}
-	for _, required := range [][]byte{[]byte("runMCP("), []byte("NewRepositoryServer("), []byte("server.Serve(")} {
+	for _, required := range [][]byte{[]byte("runMCPForProfile("), []byte("NewRepositoryServerFor("), []byte("server.Serve(")} {
 		if !bytes.Contains(source, required) {
 			t.Fatalf("production component bypasses owned runtime marker %q", required)
 		}

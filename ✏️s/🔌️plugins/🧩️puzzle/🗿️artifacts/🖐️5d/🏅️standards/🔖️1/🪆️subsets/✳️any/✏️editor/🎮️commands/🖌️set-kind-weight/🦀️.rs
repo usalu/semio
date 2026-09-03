@@ -4,7 +4,7 @@ use crate::editor::puzzle5d::puzzle5d_ensure_catalog_kind_weights;
 use crate::editor::puzzle5d::puzzle5d_kind_ids;
 use crate::editor::puzzle5d::puzzle5d_normalize_kind_weight_group;
 use crate::editor::puzzle5d::Puzzle5dActionCtx;
-use serde_json::Value;
+use dsl::os_pack::json::Value;
 
 /// ⚖️ `setObjectKindWeight`/`setVortexKindWeight` share one arm: both re-normalize their whole group
 /// so the sliders always sum to 1.

@@ -8,7 +8,7 @@ Feature: One representative command per group constructs and reports its manifes
   research report's headline count of 48 is off by one against the macro's own row count and the
   crate's own `command_ids_are_unique` test, which asserts 47 — corrected here) — one representative
   command per group, constructed with the same example payload the crate's own `every_command()` test
-  helper uses (`🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs`'s `#[cfg(test)] mod tests`).
+  helper uses (`🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs`'s `#[cfg(test)] mod tests`).
 
   The generated Rust subject host links only `semio-repo-test-host` and the lowpoly SUT crate. Lowpoly
   therefore re-exports `ArtifactView`, `ConfigView`, `Emit`, `Fault`, and `HistoryView` from

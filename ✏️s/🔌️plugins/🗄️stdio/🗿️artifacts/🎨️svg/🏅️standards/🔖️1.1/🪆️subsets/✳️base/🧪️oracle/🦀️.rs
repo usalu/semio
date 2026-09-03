@@ -6,7 +6,7 @@
 //! different mutations, and a subset that shares an implementation with another reaches it through
 //! the shared family modules rather than by copying it. No shared `xml`/`markup` family module
 //! exists yet (unlike `document`/`raster`/`archive`/`tabular`/`audio`/`mesh`) and this module does
-//! not create one: the sibling 📰xml 1.0 oracle is still an unfilled stub as of this wave, so there
+//! not create one: the sibling 📰️xml 1.0 oracle is still an unfilled stub as of this wave, so there
 //! is no second subset to genuinely share an implementation with yet. Every helper below (the
 //! quick-xml-backed tree model, the hand-written `viewBox`/`transform` grammars, the JSON mutation
 //! spec codec) is owned by THIS module alone and must not be copied into or imported from the xml

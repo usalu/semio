@@ -1,13 +1,14 @@
 //! 📝 VCS mutation — `ChangeNotes`: sets the document's `notes` scalar to a new value.
 use crate::artifacts::vcs::mutations::VcsDemoMutation;
 use crate::artifacts::vcs::{VcsDiff, VcsSnapshot};
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️Mutation
 /// 📝 `change-notes` payload.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslRecord, dsl::MutationLeaf)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[mutation_leaf(contract = ::protocol)]
-#[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[dsl(keyword = "change-notes")]
 pub struct ChangeNotes {
     pub new_notes: String,

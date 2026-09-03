@@ -4,7 +4,6 @@ use std::cell::Cell;
 use std::collections::{BTreeSet, HashMap, HashSet};
 
 use dsl::DslValue;
-use serde::{Deserialize, Serialize};
 use semio_framework_value_derive::{FromValue, ToValue};
 
 #[cfg(test)]
@@ -33,7 +32,10 @@ pub enum DagError {
     UnknownWidget(String),
     CanvasTheme(String),
     GridFactorOutOfRange,
-    Json(serde_json::Error),
+    /// 🌉️ Holds the formatted message rather than a codec error type directly — `pack::json`'s
+    /// `JsonError` (syntax) and the value derive's `ValueError` (shape) both fold into this,
+    /// matching the Display text `serde_json::Error` used to produce.
+    Json(String),
 }
 
 impl std::fmt::Display for DagError {
@@ -46,23 +48,26 @@ impl std::fmt::Display for DagError {
             Self::UnknownAlignMode(mode) => write!(formatter, "unknown align mode: {mode}"),
             Self::UnknownWidget(widget) => write!(formatter, "unknown widget: {widget}"),
             Self::GridFactorOutOfRange => formatter.write_str("gridFactor must be finite and in (0, 1e6]"),
-            Self::Json(error) => write!(formatter, "{error}"),
+            Self::Json(error) => formatter.write_str(error),
         }
     }
 }
 
 impl std::error::Error for DagError {
     fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
-        match self {
-            Self::Json(error) => std::error::Error::source(error),
-            _ => None,
-        }
+        None
     }
 }
 
-impl From<serde_json::Error> for DagError {
-    fn from(error: serde_json::Error) -> Self {
-        Self::Json(error)
+impl From<dsl::os_pack::json::JsonError> for DagError {
+    fn from(error: dsl::os_pack::json::JsonError) -> Self {
+        Self::Json(error.to_string())
+    }
+}
+
+impl From<dsl::ValueError> for DagError {
+    fn from(error: dsl::ValueError) -> Self {
+        Self::Json(error.to_string())
     }
 }
 //#endregion ⚠️ Errors
@@ -252,8 +257,7 @@ fn port_center_y(node: &DagNodeSpec, port_index: usize, count: usize) -> f64 {
 }
 
 /// 🔌️ Visual shape of a port handle cap.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, Default, ToValue, FromValue, dsl::DslScalar)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Default, ToValue, FromValue, dsl::DslScalar)]
 #[value(rename_all = "camelCase")]
 pub enum PortShape {
     #[default]
@@ -262,8 +266,7 @@ pub enum PortShape {
 }
 
 /// 📐️ Edge routing style between port handles.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, Default, ToValue, FromValue, dsl::DslScalar)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Default, ToValue, FromValue, dsl::DslScalar)]
 #[value(rename_all = "camelCase")]
 pub enum EdgeRouteStyle {
     #[default]
@@ -272,47 +275,34 @@ pub enum EdgeRouteStyle {
 }
 
 /// 🪝️ Named horizontal port on a DAG node edge.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct IoPortSpec {
     pub id: String,
     pub label: String,
-    #[serde(default, skip_serializing_if = "String::is_empty")]
     #[value(default, skip_serializing_if = "String::is_empty")]
     pub code: String,
-    #[serde(default, skip_serializing_if = "String::is_empty")]
     #[value(default, skip_serializing_if = "String::is_empty")]
     pub abbreviation: String,
-    #[serde(rename = "fullName", default, skip_serializing_if = "String::is_empty")]
     #[value(rename = "fullName", default, skip_serializing_if = "String::is_empty")]
     pub full_name: String,
-    #[serde(rename = "type", skip_serializing_if = "Option::is_none")]
     #[value(rename = "type", skip_serializing_if = "Option::is_none")]
     #[dsl(key = "type")]
     pub value_type: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
     #[value(skip_serializing_if = "Option::is_none")]
     pub default: Option<DslValue>,
-    #[serde(skip_serializing_if = "Option::is_none")]
     #[value(skip_serializing_if = "Option::is_none")]
     pub value: Option<DslValue>,
-    #[serde(skip_serializing_if = "Option::is_none")]
     #[value(skip_serializing_if = "Option::is_none")]
     pub connected: Option<bool>,
-    #[serde(rename = "resourceKind", skip_serializing_if = "Option::is_none")]
     #[value(rename = "resourceKind", skip_serializing_if = "Option::is_none")]
     pub artifact_kind: Option<String>,
-    #[serde(default = "default_port_cardinality")]
     #[value(default = "default_port_cardinality")]
     pub cardinality: String,
-    #[serde(default)]
     #[value(default)]
     pub shape: PortShape,
-    #[serde(default = "default_port_visible")]
     #[value(default = "default_port_visible")]
     pub visible: bool,
-    #[serde(skip_serializing_if = "Option::is_none")]
     #[value(skip_serializing_if = "Option::is_none")]
     pub resolved: Option<bool>,
 }
@@ -382,8 +372,7 @@ impl IoPortSpec {
 }
 
 /// 🖼️ Screen media payload for output nodes.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct DagMedia {
     pub kind: DagMediaKind,
@@ -391,8 +380,7 @@ pub struct DagMedia {
 }
 
 /// 🎬️ Screen media kind discriminator.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue, dsl::DslScalar)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, ToValue, FromValue, dsl::DslScalar)]
 #[value(rename_all = "camelCase")]
 pub enum DagMediaKind {
     Image,
@@ -411,8 +399,7 @@ const DAG_PREVIEW_MAX_IMAGE: f64 = 200.0;
 const DAG_PREVIEW_MIN_SIZE: f64 = 20.0;
 
 /// 👁️ Typed preview payload rendered inside a preview node.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ToValue, FromValue, dsl::DslEnum)]
-#[serde(rename_all = "camelCase", tag = "variant")]
+#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, dsl::DslEnum)]
 #[value(rename_all = "camelCase", tag = "variant")]
 pub enum DagPreviewContent {
     #[default]
@@ -661,17 +648,14 @@ fn preview_tree_row_layouts(node: &DagNodeSpec, json: &DslValue, expanded: &BTre
 // #endregion 🔖️PreviewContent
 
 /// 🧩️ Tagged node kind: computation, slider, select, or screen.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
-#[serde(tag = "kind", rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
 #[value(tag = "kind", rename_all = "camelCase")]
 pub enum DagNodeKind {
     Computation {
         inputs: Vec<IoPortSpec>,
         outputs: Vec<IoPortSpec>,
-        #[serde(default)]
         #[value(default)]
         variadic_inputs: bool,
-        #[serde(default)]
         #[value(default)]
         variadic_outputs: bool,
     },
@@ -684,13 +668,11 @@ pub enum DagNodeKind {
     },
     Select {
         options: Vec<String>,
-        #[serde(default)]
         #[value(default)]
         selected: u64,
         output: IoPortSpec,
     },
     Screen {
-        #[serde(default)]
         #[value(default)]
         media: Option<DagMedia>,
         input: IoPortSpec,
@@ -700,16 +682,13 @@ pub enum DagNodeKind {
         output: IoPortSpec,
     },
     Image {
-        #[serde(default)]
         #[value(default)]
         src: String,
         output: IoPortSpec,
     },
     Preview {
-        #[serde(default)]
         #[value(default)]
         content: DagPreviewContent,
-        #[serde(default)]
         #[value(default)]
         expanded: BTreeSet<String>,
         input: IoPortSpec,
@@ -728,16 +707,12 @@ pub enum DagNodeKind {
         outputs: Vec<IoPortSpec>,
     },
     AppInstance {
-        #[serde(rename = "instanceId")]
         #[value(rename = "instanceId")]
         instance_id: String,
-        #[serde(rename = "pluginId")]
         #[value(rename = "pluginId")]
         plugin_id: String,
-        #[serde(rename = "appId")]
         #[value(rename = "appId")]
         app_id: String,
-        #[serde(rename = "appIcon", default)]
         #[value(rename = "appIcon", default)]
         icon: String,
         inputs: Vec<IoPortSpec>,
@@ -798,31 +773,21 @@ pub fn cluster_explode_hit(node: &DagNodeSpec, world_x: f64, world_y: f64) -> bo
 /// 📦️ DAG node with shared layout fields and a tagged kind.
 // 🔀️ `ToValue`/`FromValue` are HAND-WRITTEN below, not derived: `kind` is `#[serde(flatten)]` and the
 // derive has no `flatten`, so only a hand-written impl reproduces serde's shape.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq)]
 pub struct DagNodeSpec {
     pub id: String,
     pub name: String,
-    #[serde(default)]
     pub abbreviation: String,
-    #[serde(default)]
     pub icon: String,
-    #[serde(default)]
     pub x: f64,
-    #[serde(default)]
     pub y: f64,
-    #[serde(default = "default_node_width")]
     pub width: f64,
-    #[serde(default = "default_node_height")]
     pub height: f64,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub operator_kind: Option<String>,
-    #[serde(default)]
     pub properties: PropertyBag,
     // 🔀️ serde flattens `kind` into the parent object; `#[derive(ToValue)]` has no `flatten`, so the
     // first-party encoding nests it under a `kind` key instead. Only the serde form is on a wire
     // today — the value form exists to satisfy `ArtifactStore`'s bounds.
-    #[serde(flatten)]
     pub kind: DagNodeKind,
 }
 
@@ -1561,11 +1526,10 @@ mod tidy_tree_tests {
 }
 //#endregion 🌳️TidyTree
 
-use serde_json::Value;
+use dsl::os_pack::json::Value;
 
 /// 🧭️ Tree layout flow direction for layered DAG positions.
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, ToValue, FromValue)]
 #[value(rename_all = "camelCase")]
 pub enum DagLayoutOrientation {
     #[default]
@@ -1579,23 +1543,17 @@ pub enum DagLayoutOrientation {
 /// `serde_json::from_str` — `host::FlowCoreError` only has `From<pack::json::JsonError>`, not
 /// `From<serde_json::Error>` (see its own docstring), so the old call never actually compiled
 /// with the `?` operator once that conversion impl was dropped.
-#[derive(Clone, Debug, Serialize, Deserialize, ToValue, FromValue)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, ToValue, FromValue)]
 #[value(rename_all = "camelCase")]
 pub struct DagLayoutOptions {
-    #[serde(default = "default_layer_spacing")]
     #[value(default = "default_layer_spacing")]
     pub layer_spacing: f64,
-    #[serde(default = "default_sibling_gap")]
     #[value(default = "default_sibling_gap")]
     pub sibling_gap: f64,
-    #[serde(default)]
     #[value(default)]
     pub orientation: DagLayoutOrientation,
-    #[serde(default)]
     #[value(default)]
     pub center_x: Option<f64>,
-    #[serde(default)]
     #[value(default)]
     pub center_y: Option<f64>,
 }
@@ -1740,8 +1698,8 @@ pub fn apply_dag_layout_to_fixture_v1_value(fixture: &mut Value, opts: &DagLayou
             DagLayoutOrientation::LeftRight => (by * opts.layer_spacing + dx, bx * opts.sibling_gap + dy),
             DagLayoutOrientation::TopBottom => (bx * opts.sibling_gap + dx, by * opts.layer_spacing + dy),
         };
-        obj.insert("x".into(), serde_json::json!(nx));
-        obj.insert("y".into(), serde_json::json!(ny));
+        obj.insert("x", Value::from(nx));
+        obj.insert("y", Value::from(ny));
     }
     Ok(())
 }
@@ -2086,11 +2044,7 @@ pub fn dag_draw_lod(zoom: f64) -> DagDrawLod {
 }
 
 fn lod_max_zoom_json(max_zoom: f64) -> Value {
-    if max_zoom.is_finite() {
-        serde_json::json!(max_zoom)
-    } else {
-        serde_json::json!(f64::MAX)
-    }
+    if max_zoom.is_finite() { Value::from(max_zoom) } else { Value::from(f64::MAX) }
 }
 
 /// 📶️ JSON LOD table for React window chrome (`id`, `name`, `description`, `maxZoom`).
@@ -2099,15 +2053,15 @@ pub fn dag_lod_scale_json() -> String {
         .iter()
         .map(|lod| {
             let max_zoom = if lod.max_zoom.is_finite() { lod.max_zoom + DAG_LOD_ZOOM_SHIFT } else { lod.max_zoom };
-            serde_json::json!({
-                "id": lod.id,
-                "name": lod.name,
-                "description": lod.description,
-                "maxZoom": lod_max_zoom_json(max_zoom),
-            })
+            dsl::os_pack::json::object([
+                ("id".to_string(), Value::from(lod.id)),
+                ("name".to_string(), Value::from(lod.name)),
+                ("description".to_string(), Value::from(lod.description)),
+                ("maxZoom".to_string(), lod_max_zoom_json(max_zoom)),
+            ])
         })
         .collect();
-    serde_json::to_string(&rows).unwrap_or_else(|_| "[]".into())
+    dsl::os_pack::json::to_string(&Value::Array(rows))
 }
 // #endregion 🔖️Lod
 
@@ -2131,8 +2085,7 @@ const GRID_FACTOR_DEFAULT: f64 = ui_styling::metrics::board::GRID_FACTOR_DEFAULT
 
 // #region 🔖️ChannelRef
 /// 🔌️ Resolved fixture channel from a port handle hover or selection.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
 #[value(rename_all = "camelCase")]
 pub struct DagChannelRef {
     pub widget_id: String,
@@ -2867,8 +2820,7 @@ impl DagNodePaintChrome {
 }
 
 /// 📦️ `dag.fixture` document.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
 #[value(rename_all = "camelCase")]
 pub struct DagFixture {
     pub schema: String,
@@ -2878,8 +2830,7 @@ pub struct DagFixture {
 }
 
 /// 📷️ Fixture camera snapshot.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
 #[value(rename_all = "camelCase")]
 pub struct DagCamera {
     pub x: f64,
@@ -2888,17 +2839,14 @@ pub struct DagCamera {
 }
 
 /// 🔗️ Edge between port handles.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ToValue, FromValue, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, dsl::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct DagFixtureEdge {
     pub id: String,
     pub source: String,
     pub target: String,
-    #[serde(default)]
     #[value(default)]
     pub route_style: EdgeRouteStyle,
-    #[serde(default)]
     #[value(default)]
     pub properties: PropertyBag,
 }
@@ -3335,14 +3283,14 @@ impl DagHost {
 
     /// 🎯️ Nodes, edges, and handles in the current selection as JSON (`nodes`, `edges`, `handles`).
     pub fn selection_domains_json(&self) -> String {
-        #[derive(serde::Serialize, ToValue, FromValue)]
+        #[derive(ToValue, FromValue)]
         struct Domains {
             nodes: Vec<String>,
             edges: Vec<String>,
             handles: Vec<String>,
         }
         let handles: Vec<String> = self.selected_channels().into_iter().map(|channel| format!("{}@{}", channel.widget_id, channel.port)).collect();
-        serde_json::to_string(&Domains { nodes: self.selected_node_ids(), edges: self.selected_edge_ids(), handles }).unwrap_or_else(|_| r#"{"nodes":[],"edges":[],"handles":[]}"#.into())
+        dsl::os_pack::json::to_json_string(&Domains { nodes: self.selected_node_ids(), edges: self.selected_edge_ids(), handles })
     }
 
     fn apply_selection_domains(&mut self, nodes: &[String], edges: &[String], handles: &[String]) {
@@ -3373,17 +3321,17 @@ impl DagHost {
 
     /// ✅️ Replaces selection from domain JSON (`{ nodes, edges, handles }`) or a legacy node-id array.
     pub fn set_selection_domains_json(&mut self, json: &str) {
-        #[derive(serde::Deserialize, Default, ToValue, FromValue)]
+        #[derive(Default, ToValue, FromValue)]
         struct Domains {
             nodes: Vec<String>,
             edges: Vec<String>,
             handles: Vec<String>,
         }
-        if let Ok(domains) = serde_json::from_str::<Domains>(json) {
+        if let Ok(domains) = dsl::os_pack::json::from_json_str::<Domains>(json) {
             self.apply_selection_domains(&domains.nodes, &domains.edges, &domains.handles);
             return;
         }
-        let ids: Vec<String> = serde_json::from_str(json).unwrap_or_default();
+        let ids: Vec<String> = dsl::os_pack::json::from_json_str(json).unwrap_or_default();
         self.set_selection(&ids);
     }
 
@@ -3440,25 +3388,24 @@ impl DagHost {
 
     /// 🔌️ Selected fixture channels as JSON.
     pub fn selected_channels_json(&self) -> String {
-        serde_json::to_string(&self.selected_channels()).unwrap_or_else(|_| "[]".into())
+        dsl::os_pack::json::to_json_string(&self.selected_channels())
     }
 
     /// 🔌️ Hovered fixture channel as JSON, or `null`.
     pub fn hovered_channel_json(&self) -> String {
         match self.hovered_channel() {
-            Some(channel) => serde_json::to_string(&channel).unwrap_or_else(|_| "null".into()),
+            Some(channel) => dsl::os_pack::json::to_json_string(&channel),
             None => "null".into(),
         }
     }
 
     /// @emoji 🎯️ All pick targets under a screen point as JSON (`domain`, `id`, `generality`).
     pub fn pick_targets_at_screen_json(&self, sx: f64, sy: f64) -> String {
-        #[derive(serde::Serialize, ToValue, FromValue)]
+        #[derive(ToValue, FromValue)]
         struct Row {
             domain: String,
             id: String,
             generality: u32,
-            #[serde(skip_serializing_if = "Option::is_none")]
             #[value(default, skip_serializing_if = "Option::is_none")]
             label: Option<String>,
         }
@@ -3481,7 +3428,7 @@ impl DagHost {
                 row
             })
             .collect();
-        serde_json::to_string(&rows).unwrap_or_else(|_| "[]".into())
+        dsl::os_pack::json::to_json_string(&rows)
     }
 
     /// ✅️ Replaces node selection from fixture widget ids.
@@ -3504,7 +3451,7 @@ impl DagHost {
     /// 🧿️ Screen-space marquee overlay points for the shared selection overlay.
     pub fn selection_preview_points_json(&self) -> String {
         let points: Vec<[f64; 2]> = self.engine.selection_preview_points().iter().map(|p| [p.x, p.y]).collect();
-        serde_json::to_string(&points).unwrap_or_else(|_| "[]".into())
+        dsl::os_pack::json::to_json_string(&points)
     }
 
     pub fn selection_preview_crossing(&self) -> bool {
@@ -3611,13 +3558,13 @@ impl DagHost {
     fn minimap_widget_json(&self) -> Option<Value> {
         let layout = self.minimap_widget_layout(self.width, self.height)?;
         let (x0, y0, x1, y1) = layout.panel;
-        Some(serde_json::json!({
-            "x": x0,
-            "y": y0,
-            "width": x1 - x0,
-            "height": y1 - y0,
-            "cursor": self.minimap_widget_cursor_hint(),
-        }))
+        Some(dsl::os_pack::json::object([
+            ("x".to_string(), Value::from(x0)),
+            ("y".to_string(), Value::from(y0)),
+            ("width".to_string(), Value::from(x1 - x0)),
+            ("height".to_string(), Value::from(y1 - y0)),
+            ("cursor".to_string(), Value::from(self.minimap_widget_cursor_hint())),
+        ]))
     }
 
     fn paint_minimap_widget(&self, scene: &mut canvas::Scene, viewport_w: u32, viewport_h: u32) {
@@ -3705,13 +3652,12 @@ impl DagHost {
         let viewport = Viewport { width: self.width.max(1), height: self.height.max(1), dpr: self.dpr.max(1.0) };
         let tl = world_to_screen(&cam, &viewport, Point::new(bounds.min_x, bounds.min_y));
         let br = world_to_screen(&cam, &viewport, Point::new(bounds.max_x, bounds.max_y));
-        serde_json::json!({
-            "x": tl.x,
-            "y": tl.y,
-            "width": (br.x - tl.x).max(1.0),
-            "height": (br.y - tl.y).max(1.0),
-        })
-        .to_string()
+        dsl::os_pack::json::to_string(&dsl::os_pack::json::object([
+            ("x".to_string(), Value::from(tl.x)),
+            ("y".to_string(), Value::from(tl.y)),
+            ("width".to_string(), Value::from((br.x - tl.x).max(1.0))),
+            ("height".to_string(), Value::from((br.y - tl.y).max(1.0))),
+        ]))
     }
 
     /// @emoji 🎯️ Screen-space geometry (canvas-local px) for a live entity in the shell's pick-target
@@ -3721,19 +3667,15 @@ impl DagHost {
     /// (`IntroductionPoint::Entity`/`Curve`). Never errors: an unresolved domain/id returns
     /// `{"visible":false}`.
     pub fn entity_screen_json(&self, domain: &str, id: &str) -> String {
-        #[derive(serde::Serialize, ToValue, FromValue)]
+        #[derive(ToValue, FromValue)]
         struct EntityGeometry {
             visible: bool,
-            #[serde(skip_serializing_if = "Option::is_none")]
             #[value(default, skip_serializing_if = "Option::is_none")]
             x: Option<f64>,
-            #[serde(skip_serializing_if = "Option::is_none")]
             #[value(default, skip_serializing_if = "Option::is_none")]
             y: Option<f64>,
-            #[serde(skip_serializing_if = "Option::is_none")]
             #[value(default, skip_serializing_if = "Option::is_none")]
             rect: Option<[f64; 4]>,
-            #[serde(skip_serializing_if = "Option::is_none")]
             #[value(default, skip_serializing_if = "Option::is_none")]
             polyline: Option<Vec<[f64; 2]>>,
         }
@@ -3806,22 +3748,22 @@ impl DagHost {
             }
             "edge" => {
                 let edge = if id == "*" { self.fixture.edges.first() } else { self.fixture.edges.iter().find(|edge| edge.id == id) };
-                let Some(edge) = edge else { return serde_json::to_string(&unresolved).unwrap_or_default() };
-                let Some((source_widget, source_port)) = edge.source.split_once('@') else { return serde_json::to_string(&unresolved).unwrap_or_default() };
-                let Some((target_widget, target_port)) = edge.target.split_once('@') else { return serde_json::to_string(&unresolved).unwrap_or_default() };
-                let Some(source_bounds) = handle_world_bounds(source_widget, source_port) else { return serde_json::to_string(&unresolved).unwrap_or_default() };
-                let Some(target_bounds) = handle_world_bounds(target_widget, target_port) else { return serde_json::to_string(&unresolved).unwrap_or_default() };
+                let Some(edge) = edge else { return dsl::os_pack::json::to_json_string(&unresolved) };
+                let Some((source_widget, source_port)) = edge.source.split_once('@') else { return dsl::os_pack::json::to_json_string(&unresolved) };
+                let Some((target_widget, target_port)) = edge.target.split_once('@') else { return dsl::os_pack::json::to_json_string(&unresolved) };
+                let Some(source_bounds) = handle_world_bounds(source_widget, source_port) else { return dsl::os_pack::json::to_json_string(&unresolved) };
+                let Some(target_bounds) = handle_world_bounds(target_widget, target_port) else { return dsl::os_pack::json::to_json_string(&unresolved) };
                 let (_, source_center) = world_rect_to_screen(source_bounds.0, source_bounds.1, source_bounds.2, source_bounds.3);
                 let (_, target_center) = world_rect_to_screen(target_bounds.0, target_bounds.1, target_bounds.2, target_bounds.3);
                 let midpoint = ((source_center.0 + target_center.0) * 0.5, (source_center.1 + target_center.1) * 0.5);
-                return serde_json::to_string(&EntityGeometry { visible: true, x: Some(midpoint.0), y: Some(midpoint.1), rect: None, polyline: Some(vec![[source_center.0, source_center.1], [target_center.0, target_center.1]]) }).unwrap_or_default();
+                return dsl::os_pack::json::to_json_string(&EntityGeometry { visible: true, x: Some(midpoint.0), y: Some(midpoint.1), rect: None, polyline: Some(vec![[source_center.0, source_center.1], [target_center.0, target_center.1]]) });
             }
             _ => None,
         };
 
-        let Some(bounds) = bounds_result else { return serde_json::to_string(&unresolved).unwrap_or_default() };
+        let Some(bounds) = bounds_result else { return dsl::os_pack::json::to_json_string(&unresolved) };
         let (rect, center) = world_rect_to_screen(bounds.0, bounds.1, bounds.2, bounds.3);
-        serde_json::to_string(&EntityGeometry { visible: true, x: Some(center.0), y: Some(center.1), rect: Some(rect), polyline: None }).unwrap_or_default()
+        dsl::os_pack::json::to_json_string(&EntityGeometry { visible: true, x: Some(center.0), y: Some(center.1), rect: Some(rect), polyline: None })
     }
 
     /// 📐️ Aligns or distributes the current multi-node selection.
@@ -4008,7 +3950,7 @@ impl DagHost {
 
     /// 🔌️ Replaces channel handle selection from fixture channel JSON, falling back to node selection below channel LOD.
     pub fn set_selected_channels_json(&mut self, json: &str) {
-        let channels: Vec<DagChannelRef> = serde_json::from_str(json).unwrap_or_default();
+        let channels: Vec<DagChannelRef> = dsl::os_pack::json::from_json_str(json).unwrap_or_default();
         if self.draw_lod_for_frame().uses_channel_row_pick() {
             let mut selection = Selection::default();
             for channel in channels {
@@ -4062,7 +4004,7 @@ impl DagHost {
         self.computing_stale.clear();
         self.node_eval_status.clear();
         self.unresolved_input_ports.clear();
-        let Ok(value) = serde_json::from_str::<Value>(json) else {
+        let Ok(value) = dsl::os_pack::json::parse(json) else {
             return;
         };
         let Some(map) = value.as_object() else {
@@ -4381,7 +4323,7 @@ impl DagHost {
     }
 
     pub fn load_fixture_json(json: &str) -> Result<Self, DagError> {
-        let fixture: DagFixture = serde_json::from_str(json)?;
+        let fixture: DagFixture = dsl::os_pack::json::from_json_str(json)?;
         if fixture.schema != "dag.fixture" {
             return Err(DagError::SchemaMismatch);
         }
@@ -4390,14 +4332,14 @@ impl DagHost {
     }
 
     pub fn fixture_json(&self) -> Result<String, DagError> {
-        Ok(serde_json::to_string(&self.fixture)?)
+        Ok(dsl::os_pack::json::to_json_string(&self.fixture))
     }
 
     /// 🌳️ Recomputes node positions from the current graph using layered tree layout.
     pub fn reorganize(&mut self, opts: &DagLayoutOptions) -> Result<(), DagError> {
-        let mut fixture_value = serde_json::to_value(&self.fixture)?;
+        let mut fixture_value = dsl::os_pack::json::from_dsl_value(&<DagFixture as dsl::ToValue>::to_value(&self.fixture));
         apply_dag_layout_to_fixture_v1_value(&mut fixture_value, opts)?;
-        self.fixture = serde_json::from_value(fixture_value)?;
+        self.fixture = <DagFixture as dsl::FromValue>::from_value(dsl::os_pack::json::to_dsl_value(&fixture_value))?;
         self.rebuild_engine_with_layout(false);
         Ok(())
     }
@@ -4419,9 +4361,9 @@ impl DagHost {
         let (cx, cy, zoom) = (self.fixture.camera.x, self.fixture.camera.y, self.fixture.camera.zoom);
         self.engine.set_camera(cx, cy, zoom);
         if apply_layout {
-            let mut fixture_value = serde_json::to_value(&self.fixture).unwrap_or_else(|_| serde_json::json!({}));
+            let mut fixture_value = dsl::os_pack::json::from_dsl_value(&<DagFixture as dsl::ToValue>::to_value(&self.fixture));
             let _ = apply_dag_layout_to_fixture_v1_value(&mut fixture_value, &DagLayoutOptions::default());
-            if let Ok(updated) = serde_json::from_value::<DagFixture>(fixture_value.clone()) {
+            if let Ok(updated) = <DagFixture as dsl::FromValue>::from_value(dsl::os_pack::json::to_dsl_value(&fixture_value)) {
                 self.fixture = updated;
             }
         }
@@ -5265,14 +5207,22 @@ impl DagHost {
                 DagMediaKind::Pdf => "pdf",
                 DagMediaKind::Video => "video",
             };
-            overlays.push(serde_json::json!({
-                "id": node.id,
-                "mediaKind": media_kind,
-                "src": media.src,
-                "rect": { "x": tl.x, "y": tl.y, "w": (br.x - tl.x).max(1.0), "h": (br.y - tl.y).max(1.0) }
-            }));
+            overlays.push(dsl::os_pack::json::object([
+                ("id".to_string(), Value::from(node.id.clone())),
+                ("mediaKind".to_string(), Value::from(media_kind)),
+                ("src".to_string(), Value::from(media.src.clone())),
+                (
+                    "rect".to_string(),
+                    dsl::os_pack::json::object([
+                        ("x".to_string(), Value::from(tl.x)),
+                        ("y".to_string(), Value::from(tl.y)),
+                        ("w".to_string(), Value::from((br.x - tl.x).max(1.0))),
+                        ("h".to_string(), Value::from((br.y - tl.y).max(1.0))),
+                    ]),
+                ),
+            ]));
         }
-        Ok(serde_json::to_string(&overlays)?)
+        Ok(dsl::os_pack::json::to_string(&Value::Array(overlays)))
     }
 
     fn handle_cap_peak(&self, center: canvas::Point, outward: canvas::Vec2, radius: f64, shape: PortShape) -> canvas::Point {
@@ -5375,22 +5325,22 @@ impl DagHost {
                 let (lx, ly) = io_widget_label_center(node);
                 ("vertical", lx, ly)
             };
-            labels.push(serde_json::json!({
-                "id": node.id,
-                "text": text,
-                "layout": layout,
-                "x": x,
-                "y": y,
-                "nodeW": node.width,
-                "nodeH": node.height,
-                "fontScreenPx": paint_px,
-                "ghost": ghost,
-            }));
+            labels.push(dsl::os_pack::json::object([
+                ("id".to_string(), Value::from(node.id.clone())),
+                ("text".to_string(), Value::from(text)),
+                ("layout".to_string(), Value::from(layout)),
+                ("x".to_string(), Value::from(x)),
+                ("y".to_string(), Value::from(y)),
+                ("nodeW".to_string(), Value::from(node.width)),
+                ("nodeH".to_string(), Value::from(node.height)),
+                ("fontScreenPx".to_string(), Value::from(paint_px)),
+                ("ghost".to_string(), Value::from(ghost)),
+            ]));
         }
         if lod.shows_port_labels() && !matches!(node.kind, DagNodeKind::Preview { .. } | DagNodeKind::Note { .. }) {
             for mut row in Self::port_label_overlay_rows(node, lod, zoom, lod_index, engine_nid, unresolved_input_ports) {
                 if let Some(obj) = row.as_object_mut() {
-                    obj.insert("ghost".into(), Value::Bool(ghost));
+                    obj.insert("ghost", Value::Bool(ghost));
                 }
                 labels.push(row);
             }
@@ -5428,19 +5378,19 @@ impl DagHost {
             }
             let world_y = port_center_y(node, i, inputs.len());
             let world_x = if computation { computation_input_label_x(node) } else { node.x - hw + handle_inset };
-            rows.push(serde_json::json!({
-                "id": node.id,
-                "kind": "port",
-                "text": label,
-                "layout": "horizontal",
-                "align": "left",
-                "x": world_x,
-                "y": world_y,
-                "nodeW": input_column_w,
-                "nodeH": DAG_CHANNEL_ROW_HEIGHT,
-                "fontScreenPx": port_layout_px,
-                "maxScreenH": port_layout_px * 1.3,
-            }));
+            rows.push(dsl::os_pack::json::object([
+                ("id".to_string(), Value::from(node.id.clone())),
+                ("kind".to_string(), Value::from("port")),
+                ("text".to_string(), Value::from(label)),
+                ("layout".to_string(), Value::from("horizontal")),
+                ("align".to_string(), Value::from("left")),
+                ("x".to_string(), Value::from(world_x)),
+                ("y".to_string(), Value::from(world_y)),
+                ("nodeW".to_string(), Value::from(input_column_w)),
+                ("nodeH".to_string(), Value::from(DAG_CHANNEL_ROW_HEIGHT)),
+                ("fontScreenPx".to_string(), Value::from(port_layout_px)),
+                ("maxScreenH".to_string(), Value::from(port_layout_px * 1.3)),
+            ]));
         }
         for (i, port) in outputs.iter().enumerate() {
             if port.shape == PortShape::Triangle || !port.visible {
@@ -5458,19 +5408,19 @@ impl DagHost {
                 let (label_w, _) = label_extent(&label, port_layout_px);
                 (node.x + hw - handle_inset, label_w / zoom.max(0.05))
             };
-            rows.push(serde_json::json!({
-                "id": node.id,
-                "kind": "port",
-                "text": label,
-                "layout": "horizontal",
-                "align": "right",
-                "x": world_x,
-                "y": world_y,
-                "nodeW": column_w,
-                "nodeH": DAG_CHANNEL_ROW_HEIGHT,
-                "fontScreenPx": port_layout_px,
-                "maxScreenH": port_layout_px * 1.3,
-            }));
+            rows.push(dsl::os_pack::json::object([
+                ("id".to_string(), Value::from(node.id.clone())),
+                ("kind".to_string(), Value::from("port")),
+                ("text".to_string(), Value::from(label)),
+                ("layout".to_string(), Value::from("horizontal")),
+                ("align".to_string(), Value::from("right")),
+                ("x".to_string(), Value::from(world_x)),
+                ("y".to_string(), Value::from(world_y)),
+                ("nodeW".to_string(), Value::from(column_w)),
+                ("nodeH".to_string(), Value::from(DAG_CHANNEL_ROW_HEIGHT)),
+                ("fontScreenPx".to_string(), Value::from(port_layout_px)),
+                ("maxScreenH".to_string(), Value::from(port_layout_px * 1.3)),
+            ]));
         }
         rows
     }
@@ -5485,26 +5435,25 @@ impl DagHost {
                 continue;
             };
             let (x0, y0, x1, y1) = slider_track_bounds(&node);
-            sliders.push(serde_json::json!({
-                "widgetId": fixture_node.id,
-                "label": node.name,
-                "value": value,
-                "min": min,
-                "max": max,
-                "step": step,
-                "x": (x0 + x1) * 0.5,
-                "y": (y0 + y1) * 0.5,
-                "w": (x1 - x0).max(1.0),
-                "h": (y1 - y0).max(1.0),
-            }));
+            sliders.push(dsl::os_pack::json::object([
+                ("widgetId".to_string(), Value::from(fixture_node.id.clone())),
+                ("label".to_string(), Value::from(node.name.clone())),
+                ("value".to_string(), Value::from(*value)),
+                ("min".to_string(), Value::from(*min)),
+                ("max".to_string(), Value::from(*max)),
+                ("step".to_string(), Value::from(*step)),
+                ("x".to_string(), Value::from((x0 + x1) * 0.5)),
+                ("y".to_string(), Value::from((y0 + y1) * 0.5)),
+                ("w".to_string(), Value::from((x1 - x0).max(1.0))),
+                ("h".to_string(), Value::from((y1 - y0).max(1.0))),
+            ]));
         }
-        serde_json::to_string(&serde_json::json!({
-            "camera": { "x": cam.x, "y": cam.y, "zoom": cam.zoom },
-            "width": self.width,
-            "height": self.height,
-            "sliders": sliders,
-        }))
-        .map_err(DagError::from)
+        Ok(dsl::os_pack::json::to_string(&dsl::os_pack::json::object([
+            ("camera".to_string(), dsl::os_pack::json::object([("x".to_string(), Value::from(cam.x)), ("y".to_string(), Value::from(cam.y)), ("zoom".to_string(), Value::from(cam.zoom))])),
+            ("width".to_string(), Value::from(self.width)),
+            ("height".to_string(), Value::from(self.height)),
+            ("sliders".to_string(), Value::Array(sliders)),
+        ])))
     }
 
     /// 🏷️ Camera, draw LOD, and node label anchors for the JS canvas text overlay (must match the last GPU frame).
@@ -5522,15 +5471,14 @@ impl DagHost {
             labels.extend(Self::label_overlay_rows_for_node(ghost, lod, cam.zoom, lod_index, true, None, &self.unresolved_input_ports));
         }
         let minimap_widget = self.minimap_widget_json();
-        serde_json::to_string(&serde_json::json!({
-            "camera": { "x": cam.x, "y": cam.y, "zoom": cam.zoom },
-            "lod": lod.label(),
-            "width": self.width,
-            "height": self.height,
-            "labels": labels,
-            "minimapWidget": minimap_widget,
-        }))
-        .map_err(DagError::from)
+        Ok(dsl::os_pack::json::to_string(&dsl::os_pack::json::object([
+            ("camera".to_string(), dsl::os_pack::json::object([("x".to_string(), Value::from(cam.x)), ("y".to_string(), Value::from(cam.y)), ("zoom".to_string(), Value::from(cam.zoom))])),
+            ("lod".to_string(), Value::from(lod.label())),
+            ("width".to_string(), Value::from(self.width)),
+            ("height".to_string(), Value::from(self.height)),
+            ("labels".to_string(), Value::Array(labels)),
+            ("minimapWidget".to_string(), Value::from(minimap_widget)),
+        ])))
     }
 
     fn paint_variadic_plus_controls(scene: &mut canvas::Scene, cam: &canvas::camera::Camera, viewport: &canvas::camera::Viewport, node: &DagNodeSpec, px: f64, fill: canvas::Color, halo: canvas::Color) {
@@ -6407,7 +6355,7 @@ mod wasm_session {
 
         #[wasm_bindgen(js_name = reorganize)]
         pub fn reorganize(&self, options_json: &str) -> Result<(), JsValue> {
-            let opts = if options_json.trim().is_empty() { DagLayoutOptions::default() } else { serde_json::from_str(options_json).unwrap_or_default() };
+            let opts = if options_json.trim().is_empty() { DagLayoutOptions::default() } else { dsl::os_pack::json::from_json_str(options_json).unwrap_or_default() };
             self.state.borrow_mut().host.reorganize(&opts).map_err(|e| JsValue::from_str(&e.to_string()))
         }
 
@@ -6447,7 +6395,7 @@ mod tests {
             DagFixture { schema: "dag.fixture".into(), camera: DagCamera { x: 0.0, y: 0.0, zoom: 1.0 }, nodes: vec![DagNodeSpec { id: "a\"\\\n".into(), ..Default::default() }, DagNodeSpec { id: "β".into(), ..Default::default() }], edges: vec![] };
         let mut host = DagHost::from_fixture_without_layout(fixture);
         host.set_selection(&["a\"\\\n".into(), "β".into()]);
-        let expected = serde_json::to_vec(&host.selected_node_ids()).unwrap();
+        let expected = dsl::os_pack::json::to_json_string(&host.selected_node_ids()).into_bytes();
         let mut cursor = DagSelectedNodesJsonCursor::default();
         let mut rejected = cursor_grant();
         rejected.fuel = 0;
@@ -6468,11 +6416,11 @@ mod tests {
     }
 
     #[test]
-    fn selected_edges_cursor_matches_test_only_serde_oracle() {
+    fn selected_edges_cursor_matches_direct_encode() {
         let mut host = DagHost::default_demo();
         let edge = host.fixture.edges.first().expect("demo edge").id.clone();
         host.set_selection_domains_json(&format!("{{\"nodes\":[],\"edges\":[{edge:?}],\"handles\":[]}}"));
-        let expected = serde_json::to_vec(&host.selected_edge_ids()).unwrap();
+        let expected = dsl::os_pack::json::to_json_string(&host.selected_edge_ids()).into_bytes();
         let mut cursor = DagSelectedNodesJsonCursor::edges();
         let mut output = Vec::new();
         let mut census = None;
@@ -6532,7 +6480,7 @@ mod tests {
         assert_eq!(dag_node_kind_tag(&node.kind), "appInstance");
         assert_eq!(node.inputs().len(), 1);
         assert_eq!(node.outputs().len(), 2);
-        let json = serde_json::to_string(&node).expect("serialize app instance");
+        let json = dsl::os_pack::json::to_json_string(&node);
         assert!(json.contains("appInstance"));
         assert!(json.contains("instanceId"));
         let mut sized = node.clone();
@@ -6580,16 +6528,19 @@ mod tests {
         assert!(!would_create_cycle(&edges, "a", "c"));
     }
 
+    /// 🧪️ Two-node/one-edge `dag.fixture` literal shared by the layout tests below.
+    fn ab_edge_layout_fixture() -> Value {
+        let node = |id: &str| dsl::os_pack::json::object([("id".to_string(), Value::from(id)), ("x".to_string(), Value::from(0)), ("y".to_string(), Value::from(0)), ("handles".to_string(), Value::Array(vec![]))]);
+        dsl::os_pack::json::object([
+            ("schema".to_string(), Value::from("dag.fixture")),
+            ("nodes".to_string(), Value::Array(vec![node("a"), node("b")])),
+            ("edges".to_string(), Value::Array(vec![dsl::os_pack::json::object([("id".to_string(), Value::from("e1")), ("source".to_string(), Value::from("a")), ("target".to_string(), Value::from("b"))])])),
+        ])
+    }
+
     #[test]
     fn dag_layout_left_right_orders_depth_on_x() {
-        let mut fixture: Value = serde_json::json!({
-            "schema": "dag.fixture",
-            "nodes": [
-                {"id": "a", "x": 0, "y": 0, "handles": []},
-                {"id": "b", "x": 0, "y": 0, "handles": []}
-            ],
-            "edges": [{"id": "e1", "source": "a", "target": "b"}]
-        });
+        let mut fixture: Value = ab_edge_layout_fixture();
         apply_dag_layout_to_fixture_v1_value(&mut fixture, &DagLayoutOptions::default()).unwrap();
         let a_x = fixture["nodes"][0]["x"].as_f64().unwrap();
         let b_x = fixture["nodes"][1]["x"].as_f64().unwrap();
@@ -6598,14 +6549,7 @@ mod tests {
 
     #[test]
     fn dag_layout_top_bottom_orders_depth_on_y() {
-        let mut fixture: Value = serde_json::json!({
-            "schema": "dag.fixture",
-            "nodes": [
-                {"id": "a", "x": 0, "y": 0, "handles": []},
-                {"id": "b", "x": 0, "y": 0, "handles": []}
-            ],
-            "edges": [{"id": "e1", "source": "a", "target": "b"}]
-        });
+        let mut fixture: Value = ab_edge_layout_fixture();
         let opts = DagLayoutOptions { orientation: DagLayoutOrientation::TopBottom, ..DagLayoutOptions::default() };
         apply_dag_layout_to_fixture_v1_value(&mut fixture, &opts).unwrap();
         let a_y = fixture["nodes"][0]["y"].as_f64().unwrap();
@@ -6615,14 +6559,7 @@ mod tests {
 
     #[test]
     fn dag_layout_spacing_scales_coordinates() {
-        let mut fixture: Value = serde_json::json!({
-            "schema": "dag.fixture",
-            "nodes": [
-                {"id": "a", "x": 0, "y": 0, "handles": []},
-                {"id": "b", "x": 0, "y": 0, "handles": []}
-            ],
-            "edges": [{"id": "e1", "source": "a", "target": "b"}]
-        });
+        let mut fixture: Value = ab_edge_layout_fixture();
         apply_dag_layout_to_fixture_v1_value(&mut fixture, &DagLayoutOptions::default()).unwrap();
         let default_gap = (fixture["nodes"][1]["x"].as_f64().unwrap() - fixture["nodes"][0]["x"].as_f64().unwrap()).abs();
         let mut wide: Value = fixture.clone();
@@ -6686,8 +6623,8 @@ mod tests {
             },
         ];
         for node in nodes {
-            let json = serde_json::to_string(&node).unwrap();
-            let back: DagNodeSpec = serde_json::from_str(&json).unwrap();
+            let json = dsl::os_pack::json::to_json_string(&node);
+            let back: DagNodeSpec = dsl::os_pack::json::from_json_str(&json).unwrap();
             assert_eq!(node, back);
         }
     }
@@ -7002,7 +6939,7 @@ mod tests {
         host.set_viewport(1280, 800, 1.0);
         host.set_automatic_lod(false);
         host.set_forced_draw_lod_label("compact");
-        let raw: serde_json::Value = serde_json::from_str(&host.label_overlay_paint_state_json().unwrap()).unwrap();
+        let raw: Value = dsl::os_pack::json::parse(&host.label_overlay_paint_state_json().unwrap()).unwrap();
         let labels = raw["labels"].as_array().expect("labels");
         assert!(!labels.is_empty());
         assert!(labels.iter().all(|row| row["layout"] == "horizontal"));
@@ -7031,14 +6968,14 @@ mod tests {
         host.set_viewport(1280, 800, 1.0);
         host.set_automatic_lod(false);
         host.set_forced_draw_lod_label("micro");
-        let raw: serde_json::Value = serde_json::from_str(&host.label_overlay_paint_state_json().unwrap()).unwrap();
+        let raw: Value = dsl::os_pack::json::parse(&host.label_overlay_paint_state_json().unwrap()).unwrap();
         let labels = raw["labels"].as_array().expect("labels");
         assert!(labels.iter().any(|row| row["text"] == "Radius" && row["layout"] == "horizontal"));
     }
 
     #[test]
     fn dag_host_slider_overlay_preserves_language_neutral_field_labels() {
-        let fixture: serde_json::Value = serde_json::from_str(include_str!("🧪️fixtures/🔣️slider-overlay.json")).unwrap();
+        let fixture: Value = dsl::os_pack::json::parse(include_str!("🧪️fixtures/🔣️slider-overlay.json")).unwrap();
         for case in fixture["cases"].as_array().unwrap() {
             let row = &case["row"];
             let host = DagHost::from_fixture_without_layout(DagFixture {
@@ -7053,7 +6990,7 @@ mod tests {
                     ..Default::default()
                 }], edges: vec![],
             });
-            let actual: serde_json::Value = serde_json::from_str(&host.slider_overlay_state_json().unwrap()).unwrap();
+            let actual: Value = dsl::os_pack::json::parse(&host.slider_overlay_state_json().unwrap()).unwrap();
             for key in ["widgetId", "label", "value", "min", "max", "step"] { assert_eq!(actual["sliders"][0][key], row[key], "{key}"); }
         }
     }
@@ -7078,7 +7015,7 @@ mod tests {
             edges: vec![],
         });
         host.set_viewport(1280, 800, 1.0);
-        let raw: serde_json::Value = serde_json::from_str(&host.slider_overlay_state_json().unwrap()).unwrap();
+        let raw: Value = dsl::os_pack::json::parse(&host.slider_overlay_state_json().unwrap()).unwrap();
         let sliders = raw["sliders"].as_array().expect("sliders");
         assert_eq!(sliders.len(), 1);
         assert_eq!(sliders[0]["widgetId"], "slider");
@@ -7115,7 +7052,7 @@ mod tests {
         host.set_viewport(1280, 800, 1.0);
         host.set_automatic_lod(false);
         host.set_forced_draw_lod_label("normal");
-        let raw: serde_json::Value = serde_json::from_str(&host.label_overlay_paint_state_json().unwrap()).unwrap();
+        let raw: Value = dsl::os_pack::json::parse(&host.label_overlay_paint_state_json().unwrap()).unwrap();
         let labels = raw["labels"].as_array().expect("labels");
         let port_rows: Vec<_> = labels.iter().filter(|row| row["kind"].as_str() == Some("port")).map(|row| (row["text"].as_str().unwrap_or(""), row["align"].as_str().unwrap_or(""))).collect();
         assert_eq!(port_rows.len(), 3);
@@ -7166,7 +7103,7 @@ mod tests {
             host.set_viewport(1280, 800, 1.0);
             host.set_automatic_lod(false);
             host.set_forced_draw_lod_label(lod);
-            let raw: serde_json::Value = serde_json::from_str(&host.label_overlay_paint_state_json().unwrap()).unwrap();
+            let raw: Value = dsl::os_pack::json::parse(&host.label_overlay_paint_state_json().unwrap()).unwrap();
             raw["labels"].as_array().expect("labels").iter().filter(|row| row["align"].as_str().is_some()).filter_map(|row| row["text"].as_str().map(str::to_string)).collect()
         };
         assert!(port_texts("normal").contains(&"! Wid".into()));
@@ -7199,7 +7136,7 @@ mod tests {
         let mut host = host;
         host.set_viewport(1280, 800, 1.0);
         let json = host.node_overlays_json().unwrap();
-        let overlays: Vec<serde_json::Value> = serde_json::from_str(&json).unwrap();
+        let overlays: Vec<Value> = dsl::os_pack::json::parse(&json).unwrap().as_array().cloned().unwrap_or_default();
         assert_eq!(overlays.len(), 1);
         assert_eq!(overlays[0]["id"], "screen");
         assert_eq!(overlays[0]["mediaKind"], "svg");
@@ -7228,7 +7165,7 @@ mod tests {
         assert!(matches!(host.engine.interaction, InteractionMode::AreaSelect { .. }), "expected area-select after marquee threshold");
         let preselect = host.preselect_widget_ids();
         assert!(!preselect.is_empty(), "marquee drag should preview widget ids before commit");
-        let preview_points: Vec<[f64; 2]> = serde_json::from_str(&host.selection_preview_points_json()).unwrap();
+        let preview_points: Vec<[f64; 2]> = dsl::os_pack::json::from_json_str(&host.selection_preview_points_json()).unwrap();
         assert!(preview_points.len() >= 2, "marquee overlay points should be published during drag");
         host.pointer_up_screen(end_sx, end_sy, false, false, false);
         assert!(!host.selected_node_ids().is_empty(), "marquee drag should commit selection on release");
@@ -7269,7 +7206,7 @@ mod tests {
         host.set_selection(&["scale".into(), "combine".into()]);
         let json = host.selection_union_bounds_screen_json();
         assert_ne!(json, "null");
-        let parsed: serde_json::Value = serde_json::from_str(&json).unwrap();
+        let parsed: Value = dsl::os_pack::json::parse(&json).unwrap();
         assert!(parsed["width"].as_f64().unwrap_or(0.0) > 1.0);
         assert!(parsed["height"].as_f64().unwrap_or(0.0) > 1.0);
     }
@@ -7279,12 +7216,12 @@ mod tests {
         let mut host = DagHost::default_demo();
         host.set_viewport(800, 600, 1.0);
         let json = host.entity_screen_json("node", "scale");
-        let parsed: serde_json::Value = serde_json::from_str(&json).unwrap();
+        let parsed: Value = dsl::os_pack::json::parse(&json).unwrap();
         assert_eq!(parsed["visible"], true);
         assert!(parsed["x"].is_number());
         assert!(parsed["rect"].is_array());
 
-        let wildcard: serde_json::Value = serde_json::from_str(&host.entity_screen_json("node", "*")).unwrap();
+        let wildcard: Value = dsl::os_pack::json::parse(&host.entity_screen_json("node", "*")).unwrap();
         assert_eq!(wildcard["visible"], true);
     }
 
@@ -7292,15 +7229,15 @@ mod tests {
     fn dag_host_entity_screen_json_resolves_handle_by_widget_and_port() {
         let mut host = DagHost::default_demo();
         host.set_viewport(800, 600, 1.0);
-        let input_json: serde_json::Value = serde_json::from_str(&host.entity_screen_json("handle", "scale@in")).unwrap();
+        let input_json: Value = dsl::os_pack::json::parse(&host.entity_screen_json("handle", "scale@in")).unwrap();
         assert_eq!(input_json["visible"], true);
-        let output_json: serde_json::Value = serde_json::from_str(&host.entity_screen_json("handle", "combine@b")).unwrap();
+        let output_json: Value = dsl::os_pack::json::parse(&host.entity_screen_json("handle", "combine@b")).unwrap();
         assert_eq!(output_json["visible"], true);
         // 🐢️ A malformed id (no "@port") or a port that doesn't exist on the node must degrade to
         // unresolved, never panic.
-        let malformed: serde_json::Value = serde_json::from_str(&host.entity_screen_json("handle", "scale")).unwrap();
+        let malformed: Value = dsl::os_pack::json::parse(&host.entity_screen_json("handle", "scale")).unwrap();
         assert_eq!(malformed["visible"], false);
-        let missing_port: serde_json::Value = serde_json::from_str(&host.entity_screen_json("handle", "scale@nope")).unwrap();
+        let missing_port: Value = dsl::os_pack::json::parse(&host.entity_screen_json("handle", "scale@nope")).unwrap();
         assert_eq!(missing_port["visible"], false);
     }
 
@@ -7308,7 +7245,7 @@ mod tests {
     fn dag_host_entity_screen_json_resolves_edge_with_a_two_point_polyline() {
         let mut host = DagHost::default_demo();
         host.set_viewport(800, 600, 1.0);
-        let json: serde_json::Value = serde_json::from_str(&host.entity_screen_json("edge", "e1")).unwrap();
+        let json: Value = dsl::os_pack::json::parse(&host.entity_screen_json("edge", "e1")).unwrap();
         assert_eq!(json["visible"], true);
         let polyline = json["polyline"].as_array().expect("edge geometry carries a polyline");
         assert_eq!(polyline.len(), 2);
@@ -7319,14 +7256,14 @@ mod tests {
         let mut host = DagHost::default_demo();
         host.set_viewport(800, 600, 1.0);
         for (domain, id) in [("node", "nonexistent"), ("handle", "*"), ("edge", "nonexistent"), ("bogus-domain", "*")] {
-            let json: serde_json::Value = serde_json::from_str(&host.entity_screen_json(domain, id)).unwrap();
+            let json: Value = dsl::os_pack::json::parse(&host.entity_screen_json(domain, id)).unwrap();
             if json["visible"] == true {
                 continue; // "handle":"*" may legitimately resolve to the demo fixture's first port.
             }
             assert_eq!(json["visible"], false, "domain={domain} id={id}");
         }
         let empty_fixture = DagFixture { schema: "dag.fixture".into(), camera: DagCamera { x: 0.0, y: 0.0, zoom: 1.0 }, nodes: vec![], edges: vec![] };
-        let empty: serde_json::Value = serde_json::from_str(&DagHost::from_fixture(empty_fixture).entity_screen_json("node", "*")).unwrap();
+        let empty: Value = dsl::os_pack::json::parse(&DagHost::from_fixture(empty_fixture).entity_screen_json("node", "*")).unwrap();
         assert_eq!(empty["visible"], false);
     }
 
@@ -8129,7 +8066,7 @@ mod tests {
         host.set_minimap_widget_visible(true);
         host.set_viewport(1280, 800, 1.0);
         host.set_camera(500.0, 400.0, 3.0);
-        let raw: serde_json::Value = serde_json::from_str(&host.label_overlay_paint_state_json().unwrap()).unwrap();
+        let raw: Value = dsl::os_pack::json::parse(&host.label_overlay_paint_state_json().unwrap()).unwrap();
         let minimap = raw.get("minimapWidget").and_then(|v| v.as_object()).expect("minimap widget json");
         assert!(minimap.get("width").and_then(|v| v.as_f64()).unwrap_or(0.0) > 0.0);
     }
@@ -8140,7 +8077,7 @@ mod tests {
         host.set_minimap_widget_visible(true);
         host.set_viewport(1280, 800, 1.0);
         host.set_camera(500.0, 400.0, 3.0);
-        let raw: serde_json::Value = serde_json::from_str(&host.label_overlay_paint_state_json().unwrap()).unwrap();
+        let raw: Value = dsl::os_pack::json::parse(&host.label_overlay_paint_state_json().unwrap()).unwrap();
         let minimap = raw.get("minimapWidget").expect("minimap");
         let x = minimap["x"].as_f64().unwrap() + minimap["width"].as_f64().unwrap() * 0.5;
         let y = minimap["y"].as_f64().unwrap() + minimap["height"].as_f64().unwrap() * 0.5;
@@ -8373,7 +8310,7 @@ mod tests {
             edges: vec![],
         });
         host.set_viewport(800, 600, 1.0);
-        let raw: serde_json::Value = serde_json::from_str(&host.label_overlay_paint_state_json().unwrap()).unwrap();
+        let raw: Value = dsl::os_pack::json::parse(&host.label_overlay_paint_state_json().unwrap()).unwrap();
         let labels = raw["labels"].as_array().expect("labels");
         assert!(labels.iter().all(|row| row["text"] != "Note" && row["text"] != "out"));
     }
@@ -8466,8 +8403,8 @@ mod tests {
     #[test]
     fn dag_node_spec_round_trips_display_fields() {
         let node = DagNodeSpec::computation("n".into(), "pass through".into(), "pass".into(), "emoji:➡️".into(), vec![], vec![IoPortSpec { id: "out".into(), label: "out".into(), ..Default::default() }], false, false, 0.0, 0.0, 80.0, 24.0);
-        let json = serde_json::to_string(&node).unwrap();
-        let back: DagNodeSpec = serde_json::from_str(&json).unwrap();
+        let json = dsl::os_pack::json::to_json_string(&node);
+        let back: DagNodeSpec = dsl::os_pack::json::from_json_str(&json).unwrap();
         assert_eq!(back.name, "PassThrough");
         assert_eq!(back.abbreviation, "Pass");
         assert_eq!(back.icon, "emoji:➡️");
@@ -8475,7 +8412,10 @@ mod tests {
 
     #[test]
     fn preview_tree_toggle_expands_and_resizes() {
-        let json = crate::os_dsl::to_dsl_value(&serde_json::json!({ "alpha": { "beta": 1 }, "gamma": "x" })).unwrap();
+        let json = dsl::os_pack::json::to_dsl_value(&dsl::os_pack::json::object([
+            ("alpha".to_string(), dsl::os_pack::json::object([("beta".to_string(), Value::from(1))])),
+            ("gamma".to_string(), Value::from("x")),
+        ]));
         let mut host = DagHost::from_fixture(DagFixture {
             schema: "dag.fixture".into(),
             camera: DagCamera { x: 0.0, y: 0.0, zoom: 1.0 },
@@ -8530,8 +8470,8 @@ mod tests {
         let inputs = vec![IoPortSpec::simple("a", "a")];
         let outputs = vec![IoPortSpec::simple("out", "out")];
         let node = DagNodeSpec::cluster("cluster".into(), "Cluster".into(), "Cluster".into(), "emoji:🧩️".into(), inputs, outputs, 10.0, 20.0, 120.0, 80.0);
-        let json = serde_json::to_string(&node).unwrap();
-        let back: DagNodeSpec = serde_json::from_str(&json).unwrap();
+        let json = dsl::os_pack::json::to_json_string(&node);
+        let back: DagNodeSpec = dsl::os_pack::json::from_json_str(&json).unwrap();
         assert!(matches!(back.kind, DagNodeKind::Cluster { .. }));
     }
 
@@ -8565,17 +8505,13 @@ fn dag_document_schema() -> String {
 
 /// 🧾️ The persistent DAG projection — nodes and edges only. Camera/viewport and selection are
 /// ephemeral view state kept in the plugin runtime, never recorded in the document's undo history.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
 #[value(rename_all = "camelCase")]
 pub struct DagSnapshot {
-    #[serde(default = "dag_document_schema")]
     #[value(default = "dag_document_schema")]
     pub schema: String,
-    #[serde(default)]
     #[value(default)]
     pub nodes: Vec<DagNodeSpec>,
-    #[serde(default)]
     #[value(default)]
     pub edges: Vec<DagFixtureEdge>,
 }
@@ -8630,8 +8566,7 @@ impl Identified<String> for DagFixtureEdge {
 /// kind-specific edits (slider value/min/max, note text, …). Consumed by `✏️s/🔌️plugins/🕸️dag`'s own
 /// `DagNodeExtraPatch` deviation (fields this type has no slot for: `id`/`icon`/`abbreviation`/
 /// `operator_kind`/`properties` — that plugin's own workaround, not extended here on their behalf).
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue)]
 #[value(rename_all = "camelCase")]
 pub struct DagNodePatch {
     #[value(default)]
@@ -8684,8 +8619,7 @@ impl Patchable<DagNodePatch> for DagNodeSpec {
 }
 
 /// 🩹️ Sparse patch of a {@link DagFixtureEdge}'s endpoints.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, dsl::DslRecord)]
 pub struct DagEdgePatch {
     pub source: Option<String>,
     pub target: Option<String>,
@@ -8721,14 +8655,14 @@ fn dag_index_to_wire(index: usize) -> u64 {
 
 /// 🏷️ `id` → `new_id` — `rename-node`'s delta. `id` is the node's identity field (its display `name`
 /// has its own `ChangedNodeName`), so this also drives every `"<id>@<port>"` edge endpoint rewrite.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
 pub struct RenamedNode {
     pub id: String,
     pub new_id: String,
 }
 
 /// ↔️ `move-node`'s delta — FINAL-state absolute `(x, y)`.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
 pub struct MovedNode {
     pub id: String,
     pub x: f64,
@@ -8736,7 +8670,7 @@ pub struct MovedNode {
 }
 
 /// 📐️ `resize-node`'s delta — FINAL-state absolute `(width, height)`.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
 pub struct ResizedNode {
     pub id: String,
     pub width: f64,
@@ -8744,21 +8678,21 @@ pub struct ResizedNode {
 }
 
 /// 🔤️ `change-node-name`'s delta — the node's display label (distinct from its `id`).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
 pub struct ChangedNodeName {
     pub id: String,
     pub new_name: String,
 }
 
 /// 🖼️ `change-node-icon`'s delta.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
 pub struct ChangedNodeIcon {
     pub id: String,
     pub new_icon: String,
 }
 
 /// 🔡️ `change-node-abbreviation`'s delta.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
 pub struct ChangedNodeAbbreviation {
     pub id: String,
     pub new_abbreviation: String,
@@ -8766,7 +8700,7 @@ pub struct ChangedNodeAbbreviation {
 
 /// 🧮️ `change-node-operator-kind`'s delta — a single (non-nested) `Option<String>`, since the delta
 /// struct's own presence on {@link DagDiff} already distinguishes "untouched" from "touched".
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
 pub struct ChangedNodeOperatorKind {
     pub id: String,
     pub new_operator_kind: Option<String>,
@@ -8775,7 +8709,7 @@ pub struct ChangedNodeOperatorKind {
 /// 🔁️ `replace-node-kind`'s delta — whole-value swap of the tagged `kind` (an 11-variant enum whose
 /// interior the editor edits via a clone-mutate-refit cycle, never a sparse per-field patch — see this
 /// ticket's report for the measurement that ruled out finer per-variant verbs).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
 pub struct ReplacedNodeKind {
     pub id: String,
     pub new_kind: DagNodeKind,
@@ -8783,7 +8717,7 @@ pub struct ReplacedNodeKind {
 
 /// 🗃️ `replace-node-properties`'s delta — whole-value swap of the node's `PropertyBag` (no piecewise
 /// per-property editing gesture exists on this board).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
 pub struct ReplacedNodeProperties {
     pub id: String,
     pub new_properties: PropertyBag,
@@ -8791,7 +8725,7 @@ pub struct ReplacedNodeProperties {
 
 /// ↩️ `rename-node`'s edge-endpoint cascade — one entry per edge whose `source`/`target` string
 /// referenced the renamed id. `None` means that side of the edge wasn't touched.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
 pub struct RewrittenEdgeEndpoint {
     pub id: String,
     pub new_source: Option<String>,
@@ -8806,8 +8740,7 @@ pub use mutations::*;
 
 /// 🔺️ Sparse field delta — every field records WHAT CHANGED (an id, a new value, a captured payload),
 /// never a whole post-mutation record or a whole-collection/whole-document snapshot.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue)]
 #[value(rename_all = "camelCase")]
 pub struct DagDelta {
     pub created_node: Option<DagNodeSpec>,
@@ -8983,8 +8916,7 @@ impl DagDelta {
 }
 
 /// 🎞️ Ordered structural deltas; composition preserves every preceding effect and rejection.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
-#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue)]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 pub struct DagDiff {
     pub steps: Vec<DagDelta>,
@@ -9027,7 +8959,7 @@ pub type DagStore = ArtifactStore<DagSnapshot, DagMutation>;
 // which needs a `Box` wrapper the REAL `DagNodeKind`/`DagNodeSpec` fields deliberately don't carry
 // (dozens of call sites here and in `dag-plugin`/`framework/surface/node-graph`/`flow/core` destructure
 // `node.kind`/`DagNodeKind::Preview { content, .. }` directly — boxing those fields would ripple far
-// outside this crate's ownership). So, exactly like `imperative/core/rs`'s `ImperativeMutationDsl`
+// outside this crate's ownership). So, exactly like `imperative/core/rs`'s `ProcedureMutationDsl`
 // mirror, `DagNodeKindDsl`/`DagNodeSpecDsl`/`DagSnapshotDsl` are
 // LOCAL structural twins that box only where the derive requires it; the real domain types keep their
 // original unboxed shape and never leave this crate — conversion happens right at this boundary.
@@ -9717,7 +9649,13 @@ mod dag_direct_tests {
     use super::*;
     use protocol::{MutationLeaf, OpBinary, OpText, SemanticMutation};
 
-    fn fixture() -> serde_json::Value { serde_json::from_str(include_str!("🧪️fixture/🔣️s.json")).expect("neutral Dag mutation fixture") }
+    fn fixture() -> Value { dsl::os_pack::json::parse(include_str!("🧪️fixture/🔣️s.json")).expect("neutral Dag mutation fixture") }
+
+    /// 🌉️ `T: FromValue` decode of a pack JSON [`Value`] — the in-house `serde_json::from_value` analog.
+    fn from_pack_value<T: dsl::FromValue>(value: Value) -> Result<T, dsl::ValueError> { <T as dsl::FromValue>::from_value(dsl::os_pack::json::to_dsl_value(&value)) }
+
+    /// 🌉️ `T: ToValue` encode into a pack JSON [`Value`] — the in-house `serde_json::to_value` analog.
+    fn to_pack_value<T: dsl::ToValue>(value: &T) -> Value { dsl::os_pack::json::from_dsl_value(&<T as dsl::ToValue>::to_value(value)) }
 
     fn node(id: &str) -> DagNodeSpec { DagNodeSpec { id: id.into(), name: id.into(), ..Default::default() } }
 
@@ -9735,8 +9673,8 @@ mod dag_direct_tests {
     fn apply(base: &DagSnapshot, mutation: &DagMutation) -> DagSnapshot { mutation.diff(base).diff().apply(base).expect("valid direct Dag mutation") }
 
     fn assert_codecs(mutation: &DagMutation) {
-        let json = serde_json::to_string(mutation).expect("serialize direct mutation");
-        assert_eq!(serde_json::from_str::<DagMutation>(&json).expect("deserialize direct mutation"), *mutation);
+        let json = dsl::os_pack::json::to_json_string(mutation);
+        assert_eq!(dsl::os_pack::json::from_json_str::<DagMutation>(&json).expect("deserialize direct mutation"), *mutation);
         let text = mutation.print_op();
         assert!(text.starts_with(mutation.descriptor().text_opcode.expect("text opcode")));
         assert_eq!(DagMutation::parse_op(&text).expect("direct text decode"), *mutation);
@@ -9747,27 +9685,32 @@ mod dag_direct_tests {
     }
 
     pub(crate) fn assert_leaf_contract<T>(index: usize, wrap: fn(T) -> DagMutation, descriptor: &str)
-    where T: MutationLeaf + serde::Serialize + serde::de::DeserializeOwned {
+    where T: MutationLeaf + dsl::ToValue + dsl::FromValue {
         let fixture = fixture();
         let row = &fixture["valid"][index];
-        let payload = serde_json::from_value::<T>(row["payload"].clone()).expect("neutral direct payload");
+        let payload = from_pack_value::<T>(row["payload"].clone()).expect("neutral direct payload");
         let mutation = wrap(payload);
+        // 🌉️ `MutationLeafDescriptor` (unlike this crate's own mutation leaves) still derives
+        // `serde::Serialize` — it lives in the replication crate, out of this migration's scope — so
+        // this one comparison legitimately stays on `serde_json`.
         assert_eq!(serde_json::to_value(T::DESCRIPTOR).expect("descriptor JSON"), serde_json::from_str::<serde_json::Value>(descriptor).expect("owned descriptor"));
         assert_eq!(mutation.descriptor(), &T::DESCRIPTOR);
         assert_eq!(mutation.descriptor().binary_tag, Some(u32::try_from(index).expect("small roster index")));
-        assert_eq!(serde_json::to_value(&mutation).expect("mutation JSON")["operation"], row["operation"]);
+        assert_eq!(to_pack_value(&mutation)["operation"], row["operation"]);
         let mut unknown_payload = row["payload"].clone();
-        unknown_payload["unknown"] = serde_json::json!(true);
-        assert!(serde_json::from_value::<T>(unknown_payload).is_err());
-        let mut unknown_operation = serde_json::to_value(&mutation).expect("mutation JSON");
-        unknown_operation["unknown"] = serde_json::json!(true);
-        assert!(serde_json::from_value::<DagMutation>(unknown_operation).is_err());
-        for key in row["payload"].as_object().expect("payload object").keys().filter(|key| key.as_str() != "newOperatorKind") {
-            let mut missing = row["payload"].clone();
-            missing.as_object_mut().expect("payload object").remove(key);
-            assert!(serde_json::from_value::<T>(missing.clone()).is_err(), "missing {key}");
-            missing["operation"] = row["operation"].clone();
-            assert!(serde_json::from_value::<DagMutation>(missing).is_err(), "missing aggregate {key}");
+        if let Some(object) = unknown_payload.as_object_mut() { object.insert("unknown".to_string(), Value::from(true)); }
+        assert!(from_pack_value::<T>(unknown_payload).is_err());
+        let mut unknown_operation = to_pack_value(&mutation);
+        if let Some(object) = unknown_operation.as_object_mut() { object.insert("unknown".to_string(), Value::from(true)); }
+        assert!(from_pack_value::<DagMutation>(unknown_operation).is_err());
+        let payload_object = row["payload"].as_object().expect("payload object");
+        let payload_keys: Vec<String> = payload_object.iter().map(|(key, _)| key.to_string()).filter(|key| key != "newOperatorKind").collect();
+        for key in payload_keys {
+            let missing: Value = Value::Object(payload_object.iter().filter(|(k, _)| *k != key).map(|(k, v)| (k.to_string(), v.clone())).collect());
+            assert!(from_pack_value::<T>(missing.clone()).is_err(), "missing {key}");
+            let mut missing_aggregate = missing;
+            if let Some(object) = missing_aggregate.as_object_mut() { object.insert("operation".to_string(), row["operation"].clone()); }
+            assert!(from_pack_value::<DagMutation>(missing_aggregate).is_err(), "missing aggregate {key}");
         }
         assert_codecs(&mutation);
         let before = base();
@@ -9785,21 +9728,21 @@ mod dag_direct_tests {
         assert_eq!(<DagMutation as Mutation<DagSnapshot>>::DESCRIPTORS.len(), 14);
         for (index, row) in fixture["valid"].as_array().expect("valid vectors").iter().enumerate() {
             let mut json = row["payload"].clone();
-            json["operation"] = row["operation"].clone();
-            let mutation = serde_json::from_value::<DagMutation>(json).expect("neutral aggregate");
+            if let Some(object) = json.as_object_mut() { object.insert("operation".to_string(), row["operation"].clone()); }
+            let mutation = from_pack_value::<DagMutation>(json).expect("neutral aggregate");
             assert_eq!(mutation.descriptor().binary_tag, Some(u32::try_from(index).expect("small index")));
             assert_eq!(mutation.descriptor().diff_participation, protocol::MutationDiffParticipation::ApplyOnly);
             assert_codecs(&mutation);
         }
         for row in fixture["invalid"].as_array().expect("invalid vectors") {
             let mut json = row["payload"].clone();
-            json["operation"] = row["operation"].clone();
-            assert!(serde_json::from_value::<DagMutation>(json).is_err(), "{}", row["name"]);
+            if let Some(object) = json.as_object_mut() { object.insert("operation".to_string(), row["operation"].clone()); }
+            assert!(from_pack_value::<DagMutation>(json).is_err(), "{}", row["name"]);
         }
         for row in fixture["additionalValid"].as_array().expect("additional input vectors") {
             let mut json = row["payload"].clone();
-            json["operation"] = row["operation"].clone();
-            assert_codecs(&serde_json::from_value::<DagMutation>(json).expect("additional serde input"));
+            if let Some(object) = json.as_object_mut() { object.insert("operation".to_string(), row["operation"].clone()); }
+            assert_codecs(&from_pack_value::<DagMutation>(json).expect("additional pack-value input"));
         }
     }
 
@@ -9863,7 +9806,7 @@ mod dag_direct_tests {
             let mut after = before.clone();
             let mut diffs = Vec::new();
             for value in row["mutations"].as_array().expect("mutation sequence") {
-                let mutation = serde_json::from_value::<DagMutation>(value.clone()).expect("sequence mutation");
+                let mutation = from_pack_value::<DagMutation>(value.clone()).expect("sequence mutation");
                 let (diff, _) = mutation.diff(&after).into_parts();
                 after = diff.apply(&after).expect("sequential diff");
                 diffs.push(diff);
@@ -9874,10 +9817,10 @@ mod dag_direct_tests {
             for mut diff in diffs.into_iter().rev() { diff.absorb(right); right = diff; }
             assert_eq!(left, right, "{}", row["name"]);
             assert_eq!(left.apply(&before).expect("absorbed diff"), after, "{}", row["name"]);
-            assert_eq!(serde_json::to_value(after.nodes.iter().map(|node| &node.id).collect::<Vec<_>>()).expect("node order"), row["nodeOrder"]);
-            assert_eq!(serde_json::to_value(after.edges.iter().map(|edge| &edge.id).collect::<Vec<_>>()).expect("edge order"), row["edgeOrder"]);
-            for (id, x) in row["x"].as_object().expect("expected positions") { assert_eq!(after.nodes.iter().find(|node| &node.id == id).expect("position target").x, x.as_f64().expect("x")); }
-            assert_eq!(serde_json::from_str::<DagDiff>(&serde_json::to_string(&left).expect("diff JSON")).expect("diff decode"), left);
+            assert_eq!(to_pack_value(&after.nodes.iter().map(|node| node.id.clone()).collect::<Vec<_>>()), row["nodeOrder"]);
+            assert_eq!(to_pack_value(&after.edges.iter().map(|edge| edge.id.clone()).collect::<Vec<_>>()), row["edgeOrder"]);
+            for (id, x) in row["x"].as_object().expect("expected positions") { assert_eq!(after.nodes.iter().find(|node| node.id == id).expect("position target").x, x.as_f64().expect("x")); }
+            assert_eq!(dsl::os_pack::json::from_json_str::<DagDiff>(&dsl::os_pack::json::to_json_string(&left)).expect("diff decode"), left);
         }
         let before = base();
         let mut rejected = DagDiff::from(DagDelta { created_node: Some(node("x")), created_node_at: Some(u64::MAX), ..Default::default() });
@@ -9894,11 +9837,11 @@ mod dag_direct_tests {
         if usize::BITS < u64::BITS { assert_eq!(dag_index_from_wire(u64::MAX).expect_err("narrow native width").code, "mutation.apply.invalid-index"); }
         for mutation in [DagMutation::CreateNode(CreateNode { node: node("x"), index: u64::MAX }), DagMutation::ConnectNodes(ConnectNodes { id: "x".into(), source: "a@out".into(), target: "b@in".into(), route_style: EdgeRouteStyle::Bezier, properties: PropertyBag::new(), index: u64::MAX })] {
             assert_codecs(&mutation);
-            assert!(serde_json::to_string(&mutation).expect("JSON").contains("18446744073709551615"));
+            assert!(dsl::os_pack::json::to_json_string(&mutation).contains("18446744073709551615"));
             assert!(mutation.print_op().contains("18446744073709551615"));
             assert_eq!(mutation.diff(&before).diff().apply(&before).expect_err("out of range").code, "mutation.apply.invalid-index");
-            let json = serde_json::to_string(&mutation).expect("JSON");
-            for invalid in ["18446744073709551616", "-1", "0.5", "1e21", "null", "\"1\""] { assert!(serde_json::from_str::<DagMutation>(&json.replace("18446744073709551615", invalid)).is_err(), "{invalid}"); }
+            let json = dsl::os_pack::json::to_json_string(&mutation);
+            for invalid in ["18446744073709551616", "-1", "0.5", "1e21", "null", "\"1\""] { assert!(dsl::os_pack::json::from_json_str::<DagMutation>(&json.replace("18446744073709551615", invalid)).is_err(), "{invalid}"); }
         }
     }
 
@@ -9907,9 +9850,9 @@ mod dag_direct_tests {
         let fixture = fixture();
         for row in fixture["nodeKinds"].as_array().expect("node kind vectors") {
             let value = row["value"].clone();
-            assert_eq!(serde_json::from_value::<DagNodeKind>(value.clone()).is_ok(), row["valid"].as_bool().expect("expected validity"), "{}", row["name"]);
+            assert_eq!(from_pack_value::<DagNodeKind>(value.clone()).is_ok(), row["valid"].as_bool().expect("expected validity"), "{}", row["name"]);
             if row["valid"] == true {
-                let kind = serde_json::from_value::<DagNodeKind>(value).expect("kind");
+                let kind = from_pack_value::<DagNodeKind>(value).expect("kind");
                 assert_codecs(&DagMutation::ReplaceNodeKind(ReplaceNodeKind { id: "a".into(), new_kind: kind }));
             }
         }
@@ -9922,10 +9865,10 @@ mod dag_direct_tests {
         let mut app = node("app");
         app.icon = "node-icon".into();
         app.kind = DagNodeKind::AppInstance { instance_id: "instance".into(), plugin_id: "plugin".into(), app_id: "app".into(), icon: "app-icon".into(), inputs: vec![], outputs: vec![] };
-        let encoded = serde_json::to_string(&app).expect("app JSON");
+        let encoded = dsl::os_pack::json::to_json_string(&app);
         assert_eq!(encoded.matches("\"icon\":").count(), 1);
         assert_eq!(encoded.matches("\"appIcon\":").count(), 1);
-        assert_eq!(serde_json::from_str::<DagNodeSpec>(&encoded).expect("app round trip"), app);
+        assert_eq!(dsl::os_pack::json::from_json_str::<DagNodeSpec>(&encoded).expect("app round trip"), app);
         assert_codecs(&DagMutation::CreateNode(CreateNode { node: app, index: 0 }));
     }
 }

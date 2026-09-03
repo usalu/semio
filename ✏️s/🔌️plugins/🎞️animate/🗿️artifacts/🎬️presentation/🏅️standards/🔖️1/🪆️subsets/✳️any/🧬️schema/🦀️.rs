@@ -117,7 +117,7 @@ pub type Construction = semio_framework_plugin::app::SnapshotBuilder<crate::arti
 #[derive(Debug)]
 pub enum PresentationError {
     /// 🧾️ The stored envelope JSON was malformed.
-    DeserializeEnvelope(serde_json::Error),
+    DeserializeEnvelope(dsl::ValueError),
     /// 🧬️ Whole-buffer envelope ingress was rejected in favor of the persistent fixed-page decoder.
     EnvelopeIngress(store::ArtifactEnvelopeWholeBufferIngressError),
     /// 📐️ VCS replay failed while materializing the projection.
@@ -144,8 +144,8 @@ impl std::error::Error for PresentationError {
     }
 }
 
-impl From<serde_json::Error> for PresentationError {
-    fn from(error: serde_json::Error) -> Self {
+impl From<dsl::ValueError> for PresentationError {
+    fn from(error: dsl::ValueError) -> Self {
         Self::DeserializeEnvelope(error)
     }
 }
@@ -267,7 +267,7 @@ pub fn build_tile_morph_prompt(source: &crate::artifacts::presentation::FigureTi
         String::new(),
         "## Source media".into(),
         format!("- kind: {kind}"),
-        format!("- src: {}", serde_json::to_string(&source.src).unwrap_or_else(|_| "\"\"".into())),
+        format!("- src: {}", dsl::os_pack::json::to_json_string(&source.src)),
     ];
     if let Some(aspect) = source.source_aspect {
         lines.push(format!("- sourceAspect: {aspect}"));

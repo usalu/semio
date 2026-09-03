@@ -448,20 +448,20 @@ fn retire_compaction_pages(owner: CompactionRetainedPages) -> Result<(), Compact
         return Ok(());
     }
     let mut retired = COMPACTION_PAGE_RETIREMENT.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
-    if let Some(index) = compaction_vacant_retirement_slot(0, &retired) {
+    if let Some(index) = compaction_vacant_retirement_slot(0, &retired[..]) {
         retired[index] = Some(owner);
         Ok(())
     } else {
         drop(retired);
         COMPACTION_PAGE_RETIREMENT_PRESSURE_FAULT.store(true, std::sync::atomic::Ordering::Release);
         let mut overflow = COMPACTION_PAGE_RETIREMENT_OVERFLOW.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
-        if let Some(index) = compaction_vacant_retirement_slot(1, &overflow) {
+        if let Some(index) = compaction_vacant_retirement_slot(1, &overflow[..]) {
             overflow[index] = Some(owner);
             return Ok(());
         }
         drop(overflow);
         let mut quarantine = COMPACTION_PAGE_RETIREMENT_QUARANTINE.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
-        let Some(index) = compaction_vacant_retirement_slot(2, &quarantine) else { return Err(owner) };
+        let Some(index) = compaction_vacant_retirement_slot(2, &quarantine[..]) else { return Err(owner) };
         quarantine[index] = Some(owner);
         Ok(())
     }
@@ -477,7 +477,7 @@ pub fn compaction_page_maintenance_step() -> Result<bool, DbError> {
             let mut quarantine = COMPACTION_PAGE_RETIREMENT_QUARANTINE.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
             let Some(index) = quarantine.iter().position(Option::is_some) else { return Ok(false) };
             let mut retired = COMPACTION_PAGE_RETIREMENT.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
-            let Some(target) = compaction_vacant_retirement_slot(0, &retired) else {
+            let Some(target) = compaction_vacant_retirement_slot(0, &retired[..]) else {
                 drop(retired);
                 let owner = quarantine[index].as_mut().ok_or_else(|| DbError::Internal("compaction quarantine retirement changed page owner".to_string()))?;
                 if !owner.close_step()? {
@@ -489,7 +489,7 @@ pub fn compaction_page_maintenance_step() -> Result<bool, DbError> {
             return Ok(true);
         };
         let mut retired = COMPACTION_PAGE_RETIREMENT.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
-        let Some(target) = compaction_vacant_retirement_slot(0, &retired) else {
+        let Some(target) = compaction_vacant_retirement_slot(0, &retired[..]) else {
             drop(retired);
             let owner = overflow[index].as_mut().ok_or_else(|| DbError::Internal("compaction overflow retirement changed page owner".to_string()))?;
             if !owner.close_step()? {
@@ -2220,13 +2220,15 @@ impl Future for DatabaseCompactionFuture {
             state.schedule();
             return std::task::Poll::Ready(Err(DbError::StaleGeneration { expected: crate::db_ids::GenerationId(state.generation), actual: crate::db_ids::GenerationId(state.observed_generation()) }));
         }
-        if let Some(execution) = state.core.lock().unwrap_or_else(std::sync::PoisonError::into_inner).output.take() {
+        let execution = { state.core.lock().unwrap_or_else(std::sync::PoisonError::into_inner).output.take() };
+        if let Some(execution) = execution {
             self.completed = true;
             self.state.take();
             return std::task::Poll::Ready(Ok(DatabaseCompactionResult { state: Some(state), execution: Some(execution) }));
         }
         *state.waker.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some(context.waker().clone());
-        if let Some(execution) = state.core.lock().unwrap_or_else(std::sync::PoisonError::into_inner).output.take() {
+        let execution = { state.core.lock().unwrap_or_else(std::sync::PoisonError::into_inner).output.take() };
+        if let Some(execution) = execution {
             self.completed = true;
             self.state.take();
             return std::task::Poll::Ready(Ok(DatabaseCompactionResult { state: Some(state), execution: Some(execution) }));
@@ -2433,7 +2435,8 @@ mod tests {
                 }
             }),
         )
-        .unwrap();
+        .ok()
+        .expect("compaction blocker admission");
         while !entered.load(std::sync::atomic::Ordering::Acquire) {
             std::thread::yield_now();
         }
@@ -2527,8 +2530,8 @@ mod tests {
         assert_eq!(holder.as_str(), "exact-holder");
         assert!(holder.close_step());
         let cancelled = std::sync::atomic::AtomicBool::new(false);
-        let mut hashes = DatabaseCompactionHashOwners { slots: [Some([7; 32]); DATABASE_COMPACTION_MAX_HASHES], len: DATABASE_COMPACTION_MAX_HASHES as u16 };
-        assert_eq!(hashes.insert([9; 32], &cancelled).await, Err(DbError::LimitExceeded("database compaction payload hash owners")));
+        let mut hashes = DatabaseCompactionHashOwners { slots: [Some(pack::ContentHash([7; 32])); DATABASE_COMPACTION_MAX_HASHES], len: DATABASE_COMPACTION_MAX_HASHES as u16 };
+        assert_eq!(hashes.insert(pack::ContentHash([9; 32]), &cancelled).await, Err(DbError::LimitExceeded("database compaction payload hash owners")));
         let descriptor = db_snapshot::SnapshotDescriptor {
             document: ArtifactId(String::from("p1y-observed-backing")),
             generation: 1,
@@ -2579,9 +2582,9 @@ mod tests {
             holder: Some(db_storage::DbIoText::try_from_str("close-holder").unwrap()),
             result: Some(Ok(CompactionReport { index_reports: reports, ..CompactionReport::default() })),
         };
-        let before = owners.result.as_ref().and_then(Result::as_ref().ok).map(|report| report.index_reports.len()).unwrap();
+        let before = owners.result.as_ref().and_then(|result| result.as_ref().ok()).map(|report| report.index_reports.len()).unwrap();
         assert!(owners.close_one());
-        let after = owners.result.as_ref().and_then(Result::as_ref().ok).map(|report| report.index_reports.len()).unwrap();
+        let after = owners.result.as_ref().and_then(|result| result.as_ref().ok()).map(|report| report.index_reports.len()).unwrap();
         assert_eq!(before - after, 1);
         while owners.close_one() {}
         assert!(owners.terminal_is_empty());

@@ -131,7 +131,7 @@ av-lst = LT "a" ":" "avLst/" GT
 # whole-node round trip backing `PptxShape::Other` -- `shape_from_xml_node`'s own `_ =>` arm,
 # `⚙️engine/🦀️.rs`:386) -- restated (not `use`d) from xml's own generic recursive
 # element/content grammar, `x-`-prefixed exactly like docx's own snapshot grammar already
-# established for THIS SAME fallback shape (`📰xml/🏅️standards/🔖️1.0/🪆️subsets/✳️base/🧬️schema/
+# established for THIS SAME fallback shape (`📰️xml/🏅️standards/🔖️1.0/🪆️subsets/✳️base/🧬️schema/
 # 📸️snapshot/📝️text/📖️.grammar.semio`'s own `x-elem` productions). ─────────────────────
 x-elem = x-empty-tag | x-open-tag x-content x-close-tag
 x-empty-tag = LT x-name x-attr* "/" GT

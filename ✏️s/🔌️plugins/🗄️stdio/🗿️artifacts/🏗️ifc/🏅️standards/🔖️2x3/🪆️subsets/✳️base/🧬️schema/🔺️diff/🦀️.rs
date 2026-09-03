@@ -5,7 +5,7 @@
 //! `4`'s `IfcDiff` is a `snapshot: Option<IfcSnapshot>` full-replace stub with no
 //! `impl DiffAlgebra`; this standard's own diff is genuinely field-sparse instead.
 
-use crate::artifacts::ifc::standards::v2x3::subsets::any::schema::snapshot::{Ifc2x3EdmPreamble, Ifc2x3Snapshot};
+use crate::artifacts::ifc::standards::v2x3::subsets::base::schema::snapshot::{Ifc2x3EdmPreamble, Ifc2x3Snapshot};
 use crate::artifacts::step::engine::part21::{Part21Decimal, Part21Header, Part21Instance, Part21Value};
 use protocol::{MutationApplyError, MutationApplyResult, MutationDiff};
 // 🧭️ `DiffAlgebra` isn't yet on the `protocol` facade's curated re-export list (S1 added the

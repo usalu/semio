@@ -1,0 +1,94 @@
+{
+  "$id": "https://semio.tech/schema/s/imperative/imperative/artifact.json",
+  "title": "ProcedureArtifact",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "path",
+    "seed",
+    "selectedStepIds",
+    "locale",
+    "contributionsJson",
+    "runOutputJson"
+  ],
+  "properties": {
+    "schema": {
+      "type": "string",
+      "x-semio-state": "artifact"
+    },
+    "path": {
+      "$ref": "#/$defs/ProcedurePath",
+      "x-semio-state": "artifact"
+    },
+    "seed": {
+      "type": "object",
+      "additionalProperties": true,
+      "x-semio-state": "artifact"
+    },
+    "selectedStepIds": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "x-semio-state": "presence"
+    },
+    "locale": {
+      "type": "string",
+      "x-semio-state": "config"
+    },
+    "contributionsJson": {
+      "type": "string",
+      "x-semio-state": "config"
+    },
+    "runOutputJson": {
+      "type": "string",
+      "x-semio-state": "transient"
+    }
+  },
+  "$defs": {
+    "ProcedurePath": {
+      "title": "ProcedurePath",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "steps"
+      ],
+      "properties": {
+        "steps": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ProcedureStep"
+          }
+        }
+      }
+    },
+    "ProcedureStep": {
+      "title": "ProcedureStep",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "kind"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "kind": {
+          "type": "string"
+        },
+        "params": {
+          "type": "object",
+          "additionalProperties": true
+        },
+        "bodies": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/ProcedurePath"
+          }
+        }
+      }
+    }
+  }
+}

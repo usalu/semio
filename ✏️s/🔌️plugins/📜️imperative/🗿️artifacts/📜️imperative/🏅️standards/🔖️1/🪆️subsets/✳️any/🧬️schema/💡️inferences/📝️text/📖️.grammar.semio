@@ -1,9 +1,0 @@
-dialect grammar
-grammar imperative.imperative.inference
-extension imperative.inference
-start document
-
-document = header body
-header = "schema" SP "imperative.imperative.inference" NL
-body = payload NL?
-payload = OCTET+

@@ -15,7 +15,8 @@ impl Serializer<WiresSnapshot> for WiresIntoJson {
     const INTO: Dialect = JSON_DIALECT;
     const FIDELITY: IoFidelity = IoFidelity::Exact;
     fn serialize(from: &WiresSnapshot) -> IoResult<IoPayload> {
-        let text = serde_json::to_string_pretty(from).map_err(|error| IoError { message: format!("WiresIntoJson: {error}"), diagnostics: Vec::new() })?;
+        let value = dsl::os_pack::json::from_dsl_value(&dsl::ToValue::to_value(from));
+        let text = dsl::os_pack::json::to_string_pretty(&value);
         Ok(IoOutcome::clean(IoPayload::Text(text)))
     }
 }

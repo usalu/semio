@@ -4,8 +4,8 @@
 //! (framework SDK) is the sole runtime adapter, so this file can never structurally emit an artifact
 //! or draft mutation. MUST NOT reference the sibling editor module.
 
-use crate::artifacts::step::standards::v_ap214::subsets::any::schema::mutations::StepMutation;
-use crate::artifacts::step::standards::v_ap214::subsets::any::schema::snapshot::StepSnapshot;
+use crate::artifacts::step::standards::v_ap214::subsets::base::schema::mutations::StepMutation;
+use crate::artifacts::step::standards::v_ap214::subsets::base::schema::snapshot::StepSnapshot;
 use crate::viewer::step_any::modes::view;
 use crate::viewer::step_any::modes::view::windows::main;
 use semio_framework_plugin::app::InteractionView;

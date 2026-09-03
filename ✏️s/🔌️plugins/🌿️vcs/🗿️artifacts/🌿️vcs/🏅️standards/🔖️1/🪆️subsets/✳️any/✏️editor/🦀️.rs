@@ -24,7 +24,7 @@ use semio_framework_plugin::{
     ui_text, ActionDescriptor, AppOperationContext, ArtifactEditor, ArtifactOwnedToolJobRequest, ArtifactToolFactoryRegistry, ArtifactToolPublicationContract, ArtifactToolPublicationLane, ArtifactView, ConfigView, Dialect, DraftView, Editor, EditorApp, Emit, Fault, GranularityDefinition, HierarchyProvider,
     HoverSpec, InteractionDefinition, InteractionRef, Label, LocalizedLabel, MergeMode, NoDraft, NoDraftMutation, SelectionMethod, SelectionMode, SelectionSpec, UiNode,
 };
-use serde_json::Value;
+use dsl::os_pack::json::Value;
 use std::collections::BTreeSet;
 use store::EngineHandles;
 
@@ -255,7 +255,7 @@ impl VcsEditCommandWork {
                 if text.len() > VCS_BOUNDED_RAW_BYTES || snapshot.tags.len() > VCS_EDIT_MAXIMUM_TAGS {
                     return Err(Fault::from("vcs-edit-input-capacity"));
                 }
-                match serde_json::from_str::<VcsSnapshot>(text) {
+                match dsl::json::from_json_str::<VcsSnapshot>(text) {
                     Ok(next) if next.tags.len() <= VCS_EDIT_MAXIMUM_TAGS => {
                         self.next = Some(next);
                         self.phase = VcsEditPhase::Reserve;
@@ -1251,7 +1251,7 @@ mod tests {
 
     #[test]
     fn bounded_command_factory_matches_the_language_neutral_maximum_oracle() {
-        let fixture: Value = serde_json::from_str(RETAINED_LIMITS).expect("VCS retained limits decode through serde_json");
+        let fixture: serde_json::Value = serde_json::from_str(RETAINED_LIMITS).expect("VCS retained limits decode through serde_json");
         let maximum = fixture.get("maximumTextBytes").and_then(Value::as_u64).expect("maximumTextBytes") as usize;
         let additional = fixture.get("rejectedAdditionalBytes").and_then(Value::as_u64).expect("rejectedAdditionalBytes") as usize;
         let expected_items = fixture.get("expectedWorkItems").and_then(Value::as_u64).expect("expectedWorkItems") as usize;
@@ -1273,7 +1273,7 @@ mod tests {
     #[test]
     fn retained_factories_publish_only_their_exact_declared_lanes() {
         use semio_framework_plugin::ArtifactOwnedToolJobFactory;
-        let fixture: Value = serde_json::from_str(RETAINED_ROUTES).expect("VCS retained route fixture decodes through serde_json");
+        let fixture: serde_json::Value = serde_json::from_str(RETAINED_ROUTES).expect("VCS retained route fixture decodes through serde_json");
         let routes = fixture.get("routes").and_then(Value::as_array).expect("routes");
         assert_eq!(routes.len(), 10);
         assert_eq!(<VcsBoundedCommandJobFactory as ArtifactOwnedToolJobFactory>::PUBLICATION_CONTRACTS, VCS_BOUNDED_PUBLICATION_CONTRACTS);
@@ -1322,7 +1322,7 @@ mod tests {
 
     #[test]
     fn resumable_text_edit_matches_the_serde_json_batch_oracle() {
-        let fixture: Value = serde_json::from_str(RETAINED_EDIT_LIMITS).expect("VCS retained edit limits decode through serde_json");
+        let fixture: serde_json::Value = serde_json::from_str(RETAINED_EDIT_LIMITS).expect("VCS retained edit limits decode through serde_json");
         assert_eq!(fixture.get("toolIds").and_then(Value::as_array).expect("toolIds").iter().map(|value| value.as_str().expect("tool id")).collect::<Vec<_>>(), VCS_RESUMABLE_TOOL_IDS);
         assert_eq!(fixture.get("maximumTextBytes").and_then(Value::as_u64), Some(VCS_BOUNDED_RAW_BYTES as u64));
         assert_eq!(fixture.get("maximumTags").and_then(Value::as_u64), Some(VCS_EDIT_MAXIMUM_TAGS as u64));
@@ -1355,7 +1355,7 @@ mod tests {
     #[test]
     fn resumable_text_edit_enforces_maximum_plus_one_and_retires_incrementally() {
         use semio_framework_plugin::retained_command::ArtifactCommandWork;
-        let fixture: Value = serde_json::from_str(RETAINED_EDIT_LIMITS).expect("VCS retained edit limits decode through serde_json");
+        let fixture: serde_json::Value = serde_json::from_str(RETAINED_EDIT_LIMITS).expect("VCS retained edit limits decode through serde_json");
         let maximum = fixture.get("maximumTextBytes").and_then(Value::as_u64).expect("maximumTextBytes") as usize;
         let additional = fixture.get("rejectedAdditionalBytes").and_then(Value::as_u64).expect("rejectedAdditionalBytes") as usize;
         assert!(VcsPlayApp::command_from_action("textEdit", Some(&serde_json::json!({ "text": "x".repeat(maximum + additional) }))).is_err());

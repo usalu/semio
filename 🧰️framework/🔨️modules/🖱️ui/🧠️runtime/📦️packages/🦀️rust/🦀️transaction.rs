@@ -156,6 +156,10 @@ impl std::fmt::Debug for TransactionPatch {
     fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result { std::fmt::Debug::fmt(&**self, formatter) }
 }
 
+/// 🧪️ Test-only: lets fixture-oracle tests diff a published patch against `serde_json` directly —
+/// `serde` moved to `[dev-dependencies]`, ticket 26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-
+/// PLUGINS-AND-ARTIFACTS.
+#[cfg(test)]
 impl serde::Serialize for TransactionPatch {
     fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> { serde::Serialize::serialize(&**self, serializer) }
 }

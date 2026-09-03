@@ -125,7 +125,7 @@ pub fn decode_semio_drawing_mutation_json(text: &str) -> Result<SemioDrawingMuta
 #[cfg(test)]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn demo_mutation_cases() -> Vec<SemioDrawingMutation> {
-    use crate::artifacts::semio::standards::v1::subsets::any::schema::geometry::{SemioPoint2, SemioPoint3, SemioQuaternion, SemioTransform};
+    use crate::artifacts::semio::standards::v1::subsets::base::schema::geometry::{SemioPoint2, SemioPoint3, SemioQuaternion, SemioTransform};
     use crate::artifacts::semio::standards::v1::subsets::drawing::schema::diff::NodePath;
     use crate::artifacts::semio::standards::v1::subsets::drawing::schema::snapshot::{DrawLayer, DrawNode, PathSegment};
 
@@ -165,7 +165,7 @@ pub(crate) fn demo_mutation_cases() -> Vec<SemioDrawingMutation> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::semio::standards::v1::subsets::any::schema::geometry::{SemioPoint2, SemioTransform};
+    use crate::artifacts::semio::standards::v1::subsets::base::schema::geometry::{SemioPoint2, SemioTransform};
     use crate::artifacts::semio::standards::v1::subsets::drawing::schema::diff::NodePath;
     use crate::artifacts::semio::standards::v1::subsets::drawing::schema::snapshot::{DrawCanvas, DrawLayer, DrawNode, DrawStyle, PathSegment, STDIO_SEMIODRAWING_DOCUMENT_SCHEMA};
     use protocol::{Mutation, MutationDiff, SemanticMutation};
@@ -175,7 +175,7 @@ mod tests {
         SemioDrawingSnapshot {
             schema: STDIO_SEMIODRAWING_DOCUMENT_SCHEMA.into(),
             canvas: DrawCanvas { width: 10.0, height: 10.0, background: None },
-            styles: vec![DrawStyle { name: "s1".into(), fill: Some(crate::artifacts::semio::standards::v1::subsets::any::schema::geometry::SemioRgba { r: 1.0, g: 0.0, b: 0.0, a: 1.0 }), stroke: None, stroke_width: Some(1.0), opacity: None }],
+            styles: vec![DrawStyle { name: "s1".into(), fill: Some(crate::artifacts::semio::standards::v1::subsets::base::schema::geometry::SemioRgba { r: 1.0, g: 0.0, b: 0.0, a: 1.0 }), stroke: None, stroke_width: Some(1.0), opacity: None }],
             layers: vec![DrawLayer {
                 id: "l0".into(),
                 name: "base".into(),
@@ -275,9 +275,9 @@ mod tests {
     async fn rotate_and_scale_round_trip() {
         let base = fixture();
         let root_path = NodePath { layer: 0, path: vec![] };
-        let rotate_m = SemioDrawingMutation::RotateNode(rotate_node::RotateNode { at: root_path.clone(), new_rotation: crate::artifacts::semio::standards::v1::subsets::any::schema::geometry::SemioQuaternion { x: 0.0, y: 0.0, z: 1.0, w: 0.0 } });
+        let rotate_m = SemioDrawingMutation::RotateNode(rotate_node::RotateNode { at: root_path.clone(), new_rotation: crate::artifacts::semio::standards::v1::subsets::base::schema::geometry::SemioQuaternion { x: 0.0, y: 0.0, z: 1.0, w: 0.0 } });
         let _ = round_trip(&base, &rotate_m);
-        let scale_m = SemioDrawingMutation::ScaleNode(scale_node::ScaleNode { at: root_path, new_scale: crate::artifacts::semio::standards::v1::subsets::any::schema::geometry::SemioPoint3 { x: 2.0, y: 2.0, z: 1.0 } });
+        let scale_m = SemioDrawingMutation::ScaleNode(scale_node::ScaleNode { at: root_path, new_scale: crate::artifacts::semio::standards::v1::subsets::base::schema::geometry::SemioPoint3 { x: 2.0, y: 2.0, z: 1.0 } });
         let _ = round_trip(&base, &scale_m);
     }
 
@@ -358,10 +358,10 @@ mod tests {
 
         let color_m = SemioDrawingMutation::ChangeStrokeColor(change_stroke_color::ChangeStrokeColor {
             style_name: "s1".into(),
-            new_color: Some(crate::artifacts::semio::standards::v1::subsets::any::schema::geometry::SemioRgba { r: 0.0, g: 1.0, b: 0.0, a: 1.0 }),
+            new_color: Some(crate::artifacts::semio::standards::v1::subsets::base::schema::geometry::SemioRgba { r: 0.0, g: 1.0, b: 0.0, a: 1.0 }),
         });
         let after_color = round_trip(&base, &color_m);
-        assert_eq!(after_color.styles[0].stroke, Some(crate::artifacts::semio::standards::v1::subsets::any::schema::geometry::SemioRgba { r: 0.0, g: 1.0, b: 0.0, a: 1.0 }));
+        assert_eq!(after_color.styles[0].stroke, Some(crate::artifacts::semio::standards::v1::subsets::base::schema::geometry::SemioRgba { r: 0.0, g: 1.0, b: 0.0, a: 1.0 }));
 
         let width_m = SemioDrawingMutation::ChangeStrokeWidth(change_stroke_width::ChangeStrokeWidth { style_name: "s1".into(), new_width: Some(5.0) });
         let after_width = round_trip(&base, &width_m);

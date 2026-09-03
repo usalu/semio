@@ -1,5 +1,5 @@
 //! 🚪️ presentation -> json — foreign `Serializer<PresentationSnapshot>` (ticket
-//! 26/08/17/CLEAN-ARTIFACT-STANDARD-SUBSET-MECHANISM design.md §3). Direct `serde_json`
+//! 26/08/17/CLEAN-ARTIFACT-STANDARD-SUBSET-MECHANISM design.md §3). Direct `dsl::os_pack::json`
 //! serialization of every field via stdio's own `JsonSnapshot::from_value`/`write_json_pretty`
 //! text codec, so this hop is `IoFidelity::Exact`.
 
@@ -18,7 +18,7 @@ impl Serializer<PresentationSnapshot> for PresentationIntoJson {
     const INTO: Dialect = JSON_DIALECT;
     const FIDELITY: IoFidelity = IoFidelity::Exact;
     async fn serialize(from: &PresentationSnapshot) -> IoResult<IoPayload> {
-        let value: serde_json::Value = dsl::ToValue::to_value(from).into();
+        let value = dsl::os_pack::json::from_dsl_value(&dsl::ToValue::to_value(from));
         let json = JsonSnapshot::from_value(value);
         Ok(IoOutcome::clean(IoPayload::Binary(write_json_pretty(&json.value).into_bytes())))
     }

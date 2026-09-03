@@ -169,8 +169,38 @@ export type WireFrontierSummary = {
 /** 🛣️ Which logical channel a wire frame travels on — mirrors Rust `protocol_wire::Lane`. */
 export type WireLane = "command" | "preview";
 
+/** 🧩️ The indivisible canonical artifact payload: pack state plus SPR history. */
+export type ArtifactBootstrapPair = Readonly<{ pack: Uint8Array; spr: Uint8Array }>;
+
+/** 📦️ Descriptor-bound metadata and optional inline pair for one public artifact bootstrap. */
+export type WireArtifactBootstrap = Readonly<{
+  format_version: number;
+  descriptor_hash: readonly number[];
+  artifact_schema: string;
+  artifact_kind: string;
+  pack_schema_hash: readonly number[];
+  baseline_frontier: WireFrontierSummary;
+  pack_hash: readonly number[];
+  spr_hash: readonly number[];
+  pack_length: number;
+  spr_length: number;
+  chunk_count: number;
+  aggregate_hash: readonly number[];
+  required_tail_frontier: WireFrontierSummary;
+  inline: Readonly<{ pack: readonly number[]; spr: readonly number[] }> | null;
+}>;
+
+/** 🛟️ Storage-key-free checkpoint identity sent before a lagged live stream closes. */
+export type WireRebootstrapRequired = Readonly<{
+  space_id: string;
+  document_id: string;
+  checkpoint_id: readonly number[];
+  descriptor_hash: readonly number[];
+  baseline_frontier: WireFrontierSummary;
+}>;
+
 /** 🚀️ How a `ServerFrame.Welcome` seeds a client — mirrors Rust `protocol_wire::Bootstrap`. */
-export type WireBootstrap = "None" | { readonly Snapshot: { readonly pack_hash: readonly number[]; readonly inline: readonly number[] | null } } | "Tail";
+export type WireBootstrap = "None" | { readonly Snapshot: { readonly pack_hash: readonly number[]; readonly inline: readonly number[] | null } } | "Tail" | { readonly ArtifactBootstrap: WireArtifactBootstrap };
 
 /** ⚖️ How the hub resolved one submitted batch against concurrent history — mirrors Rust
  * `protocol_wire::ApplyOutcome`. */
@@ -218,7 +248,10 @@ export type ServerFrame =
   | { readonly Error: { readonly code: string; readonly message: string } }
   /** 🎨️ The hub's one-time session assignment for this connection — see Rust `ServerFrame::Session`'s
    * doc comment. Sent exactly once per connection, after `Welcome` and before any `Presence` frame. */
-  | { readonly Session: { readonly actor: string; readonly color: number } };
+  | { readonly Session: { readonly actor: string; readonly color: number } }
+  | { readonly ArtifactBootstrapChunk: { readonly descriptor_hash: readonly number[]; readonly index: number; readonly bytes: readonly number[] } }
+  | { readonly ArtifactBootstrapDone: { readonly descriptor_hash: readonly number[]; readonly chunk_count: number } }
+  | { readonly RebootstrapRequired: { readonly control: WireRebootstrapRequired } };
 
 /** 🎞️ Writes an unsigned LEB128 varint (minimal length) — a byte-for-byte TS twin of
  * `protocol_core`'s `write_varint_u64` (`protocol/core/rs/lib.rs` `🔖️WireCodec`). */
@@ -649,7 +682,301 @@ export function encodeCausalEnvelopeBatch(envelopes: readonly MutationEnvelope[]
   return out;
 }
 
+//#region 🔖️ArtifactBootstrap
+export const ARTIFACT_BOOTSTRAP_FORMAT_VERSION = 1;
+export const ARTIFACT_BOOTSTRAP_CHUNK_BYTES = 4 * 1024;
+export const ARTIFACT_BOOTSTRAP_MAX_TOTAL_BYTES = 64 * 1024 * 1024;
+export const ARTIFACT_BOOTSTRAP_MAX_CHUNKS = 16 * 1024;
+
+/** 🛡️ Caller-selected assembly ceilings, always constrained by the wire chunk maximum. */
+export type ArtifactBootstrapLimits = Readonly<{ maxTotalBytes: number; maxChunks: number; maxChunkBytes: number }>;
+
+/** 📈️ Observable transfer progress; byte and chunk counts never decrease within one assembler. */
+export type ArtifactBootstrapProgress = Readonly<{ receivedBytes: number; totalBytes: number; receivedChunks: number; totalChunks: number }>;
+
+/** ⏱️ Host-provided cancellation, monotonic clock, and progress boundary. */
+export interface ArtifactBootstrapControl {
+  isCancelled(): boolean;
+  nowMs(): number;
+  onProgress(progress: ArtifactBootstrapProgress): void;
+}
+
+export const DEFAULT_ARTIFACT_BOOTSTRAP_LIMITS: ArtifactBootstrapLimits = Object.freeze({ maxTotalBytes: ARTIFACT_BOOTSTRAP_MAX_TOTAL_BYTES, maxChunks: ARTIFACT_BOOTSTRAP_MAX_CHUNKS, maxChunkBytes: ARTIFACT_BOOTSTRAP_CHUNK_BYTES });
+
+function artifactBootstrapError(message: string): Error {
+  return new Error(`artifact bootstrap ${message}`);
+}
+
+function equalBytes(left: readonly number[], right: readonly number[]): boolean {
+  return left.length === right.length && left.every((byte, index) => byte === right[index]);
+}
+
+function validateBytes(name: string, value: readonly number[]): void {
+  if (value.some((byte) => !Number.isInteger(byte) || byte < 0 || byte > 255)) throw artifactBootstrapError(`${name} contains an invalid byte`);
+}
+
+function validateHash(name: string, value: readonly number[], nonzero: boolean): void {
+  if (value.length !== 32) throw artifactBootstrapError(`${name} must contain 32 bytes`);
+  validateBytes(name, value);
+  if (nonzero && value.every((byte) => byte === 0)) throw artifactBootstrapError(`${name} must be nonzero`);
+}
+
+function validateNatural(name: string, value: number, minimum: number): void {
+  if (!Number.isSafeInteger(value) || value < minimum) throw artifactBootstrapError(`${name} is invalid`);
+}
+
+function validateLimits(limits: ArtifactBootstrapLimits): void {
+  validateNatural("max total bytes", limits.maxTotalBytes, 1);
+  validateNatural("max chunks", limits.maxChunks, 1);
+  validateNatural("max chunk bytes", limits.maxChunkBytes, 1);
+  if (limits.maxChunkBytes > ARTIFACT_BOOTSTRAP_CHUNK_BYTES) throw artifactBootstrapError("max chunk bytes exceeds wire limit");
+}
+
+function artifactBootstrapTotal(bootstrap: WireArtifactBootstrap): number {
+  validateNatural("pack length", bootstrap.pack_length, 1);
+  validateNatural("SPR length", bootstrap.spr_length, 1);
+  const total = bootstrap.pack_length + bootstrap.spr_length;
+  if (!Number.isSafeInteger(total)) throw artifactBootstrapError("total bytes overflow");
+  return total;
+}
+
+function validateArtifactBootstrapHeader(bootstrap: WireArtifactBootstrap, inline: boolean, limits: ArtifactBootstrapLimits): number {
+  validateLimits(limits);
+  if (bootstrap.format_version !== ARTIFACT_BOOTSTRAP_FORMAT_VERSION) throw artifactBootstrapError(`version ${bootstrap.format_version} is unsupported`);
+  validateHash("descriptor hash", bootstrap.descriptor_hash, true);
+  validateHash("pack schema hash", bootstrap.pack_schema_hash, true);
+  validateHash("pack hash", bootstrap.pack_hash, true);
+  validateHash("SPR hash", bootstrap.spr_hash, true);
+  validateHash("aggregate hash", bootstrap.aggregate_hash, true);
+  validateHash("baseline frontier chain hash", bootstrap.baseline_frontier.chain_hash, false);
+  validateHash("required tail frontier chain hash", bootstrap.required_tail_frontier.chain_hash, false);
+  const schemaBytes = new TextEncoder().encode(bootstrap.artifact_schema).length;
+  const kindBytes = new TextEncoder().encode(bootstrap.artifact_kind).length;
+  if (schemaBytes === 0 || schemaBytes > 256) throw artifactBootstrapError("artifact schema length is invalid");
+  if (kindBytes === 0 || kindBytes > 256) throw artifactBootstrapError("artifact kind length is invalid");
+  if (bootstrap.baseline_frontier.document_id.length === 0 || bootstrap.baseline_frontier.document_id !== bootstrap.required_tail_frontier.document_id) throw artifactBootstrapError("frontier document mismatch");
+  validateNatural("baseline head", bootstrap.baseline_frontier.head_edit_ordinal, 0);
+  validateNatural("baseline commit", bootstrap.baseline_frontier.last_commit_seq, 0);
+  validateNatural("required tail head", bootstrap.required_tail_frontier.head_edit_ordinal, 0);
+  validateNatural("required tail commit", bootstrap.required_tail_frontier.last_commit_seq, 0);
+  if (bootstrap.required_tail_frontier.head_edit_ordinal < bootstrap.baseline_frontier.head_edit_ordinal || bootstrap.required_tail_frontier.last_commit_seq < bootstrap.baseline_frontier.last_commit_seq) throw artifactBootstrapError("required tail frontier precedes baseline");
+  const total = artifactBootstrapTotal(bootstrap);
+  if (total > limits.maxTotalBytes) throw artifactBootstrapError("total bytes exceed assembler budget");
+  validateNatural("chunk count", bootstrap.chunk_count, 0);
+  if (inline) {
+    if (bootstrap.chunk_count !== 0) throw artifactBootstrapError("inline pair must declare zero chunks");
+  } else {
+    if (bootstrap.chunk_count === 0 || bootstrap.chunk_count > limits.maxChunks) throw artifactBootstrapError("chunk count exceeds assembler budget");
+    if (bootstrap.chunk_count > total || total > bootstrap.chunk_count * limits.maxChunkBytes) throw artifactBootstrapError("chunk count cannot cover declared bytes");
+  }
+  return total;
+}
+
+function validateArtifactBootstrap(bootstrap: WireArtifactBootstrap, limits: ArtifactBootstrapLimits): number {
+  const inline = bootstrap.inline !== null;
+  const total = validateArtifactBootstrapHeader(bootstrap, inline, limits);
+  if (bootstrap.inline !== null) {
+    if (bootstrap.inline.pack.length !== bootstrap.pack_length || bootstrap.inline.spr.length !== bootstrap.spr_length) throw artifactBootstrapError("inline pair lengths do not match metadata");
+    validateBytes("inline pack", bootstrap.inline.pack);
+    validateBytes("inline SPR", bootstrap.inline.spr);
+  }
+  return total;
+}
+
+/** #️⃣ Browser-safe SHA-256 backed by the host Web Crypto implementation. */
+export async function artifactBootstrapSha256(bytes: Uint8Array): Promise<Uint8Array> {
+  const owned = Uint8Array.from(bytes);
+  return new Uint8Array(await globalThis.crypto.subtle.digest("SHA-256", owned.buffer));
+}
+
+/** 🔗️ SHA-256 over the exact declared `pack || spr` content stream. */
+export async function artifactBootstrapAggregateHash(pack: Uint8Array, spr: Uint8Array): Promise<Uint8Array> {
+  const content = new Uint8Array(pack.byteLength + spr.byteLength);
+  content.set(pack, 0);
+  content.set(spr, pack.byteLength);
+  return artifactBootstrapSha256(content);
+}
+
+/** 🧱️ Bounded, cancellable staging owner that yields a pair only after complete integrity validation. */
+export class ArtifactBootstrapAssembler {
+  readonly bootstrap: WireArtifactBootstrap;
+  readonly limits: ArtifactBootstrapLimits;
+  readonly deadlineMs: number | null;
+  #storage: Uint8Array | null;
+  #received = 0;
+  #nextIndex = 0;
+
+  constructor(bootstrap: WireArtifactBootstrap, expectedDescriptorHash: readonly number[], limits: ArtifactBootstrapLimits = DEFAULT_ARTIFACT_BOOTSTRAP_LIMITS, deadlineMs: number | null = null, control: ArtifactBootstrapControl) {
+    const total = validateArtifactBootstrap(bootstrap, limits);
+    validateHash("expected descriptor hash", expectedDescriptorHash, true);
+    if (!equalBytes(bootstrap.descriptor_hash, expectedDescriptorHash)) throw artifactBootstrapError("descriptor mismatch");
+    if (control.isCancelled()) throw artifactBootstrapError("cancelled");
+    if (deadlineMs !== null && control.nowMs() >= deadlineMs) throw artifactBootstrapError("deadline exceeded");
+    this.bootstrap = bootstrap;
+    this.limits = limits;
+    this.deadlineMs = deadlineMs;
+    this.#storage = new Uint8Array(total);
+    control.onProgress(this.progress);
+    if (bootstrap.inline !== null) {
+      this.#storage.set(bootstrap.inline.pack, 0);
+      this.#storage.set(bootstrap.inline.spr, bootstrap.pack_length);
+      this.#received = total;
+      control.onProgress(this.progress);
+    }
+  }
+
+  /** 💾️ Bytes currently owned by the assembler; zero after abort or completion. */
+  get retainedBytes(): number {
+    return this.#storage?.byteLength ?? 0;
+  }
+
+  /** 📈️ Current monotonic progress snapshot. */
+  get progress(): ArtifactBootstrapProgress {
+    return { receivedBytes: this.#received, totalBytes: this.bootstrap.pack_length + this.bootstrap.spr_length, receivedChunks: this.#nextIndex, totalChunks: this.bootstrap.chunk_count };
+  }
+
+  /** 🧹️ Drops all staged bytes without producing a completion value. */
+  abort(): void {
+    this.#storage?.fill(0);
+    this.#storage = null;
+  }
+
+  #fail(message: string): never {
+    this.abort();
+    throw artifactBootstrapError(message);
+  }
+
+  #guard(control: ArtifactBootstrapControl): void {
+    if (control.isCancelled()) this.#fail("cancelled");
+    if (this.deadlineMs !== null && control.nowMs() >= this.deadlineMs) this.#fail("deadline exceeded");
+    if (this.#storage === null) throw artifactBootstrapError("is not active");
+  }
+
+  /** 🧩️ Appends exactly the next descriptor-bound, nonempty bounded chunk. */
+  push(chunk: Readonly<{ descriptor_hash: readonly number[]; index: number; bytes: readonly number[] }>, control: ArtifactBootstrapControl): ArtifactBootstrapProgress {
+    this.#guard(control);
+    if (this.bootstrap.inline !== null) this.#fail("inline transfer cannot accept chunks");
+    if (!equalBytes(chunk.descriptor_hash, this.bootstrap.descriptor_hash)) this.#fail("chunk descriptor mismatch");
+    if (chunk.index !== this.#nextIndex) this.#fail(`chunk index ${chunk.index} does not equal expected ${this.#nextIndex}`);
+    if (chunk.bytes.length === 0 || chunk.bytes.length > this.limits.maxChunkBytes) this.#fail("chunk bytes exceed assembler budget");
+    try {
+      validateBytes("chunk", chunk.bytes);
+    } catch {
+      this.#fail("chunk contains an invalid byte");
+    }
+    if (chunk.index >= this.bootstrap.chunk_count) this.#fail("chunk index exceeds declared count");
+    const end = this.#received + chunk.bytes.length;
+    if (end > this.progress.totalBytes) this.#fail("chunk bytes exceed declared total");
+    this.#storage!.set(chunk.bytes, this.#received);
+    this.#received = end;
+    this.#nextIndex += 1;
+    control.onProgress(this.progress);
+    return this.progress;
+  }
+
+  /** ✅️ Verifies completion and all hashes, transfers ownership of the pair, then retires staging. */
+  async finish(done: Readonly<{ descriptor_hash: readonly number[]; chunk_count: number }> | null, control: ArtifactBootstrapControl): Promise<ArtifactBootstrapPair> {
+    try {
+      this.#guard(control);
+      if (this.bootstrap.inline === null) {
+        if (done === null) this.#fail("is incomplete without done frame");
+        if (!equalBytes(done.descriptor_hash, this.bootstrap.descriptor_hash)) this.#fail("done descriptor mismatch");
+        if (done.chunk_count !== this.bootstrap.chunk_count) this.#fail("done chunk count mismatch");
+      } else if (done !== null && (!equalBytes(done.descriptor_hash, this.bootstrap.descriptor_hash) || done.chunk_count !== 0)) {
+        this.#fail("inline done metadata mismatch");
+      }
+      if (this.#nextIndex !== this.bootstrap.chunk_count || this.#received !== this.progress.totalBytes) this.#fail("is incomplete");
+      const storage = this.#storage!;
+      const pack = storage.subarray(0, this.bootstrap.pack_length);
+      const spr = storage.subarray(this.bootstrap.pack_length);
+      const [packHash, sprHash, aggregateHash] = await Promise.all([artifactBootstrapSha256(pack), artifactBootstrapSha256(spr), artifactBootstrapSha256(storage)]);
+      this.#guard(control);
+      if (!equalBytes(packHash, this.bootstrap.pack_hash)) this.#fail("pack hash mismatch");
+      if (!equalBytes(sprHash, this.bootstrap.spr_hash)) this.#fail("SPR hash mismatch");
+      if (!equalBytes(aggregateHash, this.bootstrap.aggregate_hash)) this.#fail("aggregate hash mismatch");
+      this.#storage = null;
+      return { pack, spr };
+    } catch (error) {
+      this.abort();
+      throw error;
+    }
+  }
+}
+//#endregion 🔖️ArtifactBootstrap
+
 //#region 🔖️NestedEnums
+function encodeArtifactBootstrap(out: number[], bootstrap: WireArtifactBootstrap): void {
+  writeVarintU64(out, bootstrap.format_version);
+  writeHash32(out, bootstrap.descriptor_hash);
+  writeStr(out, bootstrap.artifact_schema);
+  writeStr(out, bootstrap.artifact_kind);
+  writeHash32(out, bootstrap.pack_schema_hash);
+  encodeFrontier(out, bootstrap.baseline_frontier);
+  writeHash32(out, bootstrap.pack_hash);
+  writeHash32(out, bootstrap.spr_hash);
+  writeVarintU64(out, bootstrap.pack_length);
+  writeVarintU64(out, bootstrap.spr_length);
+  writeVarintU64(out, bootstrap.chunk_count);
+  writeHash32(out, bootstrap.aggregate_hash);
+  encodeFrontier(out, bootstrap.required_tail_frontier);
+  writeBool(out, bootstrap.inline !== null);
+  if (bootstrap.inline !== null) {
+    writeBytes(out, bootstrap.inline.pack);
+    writeBytes(out, bootstrap.inline.spr);
+  }
+}
+
+function readArtifactBootstrapString(bytes: Uint8Array, pos: [number], name: string): string {
+  const length = readVarintU64(bytes, pos);
+  if (!Number.isSafeInteger(length) || length === 0 || length > 256) throw artifactBootstrapError(`${name} length is invalid`);
+  const slice = bytes.subarray(pos[0], pos[0] + length);
+  if (slice.length !== length) throw artifactBootstrapError(`${name} is truncated`);
+  pos[0] += length;
+  return new TextDecoder("utf-8", { fatal: true }).decode(slice);
+}
+
+function readArtifactBootstrapBytes(bytes: Uint8Array, pos: [number], expected: number, name: string): number[] {
+  const length = readVarintU64(bytes, pos);
+  if (!Number.isSafeInteger(length) || length !== expected || length > ARTIFACT_BOOTSTRAP_MAX_TOTAL_BYTES) throw artifactBootstrapError(`${name} length does not match metadata`);
+  const slice = bytes.subarray(pos[0], pos[0] + length);
+  if (slice.length !== length) throw artifactBootstrapError(`${name} is truncated`);
+  pos[0] += length;
+  return Array.from(slice);
+}
+
+function readArtifactBootstrapChunkBytes(bytes: Uint8Array, pos: [number]): number[] {
+  const length = readVarintU64(bytes, pos);
+  if (!Number.isSafeInteger(length) || length === 0 || length > ARTIFACT_BOOTSTRAP_CHUNK_BYTES) throw artifactBootstrapError("chunk bytes exceed wire limit");
+  const slice = bytes.subarray(pos[0], pos[0] + length);
+  if (slice.length !== length) throw artifactBootstrapError("chunk bytes are truncated");
+  pos[0] += length;
+  return Array.from(slice);
+}
+
+function decodeArtifactBootstrap(bytes: Uint8Array, pos: [number]): WireArtifactBootstrap {
+  const partial: WireArtifactBootstrap = {
+    format_version: readVarintU64(bytes, pos),
+    descriptor_hash: readHash32(bytes, pos),
+    artifact_schema: readArtifactBootstrapString(bytes, pos, "artifact schema"),
+    artifact_kind: readArtifactBootstrapString(bytes, pos, "artifact kind"),
+    pack_schema_hash: readHash32(bytes, pos),
+    baseline_frontier: decodeFrontier(bytes, pos),
+    pack_hash: readHash32(bytes, pos),
+    spr_hash: readHash32(bytes, pos),
+    pack_length: readVarintU64(bytes, pos),
+    spr_length: readVarintU64(bytes, pos),
+    chunk_count: readVarintU64(bytes, pos),
+    aggregate_hash: readHash32(bytes, pos),
+    required_tail_frontier: decodeFrontier(bytes, pos),
+    inline: null,
+  };
+  const inline = readBool(bytes, pos);
+  validateArtifactBootstrapHeader(partial, inline, DEFAULT_ARTIFACT_BOOTSTRAP_LIMITS);
+  const decoded = inline ? { ...partial, inline: { pack: readArtifactBootstrapBytes(bytes, pos, partial.pack_length, "inline pack"), spr: readArtifactBootstrapBytes(bytes, pos, partial.spr_length, "inline SPR") } } : partial;
+  validateArtifactBootstrap(decoded, DEFAULT_ARTIFACT_BOOTSTRAP_LIMITS);
+  return decoded;
+}
+
 function encodeBootstrap(out: number[], bootstrap: WireBootstrap): void {
   if (bootstrap === "None") {
     out.push(0);
@@ -659,9 +986,14 @@ function encodeBootstrap(out: number[], bootstrap: WireBootstrap): void {
     out.push(2);
     return;
   }
-  out.push(1);
-  writeHash32(out, bootstrap.Snapshot.pack_hash);
-  writeOptBytes(out, bootstrap.Snapshot.inline);
+  if ("Snapshot" in bootstrap) {
+    out.push(1);
+    writeHash32(out, bootstrap.Snapshot.pack_hash);
+    writeOptBytes(out, bootstrap.Snapshot.inline);
+    return;
+  }
+  out.push(3);
+  encodeArtifactBootstrap(out, bootstrap.ArtifactBootstrap);
 }
 function decodeBootstrap(bytes: Uint8Array, pos: [number]): WireBootstrap {
   const tag = bytes[pos[0]];
@@ -670,6 +1002,7 @@ function decodeBootstrap(bytes: Uint8Array, pos: [number]): WireBootstrap {
   if (tag === 0) return "None";
   if (tag === 2) return "Tail";
   if (tag === 1) return { Snapshot: { pack_hash: readHash32(bytes, pos), inline: readOptBytes(bytes, pos) } };
+  if (tag === 3) return { ArtifactBootstrap: decodeArtifactBootstrap(bytes, pos) };
   throw new Error(`wire bootstrap tag: unknown tag ${tag}`);
 }
 
@@ -871,6 +1204,22 @@ export function encodeServerFrame(frame: ServerFrame, lane: WireLane): Uint8Arra
     out.push(9);
     writeStr(out, frame.Session.actor);
     out.push(frame.Session.color);
+  } else if ("ArtifactBootstrapChunk" in frame) {
+    out.push(10);
+    writeHash32(out, frame.ArtifactBootstrapChunk.descriptor_hash);
+    writeVarintU64(out, frame.ArtifactBootstrapChunk.index);
+    writeBytes(out, frame.ArtifactBootstrapChunk.bytes);
+  } else if ("ArtifactBootstrapDone" in frame) {
+    out.push(11);
+    writeHash32(out, frame.ArtifactBootstrapDone.descriptor_hash);
+    writeVarintU64(out, frame.ArtifactBootstrapDone.chunk_count);
+  } else if ("RebootstrapRequired" in frame) {
+    out.push(12);
+    writeStr(out, frame.RebootstrapRequired.control.space_id);
+    writeStr(out, frame.RebootstrapRequired.control.document_id);
+    writeHash32(out, frame.RebootstrapRequired.control.checkpoint_id);
+    writeHash32(out, frame.RebootstrapRequired.control.descriptor_hash);
+    encodeFrontier(out, frame.RebootstrapRequired.control.baseline_frontier);
   } else {
     throw new Error("encodeServerFrame: unrecognized frame variant");
   }
@@ -918,6 +1267,26 @@ export function decodeServerFrame(bytes: Uint8Array): { readonly lane: WireLane;
     case 9:
       frame = { Session: { actor: readStr(bytes, pos), color: readU8(bytes, pos) } };
       break;
+    case 10:
+      frame = { ArtifactBootstrapChunk: { descriptor_hash: readHash32(bytes, pos), index: readVarintU64(bytes, pos), bytes: readArtifactBootstrapChunkBytes(bytes, pos) } };
+      break;
+    case 11:
+      frame = { ArtifactBootstrapDone: { descriptor_hash: readHash32(bytes, pos), chunk_count: readVarintU64(bytes, pos) } };
+      break;
+    case 12: {
+      const control: WireRebootstrapRequired = {
+        space_id: readStr(bytes, pos),
+        document_id: readStr(bytes, pos),
+        checkpoint_id: readHash32(bytes, pos),
+        descriptor_hash: readHash32(bytes, pos),
+        baseline_frontier: decodeFrontier(bytes, pos),
+      };
+      if (!control.space_id || !control.document_id || control.space_id.length > 256 || control.document_id.length > 256 || new TextEncoder().encode(control.space_id).length > 256 || new TextEncoder().encode(control.document_id).length > 256 || control.checkpoint_id.every((byte) => byte === 0) || control.descriptor_hash.every((byte) => byte === 0) || control.baseline_frontier.document_id !== control.document_id || !control.baseline_frontier.head_edit_id) {
+        throw new Error("artifact bootstrap: rebootstrap control identity is invalid");
+      }
+      frame = { RebootstrapRequired: { control } };
+      break;
+    }
     default:
       throw new Error(`wire server-frame tag: unknown tag ${tag}`);
   }
@@ -932,6 +1301,193 @@ export function decodeServerFrame(bytes: Uint8Array): { readonly lane: WireLane;
 
 if (import.meta.vitest) {
   const { describe, expect, it } = import.meta.vitest;
+
+  describe("artifact bootstrap protocol", () => {
+    type Fixture = Readonly<{
+      schemaVersion: number;
+      formatVersion: number;
+      artifact: Readonly<{
+        descriptorHash: string;
+        schema: string;
+        kind: string;
+        packSchemaHash: string;
+        baselineFrontier: Readonly<{ documentId: string; headEditOrdinal: number; headEditId: string; lastCommitSeq: number; chainHash: string }>;
+        requiredTailFrontier: Readonly<{ documentId: string; headEditOrdinal: number; headEditId: string; lastCommitSeq: number; chainHash: string }>;
+      }>;
+      payload: Readonly<{ packHex: string; sprHex: string; packLength: number; sprLength: number; packHash: string; sprHash: string; aggregateHash: string }>;
+      chunkByteLengths: readonly number[];
+      wire: Readonly<{ inlineWelcomeHex: string; chunkedWelcomeHex: string; chunkHex: readonly string[]; doneHex: string }>;
+    }>;
+
+    const fromHex = (hex: string): number[] => Array.from(Uint8Array.from(hex.match(/../gu) ?? [], (byte) => Number.parseInt(byte, 16)));
+    const toHex = (bytes: Uint8Array | readonly number[]): string => Array.from(bytes, (byte) => byte.toString(16).padStart(2, "0")).join("");
+    const frontier = (value: Fixture["artifact"]["baselineFrontier"]): WireFrontierSummary => ({ document_id: value.documentId, head_edit_ordinal: value.headEditOrdinal, head_edit_id: value.headEditId, last_commit_seq: value.lastCommitSeq, chain_hash: fromHex(value.chainHash) });
+
+    async function loadFixture(): Promise<Fixture> {
+      const { readFile } = await import("node:fs/promises");
+      const { dirname, join } = await import("node:path");
+      const { fileURLToPath } = await import("node:url");
+      return JSON.parse(await readFile(join(dirname(fileURLToPath(import.meta.url)), "🧫️fixtures/🧫️artifact-bootstrap/🔣️.json"), "utf8")) as Fixture;
+    }
+
+    function bootstrapFromFixture(fixture: Fixture, inline: boolean): WireArtifactBootstrap {
+      return {
+        format_version: fixture.formatVersion,
+        descriptor_hash: fromHex(fixture.artifact.descriptorHash),
+        artifact_schema: fixture.artifact.schema,
+        artifact_kind: fixture.artifact.kind,
+        pack_schema_hash: fromHex(fixture.artifact.packSchemaHash),
+        baseline_frontier: frontier(fixture.artifact.baselineFrontier),
+        pack_hash: fromHex(fixture.payload.packHash),
+        spr_hash: fromHex(fixture.payload.sprHash),
+        pack_length: fixture.payload.packLength,
+        spr_length: fixture.payload.sprLength,
+        chunk_count: inline ? 0 : fixture.chunkByteLengths.length,
+        aggregate_hash: fromHex(fixture.payload.aggregateHash),
+        required_tail_frontier: frontier(fixture.artifact.requiredTailFrontier),
+        inline: inline ? { pack: fromHex(fixture.payload.packHex), spr: fromHex(fixture.payload.sprHex) } : null,
+      };
+    }
+
+    function welcome(bootstrap: WireArtifactBootstrap): ServerFrame {
+      return { Welcome: { session_id: "session-bootstrap-1", resume_token: "resume-bootstrap-1", server_frontier: bootstrap.required_tail_frontier, bootstrap: { ArtifactBootstrap: bootstrap } } };
+    }
+
+    function chunkFrames(fixture: Fixture, bootstrap: WireArtifactBootstrap): Extract<ServerFrame, { readonly ArtifactBootstrapChunk: unknown }>[] {
+      const content = [...fromHex(fixture.payload.packHex), ...fromHex(fixture.payload.sprHex)];
+      let offset = 0;
+      return fixture.chunkByteLengths.map((length, index) => {
+        const bytes = content.slice(offset, offset + length);
+        offset += length;
+        return { ArtifactBootstrapChunk: { descriptor_hash: bootstrap.descriptor_hash, index, bytes } };
+      });
+    }
+
+    function control(cancelAt = Number.POSITIVE_INFINITY, now = 0) {
+      const progress: ArtifactBootstrapProgress[] = [];
+      return {
+        progress,
+        cancelled: false,
+        now,
+        isCancelled() { return this.cancelled || progress.length >= cancelAt; },
+        nowMs() { return this.now; },
+        onProgress(value: ArtifactBootstrapProgress) { progress.push(value); },
+      };
+    }
+
+    it("validates the neutral descriptor and SHA-256 values with AJV and Node crypto", async () => {
+      const fixture = await loadFixture();
+      const { readFile } = await import("node:fs/promises");
+      const { dirname, join } = await import("node:path");
+      const { fileURLToPath } = await import("node:url");
+      const { createHash } = await import("node:crypto");
+      const { default: Ajv2020 } = await import("ajv/dist/2020.js");
+      const root = join(dirname(fileURLToPath(import.meta.url)), "🧫️fixtures/🧫️artifact-bootstrap");
+      const schema = JSON.parse(await readFile(join(root, "🔣️.schema.json"), "utf8"));
+      expect(new Ajv2020({ strict: true }).compile(schema)(fixture)).toBe(true);
+      const pack = new Uint8Array(fromHex(fixture.payload.packHex));
+      const spr = new Uint8Array(fromHex(fixture.payload.sprHex));
+      expect(createHash("sha256").update(pack).digest("hex")).toBe(fixture.payload.packHash);
+      expect(createHash("sha256").update(spr).digest("hex")).toBe(fixture.payload.sprHash);
+      expect(createHash("sha256").update(pack).update(spr).digest("hex")).toBe(fixture.payload.aggregateHash);
+      expect(toHex(await artifactBootstrapSha256(pack))).toBe(fixture.payload.packHash);
+      expect(toHex(await artifactBootstrapAggregateHash(pack, spr))).toBe(fixture.payload.aggregateHash);
+    });
+
+    it("matches canonical inline and chunked frame bytes", async () => {
+      const fixture = await loadFixture();
+      const inline = bootstrapFromFixture(fixture, true);
+      const chunked = bootstrapFromFixture(fixture, false);
+      const chunks = chunkFrames(fixture, chunked);
+      const done: ServerFrame = { ArtifactBootstrapDone: { descriptor_hash: chunked.descriptor_hash, chunk_count: chunked.chunk_count } };
+      expect(toHex(encodeServerFrame(welcome(inline), "command"))).toBe(fixture.wire.inlineWelcomeHex);
+      expect(toHex(encodeServerFrame(welcome(chunked), "command"))).toBe(fixture.wire.chunkedWelcomeHex);
+      expect(chunks.map((frame) => toHex(encodeServerFrame(frame, "command")))).toEqual(fixture.wire.chunkHex);
+      expect(toHex(encodeServerFrame(done, "command"))).toBe(fixture.wire.doneHex);
+      for (const hex of [fixture.wire.inlineWelcomeHex, fixture.wire.chunkedWelcomeHex, ...fixture.wire.chunkHex, fixture.wire.doneHex]) {
+        const bytes = new Uint8Array(fromHex(hex));
+        const decoded = decodeServerFrame(bytes);
+        expect(encodeServerFrame(decoded.frame, decoded.lane)).toEqual(bytes);
+      }
+    });
+
+    it("rejects malformed version, descriptor, order, completeness, size, and hashes atomically", async () => {
+      const fixture = await loadFixture();
+      const valid = bootstrapFromFixture(fixture, false);
+      const frames = chunkFrames(fixture, valid);
+      const limits: ArtifactBootstrapLimits = { maxTotalBytes: 64, maxChunks: 4, maxChunkBytes: 12 };
+      const expected = valid.descriptor_hash;
+      const ctl = control();
+      expect(() => new ArtifactBootstrapAssembler({ ...valid, format_version: 2 }, expected, limits, 100, ctl)).toThrow(/version/u);
+      expect(() => new ArtifactBootstrapAssembler(valid, Array(32).fill(9), limits, 100, ctl)).toThrow(/descriptor/u);
+      expect(() => new ArtifactBootstrapAssembler({ ...valid, pack_length: 65 }, expected, limits, 100, ctl)).toThrow(/bytes/u);
+      expect(() => new ArtifactBootstrapAssembler({ ...valid, required_tail_frontier: { ...valid.required_tail_frontier, head_edit_ordinal: 6 } }, expected, limits, 100, ctl)).toThrow(/frontier/u);
+      const expired = control(Number.POSITIVE_INFINITY, 100);
+      expect(() => new ArtifactBootstrapAssembler(valid, expected, limits, 100, expired)).toThrow(/deadline/u);
+      for (const indices of [[1], [0, 0]]) {
+        const assembler = new ArtifactBootstrapAssembler(valid, expected, limits, 100, control());
+        expect(() => { for (const index of indices) assembler.push(frames[index]!.ArtifactBootstrapChunk, control()); }).toThrow(/index/u);
+        expect(assembler.retainedBytes).toBe(0);
+      }
+      const missing = new ArtifactBootstrapAssembler(valid, expected, limits, 100, control());
+      missing.push(frames[0]!.ArtifactBootstrapChunk, control());
+      await expect(missing.finish({ descriptor_hash: expected, chunk_count: valid.chunk_count }, control())).rejects.toThrow(/complete/u);
+      expect(missing.retainedBytes).toBe(0);
+      const invalidByte = new ArtifactBootstrapAssembler(valid, expected, limits, 100, control());
+      expect(() => invalidByte.push({ descriptor_hash: expected, index: 0, bytes: [256] }, control())).toThrow(/byte/u);
+      expect(invalidByte.retainedBytes).toBe(0);
+      const inlineWithInvalidByte = bootstrapFromFixture(fixture, true);
+      expect(() => new ArtifactBootstrapAssembler({ ...inlineWithInvalidByte, inline: { pack: [256, ...inlineWithInvalidByte.inline!.pack.slice(1)], spr: inlineWithInvalidByte.inline!.spr } }, expected, limits, 100, control())).toThrow(/byte/u);
+      const oversizedChunk = new ArtifactBootstrapAssembler(valid, expected, limits, 100, control());
+      expect(() => oversizedChunk.push({ descriptor_hash: expected, index: 0, bytes: Array(13).fill(1) }, control())).toThrow(/chunk/u);
+      expect(oversizedChunk.retainedBytes).toBe(0);
+      const wrongChunkDescriptor = new ArtifactBootstrapAssembler(valid, expected, limits, 100, control());
+      expect(() => wrongChunkDescriptor.push({ descriptor_hash: Array(32).fill(9), index: 0, bytes: [1] }, control())).toThrow(/descriptor/u);
+      expect(wrongChunkDescriptor.retainedBytes).toBe(0);
+      for (const key of ["pack_hash", "spr_hash", "aggregate_hash"] as const) {
+        const changed = { ...valid, [key]: Array(32).fill(0xaa) };
+        const assembler = new ArtifactBootstrapAssembler(changed, expected, limits, 100, control());
+        for (const frame of frames) assembler.push(frame.ArtifactBootstrapChunk, control());
+        await expect(assembler.finish({ descriptor_hash: expected, chunk_count: valid.chunk_count }, control())).rejects.toThrow(/hash/u);
+        expect(assembler.retainedBytes).toBe(0);
+      }
+      expect(() => decodeServerFrame(encodeServerFrame(welcome({ ...valid, format_version: 2 }), "command"))).toThrow(/version/u);
+    });
+
+    it("cancels at chunk N with monotonic progress and permits a fresh transfer", async () => {
+      const fixture = await loadFixture();
+      const bootstrap = bootstrapFromFixture(fixture, false);
+      const frames = chunkFrames(fixture, bootstrap);
+      const limits: ArtifactBootstrapLimits = { maxTotalBytes: 64, maxChunks: 4, maxChunkBytes: 12 };
+      const cancelled = control(2);
+      const first = new ArtifactBootstrapAssembler(bootstrap, bootstrap.descriptor_hash, limits, 100, cancelled);
+      first.push(frames[0]!.ArtifactBootstrapChunk, cancelled);
+      expect(() => first.push(frames[1]!.ArtifactBootstrapChunk, cancelled)).toThrow(/cancel/u);
+      expect(first.retainedBytes).toBe(0);
+      expect(first.progress.receivedBytes).toBe(12);
+      expect(cancelled.progress.map((value) => value.receivedBytes)).toEqual([0, 12]);
+      let checks = 0;
+      let completions = 0;
+      const lateControl: ArtifactBootstrapControl = { isCancelled: () => ++checks >= 6, nowMs: () => 0, onProgress: () => undefined };
+      const late = new ArtifactBootstrapAssembler(bootstrap, bootstrap.descriptor_hash, limits, 100, lateControl);
+      for (const frame of frames) late.push(frame.ArtifactBootstrapChunk, lateControl);
+      await expect(late.finish({ descriptor_hash: bootstrap.descriptor_hash, chunk_count: bootstrap.chunk_count }, lateControl).then((pair) => { completions += 1; return pair; })).rejects.toThrow(/cancel/u);
+      expect(completions).toBe(0);
+      expect(late.retainedBytes).toBe(0);
+      expect(late.progress.receivedBytes).toBe(33);
+      const resumedControl = control();
+      const resumed = new ArtifactBootstrapAssembler(bootstrap, bootstrap.descriptor_hash, limits, 100, resumedControl);
+      for (const frame of frames) resumed.push(frame.ArtifactBootstrapChunk, resumedControl);
+      const pair = await resumed.finish({ descriptor_hash: bootstrap.descriptor_hash, chunk_count: bootstrap.chunk_count }, resumedControl);
+      expect(toHex(pair.pack)).toBe(fixture.payload.packHex);
+      expect(toHex(pair.spr)).toBe(fixture.payload.sprHex);
+      expect(resumed.retainedBytes).toBe(0);
+      expect(resumed.progress.receivedBytes).toBe(33);
+      const values = resumedControl.progress.map((value) => value.receivedBytes);
+      expect(values).toEqual([...values].sort((left, right) => left - right));
+      expect(values.at(-1)).toBe(fixture.payload.packLength + fixture.payload.sprLength);
+    });
+  });
 
   describe("wire fixtures", () => {
       // 🎬️ Shared fixtures: the exact same bytes `store/sync/rs/lib.rs`'s

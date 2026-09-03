@@ -76,7 +76,8 @@ export class OwnedUiReadPublication {
 /** 📸️ One exact issued read; only its issuing consumer's commit can authorize older-root retirement. */
 export class OwnedUiNodeReadSnapshot {
   readonly #root: IssuedRoot;
-  private constructor(mint: object, lease: object, readonly version: number, node: ReadOwner | null) { if (mint !== ISSUED_MINT) throw new Error("Issued snapshot requires exact mint authority"); this.#root = { lease, node, active: true, readers: 0 }; Object.freeze(this); }
+  readonly version: number;
+  private constructor(mint: object, lease: object, version: number, node: ReadOwner | null) { this.version = version; if (mint !== ISSUED_MINT) throw new Error("Issued snapshot requires exact mint authority"); this.#root = { lease, node, active: true, readers: 0 }; Object.freeze(this); }
   static {
     issue = (lease, version, node) => new OwnedUiNodeReadSnapshot(ISSUED_MINT, lease, version, node);
     release = snapshot => { if (!snapshot.#root.active) throw new Error("Owned UI read snapshot already retired"); snapshot.#root.active = false; return retireIssued(snapshot.#root); };

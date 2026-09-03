@@ -1,0 +1,5 @@
+{
+  "$id": "https://semio.tech/schema/s/procedural/generation3d/mutation/text.json",
+  "title": "Generation3dMutationsText",
+  "type": "object"
+}

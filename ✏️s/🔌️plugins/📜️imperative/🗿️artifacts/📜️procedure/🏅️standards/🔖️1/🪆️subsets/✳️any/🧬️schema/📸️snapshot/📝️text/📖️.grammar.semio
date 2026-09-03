@@ -1,0 +1,9 @@
+dialect grammar
+grammar procedure.snapshot
+extension procedure
+start document
+
+document = header body
+header = "schema" SP "imperative.procedure.snapshot" NL
+body = payload NL?
+payload = OCTET+

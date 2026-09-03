@@ -7,7 +7,8 @@ use crate::editor::puzzle3d::precompute::Puzzle3dPrecomputeSession;
 use crate::editor::puzzle3d::{puzzle3d_fill_build_scope, PUZZLE3D_FILL_COUNT_MAX};
 use semio_framework::kernel::Effect;
 use semio_framework_plugin::Emit;
-use serde_json::{json, Value};
+use dsl::os_pack::json::Value;
+use serde_json::json;
 
 pub const STEP_ACTION_ID: &str = "setFillCountStep";
 pub(crate) const MAX_PLACEMENTS_PER_STEP: usize = 1;
@@ -54,7 +55,7 @@ pub fn step(precompute: &mut Puzzle3dPrecomputeSession, config: &Puzzle3dConfig,
     };
     let mut mutations = Vec::with_capacity(chunk.added_objects.len() + chunk.added_attractions.len() + chunk.removed_object_ids.len());
     mutations.extend(chunk.removed_object_ids.into_iter().map(delete_object));
-    mutations.extend(chunk.added_objects.into_iter().filter_map(|object| serde_json::to_value(object).ok().and_then(|value| serde_json::from_value::<Puzzle3dObject>(value).ok())).map(|object| create_object(object, None)));
+    mutations.extend(chunk.added_objects.into_iter().filter_map(|object| <Puzzle3dObject as dsl::FromValue>::from_value(dsl::ToValue::to_value(&object)).ok()).map(|object| create_object(object, None)));
     mutations.extend(
         chunk
             .added_attractions

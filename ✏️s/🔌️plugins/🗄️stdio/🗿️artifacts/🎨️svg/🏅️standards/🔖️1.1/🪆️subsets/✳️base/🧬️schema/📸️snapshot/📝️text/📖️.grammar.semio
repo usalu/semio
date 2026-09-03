@@ -10,7 +10,7 @@ string single raw
 # IS a generic `XmlDocument` (`../../🦀️.rs:17`) and its own `print_dsl`/`parse_dsl`
 # (`../../🦀️.rs`'s `write_svg_xml`/`parse_svg_xml`) route straight through
 # `xml_document_to_text`/`xml_document_from_text` -- so the wire text this grammar recognizes is
-# byte-for-byte the SAME shape `📰xml`'s own snapshot grammar recognizes (element/attribute/
+# byte-for-byte the SAME shape `📰️xml`'s own snapshot grammar recognizes (element/attribute/
 # content-node recursion), restated here rather than `use`d (cross-artifact `use` doesn't resolve
 # at walk/recognize time yet, `📖️grammar-recipe.md` §2.1) -- matching `xml`'s own just-landed FG1
 # grammar's structural shape production-for-production, per this wave's brief. Only the

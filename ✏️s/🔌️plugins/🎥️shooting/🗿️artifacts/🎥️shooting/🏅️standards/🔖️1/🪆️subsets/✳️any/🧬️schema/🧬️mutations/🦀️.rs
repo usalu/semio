@@ -101,7 +101,7 @@ pub const KINDS: &[&str] = &[
 //#region 🔖️Apply
 /// 📦️ Applies `mutation` onto `snapshot`, returning the resulting snapshot — the free entry point
 /// external Rust callers use when they cannot name this crate's private `protocol` extern-crate
-/// item. Same shape as `🎬️present`'s `apply_present_mutation`.
+/// item. Same shape as `🎬️presentation`'s `apply_presentation_mutation`.
 pub fn apply_shooting_mutation(snapshot: &ShootingSnapshot, mutation: &ShootingMutation) -> protocol::MutationApplyResult<ShootingSnapshot> {
     semio_framework_plugin::resolve_ready(vcs::apply_mutation(snapshot, mutation)).map(|(next, _messages)| next)
 }
@@ -116,20 +116,18 @@ pub fn inverse_shooting_mutation(snapshot: &ShootingSnapshot, mutation: &Shootin
 /// 📥️ Decodes this facet's own internally-tagged (`{"mutation": "createAsset", …}`) JSON projection
 /// — the shape the `mutate-shooting-1` case's `Examples` rows carry, and the shape every committed
 /// per-kind leaf fixture under `<kind>/🧪️tests/*/🦠️mutation/🔣️.json` already is — into a real
-/// [`ShootingMutation`]. A thin `serde_json` wrapper (already a direct dependency of this crate, used
-/// behind this interface per CLAUDE.md's "external libraries behind an interface" rule, never a new
-/// one), so the case reads the committed payload instead of re-declaring it as a Rust literal.
+/// [`ShootingMutation`], via this crate's own `dsl::os_pack::json` parser/bridge (no `serde_json`).
 pub fn decode_shooting_mutation_json(text: &str) -> Result<ShootingMutation, String> {
-    let json_value: serde_json::Value = serde_json::from_str(text).map_err(|error| error.to_string())?;
-    let dsl_value: dsl::DslValue = json_value.into();
+    let json_value = dsl::os_pack::json::parse(text).map_err(|error| error.to_string())?;
+    let dsl_value = dsl::os_pack::json::to_dsl_value(&json_value);
     dsl::FromValue::from_value(dsl_value).map_err(|error| error.to_string())
 }
 
 /// 📥️ Decodes a committed snapshot document — the `📸️snapshot/⬅️before/🔣️.json` every leaf
 /// fixture of this vocabulary shares — into a real [`ShootingSnapshot`].
 pub fn decode_shooting_snapshot_json(text: &str) -> Result<ShootingSnapshot, String> {
-    let json_value: serde_json::Value = serde_json::from_str(text).map_err(|error| error.to_string())?;
-    let dsl_value: dsl::DslValue = json_value.into();
+    let json_value = dsl::os_pack::json::parse(text).map_err(|error| error.to_string())?;
+    let dsl_value = dsl::os_pack::json::to_dsl_value(&json_value);
     dsl::FromValue::from_value(dsl_value).map_err(|error| error.to_string())
 }
 
@@ -139,18 +137,18 @@ pub fn decode_shooting_snapshot_json(text: &str) -> Result<ShootingSnapshot, Str
 /// because it is a content address for an `s.stdio.semio.image` child that no kind of this
 /// vocabulary addresses.
 pub fn encode_shooting_projection_json(snapshot: &ShootingSnapshot) -> String {
-    let assets: serde_json::Value = dsl::ToValue::to_value(&snapshot.assets).into();
-    let saved_cameras: serde_json::Value = dsl::ToValue::to_value(&snapshot.saved_cameras).into();
-    let scene: serde_json::Value = dsl::ToValue::to_value(&snapshot.scene).into();
-    let shots: serde_json::Value = dsl::ToValue::to_value(&snapshot.shots).into();
-    serde_json::json!({
-        "schema": snapshot.schema,
+    let assets = dsl::os_pack::json::from_dsl_value(&dsl::ToValue::to_value(&snapshot.assets));
+    let saved_cameras = dsl::os_pack::json::from_dsl_value(&dsl::ToValue::to_value(&snapshot.saved_cameras));
+    let scene = dsl::os_pack::json::from_dsl_value(&dsl::ToValue::to_value(&snapshot.scene));
+    let shots = dsl::os_pack::json::from_dsl_value(&dsl::ToValue::to_value(&snapshot.shots));
+    dsl::json!({
+        "schema": snapshot.schema.as_str(),
         "assets": assets,
         "savedCameras": saved_cameras,
         "scene": scene,
         "shots": shots,
-        "activeShotId": snapshot.active_shot_id,
-        "activeAssetId": snapshot.active_asset_id
+        "activeShotId": snapshot.active_shot_id.as_str(),
+        "activeAssetId": snapshot.active_asset_id.as_str()
     })
     .to_string()
 }

@@ -115,19 +115,19 @@ async fn parse_args(rest: &str) -> Result<std::collections::BTreeMap<String, Str
 
 //#region 🔖️StructCodec
 /// 🌳️ Whole-`FormStep`/`FormQuestion` text form — a quoted JSON string (both already derive
-/// `Serialize`/`Deserialize`) rather than a second handcrafted step/block grammar; `enc_str`/
+/// `ToValue`/`FromValue`) rather than a second handcrafted step/block grammar; `enc_str`/
 /// `dec_str`'s backslash/quote escaping round-trips it byte-for-byte.
 async fn enc_step(step: &FormStep) -> String {
-    enc_str(&serde_json::to_string(step).expect("FormStep always serializes"))
+    enc_str(&dsl::os_pack::json::to_json_string(step))
 }
 async fn dec_step(s: &str) -> Result<FormStep, String> {
-    serde_json::from_str(&dec_str(s)?).map_err(|e| e.to_string())
+    dsl::os_pack::json::from_json_str(&dec_str(s)?).map_err(|e| e.to_string())
 }
 async fn enc_block(block: &FormQuestion) -> String {
-    enc_str(&serde_json::to_string(block).expect("FormQuestion always serializes"))
+    enc_str(&dsl::os_pack::json::to_json_string(block))
 }
 async fn dec_block(s: &str) -> Result<FormQuestion, String> {
-    serde_json::from_str(&dec_str(s)?).map_err(|e| e.to_string())
+    dsl::os_pack::json::from_json_str(&dec_str(s)?).map_err(|e| e.to_string())
 }
 //#endregion 🔖️StructCodec
 

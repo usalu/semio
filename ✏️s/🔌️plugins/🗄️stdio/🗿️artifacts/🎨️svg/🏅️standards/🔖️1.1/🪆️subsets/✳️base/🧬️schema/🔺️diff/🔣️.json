@@ -15,7 +15,7 @@
       "properties": { "name": { "type": "string" }, "value": { "type": "string" } }
     },
     "XmlNode": {
-      "description": "Mirrors 📰xml's own XmlNode -- see xml's snapshot facet for the canonical shape.",
+      "description": "Mirrors 📰️xml's own XmlNode -- see xml's snapshot facet for the canonical shape.",
       "type": "object"
     },
     "XmlDeclaration": {

@@ -414,21 +414,65 @@ fn fold_directory_events_action(controller_id: &str, events: &[DirectoryEvent]) 
     Some(ActionDescriptor { controller_id: controller_id.to_string(), action: "foldDirectoryEvents".to_string(), args })
 }
 
-/// 📂️ ticket §4/§3-B — parses the `os.open-artifact`/`os.open-artifact-with` relay's JSON args for
-/// the `documentId`/`spaceId` fields the opening relay now carries (contract §C6: they ride inside
-/// the existing `ReplayShellCommand` args, no channel tag added). `documentId` absent ⇒ `None` (the
-/// relay only opened an app, no document to attach — the pre-existing gap this closes).
+/// 📂️ Parses the schema-first opening relay shared with the React shell. String and numeric
+/// role forms normalize identically; a surface-suffixed artifact ref must agree with the role; app
+/// and document coordinates are all-or-nothing pairs.
 #[cfg(not(target_arch = "wasm32"))]
+#[derive(Debug)]
 struct OpenArtifactRelayTarget {
-    document_id: String,
+    artifact_ref: String,
+    dialect: semio_framework::ArtifactDialect,
+    role: semio_framework::AppRole,
+    plugin_id: Option<String>,
+    app_id: Option<String>,
+    document_id: Option<String>,
     space_id: Option<String>,
+    schema: Option<String>,
 }
 
 #[cfg(not(target_arch = "wasm32"))]
-fn open_artifact_relay_target(args: Option<&Value>) -> Option<OpenArtifactRelayTarget> {
-    let document_id = args.and_then(|value| value.get("documentId")).and_then(|value| value.as_str())?.to_string();
-    let space_id = args.and_then(|value| value.get("spaceId")).and_then(|value| value.as_str()).map(str::to_string);
-    Some(OpenArtifactRelayTarget { document_id, space_id })
+fn open_artifact_relay_target(action_id: &str, args: Option<&Value>) -> Result<OpenArtifactRelayTarget, &'static str> {
+    let args = args.and_then(Value::as_object).ok_or("opening.invalid-args")?;
+    let text = |field: &str| args.get(field).and_then(Value::as_str).filter(|value| !value.trim().is_empty()).map(str::to_string);
+    let raw_artifact_ref = text("artifactRef").ok_or("opening.invalid-artifact-ref")?;
+    let (dialect, surface_role) = if raw_artifact_ref.contains('#') {
+        let (dialect, role) = semio_framework::parse_surface_app_id(&raw_artifact_ref).map_err(|_| "opening.invalid-artifact-ref")?;
+        (dialect, Some(role))
+    } else {
+        (semio_framework::ArtifactDialect::parse_coordinate(&raw_artifact_ref).map_err(|_| "opening.invalid-artifact-ref")?, None)
+    };
+    let wire_role = match args.get("role") {
+        None => None,
+        Some(Value::Number(number)) if number.as_u64() == Some(0) => Some(semio_framework::AppRole::Viewer),
+        Some(Value::Number(number)) if number.as_u64() == Some(1) => Some(semio_framework::AppRole::Editor),
+        Some(Value::String(role)) if role == "viewer" => Some(semio_framework::AppRole::Viewer),
+        Some(Value::String(role)) if role == "editor" => Some(semio_framework::AppRole::Editor),
+        _ => return Err("opening.invalid-role"),
+    };
+    if surface_role.is_some() && wire_role.is_some() && surface_role != wire_role {
+        return Err("opening.role-mismatch");
+    }
+    let role = wire_role.or(surface_role).unwrap_or(semio_framework::AppRole::Editor);
+    let plugin_id = text("pluginId");
+    let app_id = text("appId");
+    if plugin_id.is_some() != app_id.is_some() {
+        return Err("opening.partial-app-ref");
+    }
+    if action_id == "os.open-artifact-with" && plugin_id.is_none() {
+        return Err("opening.explicit-app-required");
+    }
+    if let Some(app_id) = &app_id {
+        let (app_dialect, app_role) = semio_framework::parse_surface_app_id(app_id).map_err(|_| "opening.app-mismatch")?;
+        if app_dialect != dialect || app_role != role {
+            return Err("opening.app-mismatch");
+        }
+    }
+    let document_id = text("documentId");
+    let schema = text("schema");
+    if document_id.is_some() != schema.is_some() {
+        return Err("opening.partial-document-ref");
+    }
+    Ok(OpenArtifactRelayTarget { artifact_ref: dialect.to_coordinate(), dialect, role, plugin_id, app_id, document_id, space_id: text("spaceId"), schema })
 }
 
 /// 👥️ ticket §5 — the presence roster IS surface-scoped: a `PresencePeer` batch from the currently
@@ -674,10 +718,32 @@ mod identity_directory_presence_tests {
     /// 🧪️ Verify item: "the `os.open-artifact{documentId}` path".
     #[test]
     fn open_artifact_relay_target_parses_document_and_space_ids() {
-        let target = open_artifact_relay_target(Some(&serde_json::json!({"documentId": "index", "spaceId": "sp-1"}))).expect("documentId present");
-        assert_eq!(target.document_id, "index");
+        let target = open_artifact_relay_target("os.open-artifact", Some(&serde_json::json!({"artifactRef": "s.space.space@1/*", "documentId": "index", "spaceId": "sp-1", "schema": "s.space"}))).expect("complete target");
+        assert_eq!(target.document_id.as_deref(), Some("index"));
         assert_eq!(target.space_id.as_deref(), Some("sp-1"));
-        assert!(open_artifact_relay_target(Some(&serde_json::json!({"artifactRef": "s.space.space@1/*"}))).is_none(), "no documentId means no document to attach, the pre-existing gap this closes");
+        assert_eq!(target.schema.as_deref(), Some("s.space"));
+        assert!(open_artifact_relay_target("os.open-artifact", Some(&serde_json::json!({"artifactRef": "s.space.space@1/*"}))).expect("app-only open").document_id.is_none());
+    }
+
+    #[test]
+    fn open_artifact_relay_vectors_match_the_typescript_contract() {
+        let fixture: Value = serde_json::from_str(include_str!("../../../ShellHelpers/🧪️fixtures/📂️open-artifact/🔣️.json")).expect("opening relay fixture");
+        for vector in fixture["valid"].as_array().expect("valid vectors") {
+            let target = open_artifact_relay_target(vector["actionId"].as_str().unwrap(), Some(&vector["args"])).unwrap_or_else(|error| panic!("{}: {error}", vector["id"]));
+            let expected = &vector["expected"];
+            assert_eq!(target.artifact_ref, expected["artifactRef"].as_str().unwrap(), "{}", vector["id"]);
+            assert_eq!(target.dialect.to_coordinate(), expected["artifactRef"].as_str().unwrap(), "{}", vector["id"]);
+            assert_eq!(target.role.as_str(), expected["role"].as_str().unwrap(), "{}", vector["id"]);
+            assert_eq!(target.plugin_id.as_deref(), vector["args"].get("pluginId").and_then(Value::as_str), "{}", vector["id"]);
+            assert_eq!(target.app_id.as_deref(), vector["args"].get("appId").and_then(Value::as_str), "{}", vector["id"]);
+            assert_eq!(target.document_id.as_deref(), expected.get("documentId").and_then(Value::as_str), "{}", vector["id"]);
+            assert_eq!(target.space_id.as_deref(), expected.get("spaceId").and_then(Value::as_str), "{}", vector["id"]);
+            assert_eq!(target.schema.as_deref(), expected.get("schema").and_then(Value::as_str), "{}", vector["id"]);
+        }
+        for vector in fixture["invalid"].as_array().expect("invalid vectors") {
+            let error = open_artifact_relay_target(vector["actionId"].as_str().unwrap(), Some(&vector["args"])).expect_err(vector["id"].as_str().unwrap());
+            assert_eq!(error, vector["error"].as_str().unwrap(), "{}", vector["id"]);
+        }
     }
 
     /// 🧪️ Verify item: "the presence roster filtering by surface".
@@ -709,15 +775,16 @@ mod identity_directory_presence_tests {
     /// `computeSyncPillState`/`syncPillText` test coverage (`📓️w3-a-report.md`).
     #[test]
     fn sync_pill_text_covers_persisted_pending_and_every_remote_state() {
-        assert_eq!(ShellState::sync_pill_text(None), "Remote: detached");
-        assert_eq!(ShellState::sync_pill_text(Some(&ArtifactSyncStatus { persisted: true, pending_mutations: 0, remote: RemoteState::Live { peer_count: 1 } })), "Persisted");
-        assert_eq!(ShellState::sync_pill_text(Some(&ArtifactSyncStatus { persisted: false, pending_mutations: 3, remote: RemoteState::Live { peer_count: 1 } })), "Pending (3)");
-        assert_eq!(ShellState::sync_pill_text(Some(&ArtifactSyncStatus { persisted: false, pending_mutations: 0, remote: RemoteState::Connecting })), "Remote: connecting");
-        assert_eq!(ShellState::sync_pill_text(Some(&ArtifactSyncStatus { persisted: false, pending_mutations: 0, remote: RemoteState::Backoff { retry_in_ms: 500 } })), "Remote: backoff");
-        assert_eq!(ShellState::sync_pill_text(Some(&ArtifactSyncStatus { persisted: false, pending_mutations: 0, remote: RemoteState::Detached })), "Remote: detached");
+        assert_eq!(ShellState::sync_pill_text(None, None), "Remote: detached");
+        assert_eq!(ShellState::sync_pill_text(Some(&ArtifactSyncStatus { persisted: true, pending_mutations: 0, remote: RemoteState::Live { peer_count: 1 } }), None), "Persisted");
+        assert_eq!(ShellState::sync_pill_text(Some(&ArtifactSyncStatus { persisted: false, pending_mutations: 3, remote: RemoteState::Live { peer_count: 1 } }), None), "Pending (3)");
+        assert_eq!(ShellState::sync_pill_text(Some(&ArtifactSyncStatus { persisted: false, pending_mutations: 0, remote: RemoteState::Connecting }), None), "Remote: connecting");
+        assert_eq!(ShellState::sync_pill_text(Some(&ArtifactSyncStatus { persisted: false, pending_mutations: 0, remote: RemoteState::Backoff { retry_in_ms: 500 } }), None), "Remote: backoff");
+        assert_eq!(ShellState::sync_pill_text(Some(&ArtifactSyncStatus { persisted: false, pending_mutations: 0, remote: RemoteState::Detached }), None), "Remote: detached");
         // 🎯️ A non-live remote takes priority over a nonzero pending count — the connection itself
         // being degraded is the more urgent fact, mirroring the React twin's own priority order.
-        assert_eq!(ShellState::sync_pill_text(Some(&ArtifactSyncStatus { persisted: false, pending_mutations: 9, remote: RemoteState::Backoff { retry_in_ms: 500 } })), "Remote: backoff");
+        assert_eq!(ShellState::sync_pill_text(Some(&ArtifactSyncStatus { persisted: false, pending_mutations: 9, remote: RemoteState::Backoff { retry_in_ms: 500 } }), None), "Remote: backoff");
+        assert_eq!(ShellState::sync_pill_text(None, Some(&(4, 8, 1, 2))), "Recovering 4/8 bytes · 1/2 chunks");
     }
 
     //#region 🧪️CheckInTests
@@ -1589,6 +1656,8 @@ pub struct ShellState {
     /// @emoji 🚦️ Latest sync health for the active document's status badge (native only).
     #[cfg(not(target_arch = "wasm32"))]
     pub sync_status: Option<ArtifactSyncStatus>,
+    #[cfg(not(target_arch = "wasm32"))]
+    pub sync_bootstrap_progress: Option<(u64, u64, u32, u32)>,
     //#region 🔖️Identity
     /// 🪪️ ticket 26/08/16/HUB-SPACES-LIVE-PRESENCE-AND-COLLABORATIVE-STUDIOS §C3 — the restored-or-
     /// minted session, `None` with no hub env (unchanged local-only behaviour) or before boot's
@@ -2071,6 +2140,8 @@ impl ShellState {
             sync_channel: None,
             #[cfg(not(target_arch = "wasm32"))]
             sync_status: None,
+            #[cfg(not(target_arch = "wasm32"))]
+            sync_bootstrap_progress: None,
             #[cfg(not(target_arch = "wasm32"))]
             identity: None,
             #[cfg(not(target_arch = "wasm32"))]
@@ -2987,6 +3058,7 @@ impl ShellState {
             self.document_host.close(&channel.document_id);
         }
         self.sync_status = None;
+        self.sync_bootstrap_progress = None;
         // 👥️ ticket §5 — a detached document's roster must never linger onto whatever opens next.
         self.presence_peers.clear();
         self.presence_surface = None;
@@ -3043,6 +3115,7 @@ impl ShellState {
                     }
                 }
                 ArtifactEvent::SnapshotReplaced { pack, spr } => {
+                    self.sync_bootstrap_progress = None;
                     if let Some(plugin) = plugin.as_ref() {
                         // 🎠️ H3-wgpu-native — same treatment, `load_app_document_pack` is now async.
                         match plugin.load_app_document_pack(instance_id, &pack, &spr).await {
@@ -3050,6 +3123,10 @@ impl ShellState {
                             Err(error) => eprintln!("[DEBUG] wgpu shell load_app_document_pack failed: {error}"),
                         }
                     }
+                }
+                ArtifactEvent::BootstrapProgress { received_bytes, total_bytes, received_chunks, total_chunks } => {
+                    self.sync_bootstrap_progress = Some((received_bytes, total_bytes, received_chunks, total_chunks));
+                    changed = true;
                 }
                 ArtifactEvent::Status(status) => {
                     self.sync_status = Some(status);
@@ -3114,7 +3191,10 @@ impl ShellState {
     /// `Label`/`LocalizedLabel` plumbing gap `📓️w2-b-report.md` already flagged for tree-content
     /// strings, not invented bespoke here — see `📓️w3-a-report.md`'s "what is NOT done".
     #[cfg(not(target_arch = "wasm32"))]
-    fn sync_pill_text(status: Option<&ArtifactSyncStatus>) -> String {
+    fn sync_pill_text(status: Option<&ArtifactSyncStatus>, progress: Option<&(u64, u64, u32, u32)>) -> String {
+        if let Some((received_bytes, total_bytes, received_chunks, total_chunks)) = progress {
+            return format!("Recovering {received_bytes}/{total_bytes} bytes · {received_chunks}/{total_chunks} chunks");
+        }
         let Some(status) = status else { return "Remote: detached".to_string() };
         if !matches!(status.remote, RemoteState::Live { .. }) {
             let remote = match &status.remote {
@@ -3836,26 +3916,29 @@ impl ShellState {
             return;
         }
         if action_id == "os.open-artifact" || action_id == "os.open-artifact-with" {
-            self.handle_open_artifact_relay(args_json.as_ref()).await;
+            self.handle_open_artifact_relay(action_id, args_json.as_ref()).await;
         }
     }
 
-    /// 📂️ ticket §4/§3-B — opens the relayed `documentId` (with `spaceId` pinning `open_space_id`
-    /// first, so the default-binding computation sees it) with this session's own default bindings.
-    /// `documentId` absent ⇒ no-op (the relay only opened an app, nothing further to attach — same
-    /// as the React shell's own documented gap until lane 3-B's opening relay carries a real
-    /// `schema` field; the `s.space` mapping is the one this lane knows, mirroring `📓️w2-c-report.md`).
+    /// 📂️ Opens the relay's exact `documentId`/`schema` pair with `spaceId` pinning
+    /// `open_space_id` first so default binding computation sees it. An app-only relay is a no-op.
     #[cfg(not(target_arch = "wasm32"))]
-    async fn handle_open_artifact_relay(&mut self, args: Option<&Value>) {
-        let Some(target) = open_artifact_relay_target(args) else {
-            return;
+    async fn handle_open_artifact_relay(&mut self, action_id: &str, args: Option<&Value>) {
+        let target = match open_artifact_relay_target(action_id, args) {
+            Ok(target) => target,
+            Err(error) => {
+                eprintln!("[DEBUG] wgpu shell os.open-artifact relay rejected: {error}");
+                return;
+            }
         };
         if let Some(space_id) = target.space_id {
             self.open_space_id = Some(space_id);
         }
-        let schema = if target.document_id == S_SPACE_INDEX_DOCUMENT_ID { S_SPACE_INDEX_DOCUMENT_SCHEMA.to_string() } else { target.document_id.clone() };
+        let (Some(document_id), Some(schema)) = (target.document_id, target.schema) else {
+            return;
+        };
         let (bindings, surface) = self.default_bindings_for_current_session();
-        if let Err(error) = self.open_document(target.document_id, schema, bindings, surface).await {
+        if let Err(error) = self.open_document(document_id, schema, bindings, surface).await {
             eprintln!("[DEBUG] wgpu shell os.open-artifact relay failed: {error}");
         }
     }
@@ -4001,18 +4084,29 @@ impl ShellState {
     async fn pump_directory_events(&mut self) -> bool {
         self.poll_identity_bootstrap();
         let mut changed = false;
+        let mut restart_from_canonical_directory = false;
         if let Some(runner) = self.directory_stream.as_ref() {
             let mut events: Vec<DirectoryEvent> = Vec::new();
             for message in runner.drain() {
                 match message {
                     DirectoryStreamMessage::Event { event } => events.push(event),
                     DirectoryStreamMessage::Connection { .. } | DirectoryStreamMessage::Presence { .. } | DirectoryStreamMessage::Heartbeat { .. } => {}
+                    DirectoryStreamMessage::RebootstrapRequired { .. } => restart_from_canonical_directory = true,
                 }
             }
             if !events.is_empty() {
                 self.dispatch_directory_event_batch(events).await;
                 changed = true;
             }
+        }
+        if restart_from_canonical_directory {
+            if let Some(runner) = self.directory_stream.take() {
+                runner.cancel();
+            }
+            if let Some(client) = self.directory_client.clone() {
+                self.open_directory_stream(client);
+            }
+            changed = true;
         }
         self.flush_pending_directory_commands().await;
         changed
@@ -6842,6 +6936,7 @@ fn render_sync_status_and_checkin(
     input: &mut InputState<ActionDescriptor>,
     theme: &Theme,
     status: Option<&ArtifactSyncStatus>,
+    progress: Option<&(u64, u64, u32, u32)>,
     session: Option<&ActiveSession>,
     uncommitted_count: u32,
     x: f32,
@@ -6850,7 +6945,7 @@ fn render_sync_status_and_checkin(
 ) -> Result<Option<f32>, ()> {
     if cursor.item == 0 {
         if cursor.window.is_none() {
-            cursor.window = Some(UiText::try_from_string(ShellState::sync_pill_text(status)).map_err(|_| ())?);
+            cursor.window = Some(UiText::try_from_string(ShellState::sync_pill_text(status, progress)).map_err(|_| ())?);
         }
         let Some(label) = cursor.window.as_ref() else { return Err(()) };
         let item = ChromeGroupItem { control_id: "s-sync-status", icon_id: None, label: Some(label.as_str()), active: false, disabled: false, kind: HitKind::Button };
@@ -10980,7 +11075,7 @@ impl ShellState {
                 {
                     let count = uncommitted_edit_count(&self.history_entries);
                     let x = cursor.x;
-                    match render_sync_status_and_checkin(cursor, draw, atlas, icons, input, theme, self.sync_status.as_ref(), self.session.as_ref(), count, x, btn_y, btn_h) {
+                    match render_sync_status_and_checkin(cursor, draw, atlas, icons, input, theme, self.sync_status.as_ref(), self.sync_bootstrap_progress.as_ref(), self.session.as_ref(), count, x, btn_y, btn_h) {
                         Ok(Some(next_x)) => cursor.x = next_x,
                         Ok(None) => return false,
                         Err(()) => {
@@ -11546,7 +11641,7 @@ impl ShellState {
             let uncommitted_count = uncommitted_edit_count(&self.history_entries);
             let mut cursor = ShellChromeChildCursor::default();
             loop {
-                match render_sync_status_and_checkin(&mut cursor, draw, atlas, icons, input, theme, self.sync_status.as_ref(), self.session.as_ref(), uncommitted_count, utility_x, btn_y, btn_h) {
+                match render_sync_status_and_checkin(&mut cursor, draw, atlas, icons, input, theme, self.sync_status.as_ref(), self.sync_bootstrap_progress.as_ref(), self.session.as_ref(), uncommitted_count, utility_x, btn_y, btn_h) {
                     Ok(Some(next_x)) => {
                         utility_x = next_x;
                         break;

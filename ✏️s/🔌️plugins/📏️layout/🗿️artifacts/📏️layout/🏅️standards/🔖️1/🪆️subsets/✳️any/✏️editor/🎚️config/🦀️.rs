@@ -10,7 +10,6 @@ use crate::artifacts::layout::LayoutCamera;
 use semio_framework_value_derive::{FromValue, ToValue};
 pub use crate::artifacts::layout::LayoutDropPreviewState;
 use protocol::Mutation;
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️Config
 /// 🧮️ B1: layout's real `ArtifactApp::Config` — absorbs every field that used to live on

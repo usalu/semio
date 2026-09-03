@@ -68,7 +68,7 @@ mod tests {
     async fn import_snapshot_json_replaces_the_whole_document() {
         let mesh_json = crate::artifacts::lowpoly::schema::default_mesh_workspace()["obj-1"].clone();
         let replacement = crate::artifacts::lowpoly::snapshot_from_mesh_json(&mesh_json, "obj-x", "X");
-        let json = serde_json::to_string(&replacement).unwrap();
+        let json = serde_json::to_string(&Into::<serde_json::Value>::into(dsl::ToValue::to_value(&replacement))).unwrap();
         let snapshot = default_snapshot();
         let history = semio_framework_plugin::HistoryView::empty();
         let doc = ArtifactView::new(&snapshot, &history);

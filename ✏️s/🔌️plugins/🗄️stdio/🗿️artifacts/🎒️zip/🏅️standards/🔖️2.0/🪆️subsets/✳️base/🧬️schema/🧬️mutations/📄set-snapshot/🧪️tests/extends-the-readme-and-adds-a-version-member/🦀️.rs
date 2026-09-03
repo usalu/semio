@@ -14,9 +14,9 @@
 //! `.pack.semio`/`.patch.semio` encodings are derived from it by `fixtures generate` and are
 //! asserted by the shared codec-matrix harness, not here.
 
-use crate::artifacts::zip::standards::v2_0::subsets::any::schema::diff::ZipDiff;
-use crate::artifacts::zip::standards::v2_0::subsets::any::schema::mutations::{apply_zip_mutation, ZipMutation};
-use crate::artifacts::zip::standards::v2_0::subsets::any::schema::snapshot::ZipSnapshot;
+use crate::artifacts::zip::standards::v2_0::subsets::base::schema::diff::ZipDiff;
+use crate::artifacts::zip::standards::v2_0::subsets::base::schema::mutations::{apply_zip_mutation, ZipMutation};
+use crate::artifacts::zip::standards::v2_0::subsets::base::schema::snapshot::ZipSnapshot;
 
 const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️.json");
 const AFTER: &str = include_str!("📸️snapshot/➡️after/🔣️.json");

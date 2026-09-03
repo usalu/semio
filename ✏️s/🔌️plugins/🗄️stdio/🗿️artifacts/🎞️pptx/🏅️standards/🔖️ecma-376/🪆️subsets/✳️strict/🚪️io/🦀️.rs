@@ -5,7 +5,7 @@
 //! `✳️base/🚪️io` already established for this artifact.
 //#region 🎹️DerivedComposition
 pub mod derived_composition {
-    use crate::artifacts::pptx::standards::v_ecma_376::subsets::any::schema::PptxComposer as PptxAnyComposer;
+    use crate::artifacts::pptx::standards::v_ecma_376::subsets::base::schema::PptxComposer as PptxAnyComposer;
     use crate::artifacts::pptx::standards::v_ecma_376::subsets::strict::schema::check_strict_conformance;
     use crate::artifacts::pptx::PptxSnapshot;
     use dsl::{Diagnostic, FaultCode, Severity, TextSpan};

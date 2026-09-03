@@ -46,7 +46,7 @@ mod subject {
     use super::{removed_name, spec};
     use semio_s_plugin_stdio_test_oracle::archive::{oracle_create_zip, project_zip};
     use semio_repo_test_host::{Context, Outcome};
-    use semio_s_plugin_stdio::artifacts::zip::standards::v2_0::subsets::any::io::{decode_zip, encode_zip};
+    use semio_s_plugin_stdio::artifacts::zip::standards::v2_0::subsets::base::io::{decode_zip, encode_zip};
 
     pub fn round_trip(ctx: &Context) -> Result<Outcome, String> {
         let reference = oracle_create_zip(&spec(ctx)?)?;

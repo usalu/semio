@@ -6,7 +6,7 @@
   "type": "module",
   "private": true,
   "exports": {
-    ".": "./🟦️.tsx"
+    ".": "./📦️index.tsx"
   },
   "scripts": {
     "dev": "bun nx run os-hub-admin:dev",

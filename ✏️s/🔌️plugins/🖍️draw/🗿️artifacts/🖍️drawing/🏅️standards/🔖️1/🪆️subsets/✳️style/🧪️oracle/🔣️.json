@@ -392,15 +392,15 @@
           "role": "expected-before-json",
           "path": "../🧫️fixtures/set-layer-blend-mode/before.json",
           "mediaType": "application/json",
-          "sha256": "sha256:520188464a79c8ba4e0d79c56b05a55ac78129e8554980c8f1cd4db0b52e1971",
-          "bytes": 1114
+          "sha256": "sha256:6e0009dfe92f8c2d48f91ca7f2344770f011c300ea404a36169434a4c4411096",
+          "bytes": 1123
         },
         {
           "role": "expected-after-json",
           "path": "../🧫️fixtures/set-layer-blend-mode/after.json",
           "mediaType": "application/json",
-          "sha256": "sha256:40773e65ea753698c0b336906c117365a00ef2cd4043418cbadf39d743ee3dc8",
-          "bytes": 1114
+          "sha256": "sha256:3f66b61ec3e80a3213da2b213f4e40c87b177ed4e5c517610667a0127ae6288a",
+          "bytes": 1123
         }
       ],
       "provenance": {

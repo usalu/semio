@@ -34,7 +34,7 @@ pub const SURFACE_ID: &str = "puzzle.5d.play.3d";
 /// 🧱️ Stitched into the app manifest by `crate::editor::puzzle5d::create_puzzle5d_app`.
 ///
 /// 🔁️ The `brush`/`fill` utility ids it binds resolve to the definitions declared once under the 2D
-/// window (`🪟️windows/◻2d/🪛️utilities/{🖌️brush,🪣️fill}`) — both windows expose the identical utility,
+/// window (`🪟️windows/◻️2d/🪛️utilities/{🖌️brush,🪣️fill}`) — both windows expose the identical utility,
 /// so it is never duplicated here.
 pub fn definition(envelope: &Puzzle5dScene, precompute: &Puzzle5dPrecomputeSession, labels: &Puzzle5dLabels) -> WindowKindDefinition {
     WindowKindDefinition {

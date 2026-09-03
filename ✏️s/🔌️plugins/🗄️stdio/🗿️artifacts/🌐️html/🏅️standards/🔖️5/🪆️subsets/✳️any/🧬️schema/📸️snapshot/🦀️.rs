@@ -1,5 +1,5 @@
 //! 🧬️ HtmlSnapshot schema — own `HtmlNode` recursive tree model + a from-scratch WHATWG-inspired
-//! HTML5 tokenizer/parser and serializer. HTML is NOT XML: no shared types with `📰xml`/`🎨️svg`
+//! HTML5 tokenizer/parser and serializer. HTML is NOT XML: no shared types with `📰️xml`/`🎨️svg`
 //! (only the general "recursive node tree" *structural pattern* is borrowed, per the ticket brief)
 //! — own element/text/comment/raw-text node kinds, own void-element handling, own (deliberately
 //! small) entity table.

@@ -15,13 +15,18 @@
 
 use crate::artifacts::playbook::{PlaybookDiff, PlaybookSnapshot};
 use semio_framework_value_derive::{FromValue, ToValue};
+// 🔬️ `Serialize`/`Deserialize` survive ONLY as a `#[cfg(test)]` differential oracle — committed
+// `🧪️tests/<fixture>/🦀️.rs` fixture vectors decode/re-encode through them — never a production
+// dependency of this crate.
+#[cfg(test)]
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Mutations
 /// 🧮️ Semantic playbook document mutation vocabulary: id-keyed step/block add/remove/move, a
 /// whole-block replace, a step-header update, and the playbook's own title scalar.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, dsl::DslEnum, dsl::Mutations)]
-#[serde(tag = "mutation", rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslEnum, dsl::Mutations)]
+#[cfg_attr(test, derive(Serialize, Deserialize))]
+#[cfg_attr(test, serde(tag = "mutation", rename_all = "camelCase"))]
 #[value(tag = "mutation", rename_all = "camelCase")]
 #[mutations(snapshot = PlaybookSnapshot, diff = PlaybookDiff, schema = "playbook.playbook")]
 pub enum PlaybookMutation {
@@ -88,20 +93,20 @@ pub fn inverse_playbook_mutation_steps(mutation: &PlaybookMutation, base: &Playb
 /// committed `<slug>/🧪️tests/<fixture>/🦠️mutation/🔣️.json` vectors carry.
 // 🚫️async: E1 pure codec helper (file verified I/O-free) — see R9
 pub fn decode_playbook_mutation_json(text: &str) -> Result<PlaybookMutation, String> {
-    serde_json::from_str(text).map_err(|error| error.to_string())
+    protocol::json::from_json_str(text).map_err(|error| error.to_string())
 }
 
 /// 📥️ Decodes a committed `📸️snapshot/{⬅️before,➡️after}/🔣️.json` vector.
 // 🚫️async: E1 pure codec helper (file verified I/O-free) — see R9
 pub fn decode_playbook_snapshot_json(text: &str) -> Result<PlaybookSnapshot, String> {
-    serde_json::from_str(text).map_err(|error| error.to_string())
+    protocol::json::from_json_str(text).map_err(|error| error.to_string())
 }
 
 /// 📤️ The snapshot as the same canonical JSON the committed vectors are written in — the
 /// projection an external test host compares through.
 // 🚫️async: E1 pure codec helper (file verified I/O-free) — see R9
 pub fn encode_playbook_snapshot_json(snapshot: &PlaybookSnapshot) -> String {
-    serde_json::to_string(snapshot).expect("a PlaybookSnapshot is always serializable")
+    protocol::json::to_json_string(snapshot)
 }
 /// 🌱 Attaches the working scene to this snapshot's exact composed `flow` child handle from a
 /// committed `[PlaybookStep]` JSON document, and hands back what it decoded.
@@ -116,7 +121,7 @@ pub fn encode_playbook_snapshot_json(snapshot: &PlaybookSnapshot) -> String {
 /// as a fixture file of its own; until then this is the seam that makes the vectors runnable.
 // 🚫️async: E1 pure computation over an in-memory snapshot, consumed from a synchronous external test host — see R9
 pub fn seed_playbook_scene_json(snapshot: &mut PlaybookSnapshot, steps_json: &str) -> Result<Vec<crate::artifacts::playbook::PlaybookStep>, String> {
-    let steps: Vec<crate::artifacts::playbook::PlaybookStep> = serde_json::from_str(steps_json).map_err(|error| error.to_string())?;
+    let steps: Vec<crate::artifacts::playbook::PlaybookStep> = protocol::json::from_json_str(steps_json).map_err(|error| error.to_string())?;
     crate::artifacts::playbook::attach_playbook_steps(&mut snapshot.flow, steps.clone());
     Ok(steps)
 }

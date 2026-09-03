@@ -33,7 +33,6 @@ use semio_framework_plugin::{
     ArtifactToolFactoryRegistry, ArtifactToolPublicationContract, ArtifactToolPublicationLane, ArtifactView, ConfigView, ContextMenuItemSpec, ContextMenuRequest, DomainTopology, DraftView, Editor, EditorApp, Emit, Fault,
     GranularityDefinition, HierarchyProvider, HoverSpec, InteractionDefinition, InteractionRef, InteractionTopology, Label, LocalizedLabel, MergeMode, NoDraft, NoDraftMutation, SelectionMethod, SelectionMode, SelectionSpec, TopologyNode, UiNode,
 };
-use serde_json::Value;
 use store::EngineHandles;
 
 //#region 🔖️Constants
@@ -150,12 +149,12 @@ async fn dag_context_menu_items(registry: &AppActionRegistry, labels: &crate::ed
     // the `VcsArtifactApp::context_menu` funnel) sorts groups into `RIBBON_PARENT_CATEGORIES` order and
     // inserts the pre-destructive separator itself, so no `.separator()` call is needed ahead of the
     // `deleteSelection`/`nodeGraphEdit` destructive row below.
-    let mut menu = Menu::of(registry).action_args("addNode", serde_json::json!({ "kind": "computation" })).action("reorganize");
+    let mut menu = Menu::of(registry).action_args("addNode", dsl::DslValue::object([("kind".to_string(), dsl::DslValue::String("computation".to_string()))])).action("reorganize");
     if nodes.len() == 1 {
         menu = menu.action("renameDagNode");
     }
     if let Some(edge_id) = hit_edge_id {
-        menu = menu.group("transfer", |m| m.action_args("disconnect", serde_json::json!({ "edgeId": edge_id })));
+        menu = menu.group("transfer", |m| m.action_args("disconnect", dsl::DslValue::object([("edgeId".to_string(), dsl::DslValue::String(edge_id))])));
     }
     if let Some(spec) = node_graph_delete_selection_spec(labels.delete_selection.as_str(), is_de, nodes.len(), edges.len(), NodeGraphDeleteDispatch::ViaNodeGraphEdit) {
         menu = menu.item(spec);

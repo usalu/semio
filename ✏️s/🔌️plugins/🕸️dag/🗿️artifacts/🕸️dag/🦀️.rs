@@ -30,7 +30,7 @@ pub use infinite_board_port_directed_dag::{DagEdgePatch, DagFixtureEdge, DagNode
 /// nodes/edges now live in this composed child's `nodes`/`edges` rather than inline on `DagSnapshot`.
 pub type DagContentChild = store::ArtifactChild<SemioGraphSnapshot>;
 
-use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::any::schema::geometry::SemioPoint2;
+use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::base::schema::geometry::SemioPoint2;
 use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::graph::schema::snapshot::{
     GraphEdgeId as SemioGraphEdgeId, GraphNodeId as SemioGraphNodeId, SemioGraphEdge, SemioGraphNode, SemioGraphPort, SemioGraphPortKind, SemioGraphSnapshot, STDIO_SEMIOGRAPH_DOCUMENT_SCHEMA,
 };
@@ -54,7 +54,7 @@ async fn semio_node_from_dag_node(node: &DagNodeSpec) -> SemioGraphNode {
         label: node.name.clone(),
         position: SemioPoint2 { x: node.x, y: node.y },
         ports,
-        properties: vec![SemioValueEntry { key: DAG_NODE_JSON_PROPERTY.into(), value: SemioValue::Str { value: serde_json::to_string(node).unwrap_or_default() } }],
+        properties: vec![SemioValueEntry { key: DAG_NODE_JSON_PROPERTY.into(), value: SemioValue::Str { value: dsl::json::to_json_string(node) } }],
     }
 }
 
@@ -66,7 +66,7 @@ async fn dag_node_from_semio_node(node: &SemioGraphNode) -> DagNodeSpec {
     for property in &node.properties {
         if property.key == DAG_NODE_JSON_PROPERTY {
             if let SemioValue::Str { value } = &property.value {
-                if let Ok(parsed) = serde_json::from_str::<DagNodeSpec>(value) {
+                if let Ok(parsed) = dsl::json::from_json_str::<DagNodeSpec>(value) {
                     return parsed;
                 }
             }
@@ -84,14 +84,14 @@ async fn dag_node_from_semio_node(node: &SemioGraphNode) -> DagNodeSpec {
 async fn semio_edge_from_dag_edge(edge: &DagFixtureEdge) -> SemioGraphEdge {
     let (source_node, _) = split_endpoint(&edge.source);
     let (target_node, _) = split_endpoint(&edge.target);
-    SemioGraphEdge { id: SemioGraphEdgeId::new(edge.id.clone()), source: SemioGraphNodeId::new(source_node), target: SemioGraphNodeId::new(target_node), kind: "dag-edge".into(), label: serde_json::to_string(edge).unwrap_or_default() }
+    SemioGraphEdge { id: SemioGraphEdgeId::new(edge.id.clone()), source: SemioGraphNodeId::new(source_node), target: SemioGraphNodeId::new(target_node), kind: "dag-edge".into(), label: dsl::json::to_json_string(edge) }
 }
 
 /// 🌉 Inverse of [`semio_edge_from_dag_edge`] — falls back to a bare node-id edge (no route
 /// style/properties) if `label` isn't valid `DagFixtureEdge` JSON (content authored outside this
 /// plugin) — never panics.
 async fn dag_edge_from_semio_edge(edge: &SemioGraphEdge) -> DagFixtureEdge {
-    serde_json::from_str::<DagFixtureEdge>(&edge.label).unwrap_or_else(|_| DagFixtureEdge { id: edge.id.value.clone(), source: edge.source.value.clone(), target: edge.target.value.clone(), ..Default::default() })
+    dsl::json::from_json_str::<DagFixtureEdge>(&edge.label).unwrap_or_else(|_| DagFixtureEdge { id: edge.id.value.clone(), source: edge.source.value.clone(), target: edge.target.value.clone(), ..Default::default() })
 }
 
 async fn split_endpoint(endpoint: &str) -> (String, String) {
@@ -117,7 +117,7 @@ pub async fn working_from_dag_content_snapshot(content: &SemioGraphSnapshot) -> 
 pub async fn dag_content_child_handle(nodes: &[DagNodeSpec], edges: &[DagFixtureEdge]) -> DagContentChild {
     use std::hash::{Hash, Hasher};
     let snapshot = dag_content_snapshot_from_working(nodes, edges);
-    let content_json = serde_json::to_string(&snapshot).unwrap_or_default();
+    let content_json = dsl::json::to_json_string(&snapshot);
     let mut hasher = std::collections::hash_map::DefaultHasher::new();
     content_json.hash(&mut hasher);
     let content_hash = hasher.finish();

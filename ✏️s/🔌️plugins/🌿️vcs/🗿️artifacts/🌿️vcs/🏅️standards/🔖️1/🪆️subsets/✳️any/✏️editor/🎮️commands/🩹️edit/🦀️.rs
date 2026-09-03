@@ -50,7 +50,7 @@ fn vcs_demo_projection_diff_operations(current: &VcsSnapshot, next: &VcsSnapshot
 /// 🧩️ The former `TextEdit`/`Edit` match arm body, shared by both payload modules: parses the given
 /// text as a whole `VcsSnapshot` and emits the diff against the current one.
 pub(crate) fn text_edit_operations(text: &str, current: &VcsSnapshot) -> Emit<VcsDemoMutation, VcsDemoConfigMutation> {
-    match serde_json::from_str::<VcsSnapshot>(text) {
+    match dsl::json::from_json_str::<VcsSnapshot>(text) {
         Ok(next_projection) => {
             let operations = vcs_demo_projection_diff_operations(current, &next_projection);
             if operations.is_empty() {

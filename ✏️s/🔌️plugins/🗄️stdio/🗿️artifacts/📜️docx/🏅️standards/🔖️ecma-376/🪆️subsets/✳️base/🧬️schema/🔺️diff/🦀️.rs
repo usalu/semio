@@ -1771,7 +1771,7 @@ pub(crate) fn dec_list<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>) -> R
 
 //#region 🔖️XmlValueCodecs
 /// 🌳️ Recursive: `E[name,[attrs],[children]]` / `T[text]` / `D[text]` (CData) / `M[text]`
-/// (comment) / `P[target,data]` (processing instruction) -- same tag scheme `📰xml`/`🎨️svg`'s own
+/// (comment) / `P[target,data]` (processing instruction) -- same tag scheme `📰️xml`/`🎨️svg`'s own
 /// hand-rolled codecs use (own copy per the no-shared-helpers-module convention). Needed here
 /// because every `extra_*_properties: Vec<XmlNode>` raw-retention field (on `DocxRun`/
 /// `DocxParagraph`/`DocxTableCell`/`DocxTableRow`/`DocxTable`) carries this type verbatim.
@@ -2286,7 +2286,7 @@ fn dec_document_diff(s: &str) -> Result<DocxDocumentDiff, String> {
 /// Real LEB128-varint-framed length-prefixed strings/bytes (`store::pack_rt::write_varint_u64` +
 /// `store::ByteReader`), 1-byte tri-state presence tags, and 1-byte enum-variant tags — genuinely
 /// structured binary, never hex-ASCII text reused as "binary". Same shape
-/// `📰xml/…/🔺️diff/🦀️.rs`'s own `BinaryPrimitives`/`XmlValueBinaryCodecs`/
+/// `📰️xml/…/🔺️diff/🦀️.rs`'s own `BinaryPrimitives`/`XmlValueBinaryCodecs`/
 /// `DiffValueBinaryCodecs` regions establish; duplicated here (not imported) per this repo's
 /// per-artifact hand-roll convention (no shared "hand-roll helpers" module exists yet, see this
 /// file's own `HandcraftedDiffCodec` doc comment).

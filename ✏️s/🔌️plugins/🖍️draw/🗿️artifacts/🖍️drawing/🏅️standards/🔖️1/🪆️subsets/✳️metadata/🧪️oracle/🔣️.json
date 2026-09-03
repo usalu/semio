@@ -235,15 +235,15 @@
           "role": "expected-before-json",
           "path": "../🧫️fixtures/set-layer-locked/before.json",
           "mediaType": "application/json",
-          "sha256": "sha256:520188464a79c8ba4e0d79c56b05a55ac78129e8554980c8f1cd4db0b52e1971",
-          "bytes": 1114
+          "sha256": "sha256:6e0009dfe92f8c2d48f91ca7f2344770f011c300ea404a36169434a4c4411096",
+          "bytes": 1123
         },
         {
           "role": "expected-after-json",
           "path": "../🧫️fixtures/set-layer-locked/after.json",
           "mediaType": "application/json",
-          "sha256": "sha256:306ea26b81a4d5a4f1de0ecd712f803f36f421a326a20bf4a5ce2eae3360f988",
-          "bytes": 1113
+          "sha256": "sha256:ca20906120f60abd9162f4cce89c7082dc44d6fd645c7305643a4931a93100c9",
+          "bytes": 1122
         }
       ],
       "provenance": {
@@ -284,15 +284,15 @@
           "role": "expected-before-json",
           "path": "../🧫️fixtures/rename-layer/before.json",
           "mediaType": "application/json",
-          "sha256": "sha256:520188464a79c8ba4e0d79c56b05a55ac78129e8554980c8f1cd4db0b52e1971",
-          "bytes": 1114
+          "sha256": "sha256:6e0009dfe92f8c2d48f91ca7f2344770f011c300ea404a36169434a4c4411096",
+          "bytes": 1123
         },
         {
           "role": "expected-after-json",
           "path": "../🧫️fixtures/rename-layer/after.json",
           "mediaType": "application/json",
-          "sha256": "sha256:54ea7b1bf1fef79c6bc8100fefe091470ebc67e07f49561538aebb714fa7a6ef",
-          "bytes": 1112
+          "sha256": "sha256:59a46f609cd6cb2ac443efa1a9cef2d1a50ca855a22acab76c5510430f065ef1",
+          "bytes": 1121
         }
       ],
       "provenance": {

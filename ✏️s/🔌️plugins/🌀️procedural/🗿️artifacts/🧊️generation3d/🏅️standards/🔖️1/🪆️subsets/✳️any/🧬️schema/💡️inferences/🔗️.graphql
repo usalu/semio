@@ -1,0 +1,13 @@
+# 💡️ Generation3d inference schema — topology (DAG shape of `fixture`'s widget/synapse graph).
+
+type Generation3dInference {
+  topology: Generation3dTopology! @derived
+}
+
+type Generation3dTopology {
+  nodeCount: Int!
+  edgeCount: Int!
+  topoOrder: [String!]!
+  depth: Int!
+  cycleFree: Boolean!
+}

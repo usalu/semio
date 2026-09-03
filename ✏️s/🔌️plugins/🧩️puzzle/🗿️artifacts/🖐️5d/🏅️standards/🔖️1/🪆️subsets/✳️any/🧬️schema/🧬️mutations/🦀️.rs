@@ -318,14 +318,15 @@ fn normalize_kind_catalogs_for_snapshot_value(value: &Value) -> Value {
         return value;
     }
     let Some(catalogs_value) = object.remove("kindCatalogs") else { return value };
-    let catalogs: crate::artifacts::puzzle5d::Puzzle5dKindCatalogs = serde_json::from_value(catalogs_value).unwrap_or_default();
+    // 🩹️ Ticket 26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS: routes
+    // through `dsl::DslValue`/`dsl::ToValue`/`dsl::FromValue` instead of
+    // `serde_json::from_value`/`to_value` on `Puzzle5dKindCatalogs`/`Puzzle5dKindCatalogsExtra` —
+    // both only derive `Serialize`/`Deserialize` under `#[cfg(test)]` now. `Value` (this bridge's
+    // own boundary type) is untouched.
+    let catalogs: crate::artifacts::puzzle5d::Puzzle5dKindCatalogs = dsl::FromValue::from_value(dsl::DslValue::from(&catalogs_value)).unwrap_or_default();
     let (handle, extra) = crate::artifacts::puzzle5d::split_and_seed_kind_catalogs(Some(catalogs));
-    if let Ok(handle_value) = serde_json::to_value(&handle) {
-        object.insert("kindCatalogs".into(), handle_value);
-    }
-    if let Ok(extra_value) = serde_json::to_value(&extra) {
-        object.insert("kindCatalogsExtra".into(), extra_value);
-    }
+    object.insert("kindCatalogs".into(), Value::from(&dsl::ToValue::to_value(&handle)));
+    object.insert("kindCatalogsExtra".into(), Value::from(&dsl::ToValue::to_value(&extra)));
     value
 }
 

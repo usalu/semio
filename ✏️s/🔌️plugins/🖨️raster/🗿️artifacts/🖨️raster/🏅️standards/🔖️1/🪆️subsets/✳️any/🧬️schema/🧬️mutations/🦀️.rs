@@ -14,7 +14,6 @@
 
 use crate::artifacts::raster::diff::RasterDiff;
 use crate::artifacts::raster::RasterSnapshot;
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️Leaves
 use super::add_layer_asset;
@@ -35,9 +34,8 @@ use super::resize_layer;
 /// 🧬️ Closed semantic mutation vocabulary for the raster document, derived per
 /// `📓️derivation-rules.md` from `RasterLayerNode`'s recursive tree shape and the `assets` root
 /// collection.
-#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::Mutations, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::Mutations)]
 #[value(tag = "mutation", rename_all = "camelCase")]
-#[serde(tag = "mutation", rename_all = "camelCase")]
 #[mutations(snapshot = RasterSnapshot, diff = RasterDiff, schema = "raster.raster")]
 pub enum RasterMutation {
     CreateLayer(create_layer::CreateLayer),
@@ -211,12 +209,19 @@ mod tests {
         let mut assets = RasterOwnedMap::new();
         assets.insert("asset-1".into(), crate::artifacts::raster::image_asset_child_handle("asset-1", &RasterImageAsset { mime: "image/png".into(), data: b"abc".to_vec() }));
         let mut params = RasterOwnedMap::new();
-        params.insert("brightness".into(), dsl::to_dsl_value(&serde_json::json!(0.06)).expect("dsl value"));
-        params.insert("label".into(), dsl::to_dsl_value(&serde_json::json!("Warm \"Curve\"")).expect("dsl value"));
-        params.insert("enabled".into(), dsl::to_dsl_value(&serde_json::json!(true)).expect("dsl value"));
+        params.insert("brightness".into(), dsl::DslValue::float(0.06));
+        params.insert("label".into(), dsl::DslValue::String("Warm \"Curve\"".to_string()));
+        params.insert("enabled".into(), dsl::DslValue::Bool(true));
         params.insert("fallback".into(), dsl::DslValue::Null);
-        params.insert("curves".into(), dsl::to_dsl_value(&serde_json::json!([[0.0, 0.0], [0.25, 0.2], [1.0, 1.0]])).expect("dsl value"));
-        params.insert("nested".into(), dsl::to_dsl_value(&serde_json::json!({ "inner": 1.5 })).expect("dsl value"));
+        params.insert(
+            "curves".into(),
+            dsl::DslValue::Array(vec![
+                dsl::DslValue::Array(vec![dsl::DslValue::float(0.0), dsl::DslValue::float(0.0)]),
+                dsl::DslValue::Array(vec![dsl::DslValue::float(0.25), dsl::DslValue::float(0.2)]),
+                dsl::DslValue::Array(vec![dsl::DslValue::float(1.0), dsl::DslValue::float(1.0)]),
+            ]),
+        );
+        params.insert("nested".into(), dsl::DslValue::Object(vec![("inner".to_string(), dsl::DslValue::float(1.5))]));
         RasterSnapshot {
             schema: RASTER_DOCUMENT_SCHEMA.into(),
             id: "doc-1".into(),
@@ -366,8 +371,8 @@ mod tests {
 /// reads — into real typed values.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn bridge_decode_pair(snapshot_json: &str, mutation_json: &str) -> Result<(RasterSnapshot, RasterMutation), String> {
-    let snapshot: RasterSnapshot = serde_json::from_str(snapshot_json).map_err(|error| format!("the committed raster snapshot JSON does not decode: {error}"))?;
-    let mutation: RasterMutation = serde_json::from_str(mutation_json).map_err(|error| format!("the committed raster mutation JSON does not decode: {error}"))?;
+    let snapshot: RasterSnapshot = dsl::os_pack::json::from_json_str(snapshot_json).map_err(|error| format!("the committed raster snapshot JSON does not decode: {error}"))?;
+    let mutation: RasterMutation = dsl::os_pack::json::from_json_str(mutation_json).map_err(|error| format!("the committed raster mutation JSON does not decode: {error}"))?;
     Ok((snapshot, mutation))
 }
 
@@ -388,14 +393,18 @@ fn bridge_step(snapshot: &RasterSnapshot, mutation: &RasterMutation) -> Result<(
 /// that cannot name `protocol::MutationOutcome` can still tell an application from a refusal.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn bridge_render(snapshot: &RasterSnapshot, messages: Vec<String>) -> Result<String, String> {
-    serde_json::to_string(&serde_json::json!({ "snapshot": snapshot, "messages": messages })).map_err(|error| error.to_string())
+    let value = dsl::os_pack::json::object([
+        ("snapshot".to_string(), dsl::os_pack::json::from_dsl_value(&dsl::ToValue::to_value(snapshot))),
+        ("messages".to_string(), dsl::os_pack::json::Value::Array(messages.into_iter().map(dsl::os_pack::json::Value::from).collect())),
+    ]);
+    Ok(dsl::os_pack::json::to_string(&value))
 }
 
 /// 🌉️ Applies one committed mutation payload to one committed before-document and answers
 /// `{"snapshot": …, "messages": [ … ]}`.
 ///
 /// The bridge exists because the generated Rust test host links only `semio-repo-test-host` and,
-/// behind its `sut` feature, this crate — `serde_json`, `protocol` and `store` are private
+/// behind its `sut` feature, this crate — `dsl`, `protocol` and `store` are private
 /// extern-crate aliases (`🦀️.rs`) and cannot be named from a case adapter. Same shape and same
 /// reason as `🗄️stdio`'s `decode_semio_mesh_mutation_json`/`apply_semio_mesh_mutation` pair.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -431,7 +440,12 @@ pub fn round_trip_raster_dsl(text: &str) -> Result<String, String> {
     let parsed = <RasterSnapshot as ArtifactDsl>::parse_dsl(text).map_err(|error| format!("the committed raster example does not parse: {error:?}"))?;
     let printed = <RasterSnapshot as ArtifactDsl>::print_dsl(&parsed);
     let reparsed = <RasterSnapshot as ArtifactDsl>::parse_dsl(&printed).map_err(|error| format!("the reprinted raster document does not parse: {error:?}"))?;
-    serde_json::to_string(&serde_json::json!({ "printed": printed, "snapshot": parsed, "reparsed": reparsed })).map_err(|error| error.to_string())
+    let value = dsl::os_pack::json::object([
+        ("printed".to_string(), dsl::os_pack::json::Value::from(printed)),
+        ("snapshot".to_string(), dsl::os_pack::json::from_dsl_value(&dsl::ToValue::to_value(&parsed))),
+        ("reparsed".to_string(), dsl::os_pack::json::from_dsl_value(&dsl::ToValue::to_value(&reparsed))),
+    ]);
+    Ok(dsl::os_pack::json::to_string(&value))
 }
 //#endregion 🌉️ExternalCodecBridge
 

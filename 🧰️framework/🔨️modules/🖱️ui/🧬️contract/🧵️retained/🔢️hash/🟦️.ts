@@ -36,7 +36,8 @@ function escaped(code: number): number[] {
 
 class JsonBytes {
   #stack: Frame | null;
-  constructor(value: unknown, private readonly surface: UiSurfaceByteView | null = null, raw = false) { this.#stack = raw && typeof value === "string" ? { kind: "raw", value, offset: 0, opened: true, next: null } : { kind: "value", value, next: null }; }
+  private readonly surface: UiSurfaceByteView | null;
+  constructor(value: unknown, surface: UiSurfaceByteView | null = null, raw = false) { this.surface = surface; this.#stack = raw && typeof value === "string" ? { kind: "raw", value, offset: 0, opened: true, next: null } : { kind: "value", value, next: null }; }
   #pop(): void { const frame = this.#stack!; this.#stack = frame.next; frame.next = null; }
   #raw(value: string): void { this.#stack = { kind: "raw", value, offset: 0, opened: true, next: this.#stack }; }
   #text(value: string): void { this.#stack = { kind: "text", value, offset: 0, opened: false, next: this.#stack }; }

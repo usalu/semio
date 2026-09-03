@@ -1,14 +1,13 @@
 //! 🔍️ DAG play app panel — the per-node inspector (name/kind/id plus slider-specific fields).
 
 use crate::artifacts::dag::DagSnapshot;
-use crate::editor::dag::dag_action;
+use crate::editor::dag::{dag_action, ui_value_list, ui_value_map, ui_value_text};
 use crate::editor::dag::terminology::DagPlayLabels;
 use infinite_board_port_directed_dag::{dag_node_kind_tag, DagNodeKind, DagNodeSpec};
 use semio_framework_plugin::{
     ui_declarative_sections_to_tree, ui_inspector_groups_to_tree, ui_inspector_mixed_number, ui_inspector_mixed_text, ui_inspector_readonly_field, ui_text, Label, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, UiFieldNode,
     UiInputNode, UiInspectorFieldGroup, UiNode, UiPresence, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, UI_INSPECTOR_MIXED_PLACEHOLDER,
 };
-use serde_json::json;
 
 //#region 🔖️Constants
 pub const DAG_PLAY_BODY_INSPECTOR: &str = "dag.play.inspection";
@@ -40,7 +39,13 @@ async fn inspector_number_field(node_ids: &[String], field_id: &str, label: impl
             value: if mixed.uniform { mixed.value.to_string() } else { String::new() },
             placeholder: if mixed.uniform { None } else { Some(Label::data(UI_INSPECTOR_MIXED_PLACEHOLDER)) },
             commit: None,
-            on_change: dag_action("patchDagNodes", Some(json!({ "nodeIds": node_ids, "field": field }))),
+            on_change: dag_action("patchDagNodes", Some(
+                ui_value_map([
+                    ("nodeIds", ui_value_list(node_ids.iter().map(|id| ui_value_text(id).expect("node id fits ui text capacity"))).expect("node id list fits ui list capacity")),
+                    ("field", ui_value_text(field).expect("field name fits ui text capacity")),
+                ])
+                .expect("two-entry field map fits ui map capacity"),
+            )),
             min: None,
             max: None,
             step: None,
@@ -67,7 +72,13 @@ async fn inspector_text_field(node_ids: &[String], field_id: &str, label: impl I
             value: mixed.value,
             placeholder: mixed.placeholder.map(Label::data),
             commit: Some("blur".into()),
-            on_change: dag_action("patchDagNodes", Some(json!({ "nodeIds": node_ids, "field": field }))),
+            on_change: dag_action("patchDagNodes", Some(
+                ui_value_map([
+                    ("nodeIds", ui_value_list(node_ids.iter().map(|id| ui_value_text(id).expect("node id fits ui text capacity"))).expect("node id list fits ui list capacity")),
+                    ("field", ui_value_text(field).expect("field name fits ui text capacity")),
+                ])
+                .expect("two-entry field map fits ui map capacity"),
+            )),
             min: None,
             max: None,
             step: None,
@@ -179,7 +190,7 @@ pub async fn render(document: &DagSnapshot, selected: &[String], labels: &DagPla
                     value: node_ids[0].clone(),
                     placeholder: None,
                     commit: Some("blur".into()),
-                    on_change: dag_action("renameDagNode", Some(json!({ "oldId": node_ids[0] }))),
+                    on_change: dag_action("renameDagNode", Some(ui_value_map([("oldId", ui_value_text(&node_ids[0]).expect("node id fits ui text capacity"))]).expect("single-entry field map fits ui map capacity"))),
                     min: None,
                     max: None,
                     step: None,

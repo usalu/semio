@@ -12,7 +12,6 @@ use crate::artifacts::shooting::{ShootingShot, ShootingSnapshot};
 use crate::editor::shooting::config::{ShootingConfig, ShootingConfigMutation};
 use crate::editor::shooting::ShootingDispatchCtx;
 use semio_framework_plugin::{ArtifactView, ConfigView, DslValue, Effect, Emit, Fault, IconRenderExportItem};
-use serde_json::Value;
 use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️ExportShots
@@ -34,7 +33,7 @@ pub mod export_shots {
                 .iter()
                 .map(|shot| IconRenderExportItem {
                     filename: format!("{}.{}", shot.id, if shot.format == "png" { "png" } else { "svg" }),
-                    request: serde_json::from_str::<Value>(&shooting_icon_render_request_json(doc.snapshot, shot, asset, &config.camera)).map(DslValue::from).unwrap_or(DslValue::Null),
+                    request: dsl::os_pack::json::parse(&shooting_icon_render_request_json(doc.snapshot, shot, asset, &config.camera)).map(|value| dsl::os_pack::json::to_dsl_value(&value)).unwrap_or(DslValue::Null),
                 })
                 .collect();
             if !items.is_empty() {

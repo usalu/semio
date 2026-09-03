@@ -732,14 +732,14 @@ mod plugin_builder_dependency_tests {
         }
     }
 
-    fn counting_mesh_dwg_importer(_mesh: &semio_framework::MeshData) -> Result<serde_json::Value, String> {
+    fn counting_mesh_dwg_importer(_mesh: &semio_framework::MeshData) -> Result<dsl::os_pack::json::Value, String> {
         MESH_DWG_EXECUTIONS.fetch_add(1, Ordering::SeqCst);
-        Ok(serde_json::json!({ "bridge": "counting" }))
+        Ok(dsl::json!({ "bridge": "counting" }))
     }
 
-    fn alternate_mesh_dwg_importer(_mesh: &semio_framework::MeshData) -> Result<serde_json::Value, String> {
+    fn alternate_mesh_dwg_importer(_mesh: &semio_framework::MeshData) -> Result<dsl::os_pack::json::Value, String> {
         MESH_DWG_EXECUTIONS.fetch_add(100, Ordering::SeqCst);
-        Ok(serde_json::json!({ "bridge": "alternate" }))
+        Ok(dsl::json!({ "bridge": "alternate" }))
     }
 
     use super::dependency_fixture::{AddValue, DependencyTestOp, DependencyTestSnapshot};
@@ -794,7 +794,7 @@ mod plugin_builder_dependency_tests {
         assert_eq!(MESH_DWG_EXECUTIONS.load(Ordering::SeqCst), 0, "assembly must never execute a media converter");
         assert_eq!(plugin.host_media_handlers().len(), 1);
         let result = plugin.import_mesh_dwg(crate::MeshDwgBridgeRequest { artifact_kind: kind.id.clone(), document_schema: kind.schema.clone(), mesh: semio_framework::MeshData::default() }).expect("runtime bridge execution");
-        assert_eq!(result.document, serde_json::json!({ "bridge": "counting" }));
+        assert_eq!(result.document, dsl::json!({ "bridge": "counting" }));
         assert_eq!(MESH_DWG_EXECUTIONS.load(Ordering::SeqCst), 1);
     }
 

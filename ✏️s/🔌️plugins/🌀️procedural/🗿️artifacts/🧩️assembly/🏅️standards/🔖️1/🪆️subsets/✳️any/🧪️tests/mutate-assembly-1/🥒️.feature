@@ -30,7 +30,7 @@ Feature: Apply every typed assembly mutation twice — once in Rust, once in Pyt
   📌️ A CROSS-CASE DIVERGENCE THE REFERENCE SURFACED, which neither case could see alone.
   `mutation.cascade` at level `info` means OPPOSITE things inside this one plugin: here it announces
   that `delete-slot` really did remove the edges naming the slot, while in the sibling
-  `s.procedural.procedural2d` the same code at the same level announces that `delete-widget` LEFT a
+  `s.procedural.generation2d` the same code at the same level announces that `delete-widget` LEFT a
   dangling synapse standing. One diagnostic code, two contradictory readings. The reference asserts
   the cascade claim by READING the committed outcome — a vector that declares the code must have moved
   a second member, one that does not must have moved exactly one — rather than from a list of its own,

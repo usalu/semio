@@ -7,7 +7,7 @@ use crate::artifacts::raster::schema::{find_layer, layer_opacity, layer_transfor
 use crate::artifacts::raster::{RasterLayerNode, RasterSnapshot};
 use crate::editor::raster::config::{RasterConfig, RasterConfigMutation};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
-use serde_json::Value;
+use dsl::os_pack::json::Value;
 use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️Shared
@@ -66,7 +66,7 @@ fn raster_patch_layer_operations(document: &RasterSnapshot, layer_ids: &[String]
 /// 🩹️ Parses a `patchLayer`/`patchLayers` wire `value` as JSON text (falling back to a plain JSON string
 /// when it isn't valid JSON) — mirrors `draw_ui::patch_value_json`.
 fn patch_value_json(value: &str) -> Value {
-    serde_json::from_str(value).unwrap_or_else(|_| Value::String(value.to_string()))
+    dsl::os_pack::json::parse(value).unwrap_or_else(|_| Value::String(value.to_string()))
 }
 //#endregion 🔖️Shared
 

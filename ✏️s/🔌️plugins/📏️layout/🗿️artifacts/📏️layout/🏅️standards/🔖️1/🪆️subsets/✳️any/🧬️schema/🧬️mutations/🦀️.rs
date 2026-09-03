@@ -13,7 +13,6 @@
 //! glue-mounted siblings.
 
 use crate::artifacts::layout::{LayoutDiff, LayoutSnapshot};
-use serde::{Deserialize, Serialize};
 use semio_framework_value_derive::{FromValue, ToValue};
 
 use super::{
@@ -25,7 +24,7 @@ use super::{
 /// 🧬️ Every variant wraps exactly one `protocol::MutationKind<LayoutSnapshot, LayoutMutation>`
 /// payload struct declared in the corresponding triad leaf's `🦠️mutation/🦀️.rs`.
 #[derive(Clone, Debug, PartialEq, dsl::Mutations, ToValue, FromValue)]
-#[cfg_attr(test, derive(Serialize, Deserialize))]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[mutations(snapshot = LayoutSnapshot, diff = LayoutDiff, schema = "s.layout.layout")]
 pub enum LayoutMutation {
     RenameLayout(rename_layout::RenameLayout),

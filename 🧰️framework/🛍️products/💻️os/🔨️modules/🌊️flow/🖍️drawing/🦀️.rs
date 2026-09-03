@@ -2,7 +2,7 @@
 //! the OS `EngineCache`, mirroring `📐️brep-geometry`'s own in-process `Brep` kernel precedent) plus
 //! its JSON bridge for the flow `draw` operator extension.
 //!
-//! 🪦 Relocated verbatim from the framework's `🧰️framework/🔨️modules/◻2d/🗄️store/🦀️.rs`
+//! 🪦 Relocated verbatim from the framework's `🧰️framework/🔨️modules/◻️2d/🗄️store/🦀️.rs`
 //! (ticket 26/08/12/DISSOLVE-KERNELS-AND-MODULES-INTO-EVENT-SOURCED-ARTIFACTS) — that file was a
 //! **parallel non-artifact store** living in shared framework surface, duplicating what should be
 //! (and, for the persisted drawing document, now is) `✳️drawing`'s real `ArtifactStore` + 17
@@ -1663,7 +1663,7 @@ mod drawing_kernel_tests {
     }
     // #endregion Engine derive
 
-    /// 📐️ Migrated from `🧰️framework/🔨️modules/◻2d/⚙️engine/🦀️.rs` alongside `Affine2D`
+    /// 📐️ Migrated from `🧰️framework/🔨️modules/◻️2d/⚙️engine/🦀️.rs` alongside `Affine2D`
     /// itself (ticket 26/08/12/DISSOLVE-KERNELS-AND-MODULES-INTO-EVENT-SOURCED-ARTIFACTS).
     #[test]
     fn affine_multiplies_identity() {

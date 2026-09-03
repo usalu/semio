@@ -1,0 +1,3 @@
+(* ebnf procedural.generation3d.inference *)
+document = header, body ;
+header = 'schema', space, 'procedural.generation3d.inference', newline ;

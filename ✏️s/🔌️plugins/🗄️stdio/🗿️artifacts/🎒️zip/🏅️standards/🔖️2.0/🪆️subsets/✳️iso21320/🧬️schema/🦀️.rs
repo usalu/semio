@@ -5,7 +5,7 @@
 //! (`ArtifactCommand::MigrateDialect`). This leaf exists so `🪆️subsets/✳️iso21320/🧬️schema/` is
 //! present per `🔣️taxonomy.json`'s `subsetChildDirs`, without duplicating the schema definition.
 
-pub use crate::artifacts::zip::standards::v2_0::subsets::any::schema::*;
+pub use crate::artifacts::zip::standards::v2_0::subsets::base::schema::*;
 
 //#region 🧬️Mutations
 /// 🧬️ THIS subset's own mutation vocabulary — `ZipIso21320Mutation`, not the `✳️base` subset's
@@ -18,8 +18,8 @@ pub use mutations::{apply_zip_iso21320_mutation, ZipIso21320Method, ZipIso21320M
 //#endregion 🧬️Mutations
 //#region 🏗️DerivedConstruction
 pub mod derived_construction {
-    use crate::artifacts::zip::standards::v2_0::subsets::any::schema::diff::ZipDiff;
-    use crate::artifacts::zip::standards::v2_0::subsets::any::schema::snapshot::{ZipEntry, ZipSnapshot};
+    use crate::artifacts::zip::standards::v2_0::subsets::base::schema::diff::ZipDiff;
+    use crate::artifacts::zip::standards::v2_0::subsets::base::schema::snapshot::{ZipEntry, ZipSnapshot};
     use crate::artifacts::zip::standards::v2_0::subsets::iso21320::schema::check_iso21320_conformance;
     use crate::artifacts::zip::standards::v2_0::subsets::iso21320::schema::mutations::{add_deflated_entry, add_stored_entry, apply_zip_iso21320_mutation, ZipIso21320Mutation};
     use dsl::{Diagnostic, Severity};
@@ -120,8 +120,8 @@ pub use derived_construction::*;
 
 //#region 🧐️DerivedAnalysis
 pub mod derived_analysis {
-    use crate::artifacts::zip::standards::v2_0::subsets::any::schema::snapshot::ZipSnapshot;
-    use crate::artifacts::zip::standards::v2_0::subsets::any::schema::{ZipAnalyzer as ZipAnyAnalyzer, ZipParts};
+    use crate::artifacts::zip::standards::v2_0::subsets::base::schema::snapshot::ZipSnapshot;
+    use crate::artifacts::zip::standards::v2_0::subsets::base::schema::{ZipAnalyzer as ZipAnyAnalyzer, ZipParts};
     use dsl::{Diagnostic, FaultCode, FaultScope, Severity, TextSpan};
     use semio_framework_plugin::{Analysis, AnalyzeSource, ArtifactAnalysis, Dialect, IoConfidence, StandardId, SubsetId};
 
@@ -160,7 +160,7 @@ pub mod derived_analysis {
     }
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    fn check_iso21320_entry_headers(entries: &[crate::artifacts::zip::standards::v2_0::subsets::any::io::ZipCentralEntryHeader]) -> Vec<Diagnostic> {
+    fn check_iso21320_entry_headers(entries: &[crate::artifacts::zip::standards::v2_0::subsets::base::io::ZipCentralEntryHeader]) -> Vec<Diagnostic> {
         let mut out = Vec::new();
         for (index, entry) in entries.iter().enumerate() {
             if entry.flags & FLAG_ENCRYPTED != 0 {
@@ -188,7 +188,7 @@ pub mod derived_analysis {
     /// 🛡️ Checks ISO/IEC 21320-1 header policy against raw ZIP container bytes.
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn check_iso21320_wire_conformance(data: &[u8]) -> Vec<Diagnostic> {
-        match crate::artifacts::zip::standards::v2_0::subsets::any::io::inspect_zip_central_entry_headers(data) {
+        match crate::artifacts::zip::standards::v2_0::subsets::base::io::inspect_zip_central_entry_headers(data) {
             Ok(headers) => check_iso21320_entry_headers(&headers),
             Err(err) => vec![hard("stdio.zip.iso21320.wire-inspect-failed", format!("ISO/IEC 21320-1 wire inspection failed: {err}"))],
         }
@@ -199,7 +199,7 @@ pub mod derived_analysis {
     /// forbidden general-purpose flag bits — native violations are only observable on wire bytes.
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn check_iso21320_conformance(snapshot: &ZipSnapshot) -> Vec<Diagnostic> {
-        match crate::artifacts::zip::standards::v2_0::subsets::any::io::encode_zip(snapshot) {
+        match crate::artifacts::zip::standards::v2_0::subsets::base::io::encode_zip(snapshot) {
             Ok(bytes) => check_iso21320_wire_conformance(&bytes),
             Err(err) => vec![hard("stdio.zip.iso21320.encode-failed", format!("ISO/IEC 21320-1 conformance preflight encode failed: {err}"))],
         }
@@ -254,8 +254,8 @@ pub mod derived_analysis {
     #[cfg(test)]
     mod tests {
         use super::*;
-        use crate::artifacts::zip::standards::v2_0::subsets::any::io::ZipCentralEntryHeader;
-        use crate::artifacts::zip::standards::v2_0::subsets::any::schema::snapshot::ZipEntry;
+        use crate::artifacts::zip::standards::v2_0::subsets::base::io::ZipCentralEntryHeader;
+        use crate::artifacts::zip::standards::v2_0::subsets::base::schema::snapshot::ZipEntry;
 
         // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
         fn entry(name: &str) -> ZipEntry {

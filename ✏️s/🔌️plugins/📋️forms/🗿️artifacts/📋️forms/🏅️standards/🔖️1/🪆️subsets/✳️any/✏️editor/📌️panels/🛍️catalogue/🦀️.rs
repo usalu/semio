@@ -4,7 +4,7 @@ use crate::editor::forms::config::FormsConfig;
 use crate::editor::forms::terminology::FormsLabels;
 use crate::editor::forms::{catalogue_kinds, forms_action, parse_contributions};
 use semio_framework_plugin::{tree_item_with_action, tree_item_with_action_draggable, Label, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL};
-use serde_json::json;
+use dsl::os_pack::json::{object, Value};
 
 //#region 🔖️Constants
 pub const FORMS_PLAY_BODY_CATALOGUE: &str = "forms.play.catalogue";
@@ -29,7 +29,7 @@ pub async fn render(config: &FormsConfig, labels: &FormsLabels) -> semio_framewo
     let mut kind_items = semio_framework_plugin::UiFixedList::default();
     for (kind, label, icon) in catalogue_kinds(&contributions, labels) {
         let args = crate::editor::forms::ui_value_map([("kind", crate::editor::forms::ui_value_text(&kind)?)])?;
-        let drag_data = json!({ FORMS_QUESTION_DRAG_MIME: json!({ "kind": kind }).to_string() });
+        let drag_data = object([(FORMS_QUESTION_DRAG_MIME.to_string(), Value::String(object([("kind".to_string(), Value::String(kind.clone()))]).to_string()))]);
         let mut item = tree_item_with_action_draggable(format!("forms-play-catalogue.{kind}"), Label::data(label), Some(kind.clone()), forms_action("addQuestion", Some(args))?, &drag_data)?;
         if let semio_framework_plugin::Component::TreeItem(props) = &mut item.component {
             props.icon = Some(icon);

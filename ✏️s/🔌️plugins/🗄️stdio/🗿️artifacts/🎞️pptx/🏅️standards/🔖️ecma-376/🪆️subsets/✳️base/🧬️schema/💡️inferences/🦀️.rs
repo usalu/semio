@@ -41,7 +41,7 @@ impl protocol::InferenceSpec<PptxSnapshot> for PptxInference {
 //#endregion 🔖️Inference
 
 //#region 🔖️ArtifactInferrer
-impl ArtifactInferrer for crate::artifacts::pptx::standards::v_ecma_376::subsets::any::schema::PptxBuilder {
+impl ArtifactInferrer for crate::artifacts::pptx::standards::v_ecma_376::subsets::base::schema::PptxBuilder {
     type Snapshot = PptxSnapshot;
     type Inference = PptxInference;
 }

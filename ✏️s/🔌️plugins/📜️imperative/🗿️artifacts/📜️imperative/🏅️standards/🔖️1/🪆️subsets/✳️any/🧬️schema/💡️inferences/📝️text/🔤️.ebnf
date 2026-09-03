@@ -1,3 +1,0 @@
-(* ebnf imperative.imperative.inference *)
-document = header, body ;
-header = 'schema', space, 'imperative.imperative.inference', newline ;

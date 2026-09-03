@@ -25,7 +25,11 @@ pub mod identity;
 
 use std::collections::BTreeMap;
 
-pub use schema::{ConnectionView, DirectoryActor, DirectoryActorKind, DirectoryCommand, DirectoryConnectionPhase, DirectoryPresenceActor, DirectorySpaceVisibility, DirectoryStreamMessage, DocumentView, Hlc, InviteView};
+pub use schema::{
+    descriptor_digest_encoding_v1, descriptor_digest_v1, hex_lower, ArtifactBlobRef, ArtifactCheckpoint, ArtifactFrontier, ArtifactHash, ArtifactRetention, CheckpointId, ConnectionView, DescriptorDigestError, DirectoryActor, DirectoryActorKind,
+    DirectoryCommand, DirectoryConnectionPhase, DirectoryPresenceActor, DirectorySpaceVisibility, DirectoryStreamMessage, DocumentDescriptor, DocumentFrontier, DocumentOwner, DocumentScope, DocumentView, Hlc, InviteView, PublishedArtifactBlob,
+    PublishedArtifactCheckpoint, RebootstrapRequired, DESCRIPTOR_DIGEST_V1_DOMAIN,
+};
 pub use schema::{DirectoryEvent, DirectoryEventBody, DirectorySpaceKind, DirectorySpaceRole, MemberView, SpaceView, UserView};
 
 //#region 🔖️ReadModel
@@ -34,6 +38,7 @@ pub use schema::{DirectoryEvent, DirectoryEventBody, DirectorySpaceKind, Directo
 pub struct DirectorySpace {
     pub view: SpaceView,
     pub members: Vec<MemberView>,
+    pub documents: Vec<DocumentDescriptor>,
 }
 
 /// 📇️ The directory's whole projected state, folded from the event log.
@@ -94,6 +99,7 @@ pub fn fold(model: DirectoryReadModel, event: &DirectoryEvent) -> DirectoryReadM
                         updated_at_ms: event.recorded_at_ms,
                     },
                     members: Vec::new(),
+                    documents: Vec::new(),
                 },
             );
         }
@@ -137,6 +143,16 @@ pub fn fold(model: DirectoryReadModel, event: &DirectoryEvent) -> DirectoryReadM
                 upsert_member(space, email, display_name, user_id, *role, event.recorded_at_ms);
             }
         }
+        DirectoryEventBody::DocumentAnnounced { descriptor } => {
+            if let Some(space) = next.spaces.get_mut(&descriptor.space_id) {
+                if !space.documents.iter().any(|document| document.document_id == descriptor.document_id) {
+                    space.documents.push(descriptor.clone());
+                }
+                space.view.document_count = space.documents.len() as u32;
+                space.view.updated_at_ms = event.recorded_at_ms;
+            }
+        }
+        DirectoryEventBody::ArtifactCheckpointPublished { .. } | DirectoryEventBody::ArtifactRetentionAdvanced { .. } => {}
     }
     next
 }

@@ -61,11 +61,11 @@ impl store::ArtifactDsl for ZipSnapshot {
             let low = pair[1].to_digit(16).ok_or_else(|| store::TextError::new("invalid hex digit", dsl::TextSpan::at(1, 1)))?;
             bytes.push(((high << 4) | low) as u8);
         }
-        crate::artifacts::zip::standards::v2_0::subsets::any::io::decode_zip(&bytes).map_err(|error| store::TextError::new(error.to_string(), dsl::TextSpan::at(1, 1)))
+        crate::artifacts::zip::standards::v2_0::subsets::base::io::decode_zip(&bytes).map_err(|error| store::TextError::new(error.to_string(), dsl::TextSpan::at(1, 1)))
     }
 
     fn print_dsl(&self) -> String {
-        let bytes = crate::artifacts::zip::standards::v2_0::subsets::any::io::encode_zip(self).expect("canonical ZIP encoding");
+        let bytes = crate::artifacts::zip::standards::v2_0::subsets::base::io::encode_zip(self).expect("canonical ZIP encoding");
         let body: String = bytes.iter().map(|byte| format!("{byte:02x}")).collect();
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
         store::semio_format::wrap_text(&envelope, &body)
@@ -75,7 +75,7 @@ impl store::ArtifactDsl for ZipSnapshot {
 impl store::ArtifactPack for ZipSnapshot {
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let _ = options;
-        let raw = crate::artifacts::zip::standards::v2_0::subsets::any::io::encode_zip(self).map_err(|error| store::PackError::Schema(error.to_string()))?;
+        let raw = crate::artifacts::zip::standards::v2_0::subsets::base::io::encode_zip(self).map_err(|error| store::PackError::Schema(error.to_string()))?;
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::Schema(e.to_string()))?;
         Ok(store::semio_format::wrap_binary(&envelope, &raw))
     }
@@ -86,7 +86,7 @@ impl store::ArtifactPack for ZipSnapshot {
             return Err(store::PackError::Schema(format!("pack envelope mismatch: expected {}, got {}", <Self as store::ArtifactDsl>::envelope_id(), envelope.envelope_id())));
         }
         let _ = options;
-        crate::artifacts::zip::standards::v2_0::subsets::any::io::decode_zip(&inner).map_err(|error| store::PackError::Schema(error.to_string()))
+        crate::artifacts::zip::standards::v2_0::subsets::base::io::decode_zip(&inner).map_err(|error| store::PackError::Schema(error.to_string()))
     }
 }
 

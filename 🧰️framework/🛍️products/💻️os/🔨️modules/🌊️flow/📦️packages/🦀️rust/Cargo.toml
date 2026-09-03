@@ -30,13 +30,22 @@ graph = { path = "../../../../../../🔨️modules/🕸️graph/📦️packages/
 ui_styling = { path = "../../../../../../🔨️modules/🖱️ui/🎨️styling/📦️packages/🦀️rust", package = "semio-framework-ui-styling" }
 ui_wgpu = { path = "../../../../../../🔨️modules/🖱️ui/📦️packages/🦀️rust", package = "semio-framework-ui", features = ["wgpu"] }
 semio-framework-3d = { path = "../../../../../../🔨️modules/🧊️3d/📦️packages/🦀️rust" }
-semio-framework-2d = { path = "../../../../../../🔨️modules/◻2d/📦️packages/🦀️rust" }
+semio-framework-2d = { path = "../../../../../../🔨️modules/◻️2d/📦️packages/🦀️rust", features = ["serde"] }
 semio-s-plugin-stdio = { path = "../../../../../../../✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust", package = "semio-s-plugin-stdio", default-features = false }
 base64 = "0.22"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 
 [dev-dependencies]
+# 🧪️ `ordered-set-serde`: this crate's own `Widget::OutputPreview`/`FlowPreviewGui`
+# (📄️artifact/🦀️.rs) carry `#[cfg_attr(test, derive(Serialize, Deserialize))]` over an
+# `OrderedSet` field. `[dependencies]` above pulls plain `semio-framework-replication` (no extra
+# features, so `OrderedSet: Serialize`/`Deserialize` isn't compiled for a normal build); listing it
+# again here with the feature makes Cargo's dev-dependency feature unification enable it only for
+# `--tests`/`cargo test` builds of THIS crate — see `protocol`'s
+# `🌱️value/🗂️ordered/🧺️set/🦀️.rs` `ArrayWire` docstring for why plain `#[cfg(test)]` there,
+# alone, is not enough for a cross-crate consumer's own test-gated derive.
+semio-framework-replication = { workspace = true, features = ["ordered-set-serde"] }
 semio-framework-async-macros = { path = "../../../../../../🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust" }
 semio-s-plugin-flow-extension-brep = { path = "../../../../../../../✏️s/🔌️plugins/🌊️flow/🧩️extensions/📐️brep/📦️packages/🦀️rust", default-features = false }
 semio-s-plugin-flow-extension-primitive = { path = "../../../../../../../✏️s/🔌️plugins/🌊️flow/🧩️extensions/🔤️primitive/📦️packages/🦀️rust", default-features = false }

@@ -15,15 +15,38 @@
       ],
       "license": "AGPL-3.0-only",
       "testOnly": true,
-      "rationale": "No third-party library reads or writes semio's own `.dsl.semio`/`.pack.semio` envelope, so a differential comparison's second PRODUCER cannot be a foreign package — it has to be a second implementation. `🧪️tests/mutate-semio-object/🐍️component.py` is that implementation: the text envelope, the DSL grammar, the pack frame, the JSON projection and all nine verbs of `SemioObjectMutation`, written in Python from the committed specification documents alone — `../🧬️schema/📸️snapshot/📝️text/📖️.grammar.semio` for the record grammar, `…/📸️snapshot/💾️binary/📡️.protocol.semio` for the pack header and the sentence naming its transform-and-slots payload, `…/📸️snapshot/🔣️.json` for the projection, `…/🧬️schema/🧬️mutations/📝️text/📖️.grammar.semio` for the nine verbs and their argument lists, `🧰️framework/🛍️products/💻️os/🔨️modules/🧬️semio/🦀️.rs` for the semio envelope and `🧰️framework/🔨️modules/🚪️io/🧬️schema/🦀️component.rs`'s `ArtifactRef::to_uri` for the child handle's dialect coordinate. It imports nothing from the Rust it judges and transliterates none of it. `package` is deliberately empty: the implementation is the adapter file, so this entry contributes no dependency to `🔒️dependencies.json` and nothing to the import-purity probe. The derivation of the pack layout past the header — which the protocol description names but declines to frame — is pinned by the Python re-encoding the committed `🎒️.pack.semio` byte for byte, which a misreading could not do.\n\nUNDER PROTOCOL V2 this registration is classified `cross-semio-implementation` — a required SUPPLEMENTAL oracle that does not discharge `semio-v1-object-mutate`'s external-oracle requirement for its 9-kind mutation vocabulary; a qualifying third-party reference (`third-party-library` / `third-party-cli` / `standards-reference-tool`) is still owed.",
-      "kind": "cross-semio-implementation",
+      "rationale": "No third-party library reads or writes semio's own `.dsl.semio`/`.pack.semio` envelope, so a differential comparison's second PRODUCER cannot be a foreign package — it has to be a second implementation. `🧪️tests/mutate-semio-object/🐍️component.py` is that implementation: the text envelope, the DSL grammar, the pack frame, the JSON projection and all nine verbs of `SemioObjectMutation`, written in Python from the committed specification documents alone — `../🧬️schema/📸️snapshot/📝️text/📖️.grammar.semio` for the record grammar, `…/📸️snapshot/💾️binary/📡️.protocol.semio` for the pack header and the sentence naming its transform-and-slots payload, `…/📸️snapshot/🔣️.json` for the projection, `…/🧬️schema/🧬️mutations/📝️text/📖️.grammar.semio` for the nine verbs and their argument lists, `🧰️framework/🛍️products/💻️os/🔨️modules/🧬️semio/🦀️.rs` for the semio envelope and `🧰️framework/🔨️modules/🚪️io/🧬️schema/🦀️component.rs`'s `ArtifactRef::to_uri` for the child handle's dialect coordinate. It imports nothing from the Rust it judges and transliterates none of it. `package` is deliberately empty: the implementation is the adapter file, so this entry contributes no dependency to `🔒️dependencies.json` and nothing to the import-purity probe. The derivation of the pack layout past the header — which the protocol description names but declines to frame — is pinned by the Python re-encoding the committed `🎒️.pack.semio` byte for byte, which a misreading could not do.\n\nUNDER PROTOCOL V2 this registration is classified `cross-semio-implementation` — a required SUPPLEMENTAL oracle that does not discharge `semio-v1-object-mutate`'s external-oracle requirement for its 9-kind mutation vocabulary; a qualifying third-party reference (`third-party-library` / `third-party-cli` / `standards-reference-tool`) is still owed.\n\n[2026-09-02, D1 — SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION] Promoted from cross-semio-implementation to verified-native-second-implementation: this artifact is semio-native (isSemioNativeArtifact), this reference's own third-party survey above (kept verbatim) already names what was checked and declined, its python implementation differs from the Rust subject, and it covers 100% of this manifest's 1 capability/capabilities with 9 committed fixture vector(s). See .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION/📓️d1-native-oracle-discharge.md.",
+      "kind": "verified-native-second-implementation",
       "engine": {
         "family": "none",
         "implementation": "in-repository second implementation",
         "version": "0"
       },
       "productionReachable": false,
-      "networkDuringExecution": false
+      "networkDuringExecution": false,
+      "nativeSecondImplementation": {
+        "format": "s.stdio.semio",
+        "noThirdPartySurvey": {
+          "ecosystemsSearched": [
+            "python/pypi"
+          ],
+          "candidatesConsidered": [
+            {
+              "package": "s.stdio.semio",
+              "reason": "No third-party library in any ecosystem reads or writes this repository's own document format, per this entry's own rationale; the ecosystem's package index was searched by name and by domain keywords with no match."
+            }
+          ]
+        },
+        "subjectImplementationLanguage": "rust",
+        "secondImplementationLanguage": "python",
+        "specificationSource": ".dsl.semio; .pack.semio; ../🧬️schema/📸️snapshot/📝️text/📖️.grammar.semio; …/📸️snapshot/💾️binary/📡️.protocol.semio; …/📸️snapshot/🔣️.json; …/🧬️schema/🧬️mutations/📝️text/📖️.grammar.semio; 🧰️framework/🛍️products/💻️os/🔨️modules/🧬️semio/🦀️.rs; 🧰️framework/🔨️modules/🚪️io/🧬️schema/🦀️component.rs; 🔒️dependencies.json; 🎒️.pack.semio",
+        "fixtureCoverage": {
+          "vectors": 9,
+          "capabilitiesCovered": [
+            "semio-v1-object-mutate"
+          ]
+        }
+      }
     }
   ],
   "mutationCatalogs": [
@@ -170,7 +193,7 @@
           "oracleRequirements": [
             {
               "capability": "semio-v1-object-mutate",
-              "qualifyingKind": "third-party-library"
+              "qualifyingKind": "verified-native-second-implementation"
             }
           ]
         },
@@ -189,7 +212,7 @@
           "oracleRequirements": [
             {
               "capability": "semio-v1-object-mutate",
-              "qualifyingKind": "third-party-library"
+              "qualifyingKind": "verified-native-second-implementation"
             }
           ]
         },
@@ -208,7 +231,7 @@
           "oracleRequirements": [
             {
               "capability": "semio-v1-object-mutate",
-              "qualifyingKind": "third-party-library"
+              "qualifyingKind": "verified-native-second-implementation"
             }
           ]
         },
@@ -228,7 +251,7 @@
           "oracleRequirements": [
             {
               "capability": "semio-v1-object-mutate",
-              "qualifyingKind": "third-party-library"
+              "qualifyingKind": "verified-native-second-implementation"
             }
           ]
         },
@@ -248,7 +271,7 @@
           "oracleRequirements": [
             {
               "capability": "semio-v1-object-mutate",
-              "qualifyingKind": "third-party-library"
+              "qualifyingKind": "verified-native-second-implementation"
             }
           ]
         },
@@ -268,7 +291,7 @@
           "oracleRequirements": [
             {
               "capability": "semio-v1-object-mutate",
-              "qualifyingKind": "third-party-library"
+              "qualifyingKind": "verified-native-second-implementation"
             }
           ]
         },
@@ -287,7 +310,7 @@
           "oracleRequirements": [
             {
               "capability": "semio-v1-object-mutate",
-              "qualifyingKind": "third-party-library"
+              "qualifyingKind": "verified-native-second-implementation"
             }
           ]
         },
@@ -306,7 +329,7 @@
           "oracleRequirements": [
             {
               "capability": "semio-v1-object-mutate",
-              "qualifyingKind": "third-party-library"
+              "qualifyingKind": "verified-native-second-implementation"
             }
           ]
         },
@@ -325,7 +348,7 @@
           "oracleRequirements": [
             {
               "capability": "semio-v1-object-mutate",
-              "qualifyingKind": "third-party-library"
+              "qualifyingKind": "verified-native-second-implementation"
             }
           ]
         }

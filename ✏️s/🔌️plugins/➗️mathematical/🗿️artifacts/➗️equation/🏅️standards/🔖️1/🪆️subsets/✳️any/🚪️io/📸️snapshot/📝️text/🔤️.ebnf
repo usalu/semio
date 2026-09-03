@@ -1,0 +1,3 @@
+(* ebnf mathematical.equation.snapshot *)
+document = header, body ;
+header = 'schema', space, 'mathematical.equation.snapshot', newline ;

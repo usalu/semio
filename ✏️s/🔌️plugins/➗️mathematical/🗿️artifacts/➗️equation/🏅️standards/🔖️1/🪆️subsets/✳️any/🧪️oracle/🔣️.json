@@ -1,0 +1,57 @@
+{
+  "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json",
+  "schemaVersion": 2,
+  "_comment": "🧩️ This subset's own contribution. As of ticket 26/09/02/SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION, s.mathematical.equation's 15 mutation kinds are owned by the real ✳️graph (10), ✳️geometry (4) and ✳️equation (1) subsets declared in ../🔣️.json — none by this wildcard subset any more. This file now carries only the mutation vocabulary catalog files (🦀️.rs/🟦️.ts/🔣️.json/grammar/graphql/proto under 🧬️schema/🧬️mutations/) — the closed enum every subset's manifest is measured against — plus this subset's non-mutation-specific surface (editor, viewer, examples, probes, generator, io).",
+  "oracles": [],
+  "noOracleDecisions": [],
+  "mutationCatalogs": [
+    {
+      "id": "equation-1-any-graph",
+      "capability": "equation-1-graph-mutate",
+      "standardDirectoryName": "🔖️1",
+      "subsetDirectoryName": "✳️any",
+      "kinds": [
+        "change-graph-directed",
+        "update-graph-algorithm",
+        "replace-graph",
+        "create-node",
+        "delete-node",
+        "delete-nodes",
+        "change-node-label",
+        "move-node",
+        "connect-nodes",
+        "disconnect-nodes"
+      ],
+      "vectors": []
+    },
+    {
+      "id": "equation-1-any-geometry",
+      "capability": "equation-1-geometry-mutate",
+      "standardDirectoryName": "🔖️1",
+      "subsetDirectoryName": "✳️any",
+      "kinds": [
+        "replace-points",
+        "insert-point",
+        "remove-point",
+        "move-point"
+      ],
+      "vectors": []
+    },
+    {
+      "id": "equation-1-any-equation",
+      "capability": "equation-1-equation-mutate",
+      "standardDirectoryName": "🔖️1",
+      "subsetDirectoryName": "✳️any",
+      "kinds": [
+        "change-coefficient"
+      ],
+      "vectors": []
+    }
+  ],
+  "probes": [],
+  "comparisonPipelines": [],
+  "comparisonProfiles": [],
+  "toleranceProfiles": [],
+  "mutationManifests": [],
+  "fixtureManifests": []
+}

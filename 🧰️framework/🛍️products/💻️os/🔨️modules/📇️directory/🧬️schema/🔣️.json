@@ -125,6 +125,33 @@
             "inviteId": { "type": "string" },
             "role": { "$ref": "#/$defs/DirectorySpaceRole" }
           }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "descriptor"],
+          "properties": {
+            "kind": { "const": "document.announced" },
+            "descriptor": { "$ref": "#/$defs/DocumentDescriptor" }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "checkpoint"],
+          "properties": {
+            "kind": { "const": "artifact.checkpoint-published" },
+            "checkpoint": { "$ref": "#/$defs/PublishedArtifactCheckpoint" }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "retention"],
+          "properties": {
+            "kind": { "const": "artifact.retention-advanced" },
+            "retention": { "$ref": "#/$defs/ArtifactRetention" }
+          }
         }
       ]
     },
@@ -238,6 +265,15 @@
             "spaceId": { "type": "string" },
             "inviteId": { "type": "string" }
           }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "descriptor"],
+          "properties": {
+            "kind": { "const": "announce-document" },
+            "descriptor": { "$ref": "#/$defs/DocumentDescriptor" }
+          }
         }
       ]
     },
@@ -267,6 +303,17 @@
         "userId": { "type": "string" },
         "surface": { "type": "string" },
         "color": { "type": "integer", "minimum": 0, "maximum": 255 }
+      }
+    },
+    "RebootstrapRequired": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["scope", "checkpointId", "descriptorDigestV1", "baselineFrontier"],
+      "properties": {
+        "scope": { "$ref": "#/$defs/DocumentScope" },
+        "checkpointId": { "$ref": "#/$defs/NonzeroArtifactHash" },
+        "descriptorDigestV1": { "$ref": "#/$defs/NonzeroArtifactHash" },
+        "baselineFrontier": { "$ref": "#/$defs/ArtifactFrontier" }
       }
     },
     "DirectoryStreamMessage": {
@@ -312,6 +359,15 @@
             "kind": { "const": "heartbeat" },
             "headSeq": { "type": "integer", "minimum": 0 }
           }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "control"],
+          "properties": {
+            "kind": { "const": "rebootstrap-required" },
+            "control": { "$ref": "#/$defs/RebootstrapRequired" }
+          }
         }
       ]
     },
@@ -355,12 +411,144 @@
         "createdAtMs": { "type": "integer" }
       }
     },
+    "DocumentScope": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["spaceId", "documentId"],
+      "properties": {
+        "spaceId": { "type": "string", "minLength": 1, "maxLength": 256 },
+        "documentId": { "type": "string", "minLength": 1, "maxLength": 256 }
+      }
+    },
+    "ArtifactHash": {
+      "type": "array",
+      "minItems": 32,
+      "maxItems": 32,
+      "items": { "type": "integer", "minimum": 0, "maximum": 255 }
+    },
+    "NonzeroArtifactHash": {
+      "allOf": [
+        { "$ref": "#/$defs/ArtifactHash" },
+        { "not": { "const": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0] } }
+      ]
+    },
+    "DocumentOwner": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["pluginId", "packageId", "version", "packageHash"],
+      "properties": {
+        "pluginId": { "type": "string", "minLength": 1 },
+        "packageId": { "type": "string", "minLength": 1 },
+        "version": { "type": "string", "minLength": 1 },
+        "packageHash": { "type": "string", "pattern": "^[0-9a-f]{64}$", "not": { "const": "0000000000000000000000000000000000000000000000000000000000000000" } }
+      }
+    },
+    "DocumentFrontier": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["headSeq", "commitSeq", "epoch"],
+      "properties": {
+        "headSeq": { "type": "integer", "minimum": 0 },
+        "commitSeq": { "type": "integer", "minimum": 0 },
+        "epoch": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "DocumentDescriptor": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["spaceId", "documentId", "artifactKind", "artifactSchema", "owner", "packSchemaHash", "bootstrapVersion", "bootstrapFrontier", "bootstrapSnapshotHash"],
+      "properties": {
+        "spaceId": { "type": "string", "minLength": 1 },
+        "documentId": { "type": "string", "minLength": 1 },
+        "artifactKind": { "type": "string", "minLength": 1 },
+        "artifactSchema": { "type": "string", "minLength": 1 },
+        "owner": { "$ref": "#/$defs/DocumentOwner" },
+        "packSchemaHash": { "type": "string", "pattern": "^[0-9a-f]{64}$", "not": { "const": "0000000000000000000000000000000000000000000000000000000000000000" } },
+        "bootstrapVersion": { "type": "integer", "minimum": 1 },
+        "bootstrapFrontier": { "$ref": "#/$defs/DocumentFrontier" },
+        "bootstrapSnapshotHash": { "type": "string", "pattern": "^[0-9a-f]{64}$", "not": { "const": "0000000000000000000000000000000000000000000000000000000000000000" } }
+      }
+    },
+    "ArtifactFrontier": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["documentId", "headEditOrdinal", "headEditId", "lastCommitSeq", "chainHash"],
+      "properties": {
+        "documentId": { "type": "string", "minLength": 1 },
+        "headEditOrdinal": { "type": "integer", "minimum": 0, "maximum": 9007199254740991 },
+        "headEditId": { "type": "string", "minLength": 1 },
+        "lastCommitSeq": { "type": "integer", "minimum": 0, "maximum": 9007199254740991 },
+        "chainHash": { "$ref": "#/$defs/ArtifactHash" }
+      }
+    },
+    "ArtifactBlobRef": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["sha256", "byteLength", "storageKey"],
+      "properties": {
+        "sha256": { "$ref": "#/$defs/NonzeroArtifactHash" },
+        "byteLength": { "type": "integer", "minimum": 1, "maximum": 9007199254740991 },
+        "storageKey": { "type": "string", "minLength": 1 }
+      }
+    },
+    "ArtifactCheckpoint": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["scope", "checkpointId", "descriptorDigestV1", "baselineFrontier", "pack", "spr", "aggregateSha256", "publishedAtMs"],
+      "properties": {
+        "scope": { "$ref": "#/$defs/DocumentScope" },
+        "checkpointId": { "$ref": "#/$defs/NonzeroArtifactHash" },
+        "parentCheckpointId": { "$ref": "#/$defs/NonzeroArtifactHash" },
+        "descriptorDigestV1": { "$ref": "#/$defs/NonzeroArtifactHash" },
+        "baselineFrontier": { "$ref": "#/$defs/ArtifactFrontier" },
+        "pack": { "$ref": "#/$defs/ArtifactBlobRef" },
+        "spr": { "$ref": "#/$defs/ArtifactBlobRef" },
+        "aggregateSha256": { "$ref": "#/$defs/NonzeroArtifactHash" },
+        "publishedAtMs": { "type": "integer", "minimum": 0, "maximum": 9007199254740991 }
+      }
+    },
+    "PublishedArtifactBlob": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["sha256", "byteLength"],
+      "properties": {
+        "sha256": { "$ref": "#/$defs/NonzeroArtifactHash" },
+        "byteLength": { "type": "integer", "minimum": 1, "maximum": 9007199254740991 }
+      }
+    },
+    "PublishedArtifactCheckpoint": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["scope", "checkpointId", "descriptorDigestV1", "baselineFrontier", "pack", "spr", "aggregateSha256", "publishedAtMs"],
+      "properties": {
+        "scope": { "$ref": "#/$defs/DocumentScope" },
+        "checkpointId": { "$ref": "#/$defs/NonzeroArtifactHash" },
+        "parentCheckpointId": { "$ref": "#/$defs/NonzeroArtifactHash" },
+        "descriptorDigestV1": { "$ref": "#/$defs/NonzeroArtifactHash" },
+        "baselineFrontier": { "$ref": "#/$defs/ArtifactFrontier" },
+        "pack": { "$ref": "#/$defs/PublishedArtifactBlob" },
+        "spr": { "$ref": "#/$defs/PublishedArtifactBlob" },
+        "aggregateSha256": { "$ref": "#/$defs/NonzeroArtifactHash" },
+        "publishedAtMs": { "type": "integer", "minimum": 0, "maximum": 9007199254740991 }
+      }
+    },
+    "ArtifactRetention": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["scope", "retainedCheckpointId", "retainedFloor", "checkpointLineageHead"],
+      "properties": {
+        "scope": { "$ref": "#/$defs/DocumentScope" },
+        "retainedCheckpointId": { "$ref": "#/$defs/NonzeroArtifactHash" },
+        "retainedFloor": { "$ref": "#/$defs/ArtifactFrontier" },
+        "checkpointLineageHead": { "$ref": "#/$defs/NonzeroArtifactHash" }
+      }
+    },
     "DocumentView": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["id", "headSeq", "commitSeq", "epoch"],
+      "required": ["descriptor", "headSeq", "commitSeq", "epoch"],
       "properties": {
-        "id": { "type": "string" },
+        "descriptor": { "$ref": "#/$defs/DocumentDescriptor" },
         "headSeq": { "type": "integer", "minimum": 0 },
         "commitSeq": { "type": "integer", "minimum": 0 },
         "epoch": { "type": "integer", "minimum": 0 }

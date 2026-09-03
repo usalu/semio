@@ -2,12 +2,13 @@
 
 use crate::artifacts::vcs::VCS_DOCUMENT_SCHEMA;
 use schema::ArtifactSchema;
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️Snapshot
 /// 📸️ Persisted VCS demo document snapshot (persistent fields of the artifact).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ArtifactSchema, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, ArtifactSchema, dsl::DslRecord)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[artifact_schema(id = "s.vcs.vcs")]
 #[dsl(extension = "vcs")]
 #[dsl(layout = "lines")]
@@ -23,7 +24,7 @@ pub struct VcsSnapshot {
     #[state(artifact)]
     pub status: String,
     #[state(artifact)]
-    #[serde(default)]
+    #[value(default)]
     pub tags: Vec<String>,
 }
 
@@ -44,10 +45,10 @@ impl Default for VcsSnapshot {
 /// `../🧬️mutations/<slug>/🧪️tests/<fixture>/📸️snapshot/{⬅️before,➡️after}/🔣️.json`
 /// specification vectors are written in.
 ///
-/// A thin `serde_json` wrapper (already a direct dependency of this crate, used behind this
-/// interface per CLAUDE.md's "external libraries behind an interface" rule, never a new one).
+/// A thin `dsl::json` wrapper (this facet's own first-party `DslValue` JSON codec, used behind
+/// this interface per CLAUDE.md's "external libraries behind an interface" rule).
 pub fn encode_vcs_snapshot_json(snapshot: &VcsSnapshot) -> String {
-    serde_json::to_string(snapshot).expect("VcsSnapshot serialization is infallible")
+    dsl::json::to_json_string(snapshot)
 }
 
 /// 📥️ The inverse of [`encode_vcs_snapshot_json`] — decodes those committed specification vectors
@@ -55,7 +56,7 @@ pub fn encode_vcs_snapshot_json(snapshot: &VcsSnapshot) -> String {
 /// than re-declaring it as a Rust literal beside it. Reaching `serde_json` from that adapter is
 /// impossible: the generated test host links only this crate and `semio-repo-test-host`.
 pub fn decode_vcs_snapshot_json(text: &str) -> Result<VcsSnapshot, String> {
-    serde_json::from_str(text).map_err(|error| error.to_string())
+    dsl::json::from_json_str(text).map_err(|error| error.to_string())
 }
 
 /// 📝️ Parses `.vcs.dsl.semio` text into a [`VcsSnapshot`] — a named, non-async pass-through of this

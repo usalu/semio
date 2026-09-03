@@ -17,7 +17,7 @@
 //! - A `LINE`/`CIRCLE` whose reference chain doesn't resolve (missing entity, wrong referenced
 //!   type, non-numeric arg) is skipped, not fabricated with zeros.
 
-use crate::artifacts::semio::standards::v1::subsets::any::schema::geometry::SemioPoint2;
+use crate::artifacts::semio::standards::v1::subsets::base::schema::geometry::SemioPoint2;
 use crate::artifacts::semio::standards::v1::subsets::cad::schema::snapshot::{CadEntity, CadEntityRecord, SemioCadSnapshot, STDIO_SEMIOCAD_DOCUMENT_SCHEMA};
 use crate::artifacts::step::{
     schema::snapshot::{StepEntity, StepValue},

@@ -39,7 +39,6 @@ use semio_framework_plugin::{
     ComponentTree, ConfigView, Dialect, DraftView, Editor, EditorApp, Effect, Emit, Fault, GranularityDefinition, HierarchyProvider, HoverSpec,
     InteractionDefinition, InteractionRef, Label, LocalizedLabel, Media, MediaError, MediaPayload, MergeMode, NoDraft, NoDraftMutation, SelectionMethod, SelectionMode, SelectionSpec,
 };
-use serde_json::Value;
 use std::collections::HashSet;
 use store::EngineHandles;
 
@@ -52,8 +51,8 @@ pub use tile_editor::PRESENTATION_PLAY_BODY_MAIN;
 
 /// 🎯️ An `ActionDescriptor` addressed at this app — the single factory every taxonomy node's chrome
 /// (`📌️panels/*`) builds its `on_change`/item actions with.
-pub fn animate_presentation_action(action: &str, args: Option<Value>) -> ActionDescriptor {
-    ActionDescriptor { controller_id: PRESENTATION_PLAY_APP_ID.into(), action: action.into(), args: semio_framework_plugin::optional_json_to_dsl(args) }
+pub fn animate_presentation_action(action: &str, args: Option<dsl::DslValue>) -> ActionDescriptor {
+    ActionDescriptor { controller_id: PRESENTATION_PLAY_APP_ID.into(), action: action.into(), args }
 }
 //#endregion 🔖️Constants
 
@@ -75,7 +74,11 @@ pub struct PresentationDispatchCtx {
 /// 🕹️ JSON-encodes `ids` as the `Vec<InteractionTarget>` string the framework's `interactionSelect`
 /// action requires in its `targets` arg — every hit id shares the domain's one granularity.
 fn interaction_targets_json(ids: &[String]) -> String {
-    serde_json::to_string(&ids.iter().map(|id| serde_json::json!({ "granularity": PRESENTATION_INTERACTION_GRANULARITY, "id": id })).collect::<Vec<_>>()).unwrap_or_else(|_| "[]".into())
+    let targets = ids
+        .iter()
+        .map(|id| dsl::os_pack::json::object([("granularity".to_string(), dsl::os_pack::json::Value::from(PRESENTATION_INTERACTION_GRANULARITY)), ("id".to_string(), dsl::os_pack::json::Value::from(id.clone()))]))
+        .collect();
+    dsl::os_pack::json::to_string(&dsl::os_pack::json::Value::Array(targets))
 }
 
 /// 🕹️ Requests the shell to redispatch the framework-owned `interactionSelect` verb through its
@@ -85,7 +88,12 @@ fn interaction_targets_json(ids: &[String]) -> String {
 pub(crate) fn interaction_select_effect(ids: &[String], merge: &str) -> Effect {
     Effect::ReplayShellCommand {
         action_id: semio_framework::INTERACTION_SELECT_ACTION_ID.into(),
-        args: semio_framework::optional_json_to_dsl(Some(serde_json::json!({ "domainId": PRESENTATION_INTERACTION_DOMAIN, "targets": interaction_targets_json(ids), "merge": merge, "method": "pick" }))),
+        args: Some(dsl::DslValue::object([
+            ("domainId".to_string(), dsl::DslValue::String(PRESENTATION_INTERACTION_DOMAIN.into())),
+            ("targets".to_string(), dsl::DslValue::String(interaction_targets_json(ids))),
+            ("merge".to_string(), dsl::DslValue::String(merge.into())),
+            ("method".to_string(), dsl::DslValue::String("pick".into())),
+        ])),
     }
 }
 //#endregion 🔖️Interaction
@@ -159,7 +167,7 @@ pub(crate) fn valid_tile_ids(deck: &PresentationSnapshot, ids: Vec<String>) -> V
 fn frame_media_name(port: &str, media: &Media) -> Result<String, MediaError> {
     match &media.payload {
         MediaPayload::Structured { json, .. } => {
-            let value: Value = serde_json::from_str(json).map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?;
+            let value = dsl::os_pack::json::parse(json).map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?;
             Ok(value.get("name").and_then(|v| v.as_str()).or_else(|| value.get("src").and_then(|v| v.as_str())).map_or_else(|| "Imported frame".into(), str::to_string))
         }
         MediaPayload::Binary { blob_hash, .. } => Ok(format!("frame-{}", &blob_hash[..blob_hash.len().min(8)])),
@@ -761,7 +769,11 @@ pub(crate) mod testkit {
     }
 
     pub async fn render(app: &mut PresentationApp, body_key: &str) -> String {
-        serde_json::to_string(&app.render(body_key, None, &ViewModel::default()).await.expect("render")).expect("render json")
+        // 🌱️ `BuiltNode` deliberately has no `ToValue`/`FromValue` (framework `🦀️builder.rs`'s own
+        // "DslValue-free exception" for `UiValue`-embedding types), so every caller here reads
+        // rendered content back off the `Debug` rendering instead of round-tripping through JSON —
+        // every call site below only substring-searches the result, never parses it as JSON.
+        format!("{:?}", app.render(body_key, None, &ViewModel::default()).await.expect("render"))
     }
 }
 //#endregion 🧪️Testkit
@@ -841,8 +853,10 @@ mod tests {
         use semio_framework_plugin::ViewModel;
         let mut app = presentation_app().await;
         let node = app.render("some.unknown.body", None, &ViewModel::default()).await.expect("render unknown");
-        let json_str = serde_json::to_string(&node).unwrap();
-        assert!(json_str.contains("Unknown body: some.unknown.body"));
+        // 🌱️ `BuiltNode` deliberately has no `ToValue`/`FromValue` (framework `🦀️builder.rs`'s own
+        // "DslValue-free exception"), so this reads the message back off `Debug` instead of JSON.
+        let debug_str = format!("{node:?}");
+        assert!(debug_str.contains("Unknown body: some.unknown.body"));
     }
 
     #[semio_framework_async_macros::async_test]
@@ -860,7 +874,11 @@ mod tests {
     //#region 🔖️ManifestSanity
     #[semio_framework_async_macros::async_test]
     async fn the_manifest_stitches_every_taxonomy_node() {
-        let json = serde_json::to_string(&create_animate_presentation_app()).expect("app definition json");
+        // 🌱️ `AppDefinition` is documented framework-side (ticket 26/09/01/RUNTIME-DEPENDENCY-
+        // ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS) as still serde-only, blocked on
+        // `WindowKindDefinition`/`UtilityDefinition` converting first — outside this plugin's write
+        // scope, so this reads the manifest back off `Debug` instead of JSON.
+        let json = format!("{:?}", create_animate_presentation_app());
         assert!(json.contains(tile_editor::PRESENTATION_PLAY_WINDOW_MAIN), "window kind missing from the manifest: {json}");
         assert!(json.contains(main::PRESENTATION_PLAY_MODE_MAIN), "mode missing from the manifest");
         for body in [PRESENTATION_PLAY_BODY_DOCUMENT, PRESENTATION_PLAY_BODY_CATALOGUE, PRESENTATION_PLAY_BODY_DETAILS] {
@@ -923,10 +941,10 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn import_media_frames_in_inserts_a_new_tile() {
         use semio_framework_plugin::{Media, MediaClass, MediaForm, MediaPayload, MediaType};
-        use serde_json::json;
         let mut app = testkit::presentation_app_with_registry().await;
         let before = crate::artifacts::presentation::presentation_working_scene(&app.snapshot().await.expect("projection")).1.len();
-        let media = Media { media_type: MediaType { class: MediaClass::TwoD, form: MediaForm::Raster }, payload: MediaPayload::Structured { schema: "2d.image".into(), json: json!({ "name": "hero-frame", "src": "/frames/hero.png" }).to_string() } };
+        let frame_json = dsl::os_pack::json::to_string(&dsl::os_pack::json::object([("name".to_string(), dsl::os_pack::json::Value::from("hero-frame")), ("src".to_string(), dsl::os_pack::json::Value::from("/frames/hero.png"))]));
+        let media = Media { media_type: MediaType { class: MediaClass::TwoD, form: MediaForm::Raster }, payload: MediaPayload::Structured { schema: "2d.image".into(), json: frame_json } };
         app.import_media("frames:in", &media, &meta("local")).await.expect("import frames:in");
         let (_, after_tiles) = crate::artifacts::presentation::presentation_working_scene(&app.snapshot().await.expect("projection"));
         assert_eq!(after_tiles.len(), before + 1);
@@ -936,10 +954,10 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn import_media_frames_in_places_repeated_imports_in_distinct_cells() {
         use semio_framework_plugin::{Media, MediaClass, MediaForm, MediaPayload, MediaType};
-        use serde_json::json;
         let mut app = testkit::presentation_app_with_registry().await;
         for _ in 0..2 {
-            let media = Media { media_type: MediaType { class: MediaClass::TwoD, form: MediaForm::Raster }, payload: MediaPayload::Structured { schema: "2d.image".into(), json: json!({ "name": "frame" }).to_string() } };
+            let frame_json = dsl::os_pack::json::to_string(&dsl::os_pack::json::object([("name".to_string(), dsl::os_pack::json::Value::from("frame"))]));
+            let media = Media { media_type: MediaType { class: MediaClass::TwoD, form: MediaForm::Raster }, payload: MediaPayload::Structured { schema: "2d.image".into(), json: frame_json } };
             app.import_media("frames:in", &media, &meta("local")).await.expect("import frames:in");
         }
         let (_, tiles) = crate::artifacts::presentation::presentation_working_scene(&app.snapshot().await.expect("projection"));

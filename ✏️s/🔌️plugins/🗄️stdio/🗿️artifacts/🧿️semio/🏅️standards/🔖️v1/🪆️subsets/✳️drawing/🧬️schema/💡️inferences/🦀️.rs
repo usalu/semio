@@ -7,7 +7,7 @@
 //! (currently: `🎛flattened-scene/`).
 //!
 //! `flattenedScene` is the direct schema-level replacement for the framework's own (deleted-by-
-//! this-ticket) `◻2d/🗄️store/🦀️.rs` `DrawingEngine::compute`/`DrawingStore::flatten_
+//! this-ticket) `◻️2d/🗄️store/🦀️.rs` `DrawingEngine::compute`/`DrawingStore::flatten_
 //! handle` — world transforms composed down through nested `Group`s, plus each entity's style
 //! reference resolved into the real value. No other field of `SemioDrawingSnapshot` has an honest
 //! dependency chain to author yet (`canvas` and `styles` themselves are already fully persisted,
@@ -86,7 +86,7 @@ pub fn semio_drawing_artifact_inference_descriptor() -> schema::ArtifactInferenc
 //#region 🧪️Tests
 mod tests {
     use super::*;
-    use crate::artifacts::semio::standards::v1::subsets::any::schema::geometry::{SemioPoint2, SemioTransform};
+    use crate::artifacts::semio::standards::v1::subsets::base::schema::geometry::{SemioPoint2, SemioTransform};
     use crate::artifacts::semio::standards::v1::subsets::drawing::schema::snapshot::{DrawCanvas, DrawLayer, DrawNode, STDIO_SEMIODRAWING_DOCUMENT_SCHEMA};
     use protocol::Inference;
 

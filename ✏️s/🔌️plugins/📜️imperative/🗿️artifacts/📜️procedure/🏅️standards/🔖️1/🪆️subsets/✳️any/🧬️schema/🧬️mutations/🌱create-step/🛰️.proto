@@ -1,0 +1,7 @@
+syntax = "proto3";
+package semio.imperative.v1;
+
+message CreateStep {
+  ProcedurePathRef path_ref = 1;
+  ProcedureStep step = 2;
+}

@@ -1,0 +1,31 @@
+(* ebnf imperative.procedure.mutations *)
+(* Below: ISO-14977-style mirror of the normative 📖️.grammar.semio (same production
+   names, kebab-case -> "space case"). This facet's .semio defines no header/body/payload
+   envelope (`start line`); the two lines above are preserved verbatim from the prior
+   identity fix for traceability but are not referenced below. *)
+document = header, body ;
+header = 'schema', space, 'imperative.procedure.mutations', newline ;
+
+line = create step
+     | delete step
+     | reorder steps
+     | edit step params ;
+create step = 'create-step', space, owner, space, slot, space, step block ;
+delete step = 'delete-step', space, owner, space, slot, space, id ;
+reorder steps = 'reorder-steps', space, owner, space, slot, space, id, space, to ;
+edit step params = 'edit-step-params', space, owner, space, slot, space, id, space, params ;
+owner = 'owner=', ( id | '-' ) ;
+slot = 'slot=', ( id | '-' ) ;
+to = 'to=', number ;
+params = 'params=', text ;
+step block = 'item=', '{', newline, step fields, '}' ;
+step fields = octet, { octet } ;
+id = octet, { octet } ;
+number = octet, { octet } ;
+text = octet, { octet } ;
+
+(* Framework dialect-primitive terminals, given one concrete definition each for a
+   self-contained mirror (not defined in the .semio itself — ticket-reported deviation). *)
+newline = [ '\r' ], '\n' ;
+octet = ? any single raw byte ? ;
+space = ' ' ;

@@ -7,6 +7,8 @@
  */
 
 import { type ChildProcessByStdio, spawn } from "node:child_process";
+import { accessSync, constants as fsConstants, readFileSync, statSync } from "node:fs";
+import { posix, win32 } from "node:path";
 import { createInterface } from "node:readline";
 import type { Readable, Writable } from "node:stream";
 
@@ -17,15 +19,42 @@ import type { Readable, Writable } from "node:stream";
  * transient ticket artifact, so resolving against it made every conformance suite skip itself the
  * moment the ticket's scratch directory was cleaned. */
 export const TARGET_DEBUG_REL = "target/debug";
+export const MCP_CARGO_PACKAGE = "semio-framework-os-mcp";
+export const MCP_BINARY_NAME = "semio-os-mcp";
+
+function pathApi(platform: NodeJS.Platform): typeof posix {
+  return platform === "win32" ? win32 : posix;
+}
+
+/** 📁️ Absolute Cargo target root shared by the build and black-box test gates. */
+export function resolveMcpTargetDirectory(repoRoot: string, env: NodeJS.ProcessEnv = process.env, platform: NodeJS.Platform = process.platform): string {
+  return pathApi(platform).resolve(repoRoot, env.CARGO_TARGET_DIR ?? "target");
+}
+
+/** 📦️ The exact debug artifact Cargo's MCP build command must produce, ignoring test overrides. */
+export function resolveBuiltMcpBinaryPath(repoRoot: string, env: NodeJS.ProcessEnv = process.env, platform: NodeJS.Platform = process.platform): string {
+  const filename = platform === "win32" ? `${MCP_BINARY_NAME}.exe` : MCP_BINARY_NAME;
+  return pathApi(platform).join(resolveMcpTargetDirectory(repoRoot, env, platform), "debug", filename);
+}
 
 /** 📁️ `<repoRoot>/target/debug/semio-os-mcp[.exe]`, or `CARGO_TARGET_DIR`/`SEMIO_OS_MCP_BIN` when
  * either is set — the two seams a caller building somewhere else (a ticket scratch dir, CI) uses. */
-export function resolveMcpBinaryPath(repoRoot: string, env: NodeJS.ProcessEnv = process.env): string {
+export function resolveMcpBinaryPath(repoRoot: string, env: NodeJS.ProcessEnv = process.env, platform: NodeJS.Platform = process.platform): string {
   const override = env.SEMIO_OS_MCP_BIN;
-  if (override) return override;
-  const name = process.platform === "win32" ? "semio-os-mcp.exe" : "semio-os-mcp";
-  const targetDir = env.CARGO_TARGET_DIR ? `${env.CARGO_TARGET_DIR}/debug` : `${repoRoot}/${TARGET_DEBUG_REL}`;
-  return `${targetDir}/${name}`;
+  return override ? pathApi(platform).resolve(repoRoot, override) : resolveBuiltMcpBinaryPath(repoRoot, env, platform);
+}
+
+/** 🛡️ Resolves and verifies the real executable so a missing black-box subject cannot skip green. */
+export function requireMcpBinary(repoRoot: string, env: NodeJS.ProcessEnv = process.env, platform: NodeJS.Platform = process.platform): string {
+  const binary = resolveMcpBinaryPath(repoRoot, env, platform);
+  try {
+    if (!statSync(binary).isFile()) throw new Error("path is not a file");
+    if (platform !== "win32") accessSync(binary, fsConstants.X_OK);
+  } catch (error) {
+    const detail = error instanceof Error ? error.message : String(error);
+    throw new Error(`semio-os-mcp binary gate failed at ${binary}: ${detail}`);
+  }
+  return binary;
 }
 //#endregion 🔖️BinaryPath
 
@@ -138,6 +167,24 @@ if (import.meta.vitest) {
   const { describe, expect, it } = import.meta.vitest;
 
   describe("resolveMcpBinaryPath", () => {
+    const fixture = JSON.parse(readFileSync(new URL("./🧫️fixtures/🧱️binary-gate.json", import.meta.url), "utf8")) as {
+      pathCases: Array<{ name: string; platform: NodeJS.Platform; repoRoot: string; environment: NodeJS.ProcessEnv; expected: string }>;
+    };
+
+    for (const testCase of fixture.pathCases) {
+      it(testCase.name, () => {
+        expect(resolveMcpBinaryPath(testCase.repoRoot, testCase.environment, testCase.platform)).toBe(testCase.expected);
+      });
+    }
+
+    it("accepts an independently executable process artifact", () => {
+      expect(requireMcpBinary("/", { SEMIO_OS_MCP_BIN: process.execPath })).toBe(process.execPath);
+    });
+
+    it("rejects a missing explicit artifact instead of permitting a skipped suite", () => {
+      expect(() => requireMcpBinary("/workspace/semio", { SEMIO_OS_MCP_BIN: "missing/semio-os-mcp" }, "linux")).toThrow("binary gate failed");
+    });
+
     it("defaults to the shared workspace target/debug, platform-named", () => {
       const path = resolveMcpBinaryPath("/repo", {});
       const expected = process.platform === "win32" ? "semio-os-mcp.exe" : "semio-os-mcp";

@@ -1,0 +1,7 @@
+{
+  "$id": "https://semio.tech/schema/app/equation/equation/presence.json",
+  "title": "EquationPresence",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {}
+}

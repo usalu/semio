@@ -1,0 +1,90 @@
+{
+  "$id": "https://semio.tech/schema/app/procedural/3d/presence.json",
+  "title": "Generation3dPresence",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "camera",
+    "previewCamera",
+    "activeUtilityId",
+    "showMode"
+  ],
+  "properties": {
+    "camera": {
+      "$ref": "#/$defs/CameraJson",
+      "x-semio-state": "presence"
+    },
+    "previewCamera": {
+      "$ref": "#/$defs/Generation3dPreviewCamera",
+      "x-semio-state": "presence"
+    },
+    "activeUtilityId": {
+      "type": "string",
+      "x-semio-state": "presence"
+    },
+    "showMode": {
+      "type": "string",
+      "x-semio-state": "presence"
+    }
+  },
+  "$defs": {
+    "CameraJson": {
+      "title": "CameraJson",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "x",
+        "y",
+        "zoom"
+      ],
+      "properties": {
+        "x": {
+          "type": "number",
+          "format": "double"
+        },
+        "y": {
+          "type": "number",
+          "format": "double"
+        },
+        "zoom": {
+          "type": "number",
+          "format": "double"
+        }
+      }
+    },
+    "Generation3dPreviewCamera": {
+      "title": "Generation3dPreviewCamera",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "position",
+        "target",
+        "fov"
+      ],
+      "properties": {
+        "position": {
+          "type": "array",
+          "items": {
+            "type": "number",
+            "format": "double"
+          },
+          "minItems": 3,
+          "maxItems": 3
+        },
+        "target": {
+          "type": "array",
+          "items": {
+            "type": "number",
+            "format": "double"
+          },
+          "minItems": 3,
+          "maxItems": 3
+        },
+        "fov": {
+          "type": "number",
+          "format": "double"
+        }
+      }
+    }
+  }
+}

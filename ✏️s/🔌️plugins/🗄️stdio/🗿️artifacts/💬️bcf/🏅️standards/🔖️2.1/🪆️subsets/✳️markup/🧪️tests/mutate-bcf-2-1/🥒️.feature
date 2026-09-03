@@ -8,7 +8,7 @@ Feature: Apply every typed BCF 2.1 mutation to a real-world coordination review
   in the Rust ecosystem (BCF support only appears bundled inside much larger MPL-licensed IFC
   toolkits), so the oracle composes two already-linked, genuinely independent crates over the real
   BCF-XML 2.1 shapes: `zip` 6 for the flat bcfzip container and `quick-xml` 0.42 for every XML part
-  inside it. `📰xml`'s own oracle is the precedent for the `quick-xml` half, `🎒️zip`'s for the
+  inside it. `📰️xml`'s own oracle is the precedent for the `quick-xml` half, `🎒️zip`'s for the
   archive half; this subset composes both into one independent reader/writer rather than reusing
   either module directly.
 

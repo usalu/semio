@@ -29,7 +29,7 @@ pub const SPR_BYTES: &[u8] = include_bytes!("🖼️assets/📡️forest.spr.sem
 
 fn document_json() -> String {
     let projection = crate::artifacts::puzzle3d::dsl::parse_dsl(DSL_TEXT).unwrap_or_else(|error| panic!("{ID} example dsl parses: {error}"));
-    serde_json::to_string(&projection).expect("serialize example")
+    dsl::json::to_json_string(&projection)
 }
 
 /// 📚️ Canonical example source for `App::example_source`.

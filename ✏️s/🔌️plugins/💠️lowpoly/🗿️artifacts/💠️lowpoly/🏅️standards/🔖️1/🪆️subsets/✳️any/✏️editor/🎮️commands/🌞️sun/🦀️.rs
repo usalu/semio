@@ -7,13 +7,16 @@ use crate::editor::lowpoly::config::{lowpoly_sun_config, LowpolyConfig, LowpolyC
 use crate::editor::lowpoly::session::LowpolyScratch;
 use semio_framework_plugin::{apply_world3d_sun_action, ArtifactView, ConfigView, Emit, Fault};
 use serde::{Deserialize, Serialize};
-use serde_json::json;
 
 /// 🌞️ Reuses the framework's shared sun toggle/slider logic (`apply_world3d_sun_action`), threading it
 /// through `LowpolyConfig`'s flattened sun fields and returning the resulting `SetSun` config op.
+/// `apply_world3d_sun_action` is a framework fn (`🧰️framework/…/🔌️plugin/🦀️.rs`, `world3d_host` module)
+/// whose `args` parameter is `Option<&dsl::os_pack::json::Value>`, so the single-entry object is
+/// built through the unconditional `DslValue` bridge (`🌱️value/🦀️.rs`) and converted only at the
+/// call boundary via `dsl::os_pack::json::from_dsl_value`, never via `serde_json::json!`.
 fn apply_sun_command(config: &LowpolyConfig, action_id: &str, value: Option<f64>) -> LowpolyConfigMutation {
     let mut sun = lowpoly_sun_config(config);
-    let args = value.map(|value| json!({ "value": value }));
+    let args = value.map(|value| dsl::os_pack::json::from_dsl_value(&dsl::DslValue::object([("value".to_string(), dsl::DslValue::float(value))])));
     apply_world3d_sun_action(&mut sun, action_id, args.as_ref());
     LowpolyConfigMutation::SetSun { enabled: sun.enabled, azimuth: sun.azimuth, elevation: sun.elevation, intensity: sun.intensity, color: sun.color }
 }

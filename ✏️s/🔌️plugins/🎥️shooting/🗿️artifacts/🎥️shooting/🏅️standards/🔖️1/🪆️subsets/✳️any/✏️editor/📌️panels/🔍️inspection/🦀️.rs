@@ -46,7 +46,16 @@ async fn shot_inspector_group(shot: &ShootingShot, labels: &ShootingLabels) -> U
                     value: shot.label.clone(),
                     placeholder: None,
                     commit: None,
-                    on_change: crate::editor::shooting::shooting_action("patchShot", Some(serde_json::json!({ "shotId": shot.id, "field": "label" }))),
+                    on_change: crate::editor::shooting::shooting_action(
+                        "patchShot",
+                        Some(
+                            crate::editor::shooting::ui_value_map([
+                                ("shotId", crate::editor::shooting::ui_value_text(&shot.id).expect("shot id fits ui text capacity")),
+                                ("field", crate::editor::shooting::ui_value_text("label").expect("static field name fits ui text capacity")),
+                            ])
+                            .expect("two-entry args fit ui map capacity"),
+                        ),
+                    ),
                     min: None,
                     max: None,
                     step: None,
@@ -71,7 +80,16 @@ async fn shot_inspector_group(shot: &ShootingShot, labels: &ShootingLabels) -> U
                     value: width_mixed.value.to_string(),
                     placeholder: None,
                     commit: None,
-                    on_change: crate::editor::shooting::shooting_action("patchShot", Some(serde_json::json!({ "shotId": shot.id, "field": "width" }))),
+                    on_change: crate::editor::shooting::shooting_action(
+                        "patchShot",
+                        Some(
+                            crate::editor::shooting::ui_value_map([
+                                ("shotId", crate::editor::shooting::ui_value_text(&shot.id).expect("shot id fits ui text capacity")),
+                                ("field", crate::editor::shooting::ui_value_text("width").expect("static field name fits ui text capacity")),
+                            ])
+                            .expect("two-entry args fit ui map capacity"),
+                        ),
+                    ),
                     min: None,
                     max: None,
                     step: None,
@@ -94,7 +112,16 @@ async fn shot_inspector_group(shot: &ShootingShot, labels: &ShootingLabels) -> U
                     value: height_mixed.value.to_string(),
                     placeholder: None,
                     commit: None,
-                    on_change: crate::editor::shooting::shooting_action("patchShot", Some(serde_json::json!({ "shotId": shot.id, "field": "height" }))),
+                    on_change: crate::editor::shooting::shooting_action(
+                        "patchShot",
+                        Some(
+                            crate::editor::shooting::ui_value_map([
+                                ("shotId", crate::editor::shooting::ui_value_text(&shot.id).expect("shot id fits ui text capacity")),
+                                ("field", crate::editor::shooting::ui_value_text("height").expect("static field name fits ui text capacity")),
+                            ])
+                            .expect("two-entry args fit ui map capacity"),
+                        ),
+                    ),
                     min: None,
                     max: None,
                     step: None,

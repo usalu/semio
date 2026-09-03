@@ -1,7 +1,7 @@
 {
   "schema": "semio.app.publication-authority.v1",
-  "owner": "MathematicalPlayApp",
-  "source": "🗿️artifacts/➗️mathematical/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+  "owner": "EquationPlayApp",
+  "source": "🗿️artifacts/➗️equation/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
   "routes": [
     { "id": "setDocument", "lane": "Artifact" },
     { "id": "setAlgorithm", "lane": "Artifact" },

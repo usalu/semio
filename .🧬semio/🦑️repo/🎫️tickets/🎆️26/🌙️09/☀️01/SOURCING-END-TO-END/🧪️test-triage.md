@@ -17,14 +17,14 @@ offending test, hiding everything after it).
 ## Remaining 11 failures, by class
 
 ### A. Unmigrated document commands (4 tests)
-`curateAdd`, `curateSetCount`, `curateRemove`, `dropOnCurated` fault with
+`curationAdd`, `curationSetCount`, `curationRemove`, `dropOnCurated` fault with
 `interactive-job.missing-factory`. They are declared `InteractiveJobClassification::BatchOnlyPendingRewrite`
-(`SOURCING_CURATE_BATCH_ONLY_TOOL_IDS`, 8 ids), so they own no tool proof and typed dispatch refuses them.
+(`SOURCING_CURATION_BATCH_ONLY_TOOL_IDS`, 8 ids), so they own no tool proof and typed dispatch refuses them.
 
 Migrating them is not a one-line registry flip: they publish on the `Artifact` lane, and
 `unsupported_publication_contracts` rejects that lane unless the app implements
 `build_artifact_store_one_item_preparation_factory` — which sourcing does not (it has only the
-config-lane one, `SourcingCurateConfigPreparationFactory`). The document-lane equivalent has to be
+config-lane one, `SourcingCurationConfigPreparationFactory`). The document-lane equivalent has to be
 written; `🗒️note`, `📐️cad`, `🌊️flow` and `🌍️gis` already have theirs.
 
 ### B. World3d scene admission refused (1 test) — MEASURED, and it is NOT an overflow

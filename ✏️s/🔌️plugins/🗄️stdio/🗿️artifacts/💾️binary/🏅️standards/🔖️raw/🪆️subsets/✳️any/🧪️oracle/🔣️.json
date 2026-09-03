@@ -128,5 +128,136 @@
         }
       ]
     }
+  ],
+  "fixtureManifests": [
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "append-bytes-applied",
+      "class": "handcrafted",
+      "target": {
+        "artifact": "s.stdio.binary",
+        "standard": "raw",
+        "subset": "any"
+      },
+      "mutation": "append-bytes",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before",
+          "path": "../🧫️fixtures/append-bytes/before.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:672c38b99383042be24422f0610771e70d20d10c9674586b8e2361b8acf1b1fc",
+          "bytes": 104
+        },
+        {
+          "role": "expected-after",
+          "path": "../🧫️fixtures/append-bytes/after.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:0099a5e67d5cd41544c7fc15ede6edc05b89e8d0de62d9b638c051021d71f99d",
+          "bytes": 118
+        }
+      ],
+      "provenance": {
+        "source": "authored",
+        "license": "public-domain (handcrafted by this repository)",
+        "attribution": "Handcrafted before/after vector authored directly against this subset's own documented schema — Law 2's handcrafted-vector category.",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "ordered-json-v1",
+      "reproducible": true,
+      "family": "binary-carrier",
+      "notes": "AppendBytes{data:[8,9]} appends real bytes to the end of the buffer."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "splice-applied",
+      "class": "handcrafted",
+      "target": {
+        "artifact": "s.stdio.binary",
+        "standard": "raw",
+        "subset": "any"
+      },
+      "mutation": "splice",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before",
+          "path": "../🧫️fixtures/splice/before.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:672c38b99383042be24422f0610771e70d20d10c9674586b8e2361b8acf1b1fc",
+          "bytes": 104
+        },
+        {
+          "role": "expected-after",
+          "path": "../🧫️fixtures/splice/after.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:e3192734cc5cd2f528792fa1eb1968d2ca17f48f993d383ee3b4f7b35c21f1fd",
+          "bytes": 106
+        }
+      ],
+      "provenance": {
+        "source": "authored",
+        "license": "public-domain (handcrafted by this repository)",
+        "attribution": "Handcrafted before/after vector authored directly against this subset's own documented schema — Law 2's handcrafted-vector category.",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "ordered-json-v1",
+      "reproducible": true,
+      "family": "binary-carrier",
+      "notes": "ReplaceByteRange{offset:2,removeLen:2,insert:[99,99]} — wire tag `splice`, per this leaf's own `#[value(rename=\"splice\")]` — replaces bytes [2,4) in place with 2 new bytes, leaving the buffer length unchanged."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "truncate-at-applied",
+      "class": "handcrafted",
+      "target": {
+        "artifact": "s.stdio.binary",
+        "standard": "raw",
+        "subset": "any"
+      },
+      "mutation": "truncate-at",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before",
+          "path": "../🧫️fixtures/truncate-at/before.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:672c38b99383042be24422f0610771e70d20d10c9674586b8e2361b8acf1b1fc",
+          "bytes": 104
+        },
+        {
+          "role": "expected-after",
+          "path": "../🧫️fixtures/truncate-at/after.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:2f5a446b0a269f50214ccbaa172771ed48e0d6de3424961c027aa50fd74bc52b",
+          "bytes": 76
+        }
+      ],
+      "provenance": {
+        "source": "authored",
+        "license": "public-domain (handcrafted by this repository)",
+        "attribution": "Handcrafted before/after vector authored directly against this subset's own documented schema — Law 2's handcrafted-vector category.",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "ordered-json-v1",
+      "reproducible": true,
+      "family": "binary-carrier",
+      "notes": "TruncateAt{offset:4} drops everything from offset 4 onward."
+    }
   ]
 }

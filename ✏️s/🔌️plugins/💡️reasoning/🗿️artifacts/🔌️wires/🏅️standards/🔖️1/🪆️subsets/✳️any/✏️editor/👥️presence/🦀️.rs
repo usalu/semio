@@ -4,14 +4,13 @@
 //! `PresenceInteraction` field, not this app-opaque presence facet.
 
 use protocol::Mutation;
-use serde::{Deserialize, Serialize};
 use store::ArtifactPack;
 
 //#region 🔖️Presence
 /// 👥️ Shareable live subset of wires view state: what peers see on the mindmap canvas (selection and
 /// mid-drag pointer), not locale (local) and not board camera (document fixture).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslArtifact)]
-#[serde(rename_all = "camelCase", default)]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslArtifact)]
+#[value(rename_all = "camelCase", default)]
 #[dsl(extension = "reasoning.wirespresence")]
 #[dsl(layout = "lines")]
 pub struct WiresPresence {
@@ -82,8 +81,8 @@ impl ArtifactPack for WiresPresence {
 //#endregion 🔖️Presence
 
 //#region 🔖️PresenceMutation
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslOps)]
+#[value(rename_all = "camelCase")]
 pub enum WiresPresenceMutation {
     #[dsl(key = "snapshot")]
     Snapshot {

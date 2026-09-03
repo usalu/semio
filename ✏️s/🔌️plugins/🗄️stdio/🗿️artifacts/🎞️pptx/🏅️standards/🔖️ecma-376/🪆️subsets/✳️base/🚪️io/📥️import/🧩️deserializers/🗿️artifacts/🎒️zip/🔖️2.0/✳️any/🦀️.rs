@@ -14,7 +14,7 @@ pub fn register() {}
 /// PresentationML snapshot.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn deserialize(from: &BinarySnapshot) -> Result<PptxSnapshot, store::PackError> {
-    let mut snap = crate::artifacts::pptx::standards::v_ecma_376::subsets::any::io::import::deserializers::decode_pptx(&from.bytes).map_err(|e| store::PackError::Schema(e.to_string()))?;
+    let mut snap = crate::artifacts::pptx::standards::v_ecma_376::subsets::base::io::import::deserializers::decode_pptx(&from.bytes).map_err(|e| store::PackError::Schema(e.to_string()))?;
     snap.schema = STDIO_PPTX_DOCUMENT_SCHEMA.into();
     Ok(snap)
 }

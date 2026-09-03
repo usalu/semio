@@ -14,8 +14,8 @@ import { useAdminT } from "../📚️I18n/🟦️.tsx";
 //#region 🔖️AdminClient
 /** 🚨️ Thrown by every {@link AdminClient} call on a non-2xx response — mirrors `DirectoryHttpError`
  * (framework-os's `DirectoryClient`), which this crate cannot reuse: `/admin/api/*` is a route family
- * `DirectoryClient` never covers (contract §C2's admin surface, bearer `OS_HUB_ADMIN_TOKEN` /
- * loopback, not a user session). */
+ * `DirectoryClient` never covers (contract §C2's admin surface, verified administrator
+ * `session.v1` capability). */
 export class AdminHttpError extends Error {
   readonly status: number;
   constructor(status: number, message: string) {
@@ -128,9 +128,9 @@ export interface AdminSessionState {
 
 const AdminSessionContext = React.createContext<AdminSessionState | null>(null);
 
-/** 🔑️ Probes `GET /admin/api/overview` on mount/token-change (contract §C2's admin auth: bearer
- * `OS_HUB_ADMIN_TOKEN`, or loopback-peer-is-admin when unset — this page cannot tell which applies,
- * so it always probes rather than guessing). `authorized` renders `children`; `unauthorized` renders
+/** 🔑️ Probes `GET /admin/api/overview` on capability change. The hub accepts only a live
+ * `session.v1` whose verified identity is in the administrator-subject policy, so this page always
+ * probes instead of inferring authority from network location. `authorized` renders `children`; `unauthorized` renders
  * the bearer-token form instead. The token, once accepted, is kept in `sessionStorage` only (never
  * `localStorage` — an admin bearer token should not outlive the browser tab). */
 export function AdminSessionProvider({ baseUrl, children }: { readonly baseUrl: string; readonly children: React.ReactNode }): React.ReactElement {
